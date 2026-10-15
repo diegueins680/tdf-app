@@ -3095,7 +3095,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
+      "sha256": "388a2ec1b308220319429305c3a09bec70b4b2fe08017b9a6668f0c70a90f52b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3659,7 +3659,7 @@
     {
       "id": "SURFACE-7bc6beda98cc6e72",
       "path": "scripts/build-catalog-decisions.mjs",
-      "sha256": "55a8004c6d3fe607a7dca57e43dccc4a45db6f3a51b2985cfe2fbea18d32226a",
+      "sha256": "3147e247b20cb634412d70697f91c6ea521aff4fc129e2923b0860657d7d0b6c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5681,7 +5681,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "e2e85a516d82961776125f38cf5afcf036d0febce75ce5ca590200fa36402027",
+      "sha256": "0829c12fe760051953da7da9bc05eb82a211efaaec7e6fc44a71a4b4f7e802c9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14159,7 +14159,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "76cafe70926495622ea81f789d4183ffaeb47ae4b50b72d6cab917fe73a93527",
+      "sha256": "6315114b11fa34ccf80ea21e694ae533f3e910c25d046617607e6548ef329139",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14651,7 +14651,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "6b987d571d9df10749ba937e43aff3a10e3d2de478474bcaf898e5b6e02a1126",
+      "sha256": "cd1f6ab33a6abb6cf71477ce12410c8c34453e3ff3bb3b756f9fa065758533e4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15041,7 +15041,7 @@
     {
       "id": "SURFACE-b88bd7d333ae2b44",
       "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
-      "sha256": "d371ebe5c91c1ab973a0fbb653fa32eb91ae46f8193b02f0be0f5204778df0ac",
+      "sha256": "f2ca6f3556ba33388b05b24df4136fd4c086e8b2de50881bdea6350874cf0a19",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23901,6 +23901,34 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/TicketCaptureClassification.cfg",
+      "sha256": "77044ec1f87e776c641f808fbecfecfc0eafd57c876dc680601ce3450e991bc8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TicketCaptureClassification.tla",
+      "sha256": "f862c9d357ea3228597c01a99bfbde127ef0a6b59bc7642d7f89f6a30b7587b0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TicketCaptureClassificationUnsafeReadback.cfg",
+      "sha256": "925f71808425a6860dfeb06167a45f8fc664e7d0837854095bb18459010569ae",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TicketCaptureClassificationUnsafeResponse.cfg",
+      "sha256": "768e2b871065665d4dc66ad7b6f980498ec7db160700c2f29de37b53468bd1de",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/TicketManualReview.cfg",
       "sha256": "d2188f7899d8797c5aa15a61d5d32dd5f48ff7117b93d4ed7557b152344ffe76",
       "authority": "inferred",
@@ -24826,7 +24854,7 @@
     },
     {
       "path": "formal/system/payment-retry.md",
-      "sha256": "5c1618bc2913f50a7ce042533cae888278b948a43b942ebb80a05779827ce2a4",
+      "sha256": "b9407a7681e4f17dc75fb7f676b4306911e56f1760e05189c0dedb8eb4238f9a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24889,7 +24917,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "48c5a225337737ff9dbab87422f53ece91e23f97d396475f23c2e8c15c09487a",
+      "sha256": "508e13c895eafdf1f5ee6e948b4fdf99aa650cab37db7a11f97142e7ddac520d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -36935,6 +36963,45 @@
         "  LostAsRejected = FALSE",
         "  RetryUncertain = FALSE",
         "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketCaptureClassification.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  UnsafeErrorReadback = FALSE",
+        "  UnsafeSuccessResponse = FALSE",
+        "INVARIANTS TypeOK UnresolvedCaptureFenced",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketCaptureClassificationUnsafeReadback.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  UnsafeErrorReadback = TRUE",
+        "  UnsafeSuccessResponse = FALSE",
+        "INVARIANTS TypeOK UnresolvedCaptureFenced",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketCaptureClassificationUnsafeResponse.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  UnsafeErrorReadback = FALSE",
+        "  UnsafeSuccessResponse = TRUE",
+        "INVARIANTS TypeOK UnresolvedCaptureFenced",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
