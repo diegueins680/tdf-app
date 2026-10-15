@@ -613,6 +613,18 @@
       "resolution": "Stored diagnostics are bounded to the column; a submitted document stays submitted through failed, refused or unreadable queries and internal errors; readiness also requires TAX_INVOICE_WORKER_ENABLED=true. No schema change. Recovery for uncertain and rejected documents remains an open product and tax decision."
     },
     {
+      "id": "AUTHORITY-RUNTIME-FLAG-ABSENCE-001",
+      "sources": [
+        "ops/hetzner/inspect-runtime.py",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Cors.hs",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "Runtime receipts included configured suffix flags but omitted many known absent controls, privacy/SMTP controls and alternate CORS boolean names. Silence could not establish disabled state or effective defaults.",
+      "authority": "DEPLOY-OBSERVE-001 requires explicit unknowns and source-bound read-only observation.",
+      "resolution": "Expand the absence register and make conservative backend literal discovery part of the existing inspection boundary gate. Preserve raw presence, empty values and absence; do not infer effective values from candidate defaults or activate any feature."
+    },
+    {
       "id": "AUTHORITY-057",
       "sources": [
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
@@ -691,9 +703,48 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/WhatsApp/History.hs"
       ],
-      "conflict": "Twenty-three model lines named Index… were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
+      "conflict": "Twenty-three model lines named Index\u2026 were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
       "authority": "The application's behaviour governs: conversations hold many messages and a reply is recorded beside its message. The names, the absence of any unique-key lookup or conflict clause on these keys and the plain indexes production holds on the campaign tables under the same naming show the uniqueness was never intended.",
       "resolution": "A new migration replaces the nine constraints with plain indexes of the same names and columns, and the twenty-three lines leave the models so that a development database no longer recreates them. A rollback file restores the constraints while no stored row violates them. The identity constraints (for example the WhatsApp provider message id) are unchanged."
+    },
+    {
+      "id": "AUTHORITY-064",
+      "sources": [
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "EVT-TICKET-MANUAL-001 states that the review locks the checkout, attempt and evidence rows. The function took those locks and then committed before writing, which released them; a second concurrent reviewer read the same submitted evidence and had the write refused by the database as an error instead of being told the transfer was already decided.",
+      "authority": "The requirement governs: the review is serialized by its row locks. The database's evidence transition guard remains the last line of defence, not the means of serialization.",
+      "resolution": "The intermediate commit is removed so the locks last until the review commits. A second reviewer waits and is answered from the decided state; the buyer's concurrent writes are not covered by this. The requirement gains a direct PostgreSQL test of the review transaction, including races, and a bounded model."
+    },
+    {
+      "id": "AUTHORITY-075",
+      "sources": [
+        "formal/system/requirements.json#DEPLOY-MIGRATION-001",
+        "scripts/lib/production-release.mjs",
+        "scripts/lib/migration-contract.mjs",
+        "tdf-hq/production-entrypoint.sh",
+        "formal/system/migration-correspondence.md",
+        "formal/event-operations/MigrationLedger.tla",
+        "docs/automatic-production-migrations.md"
+      ],
+      "conflict": "DEPLOY-MIGRATION-001 requires immutable correspondence between applied history and the manifest, but the batch inserted each ledger row as a separate statement after the migration's own COMMIT (a crash between them left effects applied and unrecorded, re-applied by the next run) and its lock-refusal branch ended with \\quit 3, which psql ignores, so an active concurrent migration made the batch exit 0 and the entrypoint report success without applying or verifying. The batch also ignores ledger rows its manifest does not know while preparation rejects them.",
+      "authority": "The requirement statement and docs/automatic-production-migrations.md (\"A concurrent runner also exits nonzero\"); the batch's tolerance of unknown ledger rows is a code fact that image rollback relies on, recorded here as the decision, not a documented policy.",
+      "resolution": "The batch opens a transaction before the ledger row so a file's own COMMIT commits row and effects together, and raises an SQL error under ON_ERROR_STOP (exit 3) while the lock is held; every manifest file is checked to end with its COMMIT and to avoid non-transactional statements. The batch keeps tolerating unknown ledger rows (image rollback) while preparation keeps rejecting them; holes are applied after later entries and reported pending by preparation. Both recorded as ambiguities; checked by the bounded MigrationLedger model and the psql batch test."
+    },
+    {
+      "id": "AUTHORITY-077",
+      "sources": [
+        "formal/system/requirements.json#DEPLOY-STARTUP-001",
+        "scripts/lib/production-release.mjs",
+        "formal/system/startup-gates.md",
+        "formal/event-operations/StartupGates.tla",
+        "scripts/__tests__/startup-gates-postgres.mjs"
+      ],
+      "conflict": "DEPLOY-STARTUP-001 described only the six provider gates, while the startup verifier also requires the three manual-settlement gates and the two marketplace gates enabled and the service-booking and two course gates disabled; a flag change in any of those nine would pass unnoticed by the requirement and fail every later container start, as checkout.paypal.refunds did on 2026-10-07 (AUTHORITY-050).",
+      "authority": "The verifier as reviewed, read as the current policy (AUTHORITY-050 for the PayPal and Datafast gates; no separate product decision is on record for the service-booking, course and staged-provider gates, whose disabled state is taken from the code).",
+      "resolution": "The requirement is completed with the full asserted set and the rule that enabling or disabling an asserted gate is a verifier change in the same release; the code is unchanged. The policy is pinned by the exhaustive one-state model and by running the real verification for every flag in every state. The verifier also asserts data toggles outside revenue_feature_flag (artist_update interaction kind disabled, artist invitation policy and artist-profile category active, directory audit clean, catalog backfill statuses, minimum row counts); they are listed with the flag policy as restart hazards."
     }
   ]
 }

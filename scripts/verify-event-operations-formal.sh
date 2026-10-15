@@ -109,6 +109,18 @@ run_negative_tlc AccessGrantRebind.cfg accessgrantrebind 'Invariant SingleRedeem
 run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant RedeemedNeverRevoked is violated' AccessGrant.tla
 run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
 run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
+
+run_tlc MigrationLedger.tla MigrationLedger.cfg migration-ledger
+run_negative_tlc MigrationLedgerRecordAfterCommit.cfg migration-ledger-record-after-commit 'Invariant EffectsRecorded is violated' MigrationLedger.tla
+run_negative_tlc MigrationLedgerBatchUnchecked.cfg migration-ledger-batch-unchecked 'Invariant NoRunPastDrift is violated' MigrationLedger.tla
+run_negative_tlc MigrationLedgerPrepareUnchecked.cfg migration-ledger-prepare-unchecked 'Invariant PreparationSound is violated' MigrationLedger.tla
+run_negative_tlc MigrationLedgerUnknownAccepted.cfg migration-ledger-unknown-accepted 'Invariant PreparationSound is violated' MigrationLedger.tla
+
+run_tlc StartupGates.tla StartupGates.cfg startup-gates
+run_negative_tlc StartupGatesStagedAccepted.cfg startup-gates-staged-accepted 'The invariant of StartImpliesApproved is equal to FALSE' StartupGates.tla
+run_negative_tlc StartupGatesMissingAccepted.cfg startup-gates-missing-accepted 'The invariant of StartImpliesApproved is equal to FALSE' StartupGates.tla
+run_negative_tlc StartupGatesEitherRejected.cfg startup-gates-either-rejected 'The invariant of ApprovedStarts is equal to FALSE' StartupGates.tla
+run_negative_tlc StartupGatesRequiredUnchecked.cfg startup-gates-required-unchecked 'The invariant of StartImpliesApproved is equal to FALSE' StartupGates.tla
 run_tlc InvoiceReceipt.tla InvoiceReceipt.cfg invoicereceipt
 run_tlc ApplicationCanary.tla ApplicationCanary.cfg applicationcanary
 run_negative_tlc ApplicationCanaryNetwork.cfg applicationcanarynetwork 'Invariant NoProductionConnectivity is violated' ApplicationCanary.tla
@@ -403,6 +415,11 @@ run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
 run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+run_tlc TicketManualReview.tla TicketManualReview.cfg ticket-manual-review
+run_tlc TicketManualReview.tla TicketManualReviewLockReleasedGuarded.cfg ticket-manual-review-lock-released-guarded
+run_negative_tlc TicketManualReviewLockReleased.cfg ticket-manual-review-lock-released 'Invariant EveryoneAnswered is violated' TicketManualReview.tla
+run_negative_tlc TicketManualReviewSubmitterReviews.cfg ticket-manual-review-submitter-reviews 'Invariant NoSelfApproval is violated' TicketManualReview.tla
+run_negative_tlc TicketManualReviewLockReleasedUnguarded.cfg ticket-manual-review-lock-released-unguarded 'Invariant OnePayment is violated' TicketManualReview.tla
 run_tlc IndexDeclaration.tla IndexDeclaration.cfg index-declaration
 run_negative_tlc IndexDeclarationKeyUnique.cfg index-declaration-key-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla
 run_negative_tlc IndexDeclarationKeyTimeUnique.cfg index-declaration-key-time-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla
