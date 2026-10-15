@@ -135,10 +135,16 @@
         "scripts/lib/verification-evidence.mjs",
         "scripts/verify-system-evidence.mjs",
         ".github/workflows/event-operations-formal.yml",
-        "scripts/lib/formal-result-summary.mjs"
+        "scripts/lib/formal-result-summary.mjs",
+        "scripts/verification-report.py",
+        "formal/system/receipt-admission.md",
+        "scripts/install-proof-checkers.py",
+        "scripts/verify-proof-certificates.py",
+        "formal/system/certificate-tools.json",
+        "formal/system/proof-certificates.md"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof.",
-      "evidence": "formal CI source/result manifests and regression output",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks eight exact formula refutations, with six other certificate obligations UNPROVEN and all source/refinement limitations retained.",
+      "evidence": "formal CI source/result manifests and regression output; independent CPC result.json, exact SMT/proof/signature hashes, reference-binding and incompleteness controls",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -172,10 +178,13 @@
       "idempotency": "No additional runtime retry permission; repeat checks must bind to their actual inputs.",
       "failure": "Reject the invalid operation or verification result as defined by the mapped contract.",
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
-      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label.",
+      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label. The exact-candidate assurance report keeps PROVEN/REFUTED/UNPROVEN/NOT_APPLICABLE separate by evidence category; replayable arithmetic inputs cannot promote whole requirements or refinement. Release remains blocked with all critical gaps enumerated.",
       "tests": [
         "scripts/__tests__/verification-evidence.test.mjs",
-        "scripts/__tests__/formal-result-summary.test.mjs"
+        "scripts/__tests__/formal-result-summary.test.mjs",
+        "scripts/test-verification-report.py",
+        "formal/system/receipt-admission-counterexample.json",
+        "scripts/test-proof-certificates.py"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
@@ -1157,11 +1166,15 @@
       "implementation": [
         "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
         "tdf-hq/assets/feature-registry.json",
-        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "scripts/verify-auth-predicates.py"
       ],
       "tests": [
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
-        "scripts/audit-feature-registry.mjs"
+        "scripts/audit-feature-registry.mjs",
+        "scripts/test-auth-predicates.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -1177,7 +1190,7 @@
       "authority": "Existing RecordsIngestion backend strict-administrator and ModuleAdmin boundary",
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
-      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation.",
+      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation. Conditional source-derived authorization predicate equivalences and supporting cardinality lemmas: formal/system/auth-predicates.md. Full endpoint and refinement obligations remain UNPROVEN.",
       "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
     },
     {
@@ -1519,7 +1532,7 @@
         "reason": "Candidate repair and executable checks exist; exact final candidate runtime, full gates, review and deployment remain pending."
       },
       "source": "formal/system/identity-lifecycle.md; OWASP Forgot Password Cheat Sheet; source-derived absence of baseline expiry",
-      "verification": "Int64 properties, actual HTTP/PostgreSQL post-lock clock checks and injection failures, bounded model with four controls",
+      "verification": "Int64 properties, actual HTTP/PostgreSQL post-lock clock checks and injection failures, bounded model with four controls; four conditional source-derived SMT time contracts with serialized replay (full transaction/refinement UNPROVEN), finite PostgreSQL boundary probes",
       "evidence": "Exact-candidate gate receipts, bounded checker logs and HTTP runner output",
       "domain": "ID",
       "privacy": "Fixtures are synthetic and local; never log production tokens, hashes or customer details.",
@@ -1532,7 +1545,10 @@
         "tdf-hq/test/TDF/ServerSpec.hs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/provider-rollback.test.mjs",
-        "scripts/test-auth-recovery-migration.sh"
+        "scripts/test-auth-recovery-migration.sh",
+        "scripts/test-recovery-expiry-verifier.py",
+        "scripts/recovery-time-boundaries.py",
+        "scripts/test-recovery-time-postgres.sh"
       ],
       "id": "ID-SESSION-003",
       "title": "Recovery challenges expire and bind the exact credential",
@@ -1577,7 +1593,9 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
         "scripts/production-release.mjs",
-        "scripts/production-migrations.json"
+        "scripts/production-migrations.json",
+        "scripts/verify-recovery-expiry.py",
+        "formal/system/recovery-expiry-arithmetic.json"
       ]
     },
     {

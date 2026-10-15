@@ -136,10 +136,16 @@
         "scripts/lib/verification-evidence.mjs",
         "scripts/verify-system-evidence.mjs",
         ".github/workflows/event-operations-formal.yml",
-        "scripts/lib/formal-result-summary.mjs"
+        "scripts/lib/formal-result-summary.mjs",
+        "scripts/verification-report.py",
+        "formal/system/receipt-admission.md",
+        "scripts/install-proof-checkers.py",
+        "scripts/verify-proof-certificates.py",
+        "formal/system/certificate-tools.json",
+        "formal/system/proof-certificates.md"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof.",
-      "evidence": "formal CI source/result manifests and regression output",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks eight exact formula refutations, with six other certificate obligations UNPROVEN and all source/refinement limitations retained.",
+      "evidence": "formal CI source/result manifests and regression output; independent CPC result.json, exact SMT/proof/signature hashes, reference-binding and incompleteness controls",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -173,10 +179,13 @@
       "idempotency": "No additional runtime retry permission; repeat checks must bind to their actual inputs.",
       "failure": "Reject the invalid operation or verification result as defined by the mapped contract.",
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
-      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label.",
+      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label. The exact-candidate assurance report keeps PROVEN/REFUTED/UNPROVEN/NOT_APPLICABLE separate by evidence category; replayable arithmetic inputs cannot promote whole requirements or refinement. Release remains blocked with all critical gaps enumerated.",
       "tests": [
         "scripts/__tests__/verification-evidence.test.mjs",
-        "scripts/__tests__/formal-result-summary.test.mjs"
+        "scripts/__tests__/formal-result-summary.test.mjs",
+        "scripts/test-verification-report.py",
+        "formal/system/receipt-admission-counterexample.json",
+        "scripts/test-proof-certificates.py"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
@@ -1158,11 +1167,15 @@
       "implementation": [
         "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
         "tdf-hq/assets/feature-registry.json",
-        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "scripts/verify-auth-predicates.py"
       ],
       "tests": [
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
-        "scripts/audit-feature-registry.mjs"
+        "scripts/audit-feature-registry.mjs",
+        "scripts/test-auth-predicates.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -1178,7 +1191,7 @@
       "authority": "Existing RecordsIngestion backend strict-administrator and ModuleAdmin boundary",
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
-      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation.",
+      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation. Conditional source-derived authorization predicate equivalences and supporting cardinality lemmas: formal/system/auth-predicates.md. Full endpoint and refinement obligations remain UNPROVEN.",
       "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
     },
     {
@@ -1520,7 +1533,7 @@
         "reason": "Candidate repair and executable checks exist; exact final candidate runtime, full gates, review and deployment remain pending."
       },
       "source": "formal/system/identity-lifecycle.md; OWASP Forgot Password Cheat Sheet; source-derived absence of baseline expiry",
-      "verification": "Int64 properties, actual HTTP/PostgreSQL post-lock clock checks and injection failures, bounded model with four controls",
+      "verification": "Int64 properties, actual HTTP/PostgreSQL post-lock clock checks and injection failures, bounded model with four controls; four conditional source-derived SMT time contracts with serialized replay (full transaction/refinement UNPROVEN), finite PostgreSQL boundary probes",
       "evidence": "Exact-candidate gate receipts, bounded checker logs and HTTP runner output",
       "domain": "ID",
       "privacy": "Fixtures are synthetic and local; never log production tokens, hashes or customer details.",
@@ -1533,7 +1546,10 @@
         "tdf-hq/test/TDF/ServerSpec.hs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/provider-rollback.test.mjs",
-        "scripts/test-auth-recovery-migration.sh"
+        "scripts/test-auth-recovery-migration.sh",
+        "scripts/test-recovery-expiry-verifier.py",
+        "scripts/recovery-time-boundaries.py",
+        "scripts/test-recovery-time-postgres.sh"
       ],
       "id": "ID-SESSION-003",
       "title": "Recovery challenges expire and bind the exact credential",
@@ -1578,7 +1594,9 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
         "scripts/production-release.mjs",
-        "scripts/production-migrations.json"
+        "scripts/production-migrations.json",
+        "scripts/verify-recovery-expiry.py",
+        "formal/system/recovery-expiry-arithmetic.json"
       ]
     },
     {
@@ -9913,7 +9931,7 @@
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci.yml": "bd53987b42af93029c3f3b71ccfe800bf631678b7c299eb078834a60e3a5c0b3",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
+    ".github/workflows/event-operations-formal.yml": "a4aa1386f2eed30a5fdf15e43804c3a7d7d6621add4c1e7d52d59bf16e52169e",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -10077,8 +10095,13 @@
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
+    "formal/system/certificate-tools.json": "4082359a048ca64c39e40df31ee9fbf6aee35496a92ce40f2a2356478e75da44",
     "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
+    "formal/system/proof-certificates.md": "bf02d5a72f4337080b7ff18e94da3f5b7857a3fcdb575979a76d1ac97718ca46",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
+    "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
+    "formal/system/receipt-admission.md": "576c96dec2b58b447a96e047a1aad93f02f8c1b6bd589f5ee130be230215b0dd",
+    "formal/system/recovery-expiry-arithmetic.json": "e08bf9b4373381ab605521aabe7e5dfe2d30a6b2e3709e9a8de7f3aad7ffcc6f",
     "formal/system/state-machine-bindings.json": "33b63d2076dc6bf55f812bd12b8eadd93cd9aa1a85966ca38ddadb1ca5b45655",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -10178,6 +10201,7 @@
     "scripts/get-instagram-token.mjs": "0b00f6cc1ad6793f029339bc006ed520245af87ea55e285658faf48ba978e592",
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
+    "scripts/install-proof-checkers.py": "1a14b7fa50dd6666db4a0fd5feb8e6993104a779b019b7a0dfd3562cf37736bb",
     "scripts/install-recovery-tools.py": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
     "scripts/interactions/test-api.py": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
     "scripts/interactions/test-http.sh": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
@@ -10185,7 +10209,7 @@
     "scripts/lib/disposable-postgres-url.mjs": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
-    "scripts/lib/hetzner-preparation.mjs": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
+    "scripts/lib/hetzner-preparation.mjs": "3fd7f1cbdc667677e1d6a11619976a0b44ed4897b2f196b390f28fede4f3c6fc",
     "scripts/lib/invoice_receipt_conformance.py": "c83a551fadd81cfe006dd6bc59f3a9f20ffea17629144efd9aba5d47e8cfa544",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/music-api-s3-probe.mjs": "8972e841d5ff83f6abfbf8f5a51d66e64e7be1290dfa49c67e76400824ffb105",
@@ -10218,6 +10242,7 @@
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "a5041669e3881d019e35512e8b4e7febcc2ebd98ebea0d3eb05568ea9f0f83c8",
+    "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/run-music-release-worker-once.sh": "9674d11b9ae0f8932047a35db3fc77908d65bc46b5a495425d2bc8a1758ba625",
@@ -10234,6 +10259,7 @@
     "scripts/test-artist-invitation-auto-approval-migration.sh": "e3fb40179c83358082f9cb82afaa7950c6ceb019af862e7eea4e12ed09df83aa",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
+    "scripts/test-auth-predicates.py": "c44fd9520009dc319638af969414b93745d0d02108723a8a968f1f4bc51a4646",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
@@ -10272,11 +10298,14 @@
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
+    "scripts/test-proof-certificates.py": "6b0e3ef92a08c150ff50df58e761c07ecfb5aa1e06a4c0856861ae8db41b55e5",
     "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
+    "scripts/test-recovery-expiry-verifier.py": "afe155fe8ecc3616747f3c26094a952aaa9183462513831911eff4f84d6e9a3a",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
+    "scripts/test-recovery-time-postgres.sh": "34703ff50f843b680b065aaf1538092c77ed56c8385865676cf8b8ef922f2d73",
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
     "scripts/test-release-journal.py": "498c638af45f323fa86f9b98819fda85768dc7d173d3ce969922b8beaa570e32",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
@@ -10292,19 +10321,24 @@
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
+    "scripts/test-verification-report.py": "7d5cc2790447231cc8e0fbfe35db445fc31e7485df9e4ed03e4ce120545ac2c1",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
+    "scripts/verification-report.py": "a50488742ef8719a32fc64a4bac93d532db5a010ae0f9160857d2cb869a8462a",
+    "scripts/verify-auth-predicates.py": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
     "scripts/verify-event-operations-formal.sh": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
-    "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
+    "scripts/verify-payment-arithmetic.py": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
+    "scripts/verify-proof-certificates.py": "d7ece3270a02a465d61e4ea7081aa86f464abc3b6eff04367cbc2f050726d07e",
     "scripts/verify-readiness.py": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
+    "scripts/verify-recovery-expiry.py": "9d13c03cb82102530b3163e3f0dd3893ce1ff60bddba8ff6a96bcae74fe9947d",
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
     "scripts/verify-system-evidence.mjs": "09fda1a80dd1f221b5bb4521dc8d81af794bd166f67ea811a676251009a8eb1b",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
@@ -11089,6 +11123,42 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/verification-report.py": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/system/receipt-admission.md": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/install-proof-checkers.py": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/verify-proof-certificates.py": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/system/certificate-tools.json": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/system/proof-certificates.md": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/verification-evidence.test.mjs": [
       {
         "requirement": "SYS-VERIFY-002",
@@ -11096,6 +11166,24 @@
       }
     ],
     "scripts/__tests__/formal-result-summary.test.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-verification-report.py": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "tests"
+      }
+    ],
+    "formal/system/receipt-admission-counterexample.json": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-proof-certificates.py": [
       {
         "requirement": "SYS-VERIFY-002",
         "relationship": "tests"
@@ -11725,6 +11813,56 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Auth.hs": [
+      {
+        "requirement": "AUTH-REGISTRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-SESSION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-SESSION-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-RADIO-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-SUBJECT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Models.hs": [
+      {
+        "requirement": "AUTH-REGISTRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/verify-auth-predicates.py": [
+      {
+        "requirement": "AUTH-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/features/featureRegistry.test.ts": [
       {
         "requirement": "AUTH-REGISTRY-001",
@@ -11736,6 +11874,12 @@
       }
     ],
     "scripts/audit-feature-registry.mjs": [
+      {
+        "requirement": "AUTH-REGISTRY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-auth-predicates.py": [
       {
         "requirement": "AUTH-REGISTRY-001",
         "relationship": "tests"
@@ -11909,32 +12053,6 @@
         "relationship": "formalModels"
       }
     ],
-    "tdf-hq/src/TDF/Auth.hs": [
-      {
-        "requirement": "ID-SESSION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ID-SESSION-002",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-RADIO-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "COURSE-SUBJECT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-INTAKE-001",
-        "relationship": "implementation"
-      }
-    ],
     "tdf-hq/src/TDF/ServerAdmin.hs": [
       {
         "requirement": "ID-SESSION-001",
@@ -12043,6 +12161,18 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/verify-recovery-expiry.py": [
+      {
+        "requirement": "ID-SESSION-003",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/system/recovery-expiry-arithmetic.json": [
+      {
+        "requirement": "ID-SESSION-003",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-auth-recovery-migration.sh": [
       {
         "requirement": "ID-SESSION-003",
@@ -12051,6 +12181,24 @@
       {
         "requirement": "SYS-VERIFY-004",
         "relationship": "implementation"
+      }
+    ],
+    "scripts/test-recovery-expiry-verifier.py": [
+      {
+        "requirement": "ID-SESSION-003",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/recovery-time-boundaries.py": [
+      {
+        "requirement": "ID-SESSION-003",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-recovery-time-postgres.sh": [
+      {
+        "requirement": "ID-SESSION-003",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/RecoveryExpiry.tla": [
@@ -14778,16 +14926,6 @@
     "tdf-hq/src/TDF/Invoice/Receipt.hs": [
       {
         "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/Models.hs": [
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DATA-INDEX-DECLARATION-001",
         "relationship": "implementation"
       }
     ],
@@ -18608,7 +18746,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
+      "sha256": "a4aa1386f2eed30a5fdf15e43804c3a7d7d6621add4c1e7d52d59bf16e52169e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20903,6 +21041,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-37ed76fba61da70f",
+      "path": "scripts/install-proof-checkers.py",
+      "sha256": "1a14b7fa50dd6666db4a0fd5feb8e6993104a779b019b7a0dfd3562cf37736bb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-b85e7ba1c3709ca8",
       "path": "scripts/install-recovery-tools.py",
       "sha256": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
@@ -21077,7 +21227,7 @@
     {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
-      "sha256": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
+      "sha256": "3fd7f1cbdc667677e1d6a11619976a0b44ed4897b2f196b390f28fede4f3c6fc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21775,6 +21925,18 @@
       "sha256": "772a4b1cf24f007f9e5bbc0830fae4ed8f2ef1e7498f0f4583690005d4f82d06",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-14ce85c394623bc5",
+      "path": "scripts/recovery-time-boundaries.py",
+      "sha256": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-SESSION-003",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0210b80fb6caf081",
@@ -22477,6 +22639,18 @@
       "requirements": [
         {
           "requirement": "AUTH-ACCESS-PROVISION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-fc4c2b80fce6f504",
+      "path": "scripts/test-auth-predicates.py",
+      "sha256": "c44fd9520009dc319638af969414b93745d0d02108723a8a968f1f4bc51a4646",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-REGISTRY-001",
           "relationship": "tests"
         }
       ]
@@ -23341,6 +23515,18 @@
       ]
     },
     {
+      "id": "SURFACE-8e3764761ce42dca",
+      "path": "scripts/test-proof-certificates.py",
+      "sha256": "6b0e3ef92a08c150ff50df58e761c07ecfb5aa1e06a4c0856861ae8db41b55e5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-3c9e2b2fae1ee373",
       "path": "scripts/test-provider-event-operations-migration.sh",
       "sha256": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
@@ -23466,6 +23652,18 @@
       ]
     },
     {
+      "id": "SURFACE-8cb7488112ea1390",
+      "path": "scripts/test-recovery-expiry-verifier.py",
+      "sha256": "afe155fe8ecc3616747f3c26094a952aaa9183462513831911eff4f84d6e9a3a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-SESSION-003",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-74baba1704e4a65f",
       "path": "scripts/test-recovery-files.py",
       "sha256": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
@@ -23473,6 +23671,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-4f9c68275e359475",
+      "path": "scripts/test-recovery-time-postgres.sh",
+      "sha256": "34703ff50f843b680b065aaf1538092c77ed56c8385865676cf8b8ef922f2d73",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-SESSION-003",
           "relationship": "tests"
         }
       ]
@@ -23741,6 +23951,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-896ad45b385c665d",
+      "path": "scripts/test-verification-report.py",
+      "sha256": "7d5cc2790447231cc8e0fbfe35db445fc31e7485df9e4ed03e4ce120545ac2c1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-306ef04f302e88df",
       "path": "scripts/test-verified-experience-reviews-migration.sh",
       "sha256": "b0f35c6a469f8e3a7cc3c9db787bb73f05579eecd12219d6face386fa573e9e2",
@@ -23835,6 +24057,30 @@
       "sha256": "2e0188a0da35648c977a692ebc35a58e01aac2c454ba3f7ee65b4ad7c166f528",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-3383da3a4aa57dc1",
+      "path": "scripts/verification-report.py",
+      "sha256": "a50488742ef8719a32fc64a4bac93d532db5a010ae0f9160857d2cb869a8462a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b79d0bcd7aa10957",
+      "path": "scripts/verify-auth-predicates.py",
+      "sha256": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-REGISTRY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8b6766b7ee7590fd",
@@ -24006,7 +24252,7 @@
     {
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
-      "sha256": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
+      "sha256": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24020,6 +24266,18 @@
       ]
     },
     {
+      "id": "SURFACE-d8f74623732a7a92",
+      "path": "scripts/verify-proof-certificates.py",
+      "sha256": "d7ece3270a02a465d61e4ea7081aa86f464abc3b6eff04367cbc2f050726d07e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d633e5d8beb4a8d8",
       "path": "scripts/verify-readiness.py",
       "sha256": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
@@ -24028,6 +24286,18 @@
         {
           "requirement": "DEPLOY-READINESS-001",
           "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-bbad9cbeb80c7494",
+      "path": "scripts/verify-recovery-expiry.py",
+      "sha256": "9d13c03cb82102530b3163e3f0dd3893ce1ff60bddba8ff6a96bcae74fe9947d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-SESSION-003",
+          "relationship": "implementation"
         }
       ]
     },
@@ -35065,6 +35335,10 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
+          "requirement": "AUTH-REGISTRY-001",
+          "relationship": "implementation"
+        },
+        {
           "requirement": "ID-SESSION-001",
           "relationship": "implementation"
         },
@@ -35997,6 +36271,10 @@
       "sha256": "ea779e770eecdec1391b130137642a4839e0585db40dd0ffe2dfedbd0dabcf1f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-REGISTRY-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "PAY-INVOICE-001",
           "relationship": "implementation"
@@ -44904,7 +45182,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
+      "sourceSha256": "5faf4f3c425d2d257bcdaf070b8aae51959e4ec2fa03ce83920375cfe5fbcd1b",
       "definition": {
         "states": [
           "absent",
