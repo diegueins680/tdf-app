@@ -22,9 +22,6 @@ jobs:
     services:
       postgres:
         image: pgvector/pgvector:pg17
-        credentials:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: local-ci-only

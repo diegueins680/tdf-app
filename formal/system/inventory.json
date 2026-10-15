@@ -2637,13 +2637,13 @@
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
+      "sha256": "83cb1fc70d4cd7cbebc540eeee25093b578f463d5dfb892924c6f0683707212a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e705d7e36f8b46d9",
       "path": ".github/workflows/interaction-verification.yml",
-      "sha256": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
+      "sha256": "5c812f5a50e54395e87c5ecf2209cc2ec47158cc97849bb16edf394764904513",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2661,7 +2661,7 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
+      "sha256": "2296b25573ac27eb67fc51dd996a03e816471c0fb30cecd3746d21f0b8d3792d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25120,7 +25120,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "20769e2af6a022ad817fe06619b2b4aefcc846afc0e80908287a636493d6a2c0",
+      "sha256": "bf3d2fade067bc474e68232fc36945c2e2458c997945e3bddf03c892d3a198d5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
