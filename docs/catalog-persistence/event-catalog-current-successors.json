@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "a8128668e1b74b7c0ae4",
+      "currentId": "553655ba2d36ed6adee2",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 206,
-      "change": "Combine both additive music migrations after the unchanged 204-entry historical prefix; preserve both introduction commits and historical review provenance.",
+      "valueCount": 207,
+      "change": "Keep the unchanged204-entry historical prefix; apply enabled-only Operations capture policy, then locked music outcome repair and exact-money encoding. Preserve all introductions and review provenance; retain retention/release/activation gates.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "5f2e374ddc077e6b8418",
