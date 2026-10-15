@@ -797,6 +797,18 @@
       "conflict": "Earlier dependency notes asserted current React Navigation/Expo incoming query parsing reached decoder0.2.2 and left0.5 compatibility unresolved. Fresh exact-version source inspection shows different incoming parsers, while query-string7 still installs and exposes the affected decoder; a direct0.5 override is not a callable CommonJS export.",
       "authority": "The user-authorized security repair preserves supported caller behavior and follows the maintainer fix; fresh version-bound source and actual-consumer tests govern reachability claims rather than historical prose.",
       "resolution": "Pin unchanged upstream0.5.0 under an explicit npm alias, bind query-string7 to a private callable adapter through a root dependency-reference override, retain actual old-release and namespace negative controls, and narrow the old active attack-path claim. This neither weakens audit gates nor authorizes native distribution."
+    },
+    {
+      "id": "AUTHORITY-RUNTIME-FLAG-ABSENCE-001",
+      "sources": [
+        "ops/hetzner/inspect-runtime.py",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Cors.hs",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "Runtime receipts included configured suffix flags but omitted many known absent controls, privacy/SMTP controls and alternate CORS boolean names. Silence could not establish disabled state or effective defaults.",
+      "authority": "DEPLOY-OBSERVE-001 requires explicit unknowns and source-bound read-only observation.",
+      "resolution": "Expand the absence register and make conservative backend literal discovery part of the existing inspection boundary gate. Preserve raw presence, empty values and absence; do not infer effective values from candidate defaults or activate any feature."
     }
   ]
 }

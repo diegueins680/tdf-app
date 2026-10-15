@@ -1101,7 +1101,7 @@
       "formalModels": [],
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for finite middleware cases and observed configuration; deployed correction pending.",
+      "confidence": "High for finite middleware cases; October13 configuration and two health-origin requests observed. Full deployed contract remains unverified.",
       "ambiguity": [
         "Endpoint CSRF defenses and every alternate deployment environment are not established by these CORS tests."
       ],
@@ -1113,7 +1113,7 @@
       "property": "Production credentialed origin admission requires an explicitly trusted origin; arbitrary origins cannot reach the handler.",
       "contract": "formal/system/cors-boundary.md",
       "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins.",
-      "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts."
+      "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts. October13 runtime configuration and two health-origin smoke observations are retained in formal/system/evidence/2026-10-13-runtime-controls/; they supersede the October4 allow-all observation for that instant."
     },
     {
       "id": "AUTH-REGISTRY-001",
@@ -2225,9 +2225,9 @@
       "idempotency": "Read-only repeat observations do not mutate application state. Exclusive receipt creation rejects accidental overwrite.",
       "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider.",
       "recovery": "Retry observation after authorized configuration correction; retain previous receipts. No database restoration or image rollback is performed.",
-      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata.",
+      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata. Known backend boolean controls must be represented even when absent; record CORS boolean aliases and preserve absent/empty/false distinctions. Conservative source discovery must reject newly introduced literal controls missing from the collector register.",
       "formalModels": [],
-      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established.",
+      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established. Boolean discovery includes literal parser-wrapped lookups without a naming suffix; preparation accepts collector-valid raw spellings while requiring explicitly false destructive flags. Synthetic regressions only; this does not evaluate per-handler defaults or whitespace semantics.",
       "evidence": "Exact-revision inspection receipt and repository quality-gate logs.",
       "status": "specified and implemented",
       "confidence": "High within read-only target/disclosure guard scope; routine guarded release remains unimplemented.",
@@ -2235,7 +2235,8 @@
         "Absent environment variables need effective-default analysis.",
         "Container image/public version observations require artifact metadata correspondence before release.",
         "Optional event-operations flag-table absence and missing merchandise flag rows remain explicit unknowns; observed flag state alone is not authorization to enable or mount features.",
-        "The catalog-role SQL requires separately authorized provisioning; read-only monitoring does not authorize sending mail, suppressing recipients or modifying application records."
+        "The catalog-role SQL requires separately authorized provisioning; read-only monitoring does not authorize sending mail, suppressing recipients or modifying application records.",
+        "Lexical boolean discovery excludes computed environment names and does not resolve effective defaults or CORS alias precedence; that analysis must use the observed backend revision."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2251,14 +2252,16 @@
         "scripts/production_access.py",
         "scripts/production-catalog-inventory.mjs",
         "ops/hetzner/catalog-readonly-role.sql",
-        "scripts/mail-deliverability-monitor.py"
+        "scripts/mail-deliverability-monitor.py",
+        "scripts/lib/hetzner-preparation.mjs"
       ],
       "tests": [
         "scripts/test-hetzner-inspection.py",
         "scripts/__tests__/hetzner-inspection.test.mjs",
         "scripts/test_production_access.py",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
-        "scripts/test_mail_deliverability_monitor.py"
+        "scripts/test_mail_deliverability_monitor.py",
+        "scripts/__tests__/hetzner-preparation.test.mjs"
       ],
       "critical": false
     },
@@ -3151,7 +3154,7 @@
       "critical": true,
       "ambiguity": [
         "Full upload lifecycle, DB/file atomicity, retries, retention, quotas and deletion require separate reconciliation.",
-        "Production storage rollout and coordinated backup/restore remain unimplemented and unverified."
+        "Canonical writable production bind observed October13; legacy file preservation, deployed startup admission and coordinated backup/restore remain unverified."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3161,7 +3164,7 @@
       "property": "Production starts only after private upload storage admission, and replacement preserves accepted legacy files.",
       "contract": "formal/system/private-upload-persistence.md",
       "verification": "Actual shell negative controls, digest-pinned synthetic Linux container replacement, redacted production mount inspection and guarded coordinated recovery verification.",
-      "evidence": "Exact-revision CI logs and private runtime receipts; current production observation is nonconforming, not repaired by source edits."
+      "evidence": "The October13 source-bound runtime receipt at formal/system/evidence/2026-10-13-runtime-controls/runtime.json observes the canonical writable private bind. It supersedes the October5 missing-mount observation, not the remaining preservation, startup, file-access and recovery obligations."
     },
     {
       "id": "SYS-API-003",

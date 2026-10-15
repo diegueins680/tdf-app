@@ -33,10 +33,17 @@ export function prepareHetznerRelease({ contract, receipt, provenance, now = Dat
   }
   requireFact(snapshot.containers.db.volume === 'tdf_production_postgres_data', 'Wrong production database volume');
   const observedFlags = snapshot.containers.api.booleanConfiguration;
-  requireFact(observedFlags && Object.values(observedFlags).every(value => ['true', 'false'].includes(value)),
-    'Invalid observed flag state');
-  requireFact(observedFlags.RUN_MIGRATIONS === 'false' && observedFlags.RESET_DB === 'false'
-    && observedFlags.SEED_DB === 'false', 'Unsafe automatic schema or destructive runtime flag');
+  // Preserve the collector's raw observations: individual backend parsers have
+  // different whitespace/default rules, so this is not an effective-state claim.
+  requireFact(observedFlags && Object.entries(observedFlags).every(([name, value]) => {
+    if (typeof value !== 'string' || value.length > 256) return false;
+    const spelling = value.trim().toLowerCase();
+    const cors = /^(?:ALLOW_ALL_ORIGINS|CORS_ALLOW_ALL_ORIGINS|CORS_DISABLE_DEFAULTS|DISABLE_DEFAULT_CORS)$/.test(name);
+    return /^(?:true|false|1|0|yes|no|on|off)?$/.test(spelling) || (cors && spelling === '*');
+  }), 'Invalid observed flag state');
+  const explicitlyFalse = value => typeof value === 'string' && /^(?:false|0|no|off)$/i.test(value.trim());
+  requireFact(explicitlyFalse(observedFlags.RUN_MIGRATIONS) && explicitlyFalse(observedFlags.RESET_DB)
+    && explicitlyFalse(observedFlags.SEED_DB), 'Unsafe automatic schema or destructive runtime flag');
   const migrations = reconcileMigrationLedger(contract, database.migrations);
   return {
     schemaVersion: 1, status: 'prepared-not-authorized', executionAllowed: false,
