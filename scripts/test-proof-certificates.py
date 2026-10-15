@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Admission regressions; optional real Ethos controls use PROOF_CHECKER_TOOLS."""
 import importlib.util
+import json
 import os
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location('certificates', Path(__file__).with_name('verify-proof-certificates.py'))
 certificates = importlib.util.module_from_spec(spec)
@@ -69,6 +71,50 @@ class Admission(unittest.TestCase):
 
 @unittest.skipUnless(os.environ.get('PROOF_CHECKER_TOOLS'), 'Set PROOF_CHECKER_TOOLS for real independent-checker controls')
 class RealChecker(unittest.TestCase):
+    def test_reuse_requires_identical_formulas_and_preserves_obligation_ids(self):
+        # Real producer/checker, synthetic proof inputs and explicitly mocked
+        # provenance: exercises receipt admission, not application conformance.
+        tools = Path(os.environ['PROOF_CHECKER_TOOLS']).resolve()
+        provenance = {'revision': 'synthetic-certificate-reuse-fixture', 'worktreeDirty': True}
+        with tempfile.TemporaryDirectory(prefix='tdf-certificate-reuse-') as directory:
+            root = Path(directory)
+            for mutated in (False, True):
+                with self.subTest(mutated=mutated):
+                    report = root/('mutated' if mutated else 'identical')
+                    report.mkdir()
+                    hashes = {}
+                    for suite, expectations in certificates.EXPECTATIONS.items():
+                        (report/suite).mkdir()
+                        for identity, expected in expectations.items():
+                            text = INPUT if expected == 'unsat' else INPUT.replace('(< x x)', '(= x x)')
+                            if mutated and (suite, identity) == ('arithmetic', 'refund-safety'):
+                                text = INPUT.replace('(< x x)', '(< x (+ x 1))')
+                            key = suite+'/'+identity+'.smt2'
+                            (report/key).write_text(text)
+                            hashes[key] = certificates.sha(text.encode())
+                    (report/'report.json').write_text(json.dumps({'provenance': provenance,
+                        'execution': {'passed': True}, 'evidenceHashes': hashes}))
+                    with patch.object(certificates.assurance, 'fingerprint', return_value=provenance):
+                        result = certificates.run(report, tools, root/('changed-output' if mutated else 'same-output'))
+                    rows = {entry['id']: entry for entry in result['certificates']}
+                    if not mutated:
+                        self.assertTrue(result['executionPassed'], result['error'])
+                        self.assertEqual(len(rows), 14)
+                        self.assertTrue(all(entry['status'] == 'PROVEN' for entry in rows.values()))
+                        self.assertEqual(result['metrics']['independentlyCheckedDistinctInputs'], 1)
+                        self.assertEqual(sum('reusedFrom' in entry for entry in rows.values()), 13)
+                        self.assertNotEqual(rows['arithmetic:capture-safety']['sourceObligationIds'],
+                                            rows['arithmetic:refund-safety']['sourceObligationIds'])
+                        for suite, names in certificates.CERTIFICATES.items():
+                            for name in names:
+                                entry = rows[suite+':'+name]
+                                self.assertEqual(entry['input'], suite+'/'+name+'.smt2')
+                    else:
+                        self.assertFalse(result['executionPassed'])
+                        self.assertEqual(rows['arithmetic:refund-safety']['status'], 'UNPROVEN')
+                        self.assertNotIn('reusedFrom', rows['arithmetic:refund-safety'])
+                        self.assertIsNotNone(result['error'])
+
     def test_false_assumption_trust_and_empty_proof_are_not_certificates(self):
         tools = Path(os.environ['PROOF_CHECKER_TOOLS']).resolve()
         with tempfile.TemporaryDirectory(prefix='tdf-certificate-controls-') as directory:

@@ -2636,7 +2636,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "6cc5ba6bf686982fd3f746535aafa4b96fdcb144a9a35947dc87596df6e43065",
+      "sha256": "028f4ef32fcab6b9e3352d31b3f5e362809971436dbcce264f08d30d2e964acc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5420,7 +5420,7 @@
     {
       "id": "SURFACE-8e3764761ce42dca",
       "path": "scripts/test-proof-certificates.py",
-      "sha256": "6b0e3ef92a08c150ff50df58e761c07ecfb5aa1e06a4c0856861ae8db41b55e5",
+      "sha256": "87c9a0da68e682c20ae86e6cefed5be38d6d38f78399ad60cbcfabaf8fd300cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5774,7 +5774,7 @@
     {
       "id": "SURFACE-d8f74623732a7a92",
       "path": "scripts/verify-proof-certificates.py",
-      "sha256": "d7ece3270a02a465d61e4ea7081aa86f464abc3b6eff04367cbc2f050726d07e",
+      "sha256": "d14c09e243b543d61169113050c73ee2fc6e11b051d2ecc4abf840afffb69899",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24567,7 +24567,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "b023c819ff21bac260aa466e27ea3c04c37676ebbd7ccc0535baed5bb4ff4d1e",
+      "sha256": "5fdc6bce558b45f46814e0c5f604cb05bc47e477f47745727c67eb305eab8ea4",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24581,7 +24581,7 @@
     },
     {
       "path": "formal/system/assurance-report.md",
-      "sha256": "e4fb7513ba03215c20490c12aee423297f4b9f82495d5c3c12c31dc0e448387a",
+      "sha256": "fe8b5b9b48136eae3359c7be2e330fc4c598f2176f0e05497f3ef25e94113caa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24882,7 +24882,7 @@
     },
     {
       "path": "formal/system/proof-certificates.md",
-      "sha256": "bf02d5a72f4337080b7ff18e94da3f5b7857a3fcdb575979a76d1ac97718ca46",
+      "sha256": "d6e047ab17d93679b864a67809e3a9de9489ab1b90def061bd11f2900d4c80c1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24945,7 +24945,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "5faf4f3c425d2d257bcdaf070b8aae51959e4ec2fa03ce83920375cfe5fbcd1b",
+      "sha256": "d100615651f31d5eb501e026f6fd6609a728c7fca15c43693e548031a77ae3da",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -19,7 +19,7 @@ jobs:
   specification-contracts:
     runs-on: ubuntu-latest
     # Step budgets leave time to archive failed or incomplete verification.
-    timeout-minutes: 90
+    timeout-minutes: 110
     steps:
       - uses: actions/checkout@v7
         timeout-minutes: 3
@@ -88,7 +88,7 @@ jobs:
         timeout-minutes: 8
         run: python scripts/install-proof-checkers.py --output "${{ runner.temp }}/proof-checkers"
       - name: Independently check SMT inputs and CPC refutations
-        timeout-minutes: 15
+        timeout-minutes: 35
         run: |
           PROOF_CHECKER_TOOLS="${{ runner.temp }}/proof-checkers" python scripts/test-proof-certificates.py
           python scripts/verify-proof-certificates.py --report "${{ runner.temp }}/assurance-report" --tools "${{ runner.temp }}/proof-checkers" --output "${{ runner.temp }}/proof-certificates"

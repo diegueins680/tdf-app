@@ -16,8 +16,9 @@ spec = importlib.util.spec_from_file_location('assurance', ROOT/'scripts/verific
 assurance = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(assurance)
 CERTIFICATES = {
+    'arithmetic': tuple(name for name, expected in assurance.ARITHMETIC_EXPECTATIONS.items() if expected == 'unsat'),
     'authorization': assurance.AUTHORIZATION_CLAIMS + assurance.AUTHORIZATION_LEMMAS,
-    'recovery': ('schema-correspondence', 'issuance-exact'),
+    'recovery': assurance.RECOVERY_CLAIMS,
 }
 EXPECTATIONS = {'arithmetic': assurance.ARITHMETIC_EXPECTATIONS,
                 **{k: v['expectations'] for k, v in assurance.SUITES.items()}}
@@ -157,6 +158,7 @@ def run(report_dir, tools, out):
         shutil.copytree(signatures, retained_signatures)
         receipt['toolchain'] = installation
         passed = True
+        checked_formulas = {}  # Only byte-identical inputs in this fresh run can share a refutation.
         for suite, expectations in EXPECTATIONS.items():
             directory = out/suite
             directory.mkdir()
@@ -176,24 +178,39 @@ def run(report_dir, tools, out):
                 passed = passed and matched
                 if identity not in CERTIFICATES.get(suite, ()):
                     continue
-                entry = {'id': suite+':'+identity, 'status': 'UNPROVEN', 'inputSha256': sha(target.read_bytes())}
+                problem = target.read_bytes()
+                entry = {'id': suite+':'+identity, 'status': 'UNPROVEN',
+                         'input': str(target.relative_to(out)), 'inputSha256': sha(problem)}
                 receipt['certificates'].append(entry)
+                previous = checked_formulas.get(problem)
+                if previous is not None:
+                    # The original proof references identical bytes. Its checked
+                    # refutation applies to this formula too; preserve each
+                    # obligation's own ID/input and disclose the shared proof.
+                    entry.update({k: v for k, v in previous.items() if k not in ('id', 'input')})
+                    entry['reusedFrom'] = previous['id']
+                    continue
                 # Even generation errors must leave the attempted obligation UNPROVEN.
-                result = execute([str(tools/'cvc5'), '--lang=smt2', '--tlimit=30000',
+                result = execute([str(tools/'cvc5'), '--lang=smt2', '--tlimit=120000',
                     '--produce-proofs', '--dump-proofs', '--proof-format-mode=cpc',
-                    '--proof-granularity=dsl-rewrite', '--no-proof-allow-trust', str(target)], target.with_suffix('.generation'))
+                    '--proof-granularity=dsl-rewrite', '--no-proof-allow-trust', str(target)], target.with_suffix('.generation'), timeout=135)
                 if result.returncode != 0 or result.stderr:
                     raise ValueError('Certificate generation failed: '+entry['id'])
                 proof = directory/(identity+'.cpc')
                 proof.write_text(f'(include "../signatures/Cpc.eo")\n(reference "{target.name}")\n' +
                                  bind_certificate(result.stdout, target.read_text()))
-                checked = execute([str(tools/'ethos'), str(proof)], proof)
+                proof_hash = sha(proof.read_bytes())
+                checked = execute([str(tools/'ethos'), str(proof)], proof, timeout=600)
+                if sha(proof.read_bytes()) != proof_hash:
+                    raise ValueError('Certificate changed during checking')
                 complete = checked.returncode == 0 and checked.stdout.strip() == 'correct' and not checked.stderr
                 entry.update(status='PROVEN' if complete else 'UNPROVEN',
-                             proof=str(proof.relative_to(out)), proofSha256=sha(proof.read_bytes()),
+                             proof=str(proof.relative_to(out)), proofSha256=proof_hash,
                              checkerOutput=checked.stdout, checkerExitCode=checked.returncode,
                              scope='Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged')
                 passed = passed and complete
+                if complete:
+                    checked_formulas[problem] = dict(entry)
         if assurance.fingerprint(requirements) != before:
             raise ValueError('Sources changed during verification')
         if sha((report_dir/'report.json').read_bytes()) != receipt['reportSha256']:
@@ -205,6 +222,9 @@ def run(report_dir, tools, out):
         for name, expected in installation['binaries'].items():
             if sha((tools/name).read_bytes()) != expected:
                 raise ValueError('Proof tool changed during verification')
+        for entry in receipt['certificates']:
+            if entry.get('proof') and sha((out/entry['proof']).read_bytes()) != entry['proofSha256']:
+                raise ValueError('Retained certificate changed during verification')
         for directory in (signatures, retained_signatures):
             hashes = {str(p.relative_to(directory)): sha(p.read_bytes())
                       for p in sorted(directory.rglob('*')) if p.is_file() and not p.is_symlink()}
@@ -243,6 +263,8 @@ def run(report_dir, tools, out):
     counts = Counter(entry['status'] for entry in receipt['certificates'] + receipt['pendingCertificateObligations'])
     receipt['metrics'] = {'crossSolverInputsExpected': sum(len(e) for e in EXPECTATIONS.values()),
                           'crossSolverInputsMatched': sum(e['matched'] for e in receipt['crossSolver']),
+                          'independentlyCheckedDistinctInputs': len({e['proofSha256'] for e in receipt['certificates']
+                                                                     if e['status'] == 'PROVEN'}),
                           'certificateObligations': {s: counts[s] for s in assurance.STATUSES}}
     (out/'result.json').write_text(json.dumps(receipt, indent=2)+'\n')
     return receipt
