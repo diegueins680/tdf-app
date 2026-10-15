@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "bab53c1be046268ad206",
+      "currentId": "a8128668e1b74b7c0ae4",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 205,
-      "change": "Append only the pure exact music minor-unit JSON encoder; preserve all 204 previous migration entries, SQL bytes and introduction commits. Historical review decisions remain provenance.",
+      "valueCount": 206,
+      "change": "Combine both additive music migrations after the unchanged 204-entry historical prefix; preserve both introduction commits and historical review provenance.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "5f2e374ddc077e6b8418",
@@ -452,7 +452,7 @@
                                 "kind": "json-array",
                                 "name": "migrations",
                                 "valueCount": 177,
-                                "change": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                                "change": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                                 "previousResolution": {
                                   "historicalReplacementId": "7578a30aa3cc5aa23870",
                                   "currentId": "2be7a048fab31c7e895c",
@@ -460,7 +460,7 @@
                                   "kind": "json-array",
                                   "name": "migrations",
                                   "valueCount": 175,
-                                  "change": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                                  "change": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                                   "previousResolution": {
                                     "historicalReplacementId": "7578a30aa3cc5aa23870",
                                     "currentId": "0f3d73c6a3dc4bf18f22",
@@ -4453,7 +4453,7 @@
                                   "kind": "json-array",
                                   "name": "migrations",
                                   "valueCount": 177,
-                                  "change": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                                  "change": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                                   "previousResolution": {
                                     "historicalReplacementId": "7578a30aa3cc5aa23870",
                                     "currentId": "2be7a048fab31c7e895c",
@@ -4461,7 +4461,7 @@
                                     "kind": "json-array",
                                     "name": "migrations",
                                     "valueCount": 175,
-                                    "change": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                                    "change": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                                     "previousResolution": {
                                       "historicalReplacementId": "7578a30aa3cc5aa23870",
                                       "currentId": "0f3d73c6a3dc4bf18f22",
@@ -10207,7 +10207,7 @@
                                   "kind": "json-array",
                                   "name": "migrations",
                                   "valueCount": 177,
-                                  "change": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                                  "change": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                                   "previousResolution": {
                                     "historicalReplacementId": "7578a30aa3cc5aa23870",
                                     "currentId": "2be7a048fab31c7e895c",
@@ -10215,7 +10215,7 @@
                                     "kind": "json-array",
                                     "name": "migrations",
                                     "valueCount": 175,
-                                    "change": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                                    "change": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                                     "previousResolution": {
                                       "historicalReplacementId": "7578a30aa3cc5aa23870",
                                       "currentId": "0f3d73c6a3dc4bf18f22",
@@ -15976,7 +15976,7 @@
                                 "kind": "json-array",
                                 "name": "migrations",
                                 "valueCount": 177,
-                                "change": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                                "change": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                                 "previousResolution": {
                                   "historicalReplacementId": "7578a30aa3cc5aa23870",
                                   "currentId": "2be7a048fab31c7e895c",
@@ -15984,7 +15984,7 @@
                                   "kind": "json-array",
                                   "name": "migrations",
                                   "valueCount": 175,
-                                  "change": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                                  "change": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                                   "previousResolution": {
                                     "historicalReplacementId": "7578a30aa3cc5aa23870",
                                     "currentId": "0f3d73c6a3dc4bf18f22",
@@ -21730,7 +21730,7 @@
                                 "kind": "json-array",
                                 "name": "migrations",
                                 "valueCount": 177,
-                                "change": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                                "change": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                                 "previousResolution": {
                                   "historicalReplacementId": "7578a30aa3cc5aa23870",
                                   "currentId": "2be7a048fab31c7e895c",
@@ -21738,7 +21738,7 @@
                                   "kind": "json-array",
                                   "name": "migrations",
                                   "valueCount": 175,
-                                  "change": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                                  "change": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                                   "previousResolution": {
                                     "historicalReplacementId": "7578a30aa3cc5aa23870",
                                     "currentId": "0f3d73c6a3dc4bf18f22",
@@ -27499,7 +27499,7 @@
                               "kind": "json-array",
                               "name": "migrations",
                               "valueCount": 177,
-                              "change": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                              "change": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                               "previousResolution": {
                                 "historicalReplacementId": "7578a30aa3cc5aa23870",
                                 "currentId": "2be7a048fab31c7e895c",
@@ -27507,7 +27507,7 @@
                                 "kind": "json-array",
                                 "name": "migrations",
                                 "valueCount": 175,
-                                "change": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                                "change": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                                 "previousResolution": {
                                   "historicalReplacementId": "7578a30aa3cc5aa23870",
                                   "currentId": "0f3d73c6a3dc4bf18f22",
@@ -33253,7 +33253,7 @@
                               "kind": "json-array",
                               "name": "migrations",
                               "valueCount": 177,
-                              "change": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                              "change": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                               "previousResolution": {
                                 "historicalReplacementId": "7578a30aa3cc5aa23870",
                                 "currentId": "2be7a048fab31c7e895c",
@@ -33261,7 +33261,7 @@
                                 "kind": "json-array",
                                 "name": "migrations",
                                 "valueCount": 175,
-                                "change": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                                "change": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                                 "previousResolution": {
                                   "historicalReplacementId": "7578a30aa3cc5aa23870",
                                   "currentId": "0f3d73c6a3dc4bf18f22",
@@ -39022,7 +39022,7 @@
                             "kind": "json-array",
                             "name": "migrations",
                             "valueCount": 177,
-                            "change": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                            "change": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                             "previousResolution": {
                               "historicalReplacementId": "7578a30aa3cc5aa23870",
                               "currentId": "2be7a048fab31c7e895c",
@@ -39030,7 +39030,7 @@
                               "kind": "json-array",
                               "name": "migrations",
                               "valueCount": 175,
-                              "change": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                              "change": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                               "previousResolution": {
                                 "historicalReplacementId": "7578a30aa3cc5aa23870",
                                 "currentId": "0f3d73c6a3dc4bf18f22",
@@ -44776,7 +44776,7 @@
                             "kind": "json-array",
                             "name": "migrations",
                             "valueCount": 177,
-                            "change": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                            "change": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                             "previousResolution": {
                               "historicalReplacementId": "7578a30aa3cc5aa23870",
                               "currentId": "2be7a048fab31c7e895c",
@@ -44784,7 +44784,7 @@
                               "kind": "json-array",
                               "name": "migrations",
                               "valueCount": 175,
-                              "change": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                              "change": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                               "previousResolution": {
                                 "historicalReplacementId": "7578a30aa3cc5aa23870",
                                 "currentId": "0f3d73c6a3dc4bf18f22",
@@ -50512,7 +50512,9 @@
         }
       },
       "previousCurrentIds": [
-        "394e8ba1db3ead9328f2"
+        "394e8ba1db3ead9328f2",
+        "bab53c1be046268ad206",
+        "7f2803455cf4b4e8e6db"
       ]
     }
   ]

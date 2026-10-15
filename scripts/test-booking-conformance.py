@@ -137,9 +137,18 @@ try:
                  'AUTO_APPLY_PRODUCTION_MIGRATIONS': 'false', 'SEED_DB': 'false',
                  'HQ_ASSETS_DIR': str(assets), 'DEFAULT_LOCALE': 'es',
                  'FACEBOOK_APP_SECRET': 'synthetic-local-webhook-secret',
+                 # Invalid synthetic credentials only exercise stored-binding responses;
+                 # the music fixture never calls a provider or starts a new attempt.
+                 'PAYPAL_ENV': 'sandbox', 'PAYPAL_CLIENT_ID': 'synthetic-local-client',
+                 'PAYPAL_CLIENT_SECRET': 'synthetic-local-secret', 'PAYPAL_MERCHANT_ID': 'music-state-fixture',
+                 'COMMERCE_CHECKOUT_ENV': 'sandbox',
                  'DDEX_STORAGE_BACKEND': 'local-private', 'DDEX_PRIVATE_STORAGE_ROOT': str(OUTPUT / 'ddex-private'),
                  'EVENT_DISCOVERY_ENABLED': 'false', 'ARTIST_ENRICHMENT_ENABLED': 'false',
                  'EVENT_LOGISTICS_RECHECK_ENABLED': 'false', 'REPUTATION_AGGREGATION_WORKER_ENABLED': 'false'}
+    # /version permits this runtime override ahead of the compiled commit.
+    # A controlled fixture must reject files, directories and dangling symlinks.
+    if os.path.lexists('/app/COMMIT'):
+        raise RuntimeError('Fixture refuses /app/COMMIT runtime revision override')
     with (OUTPUT / 'backend.log').open('w') as log:
         server = subprocess.Popen([str(BINARY)], cwd=OUTPUT, stdout=log, stderr=log, env=server_env)
     for _ in range(120):
@@ -150,6 +159,12 @@ try:
         except urllib.error.URLError: pass
         time.sleep(.25)
     else: raise RuntimeError('Fixture backend did not become ready')
+
+    status, body = request('/version', token='')
+    version_info = json.loads(body) if status == 200 else {}
+    (OUTPUT / 'backend-version.json').write_text(json.dumps(version_info, indent=2) + '\n')
+    check('fixture executable revision matches candidate source',
+          status == 200 and version_info.get('commit') == revision)
 
     # OpenAPI requires bearer authentication for party radio presence. A removed
     # shadow public declaration must never turn listener state into anonymous data.
@@ -718,11 +733,13 @@ try:
 
     from music_money_conformance import verify_music_money
     verify_music_money(sql, request, check, actor, ROOT)
+    from music_payment_conformance import verify_music_payment_outcomes
+    verify_music_payment_outcomes(sql, check, ENV, NAME, OUTPUT, ROOT, request)
 
     from readiness_conformance import verify_readiness
     verify_readiness(run, NAME, http_port, check)
 
-    result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'checks': checks, 'status': 'passed'}
+    result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'reportedCommit': version_info.get('commit'), 'checks': checks, 'status': 'passed'}
 finally:
     if server is not None:
         server.terminate()

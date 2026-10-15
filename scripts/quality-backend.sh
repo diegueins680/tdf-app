@@ -17,7 +17,7 @@ STACK_ROOT_DIR="${STACK_ROOT:-$ROOT/.stack-root}"
 mkdir -p "$STACK_ROOT_DIR"
 
 echo "▶ Building and testing Haskell backend in one Stack invocation"
-build_args=(--no-terminal test tdf-hq)
+build_args=(--no-terminal test --force-dirty tdf-hq)
 if [ -n "${BACKEND_BINARY_OUT:-}" ]; then
   binary_dir="$(dirname "$BACKEND_BINARY_OUT")"
   mkdir -p "$binary_dir"
@@ -28,6 +28,8 @@ fi
   cd "$BACKEND_DIR"
   env -u TDF_PAYMENT_AUDIT_DATABASE_URL STACK_ROOT="$STACK_ROOT_DIR" stack "${build_args[@]}"
 )
+
+STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/test-backend-version-rebuild.py"
 
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-cors-boundary.py"
 

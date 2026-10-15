@@ -403,6 +403,13 @@ run_negative_tlc MusicEntitlementNoLimit.cfg music-entitlement-no-limit 'Invaria
 run_negative_tlc MusicEntitlementEndlessReplay.cfg music-entitlement-endless-replay 'Invariant UrlsInsideLifetime is violated' MusicEntitlement.tla
 run_negative_tlc MusicEntitlementFreshReplayUrl.cfg music-entitlement-fresh-replay-url 'Invariant UrlsEndWithAuthorization is violated' MusicEntitlement.tla
 run_negative_tlc MusicEntitlementRefundedDownload.cfg music-entitlement-refunded-download 'Invariant ActiveWhenIssued is violated' MusicEntitlement.tla
+run_tlc MusicPaymentOutcome.tla MusicPaymentOutcome.cfg music-payment-outcome
+run_negative_tlc MusicPaymentOutcomeFailure.cfg music-payment-outcome-failure 'Invariant FailureKeepsPayable is violated' MusicPaymentOutcome.tla
+run_negative_tlc MusicPaymentOutcomeClosed.cfg music-payment-outcome-closed 'Invariant ActiveOnlyForPaidOrder is violated' MusicPaymentOutcome.tla
+run_negative_tlc MusicPaymentOutcomeReview.cfg music-payment-outcome-review 'Invariant ClosedMoneyNeedsReview is violated' MusicPaymentOutcome.tla
+run_negative_tlc MusicPaymentOutcomeReplay.cfg music-payment-outcome-replay 'Invariant OneEntitlement is violated' MusicPaymentOutcome.tla
+run_negative_tlc MusicPaymentOutcomeRetry.cfg music-payment-outcome-retry 'Invariant NoFailedRetry is violated' MusicPaymentOutcome.tla
+run_negative_tlc MusicPaymentOutcomeFence.cfg music-payment-outcome-fence 'Invariant NoQuarantinedRetry is violated' MusicPaymentOutcome.tla
 run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target

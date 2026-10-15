@@ -740,6 +740,18 @@
       "conflict": "EVT-TICKET-MANUAL-001 states that the review locks the checkout, attempt and evidence rows. The function took those locks and then committed before writing, which released them; a second concurrent reviewer read the same submitted evidence and had the write refused by the database as an error instead of being told the transfer was already decided.",
       "authority": "The requirement governs: the review is serialized by its row locks. The database's evidence transition guard remains the last line of defence, not the means of serialization.",
       "resolution": "The intermediate commit is removed so the locks last until the review commits. A second reviewer waits and is answered from the decided state; the buyer's concurrent writes are not covered by this. The requirement gains a direct PostgreSQL test of the review transaction, including races, and a bounded model."
+    },
+    {
+      "id": "AUTHORITY-MUSIC-OUTCOME-20261015",
+      "sources": [
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server/CommerceOperations.hs",
+        "formal/system/music-purchase-entitlement.md"
+      ],
+      "conflict": "The paid projection grants an active entitlement even when its purchase update leaves a terminal order unchanged. Attempt failure also cancels the purchase despite the checkout adapter permitting subsequent verified payment. The old model omits these failed/closed histories.",
+      "authority": "Existing separate payment-attempt, money and fulfillment states, the paid-order entitlement rule and the explicit user mandate to repair financial inconsistency. This is an integrity repair, not approval to activate music commerce or contact a provider.",
+      "resolution": "Add a compatibility migration: failed attempts no longer cancel the purchase; verified money for closed fulfillment is retained with a checkout-linked reconciliation exception and audit, without an entitlement. Refuse contradictory pre-existing grants for explicit review rather than deleting history. Extend scoped SQL/model/concurrency/HTTP controls. Keep missing provider admission, uncertain transport and closed-checkout recovery explicit and commerce disabled. Preserve failed-payment retry quarantine with a checkout-locked admission function called before creation/replay in the music handler. Awaiting fulfillment is not permission to start another payment. Independent review also identified existing-binding replay and late binding/pending status reopening. Gate both attempt admission and existing binding lookup; persist the quarantine through attempt failure_code/status rather than trusting checkout status alone. Rolling back to application code that bypasses the helper requires commerce disabled; retaining the migration alone does not enforce handler admission."
     }
   ]
 }

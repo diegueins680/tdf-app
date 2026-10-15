@@ -191,6 +191,7 @@ for migration in \
   2026-09-16_music_correction_concurrency.sql \
   2026-09-16_music_ddex_operations.sql \
   2026-09-16_music_playback_identity.sql \
+  2026-10-15_music_payment_outcome_consistency.sql \
   2026-10-15_music_exact_minor_units.sql
 do
   psql -X -q -v ON_ERROR_STOP=1 -d "$TDF_MUSIC_DATABASE" \

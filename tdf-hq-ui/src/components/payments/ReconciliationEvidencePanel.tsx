@@ -18,6 +18,7 @@ const COPY = {
     expected: 'Monto esperado', actual: 'Monto observado', exception: 'Excepción', checkout: 'Checkout vinculado', attempt: 'Intento vinculado',
     unlinked: 'Sin vínculo único verificado. No significa que no hubo un pago.', detected: 'Detectada', resolvedAt: 'Fecha de resolución registrada',
     closed: 'Aprobación observada en checkout cerrado', scheduled: 'Consulta programada requiere revisión', mismatch: 'La consulta no coincide con el vínculo',
+    musicClosed: 'Pago de compra musical cerrada requiere revisión',
     providerUnknown: 'Estado del proveedor no reconocido', previous: 'Página anterior de evidencia', more: 'Página siguiente de evidencia',
     limit: 'Límite de navegación alcanzado. Filtra por checkout o solicita revisión operativa.',
     pagination: 'Las páginas pueden cambiar. Este informe no es una exportación contable inmutable.',
@@ -35,6 +36,7 @@ const COPY = {
     expected: 'Expected amount', actual: 'Observed amount', exception: 'Exception', checkout: 'Linked checkout', attempt: 'Linked attempt',
     unlinked: 'No unique verified link. This does not establish that no payment occurred.', detected: 'Detected', resolvedAt: 'Recorded resolution time',
     closed: 'Approval observed on closed checkout', scheduled: 'Scheduled query requires review', mismatch: 'Query does not match its binding',
+    musicClosed: 'Payment for closed music purchase requires review',
     providerUnknown: 'Unrecognized provider state', previous: 'Previous evidence page', more: 'Next evidence page',
     limit: 'Navigation limit reached. Filter by checkout or request operational review.',
     pagination: 'Pages may shift. This report is not an immutable accounting export.',
@@ -91,6 +93,7 @@ export default function ReconciliationEvidencePanel() {
   };
   const reasonLabel = (value: CommerceReconciliationEntry['creReason']) => {
     if (value === 'closed_checkout_approval') return copy.closed;
+    if (value === 'music_paid_closed_order') return copy.musicClosed;
     if (value === 'scheduled_query_review') return copy.scheduled;
     if (value === 'binding_mismatch') return copy.mismatch;
     if (value === 'unknown_provider_state') return copy.providerUnknown;

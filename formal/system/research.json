@@ -675,6 +675,26 @@
       "decision": "adopted",
       "rationale": "Format whole units as BigInt and convert only a remainder in0..99; do not divide the whole amount as Number. Device/provider behavior remains separately verified.",
       "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-VERSION-STACK-001",
+      "source": "https://docs.haskellstack.org/en/stable/commands/build_command/#-no-force-dirty-flag",
+      "title": "Stack local-package dirty admission",
+      "recommendation": "Use --force-dirty when local inputs outside tracked Haskell source require rebuilding an otherwise clean package.",
+      "applicability": "Restored .stack-work may contain a valid package cache with stale Git/time metadata.",
+      "decision": "adopted",
+      "rationale": "Force the canonical local package invocation, while retaining immutable dependency and unrelated GHC object caches. Actual source-identical HEAD-change regression verifies this boundary.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-VERSION-GHC-001",
+      "source": "https://downloads.haskell.org/ghc/9.10.3/docs/users_guide/separate_compilation.html#recompilation",
+      "title": "GHC recompilation checking for external splice inputs",
+      "recommendation": "Disable recompilation checking selectively when source alone cannot capture the changing external input.",
+      "applicability": "TDF.Version embeds Git identity and current time using Template Haskell.",
+      "decision": "adopted",
+      "rationale": "Use module-local -fforce-recomp together with Stack dirty admission. Independent controls removing either layer reproduce the stale metadata; unrelated Main object remains reused in the probe. No global force-recompile or source attestation claim.",
+      "verifiedAt": "2026-10-15"
     }
   ]
 }

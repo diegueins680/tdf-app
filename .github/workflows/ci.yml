@@ -293,6 +293,7 @@ jobs:
       TDF_TEST_POSTGRES_PASSWORD: postgres
       STACK_ROOT: ${{ github.workspace }}/.stack-root
       BACKEND_BINARY_OUT: ${{ github.workspace }}/tdf-hq/.release/tdf-hq-exe
+      TDF_VERSION_REBUILD_OUTPUT: ${{ github.workspace }}/tmp/specification/backend-version-rebuild
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -541,6 +542,11 @@ jobs:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: sh scripts/test-music-purchase.sh
 
+      - name: Verify music payment outcome and closed-order reconciliation
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-music-payment-outcomes.sh
+
       - name: Verify artist claim preparation concurrency and privacy
         env:
           TDF_CLAIM_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
@@ -583,6 +589,18 @@ jobs:
           PGPASSWORD: postgres
           TDF_INTERACTION_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/interactions/test-http.sh
+
+      - name: Retain synthetic backend version cache evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-version-rebuild-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            tmp/specification/backend-version-rebuild/result.json
+            tmp/specification/backend-version-rebuild/*/*.log
+            tmp/specification/backend-version-rebuild/*/*.json
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Retain compiler-derived API discovery evidence
         if: always()

@@ -12728,7 +12728,7 @@ components:
         creStatus: { type: string, enum: [open, assigned, resolved, ignored, unrecognized] }
         creReason:
           type: string
-          enum: [closed_checkout_approval, scheduled_query_review, binding_mismatch, unknown_provider_state, unrecognized]
+          enum: [closed_checkout_approval, scheduled_query_review, binding_mismatch, unknown_provider_state, music_paid_closed_order, unrecognized]
           description: Fixed safe classification, not raw stored exception text
         creCheckoutId: { type: string, format: uuid, nullable: true }
         crePaymentAttemptId: { type: string, format: uuid, nullable: true }
