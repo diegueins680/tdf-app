@@ -11035,7 +11035,7 @@
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
     "scripts/install-recovery-tools.py": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
-    "scripts/interactions/conflict_probe.py": "b46f55c43ec551f9e395fa01bca31a3ff677f261ebbb0b74a794f6892a3934a3",
+    "scripts/interactions/conflict_probe.py": "00d9c5ffddc212225663ea616226f21dc5e18533ead41024e91aa33e0e5cd29e",
     "scripts/interactions/test-api.py": "2018462abf67b2a932ec41679b1b1e023b2637c5be0c5a50954aa546a2b4bffe",
     "scripts/interactions/test-http.sh": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
     "scripts/interactions/test-native.py": "899c8199d91af4b6dff12dc154663fefacfb3cea94c640db98d2a374d4a4af97",
@@ -11106,7 +11106,7 @@
     "scripts/test-hetzner-inspection.py": "12cae0007775a3520c9b9cf276e16ebe97ee00a0128ba733dcab4d37dd59779a",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
     "scripts/test-index-declarations.sh": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
-    "scripts/test-interaction-conflict-probe.py": "22ef61fc7719c537ab733ef7e74bc6d1f2199320cd41c45034eb20e070431f3a",
+    "scripts/test-interaction-conflict-probe.py": "361ef5d78dd63b6b1c9a649582f1edccd50d01d34be94d536bd7c9582bfa13df",
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
     "scripts/test-isolated-application-canary.py": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
@@ -22491,7 +22491,7 @@
     {
       "id": "SURFACE-98737e247fca427b",
       "path": "scripts/interactions/conflict_probe.py",
-      "sha256": "b46f55c43ec551f9e395fa01bca31a3ff677f261ebbb0b74a794f6892a3934a3",
+      "sha256": "00d9c5ffddc212225663ea616226f21dc5e18533ead41024e91aa33e0e5cd29e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24613,7 +24613,7 @@
     {
       "id": "SURFACE-12364ce4d0705b8d",
       "path": "scripts/test-interaction-conflict-probe.py",
-      "sha256": "22ef61fc7719c537ab733ef7e74bc6d1f2199320cd41c45034eb20e070431f3a",
+      "sha256": "361ef5d78dd63b6b1c9a649582f1edccd50d01d34be94d536bd7c9582bfa13df",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

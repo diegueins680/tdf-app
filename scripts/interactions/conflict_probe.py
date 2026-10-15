@@ -21,6 +21,7 @@ def request_after_conflict(request):
         with response:
             code, headers = response.code, response.headers
             raw = response.read(8193)
+        assert time.monotonic() < deadline, 'Interaction conflict recovery deadline exhausted after response'
         assert len(raw) <= 8192, 'Unexpected conflict-probe response size'
         body = raw.decode()
         if code != 503:

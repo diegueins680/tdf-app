@@ -67,8 +67,10 @@ now charged, and so is each retry.
 
 ## Isolated HTTP conflict recovery
 
-The burst acceptance probe uses at most three transport attempts within five
-seconds for a declared transaction-conflict response. It reuses one request,
+The burst acceptance probe admits at most three transport attempts and accepts
+a final response only before a five-second monotonic deadline. The remaining
+budget is passed to urllib as its per-operation socket timeout; this is not
+a mechanism for forcibly cancelling all I/O exactly at five seconds. It reuses one request,
 including actor credentials, target, payload and request key. Only a final403 or429
 counts toward the probe;503 is never accepted as an authorization denial.
 Unknown503 metadata, permanent conflicts,401, other errors and transport failures
@@ -76,8 +78,9 @@ remain failures. Other HTTP acceptance boundaries do not opt into this recovery.
 Each retry remains subject to the real write budget and its original exact91
 threshold and calendar-window checks.
 
-Seven local helper regressions cover this boundary. Controlled source mutations
-that return a permanent503 as success or change the payload fail named assertions.
+Eight local helper regressions cover this boundary, including late final403 and429
+responses. Controlled source mutations that return a permanent503 as success,
+change the payload or remove the post-read deadline check fail named assertions.
 The observed older iOS failure establishes an unexpected503 at the probe; it does
 not establish which of the backend's declared conflict classes caused it.
 

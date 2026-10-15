@@ -67,10 +67,18 @@ class ConflictProbeTests(unittest.TestCase):
             send.assert_called_once()
 
     def test_deadline_exhaustion_prevents_another_attempt(self):
-        with patch.object(m.time, 'monotonic', side_effect=[0, 0, 4.1]), \
+        with patch.object(m.time, 'monotonic', side_effect=[0, 0, 4.1, 4.1]), \
                 patch.object(m.urllib.request, 'urlopen', return_value=Response(503)) as send, patch.object(m.time, 'sleep') as sleep:
             with self.assertRaisesRegex(AssertionError, 'did not recover'): m.request_after_conflict(self.request())
             send.assert_called_once(); sleep.assert_not_called()
+
+    def test_late_final_denial_is_never_credited(self):
+        for code in (403, 429):
+            with self.subTest(code=code), patch.object(m.time, 'monotonic', side_effect=[0, 0, 6]), \
+                    patch.object(m.urllib.request, 'urlopen', return_value=Response(code)) as send:
+                with self.assertRaisesRegex(AssertionError, 'deadline exhausted after response'):
+                    m.request_after_conflict(self.request())
+                send.assert_called_once()
 
     def test_real_httperror_path_retains_final_business_denial(self):
         import io

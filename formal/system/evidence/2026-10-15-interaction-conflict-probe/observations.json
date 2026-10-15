@@ -4,40 +4,48 @@
   "scope": "Fresh focused acceptance-driver execution against the previously qualified59b binary with byte-identical backend source; not a full-current-root gate or proof of the original deadlock cause.",
   "driverFingerprints": {
     "scripts/interactions/test-api.py": "2018462abf67b2a932ec41679b1b1e023b2637c5be0c5a50954aa546a2b4bffe",
-    "scripts/interactions/conflict_probe.py": "b46f55c43ec551f9e395fa01bca31a3ff677f261ebbb0b74a794f6892a3934a3",
-    "scripts/test-interaction-conflict-probe.py": "22ef61fc7719c537ab733ef7e74bc6d1f2199320cd41c45034eb20e070431f3a"
+    "scripts/interactions/conflict_probe.py": "00d9c5ffddc212225663ea616226f21dc5e18533ead41024e91aa33e0e5cd29e",
+    "scripts/test-interaction-conflict-probe.py": "361ef5d78dd63b6b1c9a649582f1edccd50d01d34be94d536bd7c9582bfa13df"
   },
   "backendRevision": "59b0739e91ba11be3c7064edc289f27338f2206b",
   "backendSha256": "a60acef061f128f610e439962cc1d140938b8ab421da735476548a05b11b5456",
   "backendSourceTree": "a66d9bc9eedeac184b2cc11145b9b3a8a490738e",
   "currentBackendSourceTreeMatches": true,
-  "helperTests": 7,
+  "helperTests": 8,
   "focusedActualHttp": "passed",
   "forcedSqlState": "40001",
   "conflictThen403Charges": 2,
   "conflictThenRevoked401Charges": 1,
   "requestBinding": "same actual actor/resource/payload/key on both wire attempts",
   "originalFunctionDefinitionRestoredExactly": true,
-  "focusedLogSha256": "fe340d08f6429a5390c4f3491e2506e79e1b68b6695dcea6d74fd8f58ab10361",
+  "focusedLogSha256": "68491b30589446b8d133602d90b5a42dad6b35b296bb1a43b3ded9a65a8b28ee",
   "negativeControls": [
     {
       "control": "false503success",
       "status": "detected-by-named-assertion",
       "exitCode": 1,
       "witness": "test_permanent503_never_becomes_success",
-      "logSha256": "2d9daee7d6a16c307e8bcd0524c1555a74f58aa97066a94013042b64668f5f7d"
+      "logSha256": "560ed381011a55459fd3ee6c4350f945f103567690c127a5b7160932e4a81f86"
     },
     {
       "control": "changed-payload",
       "status": "detected-by-named-assertion",
       "exitCode": 1,
       "witness": "test_retries_preserve_exact_actor_resource_payload_and_key",
-      "logSha256": "0d7b3167108fde3f7cd405edbc7c97a2bba73d26f2b65e5bb06fc552a88c0019"
+      "logSha256": "65594f435ea04f98bdae116b7eea7e2be4fc4837b7f93679801eb395d928e7c6"
+    },
+    {
+      "control": "late-denial",
+      "status": "detected-by-named-assertion",
+      "exitCode": 1,
+      "witness": "test_late_final_denial_is_never_credited",
+      "logSha256": "b429e7e0678fa2f17f9e6511cd73a65bedb5d4e415b3069d7f9224f7f1aabe41"
     }
   ],
   "olderIOSRun": "https://github.com/diegueins680/tdf-app/actions/runs/38748999721",
   "remaining": [
     "Fresh final-root canonical backend gate and native journeys",
     "Actual deadlock/serialization-schedule reproduction"
-  ]
+  ],
+  "deadline": "Final responses admitted only before five-second monotonic deadline; socket timeout is per operation, not hard global cancellation."
 }
