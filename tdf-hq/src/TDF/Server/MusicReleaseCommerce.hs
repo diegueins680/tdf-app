@@ -9,6 +9,9 @@ module TDF.Server.MusicReleaseCommerce
   , createMusicPaypalOrder
   , captureMusicPaypalOrder
   , listMusicEntitlements
+  , PurchaseContext(..)
+  , loadPurchaseContext
+  , recordMusicVerifiedPayment
   ) where
 
 import Control.Monad (unless)
@@ -74,14 +77,22 @@ featureEnvironment = do
     Just "prod" -> "production"
     _ -> "sandbox"
 
+-- The flag must be on for the environment the process declares and for the
+-- environment its checkouts are created in, so a sandbox flag never opens
+-- purchases that charge production merchants.
 requireCommerceFeature :: AppM ()
 requireCommerceFeature = do
   environment <- liftIO featureEnvironment
+  configuredCheckout <- liftIO (lookupEnv "COMMERCE_CHECKOUT_ENV")
+  let disabled = throwError err503
+        { errBody = "Music release commerce is not enabled in this environment" }
+  checkoutEnvironment <- either (const disabled) (pure . Checkout.checkoutEnvironmentText)
+    (Checkout.resolveCheckoutEnvironment configuredCheckout)
   rows <- runDB (rawSql
-    "SELECT enabled FROM revenue_feature_flag WHERE flag_key='music_releases.commerce' AND environment=?"
-    [PersistText environment] :: SqlPersistT IO [Single Bool])
-  unless (rows == [Single True]) $ throwError err503
-    { errBody = "Music release commerce is not enabled in this environment" }
+    "SELECT count(*) FROM revenue_feature_flag WHERE flag_key='music_releases.commerce' AND enabled AND environment IN (?,?)"
+    [PersistText environment, PersistText checkoutEnvironment] :: SqlPersistT IO [Single Int64])
+  let required = if environment == checkoutEnvironment then 1 else 2
+  unless (rows == [Single required]) disabled
 
 requireIdempotencyKey :: Maybe Text -> AppM Text
 requireIdempotencyKey supplied = do
@@ -358,28 +369,41 @@ bindAndVerify
   -> Checkout.PaymentProvider -> Checkout.CheckoutEnvironment -> Text -> Text -> Text
   -> Maybe Text -> UTCTime -> AppM ()
 bindAndVerify context checkout attempt provider environment merchantRef resourceType providerResource resourcePath now = do
-  result <- runDB $ do
-    bound <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
-      { Checkout.pbcAttempt = attempt, Checkout.pbcCheckout = checkout, Checkout.pbcProvider = provider
-      , Checkout.pbcEnvironment = environment, Checkout.pbcMerchantRef = merchantRef
-      , Checkout.pbcResourceType = resourceType, Checkout.pbcProviderResource = providerResource
-      , Checkout.pbcResourcePath = resourcePath, Checkout.pbcOrderReference = UUID.toText (purchaseId context)
-      , Checkout.pbcAmountMinor = purchaseAmountMinor context, Checkout.pbcCurrency = purchaseCurrency context
-      , Checkout.pbcStage = Checkout.AttemptProcessing, Checkout.pbcOccurredAt = now
-      , Checkout.pbcCorrelationId = "music-payment-bind:" <> UUID.toText (purchaseId context)
-      }
-    case bound of
-      Left message -> pure (Left message)
-      Right () -> Checkout.recordVerifiedPayment Checkout.VerifiedPayment
-        { Checkout.vpAttempt = attempt, Checkout.vpCheckout = checkout, Checkout.vpProvider = provider
-        , Checkout.vpEnvironment = environment, Checkout.vpMerchantRef = merchantRef
-        , Checkout.vpResourceType = resourceType, Checkout.vpProviderResource = providerResource
-        , Checkout.vpProviderResourcePath = resourcePath, Checkout.vpOrderReference = UUID.toText (purchaseId context)
-        , Checkout.vpAmountMinor = purchaseAmountMinor context, Checkout.vpCurrency = purchaseCurrency context
-        , Checkout.vpEvidence = "server_to_server", Checkout.vpOccurredAt = now
-        , Checkout.vpCorrelationId = "music-payment-verified:" <> UUID.toText (purchaseId context)
-        }
+  result <- runDB (recordMusicVerifiedPayment context checkout attempt provider environment merchantRef
+    resourceType providerResource resourcePath now)
   either (throwError . providerError) (const (pure ())) result
+
+-- Binds the provider's payment resource to the attempt and records the
+-- verified payment in one transaction. The purchase order identifier is the
+-- merchant reference on both the binding and the verified payment; the
+-- checkout triggers compare it with the checkout's domain order.
+recordMusicVerifiedPayment
+  :: PurchaseContext -> Checkout.CheckoutReference -> Checkout.PaymentAttemptReference
+  -> Checkout.PaymentProvider -> Checkout.CheckoutEnvironment -> Text -> Text -> Text
+  -> Maybe Text -> UTCTime -> SqlPersistT IO (Either Text Bool)
+recordMusicVerifiedPayment context checkout attempt provider environment merchantRef resourceType providerResource resourcePath now = do
+  let orderReference = UUID.toText (purchaseId context)
+  bound <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+    { Checkout.pbcAttempt = attempt, Checkout.pbcCheckout = checkout, Checkout.pbcProvider = provider
+    , Checkout.pbcEnvironment = environment, Checkout.pbcMerchantRef = merchantRef
+    , Checkout.pbcResourceType = resourceType, Checkout.pbcProviderResource = providerResource
+    , Checkout.pbcResourcePath = resourcePath, Checkout.pbcOrderReference = orderReference
+    , Checkout.pbcAmountMinor = purchaseAmountMinor context, Checkout.pbcCurrency = purchaseCurrency context
+    , Checkout.pbcStage = Checkout.AttemptProcessing, Checkout.pbcOccurredAt = now
+    , Checkout.pbcCorrelationId = "music-payment-bind:" <> orderReference
+    }
+  case bound of
+    Left message -> pure (Left message)
+    Right () -> Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+      { Checkout.vpAttempt = attempt, Checkout.vpCheckout = checkout, Checkout.vpProvider = provider
+      , Checkout.vpEnvironment = environment, Checkout.vpMerchantRef = merchantRef
+      , Checkout.vpResourceType = resourceType, Checkout.vpProviderResource = providerResource
+      , Checkout.vpProviderResourcePath = resourcePath, Checkout.vpOrderReference = orderReference
+      , Checkout.vpProviderReference = orderReference
+      , Checkout.vpAmountMinor = purchaseAmountMinor context, Checkout.vpCurrency = purchaseCurrency context
+      , Checkout.vpEvidence = "server_to_server", Checkout.vpOccurredAt = now
+      , Checkout.vpCorrelationId = "music-payment-verified:" <> orderReference
+      }
 
 beginAttempt
   :: PurchaseContext

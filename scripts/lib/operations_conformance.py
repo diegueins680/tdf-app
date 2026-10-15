@@ -336,7 +336,7 @@ def verify_operations(sql, request, check, env, database, output, actors):
     thread_ids = []
     for party in ['NULL', actors['admin'], 'NULL']:
         external = 'synthetic-message-' + uuid.uuid4().hex
-        sql("INSERT INTO whats_app_message(external_id,sender_id,direction,created_at,party_id,text) VALUES (" + q(external) + ',' + q(sender) + ",'inbound',now()," + party + ",'Synthetic private message')")
+        sql("INSERT INTO whats_app_message(external_id,sender_id,direction,created_at,party_id,text) VALUES (" + q(external) + ',' + q(sender) + ",'incoming',now()," + party + ",'Synthetic private message')")
         event_id = sql('SELECT id FROM operations_domain_event WHERE provider_event_id=' + q(external))
         check('operations WhatsApp source trigger produces one event', bool(event_id) and '\n' not in event_id)
         check('operations WhatsApp identity progression projects',
