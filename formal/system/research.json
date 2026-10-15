@@ -645,6 +645,36 @@
       "decision": "adopted",
       "rationale": "A customer-scoped key must be issued only to the authenticated owner of that customer; the legacy course route issued it to any caller presenting a sequential registration ID, so it was retired.",
       "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-URI-DECODE-001",
+      "source": "https://github.com/SamVerschueren/decode-uri-component/security/advisories/GHSA-vcc3-ghjq-m6fr",
+      "title": "Maintainer advisory for malformed URI decoding resource consumption",
+      "recommendation": "Use patched0.5.0 or bound input as a workaround.",
+      "applicability": "The pinned Mobile graph installs affected0.2.2 beneath query-string7. Current incoming route-parser reachability is narrower than historical prose claimed.",
+      "decision": "adopted",
+      "rationale": "Use unchanged pinned0.5.0 via a compatible callable adapter; actual old-release regression and consumer tests demonstrate detection without inventing a current app exploit claim.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-URI-DECODE-002",
+      "source": "https://docs.npmjs.com/cli/v10/configuring-npm/package-json/#overrides",
+      "title": "Root dependency-reference overrides and local package dependencies",
+      "recommendation": "Use an explicit root dependency specification and its dollar-prefixed reference for transitive overrides; local linked packages require their dependencies to be installed explicitly.",
+      "applicability": "Private decoder adapter and upstream alias must resolve reproducibly on clean Mobile npm installs.",
+      "decision": "adopted",
+      "rationale": "The initial relative-only experiment produced an invalid nested lock path and did not install linked dependencies. Explicit root adapter/alias dependencies and the reference override yield a portable four-record lock change and pass clean npm installation.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-URI-DECODE-003",
+      "source": "https://nodejs.org/download/release/v20.19.4/docs/api/modules.html#loading-ecmascript-modules-using-require",
+      "title": "Node20.19.4 require of synchronous ES modules",
+      "recommendation": "An ES module required from CommonJS exposes a namespace; the default export is accessed explicitly.",
+      "applicability": "query-string7 expects a function, while upstream decoder0.5.0 is an ES module.",
+      "decision": "adopted",
+      "rationale": "The adapter selects default; an actual-consumer namespace substitution fails in the negative control. Native Metro/Hermes qualification remains separate from Node interoperability.",
+      "verifiedAt": "2026-10-15"
     }
   ]
 }

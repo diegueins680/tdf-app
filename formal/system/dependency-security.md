@@ -22,9 +22,13 @@ parents; they are not independent vulnerability or exploitable endpoint counts.
 The production-only audit has a different scope and cannot override this result.
 
 Remaining exposure decisions live in the policy's `remaining` records. In
-particular, the URI decoder is reached by React Navigation/Expo query parsing.
-Upstream0.5.0 exports an ES module, while installed query-string7 requires a
-CommonJS callable. A blind override is not admitted as a compatibility repair.
+particular, the older URI reachability claim was too broad: current Expo incoming
+query parsing uses `URLSearchParams`, and React Navigation has its own parser.
+The installed query-string7 decoder is replaced under the scoped
+[URI compatibility contract](uri-decoder.md). Its explicit adapter preserves the
+CommonJS caller while selecting unchanged upstream0.5.0; actual-consumer tests and
+two negative controls cover that boundary. No incoming deep-link exploit or
+complete dependency clearance is claimed.
 Metro image-size1.2.1 similarly cannot be blindly replaced with its changed2.x
 export API. Forge verification exists in Expo signing tooling; no reachability
 clearance follows merely from labeling it a build dependency. Upstream forge1.4.0
