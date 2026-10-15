@@ -36,7 +36,8 @@ resolve the failure, and waits while a command holds its locks. A command
 locks, reads its authority once under the locks, then commits (result and
 audit together) or is rejected. Invariants: `CurrentAuthority` (no commit
 without a valid session, active grant, active membership and, for a note,
-the assignment-dependent visibility), `AtomicEvidence` (result iff audit), `OneRetry`,
+the assignment-dependent visibility; a retry additionally requires the failure
+to be eligible at commit), `AtomicEvidence` (result iff audit), `OneRetry`,
 `EncryptedPush`. 34,172 states generated, 13,744 distinct. Controls:
 `Unlocked` (`LocksHeld` off: the environment moves between the read and the
 commit, `CurrentAuthority`), `PartialAudit` (`AtomicAudit` off:
@@ -51,6 +52,14 @@ view contents and the retry's downstream execution are not modelled; the
 model states the guards the handlers are read to apply and does not refine
 the SQL. Decision in AUTHORITY-072.
 
+The integration review found that the original `CurrentAuthority` omitted
+failure eligibility even though `Resolve` could run between a stale read and
+commit when locks were disabled. It now checks the current failure state. The
+additional `ResolvedRetry` control permits only failure resolution and command
+steps, keeping session, grant and membership unchanged; it must violate
+`CurrentAuthority` when the stale retry commits after resolution. This isolates
+the missing property from the existing general revocation control.
+
 ## Evidence
 
 | Check | Where | Result (2026-10-12) |
@@ -61,8 +70,9 @@ the SQL. Decision in AUTHORITY-072.
 
 ## Left open
 
-- Downstream failure replay execution and real push delivery (as the
-  requirement already states).
+- Real push delivery remains outside this model. The integrated
+  [failure replay specification](operations-failure-replay.md) separately covers
+  downstream projection retry and settlement; neither model refines SQL.
 - A repeated preference or token replacement writes an additional audit row;
   the model's single command per kind does not cover repeats.
 - Mentions of members who lose their membership after the note commits are

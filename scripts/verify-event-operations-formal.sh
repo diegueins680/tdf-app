@@ -377,6 +377,7 @@ run_negative_tlc CheckoutReadinessStale.cfg checkout-stale 'Invariant CurrentRes
 run_negative_tlc CheckoutReadinessDuplicate.cfg checkout-duplicate 'Invariant SingleCurrentFlight is violated' CheckoutReadiness.tla
 run_tlc OperationsAuxiliaryWrite.tla OperationsAuxiliaryWrite.cfg operations-auxiliary-write
 run_negative_tlc OperationsAuxiliaryWriteUnlocked.cfg operations-auxiliary-write-unlocked 'Invariant CurrentAuthority is violated' OperationsAuxiliaryWrite.tla
+run_negative_tlc OperationsAuxiliaryWriteResolvedRetry.cfg operations-auxiliary-write-resolved-retry 'Invariant CurrentAuthority is violated' OperationsAuxiliaryWrite.tla
 run_negative_tlc OperationsAuxiliaryWritePartialAudit.cfg operations-auxiliary-write-partial-audit 'Invariant AtomicEvidence is violated' OperationsAuxiliaryWrite.tla
 run_negative_tlc OperationsAuxiliaryWriteRetryTwice.cfg operations-auxiliary-write-retry-twice 'Invariant OneRetry is violated' OperationsAuxiliaryWrite.tla
 run_negative_tlc OperationsAuxiliaryWriteUnencrypted.cfg operations-auxiliary-write-unencrypted 'Invariant EncryptedPush is violated' OperationsAuxiliaryWrite.tla

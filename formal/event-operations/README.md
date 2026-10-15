@@ -712,7 +712,7 @@ assumptions and the recovery gaps found are stated there.
 mutations (OPS-AUX-WRITE-001): a command takes its locks, reads session,
 grant, membership, assignment, failure state and push key under them, then
 commits its result together with its audit row or is rejected with no
-effect. Four single-guard controls. The model states the guards the
+effect. Five negative controls, including a failure-resolution-only stale retry. The model states the guards the
 handlers are read to apply; the PostgreSQL/HTTP conformance harness is the
 execution evidence. See
 [operations-aux-write.md](../system/operations-aux-write.md).

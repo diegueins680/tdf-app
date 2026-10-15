@@ -96,7 +96,9 @@ Commit(c) ==
        /\ AtomicAudit => audited
        /\ cmd' = [cmd EXCEPT ![c].phase = "done", ![c].result = TRUE, ![c].audit = audited]
   /\ failure' = IF cmd[c].kind = "retry" THEN "retrying" ELSE failure
-  /\ badCommit' = (badCommit \/ ~(session /\ grant /\ member /\ (cmd[c].kind = "note" => assigned)))
+  /\ badCommit' = (badCommit \/ ~(session /\ grant /\ member
+       /\ (cmd[c].kind = "note" => assigned)
+       /\ (cmd[c].kind = "retry" => failure = "open")))
   /\ plainPush' = (plainPush \/ (cmd[c].kind = "push" /\ ~encryption))
   /\ UNCHANGED <<session, grant, member, assigned, encryption>>
 
@@ -114,8 +116,14 @@ Next ==
 
 Spec == Init /\ [][Next]_vars
 
+(* Isolate failure resolution from session/grant changes in its negative control. *)
+ResolutionNext == Resolve \/ (\E c \in Commands : Lock(c) \/ Commit(c) \/ Reject(c))
+                  \/ Finished
+ResolutionSpec == Init /\ [][ResolutionNext]_vars
+
 (* A command commits only with a valid session, an active grant, an active
-   membership and, for a note, the current assignment-dependent visibility. *)
+   membership and, for a note, the current assignment-dependent visibility;
+   a retry also requires a currently eligible failure, not a stale snapshot. *)
 CurrentAuthority == ~badCommit
 
 (* A result exists exactly when its audit row does. *)
