@@ -521,7 +521,8 @@ describe('CourseProductionLandingPage', () => {
       fulfillmentStatus: 'seat_held',
       checkoutAvailable: true,
     });
-    registerMock.mockResolvedValueOnce(heldCheckout);
+    const pendingRegistration = createDeferred<CourseCheckoutResponse>();
+    registerMock.mockReturnValueOnce(pendingRegistration.promise);
     getCheckoutMock.mockResolvedValue(heldCheckout);
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -531,6 +532,17 @@ describe('CourseProductionLandingPage', () => {
       await openEnrollmentFromHero(container);
       await fillGuestEnrollment({ phone: '0988384849' });
       await submitEnrollment();
+      await waitForExpectation(() => expect(registerMock).toHaveBeenCalledTimes(1));
+      await act(async () => {
+        pendingRegistration.resolve(heldCheckout);
+        await flushPromises();
+      });
+      // Keep navigation out of the still-mounted dialog's exit transition.
+      expect(getDialog()).not.toBeNull();
+      expect(text(container.querySelector('[data-testid="location-probe"]'))).toBe(
+        '/curso/bateria-guillermo-diaz-abr-2026',
+      );
+      await waitForDialogToClose();
 
       await waitForExpectation(() => {
         expect(text(container.querySelector('[data-testid="location-probe"]'))).toBe(
@@ -546,6 +558,55 @@ describe('CourseProductionLandingPage', () => {
       await cleanup();
     }
   });
+
+  it.each(['during', 'after'] as const)(
+    'opens a successful checkout when its response arrives %s a manual dialog exit',
+    async (timing) => {
+      const heldCheckout = buildLeadResponse({
+        registrationId: 42,
+        lookupToken: 'synthetic-delayed-lookup-token',
+        checkoutAvailable: true,
+        fulfillmentStatus: 'seat_held',
+      });
+      const pendingRegistration = createDeferred<CourseCheckoutResponse>();
+      registerMock.mockReturnValueOnce(pendingRegistration.promise);
+      getCheckoutMock.mockResolvedValue(heldCheckout);
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+      try {
+        await openEnrollmentFromHero(container);
+        await fillGuestEnrollment();
+        await submitEnrollment();
+        await waitForExpectation(() => expect(registerMock).toHaveBeenCalledTimes(1));
+        const close = getDialog()?.querySelector<HTMLButtonElement>('button[aria-label="Cerrar"]');
+        if (!close) throw new Error('Expected close button');
+        await click(close);
+        if (timing === 'after') await waitForDialogToClose();
+        await act(async () => {
+          pendingRegistration.resolve(heldCheckout);
+          await flushPromises();
+        });
+        if (timing === 'during') {
+          expect(getDialog()).not.toBeNull();
+          expect(text(container.querySelector('[data-testid="location-probe"]'))).toBe(
+            '/curso/bateria-guillermo-diaz-abr-2026',
+          );
+          await waitForDialogToClose();
+        }
+        await waitForExpectation(() => {
+          expect(text(container.querySelector('[data-testid="location-probe"]'))).toBe(
+            '/curso/bateria-guillermo-diaz-abr-2026/orden/42',
+          );
+          expect(text(document.activeElement)).toContain('Estado de tu inscripción');
+        });
+        expect(getDialog()).toBeNull();
+      } finally {
+        window.localStorage.clear();
+        await cleanup();
+      }
+    },
+  );
 
   it('keeps the honest lead-received state visible after a delayed submit resolves', async () => {
     const pendingRegistration = createDeferred<CourseCheckoutResponse>();
