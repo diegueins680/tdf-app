@@ -5719,7 +5719,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "9018fedb33028844d7cbef2b4928187dfa060519ba3e862cbdd74fb665d590ca",
+      "sha256": "5197cec86113fe16e5a6cd22d9e71ac3c3810a3a7c76bdc3102d364b7104b2ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8425,13 +8425,13 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "49e25328808ff689c05236355e5d181201cfce92d7d4202a322b244d0463d676",
+      "sha256": "7b661f0e8c6cbb733179415914ec1782e5cccf89556ba0ac039aa7bde4536d6f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "2b1ccb573a3e1c0f97237f2e631d2b53d47d18c557a7215e82a46d0e31b4a168",
+      "sha256": "4338589839f88107cedcf55b9f0285cc4752b44be77492c1e441b835261ddc91",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20206,7 +20206,7 @@
     },
     {
       "path": "docs/notifications/chat-delivery-2026-10-13.md",
-      "sha256": "ccbace9519aadcdb6318d92a283d837b5db064f13a03c39030e15a5fd8d587c7",
+      "sha256": "d26626b7d66015fffb9583c7330db6d8d10eadbbbd42430185e477862208f326",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21731,6 +21731,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/ChatNotificationNavigation.cfg",
+      "sha256": "93a799971db6c12c9f7fb6c73ce63dd447ce9287929a0566c11d20ad0590a8ff",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ChatNotificationNavigation.tla",
+      "sha256": "d667159c8630ef9cc8c8e5ec17c23cb6ed2d7d0b881771707436a8b538e80b47",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/ChatNotificationNavigationCached.cfg",
+      "sha256": "336dee0f59c5f09a3b0b2417b6daaf3608efabf4f2d4d233f97309b41599cae4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ChatNotificationNavigationEarlyRead.cfg",
+      "sha256": "cf46029b8a66bee925dd273674c467559121dcd9897e38feadfba9bed44bb460",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ChatNotificationNavigationOldResponse.cfg",
+      "sha256": "be1a0d07cfe025d245663027f13379768b366560d89619c6e7516e8b8235e475",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/CheckoutCancellation.cfg",
       "sha256": "64c93ecd5a7f8da635b2caa53786f58da9348cc531e1b56d0365e939f36e7f10",
       "authority": "inferred",
@@ -23146,7 +23181,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "1cebd1a0174af49ae54417d9d91279b8507fbf6ad0d794d9f81c3be66f36787a",
+      "sha256": "2fc623fd6440932ca3408b3382b1c41cae7d10f68706d8537f76ace0cdf825cb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25057,7 +25092,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "731d8892d193bda5bd42c6ba975f5881b5d7f1771b5da421019b5ccbd0692c3a",
+      "sha256": "8991da0617f4eb8d1750a88e88b1fbeda9c273485f50c60ab60f4e8a9f8673ba",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32976,6 +33011,50 @@
         "CHECK_DEADLOCK FALSE",
         "CONSTANT RequireFreshAuthorization = FALSE",
         "INVARIANT NoEarlyRead"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ChatNotificationNavigation.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS BindNavigation = TRUE RejectOldResponse = TRUE",
+        "INVARIANTS NoStaleNavigationDisplay NoStaleNavigationRead"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ChatNotificationNavigationCached.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS BindNavigation = FALSE RejectOldResponse = TRUE",
+        "INVARIANT NoStaleNavigationDisplay"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ChatNotificationNavigationEarlyRead.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS BindNavigation = FALSE RejectOldResponse = TRUE",
+        "INVARIANT NoStaleNavigationRead"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ChatNotificationNavigationOldResponse.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS BindNavigation = TRUE RejectOldResponse = FALSE",
+        "INVARIANT NoStaleNavigationDisplay"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

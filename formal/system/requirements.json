@@ -10226,7 +10226,7 @@
           "Persisted messages, recipient notices and one-to-one mappings",
           "Current consent, block and account lifecycle"
         ],
-        "bounds": "Synthetic PostgreSQL assertions and web tests; no universal proof. Notification model: one cached target, Boolean display/read history, no ordinary background-polling or backend-policy refinement proof."
+        "bounds": "Synthetic PostgreSQL assertions and web tests; no universal proof. Notification model: one cached target, Boolean display/read history, no ordinary background-polling or backend-policy refinement proof. Navigation model: two same-route navigations, one prior pending poll, Boolean membership and display/read history; no backend refinement or liveness claim."
       },
       "allowedTransitions": [
         "Authorized send atomically stores a message, notice and mapping.",
@@ -10241,7 +10241,7 @@
       "effects": [
         "Durable recipient notice; repeatable migration; no historical replay or external sends."
       ],
-      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights. A notification target cannot use cached previews, message bodies or read bookkeeping while its fresh thread-list authorization is pending.",
+      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights. A notification target cannot use cached previews, message bodies or read bookkeeping while its fresh thread-list authorization is pending. Each navigation key requires its own successful list request; old cache writes, an earlier poll, or a previous notification response cannot authorize the new target.",
       "concurrency": "Existing Party and credential locks serialize send/block. Message and notice share the database transaction; read visibility uses statement snapshot semantics.",
       "failure": "Notification insert failure aborts the send; transient list errors retain the notification target for recovery; unavailable/foreign links show a generic unavailable state and never auto-select or mark another thread read.",
       "implementation": [
@@ -10262,9 +10262,10 @@
         "tdf-hq/test/integration/interactions/notification-properties.sql"
       ],
       "formalModels": [
-        "formal/event-operations/ChatNotificationAuthorization.tla"
+        "formal/event-operations/ChatNotificationAuthorization.tla",
+        "formal/event-operations/ChatNotificationNavigation.tla"
       ],
-      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response. An offline-paused, cache-success regression requires an actual post-mount authorization response and preserves the link until reconnection.",
+      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response. An offline-paused, cache-success regression requires an actual authorization response for the current navigation and preserves the link until reconnection. Same-route allowed/revoked tests and delayed ordinary-poll/previous-notification responses exercise a separate navigation-scoped query. The navigation model checks both display/read safety and three cache/response-scope counterexamples.",
       "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
       "ambiguity": [
         "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."

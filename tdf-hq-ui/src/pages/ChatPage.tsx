@@ -232,16 +232,31 @@ function ChatWorkspace() {
     staleTime: 5 * 60_000,
   });
 
-  const threadsQuery = useQuery({
+  const ordinaryThreadsQuery = useQuery({
     queryKey: ['chat-threads', myPartyId],
     queryFn: ChatAPI.listThreads,
-    enabled: Boolean(myPartyId),
+    enabled: Boolean(myPartyId) && requestedThread === null,
     // Consent can change during the session provider's 30-second cache window.
     staleTime: 0,
     refetchOnMount: 'always',
     refetchInterval: 10_000,
   });
 
+  const notificationThreadsQuery = useQuery({
+    // Every navigation gets its own response, even when ChatWorkspace stays
+    // mounted. Neither old cache writes nor a prior in-flight request authorize it.
+    queryKey: ['chat-notification-authorization', myPartyId, location.key, requestedThread],
+    queryFn: async () => {
+      await qc.cancelQueries({ queryKey: ['chat-threads', myPartyId], exact: true });
+      return ChatAPI.listThreads();
+    },
+    enabled: Boolean(myPartyId) && requestedThread !== null,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchInterval: 10_000,
+  });
+  const threadsQuery = requestedThread === null ? ordinaryThreadsQuery : notificationThreadsQuery;
   const notificationAuthorizationPending = requestedThread !== null
     && (!threadsQuery.isFetchedAfterMount || !threadsQuery.isSuccess || threadsQuery.isFetching);
   const threads = useMemo(
@@ -356,6 +371,7 @@ function ChatWorkspace() {
       // Wait for a fresh authorized list; a link never opens or creates a thread.
       if (notificationAuthorizationPending) return;
       requestParamConsumed.current = location.key;
+      qc.setQueryData(['chat-threads', myPartyId], threads);
       navigate('/chat', { replace: true });
       const numeric = parsePositiveInt(rawThread);
       if (numeric === null || !threads.some((thread) => thread.ctThreadId === numeric)) {
@@ -381,7 +397,7 @@ function ChatWorkspace() {
     createThreadMutation.mutate(numeric, {
       onError: (err) => setBannerError(err.message),
     });
-  }, [createThreadMutation, location.key, location.search, navigate, notificationAuthorizationPending, threads]);
+  }, [createThreadMutation, location.key, location.search, myPartyId, navigate, notificationAuthorizationPending, qc, threads]);
 
   const sendMutation = useMutation({
     mutationFn: ({ threadId, body }: { threadId: number; body: string }) => ChatAPI.sendMessage(threadId, body),

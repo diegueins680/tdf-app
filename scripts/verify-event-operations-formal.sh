@@ -218,6 +218,10 @@ run_tlc ChatMutationBoundary.tla ChatMutationBoundary.cfg chat-mutation-boundary
 run_tlc ChatNotificationAuthorization.tla ChatNotificationAuthorization.cfg chat-notification-authorization
 run_negative_tlc ChatNotificationCachedDisplay.cfg chat-notification-cached-display 'Invariant NoCachedDisplay is violated' ChatNotificationAuthorization.tla
 run_negative_tlc ChatNotificationEarlyRead.cfg chat-notification-early-read 'Invariant NoEarlyRead is violated' ChatNotificationAuthorization.tla
+run_tlc ChatNotificationNavigation.tla ChatNotificationNavigation.cfg chat-notification-navigation
+run_negative_tlc ChatNotificationNavigationCached.cfg chat-notification-navigation-cached 'Invariant NoStaleNavigationDisplay is violated' ChatNotificationNavigation.tla
+run_negative_tlc ChatNotificationNavigationEarlyRead.cfg chat-notification-navigation-read 'Invariant NoStaleNavigationRead is violated' ChatNotificationNavigation.tla
+run_negative_tlc ChatNotificationNavigationOldResponse.cfg chat-notification-navigation-old-response 'Invariant NoStaleNavigationDisplay is violated' ChatNotificationNavigation.tla
 run_negative_tlc ChatMutationEarlyCommit.cfg chat-mutation-early-commit 'Invariant RejectedLeavesNoMutation is violated' ChatMutationBoundary.tla
 run_negative_tlc ChatMutationNoRollback.cfg chat-mutation-no-rollback 'Invariant RejectedLeavesNoMutation is violated' ChatMutationBoundary.tla
 run_negative_tlc CredentialLifecycleConcurrentReset.cfg credential-reset-race 'Invariant SingleUseReset is violated' CredentialLifecycle.tla
