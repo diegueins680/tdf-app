@@ -91,6 +91,54 @@ def obligation(source, name, legacy=False):
     return current, limit, amount, result, domain, accepted, valid, preserved
 
 
+def caller_obligation(source, name):
+    """Lower the complete outer validator; no nonnegative-input assumption.
+
+    State membership selects the two recognized capture ceilings. The Boolean is
+    arbitrary, so both branches are covered without a small-state enumeration.
+    Dispatch/reachability and translation correctness remain explicit boundaries.
+    """
+    blocks = re.findall(r"(?ms)^transitionPayment\n(.*?)^applyPaymentEvent\n", source)
+    if len(blocks) != 1:
+        raise ValueError("Expected one complete transitionPayment validator")
+    block = " ".join(blocks[0].split())
+    pattern = (
+        r':: PaymentLifecycle -> PaymentEvent -> Either Text PaymentLifecycle '
+        r'transitionPayment lifecycle event '
+        r'\| (.+?) = Left "[^"\n]*" '
+        r'\| any \(< 0\) \[ (.+?) \] = Left "[^"\n]*" '
+        r'\| (.+?) = Left "[^"\n]*" '
+        r'\| (.+?) = Left "[^"\n]*" '
+        r'\| (.+?) = Left "[^"\n]*" '
+        r'\| otherwise = applyPaymentEvent lifecycle event'
+    )
+    match = re.fullmatch(pattern, block)
+    if not match:
+        raise ValueError("Unsupported complete transitionPayment validator")
+    fields = {field: z3.BitVec(field, 64) for field in (
+        "paymentAmountMinor", "paymentAuthorizedMinor", "paymentCapturedMinor",
+        "paymentRefundedMinor")}
+    first, checked_fields, *guards = match.groups()
+    selectors = checked_fields.split(" , ")
+    if not selectors or any(s not in {f + " lifecycle" for f in fields} for s in selectors):
+        raise ValueError("Unsupported nonnegative-field selectors")
+    rejected = [lower(first, fields), *(lower(guard, fields) for guard in guards)]
+    rejected.extend(lower(selector, fields) < 0 for selector in selectors)
+    admitted = z3.Not(z3.Or(*rejected))
+    # This also validates the full existing capture/refund helper shapes,
+    # including their ceiling selectors; unknown changes cannot inherit a proof.
+    expressions(source, name)
+    if name == "capture":
+        selected = z3.Bool("capture_uses_authorization_ceiling")
+        current = fields["paymentCapturedMinor"]
+        ceiling = z3.If(selected, fields["paymentAuthorizedMinor"], fields["paymentAmountMinor"])
+    elif name == "refund":
+        current, ceiling = fields["paymentRefundedMinor"], fields["paymentCapturedMinor"]
+    else:
+        raise ValueError("Unsupported helper")
+    return admitted, z3.And(current >= 0, ceiling >= 0), fields
+
+
 def check(formula, expected, *, evidence=None, identity=None):
     solver = z3.Solver()
     solver.set(timeout=30_000)
@@ -121,8 +169,27 @@ def verify(source, evidence=None):
         lc, ll, la, _, ld, lac, _, lp = obligation(source, name, legacy=True)
         counterexample = check(z3.And(ld, lac, z3.Not(lp), lc == 1, ll == 2**63 - 1, la == 2**63 - 1), "sat",
                                evidence=evidence, identity=name + "-legacy-counterexample")
+        admitted, precondition, fields = caller_obligation(source, name)
+        check(z3.And(admitted, z3.Not(precondition)), "unsat", evidence=evidence,
+              identity=name + "-caller-precondition")
+        check(z3.And(admitted, precondition, fields["paymentAmountMinor"] == 2**63 - 1,
+                     *(value == 0 for field, value in fields.items() if field != "paymentAmountMinor")),
+              "sat", evidence=evidence, identity=name + "-caller-witness")
+        # Remove one genuine source selector. Negative values must yield a real
+        # SAT violation; failure to recognize syntax alone is not this control.
+        selector = "paymentAuthorizedMinor" if name == "capture" else "paymentRefundedMinor"
+        fragment = ("[ paymentAuthorizedMinor lifecycle\n" if name == "capture"
+                    else "      , paymentRefundedMinor lifecycle\n")
+        replacement = "[ paymentCapturedMinor lifecycle\n" if name == "capture" else ""
+        mutated = source.replace(fragment + ("      , paymentCapturedMinor lifecycle\n" if name == "capture" else ""), replacement)
+        if mutated == source:
+            raise ValueError("Caller mutation did not change the source: " + selector)
+        ma, mp, mf = caller_obligation(mutated, name)
+        check(z3.And(ma, z3.Not(mp), mf[selector] == -1), "sat", evidence=evidence,
+              identity=name + "-caller-control")
         results.append({"function": name, "safety": "unsat", "admission_equivalence": "unsat",
-                        "non_vacuity": "sat", "legacy_counterexample": counterexample})
+                        "caller_precondition": "unsat", "caller_non_vacuity": "sat",
+                        "caller_mutation": "sat", "non_vacuity": "sat", "legacy_counterexample": counterexample})
     return results
 
 
@@ -155,7 +222,7 @@ if __name__ == "__main__":
               "sha256": hashlib.sha256(source_bytes).hexdigest(),
               "solver": z3.get_version_string(), "results": results, "artifacts": artifacts,
               "executionPassed": failure is None, "error": str(failure) if failure else None,
-              "boundary": "Two recognized Haskell arithmetic fragments, all signed Int64 inputs with nonnegative current and limit; trusted shallow translation; not SQL or whole-program refinement"}
+              "boundary": "Two recognized Haskell arithmetic fragments plus outer-validator precondition implications over all signed Int64 fields; trusted shallow translation; not dispatch, SQL or whole-program refinement"}
     if args.output is not None:
         (args.output/"result.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))

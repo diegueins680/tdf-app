@@ -19,7 +19,7 @@ importing producer code or reading its expected results as authority:
 
 | Suite | Inputs | Expected UNSAT | Expected SAT |
 |---|---:|---:|---:|
-| Payment arithmetic | 10 | 4 contracts | 4 witnesses + 2 legacy counterexamples |
+| Payment arithmetic and caller preconditions | 16 | 6 contracts | 6 witnesses + 2 source mutations + 2 legacy counterexamples |
 | Authorization | 17 | 3 contracts + 3 algebra lemmas | 6 witnesses + 5 mutations |
 | Recovery arithmetic | 14 | 4 contracts | 5 witnesses + 5 mutations |
 
@@ -100,7 +100,7 @@ python scripts/verification-report.py --output /absolute/new-directory --require
 
 The first command includes the controlled producer fault; its temporary report
 must fail proof execution. The second uses actual producers and requires fresh
-replay of all 41 inputs. With all narrow contracts established, it still returns
+replay of all 47 inputs. With all narrow contracts established, it still returns
 exit 2 because full release evidence is missing. A proof/tool failure returns 1.
 
 `authorization-replay.json`, `recovery-replay.json`, the payment replay and any

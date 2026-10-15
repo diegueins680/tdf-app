@@ -213,7 +213,7 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
       ],
-      "verification": "Source-derived signed-64-bit SMT safety/admission equivalence, SAT witnesses and negative controls; actual Haskell boundary oracle. Caller preconditions manually inspected; SQL/whole-program proof open.",
+      "verification": "Source-derived signed-64-bit SMT safety/admission equivalence and outer-validator sign-precondition implication, SAT witnesses/source mutations and negative controls; independent CPC refutations; actual Haskell boundary oracle. Translation/composition, dispatch, SQL and whole-program refinement remain open.",
       "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -276,7 +276,7 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
       ],
-      "verification": "Same full-width source-derived SMT and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
+      "verification": "Same full-width source-derived SMT, outer-validator sign-precondition, independent CPC and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
       "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",

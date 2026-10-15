@@ -214,7 +214,7 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
       ],
-      "verification": "Source-derived signed-64-bit SMT safety/admission equivalence, SAT witnesses and negative controls; actual Haskell boundary oracle. Caller preconditions manually inspected; SQL/whole-program proof open.",
+      "verification": "Source-derived signed-64-bit SMT safety/admission equivalence and outer-validator sign-precondition implication, SAT witnesses/source mutations and negative controls; independent CPC refutations; actual Haskell boundary oracle. Translation/composition, dispatch, SQL and whole-program refinement remain open.",
       "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -277,7 +277,7 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
       ],
-      "verification": "Same full-width source-derived SMT and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
+      "verification": "Same full-width source-derived SMT, outer-validator sign-precondition, independent CPC and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
       "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -10201,10 +10201,10 @@
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
     "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
-    "formal/system/proof-certificates.md": "147227e350f5b47377eb6eaa5f31b899425d43857a14eb92dc97002c32b633a3",
+    "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
-    "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
+    "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
     "formal/system/recovery-expiry-arithmetic.json": "3d251010acbff4bd6c6db5a8be3015f1a67fb79bd29ea9fd4b17c3bde1d5d958",
     "formal/system/state-machine-bindings.json": "3ac0e484ece9deb16ec4a8b85338805dfe9a86cdbadd31103b2f528d932de846",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
@@ -10401,12 +10401,12 @@
     "scripts/test-music-worker-image.mjs": "77621bf3782591ee259de08068c291ecefd88f939d5db4667b082093041707e3",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-operations-inbound-capture.sh": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
-    "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
+    "scripts/test-payment-arithmetic-verifier.py": "2fe82782ea7667eca90e4b7178e4bd95def247a120ad92aece333e4c75f96b68",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
-    "scripts/test-proof-certificates.py": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
+    "scripts/test-proof-certificates.py": "daa8f208847358dab9daaa38b917c6a06a83415bda9104d5ee23ef627fa7f24d",
     "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
@@ -10430,13 +10430,13 @@
     "scripts/test-ticket-manual-review-concurrency.sh": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
-    "scripts/test-verification-report.py": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
+    "scripts/test-verification-report.py": "c7135f7d76bdebc33b7493edd6284149a585c1b3220a3af61da03b3ddacb987f",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
-    "scripts/verification-report.py": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
+    "scripts/verification-report.py": "f42ff320583223be02b63438108ef11eb55ff8a385d169fa3435248097b53686",
     "scripts/verify-alloy-controls.mjs": "3a609d6e22e004563fba4a4c58ec9e62267b1db572b073d880bd7feb19870e9c",
     "scripts/verify-auth-predicates.py": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
@@ -10445,7 +10445,7 @@
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
-    "scripts/verify-payment-arithmetic.py": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
+    "scripts/verify-payment-arithmetic.py": "b5453ad687564a682d01f363d8c74c47851bfefb5ab5f2c09025b92b675db6f8",
     "scripts/verify-proof-certificates.py": "8f591e51689a84df4ecbc9af0b37adb8fafe771ddcaddf13dc65763024aeeb46",
     "scripts/verify-readiness.py": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
     "scripts/verify-recovery-expiry.py": "05aaa2a08d1381939d4f48d9d25dcd0b1076d7f596dee2f07db414c2f1bf96c5",
@@ -23722,7 +23722,7 @@
     {
       "id": "SURFACE-b6c843c3e1881f94",
       "path": "scripts/test-payment-arithmetic-verifier.py",
-      "sha256": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
+      "sha256": "2fe82782ea7667eca90e4b7178e4bd95def247a120ad92aece333e4c75f96b68",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23793,7 +23793,7 @@
     {
       "id": "SURFACE-8e3764761ce42dca",
       "path": "scripts/test-proof-certificates.py",
-      "sha256": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
+      "sha256": "daa8f208847358dab9daaa38b917c6a06a83415bda9104d5ee23ef627fa7f24d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24241,7 +24241,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
+      "sha256": "c7135f7d76bdebc33b7493edd6284149a585c1b3220a3af61da03b3ddacb987f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24349,7 +24349,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
+      "sha256": "f42ff320583223be02b63438108ef11eb55ff8a385d169fa3435248097b53686",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24556,7 +24556,7 @@
     {
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
-      "sha256": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
+      "sha256": "b5453ad687564a682d01f363d8c74c47851bfefb5ab5f2c09025b92b675db6f8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45528,7 +45528,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8d5b45f425bda57a8a1d241fdc4fa63f294bfb98bb0c903105fd9559b27fe27c",
+      "sourceSha256": "ebb12c9f636f5ae33b35d6c20ac2bedaf46da3ff1c15001e9e9538190c1ab9e5",
       "definition": {
         "states": [
           "absent",

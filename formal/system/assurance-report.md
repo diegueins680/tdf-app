@@ -43,10 +43,10 @@ inputs are parsed or copied from the exact byte buffers checked by their hashes.
 This prevents transient rereads from attaching a valid formula to a different
 claim; it does not defend against a compromised Python process or hostile host.
 Exact commit alone is insufficient for dirty-source evidence. `arithmetic/*.smt2`
-are the ten exact formulas; `result.json`, `replay.json`, logs and output hashes
+are the sixteen exact formulas; `result.json`, `replay.json`, logs and output hashes
 preserve execution evidence. Replay with pinned `z3 -smt2 FILE.smt2` or Z3Py
-`Solver.from_string`. Four negated properties must be UNSAT; four non-vacuity
-witnesses and two legacy bug counterexamples must be SAT. The reporter pins that
+`Solver.from_string`. Six negated properties must be UNSAT; six non-vacuity
+witnesses, two caller mutation controls and two legacy bug counterexamples must be SAT. The reporter pins that
 expectation for each obligation ID independently of the producer's receipt; a
 producer that relabels a satisfiable safety formula cannot receive a proof label.
 No new release charge,
@@ -89,12 +89,12 @@ for the exact domain, three supporting cardinality lemmas, five mutation control
 and all translation/endpoint limitations. Their seventeen SMT inputs are retained
 in `authorization/`. These do not discharge full requirements or refinement.
 
-Four additional arithmetic obligations are conditional source-derived SMT proofs: capture
-and refund safety and admission equivalence, as defined in
+Six additional arithmetic obligations are conditional source-derived SMT proofs: capture
+and refund safety, admission equivalence and outer-validator sign preconditions, as defined in
 [payment-arithmetic.md](payment-arithmetic.md). No finite input bound is substituted:
 the formula covers every signed Int64 value satisfying its preconditions. The
 translation is trusted, not verified; neither GHC nor complete callers are proved.
-Full requirement and refinement statuses remain UNPROVEN even when all four
+Full requirement and refinement statuses remain UNPROVEN even when all six
 arithmetic claims are PROVEN. These results concern a library whose adapter has no
 discovered active handler caller, not proof of the production payment service.
 
@@ -108,7 +108,7 @@ Metrics stay separate by category; there is no combined “percent correct”.
 The retained legacy arithmetic controls exhibit `current=1`,
 `amount=limit=9223372036854775807`: post-addition admission accepts a wrapped
 negative counter. Main already contains the pre-addition correction. This work
-makes the ten exact solver inputs independently replayable; it introduces no new
+makes the sixteen exact solver inputs independently replayable; it introduces no new
 application behavior or business rule. The old counterexample is not a claim that
 main still has the bug, and SMT serialization is not a proof certificate.
 
@@ -129,8 +129,8 @@ serialized formula, using the same solver; it is not independent solver validati
 No new axioms or admitted theorems are introduced.
 
 The separate [CPC certificate runner](proof-certificates.md) adds CVC5 cross-checks
-of all 41 inputs and independent Ethos checks of fourteen formula obligations
-(twelve distinct inputs). Its receipt links certificate obligations to the
+of all 47 inputs and independent Ethos checks of sixteen formula obligations
+(fourteen distinct inputs). Its receipt links certificate obligations to the
 source-derived report. Complete requirements and refinement remain UNPROVEN;
 this report's release decision is unchanged.
 
@@ -185,7 +185,7 @@ probes validate assumptions and remain test evidence, never universal proofs.
 ## Receipt admission and replay
 
 [Receipt admission](receipt-admission.md) specifies the consumer boundary for all
-41 SMT inputs. Authorization and recovery require independent consumer expectation
+47 SMT inputs. Authorization and recovery require independent consumer expectation
 inventories, source/manifest correspondence, fresh solver replay, complete witnesses
 and controls, and successful producer execution before PROVEN labels are admitted.
 Supporting lemmas are downgraded with failed suites. Arithmetic REFUTED labels also

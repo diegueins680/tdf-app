@@ -16,7 +16,9 @@ ARITHMETIC_EXPECTATIONS = {
     for name in ('capture', 'refund')
     for kind, expected in (('safety', 'unsat'), ('admission', 'unsat'),
                            ('witness-0', 'sat'), ('witness-1', 'sat'),
-                           ('legacy-counterexample', 'sat'))
+                           ('legacy-counterexample', 'sat'),
+                           ('caller-precondition', 'unsat'), ('caller-witness', 'sat'),
+                           ('caller-control', 'sat'))
 }
 
 # These inventories are defined by the consumer, independently of producer labels.
@@ -141,18 +143,22 @@ def build_report(requirements, provenance, arithmetic_ok, reason, refuted=(), au
             raise ValueError('Arithmetic requirement missing from register')
         for kind, claim in (
             ('safety', 'Admitted result equals the exact sum, strictly increases current and is <= limit.'),
-            ('admission', 'Admission iff amount > 0 and the exact sum <= limit.')):
+            ('admission', 'Admission iff amount > 0 and the exact sum <= limit.'),
+            ('caller-precondition', 'The outer lifecycle validator admits only nonnegative helper current and ceiling values; both capture ceilings are covered.')):
+            caller = kind == 'caller-precondition'
             obligations.append({
                 'id': f'{requirement}:{kind}', 'requirementId': requirement,
                 'category': 'source-derived-SMT', 'risk': 'P0',
                 'status': ('REFUTED' if f'{name}-{kind}' in refuted else
                            'PROVEN' if arithmetic_ok else 'UNPROVEN'), 'claim': claim,
-                'mapping': f'Restricted source recognizer lowers actual {name} guards/update to signed 64-bit bitvectors; 65-bit sign extension gives exact sums.',
+                'mapping': ('Complete recognized transitionPayment guards and helper ceiling selectors lower to signed 64-bit bitvectors; arbitrary capture branch selection covers both ceilings.' if caller else
+                            f'Restricted source recognizer lowers actual {name} guards/update to signed 64-bit bitvectors; 65-bit sign extension gives exact sums.'),
                 'method': 'Z3 4.13.3 QF_BV UNSAT of negated claim, SAT witnesses; SMT-LIB replay',
                 'artifact': f'arithmetic/{name}-{kind}.smt2' if arithmetic_ok or f'{name}-{kind}' in refuted else None,
-                'assumptions': ['current and limit are nonnegative signed Int64 values',
-                                'restricted Haskell-to-SMT translator is correct', 'Z3 is sound'],
-                'limitations': 'No verified compiler/translator, caller precondition, dispatch, persistence, active payment handler, concurrency or whole-program refinement proof.',
+                'assumptions': (['Defined signed Int64 lifecycle fields; no sign precondition'] if caller else
+                                ['current and limit are nonnegative signed Int64 values']) +
+                               ['restricted Haskell-to-SMT translator is correct', 'Z3 is sound'],
+                'limitations': 'No verified compiler/translator, dispatch, persistence, active payment handler, concurrency or whole-program refinement proof. The source-to-formula relation and composition remain trusted.',
                 'execution': reason})
             next(row for row in rows if row['requirementId'] == requirement)['obligations'].append(f'{requirement}:{kind}')
     for name, receipt, contract_path in (
@@ -173,7 +179,7 @@ def build_report(requirements, provenance, arithmetic_ok, reason, refuted=(), au
     critical = [row['requirementId'] for row in rows if row['risk'] == 'P0' and row['status'] != 'PROVEN']
     return {
         'schemaVersion': 1, 'provenance': provenance,
-        'scope': 'All registered requirements classified; only capture/refund arithmetic, three authorization predicates and four recovery-time contracts can be discharged by this runner. This is not an exhaustive inventory of all behaviors or derived obligations.',
+        'scope': 'All registered requirements classified; only capture/refund arithmetic and caller preconditions, three authorization predicates and four recovery-time contracts can be discharged by this runner. This is not an exhaustive inventory of all behaviors or derived obligations.',
         'requirements': rows, 'obligations': obligations,
         'metrics': {'requirements': count_status(rows),
                     'requirementsWithDeclaredAmbiguityEntries': sum(bool(row['ambiguities']) for row in rows),
@@ -378,7 +384,7 @@ def run(out, require_release):
         (out/'replay.json').write_text(json.dumps(replay, indent=2) + '\n')
         if fingerprint(requirements) != before:
             raise ValueError('Sources changed during verification')
-        ok, reason = True, 'Fresh solver execution, controls and ten serialized SMT problems replayed successfully'
+        ok, reason = True, 'Fresh solver execution, controls and all expected serialized SMT problems replayed successfully'
     except Exception as error:  # Preserve failed/inconclusive execution; never promote it.
         reason = str(error)
     refuted = []
