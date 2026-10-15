@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "ec173810d1405c6946b0e3b8380c191795856805",
+  "mobileRevision": "a30fd4f6045243c5379ce1ced2436d073f38e173",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -10485,7 +10485,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "546dffbda07d4e873c0f00eaf8a70a422d221210e70e8253a7b9e6ef6fd52cd8",
+    "docs/catalog-persistence/catalog-list-decisions.json": "df3301a5e4e14ee920619c251b37263a396222b586b415ff66344c0cf35208fc",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -19625,7 +19625,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "1176ed0b7bbf632eea70e241d7bd10346614b46e00833381cd403e662c4dbea9",
+      "sha256": "d02719a1f53c647f676a77b0b9b212f995aaaebd2269d41818d627cd3cf82a69",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20589,7 +20589,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
+      "sha256": "7cd67b064f105fb39c34c3c7798c6b1031c4892bcb90edbfeb85806bbe8c8bad",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22348,6 +22348,18 @@
       ]
     },
     {
+      "id": "SURFACE-ee87483424711c8a",
+      "path": "scripts/lib/music_payment_conformance.py",
+      "sha256": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-MUSIC-OUTCOME-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-0fae219dd0862347",
       "path": "scripts/lib/openclaw-cdp.mjs",
       "sha256": "70572d87ee664731c0ac69096dd6c3eeffe46ee2a2e6635863b5e6c20c324e74",
@@ -22409,7 +22421,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "f964eb5657627888dccf15fec7994cedaa124e24c433537af9a5408033693397",
+      "sha256": "b25c91b04c00887f224f0b670f88c0190a157f8ebddb5161299bbfa3886ebcfe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22699,7 +22711,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "14d44b2210248e593e2d95a1010b7ed58a8c5aa666ad3efe90386c433d70e38d",
+      "sha256": "6d5788d0b9efc8df6e2d55285abd67bffe9814da31594b923729893849e10906",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22783,7 +22795,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "856841c5236ba278e8c9dfb7f69757c8ecf3a97caef74aeeef5e7418b7885188",
+      "sha256": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23624,9 +23636,21 @@
       ]
     },
     {
+      "id": "SURFACE-d48fe23154c42420",
+      "path": "scripts/test-backend-version-rebuild.py",
+      "sha256": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-VERSION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "9077f23b7be20e128350366b712c180f3233c6dbe23e977c7cc176db57870404",
+      "sha256": "ad8e8a2cb66b2d8bdec18987f8aeb5b7dd1ebdde85e9a9d97ef75cd79f9f8267",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24239,6 +24263,18 @@
       ]
     },
     {
+      "id": "SURFACE-bca3bb1c75dd07ab",
+      "path": "scripts/test-music-payment-outcomes.sh",
+      "sha256": "f529c92e471a8118013eab1c229abc7c0cc9ec64b8ac925a8ef677e9f57c02ac",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-MUSIC-OUTCOME-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5f96370db974b8c1",
       "path": "scripts/test-music-playback-identity.mjs",
       "sha256": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
@@ -24289,7 +24325,7 @@
     {
       "id": "SURFACE-6508907c85e1859b",
       "path": "scripts/test-music-release-api-e2e.sh",
-      "sha256": "ad2fddf35b44f483be2a28b90b6614b8c2da7c92ec113f436733fffe4c5b4b88",
+      "sha256": "fb56372d6b979d29e762ab609ceb779012be64efd4d152105060a9ebc559116e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25033,7 +25069,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "9093ba20ae30d31731b6b2d157a79b68627df95311c58607c97d55f3aa945d93",
+      "sha256": "71acf0278cfae8fdd1414e2d2915dee19542b56fee344c13c2a61513fda3dcc3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26236,7 +26272,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "33c8e77088121c26c6c504efae56685a1d8eca6ba05f8ab3eb89135868f3064e",
+      "sha256": "58f0cb7fb5299e3571ee574e3a965196883c0fab63c208f68aa20ce5bad83fd5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27888,7 +27924,7 @@
     {
       "id": "SURFACE-9fb827f13f2ab951",
       "path": "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
-      "sha256": "51ae6b0d232085def9519c716b62c63e348f5e8920fa356d537e633048af28b5",
+      "sha256": "6d374f89848428dc6636951465e899c9488ac588f958152982f46b75444aa75f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27900,7 +27936,7 @@
     {
       "id": "SURFACE-cc4546803ae98fba",
       "path": "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
-      "sha256": "9544eb483c5460fde46a93e265f9bf9faf22cfa3c66eaa8e50af93adbac09fd5",
+      "sha256": "f65734eaafb845063f509d9a51a46815496669d75821658d35a6f7ae88f91316",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32505,7 +32541,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "a8b8acf3ff41498c2b0bce21c9ebed7fdda058a7eaa7024b6ab9cc0eb8e170d1",
+      "sha256": "3fe956fbbcacbc895ceffdc219f9827282504e3eb12f56439b2577e49e4b6cdc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35845,6 +35881,18 @@
       ]
     },
     {
+      "id": "SURFACE-465082e284a1dd48",
+      "path": "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
+      "sha256": "0eaf8fd7a04836f35eae5693a709933109c4aa91b63d0eb2b5a148c2c257db94",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-MUSIC-OUTCOME-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -37694,7 +37742,7 @@
     {
       "id": "SURFACE-5cbf72ef8bf21ded",
       "path": "tdf-hq/src/TDF/Server/CommerceOperations.hs",
-      "sha256": "fce3e53d4c0335488e7ae5f85f64cc9a85ea655b2419f9fc1b32e3259a661ae7",
+      "sha256": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37868,7 +37916,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "2658801afd15866b792343f931c268f38c4b21cf7446583160b0da69cbd071d7",
+      "sha256": "44cc676fab692ead582f71d854211c29accd5ff61a3553ac16d9700f49caa49c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38506,7 +38554,7 @@
     {
       "id": "SURFACE-8e95ce26cbe1127d",
       "path": "tdf-hq/src/TDF/Version.hs",
-      "sha256": "f0ee9bb7f48a77bf52e52e9a0a3efb70a747b951e384c6cac4792d996ceeef48",
+      "sha256": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40266,6 +40314,30 @@
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-DDEX-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2b7430b725eff68f",
+      "path": "tdf-hq/test/sql/music_payment_outcomes.sql",
+      "sha256": "80e711c6b9f7b6b4c9631982b34dc3a8f57140d8b6c5075aed2e2fbe419d9ec3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-MUSIC-OUTCOME-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-54ee080f4f17ae3d",
+      "path": "tdf-hq/test/sql/music_payment_state_fixture.sql",
+      "sha256": "21419841a8180565108a8a4f2bf3e2d5b97c351ba0f4db4a5d5c3bd060cfae22",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-MUSIC-OUTCOME-001",
           "relationship": "tests"
         }
       ]
@@ -42111,7 +42183,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "33c8e77088121c26c6c504efae56685a1d8eca6ba05f8ab3eb89135868f3064e",
+      "sha256": "58f0cb7fb5299e3571ee574e3a965196883c0fab63c208f68aa20ce5bad83fd5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

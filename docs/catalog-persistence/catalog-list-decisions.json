@@ -81966,6 +81966,15 @@
             "history": "Full pre-existing nested decision provenance remains on the containing successor unchanged."
           }
         ]
+      },
+      "parallelReviewedDecisionSource": {
+        "revision": "8fb375ec68b1340f14b9c929715bbc7b96426160",
+        "path": "docs/catalog-persistence/catalog-list-decisions.json",
+        "recordId": "7f2803455cf4b4e8e6db",
+        "documentGitBlob": "15230e7f9ecd0dfe66b59d7cc457315b4a25e0b1",
+        "completeRecordSha256": "74abcea9b9cc44ff52d72484f4df1d6afb87d4a085855ad1c536b68b1e07de43",
+        "hashEncoding": "UTF-8 JSON, sorted object keys, compact separators, non-ASCII preserved",
+        "representation": "parallelReviewedDecision contains the reviewed record fields except previousDecision; the complete record remains at the immutable source above. Shared predecessor history is retained under the active previousDecision chain without duplicating its large subtree."
       }
     },
     {
