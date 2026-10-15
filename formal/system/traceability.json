@@ -10990,7 +10990,7 @@
     "scripts/production-migrations.json": "4cfb306aad56cef7821d69d4a608ee2f3cfc61b29621c1f353c86f33edd79c7a",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
-    "scripts/qualify-current-image-shutdown.py": "e790b79921fc00c578bd7b7cea6732ad77eb6a77a434ab4b387eb35912807e1f",
+    "scripts/qualify-current-image-shutdown.py": "f1f1df314da6d1b5eec0058123033dc2f7d04c1497d3075931ac845a27f60ab6",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "a701525a1028187bc17366e1163493f5d44e17df8749d67efa564817dd5b8267",
@@ -23203,7 +23203,7 @@
     {
       "id": "SURFACE-d9c2acee16d60d4a",
       "path": "scripts/qualify-current-image-shutdown.py",
-      "sha256": "e790b79921fc00c578bd7b7cea6732ad77eb6a77a434ab4b387eb35912807e1f",
+      "sha256": "f1f1df314da6d1b5eec0058123033dc2f7d04c1497d3075931ac845a27f60ab6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

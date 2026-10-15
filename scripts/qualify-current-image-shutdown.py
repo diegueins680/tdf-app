@@ -243,6 +243,17 @@ class Fixture:
         except BaseException as error:
             self.report['status'] = 'failed'
             self.report['failureType'] = type(error).__name__
+            self.report['syntheticContainerFailures'] = []
+            for name in self.containers:
+                try:
+                    row = self.inspect(name)
+                    logs = self.docker(['logs', '--tail=50', name], allow_failure=True)
+                    self.report['syntheticContainerFailures'].append({
+                        'fixtureRole': name.rsplit('-', 1)[-1], 'running': row['State']['Running'],
+                        'exitCode': row['State']['ExitCode'], 'oomKilled': row['State']['OOMKilled'],
+                        'syntheticLogs': (logs.stdout+logs.stderr).decode(errors='replace')[:8192]})
+                except Exception:
+                    self.report['syntheticContainerFailures'].append({'inspectionUnavailable': True})
             raise
         finally:
             try:
