@@ -9,7 +9,7 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSy
 import { dirname, join } from 'node:path';
 import { tmpdir, userInfo } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { disposableMusicDatabase, musicTestEnvironment } from './lib/music-test-database.mjs';
+import { disposableMusicDatabase, musicTestEnvironment, musicTestDatabaseUrl } from './lib/music-test-database.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const runtime = mkdtempSync(join(tmpdir(), 'tdf-music-worker-test-'));
@@ -89,7 +89,7 @@ copyFileSync(join(root, 'test/fixtures/music-worker/curl.mjs'), join(bin, 'curl'
 chmodSync(join(bin, 'curl'), 0o755);
 const workerEnv = {
   ...env, PATH: `${bin}:${env.PATH}`,
-  DATABASE_URL: `postgresql://127.0.0.1:5432/${database}?user=${encodeURIComponent(env.PGUSER)}`,
+  DATABASE_URL: musicTestDatabaseUrl(database, env),
   MUSIC_S3_ENDPOINT: 'https://music-worker.test.invalid',
   MUSIC_S3_ACCESS_KEY_ID: 'synthetic-worker-access',
   MUSIC_S3_SECRET_ACCESS_KEY: 'synthetic-worker-secret',

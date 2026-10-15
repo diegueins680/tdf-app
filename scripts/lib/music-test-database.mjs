@@ -50,5 +50,18 @@ export function musicTestEnvironment({ source, username, runtime }) {
     env.PGUSER = decodeURIComponent(url.username) || username;
     if (url.password) env.PGPASSWORD = decodeURIComponent(url.password);
   }
+  if (source.CI === 'true') env.CI = 'true';
   return env;
+}
+
+export function musicTestDatabaseUrl(database, env) {
+  assert.match(database, /^tdf_music_worker_[0-9]{1,10}_[a-f0-9]{32}$/);
+  assert.ok(['127.0.0.1', 'localhost', 'postgres'].includes(env.PGHOST));
+  const url = new URL('postgresql://127.0.0.1');
+  url.hostname = env.PGHOST;
+  url.port = env.PGPORT;
+  url.username = env.PGUSER;
+  url.password = env.PGPASSWORD || '';
+  url.pathname = `/${database}`;
+  return url.href;
 }

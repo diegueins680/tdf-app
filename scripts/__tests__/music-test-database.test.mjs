@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { disposableMusicDatabase, musicTestEnvironment } from '../lib/music-test-database.mjs';
+import { disposableMusicDatabase, musicTestEnvironment, musicTestDatabaseUrl } from '../lib/music-test-database.mjs';
 const database = `tdf_music_worker_123_${'a'.repeat(32)}`;
 function fixture({ exists = false, failCreate = false } = {}) {
   const calls = []; let polls = 0;
@@ -51,6 +51,11 @@ test('explicit isolated CI connection never reuses the supplied database', () =>
   }, username: 'root', runtime: '/tmp/synthetic' });
   assert.equal(env.PGHOST, 'postgres'); assert.equal(env.PGUSER, 'postgres');
   assert.equal(env.PGPASSWORD, 'p@ss'); assert.equal(env.PGDATABASE, undefined);
+  const worker = new URL(musicTestDatabaseUrl(database, env));
+  assert.equal(worker.hostname, 'postgres'); assert.equal(worker.port, '5432');
+  assert.equal(worker.username, 'postgres'); assert.equal(decodeURIComponent(worker.password), 'p@ss');
+  assert.equal(worker.pathname, `/${database}`); assert.equal(worker.search, '');
+
 });
 test('worker CI connection rejects remote, non-test and connection override targets', () => {
   for (const value of [
@@ -65,4 +70,44 @@ test('worker CI connection rejects remote, non-test and connection override targ
   assert.throws(() => musicTestEnvironment({ source: { CI: 'true', PGHOSTADDR: '203.0.113.1',
     TDF_MUSIC_WORKER_TEST_DATABASE_URL: 'postgresql://postgres@postgres/worker_test',
   }, username: 'root', runtime: '/tmp/test' }));
+});
+
+test('worker connection follows the isolated server port and never targets a non-owned database', () => {
+  const env = musicTestEnvironment({ source: {
+    TDF_MUSIC_WORKER_TEST_DATABASE_URL: 'postgresql://tester:synthetic@127.0.0.1:55448/worker_test',
+  }, username: 'unrelated', runtime: '/tmp/synthetic' });
+  const worker = new URL(musicTestDatabaseUrl(database, env));
+  assert.equal(worker.port, '55448'); assert.equal(worker.username, 'tester');
+  assert.equal(worker.pathname, `/${database}`);
+  assert.throws(() => musicTestDatabaseUrl('postgres', env));
+  assert.throws(() => musicTestDatabaseUrl(database, { ...env, PGHOST: 'production.invalid' }));
+});
+
+import { mkdtempSync, existsSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+test('synthetic renderer accepts owned local/CI URLs and rejects routing overrides before writing', () => {
+  const renderer = fileURLToPath(new URL('../../test/fixtures/music-worker/ddex-render.mjs', import.meta.url));
+  const cases = [
+    [`postgresql://tester:synthetic@127.0.0.1:55448/${database}`, {}, true],
+    [`postgresql://postgres:synthetic@postgres:5432/${database}`, { CI: 'true' }, true],
+    [`postgresql://postgres@postgres:5432/${database}`, {}, false],
+    [`postgresql://production.invalid/${database}`, {}, false],
+    ['postgresql://127.0.0.1/production', {}, false],
+    [`postgresql://127.0.0.1/${database}?host=production.invalid`, {}, false],
+    [`postgresql://127.0.0.1/${database}`, { PGHOSTADDR: '203.0.113.1' }, false],
+  ];
+  for (const [url, extra, accepted] of cases) {
+    const scratch = mkdtempSync(join(tmpdir(), 'tdf-renderer-connection-'));
+    try {
+      const xml = join(scratch, 'fixture.xml');
+      const result = spawnSync(process.execPath, [renderer, 'synthetic', xml, join(scratch, 'manifest')],
+        { encoding: 'utf8', env: { PATH: process.env.PATH, DATABASE_URL: url, ...extra } });
+      assert.equal(result.status === 0, accepted, result.stderr);
+      assert.equal(existsSync(xml), accepted);
+    } finally { rmSync(scratch, { recursive: true }); }
+  }
 });
