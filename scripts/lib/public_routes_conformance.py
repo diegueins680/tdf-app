@@ -74,12 +74,13 @@ def verify_public_route_denial(root, port, check):
         headers, query = wrong_capability(entry)
         wrong = call(method, path + query, headers, body)
         label = method + ' ' + entry['path']
+        provider_unavailable = entry['boundary'] in PROVIDER_BOUNDARIES or label in PROVIDER_GATED
         for name, (status, text) in (('none', anonymous), ('wrong', wrong)):
-            if status >= 500 and status != 503:
+            if status >= 500 and not (status == 503 and provider_unavailable):
                 faults.append(label + ' ' + name + ' ' + str(status))
             if any(marker in text for marker in PRIVATE_MARKERS):
                 leaks.append(label + ' ' + name)
-        denied = DENIED | ({503} if entry['boundary'] in PROVIDER_BOUNDARIES or label in PROVIDER_GATED else set())
+        denied = DENIED | ({503} if provider_unavailable else set())
         if label in ANONYMOUS_ANSWER:
             # The anonymous value (null, empty) for an anonymous caller; a wrong
             # bearer token is no session and receives exactly the same answer.

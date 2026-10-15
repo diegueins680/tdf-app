@@ -130,3 +130,14 @@ bearer token only, not a cookie. Other "Stripe is not configured" 500s remain on
 authenticated routes (artist tips, ticket checkout reuse, admin), outside this
 register. The OpenAPI document does not list the social-events Stripe webhook. Query-back callbacks (Datafast, Payphone,
 PlaceToPay) answer 503 unconfigured; their body authentication is AUTH-WEBHOOK-001.
+
+### Denial-sweep server faults
+
+An HTTP 503 is tolerated only for provider callback/challenge boundaries and the
+explicitly named provider-gated Stripe intent route, where the synthetic backend
+has no provider configured. An ordinary session, capability or operator route
+returning 503 fails the server-fault assertion. Other 5xx statuses also fail on
+provider routes. `scripts/test-public-route-denial.py` exercises the entire sweep
+against local HTTP fixtures, including both anonymous and wrong-capability
+responses; restoring the former global 503 exemption fails the regression. These
+fixtures test the checker, not real handler authorization.
