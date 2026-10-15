@@ -650,9 +650,11 @@ are defined there; the model does not establish a complete checkout lifecycle.
 
 `TicketManualReview.tla` and five configurations check the rule in
 [ticket-manual-review.md](../system/ticket-manual-review.md): concurrent reviewers
-of one transfer reach one decision, record at most one payment, and are each
-answered. The two positive models and three negative controls are mandatory in
-the formal runner.
+of one transfer record at most one payment, keep payment and evidence consistent,
+and do not enter an error state when a review decision runs. `EveryoneAnswered`
+is a safety invariant despite its name: the model permits stuttering and has no
+fairness assumption or eventual-completion property. The two positive models
+and three negative controls are mandatory in the formal runner.
 ## Access grant boundary — AUTH-ACCESS-PROVISION-001 / AUTH-ARTIST-INVITE-001 (2026-10-09)
 
 `AccessGrant.tla` checks one reviewed access request and one personal invitation link.

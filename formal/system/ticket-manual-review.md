@@ -63,6 +63,11 @@ step and the lock is a flag, so it says nothing about PostgreSQL's re-read
 after a wait, deadlocks, the buyer resubmitting, the seat hold, time or
 issuance.
 
+`EveryoneAnswered` excludes the `error` state; it does not require a reviewer to
+leave `idle` or `read`. `Spec` permits stuttering and assumes no fairness, so these
+checks do not establish eventual completion. The overlap tests below observe
+both responses in their tested executions, independently of this model property.
+
 ## Tests
 
 `tdf-hq/test/TDF/TicketManualReviewSpec.hs`, run by

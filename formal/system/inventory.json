@@ -22978,7 +22978,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "82a84f0544869d21433aeefe1acc12a35285802488d648fbad1477a00c396268",
+      "sha256": "626ca81a97aa95d55b336ee329e011ad3351552a5a8bc943d9851ce867c289b3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24945,7 +24945,7 @@
     },
     {
       "path": "formal/system/ticket-manual-review.md",
-      "sha256": "46eea38c5c2fa66e005d1f4a3250fa0b760ca1eb6e34eab58b7118cb34a61c55",
+      "sha256": "43276efed8b16be6cf9ad2c1fa3517a3d294144bd8ec26f6f793b8f06b6c43d1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
