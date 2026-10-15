@@ -569,8 +569,6 @@ EngagementEvent
     eventType        Text
     metadata         Text Maybe
     createdAt        UTCTime
-    IndexEngagementArtistCreated targetArtistId createdAt !force
-    IndexEngagementActorCreated actorPartyId createdAt !force
     deriving Show Generic
 PartyFollow
     followerPartyId  PartyId
@@ -592,7 +590,6 @@ ChatMessage
     body             Text
     createdAt        UTCTime
     deriving Show Generic
-    IndexChatMessageThread threadId
 PartyRadioPresence
     partyId          PartyId
     streamUrl        Text

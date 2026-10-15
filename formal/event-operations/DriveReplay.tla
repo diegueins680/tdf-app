@@ -61,9 +61,9 @@ Lookup(r) ==
   /\ req' = [req EXCEPT ![r].phase = "looked", ![r].seen = entry[req[r].folder]]
   /\ UNCHANGED <<entry, objects>>
 
-(* The multipart create: the entry is written with the request's fingerprint.
-   A second create for the same key adds an object; a later lookup would then
-   fail closed (two matches), which no request in this model reaches. *)
+(* The multipart create writes the request fingerprint in its folder.
+   A second create for the same key and folder adds a duplicate object;
+   a later lookup would fail closed (two matches), outside this two-request model. *)
 Create(r) ==
   /\ req[r].phase = "looked" /\ req[r].seen = None
   /\ objects' = objects + 1
@@ -135,9 +135,9 @@ NoLegacyAdoption == \A r \in Reused : entry[req[r].folder].kind # "legacy"
    conflict nor a reuse creates a provider object. *)
 ConflictNoMutation == objects = Cardinality({r \in Requests : req[r].result = "created"})
 
-(* Not an invariant of the lookup-then-create design: two requests that
-   both see no entry both create. Checked only by the Race configuration,
-   which is expected to fail. *)
+(* Not a global invariant: concurrent misses in the same folder both create,
+   and sequential requests in separate folders legitimately create twice.
+   Race and CrossFolderObjects both check this as an expected counterexample. *)
 SingleObject == objects <= 1
 
 =============================================================================
