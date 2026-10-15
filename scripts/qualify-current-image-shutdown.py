@@ -27,6 +27,7 @@ APP_ENV = {
     'LANG': 'C.UTF-8', 'APP_ENV': 'production', 'APP_PORT': '8080',
     'DB_HOST': '127.0.0.1', 'DB_PORT': '5432', 'DB_USER': 'postgres',
     'DB_PASS': 'synthetic-isolated-only', 'DB_NAME': 'tdf_hq', 'DB_SSLMODE': 'disable',
+    'DEFAULT_LOCALE': 'es',
     'RUN_MIGRATIONS': 'false', 'AUTO_APPLY_PRODUCTION_MIGRATIONS': 'false',
     'RESET_DB': 'false', 'SEED_DB': 'false', 'ALLOW_ALL_ORIGINS': 'false',
     'CORS_DISABLE_DEFAULTS': 'true', 'ALLOWED_ORIGINS': 'https://www.tdfrecords.net',
