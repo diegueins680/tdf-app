@@ -143,7 +143,7 @@ class Fixture:
             '--tmpfs=/var/lib/postgresql/data:rw,nosuid,nodev,size=1073741824,uid=999,gid=999',
             '--tmpfs=/var/run/postgresql:rw,nosuid,nodev,size=16777216,uid=999,gid=999',
             '--tmpfs=/tmp:rw,nosuid,nodev,size=16777216', '--entrypoint=/usr/bin/env', POSTGRES,
-            '-i', 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+            '-i', 'PATH=/usr/lib/postgresql/17/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
             'LANG=C.UTF-8', 'PGDATA=/var/lib/postgresql/data', 'POSTGRES_USER=postgres',
             'POSTGRES_PASSWORD=synthetic-isolated-only', 'POSTGRES_DB=tdf_hq',
             '/usr/local/bin/docker-entrypoint.sh', 'postgres', '-c', 'listen_addresses=127.0.0.1'])
@@ -232,12 +232,18 @@ class Fixture:
         try:
             self.report['startedAt'] = datetime.now(timezone.utc).isoformat()
             self.report['diagnosticSource'] = self.source_snapshot()
+            self.report['stage'] = 'prepare'
             self.prepare()
             for signal in ('SIGTERM', 'SIGINT'):
+                self.report['stage'] = 'observe-'+signal
                 self.observe(signal)
             require(self.source_snapshot() == self.report['diagnosticSource'])
             self.report['completedAt'] = datetime.now(timezone.utc).isoformat()
             self.report['status'] = 'observed-not-release-qualified'
+        except BaseException as error:
+            self.report['status'] = 'failed'
+            self.report['failureType'] = type(error).__name__
+            raise
         finally:
             try:
                 self.cleanup()

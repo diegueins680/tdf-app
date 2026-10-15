@@ -4418,7 +4418,7 @@
     {
       "id": "SURFACE-d9c2acee16d60d4a",
       "path": "scripts/qualify-current-image-shutdown.py",
-      "sha256": "2057c1a7bf4a84977cafc1c26407d2bdc8d271e3938fae98860e4654eeab6bee",
+      "sha256": "e790b79921fc00c578bd7b7cea6732ad77eb6a77a434ab4b387eb35912807e1f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
