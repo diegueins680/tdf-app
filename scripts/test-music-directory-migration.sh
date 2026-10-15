@@ -4,7 +4,13 @@ set -eu
 TDF_DIRECTORY_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 TDF_DIRECTORY_CONTAINER="tdf-directory-migration-test-$$"
 TDF_DIRECTORY_DATABASE="tdf_directory_test"
-TDF_DIRECTORY_API_PORT=$((18000 + ($$ % 1000)))
+TDF_DIRECTORY_API_PORT=$(node -e '
+  const server = require("node:net").createServer();
+  server.listen(0, "127.0.0.1", () => {
+    console.log(server.address().port);
+    server.close();
+  });
+')
 TDF_DIRECTORY_API_LOG="${TMPDIR:-/tmp}/tdf-directory-api-$$.log"
 TDF_DIRECTORY_API_PID=""
 
@@ -54,6 +60,7 @@ TDF_DIRECTORY_DB_PORT=$(docker port "$TDF_DIRECTORY_CONTAINER" 5432/tcp | sed 's
 
 (
   cd "$TDF_DIRECTORY_ROOT/tdf-hq"
+  exec env \
   DB_HOST=127.0.0.1 \
   DB_PORT="$TDF_DIRECTORY_DB_PORT" \
   DB_USER=postgres \
@@ -489,10 +496,23 @@ INSERT INTO directory_search_document(
 );
 SQL
 
+# Current handlers read the RSVP projection and derived-listing columns.
+# Keep the preceding historical migration/rollback tests, then establish these
+# existing release prerequisites before serving the current API from the fixture.
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-13_unified_checkout_core.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-07_directory_event_visibility_and_favorite_evidence.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-08_event_rsvp_identity_privacy_feed.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql" >/dev/null
+
 # Exercise the anonymous taxonomy handler against the migrated database. This catches
 # drift between the SQL implementation and the canonical OpenAPI/client projection.
 (
   cd "$TDF_DIRECTORY_ROOT/tdf-hq"
+  exec env \
   DB_HOST=127.0.0.1 \
   DB_PORT="$TDF_DIRECTORY_DB_PORT" \
   DB_USER=postgres \
@@ -949,6 +969,16 @@ stop_api
 # The backfill must not notify saved searches about events that already
 # existed: drop the event documents, subscribe, then apply the migration.
 psql_exec >/dev/null <<'SQL'
+-- Earlier privacy fixtures deliberately suppress every imported event. Supply
+-- a separate public event so backfill cannot pass by exposing a tombstone.
+INSERT INTO social_event (
+  organizer_party_id,title,description,event_type_id,workflow_state_id,
+  start_time,end_time,venue_id,created_at,updated_at
+)
+SELECT 'synthetic-directory-backfill','Synthetic visible backfill event',
+  'Public positive control alongside suppressed event fixtures.',event_type_id,
+  workflow_state_id,start_time,end_time,venue_id,now(),now()
+FROM social_event WHERE title='Synthetic suppressed directory event';
 DELETE FROM directory_search_document WHERE entity_kind IN ('event', 'venue');
 INSERT INTO party (display_name, is_org, created_at) VALUES ('Event backfill subscriber', FALSE, now());
 INSERT INTO directory_saved_search (account_party_id, name, canonical_query, query_hash, alerts_enabled, alert_frequency)
@@ -961,6 +991,8 @@ test "$(psql_exec -Atc "SELECT count(*) FROM directory_search_document WHERE ent
 test "$(psql_exec -Atc "SELECT count(*) FROM directory_alert_delivery delivery JOIN directory_saved_search saved ON saved.id = delivery.saved_search_id WHERE saved.name = 'Event backfill alert';")" = "0"
 test "$(psql_exec -Atc "SELECT tgenabled FROM pg_trigger WHERE tgrelid = 'directory_search_document'::regclass AND tgname = 'directory_search_alert_trigger';")" = "O"
 psql_exec -c "DELETE FROM directory_saved_search WHERE name = 'Event backfill alert';" >/dev/null
+# Remove only this phase's positive control before exact HTTP facet counts.
+psql_exec -c "DELETE FROM social_event WHERE organizer_party_id='synthetic-directory-backfill' AND title='Synthetic visible backfill event';" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sync.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
@@ -969,6 +1001,50 @@ psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sy
 # redefines the venue projection (venue image); keep the database in release
 # order before serving searches from it.
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql" >/dev/null
+# A genre search alias edit resyncs the events it reaches (2026-10-14):
+# apply twice, verify, roll back, reapply and verify again.
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_alias_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync_rollback.sql" >/dev/null
+# An alias added while the trigger is absent leaves a stale document; applying
+# the migration repairs it without alerting a matching saved search.
+psql_exec >/dev/null <<'SQL'
+INSERT INTO social_artist_profile (name, genres, created_at, updated_at)
+VALUES ('Alias repair headliner', ARRAY['alias repair word'], now(), now());
+INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+                          workflow_state_id, timezone, start_time, end_time, metadata, created_at, updated_at)
+SELECT NULL, 'Alias repair night', 'Synthetic lineup', NULL, (SELECT id FROM event_type ORDER BY sort_order, id LIMIT 1),
+       (SELECT state.id FROM workflow_state state JOIN workflow_state_capability capability
+          ON capability.state_id = state.id AND capability.capability_code = 'public-listable' AND capability.enabled
+        WHERE state.active LIMIT 1),
+       'America/Guayaquil', now() + interval '2 days', now() + interval '2 days 3 hours', '{"isPublic": true}', now(), now();
+INSERT INTO event_artist (event_id, artist_id, role)
+SELECT event.id, artist.id, 'headliner' FROM social_event event, social_artist_profile artist
+WHERE event.title = 'Alias repair night' AND artist.name = 'Alias repair headliner';
+-- Subscribed after the event exists, so only the repair could alert it.
+INSERT INTO party (display_name, is_org, created_at) VALUES ('Alias repair subscriber', FALSE, now());
+INSERT INTO directory_saved_search (account_party_id, name, canonical_query, query_hash, alerts_enabled, alert_frequency)
+SELECT id, 'Alias repair alert', '{}'::jsonb, repeat('a', 64), TRUE, 'instant'
+FROM party WHERE display_name = 'Alias repair subscriber';
+INSERT INTO catalog_search_alias (catalog_id, entity_kind, entity_id, locale_id, term, normalized_term, source)
+SELECT catalog.id, 'genre', (SELECT id FROM genre WHERE active ORDER BY sort_order, id LIMIT 1),
+       (SELECT id FROM locale_reference WHERE code = 'es'), 'alias repair word',
+       directory_normalize_text('alias repair word'), 'migration-test'
+FROM catalog_definition catalog WHERE catalog.code = 'genres';
+SQL
+alias_repair_genres="SELECT document.genre_ids = ARRAY[(SELECT id FROM genre WHERE active ORDER BY sort_order, id LIMIT 1)] FROM directory_search_document document JOIN social_event event ON event.id::text = document.entity_id WHERE document.entity_kind = 'event' AND event.title = 'Alias repair night';"
+test "$(psql_exec -Atc "$alias_repair_genres")" = "f"
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql" >/dev/null
+test "$(psql_exec -Atc "$alias_repair_genres")" = "t"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_alert_delivery delivery JOIN directory_saved_search saved ON saved.id = delivery.saved_search_id WHERE saved.name = 'Alias repair alert';")" = "0"
+test "$(psql_exec -Atc "SELECT tgenabled FROM pg_trigger WHERE tgrelid = 'directory_search_document'::regclass AND tgname = 'directory_search_alert_trigger';")" = "O"
+psql_exec >/dev/null <<'SQL'
+DELETE FROM directory_saved_search WHERE name = 'Alias repair alert';
+DELETE FROM event_artist WHERE event_id IN (SELECT id FROM social_event WHERE title = 'Alias repair night');
+DELETE FROM social_event WHERE title = 'Alias repair night';
+SQL
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_alias_sync.sql" >/dev/null
 
 # /directory/search over the migrated database: Eventos + city, Todo, tab
 # counts, people-only filters, lineup genre, event card fields.
@@ -977,6 +1053,7 @@ event_search_genre_id=$(psql_exec -Atc "SELECT id FROM genre WHERE active ORDER 
 event_search_profession_id=$(psql_exec -Atc "SELECT id FROM profession WHERE active ORDER BY sort_order, id LIMIT 1;")
 (
   cd "$TDF_DIRECTORY_ROOT/tdf-hq"
+  exec env \
   DB_HOST=127.0.0.1 \
   DB_PORT="$TDF_DIRECTORY_DB_PORT" \
   DB_USER=postgres \

@@ -1,12 +1,19 @@
 import { buildLoginRedirectPath, resolvePostAuthPath } from '../utils/loginRouting';
 import type { NotificationDTO } from '../api/types';
-import { notificationLink, notificationTargetPath } from './notificationTarget';
+import { notificationFallbackPath, notificationLink, notificationTargetPath } from './notificationTarget';
 const key = '00000000-0000-0000-0000-000000000017';
 const notification = (overrides: Partial<NotificationDTO>): NotificationDTO => ({
   nId: 1, nType: 'test', nTitle: 'Test', nBody: 'Test', nTargetType: null,
   nTargetId: null, nIsRead: false, nCreatedAt: '2026-09-10T00:00:00Z', ...overrides,
 });
 describe('notification destination identities', () => {
+  it('preserves the merged mobile chat destination using only a positive safe thread ID', () => {
+    expect(notificationTargetPath(notification({ nTargetType: 'chat_thread', nTargetKey: '42' }))).toBe('/chat?threadId=42');
+    for (const nTargetKey of ['0', '-1', '1.2', '9007199254740992', 'https://evil.example', '42?partyId=5']) {
+      expect(notificationTargetPath(notification({ nTargetType: 'chat_thread', nTargetKey }))).toBeNull();
+    }
+    expect(notificationFallbackPath(notification({ nTargetType: 'chat_thread' }))).toBe('/chat');
+  });
   it('uses the stored follower identity, never names or the old recipient target', () => {
     expect(notificationTargetPath(notification({ nType: 'artist_liked', nTargetType: 'party_profile', nTargetId: 7, nBody: 'Galo' }))).toBe('/perfil/7');
     expect(notificationTargetPath(notification({ nType: 'artist_liked', nTargetType: 'artist', nTargetId: 5, nBody: 'Galo' }))).toBeNull();

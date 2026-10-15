@@ -1,3 +1,4 @@
+import CommunityDiscovery from '../features/discovery/CommunityDiscovery';
 import RecordThumbnail from '../features/records/RecordThumbnail';
 import { primaryRecordsResource } from '../features/records/resolveRecordThumbnail';
 import { buildArtistFollowAuthPath } from '../utils/artistFollowIntent';
@@ -389,11 +390,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     setArtistDraft((prev) => ({ ...prev, apuArtistId: partyId }));
   }, [session?.partyId]);
 
-  useEffect(() => {
-    if (focusArtist && artistSectionRef.current) {
-      artistSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [focusArtist]);
 
   const updateArtistProfileMutation = useMutation({
     mutationFn: Fans.updateMyArtistProfile,
@@ -1302,6 +1298,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Typography>
           )}
         </Stack>
+        {!focusArtist && <CommunityDiscovery />}
         {onboarding.loading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.loading')} />}
         {onboarding.loadError && (
           <Alert severity="warning" action={<Button color="inherit" onClick={onboarding.retryLoad}>{t('fanHubOnboarding.retry')}</Button>}>
