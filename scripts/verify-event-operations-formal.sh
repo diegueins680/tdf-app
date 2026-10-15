@@ -375,6 +375,11 @@ run_tlc CheckoutSnapshot.tla CheckoutSnapshot.cfg checkout-snapshot
 run_negative_tlc CheckoutSnapshotLateLines.cfg checkout-snapshot-late-lines 'Invariant SnapshotFixed is violated' CheckoutSnapshot.tla
 run_negative_tlc CheckoutSnapshotUnvalidated.cfg checkout-snapshot-unvalidated 'Invariant CommittedSum is violated' CheckoutSnapshot.tla
 run_negative_tlc CheckoutSnapshotMutableTerms.cfg checkout-snapshot-mutable-terms 'Invariant TermsFixed is violated' CheckoutSnapshot.tla
+run_tlc TermsIdentityUpgrade.tla TermsIdentityUpgrade.cfg terms-identity-upgrade
+run_negative_tlc TermsIdentityUpgradeUnfenced.cfg terms-identity-upgrade-unfenced 'Invariant InstalledHistoryValid is violated' TermsIdentityUpgrade.tla
+run_negative_tlc TermsIdentityUpgradeEarlyUnlock.cfg terms-identity-upgrade-early-unlock 'Invariant InstalledHistoryValid is violated' TermsIdentityUpgrade.tla
+run_negative_tlc TermsIdentityUpgradeUnchecked.cfg terms-identity-upgrade-unchecked 'Invariant InstalledHistoryValid is violated' TermsIdentityUpgrade.tla
+
 run_tlc NavigationVisit.tla NavigationVisit.cfg navigation-visit
 run_negative_tlc NavigationVisitUnsafe.cfg navigation-visit-unsafe 'Invariant NoFailedVisits is violated' NavigationVisit.tla
 run_tlc ProviderRollback.tla ProviderRollback.cfg provider-rollback

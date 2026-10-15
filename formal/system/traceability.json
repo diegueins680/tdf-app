@@ -963,7 +963,8 @@
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
         ".github/workflows/ci.yml",
-        "docs/catalog-persistence/catalog-list-decisions.json"
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "scripts/build-catalog-decisions.mjs"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
@@ -1826,11 +1827,11 @@
     {
       "id": "PAY-CHECKOUT-002",
       "title": "Immutable checkout payable snapshot correspondence",
-      "statement": "Every committed canonical checkout has at least one line whose exact payable sum equals its immutable parent payable total; preserve currency and monetary terms after creation.",
+      "statement": "Every committed canonical checkout has at least one line whose exact payable sum equals its immutable parent payable total; preserve currency and monetary terms after creation. Lines are created only in the transaction that creates their checkout: no line, whatever its amount, joins a committed checkout.",
       "domain": "PAY",
-      "authority": "inferred",
-      "source": "formal/system/checkout-arithmetic.md; tdf-hq/src/TDF/Server/Merch.hs; tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-      "property": "Nonempty line snapshot and exact numeric sum(line.total_minor)=checkout.total_minor; parent monetary fields immutable.",
+      "authority": "inferred; AUTHORITY-070",
+      "source": "formal/system/checkout-arithmetic.md; tdf-hq/src/TDF/Server/Merch.hs; tdf-hq/src/TDF/Commerce/CheckoutStore.hs; formal/system/checkout-snapshot.md",
+      "property": "Nonempty line snapshot and exact numeric sum(line.total_minor)=checkout.total_minor; parent monetary fields immutable; the line set of a committed checkout is the one it was committed with.",
       "contract": "formal/system/checkout-arithmetic.md",
       "actors": [
         "CheckoutStore adapter",
@@ -1852,44 +1853,59 @@
         ]
       },
       "allowedTransitions": [
-        "Create header and all lines in one transaction.",
+        "Create header and all lines in one transaction (subtransactions included).",
         "Advance lifecycle/payment/refund counters while preserving monetary terms."
       ],
       "forbiddenTransitions": [
         "Commit missing lines or mismatched/overflowing aggregate.",
-        "Rewrite parent currency or monetary terms."
+        "Rewrite parent currency or monetary terms.",
+        "Insert a line for a checkout that the inserting transaction did not create (committed by another transaction, only updated or upserted-without-insert by this one, uncommitted elsewhere, rolled back to a savepoint, or unknown)."
       ],
       "effects": [
-        "Deferred commit-time validation; reject without committed financial mutation."
+        "Deferred commit-time validation; reject without committed financial mutation.",
+        "A line for a checkout not created by the inserting transaction is refused at insert (SQLSTATE 23514)."
       ],
-      "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization.",
+      "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization. The 2026-10-12 registry is a transaction-local setting any SQL writer with INSERT privilege could set by hand: it guards against mistaken writers and is not a privilege boundary.",
       "privacy": "Synthetic tests use no real customer data or provider credentials.",
-      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable. A migration-created visible singleton fences pre-enforcement repeatable-read snapshots; SQLSTATE40001 requests retry.",
+      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable. A migration-created visible singleton fences pre-enforcement repeatable-read snapshots; SQLSTATE40001 requests retry. Since 2026-10-12 the header insert (an AFTER ROW trigger, so only rows actually inserted) records the checkout id in a transaction-local setting and a line is accepted only for a recorded id, so zero-total appends are closed whatever the isolation level, the order in which transactions began, or updates of the header; a creating transaction holding its uncommitted header is not waited on and still commits with its own lines.",
       "idempotency": "Deterministic arithmetic is repeatable for identical inputs; this adds no provider replay permission.",
-      "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch.",
-      "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence.",
+      "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch. A line for a checkout the transaction did not create is refused with SQLSTATE 23514 at insert.",
+      "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence. The 2026-10-12 rule has a rollback that leaves the 2026-10-04 rules in place; a line appended before it is not identifiable from the rows (xmin is re-stamped by header updates), only from audit and domain records.",
       "observability": "Record exact source SHA/hash, fixed QuickCheck seed, negative-control results and HTTP/database evidence without personal payloads.",
       "implementation": [
         "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
+        "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql",
+        "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql",
         "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "scripts/__tests__/checkout-amount-postgres.mjs",
-        "scripts/test-marketplace-contact-identity.sh"
+        "scripts/test-marketplace-contact-identity.sh",
+        "scripts/__tests__/test-process-session.test.mjs",
+        "scripts/lib/test-process-session.mjs"
       ],
-      "formalModels": [],
-      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls.",
-      "evidence": "checkout-amount-postgres-fence.log",
+      "formalModels": [
+        "formal/event-operations/CheckoutSnapshot.tla",
+        "formal/event-operations/CheckoutSnapshot.cfg",
+        "formal/event-operations/CheckoutSnapshotLateLines.cfg",
+        "formal/event-operations/CheckoutSnapshotUnvalidated.cfg",
+        "formal/event-operations/CheckoutSnapshotMutableTerms.cfg"
+      ],
+      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls. 2026-10-12: CheckoutSnapshot.tla (200 states, 85 distinct) with three single-guard controls checks that the guard implies the invariants; the PostgreSQL test exercises the mechanism: fixed-snapshot cases, a header update before the append, a session that began before the checkout was created, subtransactions, upserts that insert nothing or update the header, a header and line in one statement, two negative controls and the structural check of both new triggers. Interactive PostgreSQL test sessions reject spawn errors and early exits before readiness and bound stalled waits; focused child-process tests cover those failure paths.",
+      "evidence": "checkout-amount-postgres-fence.log; formal/system/checkout-snapshot.md",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "high within immutable/nonnegative schema assumptions; final hosted and deployed execution pending",
       "ambiguity": [
         "Privileged DDL, TRUNCATE and disabled triggers excluded.",
-        "Component subtotals intentionally differ for merchandise shipping."
+        "Component subtotals intentionally differ for merchandise shipping.",
+        "A line of total zero is a line: it may not join a committed checkout even though it leaves the sum unchanged (2026-10-12).",
+        "A header and its line in one statement (data-modifying CTE) is refused since 2026-10-12; no writer uses that shape.",
+        "The 2026-10-12 registry can be forged by any SQL writer via set_config; hostile SQL writers remain out of scope, as for disabled triggers."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local PG16 boundary, five negative controls and migration-era snapshot race pass; final PG17 CI and deployment pending."
+        "reason": "Local PG16 boundary, seven negative controls, migration-era snapshot race and the fixed line snapshot (mechanism tested, not modelled) pass; final PG17 CI and deployment pending."
       }
     },
     {
@@ -3414,18 +3430,22 @@
       "privacy": "Synthetic integration tests do not contact real providers or expose customer lookup capabilities.",
       "concurrency": "Atomic transaction abstraction requires actual PostgreSQL row locks and rollback; separate integration tests must establish the implementation boundary.",
       "idempotency": "Key domain is provider, merchant account, operation and key; exact replay additionally binds checkout, environment, amount and currency. Provider operation hashes retain additional request binding.",
-      "failure": "Ambiguous provider response retains original identity and blocks fresh-charge fallback pending reconciliation. Conflicting replay rejects without repairing historical evidence.",
+      "failure": "Ambiguous provider response retains original identity and blocks fresh-charge fallback pending reconciliation. Conflicting replay rejects without repairing historical evidence. Ticket capture fallback treats missing, unknown and refunded nested captures as unresolved; only explicit declined/failed captures establish no-charge.",
       "recovery": "Reconcile the original operation; allow a fresh reference only after authoritative no-charge and current payable-state admission.",
       "observability": "Retain attempt/intent/provider operation identity and redacted reconciliation outcomes; exact candidate integration and bounded-model receipts.",
       "implementation": [
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs"
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-        "scripts/test-provider-retry-runtime.sh"
+        "scripts/test-provider-retry-runtime.sh",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs"
       ],
       "formalModels": [
         "formal/event-operations/ProviderRetryAdmission.tla",
@@ -3434,7 +3454,11 @@
         "formal/event-operations/ProviderRetryAdmissionDuplicate.cfg",
         "formal/event-operations/ProviderRetryAdmissionPayload.cfg",
         "formal/event-operations/ProviderRetryAdmissionClosed.cfg",
-        "formal/event-operations/ProviderRetryAdmissionLate.cfg"
+        "formal/event-operations/ProviderRetryAdmissionLate.cfg",
+        "formal/event-operations/TicketCaptureClassification.tla",
+        "formal/event-operations/TicketCaptureClassification.cfg",
+        "formal/event-operations/TicketCaptureClassificationUnsafeReadback.cfg",
+        "formal/event-operations/TicketCaptureClassificationUnsafeResponse.cfg"
       ],
       "verification": "Bounded TLC positive and five named mutation counterexamples plus environment-enabled actual PostgreSQL provider retry integration.",
       "evidence": "Exact candidate formal and PostgreSQL integration logs; ordinary Hspec without integration environment is insufficient.",
@@ -7434,12 +7458,21 @@
         "tdf-hq-ui/src/api/eventTickets.test.ts",
         "tdf-hq/test/TicketManualReviewMain.hs",
         "tdf-hq/test/integration/ticket_manual_review_fixture.sql",
-        "scripts/test-ticket-manual-review.sh"
+        "scripts/test-ticket-manual-review.sh",
+        "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+        "scripts/test-ticket-manual-review-concurrency.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
       "formalModels": [
-        "formal/event-operations/ManualBankTransfer.tla"
+        "formal/event-operations/ManualBankTransfer.tla",
+        "formal/event-operations/TicketManualReview.tla",
+        "formal/event-operations/TicketManualReview.cfg",
+        "formal/event-operations/TicketManualReviewLockReleased.cfg",
+        "formal/event-operations/TicketManualReviewSubmitterReviews.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg"
       ],
-      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests.",
+      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests. Additional TicketManualReviewSpec cases and its separate bounded TicketManualReview model preserve the independent reviewer-overlap evidence from PR #545; see formal/system/ticket-manual-review.md.",
       "evidence": "2026-10-09 local disposable PostgreSQL 16: scripts/test-ticket-manual-review.sh 7/7 after the fix (the concurrency case failed 3/3 before it with deadlock 40P01 or an invalid evidence transition); TLC 1.7.2 positive model and seven expected counterexamples. Those local counts predate the issuance cases; the current nine Hspec cases and eight mutation controls are evidenced by hosted CI on 5112f2ed0 (2026-10-11): backend-quality ran scripts/test-ticket-manual-review.sh 9/9, and Event operations verification ran the positive model plus the eight negative configurations, each failing on its expected invariant. A production transfer remains separate evidence.",
       "status": "specified and implemented",
       "critical": true,
@@ -8841,12 +8874,14 @@
       "allowedTransitions": [
         "CTA/sticky CTA/deep link -> dialog focused on first missing field",
         "valid submit -> received or order checkout",
-        "server field error -> message beside field"
+        "server field error -> message beside field",
+        "close -> completed dialog exit -> remove resume parameter, preserve attribution and restore trigger focus"
       ],
       "forbiddenTransitions": [
         "form discovered only by scrolling",
         "raw local phone sent as E.164",
-        "raw server text shown"
+        "raw server text shown",
+        "navigation interrupts closing and retains a modal"
       ],
       "effects": [
         "Draft preserved across login round-trip and cleared on success."
@@ -9057,34 +9092,35 @@
     },
     {
       "id": "OPS-CI-REGISTRY-001",
-      "title": "Authenticate Docker Hub pulls in CI",
+      "title": "Public CI image pulls and authenticated release publication",
       "domain": "OPS",
       "critical": false,
-      "statement": "Trusted CI jobs authenticate Docker Hub image pulls with the existing repository secrets before pulling test images. Job and service containers receive credentials at initialization; reusable CI callers forward the declared credentials. Authentication does not bypass tests, reviews or release admission.",
+      "statement": "GitHub-hosted verification uses runner access for public test images without repository Docker Hub credential overrides. Release image publication still authenticates using repository secrets. Neither image access nor authentication bypasses tests, reviews or release admission.",
       "authority": "User authorized CI authentication on 2026-10-09",
-      "source": "User instruction 2026-10-09: Authenticate, following observed Docker Hub unauthenticated pull rate limits.",
+      "source": "Original user authentication instruction 2026-10-09; current consolidation authorization and observed authenticated-container pull failures on 2026-10-15; GitHub Actions hosted-runner Docker Hub rate-limit documentation.",
       "contract": ".github/workflows/ci.yml",
-      "property": "Shell pulls follow Docker login; job and service image pulls receive registry credentials; no credential literal is committed or printed.",
+      "property": "Public test pulls retain runner access; release pushes require authentication; image identities and all checks remain unchanged.",
       "actors": [
         "GitHub-hosted CI runner",
         "Repository secret administrator"
       ],
       "preconditions": [
-        "Existing DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets are valid and available to the trusted run."
+        "Public test images on GitHub-hosted runners; publishing secrets available only to authorized release jobs."
       ],
       "inputs": [
-        "Repository secret references",
-        "Existing Docker Hub image tags and immutable digests"
+        "Existing public image tags/digests",
+        "Repository secret references for release publication"
       ],
       "state": {
         "registry": [
-          "unauthenticated",
-          "authenticated",
-          "authentication-failed"
+          "public runner access",
+          "authenticated release publication",
+          "pull or login failure"
         ]
       },
       "allowedTransitions": [
-        "Available credentials -> authenticate -> pull existing test images -> execute unchanged checks"
+        "Pull the existing public test image using runner access, then execute every selected check.",
+        "Authenticate an authorized release publishing job before pushing its image."
       ],
       "forbiddenTransitions": [
         "Expose secret values in source or logs",
@@ -9092,14 +9128,14 @@
         "Use pull_request_target to expose secrets to fork code"
       ],
       "effects": [
-        "Authenticated test-image downloads in ephemeral CI runners"
+        "Test-image downloads and independently authorized image publication"
       ],
-      "authorization": "Existing repository secret access governs credentials; fork and Dependabot login steps are skipped. Protected-main review and checks remain independent.",
-      "privacy": "Pass credentials through GitHub secrets to docker/login-action or native container credentials; never copy values into source.",
-      "concurrency": "Each hosted job authenticates its own runner; registry account quotas remain shared.",
+      "authorization": "Public test-image access requires no repository secret; release publication retains Docker Hub authentication and protected-main prerequisites.",
+      "privacy": "Publishing secrets remain secret references; no values are printed or committed.",
+      "concurrency": "Each job retains runner-local public access; provider availability still constrains execution.",
       "idempotency": "Repeated runs can log in and pull the same images without changing application or production data.",
-      "failure": "Invalid available credentials fail authentication; absent fork credentials do not gain privileged access. Authenticated registry quotas and outages can still fail pulls.",
-      "recovery": "Repair or rotate repository secrets through the authorized secret store and rerun CI; do not weaken required tests.",
+      "failure": "A failed image pull, login or test remains a failure. No exemption is treated as guaranteed image availability.",
+      "recovery": "Inspect exact job/container logs and repair access configuration; rerun all affected current-head checks.",
       "observability": "GitHub login-step and container-initialization results, image-pull results and subsequent test outcomes; never secret values.",
       "implementation": [
         ".github/workflows/build.yml",
@@ -9109,19 +9145,19 @@
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/social-verification.yml"
       ],
-      "verification": "Actionlint validates workflow syntax, secret declarations and reusable-workflow references. Hosted CI must verify the stored token and actual authenticated image pulls.",
-      "evidence": "Actionlint v1.7.12 local execution and exact-commit GitHub Actions login/pull logs.",
+      "verification": "Parsed workflow comparison preserves image references, service configuration and test commands; current-head hosted jobs must actually pull images and execute tests.",
+      "evidence": "Current-head GitHub container initialization and downstream test results; repository CI regression tests.",
       "tests": [],
       "formalModels": [],
       "status": "specified and implemented",
-      "historicalStatus": null,
-      "confidence": "Workflow syntax verified locally; hosted authentication requires execution with repository secrets.",
+      "historicalStatus": "The October9 authenticated-pull policy was superseded after October15 hosted logs showed unauthenticated quota failures despite explicit Docker login.",
+      "confidence": "Source-level configuration verified; hosted pull and test completion remain independent evidence.",
       "ambiguity": [
-        "Authentication does not guarantee registry availability or unlimited pull quota."
+        "GitHub hosted-runner public-image allowance does not guarantee provider availability or successful tests."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local workflow validation passed; exact-commit hosted credential verification remains pending."
+        "reason": "Public credential overrides removed after observed failures; fresh hosted pull and test gates remain required."
       }
     },
     {
@@ -9292,7 +9328,7 @@
       "domain": "LEGAL",
       "authority": "Product owner request 2026-10-07 ('Fix them': course terms never shown; mobile ticket checkout without terms)",
       "source": "tdf-app PR (fix/terms-consent-gaps); TDF-mobile PR (fix/terms-consent-gaps)",
-      "property": "No acceptance is recorded for a terms version that was not displayed.; Events with an approved ticket policy cannot hold seats on the legacy endpoint without the current accepted version.",
+      "property": "No acceptance is recorded for a terms version that was not displayed.; Events with an approved ticket policy cannot hold seats on the legacy endpoint without the current accepted version.; Within a course or event, a terms_version names exactly one terms text, so a replacement policy cannot reuse a version for different terms.",
       "contract": "tdf-hq/docs/openapi/api.yaml",
       "actors": [
         "Course registrant",
@@ -9330,7 +9366,7 @@
       ],
       "authorization": "Unchanged: public course registration and authenticated ticket purchase keep their existing guards.",
       "privacy": "Terms text is public policy content; no personal data added.",
-      "concurrency": "Policy is re-read at checkout; a concurrent policy change surfaces as 409 rather than binding stale terms.",
+      "concurrency": "Policy is re-read at checkout; a concurrent policy change surfaces as 409 rather than binding stale terms. Terms-identity migration locks both policy tables before preflight and retains the locks through atomic trigger installation; concurrent writers cannot introduce conflicting history in that interval.",
       "idempotency": "Accepted version is validated before the existing idempotent hold logic; replays with the same version behave as before.",
       "failure": "Missing ticket acceptance returns 400; stale version returns 409; clients reload the policy and clear acceptance.",
       "recovery": "Buyer reviews the new terms and accepts again.",
@@ -9351,7 +9387,9 @@
         "tdf-mobile/app/ticketCheckout.tsx",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/client.ts",
-        "tdf-mobile/src/types/index.ts"
+        "tdf-mobile/src/types/index.ts",
+        "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql",
+        "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
@@ -9360,10 +9398,18 @@
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-mobile/__tests__/TicketCheckout.test.tsx",
-        "tdf-mobile/__tests__/apiClient.test.ts"
+        "tdf-mobile/__tests__/apiClient.test.ts",
+        "scripts/test-checkout-policy-terms-identity-migration.sh",
+        "scripts/test-checkout-terms-upgrade-concurrency.py"
       ],
-      "formalModels": [],
-      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required.",
+      "formalModels": [
+        "formal/event-operations/TermsIdentityUpgrade.tla",
+        "formal/event-operations/TermsIdentityUpgrade.cfg",
+        "formal/event-operations/TermsIdentityUpgradeUnfenced.cfg",
+        "formal/event-operations/TermsIdentityUpgradeEarlyUnlock.cfg",
+        "formal/event-operations/TermsIdentityUpgradeUnchecked.cfg"
+      ],
+      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required. Database test of the terms-version identity triggers (scripts/test-checkout-policy-terms-identity-migration.sh). Scope-only course/event reassignment is checked against destination terms; matching and unused destination versions remain permitted. Independent guard-removal controls reproduce conflicting reassignments for each table. A controlled PostgreSQL barrier witnesses a conflicting writer after preflight and before trigger DDL for each table; the original migration admits both texts, while the fenced migration blocks and then rejects the writer. TermsIdentityUpgrade checks the finite two-scope upgrade boundary with three expected counterexamples; this does not prove whole checkout consent, arbitrary schedules or SQL refinement.",
       "evidence": "Exact-revision CI receipt required before claiming conformance.",
       "status": "specified and implemented",
       "historicalStatus": "new",
@@ -9938,6 +9984,77 @@
         "classification": "PARTIAL",
         "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
       }
+    },
+    {
+      "id": "SYS-UI-FIXTURE-001",
+      "title": "Explicit clock and document boundaries in UI regression fixtures",
+      "domain": "SYS",
+      "statement": "UI regression fixtures must distinguish debounce time and new-document loading from application behavior, while retaining assertions for cancellation, late responses, selected identities, owned notification routing and absence of unrelated writes.",
+      "authority": "Existing behavior and tests reconciled under the requested verification audit",
+      "source": "docs/party-selector.md; docs/notifications/navigation-2026-09-17.md",
+      "contract": "formal/system/ui-fixture-boundaries.md",
+      "critical": false,
+      "status": "specified and implemented",
+      "actors": [
+        "Test runner",
+        "Synthetic visitor"
+      ],
+      "preconditions": [
+        "Synthetic API fixtures; production bundle for browser checks; isolated QueryClient for selector cases."
+      ],
+      "inputs": [
+        "Search text and controlled timer progression",
+        "A real middle-click or platform modified click opening a notification tab"
+      ],
+      "state": {
+        "selector": [
+          "debouncing",
+          "requesting",
+          "selected",
+          "failed",
+          "cancelled"
+        ],
+        "newTab": [
+          "created",
+          "document loaded",
+          "owned destination rendered"
+        ]
+      },
+      "allowedTransitions": [
+        "Advance the selector clock through the real 300 ms debounce; assert no request at 299 ms.",
+        "Activate the new tab as a reader would and await its load boundary, then check the unchanged bounded application redirect and visible profile.",
+        "Reset mocked responses and timers between cases."
+      ],
+      "forbiddenTransitions": [
+        "Replace cancellation, late-response, selection or routing assertions with unconditional success.",
+        "Treat a new page event as document-load completion.",
+        "Leak a queued mock response into another test."
+      ],
+      "effects": [
+        "Synthetic UI requests and revision-bound verification evidence only."
+      ],
+      "authorization": "Fixtures do not grant production authority; notification checks retain owner-specific resolution and no access-request mutation assertions.",
+      "privacy": "Only synthetic identities and local fixture endpoints are used.",
+      "concurrency": "Selector tests retain request-abort and late-response exclusion assertions; browser checks retain original-tab location.",
+      "idempotency": "Each case starts with fresh mocks, controlled timers and query scope; repeated runs retain their individual results.",
+      "failure": "A missing result, missed cancellation, wrong destination or unexpected mutation fails the test.",
+      "recovery": "Repair the fixture or implementation from retained failure evidence, then rerun the affected and full gates.",
+      "observability": "Record exact source, passed/failed/skipped counts and browser artifacts; isolated success does not erase full-run failure.",
+      "property": "Lifecycle synchronization cannot bypass the existing behavioral assertions.",
+      "implementation": [
+        "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
+        "e2e/web/notification-navigation.spec.mjs"
+      ],
+      "verification": "Existing six selector cases, repeated notification navigation on five browser/device configurations and full UI/browser gates. Finite examples, not universal proof.",
+      "evidence": "Revision-bound Jest results and Playwright logs/traces; retained initial failures.",
+      "confidence": "Scoped test-infrastructure contract; does not establish complete selector or notification authorization correctness.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused selector checks pass; complete current-candidate web/browser gates still required."
+      },
+      "tests": [],
+      "formalModels": [],
+      "ambiguity": []
     }
   ],
   "sourceFingerprints": {
@@ -9945,22 +10062,22 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "17562d44712ed8a3f4dcbe556975a1d6c59c2bfb3125efe51c560f2276c20ced",
+    ".github/workflows/ci.yml": "17094e038170cf3a3a1d66afa150eb6dcf62b29b58b33a33b62dc38afee36685",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
-    ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
-    ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
+    ".github/workflows/event-operations-formal.yml": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
+    ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
+    ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
+    ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "a50d74a8b7dbee030ef7d867262d7eed50c8c14422ceefc89d0b6acf1597596b",
+    "docs/catalog-persistence/catalog-list-decisions.json": "96f905f994bd9ff9221068b45ba3692c1009d1dede2d0220d59e8e355bf058a9",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
-    "e2e/web/auth-landing.spec.mjs": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
-    "e2e/web/course-enrollment.spec.mjs": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
+    "e2e/web/auth-landing.spec.mjs": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
+    "e2e/web/course-enrollment.spec.mjs": "ba472872afceae558496077caf2525bb11b0460592851a616a7cc06cc0866b9d",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
     "e2e/web/marketplace-cart.spec.mjs": "5b00ebfd4d2e2a4bcd3cb5ada9c06e6442c7d5e25fef286792e214e1dff8bdfa",
@@ -9969,6 +10086,7 @@
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
     "e2e/web/music-player-native.spec.mjs": "8a1ef90f2a060ff4ae4e16add3001c09280e8224e06a8d28b49c9793eefb5112",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
+    "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
     "e2e/web/persona-public.spec.mjs": "48fe60d98e00d221022e7d1411e3c487037c7587deb17521b0fdc63dee71a27e",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
@@ -9997,6 +10115,11 @@
     "formal/event-operations/ChatMutationBoundary.tla": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
     "formal/event-operations/ChatMutationEarlyCommit.cfg": "d46199cc0f1db6672aeacdacc0da24bab1fae1766063a5c0732adc5c4e7c710d",
     "formal/event-operations/ChatMutationNoRollback.cfg": "689d923264fb1fc9bbd57fae69dcc6fac4619d9ff7f050b5f1be15f09090457f",
+    "formal/event-operations/CheckoutSnapshot.cfg": "abca531531a609c6ef0eef4dc3fbaec8962fb240abbd3a886e4301d302177189",
+    "formal/event-operations/CheckoutSnapshot.tla": "2804fb92dabdc6f6ccaa518ad570abfbdc641ff94a881e6a1a9b580568b1e8b0",
+    "formal/event-operations/CheckoutSnapshotLateLines.cfg": "8315772d5acae64ac6cd79fc54f0b0391eb38340b634916f80befe19944e44d3",
+    "formal/event-operations/CheckoutSnapshotMutableTerms.cfg": "4dfb78201a2f21e44a9b08df5d6bfee520884f45a2bcca4d760645b04e303c31",
+    "formal/event-operations/CheckoutSnapshotUnvalidated.cfg": "d12cb28153dca7a90a00bb13968fa1634846562d8867d224212aab93d6e954cf",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
     "formal/event-operations/DirectoryClaimReview.tla": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
     "formal/event-operations/EventOrganizer.cfg": "ed84da709c486f2fb88625b426cec2aeddf8439f9317ade750c15a948756242d",
@@ -10092,6 +10215,21 @@
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
     "formal/event-operations/TaxDocumentSubmission.tla": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
+    "formal/event-operations/TermsIdentityUpgrade.cfg": "4debaa4424b0c45c037c98e86774f8d1ff407ec4eacb67f03ae33c9baf18a73d",
+    "formal/event-operations/TermsIdentityUpgrade.tla": "d1b84f59f87b48ff500dac08c558d259c686b6addd142bbfc613f5836da52317",
+    "formal/event-operations/TermsIdentityUpgradeEarlyUnlock.cfg": "f97164f4bc5a7b64e9e09ad695d8415a32656de524219ecc49ef1dff343ace1f",
+    "formal/event-operations/TermsIdentityUpgradeUnchecked.cfg": "c1c9707110748c1aae881c285d0f8698b11b4af8a08f160d2c5ff13be84083bf",
+    "formal/event-operations/TermsIdentityUpgradeUnfenced.cfg": "0df0c9bf61c0feb8c7a55df3988ea101391abff608ee9fc77137e34c925b93ff",
+    "formal/event-operations/TicketCaptureClassification.cfg": "77044ec1f87e776c641f808fbecfecfc0eafd57c876dc680601ce3450e991bc8",
+    "formal/event-operations/TicketCaptureClassification.tla": "f862c9d357ea3228597c01a99bfbde127ef0a6b59bc7642d7f89f6a30b7587b0",
+    "formal/event-operations/TicketCaptureClassificationUnsafeReadback.cfg": "925f71808425a6860dfeb06167a45f8fc664e7d0837854095bb18459010569ae",
+    "formal/event-operations/TicketCaptureClassificationUnsafeResponse.cfg": "768e2b871065665d4dc66ad7b6f980498ec7db160700c2f29de37b53468bd1de",
+    "formal/event-operations/TicketManualReview.cfg": "d2188f7899d8797c5aa15a61d5d32dd5f48ff7117b93d4ed7557b152344ffe76",
+    "formal/event-operations/TicketManualReview.tla": "3ae4cd45bcca420ef17baf4ca3a7311d150ad0367b79c05a1f5cea246a65e983",
+    "formal/event-operations/TicketManualReviewLockReleased.cfg": "6d345445daf969c94c0ba93bfcd21a892636d8ef1818d69bd06804dbfe58af8d",
+    "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg": "6ee38440ebb4d65c56a744d7aa8e4b74f9388159b5133a564d3f6d358b52da6d",
+    "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg": "3393757d152879613fe1b2dc59a6a6196d4270bc029399df77b33b6ef3f76515",
+    "formal/event-operations/TicketManualReviewSubmitterReviews.cfg": "94aa99787cade85e26b09bf56f2491f36d789ee9564322a47a43c8e7c14ceac4",
     "formal/event-operations/WhatsAppConsent.cfg": "06b8506b46b3cd789528bddd9ca9d829d7a7143669f2e960f92c45262ae17648",
     "formal/event-operations/WhatsAppConsent.tla": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
     "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg": "ceb85813cdddb1426d695b451a3e14f44ddd86b88601928eff4e9510beb3cfea",
@@ -10154,8 +10292,8 @@
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
-    "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "388a2ec1b308220319429305c3a09bec70b4b2fe08017b9a6668f0c70a90f52b",
+    "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
     "scripts/__tests__/ci-pipeline.test.mjs": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
@@ -10197,11 +10335,13 @@
     "scripts/__tests__/production-release.test.mjs": "e457c1521db3347e64a96b3c09f7eeba9b73495a29ff72f72f3613054cb3b626",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
+    "scripts/__tests__/test-process-session.test.mjs": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/artist-enrichment.mjs": "df64d9cdd92fb41e66f1ac33dcc137eab5245a1e0e9a834065a4f363707c383d",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
+    "scripts/build-catalog-decisions.mjs": "3147e247b20cb634412d70697f91c6ea521aff4fc129e2923b0860657d7d0b6c",
     "scripts/build-ddex-ern432-package.sh": "8cd6f2ccc3881d3715499144e1513dfe2fd61ac9f1577b53d18eda9c5c5c26bc",
     "scripts/check-api-availability.mjs": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
@@ -10241,9 +10381,10 @@
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
     "scripts/lib/operations_conformance.py": "e0ff663aee7f816df7a06418223d41065d69e0681675a05f3fb6a0592e0f911a",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
+    "scripts/lib/production-release.mjs": "cc843d1858f288799d14df10291820133e163583f28ce3eefdccbef50c05d593",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
+    "scripts/lib/test-process-session.mjs": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
     "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
@@ -10254,12 +10395,12 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "eefe7d3fbaf7441c02bfbaec4e68328d81f59d2dbc901f847489384faba31919",
+    "scripts/production-migrations.json": "3ffda8add908bae9381264bd4062eedbd6a86fab201c5bd52b4b67fb8f9560ec",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "a5041669e3881d019e35512e8b4e7febcc2ebd98ebea0d3eb05568ea9f0f83c8",
+    "scripts/quality-repo.sh": "81af27590dc1fc93711fdf413b78d8b1e4b4ea74bc2ce5edeeeab3eae1114603",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/run-music-release-worker-once.sh": "9674d11b9ae0f8932047a35db3fc77908d65bc46b5a495425d2bc8a1758ba625",
@@ -10279,6 +10420,8 @@
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
+    "scripts/test-checkout-policy-terms-identity-migration.sh": "ceded6be2927dfcb777863190ea62779d58c3637e706d48c6dce5a58b97096c1",
+    "scripts/test-checkout-terms-upgrade-concurrency.py": "7f0d4db4046fa61057d2198469529b92bdeb9b05cf0b55233f8a047e042ba504",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
@@ -10333,6 +10476,7 @@
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
+    "scripts/test-ticket-manual-review-concurrency.sh": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
@@ -10342,7 +10486,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "2091866439489607ed8b2f177e04ddf0cbc6898f3aa86dd2ef5cb6ebe9d69c51",
+    "scripts/verify-event-operations-formal.sh": "ac7d92e384b980af392d386cf2c3389aa4c8ee4000c12dd2929f2f59d49b2800",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -10446,6 +10590,7 @@
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
     "tdf-hq-ui/src/components/notificationTarget.test.ts": "37f0a06226e1f81208416a1e33ddaae9e4235ca8932eb767b29fe0b7d51fdb6d",
     "tdf-hq-ui/src/components/notificationTarget.ts": "170f6a854078d866df645bb72d09a1f34296249d489667ebde4dce951af84c23",
+    "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "cb2e829fb4c40dfbbc9f6b7cc7b94cf40f63471a23db7df3f04bb496b4638408",
@@ -10485,8 +10630,8 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
-    "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
-    "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
+    "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "46c374c150cc8b5ec599fc597a636cf7a48973ac9ce8e2f00b255cafbd702dba",
+    "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "c12dde7fb46cd996cd24a04a9195ba1f0e01faf19a2967be9ab445977047c21b",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
@@ -10671,8 +10816,12 @@
     "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql": "2d33a0b6285c8425d582732d86d43420e590267d7e30d263a84d91fb5cddebfb",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
+    "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql": "f7ded18142a59ffb07b03acfe212d73f1d2a71c4541d0467ef883881c21ffe47",
+    "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql": "41c725b6fd83a19909d63471ef8d50016ddf4d6fc9215980839ba495e1117112",
     "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql": "9ccec46d936ceca2c1feb8155b1ef61444fb273898b7f5a3e5b307f4713d4648",
     "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql": "5bf3cb0d88d30543a7c0d1d13cb3d972a8170ae60dc71873b828dba0c329a546",
+    "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql": "517423a780f237199ae96c02e9b2416d0326ccaab03c1e0905f0822fdd2602af",
+    "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql": "5d3e3eb01ef0fda54f7c3496705f691b6385c592e80369ae90dd7714ff40ebc8",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -10745,7 +10894,7 @@
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "97d466b4b45b9f13d1f1c1723008dbfaf651884cdaf27fcff67d7c8d03816fb5",
-    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "ca923ce0efbe3b8bebf51caf037d5ba99b07ba627c4188417811e79223353b8e",
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "6315114b11fa34ccf80ea21e694ae533f3e910c25d046617607e6548ef329139",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
     "tdf-hq/src/TDF/Server/MusicRelease.hs": "ed91418a104c94c9a277d28a5dfa4da9df4b0d5a31b930663eefe8e70f43cb92",
@@ -10754,7 +10903,7 @@
     "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "92259a976c8c4e7d45c32bedb469ddb27e749319a180d4bf881cd2d3ef86a8c8",
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
-    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "ca99eb94d7a285f976b592adf8ad14b2adaf39566f304cc84c677aed5e991330",
+    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "ab12faaa2c3fc73f86cc4f80f03c40e0689201245c3fa1bc54f8d2fb745eaf95",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
@@ -10781,12 +10930,12 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "7fa8a6b09b0ddd3c74b63bd3d4fffd6a0e3f3dd2472d138aae8a65cde17f659d",
+    "tdf-hq/tdf-hq.cabal": "0e439112612a9968acaad037eb7c03eed1fd00294c5fa6fa3985114ceb830d7c",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "8dba35265324fa8f1b553ecf0be7d6cd7db4f10a09e2c855c220825de35f7eec",
+    "tdf-hq/test/Spec.hs": "363dc95c50336653a169b05438c64f2bdb86fb4244bc871871679c7b28f26f6f",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -10827,7 +10976,8 @@
     "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "fd4185d685f407ba3dc7c0775abf1221258cd6153859df68198a3f0a1d22aae8",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
-    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "f2a0749e7ab144f7007a401f706d54f4e99e6dc86b0b0d75633c2e3a40c2f56e",
+    "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "2cf526501ba7c9b310916ba6ea78dfa7e2176f6421fa857ee1626e161c4cd92b",
+    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "f2ca6f3556ba33388b05b24df4136fd4c086e8b2de50881bdea6350874cf0a19",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -11059,6 +11209,10 @@
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
       },
       {
         "requirement": "EVT-TICKET-INVOICE-001",
@@ -11707,6 +11861,12 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/build-catalog-decisions.mjs": [
+      {
+        "requirement": "SYS-TRACE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-specification-conformance.py": [
       {
         "requirement": "SYS-TRACE-001",
@@ -12297,6 +12457,18 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/lib/production-release.mjs": [
       {
         "requirement": "PAY-CHECKOUT-002",
@@ -12337,6 +12509,48 @@
       {
         "requirement": "PAY-CHECKOUT-002",
         "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/test-process-session.test.mjs": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/lib/test-process-session.mjs": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/CheckoutSnapshot.tla": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/CheckoutSnapshot.cfg": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/CheckoutSnapshotLateLines.cfg": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/CheckoutSnapshotUnvalidated.cfg": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/CheckoutSnapshotMutableTerms.cfg": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/src/TDF/Commerce/Merch.hs": [
@@ -12570,6 +12784,10 @@
       },
       {
         "requirement": "SYS-API-003",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-RETRY-001",
         "relationship": "tests"
       },
       {
@@ -13461,6 +13679,52 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": [
+      {
+        "requirement": "PAY-RETRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": [
+      {
+        "requirement": "PAY-RETRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": [
+      {
+        "requirement": "PAY-RETRY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/ProviderRetryAdmission.tla": [
       {
         "requirement": "PAY-RETRY-001",
@@ -13498,6 +13762,30 @@
       }
     ],
     "formal/event-operations/ProviderRetryAdmissionLate.cfg": [
+      {
+        "requirement": "PAY-RETRY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketCaptureClassification.tla": [
+      {
+        "requirement": "PAY-RETRY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketCaptureClassification.cfg": [
+      {
+        "requirement": "PAY-RETRY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketCaptureClassificationUnsafeReadback.cfg": [
+      {
+        "requirement": "PAY-RETRY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketCaptureClassificationUnsafeResponse.cfg": [
       {
         "requirement": "PAY-RETRY-001",
         "relationship": "formalModels"
@@ -14063,24 +14351,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": [
-      {
-        "requirement": "EVT-TICKET-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "NOTIF-TICKET-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-TICKET-MANUAL-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-TICKET-INVOICE-001",
-        "relationship": "implementation"
-      }
-    ],
     "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql": [
       {
         "requirement": "EVT-TICKET-001",
@@ -14178,16 +14448,6 @@
     "tdf-hq/sql/2026-10-05_ticket_inclusive_tax_rollback.sql": [
       {
         "requirement": "EVT-TICKET-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": [
-      {
-        "requirement": "EVT-TICKET-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "NOTIF-TICKET-001",
         "relationship": "implementation"
       }
     ],
@@ -14430,12 +14690,6 @@
       },
       {
         "requirement": "LEGAL-CONSENT-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": [
-      {
-        "requirement": "EVT-TICKET-001",
         "relationship": "tests"
       }
     ],
@@ -16249,7 +16503,55 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/test/TDF/TicketManualReviewSpec.hs": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-ticket-manual-review-concurrency.sh": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/ManualBankTransfer.tla": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReview.tla": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReview.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReviewLockReleased.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReviewSubmitterReviews.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg": [
       {
         "requirement": "EVT-TICKET-MANUAL-001",
         "relationship": "formalModels"
@@ -18189,6 +18491,18 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql": [
+      {
+        "requirement": "LEGAL-CONSENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql": [
+      {
+        "requirement": "LEGAL-CONSENT-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/CourseIdentitySpec.hs": [
       {
         "requirement": "LEGAL-CONSENT-001",
@@ -18199,6 +18513,48 @@
       {
         "requirement": "LEGAL-CONSENT-001",
         "relationship": "tests"
+      }
+    ],
+    "scripts/test-checkout-policy-terms-identity-migration.sh": [
+      {
+        "requirement": "LEGAL-CONSENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-checkout-terms-upgrade-concurrency.py": [
+      {
+        "requirement": "LEGAL-CONSENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/TermsIdentityUpgrade.tla": [
+      {
+        "requirement": "LEGAL-CONSENT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TermsIdentityUpgrade.cfg": [
+      {
+        "requirement": "LEGAL-CONSENT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TermsIdentityUpgradeUnfenced.cfg": [
+      {
+        "requirement": "LEGAL-CONSENT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TermsIdentityUpgradeEarlyUnlock.cfg": [
+      {
+        "requirement": "LEGAL-CONSENT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TermsIdentityUpgradeUnchecked.cfg": [
+      {
+        "requirement": "LEGAL-CONSENT-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": [
@@ -18618,6 +18974,18 @@
         "requirement": "DATA-INDEX-DECLARATION-001",
         "relationship": "formalModels"
       }
+    ],
+    "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": [
+      {
+        "requirement": "SYS-UI-FIXTURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "e2e/web/notification-navigation.spec.mjs": [
+      {
+        "requirement": "SYS-UI-FIXTURE-001",
+        "relationship": "implementation"
+      }
     ]
   },
   "surfaces": [
@@ -18686,7 +19054,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "17562d44712ed8a3f4dcbe556975a1d6c59c2bfb3125efe51c560f2276c20ced",
+      "sha256": "17094e038170cf3a3a1d66afa150eb6dcf62b29b58b33a33b62dc38afee36685",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18726,7 +19094,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
+      "sha256": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18754,7 +19122,7 @@
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
+      "sha256": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18766,7 +19134,7 @@
     {
       "id": "SURFACE-e705d7e36f8b46d9",
       "path": ".github/workflows/interaction-verification.yml",
-      "sha256": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
+      "sha256": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18797,7 +19165,7 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
+      "sha256": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18880,7 +19248,7 @@
     {
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
-      "sha256": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
+      "sha256": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18910,7 +19278,7 @@
     {
       "id": "SURFACE-593f65650b716b87",
       "path": "e2e/web/course-enrollment.spec.mjs",
-      "sha256": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
+      "sha256": "ba472872afceae558496077caf2525bb11b0460592851a616a7cc06cc0866b9d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19074,9 +19442,14 @@
     {
       "id": "SURFACE-1650513d8810b7f7",
       "path": "e2e/web/notification-navigation.spec.mjs",
-      "sha256": "c0272c3de6e41821cf0fd9512758b60cc764a1e3f7275fe7755cd9d50409ee97",
+      "sha256": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UI-FIXTURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8e97f033e44df926",
@@ -19585,7 +19958,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
+      "sha256": "388a2ec1b308220319429305c3a09bec70b4b2fe08017b9a6668f0c70a90f52b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19597,7 +19970,7 @@
     {
       "id": "SURFACE-790b053ca0c0e13b",
       "path": "scripts/__tests__/checkout-amount-postgres.mjs",
-      "sha256": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
+      "sha256": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20423,6 +20796,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-f108b694973ffac6",
+      "path": "scripts/__tests__/test-process-session.test.mjs",
+      "sha256": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
       "sha256": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
@@ -20594,9 +20979,14 @@
     {
       "id": "SURFACE-7bc6beda98cc6e72",
       "path": "scripts/build-catalog-decisions.mjs",
-      "sha256": "55a8004c6d3fe607a7dca57e43dccc4a45db6f3a51b2985cfe2fbea18d32226a",
+      "sha256": "3147e247b20cb634412d70697f91c6ea521aff4fc129e2923b0860657d7d0b6c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-TRACE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7c46c28b38d50337",
@@ -21453,7 +21843,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
+      "sha256": "cc843d1858f288799d14df10291820133e163583f28ce3eefdccbef50c05d593",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21527,6 +21917,18 @@
       "sha256": "bc8b2be2d1ba687743be7400b4b4f225f24e5b8fc962471b6a7a4d3072ed3ab7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-cf6df3f57a9edc7c",
+      "path": "scripts/lib/test-process-session.mjs",
+      "sha256": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f1db2c4adbf5dce0",
@@ -21735,7 +22137,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "eefe7d3fbaf7441c02bfbaec4e68328d81f59d2dbc901f847489384faba31919",
+      "sha256": "3ffda8add908bae9381264bd4062eedbd6a86fab201c5bd52b4b67fb8f9560ec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21854,7 +22256,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "a5041669e3881d019e35512e8b4e7febcc2ebd98ebea0d3eb05568ea9f0f83c8",
+      "sha256": "81af27590dc1fc93711fdf413b78d8b1e4b4ea74bc2ce5edeeeab3eae1114603",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22747,6 +23149,30 @@
       "sha256": "32324ad3adc0f2b943284b71637548b54ee2e9d38adf68b483037dd0555e8710",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-408b8094f29cfa84",
+      "path": "scripts/test-checkout-policy-terms-identity-migration.sh",
+      "sha256": "ceded6be2927dfcb777863190ea62779d58c3637e706d48c6dce5a58b97096c1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "LEGAL-CONSENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8c7771c4f476a919",
+      "path": "scripts/test-checkout-terms-upgrade-concurrency.py",
+      "sha256": "7f0d4db4046fa61057d2198469529b92bdeb9b05cf0b55233f8a047e042ba504",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "LEGAL-CONSENT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-9d1fe37e56cb7506",
@@ -23827,6 +24253,18 @@
       ]
     },
     {
+      "id": "SURFACE-c24f2eb451460e6e",
+      "path": "scripts/test-ticket-manual-review-concurrency.sh",
+      "sha256": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-4c827aef16e690c3",
       "path": "scripts/test-ticket-manual-review.sh",
       "sha256": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
@@ -24013,7 +24451,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "2091866439489607ed8b2f177e04ddf0cbc6898f3aa86dd2ef5cb6ebe9d69c51",
+      "sha256": "ac7d92e384b980af392d386cf2c3389aa4c8ee4000c12dd2929f2f59d49b2800",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24071,6 +24509,10 @@
         {
           "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "tests"
         },
         {
           "requirement": "EVT-TICKET-INVOICE-001",
@@ -26745,9 +27187,14 @@
     {
       "id": "SURFACE-772702b32840fda1",
       "path": "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
-      "sha256": "e5b8043323a2ac5f0761e78c9499552de166b072bdd4482779547e7eac586d16",
+      "sha256": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UI-FIXTURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e1fc722d5c6ece7f",
@@ -28194,7 +28641,7 @@
     {
       "id": "SURFACE-fd4d2654b87334c2",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
-      "sha256": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
+      "sha256": "46c374c150cc8b5ec599fc597a636cf7a48973ac9ce8e2f00b255cafbd702dba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28214,7 +28661,7 @@
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
+      "sha256": "c12dde7fb46cd996cd24a04a9195ba1f0e01faf19a2967be9ab445977047c21b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34694,6 +35141,30 @@
       ]
     },
     {
+      "id": "SURFACE-661f6ad55c89846a",
+      "path": "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql",
+      "sha256": "f7ded18142a59ffb07b03acfe212d73f1d2a71c4541d0467ef883881c21ffe47",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8b345f57d28949bc",
+      "path": "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql",
+      "sha256": "41c725b6fd83a19909d63471ef8d50016ddf4d6fc9215980839ba495e1117112",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-997107e9fdf27779",
       "path": "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
       "sha256": "9ccec46d936ceca2c1feb8155b1ef61444fb273898b7f5a3e5b307f4713d4648",
@@ -34713,6 +35184,30 @@
       "requirements": [
         {
           "requirement": "SYS-MONEY-003",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ab4db726d3ade85c",
+      "path": "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql",
+      "sha256": "517423a780f237199ae96c02e9b2416d0326ccaab03c1e0905f0822fdd2602af",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "LEGAL-CONSENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c2b5995601d0ee06",
+      "path": "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql",
+      "sha256": "5d3e3eb01ef0fda54f7c3496705f691b6385c592e80369ae90dd7714ff40ebc8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "LEGAL-CONSENT-001",
           "relationship": "implementation"
         }
       ]
@@ -36620,9 +37115,13 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "ca923ce0efbe3b8bebf51caf037d5ba99b07ba627c4188417811e79223353b8e",
+      "sha256": "6315114b11fa34ccf80ea21e694ae533f3e910c25d046617607e6548ef329139",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "PAY-RETRY-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "EVT-TICKET-001",
           "relationship": "implementation"
@@ -36758,7 +37257,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "ca99eb94d7a285f976b592adf8ad14b2adaf39566f304cc84c677aed5e991330",
+      "sha256": "ab12faaa2c3fc73f86cc4f80f03c40e0689201245c3fa1bc54f8d2fb745eaf95",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36804,6 +37303,10 @@
       "sha256": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "PAY-RETRY-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "EVT-TICKET-001",
           "relationship": "implementation"
@@ -37393,7 +37896,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "7fa8a6b09b0ddd3c74b63bd3d4fffd6a0e3f3dd2472d138aae8a65cde17f659d",
+      "sha256": "0e439112612a9968acaad037eb7c03eed1fd00294c5fa6fa3985114ceb830d7c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37507,7 +38010,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "8dba35265324fa8f1b553ecf0be7d6cd7db4f10a09e2c855c220825de35f7eec",
+      "sha256": "363dc95c50336653a169b05438c64f2bdb86fb4244bc871871679c7b28f26f6f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37516,6 +38019,10 @@
         },
         {
           "requirement": "SYS-API-003",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-RETRY-001",
           "relationship": "tests"
         },
         {
@@ -38293,11 +38800,27 @@
       ]
     },
     {
-      "id": "SURFACE-b88bd7d333ae2b44",
-      "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
-      "sha256": "f2a0749e7ab144f7007a401f706d54f4e99e6dc86b0b0d75633c2e3a40c2f56e",
+      "id": "SURFACE-89f49f12c8c895f1",
+      "path": "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+      "sha256": "2cf526501ba7c9b310916ba6ea78dfa7e2176f6421fa857ee1626e161c4cd92b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b88bd7d333ae2b44",
+      "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
+      "sha256": "f2ca6f3556ba33388b05b24df4136fd4c086e8b2de50881bdea6350874cf0a19",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-RETRY-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "EVT-TICKET-001",
           "relationship": "tests"
@@ -42226,7 +42749,6 @@
     "SURFACE-f40804c1455f8bad",
     "SURFACE-acbdfac127b57e53",
     "SURFACE-d8799e5a0806f908",
-    "SURFACE-1650513d8810b7f7",
     "SURFACE-e5280fb6cf4274bc",
     "SURFACE-bb80adee648c0293",
     "SURFACE-d3c9dbc473fd46d6",
@@ -42286,7 +42808,6 @@
     "SURFACE-33c36559cee9f889",
     "SURFACE-d112ef0e073bf0c4",
     "SURFACE-efc90f2c7a0252ce",
-    "SURFACE-7bc6beda98cc6e72",
     "SURFACE-3dfd6f173e84edf1",
     "SURFACE-7972d2e7d13940a5",
     "SURFACE-d79860272960ddbf",
@@ -42675,7 +43196,6 @@
     "SURFACE-85bd4c6fc1a45c48",
     "SURFACE-793045e8bae5158b",
     "SURFACE-8162aa14f44a2da9",
-    "SURFACE-772702b32840fda1",
     "SURFACE-e1fc722d5c6ece7f",
     "SURFACE-388d446af04495d3",
     "SURFACE-65cbecbfc60140c5",
@@ -43905,7 +44425,8 @@
     "SURFACE-21b31fbb27b536c4"
   ],
   "untestedRequirements": [
-    "OPS-CI-REGISTRY-001"
+    "OPS-CI-REGISTRY-001",
+    "SYS-UI-FIXTURE-001"
   ],
   "unmodeledCriticalRequirements": [
     "SYS-VERIFY-001",
@@ -43924,7 +44445,6 @@
     "AUTH-REGISTRY-001",
     "DEPLOY-BUILD-001",
     "PAY-CHECKOUT-001",
-    "PAY-CHECKOUT-002",
     "PAY-CHECKOUT-003",
     "DEPLOY-TARGET-001",
     "DEPLOY-MIGRATION-001",
@@ -45081,7 +45601,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c6028ba4fcb63b35295ea0e7b5b30e1446f8817389c2fc6d7cb84183d49cbc17",
+      "sourceSha256": "d2b3f9c329d8c9479663c3f7470fbce671197268af79a3102ab3cdacd2db8f27",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -45109,7 +45629,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c6028ba4fcb63b35295ea0e7b5b30e1446f8817389c2fc6d7cb84183d49cbc17",
+      "sourceSha256": "d2b3f9c329d8c9479663c3f7470fbce671197268af79a3102ab3cdacd2db8f27",
       "definition": {
         "states": [
           "absent",
@@ -67306,7 +67826,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 122,
+    "PARTIAL": 123,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

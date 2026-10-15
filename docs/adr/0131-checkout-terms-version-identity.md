@@ -37,9 +37,11 @@ Each trigger takes a transaction-scoped advisory lock on `(scope, terms_version)
 before the existence check, so two concurrent writers of differing rows cannot
 both pass under `READ COMMITTED`.
 
-The migration first checks existing rows and raises if any scope already reuses
-a version for different text; the operator assigns new versions before the
-triggers are installed. The rollback drops the triggers and leaves rows intact.
+The migration starts one transaction and locks both policy tables before checking
+existing rows. It raises if any scope already reuses a version for different text;
+the operator assigns new versions before installation. The locks remain held
+until both triggers are installed and the transaction commits. Without this fence,
+a concurrent writer can introduce conflicting history between preflight and DDL. The rollback drops the triggers and leaves rows intact.
 
 A plain uniqueness constraint on `(scope, terms_version)` was rejected because
 it would forbid the legitimate same-text reuse above and force a new acceptance
@@ -62,3 +64,11 @@ insert/update/rename reuse for both tables, rollback and reinstall. Scope-only
 reassignment is rejected when the destination has conflicting text, and permitted
 for matching text or an unused version in that scope. Removing either scope column
 from its trigger independently makes the corresponding regression fail.
+
+The upgrade concurrency regression pauses the actual migration after preflight
+and before trigger DDL, then starts a conflicting writer for each policy table.
+The writer must block until installation commits and then fail the identity guard.
+The original unfenced SQL admits both conflicting texts in that witnessed schedule.
+`TermsIdentityUpgrade` models one upgrade and two scope classes. Its three unsafe
+variants omit fencing, release it early, or skip history validation. These bounded
+checks do not prove application consent, arbitrary concurrency or SQL refinement.

@@ -714,3 +714,8 @@ controls are mandatory in the formal runner.
 persisted submission mark, lease-fenced results and administrator resend. The positive
 model and four negative controls are mandatory in the formal runner. Bounds, provider
 assumptions and the recovery gaps found are stated there.
+
+`TermsIdentityUpgrade.tla` checks atomic terms-history validation/trigger installation
+with two scope classes; unfenced, early-unlock and unchecked-history variants
+violate `InstalledHistoryValid`. PostgreSQL barrier tests exercise the shipped SQL.
+This is a bounded upgrade model, not a proof of complete checkout consent.

@@ -343,15 +343,15 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "9dce5d95daef05f9ac10",
+      "currentId": "b925d71997a7d98258c3",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 205,
-      "change": "Append ledger posting integrity to current main, preserving all 204 existing migration entries and their introduction commits.",
+      "valueCount": 207,
+      "change": "The ordered 207-entry manifest preserves the exact main204 prefix, followed by ledger integrity, immutable checkout lines and terms identity. Original introduction commits remain ancestors. The unmerged terms migration is repaired to fence writers through atomic preflight/trigger installation; its revised checksum requires current-candidate review. No production application is implied.",
       "sourceReviewReferences": [
         {
-          "sourceRevision": "483d0ba67cdfced16ce8d3464b64ec61bc1dd71d",
+          "sourceRevision": "171b80c2def40a52e1613982b2d4ec6d6aac4707",
           "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
           "sourceFileSha256": "20c134045570cf3c02a76a1eca90a0cd44bbe3a6dea8dc66a663aa4a2e8de825",
           "sourceEntry": {
@@ -359,7 +359,7 @@
           },
           "sourceEntryCanonicalSha256": "3617fc343d8d3613dd7b2b67f8438186610d9c43ee0dc9acfd1fbd6a78522fbe",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+          "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
         },
         {
           "sourceRevision": "a35d7783fb2f4f3d6e01f9ff5577ae5ad8d04f1a",
@@ -370,7 +370,7 @@
           },
           "sourceEntryCanonicalSha256": "f1087726894f23ad090865e2c84df464c58922e9e0c92193115553281471283c",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+          "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
         },
         {
           "sourceRevision": "d5ce51ef1c884ce21bc7fd4799d9c1b8feec5cce",
@@ -381,7 +381,7 @@
           },
           "sourceEntryCanonicalSha256": "67c5c29ddb63e922e8cd1af271709ba42bb63bc52e6238e069ea3c6157c3904e",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+          "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
         }
       ]
     }

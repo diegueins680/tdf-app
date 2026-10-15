@@ -17,6 +17,14 @@
 -- so an operator reconciles them (assign a new terms_version) before the
 -- trigger is installed.
 
+BEGIN;
+SET LOCAL lock_timeout = '10s';
+-- Keep the preflight and both trigger installations in one writer-fenced
+-- transaction. Otherwise a conflicting writer can commit after the preflight
+-- and before CREATE TRIGGER, leaving invalid history under an installed guard.
+LOCK TABLE course_checkout_policy, event_ticket_checkout_policy
+  IN SHARE ROW EXCLUSIVE MODE;
+
 DO $$
 DECLARE
   offending TEXT;
@@ -103,3 +111,5 @@ CREATE TRIGGER trg_event_ticket_checkout_policy_terms_identity
   BEFORE INSERT OR UPDATE OF event_id, terms_version, terms_summary, refund_policy
   ON event_ticket_checkout_policy
   FOR EACH ROW EXECUTE FUNCTION event_ticket_checkout_policy_terms_identity();
+
+COMMIT;

@@ -9365,7 +9365,7 @@
       ],
       "authorization": "Unchanged: public course registration and authenticated ticket purchase keep their existing guards.",
       "privacy": "Terms text is public policy content; no personal data added.",
-      "concurrency": "Policy is re-read at checkout; a concurrent policy change surfaces as 409 rather than binding stale terms.",
+      "concurrency": "Policy is re-read at checkout; a concurrent policy change surfaces as 409 rather than binding stale terms. Terms-identity migration locks both policy tables before preflight and retains the locks through atomic trigger installation; concurrent writers cannot introduce conflicting history in that interval.",
       "idempotency": "Accepted version is validated before the existing idempotent hold logic; replays with the same version behave as before.",
       "failure": "Missing ticket acceptance returns 400; stale version returns 409; clients reload the policy and clear acceptance.",
       "recovery": "Buyer reviews the new terms and accepts again.",
@@ -9398,10 +9398,17 @@
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-mobile/__tests__/TicketCheckout.test.tsx",
         "tdf-mobile/__tests__/apiClient.test.ts",
-        "scripts/test-checkout-policy-terms-identity-migration.sh"
+        "scripts/test-checkout-policy-terms-identity-migration.sh",
+        "scripts/test-checkout-terms-upgrade-concurrency.py"
       ],
-      "formalModels": [],
-      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required. Database test of the terms-version identity triggers (scripts/test-checkout-policy-terms-identity-migration.sh). Scope-only course/event reassignment is checked against destination terms; matching and unused destination versions remain permitted. Independent guard-removal controls reproduce conflicting reassignments for each table.",
+      "formalModels": [
+        "formal/event-operations/TermsIdentityUpgrade.tla",
+        "formal/event-operations/TermsIdentityUpgrade.cfg",
+        "formal/event-operations/TermsIdentityUpgradeUnfenced.cfg",
+        "formal/event-operations/TermsIdentityUpgradeEarlyUnlock.cfg",
+        "formal/event-operations/TermsIdentityUpgradeUnchecked.cfg"
+      ],
+      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required. Database test of the terms-version identity triggers (scripts/test-checkout-policy-terms-identity-migration.sh). Scope-only course/event reassignment is checked against destination terms; matching and unused destination versions remain permitted. Independent guard-removal controls reproduce conflicting reassignments for each table. A controlled PostgreSQL barrier witnesses a conflicting writer after preflight and before trigger DDL for each table; the original migration admits both texts, while the fenced migration blocks and then rejects the writer. TermsIdentityUpgrade checks the finite two-scope upgrade boundary with three expected counterexamples; this does not prove whole checkout consent, arbitrary schedules or SQL refinement.",
       "evidence": "Exact-revision CI receipt required before claiming conformance.",
       "status": "specified and implemented",
       "historicalStatus": "new",

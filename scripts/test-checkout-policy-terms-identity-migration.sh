@@ -7,6 +7,14 @@ TDF_TERMS_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 TDF_TERMS_PGURL=${TDF_TERMS_PGURL:-}
 TDF_TERMS_CONTAINER=""
 
+if [ -n "$TDF_TERMS_PGURL" ]; then
+  node --input-type=module - "$TDF_TERMS_PGURL" "$TDF_TERMS_ROOT/scripts/lib/disposable-postgres-url.mjs" <<'JS'
+import { pathToFileURL } from 'node:url';
+const { disposablePostgresUrl } = await import(pathToFileURL(process.argv[3]));
+disposablePostgresUrl(process.argv[2], { ci: process.env.CI === 'true' });
+JS
+fi
+
 cleanup() {
   if [ -n "$TDF_TERMS_CONTAINER" ]; then
     docker rm -f "$TDF_TERMS_CONTAINER" >/dev/null 2>&1 || true
@@ -78,6 +86,8 @@ assert_rejected() {
 
 MIGRATION=tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql
 ROLLBACK=tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql
+
+echo "Terms identity PostgreSQL server: $(psql_exec -Atc 'SHOW server_version')"
 
 psql_exec -c "
   CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -288,3 +298,7 @@ assert_equal "$(psql_exec -Atc "SELECT event_id FROM event_ticket_checkout_polic
   "4" "Event move to an unused terms scope is permitted"
 
 echo "checkout policy terms identity migration test passed"
+
+# LEGAL-CONSENT-001: hold a real writer at the preflight/install boundary.
+TDF_TERMS_PGURL="$TDF_TERMS_PGURL" TDF_TERMS_CONTAINER="$TDF_TERMS_CONTAINER" \
+  python3 "$TDF_TERMS_ROOT/scripts/test-checkout-terms-upgrade-concurrency.py"
