@@ -928,7 +928,8 @@
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
         ".github/workflows/ci.yml",
-        "docs/catalog-persistence/catalog-list-decisions.json"
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "scripts/build-catalog-decisions.mjs"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",

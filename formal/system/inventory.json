@@ -3099,7 +3099,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
+      "sha256": "388a2ec1b308220319429305c3a09bec70b4b2fe08017b9a6668f0c70a90f52b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3669,7 +3669,7 @@
     {
       "id": "SURFACE-7bc6beda98cc6e72",
       "path": "scripts/build-catalog-decisions.mjs",
-      "sha256": "55a8004c6d3fe607a7dca57e43dccc4a45db6f3a51b2985cfe2fbea18d32226a",
+      "sha256": "3147e247b20cb634412d70697f91c6ea521aff4fc129e2923b0860657d7d0b6c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4185,7 +4185,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "85223dde03e952e0567970f7890e21bced49c02b9d4447a6fa961c742a2108dc",
+      "sha256": "1978873ba86472cc29198bf14fcc428102d69db29e6816a197a1140118ef2654",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13077,13 +13077,13 @@
     {
       "id": "SURFACE-b925364fa550109b",
       "path": "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
-      "sha256": "52f822412409064d7828a01858de9efa8620b7d517672f1104795e4b8924ab1d",
+      "sha256": "c3c79bde576ec2aaad3f1c428613bcfa3bd1e6d249437c24b047c25964785132",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f1f2a0e3e6c50eef",
       "path": "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql",
-      "sha256": "4e0449e9dc247400d898d5b2d4f99e2b75e3ee919e29b891cd583ecc2879d811",
+      "sha256": "1e6c71ec8124595b4c147ff4c57992d22cbd37ef4d226eddfd97e2f2789f842c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14067,7 +14067,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "aeb6173846be2acee8c7e6f6c6471b84116136c696fe71031cfcf325a65892d7",
+      "sha256": "5c93de5fb62e29d0611c5e38af6eddeef30ef7a60baaf1b15e547fb3a0a26984",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25015,7 +25015,7 @@
     },
     {
       "path": "formal/system/operations-failure-replay.md",
-      "sha256": "77bb588d173b5d00953226f0322e4cae9acc63ef619d450479130795c8937118",
+      "sha256": "6cc50b60020643dc5a68d32e80f3abb62b72492f80442baf9aa46e2d9533d911",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25120,7 +25120,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2116a002a650e0d59eab9375f8cd04bc7a500f95ce3aaa2cf3c85782d4c8baff",
+      "sha256": "fa230364fdd489c2969afbaf296bc6c731d8a4eec6db5c60b5b8c4ff9d3eaa7c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
