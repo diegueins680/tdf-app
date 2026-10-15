@@ -5982,7 +5982,7 @@
       "concurrency": "Each request includes pool acquisition in its deadline; runtime cancellation must propagate. System.Timeout is cooperative and cannot bound uninterruptible native operations or prove release writer exclusion.",
       "idempotency": "Read-only independent observations; retry cannot reuse a cached positive observation.",
       "failure": "Synchronous exception, negative probe or expired deadline yields503. Runtime cancellation propagates.",
-      "recovery": "Retry a fresh request after database/pool recovery; health does not establish migration, worker, provider, backup or whole-system readiness.",
+      "recovery": "Retry a fresh request after database/pool recovery; health does not establish migration, worker, provider, backup or whole-system readiness. Reopening PostgreSQL alone does not revive terminated idle pool resources; a fresh request may correctly return503 while those resources are discarded. The isolated recovery fixture bounds eventual success without changing the public per-request contract.",
       "observability": "Exact handler HTTP checks, source-bound verifier output and deployed read-only probes; record source and time.",
       "implementation": [
         "tdf-hq/src/TDF/App/Readiness.hs",
@@ -6001,19 +6001,21 @@
         "scripts/verify-readiness.py",
         "scripts/quality-backend.sh",
         "scripts/lib/readiness_conformance.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/test-readiness-conformance.py",
+        "scripts/quality-repo.sh"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "Source-derived narrow boundary; exact full-handler and deployed validation outstanding.",
       "ambiguity": [],
-      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery.",
+      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery. Recovery-oracle tests require strict documented intermediate503 responses, immediate rejection of malformed responses, finite attempt and elapsed-time bounds, and sanitized retained observations.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Full handler build, PostgreSQL failure/recovery and final deployed validation remain outstanding."
       },
       "property": "HTTP200 implies a fresh successful application-pool database round trip; failure details remain fixed and responses uncacheable.",
-      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation."
+      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation. Witnessed ten-connection stale-pool diagnostic: formal/system/evidence/2026-10-15-readiness-pool-recovery/observations.json."
     },
     {
       "id": "DEPLOY-CANARY-001",

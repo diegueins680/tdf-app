@@ -23,7 +23,17 @@ removed query, removed deadline and swallowed cancellation. Handler tests traver
 the real HTTP application with a failed pool and a real SQLite query. PostgreSQL
 connection failure/recovery is also checked through the actual HTTP application:
 the owned fixture database disallows connections, terminates only its sessions,
-requires fixed503 repeatedly, then reenables connections and requires200. The
+requires fixed503 repeatedly, then reenables connections and requires bounded
+eventual200. Reopening PostgreSQL does not revive terminated idle connections in
+the application pool: individual probes can correctly return503 while those
+resources are discarded. The synthetic recovery check permits at most16 probes
+over30 seconds, accepts only the exact documented503 between probes, and fails
+immediately on an unexpected status, body or header. Sanitized observations record
+contract classifications without retaining arbitrary response data. A witnessed
+[ten-connection diagnostic](evidence/2026-10-15-readiness-pool-recovery/observations.json) at source `669ca45ba` returned seven503 responses after
+reopening before a fresh connection returned200; it exposed the former invalid
+first-probe-success assertion. These fixture bounds are not a public recovery-time
+guarantee or a guarantee under continuing database faults. The
 maintenance connection remains separate; shared PostgreSQL itself is not stopped.
 The final deployed handler still requires a separate exact execution receipt. These finite tests are not a universal proof.
 

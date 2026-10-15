@@ -5983,7 +5983,7 @@
       "concurrency": "Each request includes pool acquisition in its deadline; runtime cancellation must propagate. System.Timeout is cooperative and cannot bound uninterruptible native operations or prove release writer exclusion.",
       "idempotency": "Read-only independent observations; retry cannot reuse a cached positive observation.",
       "failure": "Synchronous exception, negative probe or expired deadline yields503. Runtime cancellation propagates.",
-      "recovery": "Retry a fresh request after database/pool recovery; health does not establish migration, worker, provider, backup or whole-system readiness.",
+      "recovery": "Retry a fresh request after database/pool recovery; health does not establish migration, worker, provider, backup or whole-system readiness. Reopening PostgreSQL alone does not revive terminated idle pool resources; a fresh request may correctly return503 while those resources are discarded. The isolated recovery fixture bounds eventual success without changing the public per-request contract.",
       "observability": "Exact handler HTTP checks, source-bound verifier output and deployed read-only probes; record source and time.",
       "implementation": [
         "tdf-hq/src/TDF/App/Readiness.hs",
@@ -6002,19 +6002,21 @@
         "scripts/verify-readiness.py",
         "scripts/quality-backend.sh",
         "scripts/lib/readiness_conformance.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/test-readiness-conformance.py",
+        "scripts/quality-repo.sh"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "Source-derived narrow boundary; exact full-handler and deployed validation outstanding.",
       "ambiguity": [],
-      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery.",
+      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery. Recovery-oracle tests require strict documented intermediate503 responses, immediate rejection of malformed responses, finite attempt and elapsed-time bounds, and sanitized retained observations.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Full handler build, PostgreSQL failure/recovery and final deployed validation remain outstanding."
       },
       "property": "HTTP200 implies a fresh successful application-pool database round trip; failure details remain fixed and responses uncacheable.",
-      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation."
+      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation. Witnessed ten-connection stale-pool diagnostic: formal/system/evidence/2026-10-15-readiness-pool-recovery/observations.json."
     },
     {
       "id": "DEPLOY-CANARY-001",
@@ -10971,7 +10973,7 @@
     "scripts/lib/operations_conformance.py": "1cf556f9982d1eb598a24c8f6b51439f8022ec3cb56fb27b3a6587f9666efe10",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "b25c91b04c00887f224f0b670f88c0190a157f8ebddb5161299bbfa3886ebcfe",
-    "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
+    "scripts/lib/readiness_conformance.py": "56de03b5bf2b984cf7186c83dc3bb297aa0746ebe57be724d357d1f6b3931cdc",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
@@ -10988,7 +10990,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "5863cc281589cebdb692b883254aa9b095065860d12f988301dc19fcb7d7ba02",
+    "scripts/quality-repo.sh": "0a33416b65425b8f55b85d20283b362de3603b3c1c3ebfbdd2c153fc2190f329",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/run-music-release-worker-once.sh": "9674d11b9ae0f8932047a35db3fc77908d65bc46b5a495425d2bc8a1758ba625",
@@ -11008,7 +11010,7 @@
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
     "scripts/test-backend-version-rebuild.py": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
-    "scripts/test-booking-conformance.py": "fbe2741c71cc9d206a4f4d7b1ebaba804d423063546e3fffe10511be4b045a72",
+    "scripts/test-booking-conformance.py": "a9b322e5122b02b2fdf62fd0a7324cac68b73f3d41024023be71c4cd68fe7877",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
@@ -11050,6 +11052,7 @@
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
     "scripts/test-rag-index-privacy.sh": "d7086eccde1db152d9a6b0df4d7f9c806157aed92f654b489d4e677fcfb00ce9",
+    "scripts/test-readiness-conformance.py": "d6e7969f3819e7cb3ff20884e0beb0b11fac98f135ae4a35005f6c6948377098",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
@@ -11935,6 +11938,10 @@
       },
       {
         "requirement": "DEPLOY-BACKUP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-READINESS-001",
         "relationship": "tests"
       },
       {
@@ -15895,6 +15902,12 @@
       }
     ],
     "scripts/lib/readiness_conformance.py": [
+      {
+        "requirement": "DEPLOY-READINESS-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-readiness-conformance.py": [
       {
         "requirement": "DEPLOY-READINESS-001",
         "relationship": "tests"
@@ -22844,7 +22857,7 @@
     {
       "id": "SURFACE-f9884c5ddfa3d37d",
       "path": "scripts/lib/readiness_conformance.py",
-      "sha256": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
+      "sha256": "56de03b5bf2b984cf7186c83dc3bb297aa0746ebe57be724d357d1f6b3931cdc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23229,7 +23242,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "5863cc281589cebdb692b883254aa9b095065860d12f988301dc19fcb7d7ba02",
+      "sha256": "0a33416b65425b8f55b85d20283b362de3603b3c1c3ebfbdd2c153fc2190f329",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23250,6 +23263,10 @@
         },
         {
           "requirement": "DEPLOY-BACKUP-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-READINESS-001",
           "relationship": "tests"
         },
         {
@@ -24033,7 +24050,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "fbe2741c71cc9d206a4f4d7b1ebaba804d423063546e3fffe10511be4b045a72",
+      "sha256": "a9b322e5122b02b2fdf62fd0a7324cac68b73f3d41024023be71c4cd68fe7877",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25016,6 +25033,18 @@
       "requirements": [
         {
           "requirement": "PRIV-RAG-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8937e0d984cfd4c3",
+      "path": "scripts/test-readiness-conformance.py",
+      "sha256": "d6e7969f3819e7cb3ff20884e0beb0b11fac98f135ae4a35005f6c6948377098",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-READINESS-001",
           "relationship": "tests"
         }
       ]
@@ -46888,7 +46917,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a11ab36ac0b000b066f4bed1f6b92c5afa006e8bac56472dd6cb6a8033f3198a",
+      "sourceSha256": "a531e546453218b32c4415816da3933368b0a6978cc1b123fe29cbeae625a056",
       "definition": {
         "states": [
           "absent",

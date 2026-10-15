@@ -746,7 +746,7 @@ try:
     verify_music_payment_outcomes(sql, check, ENV, NAME, OUTPUT, ROOT, request)
 
     from readiness_conformance import verify_readiness
-    verify_readiness(run, NAME, http_port, check)
+    verify_readiness(run, NAME, http_port, check, OUTPUT)
 
     result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'reportedCommit': version_info.get('commit'), 'checks': checks, 'status': 'passed'}
 finally:
