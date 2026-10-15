@@ -342,21 +342,58 @@ def verify_operations(sql, request, check, env, database, output, actors):
         + ",encode(digest(" + q(legacy_body['correlationKey'] + ':manual-created') + ",'sha256'),'hex'),now(),'{}')")
     check('operations refuses unbound legacy manual replay', post_manual(legacy_body)[0] == 409)
 
-    # Exercise the installed WhatsApp capture trigger, not a handwritten DTO.
-    sender = 'synthetic-identity-' + uuid.uuid4().hex
-    thread_ids = []
-    for party in ['NULL', actors['admin'], 'NULL']:
-        external = 'synthetic-message-' + uuid.uuid4().hex
-        sql("INSERT INTO whats_app_message(external_id,sender_id,direction,created_at,party_id,text) VALUES (" + q(external) + ',' + q(sender) + ",'incoming',now()," + party + ",'Synthetic private message')")
-        event_id = sql('SELECT id FROM operations_domain_event WHERE provider_event_id=' + q(external))
-        check('operations WhatsApp source trigger produces one event', bool(event_id) and '\n' not in event_id)
-        check('operations WhatsApp identity progression projects',
-              sql("SELECT processed||'|'||failed FROM operations_process_outbox_batch(1,'synthetic'," + q(event_id) + '::uuid)') == '1|0')
-        row = json.loads(sql("SELECT row_to_json(item)::text FROM operations_work_item item WHERE correlation_key=" + q('whatsapp:' + sender)))
-        thread_ids.append(row['id'])
-        if len(thread_ids) > 1:
-            check('operations WhatsApp known identity remains bound', row['entity_type'] == 'party' and row['entity_id'] == actors['admin'] and not row['uncorrelated'])
-    check('operations WhatsApp identity retains a single thread', len(set(thread_ids)) == 1)
+    # Capture is opt-in in the same default context as operations_record_event.
+    capture_org = "00000000-0000-4000-8000-000000000001"
+    capture_branch = "00000000-0000-4000-8000-000000000002"
+    previous_capture = sql("SELECT operations_enabled FROM operations_organization WHERE id=" + q(capture_org))
+    previous_branch = sql("SELECT active FROM operations_branch WHERE id=" + q(capture_branch))
+    sql("UPDATE operations_organization SET operations_enabled=true WHERE id=" + q(capture_org))
+    sql("UPDATE operations_branch SET active=true WHERE id=" + q(capture_branch))
+    try:
+        for table in ['whats_app_message', 'instagram_message', 'facebook_message']:
+            for control_table, column, context in [
+                ('operations_organization', 'operations_enabled', capture_org),
+                ('operations_branch', 'active', capture_branch),
+            ]:
+                external = 'synthetic-capture-policy-' + uuid.uuid4().hex
+                insertion = ("/* operations_capture_policy */ INSERT INTO " + table
+                    + "(external_id,sender_id,direction,created_at) VALUES ("
+                    + q(external) + ",'synthetic-disabled-sender','incoming',now())")
+                update = "UPDATE " + control_table + " SET " + column + "=false WHERE id=" + q(context)
+                race(update, [lambda query=insertion: sql(query)])
+                check('capture rechecks disabled ' + column + ' after witnessed wait: ' + table,
+                      count('operations_domain_event', 'provider_event_id=' + q(external)) == 0
+                      and count(table, 'external_id=' + q(external)) == 1)
+                sql("UPDATE " + control_table + " SET " + column + "=true WHERE id=" + q(context))
+
+        # Reverse ordering: an admitted message retains the enablement lock until
+        # its commit; disabling cannot cross that accepted transaction boundary.
+        external = 'synthetic-capture-commit-' + uuid.uuid4().hex
+        insertion = ("INSERT INTO whats_app_message(external_id,sender_id,direction,created_at) VALUES ("
+                     + q(external) + ",'synthetic-enabled-sender','incoming',now())")
+        race(insertion, [lambda: sql("UPDATE operations_organization SET operations_enabled=false WHERE id=" + q(capture_org))])
+        check('admitted capture holds its enablement lock until message commit',
+              count('operations_domain_event', 'provider_event_id=' + q(external)) == 1)
+        sql("UPDATE operations_organization SET operations_enabled=true WHERE id=" + q(capture_org))
+
+        # Exercise the installed WhatsApp capture trigger, not a handwritten DTO.
+        sender = 'synthetic-identity-' + uuid.uuid4().hex
+        thread_ids = []
+        for party in ['NULL', actors['admin'], 'NULL']:
+            external = 'synthetic-message-' + uuid.uuid4().hex
+            sql("INSERT INTO whats_app_message(external_id,sender_id,direction,created_at,party_id,text) VALUES (" + q(external) + ',' + q(sender) + ",'incoming',now()," + party + ",'Synthetic private message')")
+            event_id = sql('SELECT id FROM operations_domain_event WHERE provider_event_id=' + q(external))
+            check('operations WhatsApp source trigger produces one event', bool(event_id) and '\n' not in event_id)
+            check('operations WhatsApp identity progression projects',
+                  sql("SELECT processed||'|'||failed FROM operations_process_outbox_batch(1,'synthetic'," + q(event_id) + '::uuid)') == '1|0')
+            row = json.loads(sql("SELECT row_to_json(item)::text FROM operations_work_item item WHERE correlation_key=" + q('whatsapp:' + sender)))
+            thread_ids.append(row['id'])
+            if len(thread_ids) > 1:
+                check('operations WhatsApp known identity remains bound', row['entity_type'] == 'party' and row['entity_id'] == actors['admin'] and not row['uncorrelated'])
+        check('operations WhatsApp identity retains a single thread', len(set(thread_ids)) == 1)
+    finally:
+        sql("UPDATE operations_organization SET operations_enabled=" + q(previous_capture) + "::boolean WHERE id=" + q(capture_org))
+        sql("UPDATE operations_branch SET active=" + q(previous_branch) + "::boolean WHERE id=" + q(capture_branch))
 
     # Appending a note has no expectedVersion, but current ownership is still locked.
     note_item = item()
