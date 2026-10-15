@@ -153,6 +153,11 @@ class Fixture:
             if result.returncode == 0:
                 break
             time.sleep(.25)
+        if result.returncode != 0:
+            state = self.inspect(self.database)['State']
+            logs = self.docker(['logs', '--tail=40', self.database], allow_failure=True)
+            self.report['databaseStartup'] = {'running': state['Running'], 'exitCode': state['ExitCode'],
+                'oomKilled': state['OOMKilled'], 'syntheticLogs': (logs.stdout+logs.stderr).decode(errors='replace')[:8192]}
         require(result.returncode == 0)
         for schema in schemas.values():
             self.sql(schema)
