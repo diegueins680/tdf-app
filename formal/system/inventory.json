@@ -15035,7 +15035,7 @@
     {
       "id": "SURFACE-89f49f12c8c895f1",
       "path": "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
-      "sha256": "726d09e3d6251b77588bafb3647b2544754febcf48cdc4a3c813425dd7267120",
+      "sha256": "2cf526501ba7c9b310916ba6ea78dfa7e2176f6421fa857ee1626e161c4cd92b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24945,7 +24945,7 @@
     },
     {
       "path": "formal/system/ticket-manual-review.md",
-      "sha256": "b7b20eebd3030ae89713b12fe0f512a0bbf9dbe61eaac6a5a22507192de1792e",
+      "sha256": "39eaed4619a4b6d883d5b347009dbe3802f7afa9ff944ee6bc3cf629baefadd5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

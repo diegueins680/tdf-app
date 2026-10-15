@@ -12,7 +12,7 @@ import Control.Monad.Logger (runNoLoggingT)
 import qualified Data.ByteString.Char8 as BS
 import Data.IORef (IORef, modifyIORef', newIORef, readIORef)
 import Data.Int (Int64)
-import Data.List (isPrefixOf, isSuffixOf, sort)
+import Data.List (isSuffixOf, sort, stripPrefix)
 import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -31,6 +31,7 @@ import Database.Persist.Sql (
 import System.Environment (lookupEnv)
 import System.IO.Error (ioeGetErrorString)
 import System.Timeout (timeout)
+import Text.Read (readMaybe)
 import TDF.Server.TicketManualPayments (
   ManualReviewAction (..),
   ManualReviewer (..),
@@ -44,8 +45,25 @@ import Test.Hspec
 spec :: Spec
 spec = describe "ticket-manual-review-postgresql" $ do
   configured <- runIO (lookupEnv "TDF_TICKET_MANUAL_REVIEW_DATABASE_URL")
+  ci <- runIO ((== Just "true") <$> lookupEnv "CI")
   routingOverrides <- runIO (traverse lookupEnv ["PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"])
   made <- runIO (newIORef [])
+  it "accepts only an explicit local authority or the isolated CI service" $ do
+    forM_ ["postgresql://127.0.0.1/orders_test", "postgresql://localhost:5432/orders_test"] $
+      \connection -> safeConnection False connection `shouldBe` True
+    forM_
+      [ "postgresql://localhost:password@db.example/orders_test"
+      , "postgresql://127.0.0.1:5432@db.example/orders_test"
+      , "postgresql://localhost.evil/orders_test"
+      , "postgresql://localhost:5432/orders_test?host=db.example"
+      , "postgresql://localhost:65536/orders_test"
+      , "postgresql://localhost:0/orders_test"
+      , "postgresql://localhost/orders%5ftest"
+      , "postgresql://localhost/production"
+      ] $ \connection -> safeConnection True connection `shouldBe` False
+    let service = "postgresql://postgres:postgres@postgres:5432/orders_test"
+    safeConnection False service `shouldBe` False
+    safeConnection True service `shouldBe` True
   case configured of
     Nothing ->
       it "requires the isolated fully migrated integration runner" $
@@ -56,7 +74,7 @@ spec = describe "ticket-manual-review-postgresql" $ do
             expectationFailure "Unset PGHOSTADDR, PGSERVICE and PGSERVICEFILE for the isolated\
               \ runner"
     Just connection
-      | not (safeConnection connection) ->
+      | not (safeConnection ci connection) ->
           it "refuses a non-disposable database" $ expectationFailure "Use the isolated\
             \ integration runner"
     Just connection -> beforeAll (runNoLoggingT (createPostgresqlPool (BS.pack connection) 4)) $
@@ -193,6 +211,16 @@ spec = describe "ticket-manual-review-postgresql" $ do
             review pool c (organizer c) ManualApprove `shouldReturn` Right True
             payments pool c `shouldReturn` 1
 
+        it "releases blocked reviewers when the actual observation deadline expires" $ \pool -> do
+          c <- transfer made pool
+          let approve = review pool c (organizer c) ManualApprove
+          overlappingWithObservation (threadDelay 60000000) pool c approve approve
+            `shouldThrow`
+              ((== "Ticket manual review overlap timed out waiting for both transactions")
+                . ioeGetErrorString)
+          review pool c (organizer c) ManualApprove `shouldReturn` Right True
+          payments pool c `shouldReturn` 1
+
 -- A decision (Just) or a refusal (Nothing).
 decided :: Either Text Bool -> Maybe Bool
 decided = either (const Nothing) Just
@@ -260,18 +288,24 @@ data Case = Case
   , buyerEmail :: Text
   }
 
-safeConnection :: String -> Bool
-safeConnection value =
-  not (any (`elem` value) ['?', '#'])
-    && "_test" `isSuffixOf` value
-    && any
-      (`isPrefixOf` value)
-      [ "postgresql://127.0.0.1/"
-      , "postgresql://127.0.0.1:"
-      , "postgresql://localhost/"
-      , "postgresql://localhost:"
-      , "postgresql://postgres:postgres@postgres:5432/"
-      ]
+-- Parse a deliberately restricted URI grammar. Credentials cannot masquerade
+-- as a local host, and encoded names/query routing overrides are never accepted.
+safeConnection :: Bool -> String -> Bool
+safeConnection ci value = case stripPrefix "postgresql://" value of
+  Nothing -> False
+  Just rest -> case break (== '/') rest of
+    (authority, '/' : database) ->
+      validAuthority authority && "_test" `isSuffixOf` database
+        && all (\c -> c `elem` (['_'] ++ ['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['0' .. '9'])) database
+    _ -> False
+ where
+  validAuthority authority =
+    (ci && authority == "postgres:postgres@postgres:5432")
+      || any (localAuthority authority) ["127.0.0.1", "localhost"]
+  localAuthority authority host = authority == host || case stripPrefix (host ++ ":") authority of
+    Just port | not (null port) && all (`elem` ['0' .. '9']) port ->
+      maybe False (\n -> n > 0 && n <= 65535) (readMaybe port :: Maybe Int)
+    _ -> False
 
 review :: ConnectionPool -> Case -> ManualReviewer -> ManualReviewAction -> IO (Either Text Bool)
 review pool c reviewer action = getCurrentTime >>= reviewAt pool c reviewer action
