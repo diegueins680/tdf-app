@@ -67,5 +67,11 @@ export default {
   "language": "Language",
   "share": "Share tdfrecords.net/app",
   "optout": "You can leave through TestFlight or Play Testing. To withdraw a request, use the privacy contact.",
-  "enrollment": "Requesting access does not automatically add you to Apple or Google lists."
+  "enrollment": "Requesting access does not automatically add you to Apple or Google lists.",
+  "shareHint": "This is the only link you need to share: it leads each person to the right store or beta for their phone.",
+  "copyLink": "Copy link",
+  "copied": "Link copied.",
+  "copyFailed": "Could not copy. Select the link and copy it manually.",
+  "qrHint": "Scan this code with your phone to open this page there.",
+  "qrAlt": "QR code that opens tdfrecords.net/app"
 };

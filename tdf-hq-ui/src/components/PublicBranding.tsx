@@ -1,5 +1,6 @@
 import SignupMobileInvitation from '../mobile/SignupMobileInvitation';
 import MobilePromo from '../mobile/MobilePromo';
+import { useMobileTelemetry } from '../mobile/telemetry';
 import { useTranslation } from 'react-i18next';
 import { Box, Button, Container, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
@@ -24,7 +25,7 @@ const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.search', to: '/buscar' },
   { label: 'authEntry.events', to: EVENTS_PATH },
   { label: 'TDF', to: '/tdf' },
-  { label: 'app.title', to: '/app' },
+  { label: 'app.title', to: '/app', surface: 'nav' },
   { label: 'authEntry.services', to: '/comercio' },
   { label: 'authEntry.community', to: '/fans' },
   { label: 'authEntry.shop', to: '/marketplace' },
@@ -69,6 +70,12 @@ export default function PublicBranding({
   );
   const isActiveNavItem = (path: string) =>
     location.pathname === path || location.pathname.startsWith(`${path}/`);
+  const trackMobileNav = useMobileTelemetry('nav');
+  // The TDF Mobile entry carries its surface so the landing can attribute the visit, and its click is measured
+  // as interest; the other items stay plain links.
+  const navItemProps = (item: { to: string; surface?: string }) => item.surface
+    ? { to: `${item.to}?surface=${item.surface}`, onClick: () => trackMobileNav('mobile_testing_interest_clicked') }
+    : { to: item.to };
   const footerPrimaryAction = useMemo<FooterAction>(() => {
     if (
       location.pathname.startsWith('/reservar') ||
@@ -194,7 +201,7 @@ export default function PublicBranding({
                     <Button
                       key={item.to}
                       component={RouterLink}
-                      to={item.to}
+                      {...navItemProps(item)}
                       aria-current={isActiveNavItem(item.to) ? 'page' : undefined}
                       sx={{
                         textTransform: 'none',
@@ -249,8 +256,8 @@ export default function PublicBranding({
                     <MenuItem
                       key={item.to}
                       component={RouterLink}
-                      to={item.to}
-                      onClick={() => setMenuAnchor(null)}
+                      to={navItemProps(item).to}
+                      onClick={() => { navItemProps(item).onClick?.(); setMenuAnchor(null); }}
                       sx={{ display: { md: 'none' } }}
                     >
                       {t(item.label)}
@@ -366,7 +373,7 @@ export default function PublicBranding({
                     key={item.to}
                     size="small"
                     component={RouterLink}
-                    to={item.to}
+                    {...navItemProps(item)}
                     aria-current={isActiveNavItem(item.to) ? 'page' : undefined}
                     sx={{
                       textTransform: 'none',
