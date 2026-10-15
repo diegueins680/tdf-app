@@ -4808,12 +4808,12 @@
     {
       "id": "OPS-WORKER-001",
       "title": "Private and truthful Operations worker failure reporting",
-      "statement": "Operations worker failures must not expose arbitrary exception data, swallow cancellation, repeat work on logging failure or report malformed SQL results as successful zero work.",
+      "statement": "Operations worker failures must not expose arbitrary exception data, swallow cancellation, repeat work on logging failure or report malformed SQL results as successful zero work. One outbox row whose projection fails, including a row whose entity no longer exists, must fail alone with its attempt, backoff and dead letter; it must never roll back the tick or block rows of other aggregates (later events of the same aggregate wait behind it, and behind a dead letter until an operator acts).",
       "domain": "OPS",
       "authority": "reconciled",
       "source": "docs/operations-control-center/architecture.md; docs/operations-control-center/formal-model.yaml; actual synthetic concurrent HTTP reproduction",
       "property": "safe fixed error; cancellation propagation; single invocation",
-      "contract": "formal/system/operations-command-boundary.md",
+      "contract": "formal/system/operations-worker-tick.md",
       "critical": true,
       "actors": [
         "Operations background worker",
@@ -4857,32 +4857,44 @@
       ],
       "authorization": "Deployment configuration controls worker startup; synchronous manual commands retain independent actor admission.",
       "privacy": "Never log arbitrary exception/SQL payload or disclose conflicting receipt.",
-      "concurrency": "Existing per-aggregate order and SKIP LOCKED; logging does not retry business work.",
+      "concurrency": "Existing per-aggregate order and SKIP LOCKED; logging does not retry business work. The tick checks constraints at each statement (SET CONSTRAINTS ALL IMMEDIATE) so a deferred constraint trigger cannot escape the batch's per-row handling.",
       "idempotency": "No exactly-once external delivery claim; deterministic test fixtures explicitly pause the background loop.",
-      "failure": "Invalid configuration rejects startup; malformed result fails; async cancellation escapes; SQL projection diagnostics contain SQLSTATE and fixed text.",
+      "failure": "Invalid configuration rejects startup; malformed result fails; async cancellation escapes; SQL projection diagnostics contain SQLSTATE and fixed text. A projection that fails for one row (including a missing referenced entity) records the attempt, SQLSTATE and backoff on that row and dead-letters it on the eighth attempt; before 2026-10-12 a missing entity raised at commit, rolled back the whole tick, recorded nothing and repeated every second.",
       "recovery": "Operator may resume worker; preserve pending/dead-letter evidence and inspect unbound legacy manual events.",
       "observability": "Atomic audit/stream for accepted mutations; source-bound HTTP/model/property test receipts.",
       "implementation": [
         "tdf-hq/src/TDF/Operations/Worker.hs",
         "tdf-hq/.env.example",
-        "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql"
+        "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
-        "scripts/lib/operations_conformance.py"
+        "scripts/lib/operations_conformance.py",
+        "scripts/__tests__/operations-worker-tick-postgres.mjs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/OperationsWorkerTick.tla",
+        "formal/event-operations/OperationsWorkerTick.cfg",
+        "formal/event-operations/OperationsWorkerTickDeferredCheck.cfg",
+        "formal/event-operations/OperationsWorkerTickNoAttempt.cfg",
+        "formal/event-operations/OperationsWorkerTickUnboundedRetry.cfg"
+      ],
       "status": "specified and implemented",
-      "confidence": "Source reviewed; exact final runtime validation pending",
+      "confidence": "Source reviewed; tick semantics on the migrated fixture tested; production enablement and runtime validation pending.",
       "ambiguity": [
-        "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof."
+        "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof.",
+        "SET CONSTRAINTS ALL IMMEDIATE covers every deferrable constraint in the tick transaction, not only the entity-reference trigger; none of the tick's writes relies on deferred checking.",
+        "A dead-lettered row for a deleted entity needs an operator decision (OPS-FAILURE-REPLAY-001); the worker never resolves it.",
+        "A poisoned row blocks later events of its own aggregate while it backs off and, once dead-lettered, until an operator replays or resolves it (OPS-FAILURE-REPLAY-001); other aggregates are unaffected.",
+        "Re-projection of an existing work item (ON CONFLICT DO UPDATE sets entity_type, entity_id and uncorrelated) also fires the reference trigger; with immediate checking an existing item whose entity was since deleted fails per row instead of failing the tick."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Repair is under exact-candidate runtime validation; other Operations surfaces and deployed correspondence remain unverified."
+        "reason": "Tick semantics tested on the migrated fixture and modelled within bounds; exact-candidate runtime validation and production enablement pending."
       },
-      "verification": "Actual isolated HTTP/PostgreSQL races and rollback checks; actual worker iteration Hspec/QuickCheck; bounded safety models with required negative controls where mapped.",
-      "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
+      "verification": "Actual isolated HTTP/PostgreSQL races and rollback checks; actual worker iteration Hspec/QuickCheck; bounded TLC check of OperationsWorkerTick.tla (61 states, 27 distinct, depth 9) with three single-guard negative controls; the tick's statements run against the migrated fixture with a poisoned and a healthy row (operations-worker-tick-postgres.mjs), the deferred-check tick as a negative control.",
+      "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence. The poisoned-row tick failure reproduced on the migrated fixture on 2026-10-12 before the fix."
     },
     {
       "id": "OPS-METRICS-001",

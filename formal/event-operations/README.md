@@ -111,6 +111,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `OperationsAuxiliaryWriteUnlocked.cfg`, `OperationsAuxiliaryWritePartialAudit.cfg`, `OperationsAuxiliaryWriteRetryTwice.cfg`, `OperationsAuxiliaryWriteUnencrypted.cfg` | Negative controls: environment moves while a command holds its locks, a result without its audit, a second retry admitted, a push token stored without the key | Expected exit 12 with `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
 | `OperationsReadPolicy.cfg` (2026-10-12) | One state; the grant table of `Model.hs` and the SQL scope filter evaluated over every subset of ten roles, both assignment flags and fifteen entity types (up to 30,720 cases per invariant) | PASS; `ReadersAgree`, `NoSecurityDisclosure`, `ReadOnlyNoWriteGain`, `SpecialistsAssigned`, `UnknownNothing` |
 | `OperationsReadPolicyWildcardSecurity.cfg`, `OperationsReadPolicySqlDrift.cfg`, `OperationsReadPolicyUnassigned.cfg`, `OperationsReadPolicyReadOnlyWrites.cfg`, `OperationsReadPolicyUnknownGrant.cfg` | Negative controls: the Haskell wildcard includes security, the SQL wildcard includes security, specialists see unassigned items, ReadOnly kept for write visibility, an unlisted role granted the wildcard | Expected non-zero exit with "The invariant of ... is equal to FALSE" for `NoSecurityDisclosure`, `ReadersAgree`, `SpecialistsAssigned`, `ReadOnlyNoWriteGain`, `UnknownNothing` |
+| `OperationsWorkerTick.cfg` (2026-10-12) | 3 outbox rows (1 poisoned), 3 attempts to dead letter, 6 ticks; backoff elapses between ticks | PASS; 61 generated, 27 distinct states, depth 9; `PoisonIsolated`, `NoAbortedTick`, `AttemptsRecorded`, `DeadLetterAtBound` |
+| `OperationsWorkerTickDeferredCheck.cfg`, `OperationsWorkerTickNoAttempt.cfg`, `OperationsWorkerTickUnboundedRetry.cfg` | Negative controls: constraints deferred to commit (the previous tick), failed projection records no attempt, no dead-letter bound | Expected non-zero exit with `PoisonIsolated`, `AttemptsRecorded`, `DeadLetterAtBound` violated |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
@@ -725,3 +727,15 @@ the one site that did not); Teacher, Engineer and unlisted roles see
 nothing unassigned. Five controls each break one guard. The table is copied by hand; a change to `Model.hs` or
 `scopeFilterSql` must be mirrored here. See
 [operations-read-policy.md](../system/operations-read-policy.md).
+
+`OperationsWorkerTick.tla` checks the Operations worker's maintenance tick of
+OPS-WORKER-001: every due outbox row is projected or fails alone with a
+recorded attempt and a backoff, and a row whose entity no longer exists is
+dead-lettered after the attempt bound, so one poisoned row never holds the
+rows of other aggregates hostage (its own aggregate's successors wait, by
+design). The `DeferredCheck` control is the previous tick, in which the
+deferred reference trigger fired at commit and rolled the whole tick back;
+`NoAttempt` and `UnboundedRetry` remove the two retry guards.
+`scripts/__tests__/operations-worker-tick-postgres.mjs` runs the tick's
+statements against the migrated fixture. Bounds and exclusions are in
+`formal/system/operations-worker-tick.md`.

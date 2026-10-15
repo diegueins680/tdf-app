@@ -743,6 +743,20 @@
       "conflict": "AUTH-OPS-READ-001 had no formal model; the read policy exists twice (the Haskell predicate for detail and writes, the SQL scope filter for list, metrics and stream) and their agreement, the Admin-only security rule and ReadOnly's write neutrality were stated in prose and three Hspec examples. The independent review found the approval handler's linked-item check calling canViewEntityType with ReadOnly still present, unlike the three other write sites: Accounting plus ReadOnly could link an approval to a work item Accounting alone cannot see.",
       "authority": "The requirement's property and forbidden transitions, docs/operations-control-center/rbac.md, and the two evaluators as read on 2026-10-12.",
       "resolution": "OperationsReadPolicy.tla copies the grant table and both evaluators and checks the five invariants exhaustively over the finite policy (ten roles, two assignment flags, fifteen entity types) with one negative configuration per guard. The copy is by hand: it establishes the policy's properties, not the Haskell or SQL text, which ModelSpec and the conformance harness keep covering. One code change: the approval handler strips ReadOnly before the linked-item check, as docs/operations-control-center/rbac.md requires (ReadOnly cannot enlarge another role's write scope); the conformance harness gains the Accounting-plus-ReadOnly case. ReadOnlyNoWriteGain holds by construction once every write site strips ReadOnly; it records the rule, the harness checks the sites."
+    },
+    {
+      "id": "AUTHORITY-076",
+      "sources": [
+        "formal/system/requirements.json#OPS-WORKER-001",
+        "tdf-hq/src/TDF/Operations/Worker.hs",
+        "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
+        "formal/system/operations-worker-tick.md",
+        "formal/event-operations/OperationsWorkerTick.tla"
+      ],
+      "conflict": "OPS-WORKER-001 requires a failed projection to be reported as a fixed failure and the worker to keep working, but operations_work_item_entity_reference is a deferred constraint trigger: a domain event for an entity that no longer exists raised at the tick's commit, outside operations_process_outbox_batch's per-row handling, so the whole tick (outbox, SLA, archive) rolled back, no attempt was recorded and the same failure repeated every second while every other pending row stayed blocked.",
+      "authority": "The requirement statement (fixed failure, single invocation, preserved pending/dead-letter evidence) and the batch function's own per-row attempt, backoff and dead-letter design.",
+      "resolution": "The worker runs SET CONSTRAINTS ALL IMMEDIATE at the start of the tick, so the trigger fires inside the batch and the poisoned row fails alone with its attempt, backoff and dead letter; the trigger and the function are unchanged. Checked by the bounded OperationsWorkerTick model and the mirrored-statement PostgreSQL test with the deferred tick as a negative control."
     }
   ]
 }

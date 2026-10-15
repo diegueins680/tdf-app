@@ -551,6 +551,11 @@ jobs:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: sh scripts/test-music-purchase.sh
 
+      - name: Verify the Operations worker tick isolates a poisoned outbox row
+        env:
+          TDF_OPERATIONS_WORKER_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: node scripts/__tests__/operations-worker-tick-postgres.mjs
+
       - name: Verify artist claim preparation concurrency and privacy
         env:
           TDF_CLAIM_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test

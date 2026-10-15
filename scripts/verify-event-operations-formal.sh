@@ -116,6 +116,12 @@ run_negative_tlc OperationsReadPolicySqlDrift.cfg operations-read-policy-sql-dri
 run_negative_tlc OperationsReadPolicyUnassigned.cfg operations-read-policy-unassigned 'The invariant of SpecialistsAssigned is equal to FALSE' OperationsReadPolicy.tla
 run_negative_tlc OperationsReadPolicyReadOnlyWrites.cfg operations-read-policy-readonly-writes 'The invariant of ReadOnlyNoWriteGain is equal to FALSE' OperationsReadPolicy.tla
 run_negative_tlc OperationsReadPolicyUnknownGrant.cfg operations-read-policy-unknown-grant 'The invariant of UnknownNothing is equal to FALSE' OperationsReadPolicy.tla
+
+
+run_tlc OperationsWorkerTick.tla OperationsWorkerTick.cfg operations-worker-tick
+run_negative_tlc OperationsWorkerTickDeferredCheck.cfg operations-worker-tick-deferred-check 'Invariant PoisonIsolated is violated' OperationsWorkerTick.tla
+run_negative_tlc OperationsWorkerTickNoAttempt.cfg operations-worker-tick-no-attempt 'Invariant AttemptsRecorded is violated' OperationsWorkerTick.tla
+run_negative_tlc OperationsWorkerTickUnboundedRetry.cfg operations-worker-tick-unbounded-retry 'Invariant DeadLetterAtBound is violated' OperationsWorkerTick.tla
 run_tlc InvoiceReceipt.tla InvoiceReceipt.cfg invoicereceipt
 run_tlc ApplicationCanary.tla ApplicationCanary.cfg applicationcanary
 run_negative_tlc ApplicationCanaryNetwork.cfg applicationcanarynetwork 'Invariant NoProductionConnectivity is violated' ApplicationCanary.tla
