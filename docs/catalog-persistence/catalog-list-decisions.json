@@ -317,7 +317,7 @@
             }
           },
           "originalDecisionSha256": "31bdf931129e2cc5527a52ee0ffb5cf0c26c3b355cd2ca10d191f321386ab6df",
-          "replacementId": "66c48cc059727856b6f1",
+          "replacementId": "49d1c72ba174118670bf",
           "reason": "The combined 160-entry Mobile registry already preserves both shipped and audit parent decisions.",
           "previousReplacementId": "0bd23196640f34d2ea12",
           "successorReason": "Reviewed current generated mirror retains strict-admin concealment and adds authenticated account-deletion discovery; full main predecessor decision remains in its concurrentReviewHistory."
@@ -12892,7 +12892,7 @@
       "reviewed": true
     },
     {
-      "id": "068d6f3f0c164631ab35",
+      "id": "a7561a719beb23884345",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -12904,10 +12904,10 @@
       "reviewBatch": "ci-recovery-2026-09-12",
       "evidence": {
         "file": "tdf-mobile/src/api/events.ts",
-        "line": 432,
+        "line": 435,
         "kind": "object-registry",
         "name": "Events",
-        "valueCount": 29,
+        "valueCount": 30,
         "consumerCount": 151,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
@@ -15187,42 +15187,6 @@
       "reviewBatch": "mobile-program-2026-10-04"
     },
     {
-      "id": "7804604c0af849751309",
-      "classification": "dynamic-business-catalog",
-      "disposition": "retain-in-code",
-      "specializedModel": "navigation_item",
-      "priority": "P3-retain",
-      "risk": "Changing UI constants could break rendering or user experience.",
-      "justification": "Reviewed public header navigation adds a single Eventos entry pointing to the canonical /social/eventos route (public agenda for visitors, events workspace for signed-in users). It holds client routes and localized labels only; event visibility and RSVP authority remain server-side.",
-      "reviewed": true,
-      "previousDecision": {
-        "id": "d24fc428c18f60568996",
-        "classification": "dynamic-business-catalog",
-        "disposition": "retain-in-code",
-        "specializedModel": "navigation_item",
-        "priority": "P3-retain",
-        "risk": "Changing UI constants could break rendering or user experience.",
-        "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
-        "reviewed": true,
-        "previousDecision": {
-          "id": "f9819fa4b81bdd8f3f21",
-          "classification": "dynamic-business-catalog",
-          "disposition": "retain-in-code",
-          "specializedModel": "navigation_item",
-          "priority": "P3-retain",
-          "risk": "Changing UI constants could break rendering or user experience.",
-          "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
-          "reviewed": true
-        }
-      },
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
-        "line": 23
-      },
-      "reviewBatch": "events-nav-carousel-2026-10-08",
-      "reviewMethod": "successor-of-reviewed-decision"
-    },
-    {
       "id": "b04463685b6b720b3ca9",
       "classification": "governed-reference-data",
       "disposition": "retain-in-code",
@@ -15360,64 +15324,80 @@
       "reviewMethod": "source-review-2026-10-05"
     },
     {
-      "id": "66c48cc059727856b6f1",
+      "id": "49d1c72ba174118670bf",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "The 161-entry canonical generated registry retains the 159 reviewed definitions, preserves the existing admin.video-sources destination, and adds authenticated account.deletion discovery. This navigation metadata grants no permission or erasure authority. The deletion endpoint requires the matching authenticated account and a current-session transaction lock; the destination cannot be pinned, favorited or added to recents.",
+      "justification": "The 163-entry generated registry retains the 161 reviewed definitions, relabels the social.events destination from 'Eventos sociales' / 'Social events' to 'Eventos' / 'Events' (the former names stay as search synonyms; route, permissions and API scopes are unchanged), and carries the two music destinations the parent registry already defines: music.public.catalog (public, opened on the web from the app) and music.library (signed-in, no role or module requirement). Neither adds a role, module, permission or API scope. The file is generated from tdf-hq/assets/feature-registry.json and its source digest matches.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
-      "reviewBatch": "account-deletion-discovery-2026-10-05",
+      "reviewBatch": "eventos-label-2026-10-11",
       "evidence": {
         "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
         "line": 55
       },
       "previousDecision": {
-        "id": "44c80a6dd2f154d0d59a",
+        "id": "66c48cc059727856b6f1",
         "classification": "security-system-registry",
         "disposition": "migrate-and-remove-authority-from-code",
         "specializedModel": "navigation_item, navigation_item_permission",
         "priority": "P0-security",
         "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-        "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant. The canonical tester landing adds one public discovery destination while retaining all 158 definitions from the merged payment main, with no authorization grants changed.",
+        "justification": "The 161-entry canonical generated registry retains the 159 reviewed definitions, preserves the existing admin.video-sources destination, and adds authenticated account.deletion discovery. This navigation metadata grants no permission or erasure authority. The deletion endpoint requires the matching authenticated account and a current-session transaction lock; the destination cannot be pinned, favorited or added to recents.",
         "reviewed": true,
         "reviewMethod": "manual-source-review",
-        "reviewBatch": "mobile-program-current-main-2026-10-04",
+        "reviewBatch": "account-deletion-discovery-2026-10-05",
         "evidence": {
           "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
           "line": 55
         },
         "previousDecision": {
-          "id": "0eafdd9f0a8bbebf9a23",
+          "id": "44c80a6dd2f154d0d59a",
           "classification": "security-system-registry",
           "disposition": "migrate-and-remove-authority-from-code",
           "specializedModel": "navigation_item, navigation_item_permission",
           "priority": "P0-security",
           "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-          "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant.",
+          "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant. The canonical tester landing adds one public discovery destination while retaining all 158 definitions from the merged payment main, with no authorization grants changed.",
           "reviewed": true,
-          "reviewMethod": "deterministic-policy-v3",
-          "reviewBatch": "universal-interactions-2026-09-28",
+          "reviewMethod": "manual-source-review",
+          "reviewBatch": "mobile-program-current-main-2026-10-04",
           "evidence": {
             "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
             "line": 55
           },
           "previousDecision": {
-            "id": "5147eb2751a01d8b4c73",
+            "id": "0eafdd9f0a8bbebf9a23",
             "classification": "security-system-registry",
             "disposition": "migrate-and-remove-authority-from-code",
             "specializedModel": "navigation_item, navigation_item_permission",
             "priority": "P0-security",
             "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-            "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+            "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant.",
             "reviewed": true,
             "reviewMethod": "deterministic-policy-v3",
             "reviewBatch": "universal-interactions-2026-09-28",
             "evidence": {
               "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
               "line": 55
+            },
+            "previousDecision": {
+              "id": "5147eb2751a01d8b4c73",
+              "classification": "security-system-registry",
+              "disposition": "migrate-and-remove-authority-from-code",
+              "specializedModel": "navigation_item, navigation_item_permission",
+              "priority": "P0-security",
+              "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+              "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+              "reviewed": true,
+              "reviewMethod": "deterministic-policy-v3",
+              "reviewBatch": "universal-interactions-2026-09-28",
+              "evidence": {
+                "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                "line": 55
+              }
             }
           }
         }
@@ -15641,19 +15621,19 @@
       }
     },
     {
-      "id": "155c8ba51c7e002c10d0",
+      "id": "394e8ba1db3ead9328f2",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 202-entry manifest keeps the reviewed 200 entries unchanged and appends the additive directory artist derived listings migration and its idempotent listing backfill with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 204-entry manifest keeps the reviewed 203 entries unchanged and appends the migration that replaces nine uniqueness constraints with plain indexes of the same names (no row or column change) with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "directory-artist-listings-2026-10-10",
+      "reviewBatch": "index-declarations-2026-10-11",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57199,20 +57179,52 @@
         ]
       },
       "mergedDecision": {
-        "id": "f185683a8f6a6532b802",
+        "id": "5f2e374ddc077e6b8418",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Ordered 200-entry manifest keeps the reviewed 199 entries unchanged and appends the additive directory event search sync migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+        "justification": "Ordered 203-entry manifest keeps the reviewed 202 entries unchanged and appends the Operations inbound capture direction migration (function replacement only, no table change) with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
         "reviewed": true,
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3
         },
-        "reviewBatch": "directory-event-search-sync-2026-10-10",
-        "reviewMethod": "successor-of-reviewed-decision"
+        "reviewBatch": "operations-inbound-capture-2026-10-11",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "mergedDecision": {
+          "id": "155c8ba51c7e002c10d0",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Ordered 202-entry manifest keeps the reviewed 200 entries unchanged and appends the additive directory artist derived listings migration and its idempotent listing backfill with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+          "reviewed": true,
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3
+          },
+          "reviewBatch": "directory-artist-listings-2026-10-10",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "mergedDecision": {
+            "id": "f185683a8f6a6532b802",
+            "classification": "genuine-technical-constant",
+            "disposition": "explicit-allowlist",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Ordered 200-entry manifest keeps the reviewed 199 entries unchanged and appends the additive directory event search sync migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+            "reviewed": true,
+            "evidence": {
+              "file": "scripts/production-migrations.json",
+              "line": 3
+            },
+            "reviewBatch": "directory-event-search-sync-2026-10-10",
+            "reviewMethod": "successor-of-reviewed-decision"
+          }
+        }
       }
     },
     {
@@ -58901,6 +58913,105 @@
         "name": "actionCopy"
       },
       "reviewBatch": "legal-disclosure-2026-10-07"
+    },
+    {
+      "id": "3762b4a9073c4dd72244",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Replacing coarse device classes with device identifiers would expand telemetry privacy exposure.",
+      "justification": "DeviceClass is a closed technical telemetry discriminator derived from Platform.isPad: phone, tablet, or unknown. It is not a business catalog or authorization input; tester feedback preserves this coarse classification without device identifiers.",
+      "reviewed": true
+    },
+    {
+      "id": "22a8352d47846fdea0c9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "If this list drifts from the landing's distribution statuses, the read-only expiry monitor could fail on, or wrongly accept, a manifest the /app page treats differently.",
+      "justification": "Validation vocabulary of the read-only Mobile distribution expiry monitor. It mirrors the status union declared in tdf-hq-ui/src/mobile/distribution.ts so the monitor rejects the manifests the landing rejects; a test compares both lists. It is not an authority for which channels exist and nothing is persisted from it.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/check-mobile-distribution.mjs",
+        "line": 13,
+        "kind": "array",
+        "name": "STATUSES"
+      },
+      "reviewBatch": "mobile-distribution-expiry-check-2026-10-12",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "8ea9381b405e317f5e7f",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing UI constants could break rendering or user experience.",
+      "justification": "Reviewed public header navigation: the TDF Mobile entry now carries its entry surface (surface=nav) so the landing attributes the visit and the click is measured as interest. Still client routes and localized labels only; distribution state keeps coming from the validated manifest.",
+      "reviewed": true,
+      "previousDecision": {
+        "id": "7804604c0af849751309",
+        "classification": "dynamic-business-catalog",
+        "disposition": "retain-in-code",
+        "specializedModel": "navigation_item",
+        "priority": "P3-retain",
+        "risk": "Changing UI constants could break rendering or user experience.",
+        "justification": "Reviewed public header navigation adds a single Eventos entry pointing to the canonical /social/eventos route (public agenda for visitors, events workspace for signed-in users). It holds client routes and localized labels only; event visibility and RSVP authority remain server-side.",
+        "reviewed": true,
+        "previousDecision": {
+          "id": "d24fc428c18f60568996",
+          "classification": "dynamic-business-catalog",
+          "disposition": "retain-in-code",
+          "specializedModel": "navigation_item",
+          "priority": "P3-retain",
+          "risk": "Changing UI constants could break rendering or user experience.",
+          "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
+          "reviewed": true,
+          "previousDecision": {
+            "id": "f9819fa4b81bdd8f3f21",
+            "classification": "dynamic-business-catalog",
+            "disposition": "retain-in-code",
+            "specializedModel": "navigation_item",
+            "priority": "P3-retain",
+            "risk": "Changing UI constants could break rendering or user experience.",
+            "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
+            "reviewed": true
+          }
+        },
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+          "line": 23
+        },
+        "reviewBatch": "events-nav-carousel-2026-10-08",
+        "reviewMethod": "successor-of-reviewed-decision"
+      },
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "line": 23
+      },
+      "reviewBatch": "events-nav-carousel-2026-10-08",
+      "reviewMethod": "successor-of-reviewed-decision"
+    },
+    {
+      "id": "c2b46fc847fe0b3f1f6f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could let a non-label utm parameter reach analytics or drop a campaign tag from shared links.",
+      "justification": "The five utm_* suffixes the mobile funnel accepts as campaign tags (source, medium, campaign, content, term) are a validation allowlist mirroring the growth attribution store; the values are query-parameter names, not selectable or reportable business values, and each accepted value is still label-validated.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "mobile-growth-funnel-2026-10-13",
+      "evidence": {
+        "file": "tdf-hq-ui/src/mobile/telemetry.ts",
+        "line": 18,
+        "kind": "array",
+        "name": "CAMPAIGN_TAGS",
+        "valueCount": 5
+      }
     }
   ]
 }

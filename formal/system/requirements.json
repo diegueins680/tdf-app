@@ -321,10 +321,13 @@
       "property": "per-currency accumulated sum uses arbitrary precision",
       "contract": "formal/system/payment-arithmetic.md",
       "implementation": [
-        "tdf-hq/src/TDF/Commerce/StateMachine.hs"
+        "tdf-hq/src/TDF/Commerce/StateMachine.hs",
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs"
       ],
-      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions. No proof of persisted SQL ledger or production use of this helper.",
-      "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output",
+      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control.",
+      "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output; 2026-10-09 local PG16 run of ledger_posting_balance.sql via scripts/test-ticket-manual-review.sh.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -360,16 +363,19 @@
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
-        "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs"
+        "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
+        "tdf-hq/test/integration/ledger_posting_balance.sql",
+        "scripts/test-ticket-manual-review.sh"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
       "ambiguity": [
-        "Full cross-system refinement and current deployed correspondence remain unverified."
+        "Full cross-system refinement and current deployed correspondence remain unverified.",
+        "The database validates balance only on draft -> posted; a transaction inserted as posted, or an entry appended after posting, is not rejected. No live writer does either."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Live writers and the posting trigger conform; the database does not reject transactions inserted as posted or entries appended after posting."
       }
     },
     {
@@ -447,7 +453,7 @@
         "tdf-hq/src/TDF/API.hs"
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
-      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "evidence": "2026-10-09: createServiceMarketplaceBooking and releaseServiceMarketplaceEscrow reject unconditionally with 503 before any database access in main 7831b69 and in production backend 7ab3444; legacy-escrow-contract.test.mjs 7/7 and the backend Hspec suite (3,918 examples, 0 failures, including the ServerSpec escrow cases) passed on the #528 candidate. No formal model: an unconditional rejection has no state space to explore.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-verification-and-release",
       "critical": true,
@@ -493,7 +499,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Fresh execution on the current candidate and source identity with the deployed backend; an authenticated deployed request was not sent."
       }
     },
     {
@@ -508,7 +514,7 @@
         "tdf-hq/src/TDF/API.hs"
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
-      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "evidence": "2026-10-09: createServiceMarketplaceBooking and releaseServiceMarketplaceEscrow reject unconditionally with 503 before any database access in main 7831b69 and in production backend 7ab3444; legacy-escrow-contract.test.mjs 7/7 and the backend Hspec suite (3,918 examples, 0 failures, including the ServerSpec escrow cases) passed on the #528 candidate. No formal model: an unconditional rejection has no state space to explore.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-verification-and-release",
       "critical": true,
@@ -554,7 +560,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Fresh execution on the current candidate and source identity with the deployed backend; an authenticated deployed request was not sent."
       }
     },
     {
@@ -568,7 +574,7 @@
         "scripts/production-release.mjs"
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
-      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "evidence": "2026-10-09: createServiceMarketplaceBooking and releaseServiceMarketplaceEscrow reject unconditionally with 503 before any database access in main 7831b69 and in production backend 7ab3444; legacy-escrow-contract.test.mjs 7/7 and the backend Hspec suite (3,918 examples, 0 failures, including the ServerSpec escrow cases) passed on the #528 candidate. No formal model: an unconditional rejection has no state space to explore.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-verification-and-release",
       "critical": true,
@@ -613,7 +619,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Fresh execution on the current candidate and source identity with the deployed backend; an authenticated deployed request was not sent."
       }
     },
     {
@@ -4442,9 +4448,91 @@
       }
     },
     {
+      "id": "EVT-OWNER-CLAIM-001",
+      "title": "Never hand an event without an organizer to the first caller",
+      "domain": "EVT",
+      "statement": "An event is managed by its stored organizer and no request path replaces a stored organizer. On an event without an organizer, organizer-only routes refuse and never write; strict administrators keep the administrative routes that never depended on assignment. Only a strict administrator whose edit of the event is accepted becomes its organizer, in the same transaction, through one conditional update whose stored result decides the outcome.",
+      "authority": "Event-operations foundation migration of 2026-09-14 (events without a resolved owner stay disabled until reviewed) and repository audit of 2026-09-14 (remove organizer-null claiming)",
+      "source": "formal/system/event-organizer-assignment.md",
+      "contract": "formal/system/event-organizer-assignment.md",
+      "actors": [
+        "Event organizer",
+        "Strict administrator",
+        "Authenticated user",
+        "Logistics team member"
+      ],
+      "preconditions": [
+        "Authenticated session",
+        "Event visible to the caller, or caller is a strict administrator"
+      ],
+      "inputs": [
+        "Event identifier",
+        "Caller party and roles"
+      ],
+      "state": {
+        "boundary": "social_event.organizer_party_id",
+        "authority": "PostgreSQL conditional update and row lock"
+      },
+      "allowedTransitions": [
+        "No organizer -> strict administrator whose edit of the event is accepted"
+      ],
+      "forbiddenTransitions": [
+        "No organizer -> any caller of a read route",
+        "No organizer -> ordinary user",
+        "No organizer -> administrator whose edit was refused",
+        "Organizer A -> organizer B through any organizer-only route",
+        "Acting as organizer when the stored organizer is another party"
+      ],
+      "effects": [
+        "Organizer assigned once",
+        "updated_at refreshed on assignment"
+      ],
+      "authorization": "Organizer-only routes require the stored organizer; an event without one is refused with 403 except for the strict-administrator edit that assigns it. Administrative refund, payment-review, invoice-resend, deletion and invitation routes admit strict administrators as before.",
+      "privacy": "Buyer, refund and invoice data of an event without an organizer are no longer reachable by an arbitrary signed-in account.",
+      "concurrency": "Assignment runs under the event row lock together with the accepted edit and is one UPDATE conditional on the organizer still being missing; the row is reread and the edit proceeds only if the stored organizer is the caller.",
+      "idempotency": "Repeating the edit as the assigned organizer is an ordinary organizer request; a second assignment changes nothing.",
+      "failure": "403 for an event without an organizer; 403 for a caller who lost a simultaneous assignment; 404 if the event disappeared.",
+      "recovery": "A strict administrator edits the event through the API to become its organizer, or an owner is assigned by a reviewed database change; no shipped client exposes the administrator edit.",
+      "observability": "The organizer field and updated_at; no audit row is written.",
+      "property": "A stored organizer never changes through a request, and a missing organizer is filled at most once and only by a strict administrator.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "formal/event-operations/EventOrganizer.tla",
+        "scripts/test-event-organizer.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/EventOrganizerSpec.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+        "scripts/test-event-organizer.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/EventOrganizer.tla",
+        "formal/event-operations/EventOrganizer.cfg",
+        "formal/event-operations/EventOrganizerAnyoneClaims.cfg",
+        "formal/event-operations/EventOrganizerUnconditionalWrite.cfg",
+        "formal/event-operations/EventOrganizerTrustEarlierRead.cfg"
+      ],
+      "verification": "Bounded TLA+ model with three negative controls; PostgreSQL assignment tests including simultaneous callers and a lock-wait case; SQLite handler tests of the edit and image-upload routes, including a refused administrator edit.",
+      "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "The helper and its seven call sites were read in full; other organizer checks compare the stored organizer directly and never wrote.",
+      "ambiguity": [
+        "How many production events lack an organizer is unknown; none is created by current code.",
+        "The assignment is not audited and does not update event_operation_relationship.",
+        "The assigning administrator stays organizer; there is no transfer route and no client surface for the assignment.",
+        "Whether a non-administrator should ever be able to request ownership of such an event is a product decision; today the answer is no."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Assignment is modeled within bounds and exercised on PostgreSQL; a successful administrator edit and the remaining organizer-only call sites are covered by reading, not by per-route tests, and production data was not inspected."
+      }
+    },
+    {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4556,7 +4644,9 @@
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx"
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
+        "scripts/test-ticket-payment-gate.sh"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
@@ -5243,7 +5333,10 @@
       "property": "Validation selected for main and release; configured provider failures cannot be green.",
       "implementation": [
         "tdf-mobile/.github/workflows/mobile-validate.yml",
-        "tdf-mobile/.github/workflows/datadog-synthetics.yml"
+        "tdf-mobile/.github/workflows/datadog-synthetics.yml",
+        ".github/workflows/datadog-synthetics.yml",
+        "datadog-ci.json",
+        "tdf-mobile/datadog-ci.json"
       ],
       "tests": [
         "scripts/__tests__/ci-pipeline.test.mjs"
@@ -5613,11 +5706,11 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Accepted incoming main change is structurally mapped; fresh combined-source tests and deployed response checks remain necessary."
+        "reason": "Edge headers verified on the deployed site and in tests; hydrated canonical metadata is verified only in Jest, not in a deployed browser."
       },
       "property": "Transactional pages do not become misleading independent search offers or shared-cache/referrer sources.",
       "verification": "Actual edge Response and React component tests; not search-engine or cache-vendor proof.",
-      "evidence": "Exact combined repository/UI gates and source-bound deployed safe smoke.",
+      "evidence": "2026-10-09: deployed responses for https://www.tdfrecords.net/eventos/141/entradas and /eventos/141/orden/<id> returned Cache-Control 'private, no-store', X-Robots-Tag 'noindex, follow' and Referrer-Policy 'no-referrer'; the event page /eventos/141 publishes Event (no Offer) JSON-LD. Edge tests 7/7 and PublicEventTicketsPage/TicketBankTransferPanel Jest 30/30 on 3874e23. Canonical and robots metadata are set after hydration and are covered by the Jest cases, not by the HTTP check.",
       "supersedes": {
         "id": "EVT-PUBLIC-001",
         "sourceRevision": "ce422263309d85ce7001e7dfe0f8c27f35e8c409",
@@ -6723,10 +6816,30 @@
         "tdf-hq-ui/public/mobile-app/support.html",
         "tdf-hq-ui/public/mobile-app/terms.html",
         "tdf-hq-ui/public/mobile-distribution.json",
-        "tdf-hq-ui/src/pages/MobileAppPage.tsx"
+        ".github/workflows/check-mobile-distribution.yml",
+        "scripts/check-mobile-distribution.mjs",
+        "tdf-hq-ui/src/pages/MobileAppPage.tsx",
+        "tdf-hq-ui/src/mobile/telemetry.ts",
+        "tdf-hq-ui/src/mobile/MobilePromoContent.tsx",
+        "tdf-hq-ui/src/components/SessionMenu.tsx",
+        "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
+        "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
+        "functions/_shared/app-smart-link.mjs",
+        "functions/descargar.js",
+        "functions/download.js",
+        "tdf-hq-ui/src/analytics/growthAttribution.ts",
+        "tdf-hq-ui/src/i18n/index.ts",
+        "tdf-mobile/src/i18n/index.ts"
       ],
       "tests": [
-        "tdf-hq-ui/src/mobile/MobileApp.test.tsx"
+        "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
+        "scripts/__tests__/mobile-distribution-expiry.test.mjs",
+        "scripts/__tests__/app-smart-link.test.mjs",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "e2e/web/mobile-program.spec.mjs",
+        "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
+        "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts",
+        "tdf-mobile/src/notifications/NotificationScreen.test.tsx"
       ],
       "formalModels": [],
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
@@ -6748,7 +6861,7 @@
       "idempotency": "Repeated reads have no application mutation.",
       "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
       "recovery": "Correct source under review and reverify deployed content and links.",
-      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence."
+      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence. A daily read-only workflow reports a published store channel within 48 hours of its validUntil; it never renews the manifest. Funnel exposure (mobile_landing_viewed), entry surfaces, the /descargar and /download aliases and the shared smart link are covered by component and edge-function tests; receipt of events in PostHog remains a separate production check."
     },
     {
       "id": "OPS-INTEGRATION-001",
@@ -6928,8 +7041,8 @@
     {
       "id": "SOC-ABUSE-001",
       "title": "Rejected interaction writes consume the exact per-account minute budget",
-      "statement": "Authenticated interaction write attempts, including domain authorization denials, consume a durable per-account calendar-minute counter; increment 91 returns HTTP 429.",
-      "authority": "Existing canonical interaction_integrity SQL limiter and routed HTTP behavior; CI regression preserves the existing threshold.",
+      "statement": "Authenticated interaction write attempts consume a durable per-account calendar-minute counter after the session is confirmed and before the write runs. The charge is kept whether the write is answered, refused by a domain rule or refused by the database with an error; increment 91 returns HTTP 429 without running the write.",
+      "authority": "Existing canonical interaction_integrity SQL limiter and routed HTTP behavior; AUTHORITY-059 for database-error outcomes.",
       "domain": "SOC",
       "actors": [
         "Authenticated interaction actor"
@@ -6944,10 +7057,12 @@
         "boundary": "directory_rate_limit interaction:write scope and HTTP queryWith"
       },
       "allowedTransitions": [
-        "Increment budget before domain command; return HTTP 429 when the minute counter exceeds 90"
+        "Increment budget before the write; return HTTP 429 when the minute counter exceeds 90",
+        "Write raises a database error -> write undone to a savepoint, charge committed"
       ],
       "forbiddenTransitions": [
         "Rejected domain writes roll back their consumed budget",
+        "A write refused by the database with an error rolls back its consumed budget",
         "Allow increment 91 within a minute",
         "Treat a fixed-minute rollover as a missing budget"
       ],
@@ -6956,32 +7071,38 @@
       ],
       "authorization": "Current HTTP session remains required; rate limiting never grants domain authority.",
       "privacy": "Budget key is the existing hashed account identifier; no new PII collection.",
-      "concurrency": "Atomic PostgreSQL upsert serializes increments for the same account and minute.",
+      "concurrency": "Atomic PostgreSQL upsert serializes increments for the same account and minute; the row stays locked until the attempt's transaction ends.",
       "idempotency": "Repeated write attempts consume the budget even if the domain command is a replay.",
-      "failure": "Domain rejection preserves the committed budget; quota exhaustion returns 429.",
+      "failure": "Domain rejection and database errors preserve the committed budget; a NUL escape refused by jsonb returns 400; quota exhaustion returns 429. A transaction that cannot commit cannot keep its charge.",
       "recovery": "The next database calendar-minute bucket has its own budget.",
       "observability": "Actual HTTP responses and persisted isolated-test counter, without bearer tokens.",
-      "source": "tdf-hq/sql/2026-09-28_interaction_integrity.sql; scripts/interactions/test-api.py",
-      "property": "HTTP rejection at exactly counter 91, including unauthorized commands; regression spans at most two calendar windows.",
-      "contract": "formal/interactions/README.md",
+      "source": "tdf-hq/sql/2026-09-28_interaction_integrity.sql; tdf-hq/src/TDF/Interactions/Server.hs; scripts/interactions/test-api.py",
+      "property": "HTTP rejection at exactly counter 91, including unauthorized commands; ChargeCounted, LimitHolds and RefusedOnlyWhenSpent in the bounded model; the charge survives a raised write in PostgreSQL.",
+      "contract": "formal/system/interaction-write-budget.md",
       "implementation": [
         "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
         "tdf-hq/src/TDF/Interactions/Server.hs"
       ],
       "tests": [
         "scripts/interactions/test-api.py",
-        "scripts/interactions/test-http.sh"
+        "scripts/interactions/test-http.sh",
+        "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
+        "scripts/test-interaction-write-budget.sh"
       ],
-      "formalModels": [],
-      "verification": "Isolated real HTTP/PostgreSQL test checks 429 and exact persisted counter; no simulated payment or production evidence.",
-      "evidence": "CI run 37380322736 crossed 22:22 to 22:23 UTC during the old single-window assertion; corrected HTTP regression awaits execution.",
+      "formalModels": [
+        "formal/event-operations/InteractionWriteBudget.tla"
+      ],
+      "verification": "Bounded TLC model with four single-guard controls; PostgreSQL test of the charge against the migrated limiter, including raised writes and simultaneous attempts; isolated real HTTP/PostgreSQL test of 429 and the exact persisted counter.",
+      "evidence": "formal/system/interaction-write-budget.md",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Actual SQL and HTTP boundary inspected; revised runtime test pending.",
-      "ambiguity": [],
+      "confidence": "SQL limiter and HTTP boundary inspected; savepoint repair run locally against PostgreSQL 16 on 2026-10-11; pre-database rejections and uncommittable transactions are documented as uncharged.",
+      "ambiguity": [
+        "Whether requests rejected before database work (malformed identifier, oversized payload) should also be charged is undecided."
+      ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing implementation unchanged; current revised HTTP test must execute."
+        "reason": "Charge durability repaired and tested at the database boundary; the HTTP boundary's commit after a raised write and its 400 mapping have no HTTP test and counter rows are never pruned."
       }
     },
     {
@@ -7203,7 +7324,7 @@
       "title": "Settle public ticket orders by staff-verified bank transfer",
       "domain": "EVT",
       "statement": "An approved ticket policy may opt into manual bank transfer with a bounded hold and a selection cutoff. The immutable checkout snapshot is preserved; a separately guarded extension keeps the seat while the buyer transfers and staff verifies. A reported transfer reference is evidence only. An event organizer or administrator who is neither the submitting party nor the buyer's email approves it, which records the canonical staff-verified payment and issues tickets through the provider-capture issuance path.",
-      "authority": "User decision of 2026-10-06 for PATCH CULTURE vol. 1: add bank transfer with manual confirmation, 24-hour hold, selections close 2026-10-22 18:00 America/Guayaquil; AUTHORITY-064",
+      "authority": "User decision of 2026-10-06 for PATCH CULTURE vol. 1: add bank transfer with manual confirmation, 24-hour hold, selections close 2026-10-22 18:00 America/Guayaquil",
       "source": "docs/events/ticket-manual-bank-transfer.md",
       "contract": "docs/events/ticket-manual-bank-transfer.md",
       "actors": [
@@ -7244,9 +7365,9 @@
       ],
       "authorization": "Lookup token for buyer actions; strict administrator or event organizer for review, checked inside the review transaction.",
       "privacy": "Guests become new unverified contact parties with name and email only; account details are server configuration shown after selection; approval notes stay internal.",
-      "concurrency": "Review locks checkout, attempt and evidence rows and holds them until it commits, so a concurrent reviewer waits and is answered from the decided state; the evidence transition guard, the hold guard and expiry run in the database. A reviewer and the buyer acting at the same moment take these locks in different orders and one can fail with a deadlock error (open).",
+      "concurrency": "Review locks checkout, attempt and evidence rows FOR UPDATE and keeps the locks through the decision (savepoint, not commit); a concurrent reviewer waits and then sees the decided state. The hold guard and expiry run in the database.",
       "idempotency": "Repeated selection replays the same attempt; repeated approval of a paid order returns success and issuance is idempotent.",
-      "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail.",
+      "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail. A failed ticket issuance rolls the approval back (409) and leaves the evidence reviewable.",
       "recovery": "Late deposits are reconciled and refunded manually; no automatic reissue after expiry.",
       "observability": "Checkout audit events for selection, evidence and review; funnel observes initiation with provider bank_transfer.",
       "property": "An order is paid by bank transfer only with independently approved evidence bound to the exact checkout amount while its effective hold is alive.",
@@ -7276,11 +7397,15 @@
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
         "tdf-hq-ui/src/api/eventTickets.test.ts",
-        "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+        "tdf-hq/test/TicketManualReviewMain.hs",
+        "tdf-hq/test/integration/ticket_manual_review_fixture.sql",
         "scripts/test-ticket-manual-review.sh",
+        "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+        "scripts/test-ticket-manual-review-concurrency.sh",
         "scripts/verify-event-operations-formal.sh"
       ],
       "formalModels": [
+        "formal/event-operations/ManualBankTransfer.tla",
         "formal/event-operations/TicketManualReview.tla",
         "formal/event-operations/TicketManualReview.cfg",
         "formal/event-operations/TicketManualReviewLockReleased.cfg",
@@ -7288,25 +7413,24 @@
         "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg",
         "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg"
       ],
-      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; React buyer flow and API contract tests. The review transaction is run directly against PostgreSQL, including approval and rejection races, with a bounded TLC model and three controls (formal/system/ticket-manual-review.md).",
-      "evidence": "Local disposable PostgreSQL 16 and Jest runs on 2026-10-06; hosted CI and a production transfer remain separate evidence. Review transaction test and model run locally on 2026-10-11.",
+      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests. Additional TicketManualReviewSpec cases and its separate bounded TicketManualReview model preserve the independent reviewer-overlap evidence from PR #545; see formal/system/ticket-manual-review.md.",
+      "evidence": "2026-10-09 local disposable PostgreSQL 16: scripts/test-ticket-manual-review.sh 7/7 after the fix (the concurrency case failed 3/3 before it with deadlock 40P01 or an invalid evidence transition); TLC 1.7.2 positive model and seven expected counterexamples. Those local counts predate the issuance cases; the current nine Hspec cases and eight mutation controls are evidenced by hosted CI on 5112f2ed0 (2026-10-11): backend-quality ran scripts/test-ticket-manual-review.sh 9/9, and Event operations verification ran the positive model plus the eight negative configurations, each failing on its expected invariant. A production transfer remains separate evidence.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Database invariants are exercised directly, and the Haskell review transaction is run against PostgreSQL for its decisions, refusals and reviewer overlaps, with a fixture that has no payment intent; its undo paths, ticket issuance after approval and the HTTP handler are exercised only through deployed HTTP verification.",
+      "confidence": "Database invariants and the Haskell review transaction are exercised on the production schema; HTTP admission (requireRefundManagedEvent), the issuance body (finalizePaidTicketOrder) and a real verified transfer are separate evidence.",
       "ambiguity": [
-        "No bank API confirms deposits; staff verification against the statement is the authority.",
-        "Whether an approval should be bound to the reference the reviewer saw is undecided; it is not."
+        "No bank API confirms deposits; staff verification against the statement is the authority."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implemented and tested at database and browser boundaries; production configuration and a real verified transfer are pending."
+        "reason": "Review transaction conforms on the production schema after the 2026-10-09 lock-scope fix; production deployment of the fix, configuration and a real verified transfer are pending."
       }
     },
     {
       "id": "EVT-TICKET-INVOICE-001",
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
-      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
+      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
       "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
@@ -7350,9 +7474,9 @@
       ],
       "authorization": "Event organizer or administrator views invoices; only strict administrators resend failed ones.",
       "privacy": "Identification only when required by the SRI USD 50 rule; credentials stay in server configuration and are redacted from stored errors.",
-      "concurrency": "Issuer point row lock for numbering; SKIP LOCKED claims with lease fencing.",
+      "concurrency": "Issuer point row lock for numbering; SKIP LOCKED claims; a submission starts only through one statement bound to the claimer's lease and an unset submission mark; every result is written under the claimer's lease token.",
       "idempotency": "Unique invoice per order; stable access key per document; paid re-transitions do not enqueue again.",
-      "failure": "Validation refusal -> failed; unknown transport outcome -> uncertain; status query failures retry.",
+      "failure": "Validation refusal -> failed, whatever the length of the provider's message; unknown transport outcome of a submission -> uncertain; a status query that fails, is refused or is unreadable, or an internal error while polling, leaves the document submitted for a later query.",
       "recovery": "Administrators resend failed documents after fixing configuration; uncertain documents are reconciled in the provider.",
       "observability": "Staff invoice list with status, number, access key, authorization and last error.",
       "property": "Every paid order of an invoiced policy has exactly one invoice document whose identity never changes.",
@@ -7380,27 +7504,46 @@
         "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes_rollback.sql",
         "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
-        "tdf-hq-ui/src/components/RefundManagementPanel.tsx"
+        "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
+        "formal/event-operations/InvoiceSubmission.tla",
+        "scripts/test-invoice-worker.sh"
       ],
       "tests": [
         "tdf-hq/test/integration/ticket_tax_invoices.sql",
         "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
+        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
+        "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
+        "scripts/test-invoice-worker.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "formalModels": [],
-      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
-      "evidence": "Local PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
+      "formalModels": [
+        "formal/event-operations/TaxDocumentSubmission.tla",
+        "formal/event-operations/InvoiceSubmission.tla",
+        "formal/event-operations/InvoiceSubmission.cfg",
+        "formal/event-operations/InvoiceSubmissionUnfencedStart.cfg",
+        "formal/event-operations/InvoiceSubmissionStaleFinish.cfg",
+        "formal/event-operations/InvoiceSubmissionUnknownAsRefused.cfg",
+        "formal/event-operations/InvoiceSubmissionRetryUncertain.cfg"
+      ],
+      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests. Bounded TaxDocumentSubmission model: at most one provider document under crashes, lease expiry, lost answers and staff retry, with four mutation controls. Bounded TLA+ worker model with four negative controls (formal/system/ticket-invoice-worker.md); PostgreSQL worker tests with a substitute transport; PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
+      "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
       "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
-        "Regime legends (e.g. RIMPE) are not automated."
+        "Regime legends (e.g. RIMPE) are not automated.",
+        "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
+        "Status transitions other than the finality of authorized are enforced by the worker, not by the database.",
+        "That an HTTP 4xx other than 408/429 means the provider created nothing was observed only with an invalid key on 2026-10-06.",
+        "A paid transition is refused after capture if the issuer point was disabled or its counter lowered by hand after checkout creation; no application path edits the point.",
+        "Whether the SRI accepts a credit note addressed to consumidor final is unverified.",
+        "The selling rule requires the worker flag in each serving process; a separate worker process is not supported."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implemented and tested locally; Dátil pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -7543,11 +7686,11 @@
     },
     {
       "id": "PRIV-WHATSAPP-001",
-      "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowing at most one per number per 24 hours, and a request the provider did not accept releases the claim. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request and within 7 days of it, so a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and clears any pending request; the public opt-out notifies only a number that was subscribed. Staff consent capture remains admin-only.",
+      "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowed only when the number has no request in the last 24 hours, and simultaneous first requests for a number do not fail. A request the provider did not accept stays pending as undelivered: for 1 hour from the request the number can still confirm it by messaging first and a new public request may retry the send without changing the request instant; afterwards it waits for the 24-hour interval. Delivered requests to a number are therefore at least 23 hours apart. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request, within 7 days of a delivered request, and the request has not been withdrawn since; a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form, inbound STOP/SALIR/BAJA/CANCELAR or staff revocation) always withdraws consent and invalidates any pending request without resetting the 24-hour interval, and its stored instant is never earlier than the request it defeats; neither withdrawing, confirming nor staff capture lets anyone request another message early. The public opt-out notifies only a number that was subscribed. The failure of a superseded send attempt changes nothing. Staff consent capture remains admin-only.",
       "authority": "reconciled",
-      "source": "Product decision 2026-10-06 (double opt-in, AUTHORITY-052)",
-      "property": "Consent is active only after a timely reply from the same number or admin capture",
-      "contract": "formal/system/public-route-admission.md",
+      "source": "Product decision 2026-10-06 (double opt-in, AUTHORITY-052); request-interval and undelivered-request repair (AUTHORITY-055)",
+      "property": "Consent is active only after a timely reply from the same number to an unwithdrawn request, or admin capture; delivered requests are at least 23 hours apart",
+      "contract": "formal/system/whatsapp-consent.md",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/API.hs",
@@ -7559,10 +7702,12 @@
         "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
         "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql",
         "tdf-hq-ui/src/config/appConfig.ts",
-        "tdf-hq-ui/src/vite-env.d.ts"
+        "tdf-hq-ui/src/vite-env.d.ts",
+        "formal/event-operations/WhatsAppConsent.tla",
+        "scripts/test-whatsapp-consent.sh"
       ],
-      "verification": "Unit and database tests; PostgreSQL migration rehearsal in CI",
-      "evidence": "Keyword unit test, SQLite confirmation-window test, served-app check that the public lookup is gone",
+      "verification": "Bounded TLA+ model with eight negative controls; unit tests; PostgreSQL concurrency tests on the migrated fixture in CI",
+      "evidence": "Keyword unit test, SQLite window/withdrawal/undelivered tests, PostgreSQL simultaneous-claim, duplicate-reply and withdrawal-lock tests, served-app check that the public lookup is gone",
       "status": "specified and implemented",
       "historicalStatus": null,
       "critical": true,
@@ -7585,45 +7730,71 @@
       "state": {
         "consent": [
           "none",
-          "pending",
+          "pending (delivered)",
+          "pending (undelivered)",
           "active",
           "withdrawn"
         ]
       },
       "allowedTransitions": [
-        "none/withdrawn -> pending (public request)",
-        "pending -> active (affirmative reply within 7 days)",
-        "any -> withdrawn (opt-out or STOP)",
+        "none -> pending (public request)",
+        "withdrawn/expired/active-then-withdrawn -> pending (public request more than 24 hours after the previous request instant)",
+        "pending (delivered) -> pending (undelivered) (provider did not accept that exact request)",
+        "pending (undelivered) -> pending (delivered) (retry within 1 hour, same request instant, not withdrawn)",
+        "pending (delivered) -> active (affirmative reply within 7 days)",
+        "pending (undelivered) -> active (affirmative reply within 1 hour of the request)",
+        "any -> withdrawn (opt-out, STOP or staff revocation)",
         "admin capture -> active"
       ],
       "forbiddenTransitions": [
         "public request -> active",
-        "pending older than 7 days -> active",
-        "withdrawn -> active without a new request and reply"
+        "pending older than its window -> active",
+        "withdrawn -> active without a new request and reply",
+        "any -> new request within 24 hours of the previous request instant",
+        "undelivered retry -> later request instant",
+        "superseded attempt failure -> any change to a newer request, consent or withdrawal"
       ],
       "effects": [
         "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages."
       ],
       "authorization": "Only the number's own reply (verified Meta webhook signature) or an Admin can activate consent.",
       "privacy": "Public responses are identical regardless of prior state; display names are not returned publicly.",
-      "concurrency": "Claim and confirmation are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits.",
-      "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours send nothing.",
-      "failure": "WhatsApp send failures are recorded on the outgoing message; consent state is unaffected.",
-      "recovery": "A number can request again after 24 hours or after a request expires.",
-      "observability": "whatsapp_consent note (pending_confirmation, confirmed_by_reply), outgoing message sources.",
+      "concurrency": "Claim, confirmation and the undelivered mark are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits. Row creation uses ON CONFLICT DO NOTHING. A withdrawal raises revoked_at to the request instant inside its own transaction, so a clock read before the row lock cannot predate the request.",
+      "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours of a request send nothing unless they retry an undelivered request inside its hour; a send failure is bound to its own request instant.",
+      "failure": "A WhatsApp send failure is recorded on the outgoing message and marks only its own request undelivered; consent is unaffected.",
+      "recovery": "A number can request again 24 hours after its last request instant, or retry an undelivered, unwithdrawn request within 1 hour.",
+      "observability": "whats_app_consent note (pending_confirmation, pending_unsent, confirmed_by_reply), confirmation_requested_at, revoked_at, outgoing message sources.",
       "tests": [
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
+        "scripts/test-whatsapp-consent.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "formalModels": [],
-      "confidence": "High for the tested transitions; WhatsApp delivery and Meta webhook timing are external.",
+      "formalModels": [
+        "formal/event-operations/WhatsAppConsent.tla",
+        "formal/event-operations/WhatsAppConsent.cfg",
+        "formal/event-operations/WhatsAppConsentStaleReply.cfg",
+        "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg",
+        "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg",
+        "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg",
+        "formal/event-operations/WhatsAppConsentUnboundFailure.cfg",
+        "formal/event-operations/WhatsAppConsentReleasedFailure.cfg",
+        "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg",
+        "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg"
+      ],
+      "confidence": "High for the modeled and tested transitions; WhatsApp delivery, truthful provider outcomes and Meta webhook timing are external.",
       "ambiguity": [
         "Affirmative keywords are exact single-word matches; free-text consent is not inferred.",
         "OpenAPI still documents a 200 response for GET /public/whatsapp/consent and the previous POST description; correcting it regenerates the web and Mobile clients and is deferred to the next Mobile client regeneration.",
-        "Production has no WhatsApp Cloud API configuration (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN), so no confirmation can be sent or received until it is configured; an approved template (WHATSAPP_CONSENT_TEMPLATE) is required for business-initiated requests outside a 24-hour window."
+        "Production has no WhatsApp Cloud API configuration (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN), so no confirmation can be sent or received until it is configured; an approved template (WHATSAPP_CONSENT_TEMPLATE) is required for business-initiated requests outside a 24-hour window.",
+        "The 1-hour window for an undelivered request is an engineering default chosen because the number never saw a prompt; the product owner has not confirmed the duration.",
+        "A provider failure that hides an actual delivery (ambiguous timeout) is treated as undelivered and could allow a second request inside the interval.",
+        "A withdrawn request cannot be replaced until 24 hours after its request instant. Because opting out needs no proof of control, a third party can impose that wait on someone else's pending request; this is accepted so that the unauthenticated opt-out cannot be used to message a number repeatedly. Staff capture remains available.",
+        "An undelivered request that is neither confirmed nor retried within 1 hour waits for the 24-hour interval even though nothing was delivered."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local tests pass; CI migration rehearsal and production verification pending."
+        "reason": "Bounded model, unit and PostgreSQL tests pass on the candidate; not deployed, and production has no WhatsApp Cloud API configuration to exercise it."
       }
     },
     {
@@ -7937,17 +8108,26 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicEntitlement.tla",
+        "formal/event-operations/MusicEntitlement.cfg",
+        "formal/event-operations/MusicEntitlementForgedPaid.cfg",
+        "formal/event-operations/MusicEntitlementRepeatedGrant.cfg",
+        "formal/event-operations/MusicEntitlementNoLimit.cfg",
+        "formal/event-operations/MusicEntitlementEndlessReplay.cfg",
+        "formal/event-operations/MusicEntitlementFreshReplayUrl.cfg",
+        "formal/event-operations/MusicEntitlementRefundedDownload.cfg"
+      ],
       "status": "specified and implemented",
       "id": "PAY-MUSIC-DOWNLOAD-001",
       "title": "Music downloads only through verified purchase entitlements",
       "domain": "PAY",
       "critical": true,
-      "statement": "A music purchase order references one rule, version and asset in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence marks it paid; triggers create exactly one entitlement and revoke it on refund. Both free-grant and entitled download handlers use the same downloadable-asset predicate, bounded per-request UUID limits, audit rows and short-lived URLs.",
+      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; triggers then grant exactly one entitlement and end it on refund or chargeback. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request.",
       "authority": "Unreviewed recovered local implementation; ADR-005 in docs/music-releases/architecture-and-data-model.md",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
-      "contract": "docs/music-releases/architecture-and-data-model.md",
-      "property": "A non-free download URL is issued only for an active entitlement whose order is provider-verified paid and not refunded.",
+      "contract": "formal/system/music-purchase-entitlement.md",
+      "property": "A purchase entitlement is granted once, by the paid transition of a checkout carrying bound verified evidence, and a download URL is issued only for an active entitlement of the requesting buyer within its counted limit.",
       "actors": [
         "Buyer",
         "Payment provider"
@@ -7962,13 +8142,18 @@
       ],
       "state": {
         "order": [
-          "open",
+          "pending",
+          "awaiting_payment",
           "paid",
-          "refunded"
+          "cancelled",
+          "refunded",
+          "chargeback"
         ],
         "entitlement": [
           "active",
-          "revoked"
+          "revoked",
+          "refunded",
+          "expired"
         ]
       },
       "allowedTransitions": [
@@ -7978,7 +8163,10 @@
       "forbiddenTransitions": [
         "Client-asserted payment -> paid",
         "Download of master or unavailable asset",
-        "Duplicate entitlements per order"
+        "Duplicate entitlements per order",
+        "More counted downloads than the entitlement limit",
+        "A signed URL for a request identifier whose first URL has expired",
+        "revoked or expired free grant -> active by request"
       ],
       "effects": [
         "One entitlement per paid order",
@@ -7986,27 +8174,38 @@
       ],
       "authorization": "Entitlement owner only; free grants follow the release rule.",
       "privacy": "Purchase and download audit is visible only to the buyer and authorized staff.",
-      "concurrency": "Entitlement creation is trigger-enforced unique.",
-      "idempotency": "Repeated provider evidence and download request UUIDs are idempotent.",
-      "failure": "Unverified or failed payment leaves no entitlement.",
+      "concurrency": "One order per buyer and idempotency key by unique constraint; entitlement creation is trigger-enforced and unique per order; download authorization holds the entitlement row lock while it counts and inserts.",
+      "idempotency": "Repeated order creation and repeated recording of the same verified payment change nothing; a repeated download request identifier is answered without counting for 300 seconds and refused afterwards.",
+      "failure": "Unverified payment leaves no entitlement. A recorded provider failure cancels the order permanently and a later verified payment can still grant an entitlement on it (open defects, see contract).",
       "recovery": "Refund revokes entitlement; no royalties, subscriptions or settlement.",
       "observability": "Download audit rows and checkout session events.",
       "implementation": [
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-        "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs"
+        "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "formal/event-operations/MusicEntitlement.tla",
+        "scripts/test-music-purchase.sh"
       ],
       "tests": [
-        "scripts/test-music-download-predicate.mjs"
+        "scripts/test-music-download-predicate.mjs",
+        "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
+        "scripts/test-music-purchase.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "verification": "Read-only SQL contract of the shared predicate; handler E2E not covered by this test",
-      "evidence": "Local execution only",
-      "confidence": "Low-medium: predicate contract only; no provider round-trip evidence.",
+      "verification": "Bounded TLA+ model with five negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
+      "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
+      "confidence": "Medium for the payment record, entitlement and download rules, which run on PostgreSQL in tests; low for the provider calls and failure handling, which are untested and have open defects.",
       "ambiguity": [
-        "No live payment provider wiring for music_download has been verified."
+        "No live payment provider wiring for music_download has been verified.",
+        "Music payments bypass the shared payment runtime and the production provider switches; only the commerce flag for the checkout environment gates them.",
+        "A recorded provider failure cancels the order irreversibly while the payment may still complete, and an entitlement can end up active on a cancelled order; repair needs a trigger migration and a product decision.",
+        "A failure after the provider charged leaves no reconciliation record; no webhook or reconciliation path exists for this domain.",
+        "Partial refunds keep the entitlement and disputes revoke it permanently; both need a product decision.",
+        "Download limits count authorizations, not transferred bytes; one counted download gives access for just under 600 seconds."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Predicate contract only; commerce disabled by default."
+        "reason": "Payment record, entitlement and download rules are modeled within bounds and exercised on PostgreSQL; provider calls are untested and several failure-path defects are open. Commerce is disabled by default and should stay disabled until they are closed."
       }
     },
     {
@@ -8128,7 +8327,9 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/AccessGrant.tla"
+      ],
       "status": "specified and implemented",
       "id": "AUTH-ARTIST-INVITE-001",
       "title": "Personal single-use artist invitation links grant the Artist role by automatic policy",
@@ -8221,11 +8422,10 @@
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx"
       ],
-      "verification": "Backend validation unit tests, client and panel unit tests, migration test script; local Postgres exercise of the claim statement",
+      "verification": "Backend validation unit tests, client and panel unit tests, migration test script; local Postgres exercise of the claim statement; AccessGrant.tla checks single redeemer, redeemed/revoked exclusion, non-administrative role and no automatic reactivation of a revoked assignment by redemption, each with a mutation control.",
       "evidence": "Local execution only",
       "confidence": "Medium: claim SQL and validation exercised locally; end-to-end redemption not yet run against a deployed backend.",
       "ambiguity": [
-        "tdf-hq/src/TDF/Profiles/Artist.hs change is only an unused import removal.",
         "artist.self-service.artist (on main since 2026-09-16) already lets any signed-in user activate Artist without approval; invitation links add attribution, not a stronger boundary."
       ],
       "conformance": {
@@ -8235,20 +8435,23 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/AccessGrant.tla"
+      ],
       "status": "specified and implemented",
       "id": "AUTH-ACCESS-PROVISION-001",
       "title": "Approved artist onboarding access requests provision the Artist role",
       "domain": "AUTH",
       "critical": true,
-      "statement": "An access request for feature artist.onboarding with action create is the only feature/action pair with a code-owned grant role (Artist). Only an administrator distinct from the requester may approve it; approval publishes a sensitive-publication security revision with the requester as author and reviewer as approver and applies the grant atomically. All other approvals remain manual. The web page explains which outcome applies and shows the review link only to users allowed to review.",
+      "statement": "An access request for feature artist.onboarding with action create is the only feature/action pair with a code-owned grant role (Artist). Since the 2026-09-16 self-service decision, creating that request activates the requester's own Artist profile through the artist.self-service.artist policy and records the request as approved by system-policy; the reviewed path remains only for requests created before that decision. Any reviewed decision requires a reviewer distinct from the requester, Admin for grant-bearing pairs, a request that is still pending and not past its expiry; approval publishes a sensitive-publication security revision with the requester as author and reviewer as approver and applies the grant atomically. All other approvals remain manual. The web page explains which outcome applies and shows the review link only to users allowed to review.",
       "authority": "Unreviewed recovered local implementation",
-      "source": "Recovered local work; tdf-hq/src/TDF/FeatureRegistry.hs",
-      "contract": "tdf-hq/src/TDF/FeatureRegistry.hs",
-      "property": "A role is provisioned from an access request only for artist.onboarding/create, by a distinct administrator, with a published revision.",
+      "source": "Recovered local work; tdf-hq/src/TDF/FeatureRegistry.hs; formal/system/access-grant.md (AUTHORITY-054)",
+      "contract": "formal/system/access-grant.md",
+      "property": "A role is provisioned from an access request only for artist.onboarding/create, and only by one of two paths: (a) self-service, where createRequest activates the requester's own artist profile and records the request approved by system-policy with no reviewer; a non-administrator receives Artist through the artist.self-service.artist policy, while an administrator receives no Artist role so the strict Admin scope is preserved; (b) a reviewed decision on a request that is still pending and not past expiry, made by an administrator distinct from the requester, with a published revision. No path grants an administrative or emergency role. Automatic paths never reactivate a revoked assignment; a reviewed approval may restore one as an explicit, published and audited administrator decision.",
       "actors": [
-        "Requester",
-        "Strict administrator",
+        "Requester (self-service activation and cancellation)",
+        "system-policy (artist.self-service.artist automatic assignment)",
+        "Strict administrator (grant-bearing review)",
         "Manager",
         "Studio manager"
       ],
@@ -8258,55 +8461,73 @@
         "sensitive-publication workflow active"
       ],
       "inputs": [
-        "Access request review decision and notes"
+        "Self-service request for artist.onboarding/create",
+        "Access request review decision and notes",
+        "Requester cancellation note",
+        "Current time (expiry is settled lazily in the same transaction)"
       ],
       "state": {
         "request": [
           "pending",
           "approved",
           "rejected",
-          "cancelled"
+          "cancelled",
+          "expired"
         ]
       },
       "allowedTransitions": [
-        "pending -> approved (grant for artist.onboarding/create) ",
-        "pending -> approved (manual provisioning otherwise)",
-        "pending -> rejected with note"
+        "(new) -> approved by system-policy (artist.onboarding/create self-service; a non-administrator receives Artist through the artist.self-service.artist policy, an administrator receives only the owned profile and keeps the strict Admin scope with no Artist role or policy audit; a lapsed pending onboarding request is first settled as expired, never approved)",
+        "pending -> approved by a distinct administrator before expiry (grant for artist.onboarding/create)",
+        "pending -> approved before expiry (manual provisioning otherwise)",
+        "pending -> rejected with note before expiry",
+        "pending -> cancelled by the requester before expiry",
+        "pending -> expired once past expires_at (list, review, decide or cancel paths)"
       ],
       "forbiddenTransitions": [
-        "Requester approving own grant",
         "Non-admin approving a grant-bearing request",
-        "Provisioning the emergency administrator role"
+        "Provisioning the emergency administrator role",
+        "Requester approving own grant",
+        "expired (or past-deadline pending) request -> approved/rejected/cancelled",
+        "revoked Artist assignment -> active through any automatic policy"
       ],
       "effects": [
-        "Published security revision and party role grant"
+        "Self-service: owned artist profile and an approved request with history and audit rows; a non-administrator also receives the policy-applied Artist grant, while an administrator keeps the strict Admin-only scope (no Artist role, no policy audit)",
+        "Reviewed approval: published security revision and party role grant (grant-bearing pair) or manual-provisioning notification",
+        "Expiry: request marked expired with history and audit rows; a decision or cancellation on it returns 409 with no grant"
       ],
       "authorization": "registryReviewerCanDecide requires Admin for grant-bearing requests.",
       "privacy": "Reviewer notes stay internal.",
-      "concurrency": "Revision and grant written in one transaction.",
+      "concurrency": "Revision and grant written in one transaction. transitionPendingAccessRequest locks the target row, reads the database clock after the lock, settles lazy expiry against that instant and then applies a conditional UPDATE WHERE status = 'pending' in the same transaction, so at most one decision or cancellation is admitted and none after the deadline.",
       "idempotency": "Re-approval of an already granted role reports no change.",
       "failure": "Any precondition failure aborts without a grant.",
       "recovery": "Revoke through Roles and permissions.",
       "observability": "Security revision and audit rows.",
       "implementation": [
-        "tdf-hq/src/TDF/FeatureRegistry.hs",
-        "tdf-hq/src/TDF/Catalog/Security.hs",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
-        "tdf-hq-ui/src/utils/navigationLabels.ts"
+        "tdf-hq-ui/src/utils/navigationLabels.ts",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq/src/TDF/FeatureRegistry.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-mobile/app/access-requests/review.tsx"
       ],
       "tests": [
-        "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
+        "scripts/test-artist-self-service.sh",
+        "tdf-hq-ui/src/components/navigationLabels.test.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
-        "tdf-hq-ui/src/components/navigationLabels.test.ts"
+        "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
+        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs"
       ],
-      "verification": "Security spec and web unit tests",
-      "evidence": "Local execution only",
-      "confidence": "Medium.",
-      "ambiguity": [],
+      "verification": "Security spec and web unit tests; AccessGrant.tla bounded model (212 states) with seven single-guard mutation controls; PostgreSQL regression in ArtistActivationSpec for expiry before decision/cancellation.",
+      "evidence": "formal/system/access-grant.md",
+      "confidence": "high for the modeled guards and the expiry regression; refinement from model to Haskell is by review",
+      "ambiguity": [
+        "Reviewer authority is read from the authenticated session; freshness relative to concurrent role revocation is governed by the identity lifecycle contract, not this requirement."
+      ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Unit evidence only; CI on current main pending."
+        "reason": "Expiry defect repaired with PostgreSQL regression and bounded model; deployment of the repair is pending."
       }
     },
     {
@@ -8724,6 +8945,160 @@
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
     {
+      "id": "WEB-CANONICAL-001",
+      "title": "Public links use the canonical tdfrecords.net origin",
+      "domain": "WEB",
+      "statement": "Links TDF generates for people outside the app (event shares from web and Mobile, link-preview canonical and og:url, sitemap, legal pages, course landings) use https://www.tdfrecords.net. Requests to the production Pages host tdf-app.pages.dev are permanently redirected to the same path and query on the canonical origin, except branch previews and /.well-known app-link files.",
+      "authority": "User instruction of 2026-10-06: shared RSVP links used tdf-app.pages.dev; only use the tdfrecords.net URL everywhere in the app",
+      "source": "docs/web/canonical-public-origin.md",
+      "contract": "docs/web/canonical-public-origin.md",
+      "actors": [
+        "Visitor",
+        "Event attendee sharing an RSVP",
+        "Link-preview crawler"
+      ],
+      "preconditions": [
+        "www.tdfrecords.net is a custom domain of the same Pages project"
+      ],
+      "inputs": [
+        "Request URL host, path and query"
+      ],
+      "state": {
+        "boundary": "Cloudflare Pages Functions middleware and generated link builders",
+        "authority": "functions/_shared/event-preview.mjs PUBLIC_ORIGIN"
+      },
+      "allowedTransitions": [
+        "tdf-app.pages.dev/<path>?<query> -> 301 www.tdfrecords.net/<path>?<query>",
+        "Canonical or branch-preview host -> served unchanged"
+      ],
+      "forbiddenTransitions": [
+        "Generated public link or preview canonical on tdf-app.pages.dev",
+        "Redirecting branch previews or /.well-known files",
+        "Dropping the query string (attribution, OAuth code/state) on redirect"
+      ],
+      "effects": [
+        "Permanent redirect",
+        "Canonical preview metadata"
+      ],
+      "authorization": "Public; no credentials are involved in the redirect.",
+      "privacy": "Query parameters are forwarded only to the same organization's canonical origin.",
+      "concurrency": "Stateless.",
+      "idempotency": "Redirect is a pure function of the request URL.",
+      "failure": "Hosts other than the exact production Pages host fall through to normal serving.",
+      "recovery": "Removing the middleware restores direct serving on the Pages host.",
+      "observability": "Shared links carry utm attribution on the canonical origin.",
+      "property": "No public link or preview generated by TDF names tdf-app.pages.dev, and every legacy production-host request lands on the same resource at www.tdfrecords.net.",
+      "implementation": [
+        "functions/_middleware.js",
+        "functions/_shared/event-preview.mjs",
+        "functions/eventos/[eventId].js",
+        "tdf-hq-ui/src/config/appConfig.ts",
+        "tdf-hq-ui/public/sitemap.xml",
+        "tdf-hq-ui/public/robots.txt",
+        "tdf-mobile/src/lib/eventSharing.ts",
+        "scripts/mobile-publishing-admin-audit.sh",
+        "scripts/upsert-course.mjs",
+        "screencast/meta-app-review/run.mjs",
+        "screencast/meta-app-review/review.env.example",
+        "tdf-hq-ui/public/account/privacy-es.html",
+        "tdf-hq-ui/public/account/privacy.html",
+        "tdf-hq-ui/public/account/terms-es.html",
+        "tdf-hq-ui/public/account/terms.html",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-mobile/app.config.ts",
+        "tdf-mobile/app.json",
+        "tdf-mobile/app/auth.tsx",
+        "tdf-mobile/src/features/featureRegistry.ts"
+      ],
+      "tests": [
+        "scripts/__tests__/event-preview.test.mjs",
+        "tdf-hq-ui/src/hooks/useMetaTags.test.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Node tests for redirect location, exclusions and preview canonical origin.",
+      "evidence": "Local node --test run on 2026-10-06; Mobile share origin fix lands with the Mobile pin.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Pure URL functions are exercised directly; the edge deployment is verified after release.",
+      "ambiguity": [
+        "Google OAuth redirect URIs registered on the old host keep working through the redirect until they are re-registered."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Web and preview links fixed here; Mobile share origin ships with the Mobile release that includes the fix."
+      }
+    },
+    {
+      "id": "OPS-CI-REGISTRY-001",
+      "title": "Authenticate Docker Hub pulls in CI",
+      "domain": "OPS",
+      "critical": false,
+      "statement": "Trusted CI jobs authenticate Docker Hub image pulls with the existing repository secrets before pulling test images. Job and service containers receive credentials at initialization; reusable CI callers forward the declared credentials. Authentication does not bypass tests, reviews or release admission.",
+      "authority": "User authorized CI authentication on 2026-10-09",
+      "source": "User instruction 2026-10-09: Authenticate, following observed Docker Hub unauthenticated pull rate limits.",
+      "contract": ".github/workflows/ci.yml",
+      "property": "Shell pulls follow Docker login; job and service image pulls receive registry credentials; no credential literal is committed or printed.",
+      "actors": [
+        "GitHub-hosted CI runner",
+        "Repository secret administrator"
+      ],
+      "preconditions": [
+        "Existing DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets are valid and available to the trusted run."
+      ],
+      "inputs": [
+        "Repository secret references",
+        "Existing Docker Hub image tags and immutable digests"
+      ],
+      "state": {
+        "registry": [
+          "unauthenticated",
+          "authenticated",
+          "authentication-failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Available credentials -> authenticate -> pull existing test images -> execute unchanged checks"
+      ],
+      "forbiddenTransitions": [
+        "Expose secret values in source or logs",
+        "Treat registry login as a passing test or merge approval",
+        "Use pull_request_target to expose secrets to fork code"
+      ],
+      "effects": [
+        "Authenticated test-image downloads in ephemeral CI runners"
+      ],
+      "authorization": "Existing repository secret access governs credentials; fork and Dependabot login steps are skipped. Protected-main review and checks remain independent.",
+      "privacy": "Pass credentials through GitHub secrets to docker/login-action or native container credentials; never copy values into source.",
+      "concurrency": "Each hosted job authenticates its own runner; registry account quotas remain shared.",
+      "idempotency": "Repeated runs can log in and pull the same images without changing application or production data.",
+      "failure": "Invalid available credentials fail authentication; absent fork credentials do not gain privileged access. Authenticated registry quotas and outages can still fail pulls.",
+      "recovery": "Repair or rotate repository secrets through the authorized secret store and rerun CI; do not weaken required tests.",
+      "observability": "GitHub login-step and container-initialization results, image-pull results and subsequent test outcomes; never secret values.",
+      "implementation": [
+        ".github/workflows/build.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/event-operations-formal.yml",
+        ".github/workflows/event-raci-browser.yml",
+        ".github/workflows/interaction-verification.yml",
+        ".github/workflows/social-verification.yml"
+      ],
+      "verification": "Actionlint validates workflow syntax, secret declarations and reusable-workflow references. Hosted CI must verify the stored token and actual authenticated image pulls.",
+      "evidence": "Actionlint v1.7.12 local execution and exact-commit GitHub Actions login/pull logs.",
+      "tests": [],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "confidence": "Workflow syntax verified locally; hosted authentication requires execution with repository secrets.",
+      "ambiguity": [
+        "Authentication does not guarantee registry availability or unlimited pull quota."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local workflow validation passed; exact-commit hosted credential verification remains pending."
+      }
+    },
+    {
       "id": "EVT-DISCOVERY-001",
       "title": "One events entry in navigation and an upcoming-events carousel after login",
       "domain": "EVT",
@@ -8885,6 +9260,96 @@
       }
     },
     {
+      "id": "LEGAL-CONSENT-001",
+      "title": "Buyers read the exact versioned terms they accept, and the server binds that version",
+      "statement": "Course registration and ticket checkouts that require acceptance show the approved policy's terms and cancellation/refund text before the acceptance control, send the accepted terms version, and the server rejects a missing (tickets) or stale (courses and tickets) version for the policy it is about to bind.",
+      "domain": "LEGAL",
+      "authority": "Product owner request 2026-10-07 ('Fix them': course terms never shown; mobile ticket checkout without terms)",
+      "source": "tdf-app PR (fix/terms-consent-gaps); TDF-mobile PR (fix/terms-consent-gaps)",
+      "property": "No acceptance is recorded for a terms version that was not displayed.; Events with an approved ticket policy cannot hold seats on the legacy endpoint without the current accepted version.",
+      "contract": "tdf-hq/docs/openapi/api.yaml",
+      "actors": [
+        "Course registrant",
+        "Ticket buyer (web modal or mobile app)",
+        "Checkout server"
+      ],
+      "preconditions": [
+        "An approved, active checkout policy exists for the course or event; without one no acceptance is requested."
+      ],
+      "inputs": [
+        "CourseMetadata.checkoutTerms",
+        "CourseRegistrationRequest.acceptedTermsVersion",
+        "TicketPurchaseWithPromoDTO.ticketPurchaseAcceptedTermsVersion",
+        "Public event ticket policy"
+      ],
+      "state": {
+        "display": "terms collapsed with visible version and acceptance control",
+        "binding": [
+          "accepted version equals active policy version",
+          "otherwise 400/409 and re-acceptance"
+        ]
+      },
+      "allowedTransitions": [
+        "Shown version accepted -> checkout/seat hold bound to that policy",
+        "Policy changed after display -> 409 -> new terms shown and acceptance cleared"
+      ],
+      "forbiddenTransitions": [
+        "Acceptance requested for terms that are never displayed",
+        "Legacy ticket hold for an event with an approved policy without the accepted version",
+        "Course checkout bound to a terms version different from the one the buyer accepted"
+      ],
+      "effects": [
+        "Course metadata exposes checkoutTerms from the same approval query checkout uses",
+        "Clients send the accepted version; mismatch returns 409 with a review-again message"
+      ],
+      "authorization": "Unchanged: public course registration and authenticated ticket purchase keep their existing guards.",
+      "privacy": "Terms text is public policy content; no personal data added.",
+      "concurrency": "Policy is re-read at checkout; a concurrent policy change surfaces as 409 rather than binding stale terms.",
+      "idempotency": "Accepted version is validated before the existing idempotent hold logic; replays with the same version behave as before.",
+      "failure": "Missing ticket acceptance returns 400; stale version returns 409; clients reload the policy and clear acceptance.",
+      "recovery": "Buyer reviews the new terms and accepts again.",
+      "observability": "Haskell decode specs, web/mobile unit tests for display, gating and version binding.",
+      "implementation": [
+        "tdf-hq/src/TDF/Routes/Courses.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/courses.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-mobile/app/ticketCheckout.tsx",
+        "tdf-mobile/src/api/events.ts",
+        "tdf-mobile/src/api/client.ts",
+        "tdf-mobile/src/types/index.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-mobile/__tests__/TicketCheckout.test.tsx",
+        "tdf-mobile/__tests__/apiClient.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required.",
+      "evidence": "Exact-revision CI receipt required before claiming conformance.",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": false,
+      "confidence": "medium: server-side enforcement is covered by compile and decode tests, not yet by a database-backed handler test",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Display and binding are implemented and unit-tested; a database-backed runtime receipt is still required."
+      }
+    },
+    {
       "id": "DIR-SEARCH-SYNC-001",
       "title": "Public events and venues are searchable as soon as they are published",
       "domain": "DIR",
@@ -8915,31 +9380,40 @@
       "forbiddenTransitions": [
         "Private or suppressed event visible in public search",
         "Upcoming public event hidden only because it has not started",
-        "Non-HTTPS image projected into search results"
+        "Image URL that the public event detail rejects (non-HTTPS, credentials, backslash) projected into search results",
+        "Event excluded from the Eventos results by a profession, service, instrument, availability or remote filter it cannot carry",
+        "Event without an end time listed forever"
       ],
       "effects": [
         "Search document upsert/delete",
-        "Venue city_id resolution"
+        "Venue city_id resolution",
+        "Lineup genres mapped to catalog genre ids and lineup names added to the event search text"
       ],
       "authorization": "Derived data only; written by database triggers on source changes.",
       "privacy": "Projection from the privacy-reviewed public views; reads still re-check the views.",
-      "concurrency": "Runs inside the source transaction; upserts keyed by (entity_kind, entity_id).",
-      "idempotency": "Re-running a sync or the full refresh converges to the same rows.",
+      "concurrency": "Runs inside the source transaction; upserts keyed by (entity_kind, entity_id); every sync and the full refresh take the same advisory lock first.",
+      "idempotency": "Re-running a sync, the full refresh or directory_event_search_reindex() converges to the same rows and keeps versions of unchanged documents.",
       "failure": "A sync failure aborts the source write, so documents never diverge silently.",
-      "recovery": "directory_refresh_legacy_event_search() rebuilds all event and venue documents from the same projection.",
-      "observability": "Saved-search alerts fire for newly inserted documents through the existing trigger.",
-      "property": "For every event, a publicly searchable document exists if and only if the event is in directory_public_event.",
+      "recovery": "directory_event_search_reindex() rebuilds all event and venue documents from the same projection and reports examined, eligible, skipped, inserted, updated, unchanged, paused and deleted counts plus events whose venue city could not be resolved.",
+      "observability": "Saved-search alerts fire for newly inserted documents through the existing trigger; the migration log carries the reindex counts.",
+      "property": "For every event, a publicly searchable document exists if and only if the event is in directory_public_event; /directory/search applies people-only filters to profiles and classifieds only and counts every entity type under the current filters.",
       "implementation": [
         "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
-        "scripts/production-migrations.json"
+        "scripts/production-migrations.json",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "docs/directory/event-search-sync.md"
       ],
       "tests": [
         "tdf-hq/test/integration/directory_event_search_sync.sql",
-        "scripts/test-music-directory-migration.sh"
+        "tdf-hq/test/integration/directory_event_search_http_seed.sql",
+        "scripts/__tests__/directory-event-search-http.mjs",
+        "scripts/test-music-directory-migration.sh",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
       ],
       "formalModels": [],
-      "verification": "PostgreSQL integration checks for create, edit, unsafe image, private, republish, suppression, venue rename, delete, city resolution, kind words and full-refresh agreement; rollback and reapply.",
+      "verification": "PostgreSQL integration checks for create, edit, unsafe image, same-origin image, lineup genres, bounded expiry, private, republish, suppression, venue rename, delete, city resolution, kind words, reindex metrics and full-refresh agreement; rollback and reapply; HTTP checks of /directory/search (Eventos + city, Todo, tab counts, people-only filters, lineup genre, card fields) against the real API; web page tests for the deep link, tab counts, event date and history back.",
       "evidence": "Local PostgreSQL 16 run on a fully migrated schema on 2026-10-09; CI directory migration test.",
       "status": "specified and implemented",
       "critical": false,
@@ -9035,7 +9509,8 @@
         "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts",
-        "tdf-mobile/__tests__/directoryPreviewImage.test.tsx"
+        "tdf-mobile/__tests__/directoryPreviewImage.test.tsx",
+        "tdf-mobile/__tests__/DirectoryManage.test.tsx"
       ],
       "formalModels": [],
       "verification": "PostgreSQL 16 production-shaped schema: image priority, creation, sync, privacy, lifecycle, idempotency, real two-session race, backfill twice, rollback/re-apply and the HTTP flow through the built API; Jest web and mobile component tests; production schema verification gate.",
@@ -9049,6 +9524,393 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Implemented and verified locally; production backfill and post-deploy verification pending."
+      }
+    },
+    {
+      "id": "MSG-WHATSAPP-REDELIVERY-001",
+      "title": "A redelivered WhatsApp message changes nothing and is not answered again",
+      "domain": "MSG",
+      "statement": "The webhook delivery that stores an inbound WhatsApp message applies what it asks for (opt-out keyword, consent confirmation) in the same transaction and sends its automatic reply; a delivery that finds the message already stored applies nothing again. An enrolment message is registered once and answered by the one delivery that claims its reply.",
+      "authority": "AUTHORITY-060; Meta delivers webhooks at least once and a signed body stays valid.",
+      "source": "formal/system/whatsapp-redelivery.md",
+      "contract": "formal/system/whatsapp-redelivery.md",
+      "actors": [
+        "Meta webhook delivery",
+        "WhatsApp sender"
+      ],
+      "preconditions": [
+        "Valid X-Hub-Signature-256 over the raw body (AUTH-WEBHOOK-001)"
+      ],
+      "inputs": [
+        "Provider message id, sender number, text and sent time"
+      ],
+      "state": {
+        "boundary": "whats_app_message.external_id, whats_app_consent",
+        "authority": "PostgreSQL unique index, advisory lock and one transaction"
+      },
+      "allowedTransitions": [
+        "Message absent -> stored, opt-out or confirmation applied, reply sent once"
+      ],
+      "forbiddenTransitions": [
+        "Stored message delivered again -> consent withdrawn again",
+        "Stored message delivered again -> automatic reply sent again",
+        "Opt-out message stored without its opt-out applied",
+        "Two stored copies of one provider message"
+      ],
+      "effects": [
+        "One whats_app_message row and one received audit entry per provider message",
+        "Consent withdrawn or confirmed at most once per message"
+      ],
+      "authorization": "Unauthenticated route admitted only by the Meta signature; the effect is limited to the sender's own number.",
+      "privacy": "No new data; the stored message and consent rows are unchanged in shape.",
+      "concurrency": "Deliveries of one provider message take a transaction-scoped advisory lock on its id; the unique index on external_id refuses a second copy.",
+      "idempotency": "Keyed by the provider message id, or for a message without one by an id derived from sender, sent time and body. The course registration is keyed by the stored message; the reply by an auto_reply_claimed audit entry.",
+      "failure": "A failed transaction stores nothing and applies nothing, so the next delivery is again the first.",
+      "recovery": "Meta redelivers; a registration that failed is retried by the next delivery. A reply already claimed, or a notice whose confirmation already committed, is not sent later.",
+      "observability": "whats_app_message row, its received audit entry and whats_app_consent.",
+      "property": "What a message asks for is applied at most once however often it is delivered, a stored opt-out has been applied, and an enrolment message is answered at most once.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/WhatsApp/History.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
+        "scripts/test-whatsapp-redelivery.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/WhatsAppRedelivery.tla",
+        "formal/event-operations/WhatsAppRedelivery.cfg",
+        "formal/event-operations/WhatsAppRedeliveryEveryDeliveryApplies.cfg",
+        "formal/event-operations/WhatsAppRedeliveryDuplicateStore.cfg",
+        "formal/event-operations/WhatsAppRedeliveryEffectAfterStore.cfg",
+        "formal/event-operations/WhatsAppRedeliveryEveryDeliveryReplies.cfg"
+      ],
+      "verification": "Bounded TLC model with four single-guard controls; PostgreSQL test of the function the webhook calls, including redelivery after a new subscription and simultaneous deliveries.",
+      "evidence": "formal/system/whatsapp-redelivery.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Handler and storage read; database behaviour run locally against PostgreSQL 16 on 2026-10-11; the handler's use of the reply claim is covered by reading only.",
+      "ambiguity": [
+        "Whether a delayed first delivery of an old STOP should defeat a later subscription is undecided; it currently does."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Database effects repaired and tested; no signed HTTP test, and the reply worker, delivery updates and other Meta channels were not examined."
+      }
+    },
+    {
+      "id": "MSG-META-REDELIVERY-001",
+      "title": "A repeated Instagram or Facebook message leaves the stored message as it is",
+      "domain": "MSG",
+      "statement": "A stored inbound Instagram or Facebook message keeps its text, direction, deletion and reply state however often a webhook delivers it again or a backfill reads it again; a repeat may only fill a missing sender name or advertising attribution, or metadata that lacked the receiving account, and a repeated deletion keeps its first time.",
+      "authority": "AUTHORITY-061; Meta delivers webhooks at least once, and the WhatsApp history rule that a duplicate delivery must not rewrite the stored message.",
+      "source": "formal/system/meta-redelivery.md",
+      "contract": "formal/system/meta-redelivery.md",
+      "actors": [
+        "Meta webhook delivery",
+        "Administrator running a backfill",
+        "Reply worker"
+      ],
+      "preconditions": [
+        "Valid X-Hub-Signature-256 over the raw body (AUTH-WEBHOOK-001), or an authorized backfill"
+      ],
+      "inputs": [
+        "Provider message id, sender, text, attribution, deletion event"
+      ],
+      "state": {
+        "boundary": "instagram_message, facebook_message",
+        "authority": "PostgreSQL unique index on external_id; one insert-or-leave statement"
+      },
+      "allowedTransitions": [
+        "Message absent -> stored as pending",
+        "Stored without sender name or attribution -> filled",
+        "Stored and not deleted -> deleted at the first deletion"
+      ],
+      "forbiddenTransitions": [
+        "On hold or failed -> pending because the message was delivered or backfilled again",
+        "Stored text -> other text",
+        "Outgoing -> incoming",
+        "Deletion time -> later deletion time",
+        "Deleted before stored -> text"
+      ],
+      "effects": [
+        "One row per provider message",
+        "A repeat never returns a message to the reply worker"
+      ],
+      "authorization": "Unauthenticated webhook routes admitted only by the Meta signature; the backfill keeps its existing authorization.",
+      "privacy": "A repeat can no longer write new text into a message its sender deleted. Text stored before a deletion is still kept.",
+      "concurrency": "The store is one insert-or-leave statement on the unique index, so simultaneous first deliveries all succeed and leave one row.",
+      "idempotency": "Keyed by the provider message id.",
+      "failure": "A failed transaction stores nothing.",
+      "recovery": "Meta redelivers; a repeat is harmless.",
+      "observability": "The message row.",
+      "property": "Delivering or backfilling a stored message again changes neither its text nor its direction, deletion or reply state.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MetaRedeliverySpec.hs",
+        "tdf-hq/test/TDF/ServerExtraSpec.hs",
+        "scripts/test-meta-redelivery.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/MetaRedelivery.tla",
+        "formal/event-operations/MetaRedelivery.cfg",
+        "formal/event-operations/MetaRedeliveryRepeatResetsReply.cfg",
+        "formal/event-operations/MetaRedeliveryRepeatRewritesText.cfg",
+        "formal/event-operations/MetaRedeliveryRepeatMovesDeletion.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test of the function both webhooks call.",
+      "evidence": "formal/system/meta-redelivery.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Webhook, backfill and reply worker read; storage behaviour run locally against PostgreSQL 16 on 2026-10-11; the backfill path is covered by reading only.",
+      "ambiguity": [
+        "Whether the text of a message deleted by its sender should be erased is undecided; it is kept."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Storage repaired and tested; no signed HTTP or backfill-route test, and the reply worker was not changed."
+      }
+    },
+    {
+      "id": "MOB-FEEDBACK-001",
+      "title": "Consented mobile tester feedback with minimized diagnostics",
+      "statement": "The mobile tester feedback form enables submission only with consent, nonempty text and published catalog choices. Optional diagnostics use an explicit field allowlist and coarse device class; full device model, tokens and arbitrary input fields are not spread into metadata. Prompt eligibility honors opt-out and dismissal.",
+      "property": "ConsentedSubmission; AllowlistedDiagnostics; CoarseDeviceClass; PromptOptOut",
+      "domain": "MOB",
+      "authority": "Existing shipped client behavior; explicit traceability submitted for independent review in parent PR #542.",
+      "source": "TDF-mobile src/feedback/FeedbackEntry.tsx and metadata.ts; parent integration of Mobile #157 through #158.",
+      "contract": "formal/system/mobile-tester-feedback.md",
+      "actors": [
+        "Authenticated or anonymous tester using the existing feedback endpoint"
+      ],
+      "preconditions": [
+        "Published feedback category and severity resolve",
+        "Consent and nonempty description",
+        "Valid optional image"
+      ],
+      "inputs": [
+        "Feedback text",
+        "Consent toggle",
+        "Technical-details toggle",
+        "Optional attachment",
+        "Version, platform, locale and fixed entry surface",
+        "Coarse phone/tablet/unknown classification"
+      ],
+      "state": {
+        "form": [
+          "closed",
+          "editing",
+          "pending",
+          "succeeded",
+          "failed"
+        ],
+        "prompt": [
+          "eligible",
+          "dismissed",
+          "opted-out"
+        ]
+      },
+      "allowedTransitions": [
+        "Editing to pending only when submission controls admit it",
+        "Successful response to confirmation",
+        "Failed response retains input for retry",
+        "Prompt dismissal and opt-out suppress future prompts"
+      ],
+      "forbiddenTransitions": [
+        "Submitting through the disabled control without consent",
+        "Spreading arbitrary input properties into diagnostic metadata",
+        "Claiming successful submission before the server accepts it"
+      ],
+      "effects": [
+        "Existing feedback request with optional attachment",
+        "Minimized submission analytics after accepted response"
+      ],
+      "implementation": [
+        "tdf-mobile/src/feedback/FeedbackEntry.tsx",
+        "tdf-mobile/src/feedback/metadata.ts"
+      ],
+      "tests": [
+        "tdf-mobile/__tests__/TesterParticipation.test.ts",
+        "tdf-mobile/__tests__/TesterFeedback.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Existing implementation unit/component tests; no bounded model or universal proof claimed.",
+      "evidence": "Parent PR #542 and Mobile PR #158 current-head gate receipts; local full mobile suite 97 suites / 625 tests.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Scoped client behavior covered by tests; production upload and physical-device qualification remain separate.",
+      "ambiguity": [
+        "No production feedback submission or upload was performed during this audit."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client mappings and regression tests are present; production upload and device release qualification remain external release gates."
+      },
+      "authorization": "Existing API authentication and feedback policy remain authoritative; this client mapping does not grant new backend permissions.",
+      "privacy": "The diagnostic payload uses an explicit field allowlist; device class is phone, tablet or unknown, not a device model. Free-text feedback and an optional screenshot are user supplied and are not claimed to be intrinsically anonymous.",
+      "concurrency": "React Query pending state disables repeated submission; no exactly-once server delivery claim is made.",
+      "idempotency": "Participation counters advance only after the 30-minute session interval; feedback network retries have no new server deduplication guarantee.",
+      "failure": "Failed submission preserves editable state; optional storage errors must not block navigation.",
+      "recovery": "Retry from retained form input; corrupted participation storage falls back to safe defaults.",
+      "observability": "TesterParticipation unit tests cover metadata allowlisting, coarse device class, opt-out, dismissal and corrupted storage; TesterFeedback component tests exercise the form."
+    },
+    {
+      "id": "OPS-INBOUND-CAPTURE-001",
+      "title": "Inbound messages stored by the application reach Operations once",
+      "domain": "OPS",
+      "statement": "A WhatsApp, Instagram or Facebook message that the application stores as a request from a customer produces one Operations domain event in the storing transaction, or is stored without one (with a logged warning) if the event cannot be recorded; outgoing messages, deletion records, rows more than a day old when inserted and repeated deliveries produce none.",
+      "authority": "AUTHORITY-062; Operations control center design of 2026-08-09 (inbound communication becomes a reception work item).",
+      "source": "formal/system/operations-inbound-capture.md",
+      "contract": "formal/system/operations-inbound-capture.md",
+      "actors": [
+        "Meta webhook delivery",
+        "Operations outbox worker",
+        "Reception"
+      ],
+      "preconditions": [
+        "Message stored by the application in whats_app_message, instagram_message or facebook_message"
+      ],
+      "inputs": [
+        "Message direction, sender, provider message id, deletion and creation times"
+      ],
+      "state": {
+        "boundary": "AFTER INSERT triggers on the message tables; operations_domain_event",
+        "authority": "PostgreSQL triggers and the unique provider event index"
+      },
+      "allowedTransitions": [
+        "Inbound request stored -> one communication.<channel>.received event"
+      ],
+      "forbiddenTransitions": [
+        "Inbound request stored with the application's direction -> no event",
+        "Outgoing message, deletion record or history import -> event",
+        "Message delivered again -> second event"
+      ],
+      "effects": [
+        "One domain event and outbox entry per inbound request",
+        "A reception work item per sender and channel once projected"
+      ],
+      "authorization": "No request path; the trigger runs with the storing transaction. Reading the resulting work items follows the existing Operations read policy.",
+      "privacy": "The sender identifier (the telephone number on WhatsApp) is written to append-only event and audit rows that have no erasure path. This is the control center's existing design, exercised in production for the first time by this change.",
+      "concurrency": "The event is recorded in the storing transaction; operations_record_event resolves a duplicate provider event to the existing one.",
+      "idempotency": "Keyed by channel and provider message id; a repeated delivery inserts no row and fires no trigger.",
+      "failure": "If the event cannot be recorded the message is stored without one and a warning naming the message id is logged.",
+      "recovery": "Rollback file restores the previous functions; recorded events stay.",
+      "observability": "operations_domain_event, operations_outbox and the reception work item.",
+      "property": "At most one event per inbound request stored by the application, exactly one unless recording fails, and none for anything else.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
+        "scripts/production-migrations.json"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs",
+        "scripts/test-operations-inbound-capture.sh",
+        "scripts/lib/operations_conformance.py",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/InboundCapture.tla",
+        "formal/event-operations/InboundCapture.cfg",
+        "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg",
+        "formal/event-operations/InboundCaptureEveryIncomingRow.cfg",
+        "formal/event-operations/InboundCaptureEveryDelivery.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test through the application's storage functions against the migrated triggers, with a run against the rolled-back functions as control.",
+      "evidence": "formal/system/operations-inbound-capture.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Trigger functions, application storage and the conformance fixture read; behaviour run locally against PostgreSQL 16 on 2026-10-11. Not applied to production.",
+      "ambiguity": [
+        "Whether opt-out and consent-confirmation messages should open a reception item is undecided; they do."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repaired and tested at the database boundary; the migration is not applied in production, and the projection and reception handling were not examined."
+      }
+    },
+    {
+      "id": "DATA-INDEX-DECLARATION-001",
+      "title": "A lookup index never refuses a legitimate row",
+      "domain": "DATA",
+      "statement": "A conversation stores every message sent in it; a WhatsApp message and the reply recorded at the same instant, and two messages from one sender received together, are all stored; course registrations, receipts and follow-ups written at the same instant or sharing a reminder time are all stored. A message identity given by the provider is still stored once.",
+      "authority": "AUTHORITY-063; the application's chat, WhatsApp history and course follow-up behaviour.",
+      "source": "formal/system/index-declarations.md",
+      "contract": "formal/system/index-declarations.md",
+      "actors": [
+        "Signed-in person in a conversation",
+        "Meta webhook delivery",
+        "Staff recording course follow-ups",
+        "Person registering for a course"
+      ],
+      "preconditions": [
+        "A row with an identity not yet stored, written through the application"
+      ],
+      "inputs": [
+        "Conversation, contact, telephone number or registration; the row's timestamp; the reminder time"
+      ],
+      "state": {
+        "boundary": "chat_message, whats_app_message, course_registration, course_registration_receipt, course_registration_follow_up",
+        "authority": "PostgreSQL constraints and indexes"
+      },
+      "allowedTransitions": [
+        "New row with a new identity -> stored, whatever key and time it carries"
+      ],
+      "forbiddenTransitions": [
+        "Second message in a conversation -> refused",
+        "Reply recorded at the instant of its message -> refused",
+        "Second follow-up with the same reminder time -> refused",
+        "Provider message identity already stored -> second row"
+      ],
+      "effects": [
+        "Nine plain indexes in place of nine uniqueness constraints; no row changed"
+      ],
+      "authorization": "Unchanged; the existing conversation, staff and webhook checks decide who may write.",
+      "privacy": "No new data is stored or exposed.",
+      "concurrency": "Removing the constraints removes a source of refusals between concurrent writers; identity constraints still serialize repeated deliveries.",
+      "idempotency": "Unchanged: the WhatsApp provider message id and the other identity constraints remain unique.",
+      "failure": "Before the migration the refused write raises a database error and the request fails; a WhatsApp webhook request fails after the reply has been sent.",
+      "recovery": "Rollback file restores the constraints while no stored row violates them.",
+      "observability": "pg_constraint and pg_indexes; the request no longer fails with a unique violation on an index_ name.",
+      "property": "No row with a new identity is refused by a lookup index, and an identity is stored at most once.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql",
+        "scripts/production-migrations.json",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
+        "scripts/test-index-declarations.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/IndexDeclaration.tla",
+        "formal/event-operations/IndexDeclaration.cfg",
+        "formal/event-operations/IndexDeclarationKeyUnique.cfg",
+        "formal/event-operations/IndexDeclarationKeyTimeUnique.cfg",
+        "formal/event-operations/IndexDeclarationIdentityNotUnique.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test against the migrated schema, through the application's storage functions where one exists, with a manual local run against the schema before the migration as control (not repeated in CI).",
+      "evidence": "formal/system/index-declarations.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Models, production schema snapshot and writers read; behaviour run locally against PostgreSQL 16 on 2026-10-11. The production database itself was not queried, and the migration is not applied there.",
+      "ambiguity": [
+        "Whether production still carries the nine constraints of the 2026-08-14 snapshot was not checked against the live database."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
       }
     }
   ]

@@ -4,11 +4,11 @@ Requirement `EVT-TICKET-MANUAL-001`, decision `AUTHORITY-064`.
 
 ## What was checked
 
-`reviewTicketManualPayment` (`tdf-hq/src/TDF/Server/TicketManualPayments.hs`) is
-the transaction behind the organizer's approve and reject buttons for a bank
-transfer. It had no test of its own; the requirement recorded that it was
-exercised only through deployed HTTP verification. It is now run directly
-against PostgreSQL.
+`reviewTicketManualPayment` is the staff approve/reject function for a ticket bank
+transfer. This document preserves the independent model and additional transaction
+tests developed in PR #545. Current main already carries the lock-preserving
+savepoint, payment-intent/issuance harness, and the ManualBankTransfer model from
+an earlier integration. Both test suites and both models are retained.
 
 ## What was wrong
 
@@ -32,11 +32,11 @@ gap at the level of what the reviewer saw on screen.
 
 ## What changed
 
-The `transactionSave` is removed. The locks taken by the read now last until
-the review commits, so a second reviewer waits and then reads the decision:
-a repeated approval or a repeated rejection is answered as done, anything else
-as a refusal that says why. Nothing else in the function changed; a refusal that follows a failed
-binding or payment record still undoes the whole review.
+The earlier fix replaced the intermediate commit with a savepoint. The current
+implementation keeps that savepoint and its scoped rollback: the locks last until
+the review transaction commits, while a rejected binding or payment record can
+undo the review writes without releasing the locks. This consolidation preserves
+that implementation unchanged and adds the distinct tests and model below.
 
 ## Model
 
@@ -66,7 +66,7 @@ issuance.
 ## Tests
 
 `tdf-hq/test/TDF/TicketManualReviewSpec.hs`, run by
-`scripts/test-ticket-manual-review.sh` against a database built from the
+`scripts/test-ticket-manual-review-concurrency.sh` against a database built from the
 production snapshot and the migration manifest. Each case builds an event with
 an approved bank transfer policy, a held ticket order, its checkout and a
 submitted reference, and calls the function the handler calls.
@@ -111,10 +111,12 @@ overlap cases would report.
   time instead).
 - No real transfer was made or verified.
 
-## Left open
+## Historical findings and remaining scope
 
-Found by the independent review, present before this change and not fixed by
-it:
+The original review recorded the following concerns. Current main retains its separate production-schema concurrency harness and
+savepoint implementation.
+The model here does not establish the buyer/reviewer lock ordering or close the
+clock and screen-reference questions below:
 
 - A reviewer and the buyer acting on the same order at the same moment take
   the checkout, attempt and evidence locks in different orders
