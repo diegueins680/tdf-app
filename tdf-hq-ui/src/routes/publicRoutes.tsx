@@ -65,6 +65,7 @@ const DJ_BOOTH_SERVICE_CODE = 'dj-booth-practice';
 export function LegacyDjBoothRedirect() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
+  params.delete('service');
   params.set('servicio', DJ_BOOTH_SERVICE_CODE);
   return <Navigate to={{ pathname: '/reservar', search: `?${params.toString()}`, hash: location.hash }} replace />;
 }

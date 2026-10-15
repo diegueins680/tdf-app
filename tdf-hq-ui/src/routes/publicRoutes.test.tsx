@@ -50,7 +50,11 @@ describe('public routes', () => {
     }
   });
 
-  it('sends the legacy DJ booth URL to the general booking form with the service preselected', async () => {
+  it.each([
+    '/dj-booth?utm_source=instagram#horario',
+    '/dj-booth?service=recording&servicio=mixing&utm_source=instagram#horario',
+    '/dj-booth?service=recording&service=mixing&utm_source=instagram#horario',
+  ])('preselects DJ booth and preserves tracking for %s', async (legacyUrl) => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     let root: Root | null = createRoot(container);
@@ -58,7 +62,7 @@ describe('public routes', () => {
     try {
       await act(async () => {
         root?.render(
-          <MemoryRouter initialEntries={['/dj-booth?utm_source=instagram#horario']}>
+          <MemoryRouter initialEntries={[legacyUrl]}>
             <Routes>
               <Route path="/dj-booth" element={<LegacyDjBoothRedirect />} />
               <Route path="/reservar" element={<LocationProbe />} />
@@ -68,8 +72,12 @@ describe('public routes', () => {
         await flushPromises();
       });
 
-      expect(container.querySelector('[data-testid="location"]')?.textContent)
-        .toBe('/reservar?utm_source=instagram&servicio=dj-booth-practice#horario');
+      const target = new URL(container.querySelector('[data-testid="location"]')?.textContent ?? '', 'https://example.test');
+      expect(target.pathname).toBe('/reservar');
+      expect(target.searchParams.getAll('servicio')).toEqual(['dj-booth-practice']);
+      expect(target.searchParams.has('service')).toBe(false);
+      expect(target.searchParams.get('utm_source')).toBe('instagram');
+      expect(target.hash).toBe('#horario');
     } finally {
       await act(async () => {
         root?.unmount();
