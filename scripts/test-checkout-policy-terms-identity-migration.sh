@@ -242,4 +242,49 @@ assert_equal "$(psql_exec -Atc "SELECT count(*) FROM course_checkout_policy;")" 
 apply_file "$MIGRATION"
 assert_equal "$(psql_exec -Atc "SELECT count(*) FROM pg_trigger WHERE tgname LIKE 'trg_%_terms_identity';")" "2" "Migration reinstalls after rollback"
 
+# Reassigning only the scope must validate the target's terms identity too.
+psql_exec -c "
+  INSERT INTO course(id, slug, title, price_cents, currency, capacity) VALUES
+    (2, 'move-source', 'Move source', 24000, 'USD', 5),
+    (3, 'move-matching', 'Move matching', 24000, 'USD', 5),
+    (4, 'move-empty', 'Move empty', 24000, 'USD', 5);
+  INSERT INTO social_event(id, title, start_time, end_time)
+    SELECT id, 'Move scope ' || id, NOW() + INTERVAL '30 days', NOW() + INTERVAL '31 days'
+    FROM generate_series(2, 4) id;
+  INSERT INTO course_checkout_policy(course_id, policy_version, currency, price_minor,
+      terms_version, terms_summary, cancellation_policy) VALUES
+    (2, 'course-move-source', 'USD', 24000, 'course-terms-v1', 'Different terms.', 'Different cancellation.'),
+    (3, 'course-move-matching', 'USD', 24000, 'course-terms-v1', 'Different terms.', 'Different cancellation.');
+  INSERT INTO event_ticket_checkout_policy(event_id, policy_version, currency,
+      terms_version, terms_summary, refund_policy) VALUES
+    (2, 'event-move-source', 'USD', 'ticket-terms-v1', 'Different terms.', 'Different refund.'),
+    (3, 'event-move-matching', 'USD', 'ticket-terms-v1', 'Different terms.', 'Different refund.');
+" >/dev/null
+assert_rejected "
+  UPDATE course_checkout_policy SET course_id=1 WHERE policy_version='course-move-source';
+" "Moving a draft course policy onto conflicting terms"
+assert_rejected "
+  UPDATE event_ticket_checkout_policy SET event_id=1 WHERE policy_version='event-move-source';
+" "Moving a draft event policy onto conflicting terms"
+assert_equal "$(psql_exec -Atc "SELECT course_id FROM course_checkout_policy WHERE policy_version='course-move-source';")" \
+  "2" "Rejected course move preserves its source scope"
+assert_equal "$(psql_exec -Atc "SELECT event_id FROM event_ticket_checkout_policy WHERE policy_version='event-move-source';")" \
+  "2" "Rejected event move preserves its source scope"
+psql_exec -c "
+  UPDATE course_checkout_policy SET course_id=3 WHERE policy_version='course-move-source';
+  UPDATE event_ticket_checkout_policy SET event_id=3 WHERE policy_version='event-move-source';
+" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT course_id FROM course_checkout_policy WHERE policy_version='course-move-source';")" \
+  "3" "Course move to matching terms is permitted"
+assert_equal "$(psql_exec -Atc "SELECT event_id FROM event_ticket_checkout_policy WHERE policy_version='event-move-source';")" \
+  "3" "Event move to matching terms is permitted"
+psql_exec -c "
+  UPDATE course_checkout_policy SET course_id=4 WHERE policy_version='course-move-source';
+  UPDATE event_ticket_checkout_policy SET event_id=4 WHERE policy_version='event-move-source';
+" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT course_id FROM course_checkout_policy WHERE policy_version='course-move-source';")" \
+  "4" "Course move to an unused terms scope is permitted"
+assert_equal "$(psql_exec -Atc "SELECT event_id FROM event_ticket_checkout_policy WHERE policy_version='event-move-source';")" \
+  "4" "Event move to an unused terms scope is permitted"
+
 echo "checkout policy terms identity migration test passed"

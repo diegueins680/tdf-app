@@ -29,7 +29,9 @@ Within a course or event, a `terms_version` identifies exactly one terms text:
 - `event_ticket_checkout_policy`: `(terms_summary, refund_policy)`.
 
 `BEFORE INSERT OR UPDATE` triggers reject a row whose `(scope, terms_version)`
-already names different text. Rows with identical text may share a version, so a
+already names different text. Scope-only changes to `course_id` or `event_id`
+also run the corresponding trigger and validate the destination scope. Rows with
+identical text may share a version, so a
 price-only or fee-only replacement keeps the version the buyer already accepted.
 Each trigger takes a transaction-scoped advisory lock on `(scope, terms_version)`
 before the existence check, so two concurrent writers of differing rows cannot
@@ -56,4 +58,7 @@ row. Reusing a version is accepted only when the text is byte-identical.
 `scripts/test-checkout-policy-terms-identity-migration.sh` (migration-tests job)
 applies the checkout runtime migrations, proves the failing precondition
 installs nothing, applies the migration twice, exercises allowed reuse, rejected
-insert/update/rename reuse for both tables, rollback and reinstall.
+insert/update/rename reuse for both tables, rollback and reinstall. Scope-only
+reassignment is rejected when the destination has conflicting text, and permitted
+for matching text or an unused version in that scope. Removing either scope column
+from its trigger independently makes the corresponding regression fail.

@@ -71,7 +71,7 @@ $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_course_checkout_policy_terms_identity ON course_checkout_policy;
 CREATE TRIGGER trg_course_checkout_policy_terms_identity
-  BEFORE INSERT OR UPDATE OF terms_version, terms_summary, cancellation_policy
+  BEFORE INSERT OR UPDATE OF course_id, terms_version, terms_summary, cancellation_policy
   ON course_checkout_policy
   FOR EACH ROW EXECUTE FUNCTION course_checkout_policy_terms_identity();
 
@@ -100,6 +100,6 @@ $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_event_ticket_checkout_policy_terms_identity ON event_ticket_checkout_policy;
 CREATE TRIGGER trg_event_ticket_checkout_policy_terms_identity
-  BEFORE INSERT OR UPDATE OF terms_version, terms_summary, refund_policy
+  BEFORE INSERT OR UPDATE OF event_id, terms_version, terms_summary, refund_policy
   ON event_ticket_checkout_policy
   FOR EACH ROW EXECUTE FUNCTION event_ticket_checkout_policy_terms_identity();
