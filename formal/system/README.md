@@ -39,6 +39,9 @@ These checks make drift fail CI; run them before changing a mapped surface.
   metadata admission, colliding private index identities and bounded read/delete
   interleavings with four negative controls.
 
+- [uri-decoder.md](uri-decoder.md): patched Mobile decoder, actual CommonJS
+  consumer compatibility, negative controls and corrected reachability scope.
+
 - [physical-recovery.md](physical-recovery.md): verified cold PG17 copy startup, isolated configuration and explicit coordinated-recovery exclusions.
 
 - [recovery-envelope.md](recovery-envelope.md): sealed executable encryption/decryption and explicit off-host recovery obligations.

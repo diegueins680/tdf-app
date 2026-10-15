@@ -83,7 +83,7 @@
     {
       "package": "decode-uri-component",
       "advisory": "GHSA-vcc3-ghjq-m6fr",
-      "status": "Runtime-reachable through React Navigation/Expo query-string. Patched0.5.0 is ESM; current query-string expects CommonJS callable. Compatibility repair remains open."
+      "status": "Scoped compatibility repair: Mobile pins upstream0.5.0 through a callable CommonJS adapter and actual query-string7 tests with two negative controls (SYS-URI-DECODE-001). Earlier current-router reachability claim is narrowed: Expo incoming queries use URLSearchParams and installed React Navigation has its own parser. Other distribution/advisory gates remain separate."
     }
   ]
 }
