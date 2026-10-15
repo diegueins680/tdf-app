@@ -52,7 +52,11 @@ import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
+import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
+import qualified TDF.TicketManualReviewSpec as TicketManualReviewSpec
+import qualified TDF.IndexDeclarationSpec as IndexDeclarationSpec
+import qualified TDF.InvoiceWorkerSpec as InvoiceWorkerSpec
 import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
 
@@ -620,9 +624,15 @@ import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
 import qualified TDF.TicketPaymentGateSpec as TicketPaymentGateSpec
 import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
+import qualified TDF.OperationsInboundCaptureSpec as OperationsInboundCaptureSpec
+import qualified TDF.MetaRedeliverySpec as MetaRedeliverySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
+import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
+import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
+import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
+import qualified TDF.WhatsAppRedeliverySpec as WhatsAppRedeliverySpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
@@ -873,7 +883,11 @@ main = hspec $ do
     CheckoutMoneySpec.spec
     EmailHeadersSpec.spec
     TicketConfirmationSpec.spec
+    EventOrganizerSpec.spec
     InvoiceDatilSpec.spec
+    TicketManualReviewSpec.spec
+    IndexDeclarationSpec.spec
+    InvoiceWorkerSpec.spec
     describe "merch commercial reputation formula v1" $ do
         it "publishes only after five evaluable orders and at least one review" $ do
             commercialStoreScore initialCommercialFormula 4
@@ -1346,6 +1360,29 @@ main = hspec $ do
                   `shouldSatisfy` isLeft
                 ServiceStorefront.validatePaypalSuccessfulCapture "ticket-order" 2000 "USD" "OTHER" outcome
                   `shouldSatisfy` isLeft
+
+        it "retains capture uncertainty when an approved order has no capture" $ do
+            let payload = A.object
+                  [ "id" .= ("PAYPAL-ORDER" :: Text), "status" .= ("APPROVED" :: Text)
+                  , "purchase_units" .= [A.object ["custom_id" .= ("ticket-order" :: Text)]]
+                  ]
+            case ServiceStorefront.parsePaypalBoundCaptureOutcome "PAYPAL-ORDER" payload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "UNKNOWN"
+                EventTicketCheckoutServer.paypalCaptureFailureCode
+                  (Just (ServiceStorefront.spcoStatus outcome))
+                  `shouldBe` "paypal_capture_unverified"
+
+        it "requires affirmative no-charge capture evidence before allowing another rail" $ do
+            forM_ ["DECLINED", "FAILED"] $ \status ->
+              EventTicketCheckoutServer.paypalCaptureFailureCode (Just status)
+                `shouldBe` "paypal_capture_request"
+            forM_ [Nothing, Just "", Just "UNKNOWN", Just "PENDING", Just "APPROVED",
+                   Just "VOIDED", Just "PARTIALLY_REFUNDED", Just "REFUNDED",
+                   Just "FUTURE_PROVIDER_STATUS"] $ \status ->
+              EventTicketCheckoutServer.paypalCaptureFailureCode status
+                `shouldBe` "paypal_capture_unverified"
 
         it "rejects ambiguous multi-capture PayPal responses" $ do
             let capture captureId = A.object
@@ -12829,6 +12866,43 @@ main = hspec $ do
                     expectationFailure
                         ("Expected oversized Stripe amount to be rejected, got " <> show amount)
 
+    describe "legacy ticket purchase terms acceptance" $ do
+        let recorded version =
+                EventMetadataServer.decodeTicketAcceptedTermsVersion
+                    ( EventMetadataServer.encodeTicketCheckoutMetadata
+                        (Just "key-1")
+                        Nothing
+                        version
+                        (EventMetadataServer.ticketPlatformFeeBreakdown 5000)
+                    )
+            decision active submitted existing =
+                either (Left . errHTTPCode) Right $
+                    EventMetadataServer.ticketTermsAcceptance active submitted existing
+
+        it "stores the accepted version with the order and reads it back" $ do
+            recorded (Just "terms-v2") `shouldBe` Just "terms-v2"
+            recorded Nothing `shouldBe` Nothing
+            EventMetadataServer.decodeTicketAcceptedTermsVersion
+                (Just "{\"checkout_idempotency_key\":\"old\"}")
+                `shouldBe` Nothing
+
+        it "requires the active version for a new order and records exactly that version" $ do
+            decision (Just "terms-v2") (Just "terms-v2") Nothing `shouldBe` Right (Just "terms-v2")
+            decision (Just "terms-v2") Nothing Nothing `shouldBe` Left 400
+            decision (Just "terms-v2") (Just "terms-v1") Nothing `shouldBe` Left 409
+            decision Nothing (Just "terms-v1") Nothing `shouldBe` Right Nothing
+            decision Nothing Nothing Nothing `shouldBe` Right Nothing
+
+        it "keeps a replay bound to the acceptance its order recorded" $ do
+            -- The policy moved on after the order was created: the retry is still that order.
+            decision (Just "terms-v3") (Just "terms-v2") (Just (Just "terms-v2"))
+                `shouldBe` Right (Just "terms-v2")
+            -- A replay cannot swap in a different acceptance, even the currently active one.
+            decision (Just "terms-v3") (Just "terms-v3") (Just (Just "terms-v2")) `shouldBe` Left 409
+            decision (Just "terms-v2") Nothing (Just (Just "terms-v2")) `shouldBe` Left 409
+            -- Orders older than this evidence have nothing to contradict.
+            decision (Just "terms-v2") (Just "terms-v2") (Just Nothing) `shouldBe` Right Nothing
+
     describe "normalizeTicketStatus" $ do
         it "preserves refund holds instead of presenting the ticket as issued" $ do
             normalizeTicketStatus (Just "refund_pending") `shouldBe` "refund_pending"
@@ -17841,10 +17915,16 @@ main = hspec $ do
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
+    OperationsInboundCaptureSpec.spec
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
+    WhatsAppConsentSpec.spec
+    InteractionWriteBudgetSpec.spec
+    MusicPurchaseSpec.spec
     DriveReplaySpec.spec
+    WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec
+    MetaRedeliverySpec.spec
     TrialIdentitySpec.spec
     CourseIdentitySpec.spec
     TicketPaymentGateSpec.spec

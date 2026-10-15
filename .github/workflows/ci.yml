@@ -118,12 +118,6 @@ jobs:
     if: needs.changes.outputs.repo == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Authenticate Docker Hub pulls
-        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v7
         env:
@@ -273,21 +267,17 @@ jobs:
       - name: Run mobile checks
         run: npm run quality:mobile
 
+  # Public Docker Hub pulls use GitHub-hosted runner credentials. An explicit
+  # global login overrides that identity and caused pre-build pull-rate failures.
   backend-quality:
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     container:
       image: haskell:9.10.3-bookworm
-      credentials:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
     services:
       postgres:
         image: pgvector/pgvector:pg17
-        credentials:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
         env:
           POSTGRES_DB: tdf_hq_automatic_migration_test
           POSTGRES_PASSWORD: postgres
@@ -515,19 +505,41 @@ jobs:
         run: |
           createdb -h postgres -U postgres tdf_provider_retry_test
           sh scripts/test-provider-retry-runtime.sh
+      - name: Verify invoice worker claim, submission mark and lease fencing
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-invoice-worker.sh
+
       - name: Verify contact HTTP concurrency, authorization, archival and rollback
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
           TDF_IDENTITY_HTTP_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: |
+          sh scripts/test-operations-inbound-capture.sh
           bash scripts/test-auth-recovery-migration.sh
+          sh scripts/test-meta-redelivery.sh
           node scripts/__tests__/identity-http-runtime.mjs
+          sh scripts/test-whatsapp-redelivery.sh
           sh scripts/test-credential-lifecycle.sh
+          sh scripts/test-ticket-manual-review-concurrency.sh
+          sh scripts/test-whatsapp-consent.sh
+          sh scripts/test-index-declarations.sh
+          sh scripts/test-interaction-write-budget.sh
+
+      - name: Verify single assignment of an event without an organizer
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-event-organizer.sh
 
       - name: Verify checkout monetary snapshots and invalid-schema controls
         env:
           TDF_CHECKOUT_AMOUNT_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: node scripts/__tests__/checkout-amount-postgres.mjs
+
+      - name: Verify music purchase payment record, entitlement and download limits
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-music-purchase.sh
 
       - name: Verify artist claim preparation concurrency and privacy
         env:
@@ -610,9 +622,6 @@ jobs:
     services:
       postgres:
         image: pgvector/pgvector:pg17
-        credentials:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
@@ -801,9 +810,6 @@ jobs:
     services:
       postgres:
         image: pgvector/pgvector:pg17
-        credentials:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
         env:
           POSTGRES_DB: tdf_hq_migration_test
           POSTGRES_PASSWORD: postgres
@@ -818,12 +824,6 @@ jobs:
     env:
       PGURL: postgresql://postgres:postgres@127.0.0.1:5432/tdf_hq_migration_test
     steps:
-      - name: Authenticate Docker Hub pulls
-        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v7
         with:

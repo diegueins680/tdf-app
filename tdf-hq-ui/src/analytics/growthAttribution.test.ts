@@ -87,6 +87,21 @@ describe('growth attribution', () => {
     });
   });
 
+  it('persists campaign tags only when they are labels, so analytics never receives an email or token', () => {
+    const storage = makeStorage();
+    const attribution = captureGrowthAttribution({
+      search: '?utm_source=user@example.com&utm_medium=https://evil.example/x&utm_campaign=patch_culture&utm_content=creative_a&utm_term=two words',
+      pathname: '/app',
+      storage,
+      now: new Date('2026-10-13T12:00:00.000Z'),
+    });
+
+    expect(attribution).toEqual({ campaign: 'patch_culture', content: 'creative_a', landingPath: '/app', capturedAt: '2026-10-13T12:00:00.000Z' });
+    expect(storage.values.get(__growthAttributionTestUtils.storageKey)).not.toContain('example');
+    storage.values.set(__growthAttributionTestUtils.storageKey, JSON.stringify({ source: 'old@example.com', campaign: 'ok', landingPath: '/tdf', capturedAt: '2026-10-01T00:00:00.000Z' }));
+    expect(getGrowthAttribution(storage)).toMatchObject({ source: undefined, campaign: 'ok' });
+  });
+
   it('ignores malformed stored attribution', () => {
     const storage = makeStorage();
     storage.values.set(__growthAttributionTestUtils.storageKey, '{"source":');

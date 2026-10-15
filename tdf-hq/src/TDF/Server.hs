@@ -21,6 +21,7 @@ import TDF.Social.Server (socialV2Server)
 import qualified TDF.Interactions.Legacy as InteractionLegacy
 import qualified TDF.Interactions.Server as InteractionsServer
 import qualified TDF.Interactions.Notifications as InteractionNotifications
+import qualified Database.Persist.Sql as PersistSql
 import           Control.Applicative ((<|>))
 import           Control.Exception (Exception, SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
 import qualified Control.Exception.Safe as Safe
@@ -94,7 +95,7 @@ import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
 
 import           Database.Persist
-import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount)
+import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawExecuteCount, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount)
 import           Database.Persist.Postgresql ()
 import           Database.PostgreSQL.Simple (SqlError (..))
 
@@ -291,7 +292,7 @@ import           TDF.WhatsApp.History ( IncomingWhatsAppRecord(..)
                                       , WhatsAppDeliveryUpdate(..)
                                       , applyWhatsAppDeliveryUpdate
                                       , normalizeWhatsAppPhone
-                                      , recordIncomingWhatsAppMessage
+                                      , receiveIncomingWhatsAppMessage
                                       , recordOutgoingWhatsAppMessage
                                       )
 import           TDF.WhatsApp.Transport (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTemplateIO, sendWhatsAppTextIO)
@@ -1304,7 +1305,10 @@ coursesPublicServer =
   :<|> paypalCreateH
   :<|> paypalCaptureH
   where
-    courseMetadataH slug = loadCourseMetadata slug
+    courseMetadataH slug = do
+      meta <- loadCourseMetadata slug
+      terms <- CourseCheckoutServer.loadPublicCourseCheckoutTerms (normalizeSlug (courseMetaSlug meta))
+      pure meta { Courses.checkoutTerms = terms }
     registrationH slug idempotencyKey payload =
       CourseCheckoutServer.createCourseCheckoutRegistration
         createOrUpdateRegistration slug idempotencyKey payload
@@ -1402,6 +1406,104 @@ listEngineersPublic = do
       [Asc PartyDisplayName]
     pure [PublicEngineerDTO (fromSqlKey pid) (M.partyDisplayName p) | Entity pid p <- parties]
 
+data WhatsAppReceipt = WhatsAppReceipt
+  { warFirst :: Bool
+  -- ^ This delivery stored the message; False for a redelivery.
+  , warConfirmed :: Bool
+  -- ^ This delivery turned a pending consent request into consent.
+  , warMessage :: Entity ME.WhatsAppMessage
+  }
+
+-- | Stores one inbound WhatsApp message and, in the same transaction, applies
+-- what it asks for (opt-out keyword, consent confirmation). Meta delivers a
+-- message again when an earlier delivery was slow or failed, and a signed body
+-- stays valid, so a delivery that finds the message already stored changes
+-- nothing: an earlier STOP must not undo a later subscription. Deliveries of
+-- one message are taken one at a time.
+receiveWhatsAppInbound :: UTCTime -> Maybe UTCTime -> IncomingWhatsAppRecord -> SqlPersistT IO WhatsAppReceipt
+receiveWhatsAppInbound now sentAt record = do
+  let externalId = T.strip (iwrExternalId record)
+  unless (T.null externalId) $ do
+    _ <- rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
+      [PersistText ("whatsapp-inbound:" <> externalId)] :: SqlPersistT IO [Single Int64]
+    pure ()
+  (first, message) <- receiveIncomingWhatsAppMessage now record
+  -- Earlier versions stored the message and applied its effects in separate,
+  -- later transactions, which may never have committed; such a row has no
+  -- 'effects_applied' entry. Its next delivery applies them, once, so a STOP
+  -- from before this version cannot stay ineffective. A row stored by this
+  -- version carries the entry from its storing transaction.
+  applied <- if first then pure False else whatsAppEffectsApplied (entityKey message)
+  if applied
+    then pure (WhatsAppReceipt False False message)
+    else do
+      when (CampaignAutomation.isWhatsAppCampaignOptOutMessage (iwrText record)) $
+        CampaignAutomation.applyWhatsAppCampaignOptOut now (iwrSenderId record)
+          (ME.whatsAppMessagePartyId (entityVal message))
+      confirmed <-
+        if isWhatsAppConsentConfirmationMessage (iwrText record)
+          then applyWhatsAppConsentConfirmation now sentAt (iwrSenderId record)
+          else pure False
+      markWhatsAppEffectsApplied now (entityKey message)
+      pure (WhatsAppReceipt first confirmed message)
+
+whatsAppEffectsApplied :: Key ME.WhatsAppMessage -> SqlPersistT IO Bool
+whatsAppEffectsApplied messageKey = do
+  rows <- rawSql
+    "SELECT 1::bigint FROM audit_log WHERE entity = 'whatsapp_message' AND entity_id = ? \
+    \AND action = 'effects_applied' LIMIT 1"
+    [PersistText (T.pack (show (fromSqlKey messageKey)))] :: SqlPersistT IO [Single Int64]
+  pure (not (null rows))
+
+markWhatsAppEffectsApplied :: UTCTime -> Key ME.WhatsAppMessage -> SqlPersistT IO ()
+markWhatsAppEffectsApplied now messageKey =
+  PersistSql.rawExecute
+    "INSERT INTO audit_log(entity, entity_id, action, created_at) \
+    \VALUES ('whatsapp_message', ?, 'effects_applied', ?)"
+    [PersistText (T.pack (show (fromSqlKey messageKey))), toPersistValue now]
+
+-- | Takes the one automatic reply an inbound message may receive. True for the
+-- first caller only; the claim is an audit entry of the message, written
+-- before the reply is sent, so a message is answered at most once. A message
+-- answered before this version has no claim entry but carries its reply time,
+-- which refuses the claim too.
+-- | The idempotency key of the course registration a WhatsApp message makes.
+whatsAppCourseRegistrationKey :: Key ME.WhatsAppMessage -> Text
+whatsAppCourseRegistrationKey messageKey =
+  "whatsapp-message-" <> T.pack (show (fromSqlKey messageKey))
+
+-- | Whether a delivery of this message may reach the registration: the sender
+-- is under the hourly cap, or this message already made its registration. The
+-- second case is a redelivery after the registration committed and before the
+-- reply was claimed; it creates nothing and must still complete the reply,
+-- even when that registration was the one that filled the cap.
+whatsAppCourseRegistrationAdmitted
+  :: UTCTime -> Text -> Key ME.WhatsAppMessage -> SqlPersistT IO Bool
+whatsAppCourseRegistrationAdmitted now phone messageKey = do
+  rows <- rawSql
+    "SELECT (SELECT count(*) FROM course_registration \
+    \WHERE phone_e164 = ? AND source = 'whatsapp' AND created_at >= ?) < 3 \
+    \OR EXISTS (SELECT 1 FROM identity_course_registration_request \
+    \WHERE request_scope LIKE 'whatsapp-course:%' AND request_key = ?)"
+    [ PersistText phone, PersistUTCTime (addUTCTime (-3600) now)
+    , PersistText (whatsAppCourseRegistrationKey messageKey) ]
+    :: SqlPersistT IO [Single Bool]
+  pure (rows == [Single True])
+
+claimWhatsAppAutoReply :: UTCTime -> Key ME.WhatsAppMessage -> SqlPersistT IO Bool
+claimWhatsAppAutoReply now messageKey = do
+  let messageId = T.pack (show (fromSqlKey messageKey))
+  _ <- rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
+    [PersistText ("whatsapp-auto-reply:" <> messageId)] :: SqlPersistT IO [Single Int64]
+  inserted <- PersistSql.rawExecuteCount
+    "INSERT INTO audit_log(entity, entity_id, action, created_at) \
+    \SELECT 'whatsapp_message', ?, 'auto_reply_claimed', ? \
+    \WHERE NOT EXISTS (SELECT 1 FROM audit_log WHERE entity = 'whatsapp_message' \
+    \AND entity_id = ? AND action = 'auto_reply_claimed') \
+    \AND EXISTS (SELECT 1 FROM whats_app_message WHERE id = ? AND replied_at IS NULL)"
+    [PersistText messageId, toPersistValue now, PersistText messageId, toPersistValue (fromSqlKey messageKey)]
+  pure (inserted == 1)
+
 whatsappWebhookServer :: ServerT WhatsAppWebhookAPI AppM
 whatsappWebhookServer =
        verifyHook
@@ -1434,47 +1536,38 @@ whatsappWebhookServer =
             }
           pure ()
       for_ inbound $ \WAInbound{..} -> do
-        incomingEntity <- liftIO $ flip runSqlPool envPool $
-          recordIncomingWhatsAppMessage now IncomingWhatsAppRecord
-            { iwrExternalId = waInboundExternalId
-            , iwrSenderId = waInboundSenderId
-            , iwrSenderName = waInboundSenderName
-            , iwrText = waInboundText
-            , iwrAdExternalId = waInboundAdExternalId
-            , iwrAdName = waInboundAdName
-            , iwrCampaignExternalId = waInboundCampaignExternalId
-            , iwrCampaignName = waInboundCampaignName
-            , iwrMetadata = waInboundMetadata
-            , iwrTransportPayload = Nothing
-            , iwrSource = Just "whatsapp_webhook"
-            }
-        when (CampaignAutomation.isWhatsAppCampaignOptOutMessage waInboundText) $
+        WhatsAppReceipt{warConfirmed, warMessage = incomingEntity} <-
           liftIO $ flip runSqlPool envPool $
-            CampaignAutomation.applyWhatsAppCampaignOptOut
-              now
-              waInboundSenderId
-              (ME.whatsAppMessagePartyId (entityVal incomingEntity))
-        when (isWhatsAppConsentConfirmationMessage waInboundText) $ do
-          confirmed <- liftIO $ flip runSqlPool envPool $
-            applyWhatsAppConsentConfirmation now waInboundSentAt waInboundSenderId
-          when confirmed $
-            sendWhatsAppConsentNotice now waInboundSenderId waInboundSenderName "consent_confirmation"
-              "Gracias, confirmamos tu suscripción a los mensajes de TDF Records por WhatsApp. Responde STOP para dejar de recibirlos."
+            receiveWhatsAppInbound now waInboundSentAt IncomingWhatsAppRecord
+              { iwrExternalId = waInboundExternalId
+              , iwrSenderId = waInboundSenderId
+              , iwrSenderName = waInboundSenderName
+              , iwrText = waInboundText
+              , iwrAdExternalId = waInboundAdExternalId
+              , iwrAdName = waInboundAdName
+              , iwrCampaignExternalId = waInboundCampaignExternalId
+              , iwrCampaignName = waInboundCampaignName
+              , iwrMetadata = waInboundMetadata
+              , iwrTransportPayload = Nothing
+              , iwrSource = Just "whatsapp_webhook"
+              }
+        when warConfirmed $
+          sendWhatsAppConsentNotice now waInboundSenderId waInboundSenderName "consent_confirmation"
+            "Gracias, confirmamos tu suscripción a los mensajes de TDF Records por WhatsApp. Responde STOP para dejar de recibirlos."
         let lowerBody = T.toLower (T.strip waInboundText)
+        -- Every delivery reaches the registration, which is keyed by the stored
+        -- message and so is made once; a delivery that follows a failed one
+        -- completes it. The reply is sent by the one delivery that claims it.
         when ("inscribirme" `T.isInfixOf` lowerBody) $ do
           case normalizePhone waInboundSenderId of
             Nothing -> pure ()
             Just phone -> do
-              let oneHourAgo = addUTCTime (-3600) now
-              recentCount <- liftIO $ flip runSqlPool envPool $
-                count
-                  [ ME.CourseRegistrationPhoneE164 ==. Just phone
-                  , ME.CourseRegistrationSource ==. "whatsapp"
-                  , ME.CourseRegistrationCreatedAt >=. oneHourAgo
-                  ]
-              when (recentCount < 3) $ do
+              admitted <- liftIO $ flip runSqlPool envPool $
+                whatsAppCourseRegistrationAdmitted now phone (entityKey incomingEntity)
+              when admitted $ do
                 _ <- createCourseRegistrationInScope "whatsapp-course" (productionCourseSlug envConfig)
-                  (Just ("whatsapp-message-" <> T.pack (show (fromSqlKey (entityKey incomingEntity))))) CourseRegistrationRequest
+                  (Just (whatsAppCourseRegistrationKey (entityKey incomingEntity)))
+                  CourseRegistrationRequest
                   { fullName = Nothing
                   , email = Nothing
                   , phoneE164 = Just phone
@@ -1482,25 +1575,29 @@ whatsappWebhookServer =
                   , howHeard = Just "whatsapp"
                   , utm = Nothing
                   , termsAccepted = Nothing
+                  , acceptedTermsVersion = Nothing
                   }
                 let incomingMsg = entityVal incomingEntity
-                (replyTxt, replyRes) <- sendWhatsappReply cfg phone
-                liftIO $ flip runSqlPool envPool $ do
-                  _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
-                    { owrRecipientPhone = phone
-                    , owrRecipientPartyId = ME.whatsAppMessagePartyId incomingMsg
-                    , owrRecipientName = waInboundSenderName <|> ME.whatsAppMessageSenderName incomingMsg
-                    , owrRecipientEmail = ME.whatsAppMessageContactEmail incomingMsg
-                    , owrActorPartyId = Nothing
-                    , owrBody = replyTxt
-                    , owrSource = Just "course_enrollment_auto_reply"
-                    , owrReplyToMessageId = Just (entityKey incomingEntity)
-                    , owrReplyToExternalId = Just (ME.whatsAppMessageExternalId incomingMsg)
-                    , owrResendOfMessageId = Nothing
-                    , owrMetadata = Nothing
-                    }
-                    replyRes
-                  pure ()
+                claimed <- liftIO $ flip runSqlPool envPool $
+                  claimWhatsAppAutoReply now (entityKey incomingEntity)
+                when claimed $ do
+                  (replyTxt, replyRes) <- sendWhatsappReply cfg phone
+                  liftIO $ flip runSqlPool envPool $ do
+                    _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+                      { owrRecipientPhone = phone
+                      , owrRecipientPartyId = ME.whatsAppMessagePartyId incomingMsg
+                      , owrRecipientName = waInboundSenderName <|> ME.whatsAppMessageSenderName incomingMsg
+                      , owrRecipientEmail = ME.whatsAppMessageContactEmail incomingMsg
+                      , owrActorPartyId = Nothing
+                      , owrBody = replyTxt
+                      , owrSource = Just "course_enrollment_auto_reply"
+                      , owrReplyToMessageId = Just (entityKey incomingEntity)
+                      , owrReplyToExternalId = Just (ME.whatsAppMessageExternalId incomingMsg)
+                      , owrResendOfMessageId = Nothing
+                      , owrMetadata = Nothing
+                      }
+                      replyRes
+                    pure ()
       pure NoContent
 
 whatsappHooksServer :: ServerT WhatsAppHooksAPI AppM
@@ -1698,16 +1795,19 @@ publicRequestWhatsAppConsent WhatsAppConsentRequest{..} = do
   sourceClean <- either throwError pure (validateWhatsAppConsentSource "public" wcrSource)
   now <- liftIO getCurrentTime
   claimed <- runDB (claimWhatsAppConfirmationRequest now phoneVal nameClean sourceClean)
-  when claimed $ do
+  for_ claimed $ \requestedAt -> do
     result <- sendWhatsAppConfirmationRequest now phoneVal nameClean
-    -- A request that never reached the number must not block a retry.
+    -- A request that never reached the number must not block a prompt retry,
+    -- and the person can still confirm it by messaging SI themselves.
     when (isLeft result) $
-      runDB (releaseWhatsAppConfirmationClaim now phoneVal)
+      runDB (markWhatsAppConfirmationRequestUnsent requestedAt phoneVal)
   pure (publicWhatsAppConsentResponse phoneVal
     "Si el número es válido, recibirá un WhatsApp de TDF Records. Responde SI a ese mensaje para confirmar tu suscripción.")
 
 -- | Opting out needs no proof of control; a confirmation message is sent only
 -- to a number that was actually subscribed, so the form cannot message strangers.
+-- The withdrawal instant invalidates a pending request; the request instant is
+-- kept so that withdrawing cannot be used to request another message early.
 publicWhatsAppOptOut :: WhatsAppOptOutRequest -> AppM WhatsAppConsentResponse
 publicWhatsAppOptOut WhatsAppOptOutRequest{..} = do
   phoneVal <- either throwError pure (validateWhatsAppPhoneInput worPhone)
@@ -1732,9 +1832,9 @@ publicWhatsAppOptOut WhatsAppOptOutRequest{..} = do
       , ME.WhatsAppConsentNote =. reasonClean
       , ME.WhatsAppConsentConsentedAt =. Nothing
       , ME.WhatsAppConsentRevokedAt =. Just now
-      , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
       , ME.WhatsAppConsentUpdatedAt =. now
       ]
+    CampaignAutomation.settleWhatsAppWithdrawalInstant phoneVal
     pure (maybe False (ME.whatsAppConsentConsent . entityVal) existing)
   when wasActive $
     sendWhatsAppConsentNotice now phoneVal Nothing "opt_out_confirmation"
@@ -1805,47 +1905,74 @@ recordWhatsAppConsentNotice now phoneVal nameClean source message result =
       result
 
 -- | Claims the right to send one confirmation request: at most once per number
--- per resend interval, never for an active consent. One conditional update, so
--- concurrent submissions cannot both claim.
+-- per resend interval unless the previous request was not accepted by the
+-- provider, never for an active consent. One conditional update, so concurrent
+-- submissions cannot both claim. Returns the request instant the send is bound to.
 claimWhatsAppConfirmationRequest
-  :: UTCTime -> Text -> Maybe Text -> Maybe Text -> SqlPersistT IO Bool
+  :: UTCTime -> Text -> Maybe Text -> Maybe Text -> SqlPersistT IO (Maybe UTCTime)
 claimWhatsAppConfirmationRequest now phoneVal nameClean sourceClean = do
-  _ <- insertUnique ME.WhatsAppConsent
-    { ME.whatsAppConsentPhoneE164 = phoneVal
-    , ME.whatsAppConsentDisplayName = nameClean
-    , ME.whatsAppConsentConsent = False
-    , ME.whatsAppConsentSource = sourceClean
-    , ME.whatsAppConsentNote = Just "pending_confirmation"
-    , ME.whatsAppConsentConsentedAt = Nothing
-    , ME.whatsAppConsentRevokedAt = Nothing
-    , ME.whatsAppConsentConfirmationRequestedAt = Nothing
-    , ME.whatsAppConsentCreatedAt = now
-    , ME.whatsAppConsentUpdatedAt = now
-    }
-  changed <- updateWhereCount
-    ( [ ME.WhatsAppConsentPhoneE164 ==. phoneVal
-      , ME.WhatsAppConsentConsent ==. False
-      ]
-      ++ ( [ME.WhatsAppConsentConfirmationRequestedAt ==. Nothing]
-           ||. [ME.WhatsAppConsentConfirmationRequestedAt <. Just (addUTCTime (negate whatsAppConfirmationResendInterval) now)] )
-    )
-    [ ME.WhatsAppConsentConfirmationRequestedAt =. Just now
-    , ME.WhatsAppConsentDisplayName =. nameClean
-    , ME.WhatsAppConsentSource =. sourceClean
-    , ME.WhatsAppConsentNote =. Just "pending_confirmation"
-    , ME.WhatsAppConsentUpdatedAt =. now
+  -- Simultaneous first requests for a number must not fail on its unique row.
+  rawExecute
+    "INSERT INTO whats_app_consent (phone_e164, display_name, consent, source, note, created_at, updated_at) \
+    \VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING"
+    [ toPersistValue phoneVal
+    , toPersistValue nameClean
+    , toPersistValue False
+    , toPersistValue sourceClean
+    , toPersistValue whatsAppSentRequestNote
+    , toPersistValue now
+    , toPersistValue now
     ]
-  pure (changed == 1)
+  -- A withdrawal keeps the request instant, so withdrawing cannot reopen the
+  -- interval. An undelivered, unwithdrawn request may be sent again only inside
+  -- its short window and keeps its instant, so retries cannot extend the time
+  -- in which a number that saw no prompt could confirm.
+  let intervalStart = addUTCTime (negate whatsAppConfirmationResendInterval) now
+  changed <- rawExecuteCount
+    "UPDATE whats_app_consent \
+    \SET confirmation_requested_at = CASE \
+    \WHEN confirmation_requested_at IS NULL OR confirmation_requested_at < ? THEN ? \
+    \ELSE confirmation_requested_at END, \
+    \display_name = ?, source = ?, note = ?, updated_at = ? \
+    \WHERE phone_e164 = ? AND NOT consent \
+    \AND (confirmation_requested_at IS NULL OR confirmation_requested_at < ? \
+    \OR (note = ? AND confirmation_requested_at >= ? \
+    \AND (revoked_at IS NULL OR revoked_at < confirmation_requested_at)))"
+    [ toPersistValue intervalStart
+    , toPersistValue now
+    , toPersistValue nameClean
+    , toPersistValue sourceClean
+    , toPersistValue whatsAppSentRequestNote
+    , toPersistValue now
+    , toPersistValue phoneVal
+    , toPersistValue intervalStart
+    , toPersistValue whatsAppUnsentRequestNote
+    , toPersistValue (addUTCTime (negate whatsAppUnsentConfirmationWindow) now)
+    ]
+  if changed /= 1
+    then pure Nothing
+    else fmap (>>= ME.whatsAppConsentConfirmationRequestedAt . entityVal)
+           (getBy (ME.UniqueWhatsAppConsent phoneVal))
 
--- | Undoes a claim whose request was not accepted by the provider.
-releaseWhatsAppConfirmationClaim :: UTCTime -> Text -> SqlPersistT IO ()
-releaseWhatsAppConfirmationClaim claimedAt phoneVal =
+-- | Records that the provider did not accept this exact claim's request. The
+-- request stays pending so the number can confirm it by messaging first, but
+-- only briefly, and it no longer blocks a new request. A later claim or a
+-- withdrawal is left untouched.
+markWhatsAppConfirmationRequestUnsent :: UTCTime -> Text -> SqlPersistT IO ()
+markWhatsAppConfirmationRequestUnsent claimedAt phoneVal =
   updateWhere
     [ ME.WhatsAppConsentPhoneE164 ==. phoneVal
     , ME.WhatsAppConsentConsent ==. False
     , ME.WhatsAppConsentConfirmationRequestedAt ==. Just claimedAt
+    , ME.WhatsAppConsentNote ==. Just whatsAppSentRequestNote
     ]
-    [ME.WhatsAppConsentConfirmationRequestedAt =. Nothing]
+    [ME.WhatsAppConsentNote =. Just whatsAppUnsentRequestNote]
+
+whatsAppSentRequestNote :: Text
+whatsAppSentRequestNote = "pending_confirmation"
+
+whatsAppUnsentRequestNote :: Text
+whatsAppUnsentRequestNote = "pending_unsent"
 
 parseWhatsAppMessageTimestamp :: Maybe Text -> Maybe UTCTime
 parseWhatsAppMessageTimestamp rawTimestamp = do
@@ -1866,6 +1993,11 @@ whatsAppConfirmationResendInterval = 24 * 3600
 whatsAppConfirmationWindow :: NominalDiffTime
 whatsAppConfirmationWindow = 7 * 24 * 3600
 
+-- | The number never received a prompt for an unsent request, so only a reply
+-- made while the person is still completing the form may confirm it.
+whatsAppUnsentConfirmationWindow :: NominalDiffTime
+whatsAppUnsentConfirmationWindow = 3600
+
 isWhatsAppConsentConfirmationMessage :: Text -> Bool
 isWhatsAppConsentConfirmationMessage rawMessage =
   normalized `elem` ["si", "sí", "yes", "acepto", "confirmo"]
@@ -1873,24 +2005,31 @@ isWhatsAppConsentConfirmationMessage rawMessage =
     normalized = T.toCaseFold (T.dropAround (not . isAlphaNum) (T.strip rawMessage))
 
 -- | Activates consent only for a pending request on the replying number that is
--- inside the confirmation window and was created no later than the reply itself.
--- One conditional update: a concurrent opt-out that clears the request wins, and
--- a delayed or replayed earlier reply cannot confirm a newer request.
+-- inside its confirmation window (shorter when the request was never delivered),
+-- was created no later than the reply itself and has not been withdrawn since.
+-- One conditional update: a concurrent opt-out wins, and a delayed or replayed
+-- earlier reply cannot confirm a newer request. The request instant is kept so
+-- the per-number interval still applies after a confirmation or a withdrawal.
 applyWhatsAppConsentConfirmation :: UTCTime -> Maybe UTCTime -> Text -> SqlPersistT IO Bool
 applyWhatsAppConsentConfirmation _ Nothing _ = pure False
 applyWhatsAppConsentConfirmation now (Just sentAt) senderPhone = do
-  changed <- updateWhereCount
-    [ ME.WhatsAppConsentPhoneE164 ==. senderPhone
-    , ME.WhatsAppConsentConsent ==. False
-    , ME.WhatsAppConsentConfirmationRequestedAt >=. Just (addUTCTime (negate whatsAppConfirmationWindow) now)
-    , ME.WhatsAppConsentConfirmationRequestedAt <=. Just sentAt
-    ]
-    [ ME.WhatsAppConsentConsent =. True
-    , ME.WhatsAppConsentConsentedAt =. Just now
-    , ME.WhatsAppConsentRevokedAt =. Nothing
-    , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
-    , ME.WhatsAppConsentNote =. Just "confirmed_by_reply"
-    , ME.WhatsAppConsentUpdatedAt =. now
+  changed <- rawExecuteCount
+    "UPDATE whats_app_consent \
+    \SET consent = ?, consented_at = ?, revoked_at = NULL, note = ?, updated_at = ? \
+    \WHERE phone_e164 = ? AND NOT consent \
+    \AND confirmation_requested_at <= ? \
+    \AND (revoked_at IS NULL OR revoked_at < confirmation_requested_at) \
+    \AND ((note = ? AND confirmation_requested_at >= ?) OR (note = ? AND confirmation_requested_at >= ?))"
+    [ toPersistValue True
+    , toPersistValue now
+    , toPersistValue ("confirmed_by_reply" :: Text)
+    , toPersistValue now
+    , toPersistValue senderPhone
+    , toPersistValue sentAt
+    , toPersistValue whatsAppSentRequestNote
+    , toPersistValue (addUTCTime (negate whatsAppConfirmationWindow) now)
+    , toPersistValue whatsAppUnsentRequestNote
+    , toPersistValue (addUTCTime (negate whatsAppUnsentConfirmationWindow) now)
     ]
   pure (changed == 1)
 
@@ -1953,7 +2092,6 @@ whatsappConsentRoutes defaultSource exposeDisplayName requireGate =
         , ME.WhatsAppConsentNote =. noteClean
         , ME.WhatsAppConsentConsentedAt =. Just now
         , ME.WhatsAppConsentRevokedAt =. Nothing
-        , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
         , ME.WhatsAppConsentUpdatedAt =. now
         ]
       getBy (ME.UniqueWhatsAppConsent phoneVal)
@@ -1979,9 +2117,9 @@ whatsappConsentRoutes defaultSource exposeDisplayName requireGate =
         , ME.WhatsAppConsentNote =. reasonClean
         , ME.WhatsAppConsentConsentedAt =. Nothing
         , ME.WhatsAppConsentRevokedAt =. Just now
-        , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
         , ME.WhatsAppConsentUpdatedAt =. now
         ]
+      CampaignAutomation.settleWhatsAppWithdrawalInstant phoneVal
       getBy (ME.UniqueWhatsAppConsent phoneVal)
 
     sendConsentMessage phoneVal nameClean = do
@@ -2739,63 +2877,51 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
         else do
           case channel of
             MetaInstagram ->
-              runDB $ do
-                _ <- upsert (InstagramMessage extId
-                              sid
-                              senderName
-                              (Just body)
-                              "incoming"
-                              Nothing
-                              Nothing
-                              Nothing
-                              Nothing
-                              (Just metadata)
-                              "pending"
-                              Nothing
-                              Nothing
-                              Nothing
-                              0
-                              Nothing
-                              Nothing
-                              Nothing
-                              Nothing
-                              createdAt)
-                     [ InstagramMessageSenderName =. senderName
-                     , InstagramMessageText =. Just body
-                     , InstagramMessageDirection =. "incoming"
-                     , InstagramMessageMetadata =. Just metadata
-                     , InstagramMessageReplyStatus =. "pending"
-                     ]
-                pure ()
+              -- A message already stored (delivered by webhook, or read by an
+              -- earlier backfill) is left as it is.
+              runDB $ ServerExtra.storeInstagramInboundOnce
+                (InstagramMessage extId
+                    sid
+                    senderName
+                    (Just body)
+                    "incoming"
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    (Just metadata)
+                    "pending"
+                    Nothing
+                    Nothing
+                    Nothing
+                    0
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    createdAt)
             MetaFacebook ->
-              runDB $ do
-                _ <- upsert (ME.FacebookMessage extId
-                              sid
-                              senderName
-                              (Just body)
-                              "incoming"
-                              Nothing
-                              Nothing
-                              Nothing
-                              Nothing
-                              (Just metadata)
-                              "pending"
-                              Nothing
-                              Nothing
-                              Nothing
-                              0
-                              Nothing
-                              Nothing
-                              Nothing
-                              Nothing
-                              createdAt)
-                     [ ME.FacebookMessageSenderName =. senderName
-                     , ME.FacebookMessageText =. Just body
-                     , ME.FacebookMessageDirection =. "incoming"
-                     , ME.FacebookMessageMetadata =. Just metadata
-                     , ME.FacebookMessageReplyStatus =. "pending"
-                     ]
-                pure ()
+              runDB $ ServerExtra.storeFacebookInboundOnce
+                (ME.FacebookMessage extId
+                    sid
+                    senderName
+                    (Just body)
+                    "incoming"
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    (Just metadata)
+                    "pending"
+                    Nothing
+                    Nothing
+                    Nothing
+                    0
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    createdAt)
           pure True
     _ -> pure False
 
@@ -5359,6 +5485,7 @@ productionCourseMetadataForStartDate cfg mWaContact slugVal startDate mTemplate 
       , syllabus = syllabus
       , whatsappCtaUrl = buildWhatsappCtaFor mWaContact titleVal landing
       , landingUrl = landing
+      , checkoutTerms = Nothing
       }
 
 firstSaturdayOfConfiguredProductionSlug :: Text -> Day
@@ -5661,6 +5788,7 @@ toCourseMetadata cfg waEnv course sessions syllabus =
       , syllabus = map toSyllabus syllabus
       , whatsappCtaUrl = whatsappUrl
       , landingUrl = landingUrlVal
+      , checkoutTerms = Nothing
       }
 
 buildLandingUrlFor :: AppConfig -> Text -> Text
@@ -14803,7 +14931,7 @@ buildRagMessages kb examples userMsg mChannel =
       systemIntro = T.intercalate "\n"
         [ "Eres un asistente de marketing de TDF Records."
         , "Responde en el idioma del usuario con un tono cálido y conciso."
-        , "Tu objetivo es ayudar al usuario y, cuando sea relevante, promocionar el Curso de Producción Musical (presencial, cuatro sábados, 16 horas en total, $150 USD, cupos limitados) con link: https://tdf-app.pages.dev/curso/produccion-musical-jun-2026"
+        , "Tu objetivo es ayudar al usuario y, cuando sea relevante, promocionar el Curso de Producción Musical (presencial, cuatro sábados, 16 horas en total, $150 USD, cupos limitados) con link: https://www.tdfrecords.net/curso/produccion-musical-jun-2026"
         , "REGLA CRÍTICA DE FORMATO: responde SOLO con una de estas dos formas:"
         , "1) SEND: <tu respuesta final para enviar al usuario>"
         , "2) HOLD: <por qué no puedes responder todavía>\\nNEED: <lista corta de datos que faltan>"

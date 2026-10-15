@@ -3,7 +3,7 @@ module TDF.TicketPaymentGateSpec (spec) where
 
 import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar, threadDelay)
 import Control.Exception (SomeException, try)
-import Control.Monad (void)
+import Control.Monad (forM_, void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Reader (ReaderT, runReaderT)
@@ -225,12 +225,15 @@ spec = describe "ticket-payment-gate-postgresql" $ do
           [PersistText (oCheckout order)]
         transfers `shouldBe` 0
 
-        -- An order PayPal still reports approved or pending can yet be captured.
-        paypalCaptureFailureCode (Just "APPROVED") `shouldBe` paypalCaptureFailureCode Nothing
-        paypalCaptureFailureCode (Just "PENDING") `shouldBe` paypalCaptureFailureCode Nothing
-        -- Only a status that rules a capture out settles it as a plain failure.
-        paypalCaptureFailureCode (Just "VOIDED") `shouldNotBe` paypalCaptureFailureCode Nothing
-        setFailureCode (paypalCaptureFailureCode (Just "VOIDED"))
+        -- Missing/ambiguous captures and refund evidence never mean no charge.
+        forM_ ["UNKNOWN", "PARTIALLY_REFUNDED", "REFUNDED", "PENDING", "VOIDED"] $ \status -> do
+          setFailureCode (paypalCaptureFailureCode (Just status))
+          runSqlPool (ticketCaptureUnverified checkout) pool `shouldReturn` True
+          view >>= (`shouldNotSatisfy` offersTransfer)
+          run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order)))
+            >>= (`shouldSatisfy` captureUnverified)
+        -- DECLINED is a nested capture status; VOIDED is an order status.
+        setFailureCode (paypalCaptureFailureCode (Just "DECLINED"))
         runSqlPool (ticketUnverifiedCaptureRefusal checkout) pool `shouldReturn` Nothing
         view >>= (`shouldSatisfy` offersTransfer)
         selected <- run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order)))

@@ -1114,16 +1114,14 @@ ticketPaymentMethodsOffered :: UTCTime -> Text -> UTCTime -> Bool -> Bool
 ticketPaymentMethodsOffered now status holdExpiresAt salesOpen =
   ticketCheckoutAwaitsPayment status && holdExpiresAt > now && salesOpen
 
--- | Failure code for a PayPal capture request that errored, given the status of
--- the provider order read back afterwards ('Nothing' when the readback failed
--- too). Without a readback, or while PayPal still reports the order approved or
--- pending, the capture may yet be taken, so it is recorded as unverified. Any
--- other status is PayPal's definite answer that no capture is under way.
+-- | Classify the nested capture status, never the enclosing order status.
+-- Only an explicit declined/failed capture establishes no charge. Missing,
+-- ambiguous or unknown captures, and refund evidence, require reconciliation.
+-- Completed captures follow the existing binding and money validation path.
 paypalCaptureFailureCode :: Maybe Text -> Text
-paypalCaptureFailureCode Nothing = paypalCaptureUnverifiedCode
-paypalCaptureFailureCode (Just status)
-  | status == "APPROVED" || status == "PENDING" = paypalCaptureUnverifiedCode
-  | otherwise = "paypal_capture_request"
+paypalCaptureFailureCode (Just "DECLINED") = "paypal_capture_request"
+paypalCaptureFailureCode (Just "FAILED") = "paypal_capture_request"
+paypalCaptureFailureCode _ = paypalCaptureUnverifiedCode
 
 paypalCaptureUnverifiedCode :: Text
 paypalCaptureUnverifiedCode = "paypal_capture_unverified"
@@ -1674,10 +1672,14 @@ capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request =
         "PENDING" -> runDB $ Checkout.recordPaymentProcessing
           (tpcCheckout context) attempt Checkout.ProviderPayPal
           (ticketPaymentCorrelationId context Checkout.ProviderPayPal "capture") now
-        providerStatus -> runDB $ Checkout.recordPaymentFailure
-          (tpcCheckout context) attempt Checkout.ProviderPayPal
-          ("paypal_" <> T.toLower providerStatus)
-          (ticketPaymentCorrelationId context Checkout.ProviderPayPal "capture") now
+        providerStatus -> do
+          let classified = paypalCaptureFailureCode (Just providerStatus)
+              failureCode
+                | classified == paypalCaptureUnverifiedCode = classified
+                | otherwise = "paypal_" <> T.toLower providerStatus
+          runDB $ Checkout.recordPaymentFailure
+            (tpcCheckout context) attempt Checkout.ProviderPayPal failureCode
+            (ticketPaymentCorrelationId context Checkout.ProviderPayPal "capture") now
       loadTicketCheckoutDTO (tpcOrderKey context) Nothing
 
 finalizeVerifiedTicketOrder :: TicketPaymentContext -> AppM ()

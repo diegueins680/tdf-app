@@ -8,7 +8,7 @@ Versión 1.1 | Julio 2026
 ## 📋 Tabla de Contenidos
 
 1. [Introducción](#introducción)
-2. [Cómo llegar a Eventos sociales](#cómo-llegar-a-eventos-sociales)
+2. [Cómo llegar a Eventos](#cómo-llegar-a-eventos)
 3. [Crear un evento](#crear-un-evento)
 4. [Crear tickets (tiers)](#crear-tickets-tiers)
 5. [Guía para vender tickets (organizador)](#guía-para-vender-tickets-organizador)
@@ -17,14 +17,9 @@ Versión 1.1 | Julio 2026
 8. [Reembolsos y cancelaciones](#reembolsos-y-cancelaciones)
 9. [Preguntas frecuentes](#preguntas-frecuentes)
 
-> **Nota sobre el estado del módulo**
-> El módulo de **Eventos sociales** está marcado como **Beta**. Las pantallas y los botones descritos aquí son los actuales; algunas funciones pueden seguir evolucionando.
-
----
-
 ## Introducción
 
-El módulo **Eventos sociales** permite organizar fiestas, conciertos, festivales y showcases, y gestionar su venta de tickets de principio a fin:
+El módulo **Eventos** permite organizar fiestas, conciertos, festivales y showcases, y gestionar su venta de tickets de principio a fin:
 
 - **Organizadores** crean el evento, definen los tipos de ticket (*tiers*), venden, hacen check-in y gestionan reembolsos.
 - **Asistentes** navegan eventos próximos en la app, compran en un checkout dedicado y conservan el QR en **Mis entradas**; también reciben una confirmación por correo.
@@ -40,17 +35,17 @@ Hay dos roles principales en este manual:
 
 ---
 
-## Cómo llegar a Eventos sociales
+## Cómo llegar a Eventos
 
 1. Inicie sesión en TDF Records.
 2. En el menú lateral abra la sección **Social**.
-3. Haga clic en **Eventos sociales**.
+3. Haga clic en **Eventos**.
 
 La ruta directa es **`/social/eventos`**.
 
 > Si ve el mensaje **"Inicia sesión para crear eventos."**, primero debe autenticarse.
 
-En la parte superior verá el título **Eventos sociales** (con la etiqueta **Beta**) y debajo el **Calendario de eventos**, donde los eventos aparecen agrupados por fecha.
+En la parte superior verá el título **Eventos** y debajo el **Calendario de eventos**, donde los eventos aparecen agrupados por fecha.
 
 ---
 
@@ -58,7 +53,7 @@ En la parte superior verá el título **Eventos sociales** (con la etiqueta **Be
 
 > Solo usuarios con sesión iniciada pueden crear eventos. El usuario que lo crea queda como **organizador**.
 
-1. En la página **Eventos sociales**, abra el formulario de nuevo evento.
+1. En la página **Eventos**, abra el formulario de nuevo evento.
 2. Complete los campos:
 
 | Campo | Descripción |
