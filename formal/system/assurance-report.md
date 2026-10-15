@@ -22,6 +22,15 @@ it is expressly not release approval. Output directories must not already exist
 and must resolve outside the source checkout, including through symlinks. This
 keeps generated evidence from changing the checkout's own dirty-state fingerprint.
 
+If the registered source set cannot be fingerprinted, the reporter preserves an
+UNPROVEN report with a null revision/digest and the failure reason; it does not
+invent source identity or start proof producers. Source loss during execution
+invalidates all claims. CI archives the report immediately after generation,
+before checker installation or subsequent tests. Explicit step budgets fit
+inside the larger job budget; if generation itself is terminated, a separately
+initialized fallback records BLOCKED/incomplete execution. It is not a proof
+report. Platform cancellation or runner loss can still prevent artifact upload.
+
 `report.json` is the generated obligation/traceability matrix; `report.md` renders
 it. `sources.json` hashes every registered implementation, model and test and the
 report's direct dependencies, binding a dirty working tree explicitly to both its

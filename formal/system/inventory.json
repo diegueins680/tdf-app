@@ -2636,7 +2636,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "a4aa1386f2eed30a5fdf15e43804c3a7d7d6621add4c1e7d52d59bf16e52169e",
+      "sha256": "9d89714e5405826e72d4539c472653b5cbe5bea4f66b35b9305fe3c1658f83a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5654,7 +5654,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "7d5cc2790447231cc8e0fbfe35db445fc31e7485df9e4ed03e4ce120545ac2c1",
+      "sha256": "7ba722d75adef3bf69f80f74836a13abb1676176c37681ec2ec8eb711975e144",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5714,7 +5714,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "a50488742ef8719a32fc64a4bac93d532db5a010ae0f9160857d2cb869a8462a",
+      "sha256": "13e8db85804298706e040230162b98356ca303ec4eed74b09e2d813d939a9118",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24581,7 +24581,7 @@
     },
     {
       "path": "formal/system/assurance-report.md",
-      "sha256": "f430a4799af2be718c7dd19c173c14f7cbc9ecc362325f2fba8ba4e09837120b",
+      "sha256": "e4fb7513ba03215c20490c12aee423297f4b9f82495d5c3c12c31dc0e448387a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

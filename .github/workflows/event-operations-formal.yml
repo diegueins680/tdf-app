@@ -18,9 +18,11 @@ concurrency:
 jobs:
   specification-contracts:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Step budgets leave time to archive failed or incomplete verification.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
+        timeout-minutes: 3
         env:
           GIT_CONFIG_COUNT: '1'
           GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
@@ -28,16 +30,21 @@ jobs:
         with:
           submodules: recursive
       - uses: actions/setup-node@v7
+        timeout-minutes: 3
         with:
           node-version: "22"
       - uses: actions/setup-python@v6
+        timeout-minutes: 3
         with:
           python-version: "3.13"
       - name: Initialize arithmetic execution receipt
+        timeout-minutes: 1
         run: |
           mkdir "${{ runner.temp }}/payment-proof"
           printf '%s\n' '{"status":"not-executed","reason":"Prerequisite checks or installation have not completed"}' > "${{ runner.temp }}/payment-proof/result.json"
+          printf '%s\n' '{"execution":{"passed":false},"release":{"decision":"BLOCKED","executionAllowed":false},"reason":"Fallback only when report.json is unavailable; inspect failed/timed-out prerequisite and generation steps"}' > "${{ runner.temp }}/assurance-fallback.json"
       - name: Check specification inventory and evidence admission
+        timeout-minutes: 5
         run: |
           python -m pip install -r formal/system/requirements-verification.txt
           python scripts/specification-inventory.py --check
@@ -51,27 +58,43 @@ jobs:
           python scripts/test-state-machines.py --static
           node --test scripts/__tests__/verification-evidence.test.mjs scripts/__tests__/legacy-escrow-contract.test.mjs
       - name: Verify actual payment arithmetic and negative controls
+        timeout-minutes: 5
         run: |
           python scripts/verify-payment-arithmetic.py > "${{ runner.temp }}/payment-proof/solver-output.json"
           mv "${{ runner.temp }}/payment-proof/solver-output.json" "${{ runner.temp }}/payment-proof/result.json"
           python scripts/test-payment-arithmetic-verifier.py
       - name: Generate formal assurance and release decision
         if: ${{ !cancelled() }}
+        timeout-minutes: 15
         run: python scripts/verification-report.py --output "${{ runner.temp }}/assurance-report"
+      - name: Preserve formal assurance report
+        if: always()
+        uses: actions/upload-artifact@v7
+        timeout-minutes: 3
+        with:
+          name: assurance-report-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/assurance-report
+            ${{ runner.temp }}/assurance-fallback.json
+          if-no-files-found: error
       - name: Test assurance reporting and counterexample retention
+        timeout-minutes: 10
         run: |
           python scripts/test-verification-report.py
           python scripts/test-auth-predicates.py
           python scripts/test-recovery-expiry-verifier.py
       - name: Build pinned independent proof checker
+        timeout-minutes: 8
         run: python scripts/install-proof-checkers.py --output "${{ runner.temp }}/proof-checkers"
       - name: Independently check SMT inputs and CPC refutations
+        timeout-minutes: 15
         run: |
           PROOF_CHECKER_TOOLS="${{ runner.temp }}/proof-checkers" python scripts/test-proof-certificates.py
           python scripts/verify-proof-certificates.py --report "${{ runner.temp }}/assurance-report" --tools "${{ runner.temp }}/proof-checkers" --output "${{ runner.temp }}/proof-certificates"
       - name: Preserve independent proof evidence
         if: always()
         uses: actions/upload-artifact@v7
+        timeout-minutes: 3
         with:
           name: proof-certificates-${{ github.sha }}-${{ github.run_attempt }}
           path: |
@@ -79,17 +102,10 @@ jobs:
             ${{ runner.temp }}/proof-checkers/installation.json
             ${{ runner.temp }}/proof-checkers/build.log
           if-no-files-found: warn
-      - name: Preserve formal assurance report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: assurance-report-${{ github.sha }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/assurance-report
-          if-no-files-found: warn
-
       - name: Preserve solver result
         if: always()
         uses: actions/upload-artifact@v7
+        timeout-minutes: 3
         with:
           name: payment-proof-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/payment-proof

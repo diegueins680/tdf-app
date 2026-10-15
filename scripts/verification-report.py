@@ -184,7 +184,9 @@ def render(report):
     for row in report['requirements']:
         lines.append(f"| {row['requirementId']} | {row['risk']} | {row['status']} | Both UNPROVEN |")
     lines += ['', '## Release decision', '', report['release']['reason'], '',
-              'No critical UNPROVEN obligation is accepted. The JSON enumerates every critical blocker.', '',
+              ('Requirement enumeration is unavailable; no proof or risk acceptance is admitted.'
+               if report['metrics'].get('requirementInventoryAvailable') is False else
+               'No critical UNPROVEN obligation is accepted. The JSON enumerates every critical blocker.'), '',
               'SMT files are replayable solver inputs, not independently checked proof certificates. The solver and source translation remain trusted.', '',
               'See `formal/system/assurance-report.md` for architecture, TCB, counterexamples, CI, limitations and continuation steps.', '']
     return '\n'.join(lines)
@@ -276,15 +278,56 @@ def admit_receipt(name, directory, receipt, provenance, exit_code):
             'error': receipt.get('error') or (None if passed else 'Producer or consumer replay failed')}
 
 
+def finish_report(out, report, started, ok, reason, require_release, receipts=None):
+    receipts = receipts or {}
+    report.update({'startedAt': started, 'finishedAt': datetime.now(timezone.utc).isoformat(),
+                   'execution': {'passed': ok, 'reason': reason, 'python': sys.version},
+                   'supportingAlgebraLemmas': receipts.get('authorization', {}).get('supportingLemmas', []),
+                   'evidenceHashes': {p.relative_to(out).as_posix(): sha(p.read_bytes())
+                                      for p in sorted(out.rglob('*')) if p.is_file()}})
+    (out/'report.json').write_text(json.dumps(report, indent=2) + '\n')
+    (out/'report.md').write_text(render(report))
+    print(json.dumps({'output': str(out), 'executionPassed': ok, 'release': report['release']['decision'],
+                      'metrics': report['metrics']}))
+    return 1 if not ok else (2 if require_release and report['release']['decision'] != 'READY' else 0)
+
+
 def run(out, require_release):
     out = out.resolve()
     if out.is_relative_to(ROOT.resolve()):
         raise ValueError('Output directory must be outside the source checkout')
     out.mkdir()  # Exclusive output; a previous run can never supply missing evidence.
-    requirements = json.loads((ROOT/'formal/system/requirements.json').read_text())['requirements']
-    before = fingerprint(requirements)
-    (out/'sources.json').write_text(json.dumps(before, indent=2) + '\n')
     started = datetime.now(timezone.utc).isoformat()
+    requirements = None
+    try:
+        requirements = json.loads((ROOT/'formal/system/requirements.json').read_text())['requirements']
+        before = fingerprint(requirements)
+    except Exception as error:
+        reason = 'Source fingerprint unavailable: ' + str(error)
+        before = {'revision': None, 'digest': None, 'worktreeDirty': None,
+                  'files': {}, 'available': False, 'error': reason}
+        (out/'sources.json').write_text(json.dumps(before, indent=2) + '\n')
+        if requirements is None:
+            report = {'schemaVersion': 1, 'provenance': before,
+                      'scope': 'UNPROVEN: requirement inventory unavailable; counts and obligations cannot be enumerated.',
+                      'requirements': [], 'obligations': [],
+                      'metrics': {'requirementInventoryAvailable': False,
+                                  'requirements': {status: None for status in STATUSES},
+                                  'obligationsByCategory': {}},
+                      'release': {'decision': 'BLOCKED', 'executionAllowed': False,
+                                  'criticalUnprovenRequirements': None, 'acceptedRisks': [],
+                                  'reason': reason}}
+        else:
+            report = build_report(requirements, before, False, reason)
+        return finish_report(out, report, started, False, reason, require_release)
+    (out/'sources.json').write_text(json.dumps(before, indent=2) + '\n')
+
+    def sources_unchanged():
+        try:
+            return fingerprint(requirements) == before
+        except Exception:
+            return False
+
     ok, reason = False, 'Verification not completed'
     try:
         commands = ([sys.executable, 'scripts/verify-payment-arithmetic.py', '--output', str(out/'arithmetic')],
@@ -308,7 +351,7 @@ def run(out, require_release):
         reason = str(error)
     refuted = []
     arithmetic_path = out/'arithmetic/result.json'
-    if not ok and arithmetic_path.is_file() and fingerprint(requirements) == before:
+    if not ok and arithmetic_path.is_file() and sources_unchanged():
         try:
             failed = json.loads(arithmetic_path.read_text())
             replay = replay_smt(out/'arithmetic', failed.get('artifacts', []),
@@ -335,21 +378,12 @@ def run(out, require_release):
         except Exception as error:
             reason += '; ' + name + ' incomplete: ' + str(error)
         runs.append(passed)
-    if fingerprint(requirements) != before:
+    if not sources_unchanged():
         ok, receipts, refuted = False, {}, []
-        reason = 'Sources changed during verification; all claims stale'
+        reason = 'Sources changed or became unreadable during verification; all claims stale'
     report = build_report(requirements, before, ok, reason, refuted, **receipts)
     ok = ok and all(runs)
-    report.update({'startedAt': started, 'finishedAt': datetime.now(timezone.utc).isoformat(),
-                   'execution': {'passed': ok, 'reason': reason, 'python': sys.version},
-                   'supportingAlgebraLemmas': receipts.get('authorization', {}).get('supportingLemmas', []),
-                   'evidenceHashes': {p.relative_to(out).as_posix(): sha(p.read_bytes())
-                                      for p in sorted(out.rglob('*')) if p.is_file()}})
-    (out/'report.json').write_text(json.dumps(report, indent=2) + '\n')
-    (out/'report.md').write_text(render(report))
-    print(json.dumps({'output': str(out), 'executionPassed': ok, 'release': report['release']['decision'],
-                      'metrics': report['metrics']}))
-    return 1 if not ok else (2 if require_release and report['release']['decision'] != 'READY' else 0)
+    return finish_report(out, report, started, ok, reason, require_release, receipts)
 
 
 if __name__ == '__main__':

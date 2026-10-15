@@ -9931,7 +9931,7 @@
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci.yml": "bd53987b42af93029c3f3b71ccfe800bf631678b7c299eb078834a60e3a5c0b3",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "a4aa1386f2eed30a5fdf15e43804c3a7d7d6621add4c1e7d52d59bf16e52169e",
+    ".github/workflows/event-operations-formal.yml": "9d89714e5405826e72d4539c472653b5cbe5bea4f66b35b9305fe3c1658f83a8",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -10321,13 +10321,13 @@
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
-    "scripts/test-verification-report.py": "7d5cc2790447231cc8e0fbfe35db445fc31e7485df9e4ed03e4ce120545ac2c1",
+    "scripts/test-verification-report.py": "7ba722d75adef3bf69f80f74836a13abb1676176c37681ec2ec8eb711975e144",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
-    "scripts/verification-report.py": "a50488742ef8719a32fc64a4bac93d532db5a010ae0f9160857d2cb869a8462a",
+    "scripts/verification-report.py": "13e8db85804298706e040230162b98356ca303ec4eed74b09e2d813d939a9118",
     "scripts/verify-auth-predicates.py": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
@@ -18746,7 +18746,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "a4aa1386f2eed30a5fdf15e43804c3a7d7d6621add4c1e7d52d59bf16e52169e",
+      "sha256": "9d89714e5405826e72d4539c472653b5cbe5bea4f66b35b9305fe3c1658f83a8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23953,7 +23953,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "7d5cc2790447231cc8e0fbfe35db445fc31e7485df9e4ed03e4ce120545ac2c1",
+      "sha256": "7ba722d75adef3bf69f80f74836a13abb1676176c37681ec2ec8eb711975e144",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24061,7 +24061,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "a50488742ef8719a32fc64a4bac93d532db5a010ae0f9160857d2cb869a8462a",
+      "sha256": "13e8db85804298706e040230162b98356ca303ec4eed74b09e2d813d939a9118",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

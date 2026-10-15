@@ -194,6 +194,53 @@ class AssuranceTests(unittest.TestCase):
                         report.run(out, False)
             self.assertEqual(list(root.iterdir()), [])
 
+    def test_unreadable_sources_preserve_an_unproven_report_without_running_solvers(self):
+        errors = [FileNotFoundError('mapped Mobile source missing'),
+                  PermissionError('mapped source unreadable'),
+                  subprocess.CalledProcessError(128, ['git', 'rev-parse', 'HEAD'])]
+        for error in errors:
+            with self.subTest(error=error), tempfile.TemporaryDirectory() as tmp:
+                out = Path(tmp)/'report'
+                with patch.object(report, 'fingerprint', side_effect=error), \
+                     patch.object(report.subprocess, 'run') as execute:
+                    self.assertEqual(report.run(out, True), 1)
+                execute.assert_not_called()
+                saved = json.loads((out/'report.json').read_text())
+                self.assertFalse(saved['execution']['passed'])
+                self.assertIsNone(saved['provenance']['revision'])
+                self.assertIsNone(saved['provenance']['digest'])
+                self.assertEqual(saved['release']['decision'], 'BLOCKED')
+                self.assertTrue(all(o['status'] == 'UNPROVEN' for o in saved['obligations']))
+                self.assertTrue((out/'report.md').is_file())
+
+    def test_source_loss_after_execution_invalidates_claims_and_keeps_report(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)/'report'
+            with patch.object(report, 'fingerprint', side_effect=[
+                    self.provenance, FileNotFoundError('source disappeared')]), \
+                 patch.object(report.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1)):
+                self.assertEqual(report.run(out, True), 1)
+            saved = json.loads((out/'report.json').read_text())
+            self.assertFalse(saved['execution']['passed'])
+            self.assertIn('unreadable', saved['execution']['reason'])
+            self.assertTrue(all(o['status'] == 'UNPROVEN' for o in saved['obligations']))
+
+    def test_missing_requirement_register_does_not_report_zero_obligations(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)/'source'
+            root.mkdir()
+            out = Path(tmp)/'report'
+            with patch.object(report, 'ROOT', root), \
+                 patch.object(report.subprocess, 'run') as execute:
+                self.assertEqual(report.run(out, True), 1)
+            execute.assert_not_called()
+            saved = json.loads((out/'report.json').read_text())
+            self.assertFalse(saved['metrics']['requirementInventoryAvailable'])
+            self.assertTrue(all(n is None for n in saved['metrics']['requirements'].values()))
+            self.assertIsNone(saved['release']['criticalUnprovenRequirements'])
+            self.assertFalse(saved['release']['executionAllowed'])
+            self.assertTrue((out/'report.md').is_file())
+
     def test_replay_rejects_self_consistent_relabelled_proof_formulas(self):
         # A producer regression emits a satisfiable safety/admission formula and
         # labels it SAT. Replaying against that self-declared expectation passed
