@@ -7,6 +7,9 @@
 --   * events whose document already carries the alias's genre id (an alias
 --     moved to another genre, or removed).
 -- Aliases of other catalog entities (professions, ...) are ignored.
+-- Alias edits made before this trigger existed left documents stale, so the
+-- migration reindexes events once (idempotent; unchanged documents keep their
+-- version).
 -- Rollback: 2026-10-14_directory_event_search_alias_sync_rollback.sql, which
 -- must run before rolling back the 2026-10-09 event search sync.
 BEGIN;
@@ -60,5 +63,16 @@ CREATE CONSTRAINT TRIGGER trg_directory_sync_alias_events_search
   AFTER INSERT OR UPDATE OR DELETE ON catalog_search_alias
   DEFERRABLE INITIALLY DEFERRED
   FOR EACH ROW EXECUTE FUNCTION directory_sync_alias_events_search_trigger();
+
+-- Repair: reindex events from the same projection. Events that already
+-- existed are not new results, so saved-search alerts stay off while their
+-- documents are written (until this transaction ends). The sync lock comes
+-- first, the order every concurrent sync uses (advisory lock, then the
+-- documents), so this cannot deadlock with a write that commits meanwhile.
+SELECT directory_search_sync_lock();
+ALTER TABLE directory_search_document DISABLE TRIGGER directory_search_alert_trigger;
+-- The reported counts are the repair's audit record in the migration log.
+SELECT * FROM directory_event_search_reindex();
+ALTER TABLE directory_search_document ENABLE TRIGGER directory_search_alert_trigger;
 
 COMMIT;
