@@ -10008,10 +10008,16 @@
         "e2e/web/records-thumbnails.spec.mjs",
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
         "playwright.discovery.config.mjs",
-        "tdf-hq-ui/src/api/directory.test.ts"
+        "tdf-hq-ui/src/api/directory.test.ts",
+        "scripts/test-music-directory-migration.sh"
       ],
-      "formalModels": [],
-      "verification": "Real PostgreSQL SQL cases, Jest component regressions, Playwright browser integration; no formal proof claimed.",
+      "formalModels": [
+        "formal/event-operations/DiscoveryFallbackPrivacy.tla",
+        "formal/event-operations/DiscoveryFallbackPrivacy.cfg",
+        "formal/event-operations/DiscoveryFallbackPrivacyPrivateSubject.cfg",
+        "formal/event-operations/DiscoveryFallbackPrivacyIgnoredLink.cfg"
+      ],
+      "verification": "Real PostgreSQL SQL cases, Jest component regressions, Playwright browser integration; no formal proof claimed. Finite fallback-privacy model plus two expected counterexamples; actual SQL subject/link suppression negative controls. No general SQL refinement or cache revocation proof.",
       "evidence": "Local validation recorded in delivery report; hosted and production verification pending.",
       "status": "specified and implemented",
       "openQuestions": [

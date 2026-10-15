@@ -27,11 +27,12 @@ sql = expression('searchSql')
 fixture = """
 BEGIN;
 INSERT INTO party(id,display_name,is_org,created_at) VALUES
-(990001,'Lúna',false,now()),(990002,'Luna Extended',false,now()),(990003,'Hidden Luna',false,now()),(990004,'Fixture Banda',true,now()),(990005,'Fixture Proyecto',true,now()),(990006,'Ana',false,now());
+(990001,'Lúna',false,now()),(990002,'Luna Extended',false,now()),(990003,'Hidden Luna',false,now()),(990004,'Fixture Banda',true,now()),(990005,'Fixture Proyecto',true,now()),(990006,'Ana',false,now()),(990007,'Linked Hidden Luna',false,now());
 INSERT INTO artist_profile(artist_party_id,slug,bio,city,created_at) VALUES
 (990001,'luna-fixture','Ambient music project','Quito',now()),
 (990002,'luna-extended-fixture','Music','Quito',now()),
-(990003,'hidden-luna-fixture','Private directory identity','Quito',now());
+(990003,'hidden-luna-fixture','Private directory identity','Quito',now()),
+(990007,'linked-hidden-luna-fixture','Private legacy link identity','Quito',now());
 INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,profile_status,visibility,moderation_status)
 VALUES ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',990003,'artist','Hidden Luna','private-luna-fixture','draft','private','allowed'),
 ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',990002,'artist','Luna Extended','canonical-luna-fixture','published','public','allowed');
@@ -39,6 +40,9 @@ INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,
 ('cccccccc-cccc-4ccc-8ccc-cccccccccccc',990004,'band','Fixture Banda','fixture-banda','published','public','allowed'),
 ('dddddddd-dddd-4ddd-8ddd-dddddddddddd',990005,'project','Fixture Proyecto','fixture-proyecto','published','public','allowed');
 INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,bio,profile_status,visibility,moderation_status) VALUES ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',990006,'artist','Ana','ana-fixture','productor','published','public','allowed');
+INSERT INTO directory_legacy_link(profile_id,legacy_kind,legacy_id,source_table)
+SELECT 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','artist_profile',id::text,'artist_profile'
+FROM artist_profile WHERE artist_party_id=990007;
 SELECT directory_refresh_profile_search(id) FROM directory_profile WHERE subject_party_id BETWEEN 990002 AND 990006;
 """
 
@@ -62,8 +66,9 @@ for value in ['luna', 'LÚNA', '  lúNa  ', 'lun']:
     assert any(row['title'] == 'Lúna' for row in rows), rows
     if value != 'lun': assert rows[0]['title'] == 'Lúna', rows
     assert not any(row['id'] == 'artist-990003' for row in rows), rows
+    assert not any(row['id'] == 'artist-990007' for row in rows), rows
     assert next(row for row in rows if row['title'] == 'Lúna')['canonicalPath'] == '/artista/990001'
-print('PASS: case/accent/whitespace/partial matching; exact before prefix; canonical identity; private fallback denied')
+print('PASS: case/accent/whitespace/partial matching; exact before prefix; canonical identity; private subject and legacy-link fallback denied')
 assert not query("'; DROP TABLE party; --", 'artist')
 assert not query('zzzxqqv999', 'artist')
 assert not query('Luna', 'event')

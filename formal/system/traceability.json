@@ -10009,10 +10009,16 @@
         "e2e/web/records-thumbnails.spec.mjs",
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
         "playwright.discovery.config.mjs",
-        "tdf-hq-ui/src/api/directory.test.ts"
+        "tdf-hq-ui/src/api/directory.test.ts",
+        "scripts/test-music-directory-migration.sh"
       ],
-      "formalModels": [],
-      "verification": "Real PostgreSQL SQL cases, Jest component regressions, Playwright browser integration; no formal proof claimed.",
+      "formalModels": [
+        "formal/event-operations/DiscoveryFallbackPrivacy.tla",
+        "formal/event-operations/DiscoveryFallbackPrivacy.cfg",
+        "formal/event-operations/DiscoveryFallbackPrivacyPrivateSubject.cfg",
+        "formal/event-operations/DiscoveryFallbackPrivacyIgnoredLink.cfg"
+      ],
+      "verification": "Real PostgreSQL SQL cases, Jest component regressions, Playwright browser integration; no formal proof claimed. Finite fallback-privacy model plus two expected counterexamples; actual SQL subject/link suppression negative controls. No general SQL refinement or cache revocation proof.",
       "evidence": "Local validation recorded in delivery report; hosted and production verification pending.",
       "status": "specified and implemented",
       "openQuestions": [
@@ -10161,6 +10167,10 @@
     "formal/event-operations/ChatMutationNoRollback.cfg": "689d923264fb1fc9bbd57fae69dcc6fac4619d9ff7f050b5f1be15f09090457f",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
     "formal/event-operations/DirectoryClaimReview.tla": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+    "formal/event-operations/DiscoveryFallbackPrivacy.cfg": "a6d95741d13316571594addba3bb26495081132058f0994c800a4b699745b1f8",
+    "formal/event-operations/DiscoveryFallbackPrivacy.tla": "e05472793509eb2c2837e3acae82bfd3b49ab9264d0da989f6c7cefda4cb5f3c",
+    "formal/event-operations/DiscoveryFallbackPrivacyIgnoredLink.cfg": "6d4fdf4a9319c4c8a430e03613cb98531d1b5ad096b0f21df2f5321f40b51c9d",
+    "formal/event-operations/DiscoveryFallbackPrivacyPrivateSubject.cfg": "b156d18649ac9c035343a35296637a3f20592e91663dd018d80ba16cda188853",
     "formal/event-operations/EventOrganizer.cfg": "ed84da709c486f2fb88625b426cec2aeddf8439f9317ade750c15a948756242d",
     "formal/event-operations/EventOrganizer.tla": "b1cd25333de4d8722147e39b72a8ff63e5b6fd7870bccf4ad033524ee9ba2b81",
     "formal/event-operations/EventOrganizerAnyoneClaims.cfg": "87c88ff91027aa555ac04eeda4c6d98bbc92f34458a5c070bc7f70844c6d0ea5",
@@ -10441,7 +10451,7 @@
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
-    "scripts/test-community-search.py": "95b8120ec7093a826f66ce292f9039f6991cecb1a29bbc02a6a2da1f75dbe92c",
+    "scripts/test-community-search.py": "c6be90dbc19bfd6fc6c06e72c300f77f75729e94e518d5132560e94cd1b58c24",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
@@ -10458,7 +10468,7 @@
     "scripts/test-music-correction-concurrency.mjs": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
     "scripts/test-music-ddex-credits.sh": "220bdee67ca10d4257ba488de067617e244479d7e30143e5eceafe4d3a0d7a71",
     "scripts/test-music-ddex-package.mjs": "b27e141ea3cb945aa4c1e4ec425f75b6da6c02bf0d662b735a7040795ead5b74",
-    "scripts/test-music-directory-migration.sh": "116fc32a32df42b644345be744e2f1e49df5b46f9e5f6a3f257af06ac2fc000c",
+    "scripts/test-music-directory-migration.sh": "8d9e150890c5202dec3ade32fcef4a0a54d1593b777fe61e05c2911e8aba7df7",
     "scripts/test-music-download-predicate.mjs": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
     "scripts/test-music-playback-identity.mjs": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
     "scripts/test-music-purchase.sh": "881cf0f42840cc2e2fff2fdba60ddc661d791e40d2f8749a2bf9da326beb309c",
@@ -10505,7 +10515,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "e2e85a516d82961776125f38cf5afcf036d0febce75ce5ca590200fa36402027",
+    "scripts/verify-event-operations-formal.sh": "53425c586734056885581c469b36ff47e6117206c7d878854b1f89238fce776e",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -18499,6 +18509,10 @@
       {
         "requirement": "DIR-SEARCH-SYNC-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DISCOVERY-NAV-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql": [
@@ -18973,6 +18987,30 @@
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/DiscoveryFallbackPrivacy.tla": [
+      {
+        "requirement": "DISCOVERY-NAV-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DiscoveryFallbackPrivacy.cfg": [
+      {
+        "requirement": "DISCOVERY-NAV-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DiscoveryFallbackPrivacyPrivateSubject.cfg": [
+      {
+        "requirement": "DISCOVERY-NAV-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DiscoveryFallbackPrivacyIgnoredLink.cfg": [
+      {
+        "requirement": "DISCOVERY-NAV-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": [
@@ -23155,7 +23193,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "95b8120ec7093a826f66ce292f9039f6991cecb1a29bbc02a6a2da1f75dbe92c",
+      "sha256": "c6be90dbc19bfd6fc6c06e72c300f77f75729e94e518d5132560e94cd1b58c24",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23625,11 +23663,15 @@
     {
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
-      "sha256": "116fc32a32df42b644345be744e2f1e49df5b46f9e5f6a3f257af06ac2fc000c",
+      "sha256": "8d9e150890c5202dec3ade32fcef4a0a54d1593b777fe61e05c2911e8aba7df7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DISCOVERY-NAV-001",
           "relationship": "tests"
         }
       ]
@@ -24429,7 +24471,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "e2e85a516d82961776125f38cf5afcf036d0febce75ce5ca590200fa36402027",
+      "sha256": "53425c586734056885581c469b36ff47e6117206c7d878854b1f89238fce776e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45659,7 +45701,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d27751d2872d1f70363224139185e492a1722dd45c7fa261804455cc651681ed",
+      "sourceSha256": "399ff4a3000f6bdfc2edf6fad619fbb7860a76bd6bb52e5b8500037740ff27e5",
       "definition": {
         "states": [
           "absent",

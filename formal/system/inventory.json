@@ -4971,7 +4971,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "95b8120ec7093a826f66ce292f9039f6991cecb1a29bbc02a6a2da1f75dbe92c",
+      "sha256": "c6be90dbc19bfd6fc6c06e72c300f77f75729e94e518d5132560e94cd1b58c24",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5277,7 +5277,7 @@
     {
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
-      "sha256": "116fc32a32df42b644345be744e2f1e49df5b46f9e5f6a3f257af06ac2fc000c",
+      "sha256": "8d9e150890c5202dec3ade32fcef4a0a54d1593b777fe61e05c2911e8aba7df7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5703,7 +5703,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "e2e85a516d82961776125f38cf5afcf036d0febce75ce5ca590200fa36402027",
+      "sha256": "53425c586734056885581c469b36ff47e6117206c7d878854b1f89238fce776e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18757,7 +18757,7 @@
     },
     {
       "path": "docs/discovery/community-search-navigation.md",
-      "sha256": "8d1039f85be05323ae636773c997d80528d92fee2b471bf020339e64794e872a",
+      "sha256": "113d86e5f3b351538c44fa814fb4cd9bfa3533c505ad3553119c9c05325ee5ab",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21906,6 +21906,34 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/DiscoveryFallbackPrivacy.cfg",
+      "sha256": "a6d95741d13316571594addba3bb26495081132058f0994c800a4b699745b1f8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DiscoveryFallbackPrivacy.tla",
+      "sha256": "e05472793509eb2c2837e3acae82bfd3b49ab9264d0da989f6c7cefda4cb5f3c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/DiscoveryFallbackPrivacyIgnoredLink.cfg",
+      "sha256": "6d4fdf4a9319c4c8a430e03613cb98531d1b5ad096b0f21df2f5321f40b51c9d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DiscoveryFallbackPrivacyPrivateSubject.cfg",
+      "sha256": "b156d18649ac9c035343a35296637a3f20592e91663dd018d80ba16cda188853",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/EventLifecycle.cfg",
       "sha256": "acc8eb27d52d4565654f77be0fbd9eb144fa5843e2aa11f98a8ad01b76be1159",
       "authority": "inferred",
@@ -24966,7 +24994,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d27751d2872d1f70363224139185e492a1722dd45c7fa261804455cc651681ed",
+      "sha256": "399ff4a3000f6bdfc2edf6fad619fbb7860a76bd6bb52e5b8500037740ff27e5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33206,6 +33234,45 @@
         "CONSTANTS GuardDispatch = TRUE GuardReceipt = FALSE",
         "INVARIANTS AuthorizedDispatch CurrentSessionReceipt PersistedReceipt",
         "PROPERTY RequestSettles",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DiscoveryFallbackPrivacy.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  UnsafePrivateSubject = FALSE",
+        "  UnsafeLegacyLink = FALSE",
+        "INVARIANTS TypeOK FallbackRequiresNoAuthority CanonicalAndLegacyDoNotDuplicate",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DiscoveryFallbackPrivacyIgnoredLink.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  UnsafePrivateSubject = FALSE",
+        "  UnsafeLegacyLink = TRUE",
+        "INVARIANTS TypeOK FallbackRequiresNoAuthority CanonicalAndLegacyDoNotDuplicate",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DiscoveryFallbackPrivacyPrivateSubject.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  UnsafePrivateSubject = TRUE",
+        "  UnsafeLegacyLink = FALSE",
+        "INVARIANTS TypeOK FallbackRequiresNoAuthority CanonicalAndLegacyDoNotDuplicate",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",

@@ -247,3 +247,19 @@ references to retained source commits, as documented in the catalog README.
 The review references are evidence; the migration manifest remains the authority
 for execution order. No production deployment or new feature activation is
 established by this consolidation.
+
+
+`DiscoveryFallbackPrivacy.tla` covers the privacy boundary in one SQL snapshot:
+three subject-identity states and presence/absence of a legacy link. Any directory
+subject identity or legacy link suppresses fallback, even if that identity is
+private. Two deliberate mutations admit private subjects or ignore a link and
+must violate the named safety invariant. Actual PostgreSQL controls separately
+remove each shipped SQL predicate and must expose the synthetic hidden artist.
+These finite checks do not prove arbitrary SQL translation, cache revocation,
+concurrency across publication changes, liveness or complete application privacy.
+
+The canonical directory migration runner now owns its actual server process,
+allocates an available loopback port, and applies the existing current-handler
+schema prerequisites after its historical migration tests. Its public backfill
+control is isolated from subsequent exact HTTP facet fixtures. Earlier fixture
+failures are retained as regression evidence; assertions were not weakened.
