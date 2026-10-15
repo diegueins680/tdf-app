@@ -9838,6 +9838,83 @@
         "classification": "PARTIAL",
         "reason": "Repaired and tested at the database boundary; the migration is not applied in production, and the projection and reception handling were not examined."
       }
+    },
+    {
+      "id": "DATA-INDEX-DECLARATION-001",
+      "title": "A lookup index never refuses a legitimate row",
+      "domain": "DATA",
+      "statement": "A conversation stores every message sent in it; a WhatsApp message and the reply recorded at the same instant, and two messages from one sender received together, are all stored; course registrations, receipts and follow-ups written at the same instant or sharing a reminder time are all stored. A message identity given by the provider is still stored once.",
+      "authority": "AUTHORITY-063; the application's chat, WhatsApp history and course follow-up behaviour.",
+      "source": "formal/system/index-declarations.md",
+      "contract": "formal/system/index-declarations.md",
+      "actors": [
+        "Signed-in person in a conversation",
+        "Meta webhook delivery",
+        "Staff recording course follow-ups",
+        "Person registering for a course"
+      ],
+      "preconditions": [
+        "A row with an identity not yet stored, written through the application"
+      ],
+      "inputs": [
+        "Conversation, contact, telephone number or registration; the row's timestamp; the reminder time"
+      ],
+      "state": {
+        "boundary": "chat_message, whats_app_message, course_registration, course_registration_receipt, course_registration_follow_up",
+        "authority": "PostgreSQL constraints and indexes"
+      },
+      "allowedTransitions": [
+        "New row with a new identity -> stored, whatever key and time it carries"
+      ],
+      "forbiddenTransitions": [
+        "Second message in a conversation -> refused",
+        "Reply recorded at the instant of its message -> refused",
+        "Second follow-up with the same reminder time -> refused",
+        "Provider message identity already stored -> second row"
+      ],
+      "effects": [
+        "Nine plain indexes in place of nine uniqueness constraints; no row changed"
+      ],
+      "authorization": "Unchanged; the existing conversation, staff and webhook checks decide who may write.",
+      "privacy": "No new data is stored or exposed.",
+      "concurrency": "Removing the constraints removes a source of refusals between concurrent writers; identity constraints still serialize repeated deliveries.",
+      "idempotency": "Unchanged: the WhatsApp provider message id and the other identity constraints remain unique.",
+      "failure": "Before the migration the refused write raises a database error and the request fails; a WhatsApp webhook request fails after the reply has been sent.",
+      "recovery": "Rollback file restores the constraints while no stored row violates them.",
+      "observability": "pg_constraint and pg_indexes; the request no longer fails with a unique violation on an index_ name.",
+      "property": "No row with a new identity is refused by a lookup index, and an identity is stored at most once.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql",
+        "scripts/production-migrations.json",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
+        "scripts/test-index-declarations.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/IndexDeclaration.tla",
+        "formal/event-operations/IndexDeclaration.cfg",
+        "formal/event-operations/IndexDeclarationKeyUnique.cfg",
+        "formal/event-operations/IndexDeclarationKeyTimeUnique.cfg",
+        "formal/event-operations/IndexDeclarationIdentityNotUnique.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test against the migrated schema, through the application's storage functions where one exists, with a manual local run against the schema before the migration as control (not repeated in CI).",
+      "evidence": "formal/system/index-declarations.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Models, production schema snapshot and writers read; behaviour run locally against PostgreSQL 16 on 2026-10-11. The production database itself was not queried, and the migration is not applied there.",
+      "ambiguity": [
+        "Whether production still carries the nine constraints of the 2026-08-14 snapshot was not checked against the live database."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -9845,7 +9922,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "a47362a044410adae7ec5f7486714f6169b7e9d3c1e838788e88db7a8fff5ae2",
+    ".github/workflows/ci.yml": "bd53987b42af93029c3f3b71ccfe800bf631678b7c299eb078834a60e3a5c0b3",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "8bd15cdecaec5dfd55474be31a5ea5a8ffa7576dc1a4ac73819f7ee5a18238b4",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
@@ -9853,7 +9930,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "4cc7efb8256892dc5796cdfee30318b8516772ff99598d07f04b9d1536f3189f",
+    "docs/catalog-persistence/catalog-list-decisions.json": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -9915,6 +9992,11 @@
     "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg": "9f85ed6fcb673fe53ee1787e1495f5f1f9260b2daffd339939a88f414f598020",
     "formal/event-operations/InboundCaptureEveryDelivery.cfg": "a4db800625e51f436765321bf7b7e1e0523d4ca0e04ef2533533162ed60e3884",
     "formal/event-operations/InboundCaptureEveryIncomingRow.cfg": "588b8e5d6f34a02521808f5eea85513c49e82337fb31730290cc9f004a71a583",
+    "formal/event-operations/IndexDeclaration.cfg": "6da2310ea72d3b8415253bd26302cfae8e0ceffa601045d9e1582127649a89a3",
+    "formal/event-operations/IndexDeclaration.tla": "bb5f936380117713f7098e8d40a18883f40ead9a1bce3bb1f9e4bd92d4a49836",
+    "formal/event-operations/IndexDeclarationIdentityNotUnique.cfg": "57807fc0522e2e8b48766b2aa0d61371a11c44325791b7861695df1fb008b190",
+    "formal/event-operations/IndexDeclarationKeyTimeUnique.cfg": "81fa3174a93205af07c0dc392d2b8f5be264278f1332b05cb05b2a24a3de0e37",
+    "formal/event-operations/IndexDeclarationKeyUnique.cfg": "49d5a50a11d0b741567941383f801b1cf505ffa162d134a2c8957f546681054e",
     "formal/event-operations/InteractionWriteBudget.tla": "45dce5e8395e15ce6af5134d3bdec6b98bc3b703391afd8b16bb9e680d0febcd",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/InvoiceSubmission.cfg": "f3f33e7679d0703bb496917d87741436062391fa411d0a394d89d86dce9e7ce5",
@@ -10008,7 +10090,7 @@
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
-    "formal/system/recovery-expiry-arithmetic.json": "8c4c6a1467b8b44e1a9bf08c340e5f39df4dacb76f61b1060af6b5e0c81e2f25",
+    "formal/system/recovery-expiry-arithmetic.json": "e08bf9b4373381ab605521aabe7e5dfe2d30a6b2e3709e9a8de7f3aad7ffcc6f",
     "formal/system/state-machine-bindings.json": "33b63d2076dc6bf55f812bd12b8eadd93cd9aa1a85966ca38ddadb1ca5b45655",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -10082,7 +10164,7 @@
     "scripts/__tests__/persistent-uploads.test.mjs": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
     "scripts/__tests__/production-entrypoint.test.mjs": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
-    "scripts/__tests__/production-release.test.mjs": "03542f10f973a508cf0f9ba30f5f55308aa9a3291d2d1515684a66afcd87e8dc",
+    "scripts/__tests__/production-release.test.mjs": "e457c1521db3347e64a96b3c09f7eeba9b73495a29ff72f72f3613054cb3b626",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
@@ -10129,7 +10211,7 @@
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
     "scripts/lib/operations_conformance.py": "e0ff663aee7f816df7a06418223d41065d69e0681675a05f3fb6a0592e0f911a",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
+    "scripts/lib/production-release.mjs": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -10142,7 +10224,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "ee13a6ff16c0b24b99517271ec4ea1ab35aa61f129fb394aced2f34ca1431291",
+    "scripts/production-migrations.json": "5a2894568e5baf251a0a882438f5153dd3e703157e9c42dbb8a8bd89c13878bb",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -10167,7 +10249,7 @@
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
     "scripts/test-auth-predicates.py": "c44fd9520009dc319638af969414b93745d0d02108723a8a968f1f4bc51a4646",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-automatic-migrations-production-schema.sh": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
+    "scripts/test-automatic-migrations-production-schema.sh": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
@@ -10175,6 +10257,7 @@
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
+    "scripts/test-index-declarations.sh": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
     "scripts/test-isolated-application-canary.py": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
@@ -10235,7 +10318,7 @@
     "scripts/verify-auth-predicates.py": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "4211d64c8d15d09e4e0e83df781a434f1a0d675dc4d11af2cc49d9eaf4d86ba1",
+    "scripts/verify-event-operations-formal.sh": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -10561,6 +10644,8 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "bafc9d13e6a40650082e07b89dddbbe293713bd6a302dcc53d9ad27e780fa9eb",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "be18726df45a30041e753ae1bc6bc40431bf0529ab2f3279d6dd027dac7353bb",
+    "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql": "a45fb398f49dbf49be4fac8ae23bf0a5f0ff4ab5d4d51f748918e3137f0adb39",
+    "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql": "2d33a0b6285c8425d582732d86d43420e590267d7e30d263a84d91fb5cddebfb",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
@@ -10614,8 +10699,8 @@
     "tdf-hq/src/TDF/Invoice/Datil.hs": "83703af73bc1195ce5483cf68b9afe61eb4107dc6ca72015a2f7ed86200d7eae",
     "tdf-hq/src/TDF/Invoice/Receipt.hs": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
-    "tdf-hq/src/TDF/Models.hs": "dc258c58132e321fe330698b21f05d89e70edb68e001b5f0fd62e1a14c5feb89",
-    "tdf-hq/src/TDF/ModelsExtra.hs": "88d571f82c7883b151c3e3292d8219ac753c74af520cae7518e8bb97b693aa3f",
+    "tdf-hq/src/TDF/Models.hs": "ea779e770eecdec1391b130137642a4839e0585db40dd0ffe2dfedbd0dabcf1f",
+    "tdf-hq/src/TDF/ModelsExtra.hs": "c6ce1dcd223e1ab57d26d980f41359abb5c020f765d1d8cf1726e2a564298da2",
     "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs": "1c3b5fae0cc4e5f4605aea8a1a0118badcafb8d83dbef671fce27f6cbf3d65d2",
     "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs": "4dec7b8d3065fb925231203efe76181a645eb3701b3560b635eb364ece867677",
     "tdf-hq/src/TDF/MusicRelease/Domain.hs": "0f22bc111131e3a52d3d68bd6d9614c4b1005dd51dae59ac9fea1b92f0b7a193",
@@ -10671,12 +10756,12 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "d6b48b8e83938c3067501501dff4138ed31eaf658a24e816c770c1add97d4c69",
+    "tdf-hq/tdf-hq.cabal": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "1dab20fb258ca864deb64b2a4f5e00f53ccd520fa01ad06ccf486af70d406f79",
+    "tdf-hq/test/Spec.hs": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -10694,6 +10779,7 @@
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "bf9d46cd50c4563639019e5a83a3750e5ffb27a636f236ff236d3a405b6891ec",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
+    "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "de7e62fd390a1286f6daacc67042af69b557adc1c1e8e4fa40c6f2538c32a65d",
@@ -10970,6 +11056,10 @@
       },
       {
         "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
         "relationship": "tests"
       }
     ],
@@ -11705,6 +11795,10 @@
       {
         "requirement": "PAY-INVOICE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/verify-auth-predicates.py": [
@@ -12004,6 +12098,10 @@
       },
       {
         "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
         "relationship": "implementation"
       }
     ],
@@ -16277,6 +16375,10 @@
       {
         "requirement": "PRIV-WHATSAPP-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/CampaignAutomation.hs": [
@@ -18426,6 +18528,60 @@
         "requirement": "OPS-INBOUND-CAPTURE-001",
         "relationship": "formalModels"
       }
+    ],
+    "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/IndexDeclarationSpec.hs": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-index-declarations.sh": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/IndexDeclaration.tla": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/IndexDeclaration.cfg": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/IndexDeclarationKeyUnique.cfg": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/IndexDeclarationKeyTimeUnique.cfg": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/IndexDeclarationIdentityNotUnique.cfg": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -18494,7 +18650,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "a47362a044410adae7ec5f7486714f6169b7e9d3c1e838788e88db7a8fff5ae2",
+      "sha256": "bd53987b42af93029c3f3b71ccfe800bf631678b7c299eb078834a60e3a5c0b3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20141,7 +20297,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "03542f10f973a508cf0f9ba30f5f55308aa9a3291d2d1515684a66afcd87e8dc",
+      "sha256": "e457c1521db3347e64a96b3c09f7eeba9b73495a29ff72f72f3613054cb3b626",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21249,7 +21405,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
+      "sha256": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21531,7 +21687,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "ee13a6ff16c0b24b99517271ec4ea1ab35aa61f129fb394aced2f34ca1431291",
+      "sha256": "5a2894568e5baf251a0a882438f5153dd3e703157e9c42dbb8a8bd89c13878bb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21556,6 +21712,10 @@
         },
         {
           "requirement": "OPS-INBOUND-CAPTURE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
           "relationship": "implementation"
         }
       ]
@@ -22446,7 +22606,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
+      "sha256": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22848,6 +23008,18 @@
       "sha256": "7a0a057ed0d5aa4c453a7ca50ab81a644f0ff184c664b16f2c131ac577b04175",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-7842f199f23fca5a",
+      "path": "scripts/test-index-declarations.sh",
+      "sha256": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-38e572568da4fe30",
@@ -23865,7 +24037,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "4211d64c8d15d09e4e0e83df781a434f1a0d675dc4d11af2cc49d9eaf4d86ba1",
+      "sha256": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23946,6 +24118,10 @@
         },
         {
           "requirement": "OPS-INBOUND-CAPTURE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
           "relationship": "tests"
         }
       ]
@@ -34506,6 +34682,30 @@
       ]
     },
     {
+      "id": "SURFACE-2ea4fa983f6c4814",
+      "path": "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
+      "sha256": "a45fb398f49dbf49be4fac8ae23bf0a5f0ff4ab5d4d51f748918e3137f0adb39",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1180f7716e42349e",
+      "path": "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql",
+      "sha256": "2d33a0b6285c8425d582732d86d43420e590267d7e30d263a84d91fb5cddebfb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-672fc61c890788b0",
       "path": "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
       "sha256": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
@@ -35976,7 +36176,7 @@
     {
       "id": "SURFACE-a97719441b71656b",
       "path": "tdf-hq/src/TDF/Models.hs",
-      "sha256": "dc258c58132e321fe330698b21f05d89e70edb68e001b5f0fd62e1a14c5feb89",
+      "sha256": "ea779e770eecdec1391b130137642a4839e0585db40dd0ffe2dfedbd0dabcf1f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35985,6 +36185,10 @@
         },
         {
           "requirement": "PAY-INVOICE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
           "relationship": "implementation"
         }
       ]
@@ -35999,11 +36203,15 @@
     {
       "id": "SURFACE-de59a337fc1e94a1",
       "path": "tdf-hq/src/TDF/ModelsExtra.hs",
-      "sha256": "88d571f82c7883b151c3e3292d8219ac753c74af520cae7518e8bb97b693aa3f",
+      "sha256": "c6ce1dcd223e1ab57d26d980f41359abb5c020f765d1d8cf1726e2a564298da2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PRIV-WHATSAPP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
           "relationship": "implementation"
         }
       ]
@@ -37205,7 +37413,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "d6b48b8e83938c3067501501dff4138ed31eaf658a24e816c770c1add97d4c69",
+      "sha256": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37319,7 +37527,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1dab20fb258ca864deb64b2a4f5e00f53ccd520fa01ad06ccf486af70d406f79",
+      "sha256": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37682,6 +37890,18 @@
       "requirements": [
         {
           "requirement": "PRIV-ERROR-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-53f917e22cc25447",
+      "path": "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
+      "sha256": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
           "relationship": "tests"
         }
       ]
@@ -44870,7 +45090,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5a2c88aa046f54bcc9918579486d03867d089ce5610888a0bb48e7ac26d341ab",
+      "sourceSha256": "c5528de05ef0b8891e29a8c8a39d55b3ef7c8fb27a806adc127befededc31c08",
       "definition": {
         "states": [
           "absent",
@@ -67067,7 +67287,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 121,
+    "PARTIAL": 122,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -661,6 +661,12 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+## Index declarations
+
+`IndexDeclaration.tla` and four configurations check the rule in
+[index-declarations.md](../system/index-declarations.md): a row with a new identity
+is stored whatever key and time it carries, and an identity is stored once. The
+positive model and three negative controls are mandatory in the formal runner.
 ## Interaction write budget
 
 `InteractionWriteBudget.tla` and five configurations check the rule in

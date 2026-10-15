@@ -132,3 +132,13 @@ Reviewed main integration `f7068f813d85cba5d1435f9545dfd78b947d3050` adds
 change to a pinned input; authorization source, dependencies and compiler
 selection are unchanged. The manifest pin is refreshed after inspecting that
 diff, and all predicate/lemma/control obligations must run again.
+
+## Source review after main integration
+
+Main `2781ddc2a3c9fd661684742550918d653afdc0cf` removes three mistakenly
+unique index declarations from engagement/chat records in `Models.hs` and adds
+`TDF.IndexDeclarationSpec` to the Cabal test suite. Review of the complete diff
+found no changes to role constructors, Party identity, imports or translated
+authorization expressions. Those two source pins were refreshed after that
+review; all proof obligations must still be regenerated for the integrated
+candidate. Historical success is not carried forward as current evidence.

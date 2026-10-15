@@ -138,3 +138,13 @@ run `psql -X -v ON_ERROR_STOP=1 -d DISPOSABLE_DB -f /tmp/recovery-time-probes.sq
 The script uses only a temporary table inside a rolled-back transaction. The
 existing required `postgres-foundation` CI job runs the Docker probes on every
 configured PR, main and scheduled execution.
+
+## Source review after main integration
+
+Main `2781ddc2a3c9fd661684742550918d653afdc0cf` adds
+`TDF.IndexDeclarationSpec` to the Cabal test-module list. The complete diff
+changes no recovery function, time constraint, authority document or compiler
+configuration. The Cabal pin was refreshed after reviewing that registration;
+the integrated candidate requires fresh solver execution and evidence hashes.
+This review does not establish the correctness of the newly merged index
+migration or promote its separate full requirement to PROVEN.

@@ -190,6 +190,9 @@ SQL
 assert_gate_rejected "ALTER TABLE google_calendar_config DROP COLUMN access_token;" "Calendar runtime columns or archived-owner guard are incompatible"
 assert_gate_rejected "ALTER TABLE google_calendar_config DISABLE TRIGGER identity_archive_reference_guard;" "Calendar runtime columns or archived-owner guard are incompatible"
 assert_gate_rejected "ALTER TABLE google_calendar_event DROP CONSTRAINT unique_calendar_event;" "Calendar runtime columns or archived-owner guard are incompatible"
+# The 2026-10-11 rollback restores the UNIQUE constraints under the same names.
+assert_gate_rejected "DROP INDEX index_whats_app_message_phone; ALTER TABLE whats_app_message ADD CONSTRAINT index_whats_app_message_phone UNIQUE (phone_e164, created_at);" "A declared index is unique, missing or invalid"
+assert_gate_rejected "DROP INDEX index_chat_message_thread;" "A declared index is unique, missing or invalid"
 
 assert_gate_accepted() {
   local mutation="$1"
