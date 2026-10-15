@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -645,6 +645,17 @@
       "decision": "adopted",
       "rationale": "A customer-scoped key must be issued only to the authenticated owner of that customer; the legacy course route issued it to any caller presenting a sequential registration ID, so it was retired.",
       "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-ALLOY-CONTROLS-001",
+      "source": "https://alloytools.org/spec.html",
+      "supportingSource": "https://alloytools.org/tutorials/online/sidenote-format-fact.html",
+      "title": "Alloy language specification and fact overconstraint guidance",
+      "recommendation": "A check searches for a counterexample under facts and finite scopes; inconsistent or overly restrictive facts can conceal assertion violations. Run commands witness consistency.",
+      "applicability": "EventStructure and TaskReadStructure assertion admission",
+      "decision": "adopted",
+      "rationale": "Keep original satisfiable scenarios; remove selected guards in separate copies without weakening assertions or enlarging scopes, and require their counterexamples. Retain original scope limits and separate implementation refinement.",
+      "verifiedAt": "2026-10-13"
     }
   ]
 }
