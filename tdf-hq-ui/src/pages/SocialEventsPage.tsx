@@ -1087,10 +1087,7 @@ export default function SocialEventsPage() {
   return (
     <Box>
       <Stack spacing={2} sx={{ mb: 3 }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h4" fontWeight={800}>Eventos sociales</Typography>
-          <Chip label="Beta" size="small" color="info" />
-        </Stack>
+        <Typography variant="h4" fontWeight={800}>Eventos</Typography>
         <Typography color="text.secondary">
           Descubre eventos, confirma asistencia y gestiona operación completa: tickets, presupuesto y contabilidad por evento.
         </Typography>
