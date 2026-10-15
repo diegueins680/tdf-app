@@ -11277,7 +11277,7 @@
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
     "scripts/verify-event-operations-formal.sh": "e3907a0a7b532de3b48ad41ed80c237803672080662bdc5be6b45923cc45f054",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
-    "scripts/verify-http-shutdown.py": "48aa4fdf9f5fbefb7831bb8737271eeb6bf9a9ac0561f6149ea8a5ed318386b5",
+    "scripts/verify-http-shutdown.py": "24369e492978526d0e97fa1c821656c1c4b9b33e02ab6a14511b7c47f71b4f44",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -26058,7 +26058,7 @@
     {
       "id": "SURFACE-d5932c3e0804ef13",
       "path": "scripts/verify-http-shutdown.py",
-      "sha256": "48aa4fdf9f5fbefb7831bb8737271eeb6bf9a9ac0561f6149ea8a5ed318386b5",
+      "sha256": "24369e492978526d0e97fa1c821656c1c4b9b33e02ab6a14511b7c47f71b4f44",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

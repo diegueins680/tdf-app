@@ -25,7 +25,8 @@ def check(condition, name):
         raise AssertionError(name)
 
 
-def exercise(binary, scenario, stop_signal=signal.SIGTERM, repeat_signal=False):
+def exercise(binary, scenario, stop_signal=signal.SIGTERM, repeat_signal=False,
+             await_early_exit=False):
     # The free-port handoff is fixture setup, not part of the shutdown guarantee.
     with socket.socket() as reservation:
         reservation.bind(('127.0.0.1', 0))
@@ -77,6 +78,12 @@ def exercise(binary, scenario, stop_signal=signal.SIGTERM, repeat_signal=False):
                     until('request-started')
                 started = time.monotonic()
                 process.send_signal(stop_signal)
+                if await_early_exit:
+                    # Only the zero-grace negative control uses this ordering:
+                    # make its premature process exit an observed fact rather
+                    # than depending on the platform's scheduling of poll().
+                    check(scenario == 'hold', 'early-exit control requires an accepted request')
+                    process.wait(timeout=8)
                 # Listener closure must reject a new TCP connection while the held
                 # request is still running, not merely after process termination.
                 if scenario == 'hold':
@@ -94,8 +101,8 @@ def exercise(binary, scenario, stop_signal=signal.SIGTERM, repeat_signal=False):
                             # only a subsequent explicit refusal proves closure.
                             pass
                         time.sleep(.02)
-                    check(closed and process.poll() is None, 'listener must close before accepted request completes')
-                    if repeat_signal:
+                    closed_while_held = closed and process.poll() is None
+                    if repeat_signal and closed_while_held:
                         process.send_signal(signal.SIGINT)
                         process.send_signal(signal.SIGTERM)
                 if request_result and scenario == 'hold':
@@ -104,6 +111,10 @@ def exercise(binary, scenario, stop_signal=signal.SIGTERM, repeat_signal=False):
                     except Exception as error:
                         raise AssertionError('accepted request must finish during graceful drain') from error
                     check(result == (200, b'accepted-completed'), 'accepted request must finish during graceful drain')
+                    # Preserve the original observation from before awaiting the
+                    # body. A zero-grace exit violates request drainage first;
+                    # it must not be mislabelled as a missing-listener-close bug.
+                    check(closed_while_held, 'listener must close before accepted request completes')
                 code = process.wait(timeout=8)
                 elapsed = time.monotonic()-started
                 check(code == 0, 'shutdown must return successful process status')
@@ -132,7 +143,8 @@ def exercise(binary, scenario, stop_signal=signal.SIGTERM, repeat_signal=False):
 
 
 def verify():
-    sources = {p: (ROOT/p).read_bytes() for p in (MODULE, FIXTURE, RETRY)}
+    sources = {p: (ROOT/p).read_bytes() for p in
+               (MODULE, FIXTURE, RETRY, 'scripts/verify-http-shutdown.py')}
     controls = [('intended', None, None),
         ('listener-not-closed', ('when first closeListener', 'when first (pure ())'),
          'listener must close before accepted request completes'),
@@ -166,7 +178,8 @@ def verify():
             check(build.returncode == 0, 'shutdown fixture compilation failed: '+build.stderr)
             if expected:
                 try:
-                    exercise(binary, 'startup-wait' if name == 'swallowed-startup-cancellation' else 'hold')
+                    exercise(binary, 'startup-wait' if name == 'swallowed-startup-cancellation' else 'hold',
+                             await_early_exit=name == 'no-request-drain')
                 except AssertionError as error:
                     check(str(error) == expected, 'negative control failed for an unrelated reason: '+str(error))
                     reports.append({'control': name, 'status': 'detected', 'assertion': expected})

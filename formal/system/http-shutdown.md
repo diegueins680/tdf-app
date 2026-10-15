@@ -36,6 +36,15 @@ STACK_ROOT=/absolute/stack/root python3 scripts/verify-http-shutdown.py
 npm run quality:backend
 ```
 
+The zero-grace control explicitly waits for its premature process exit before
+observing the socket. This makes that failure deterministic across OS scheduling.
+The verifier records listener refusal while the accepted request is still held,
+then checks the complete accepted response before asserting that recorded ordering.
+An early exit therefore fails the request-drain assertion, while a listener left
+open fails the listener-order assertion. Both checks remain required for the
+intended implementation. The receipt fingerprints the verifier as well as its
+Haskell sources.
+
 The runner's temporary port handoff can fail as fixture setup; this is not evidence
 of a shutdown violation. The local subprocess is not container PID1 qualification.
 The exact release image must separately exercise the same signals before rollout.

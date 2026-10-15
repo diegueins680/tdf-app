@@ -5825,7 +5825,7 @@
     {
       "id": "SURFACE-d5932c3e0804ef13",
       "path": "scripts/verify-http-shutdown.py",
-      "sha256": "48aa4fdf9f5fbefb7831bb8737271eeb6bf9a9ac0561f6149ea8a5ed318386b5",
+      "sha256": "24369e492978526d0e97fa1c821656c1c4b9b33e02ab6a14511b7c47f71b4f44",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25155,7 +25155,7 @@
     },
     {
       "path": "formal/system/http-shutdown.md",
-      "sha256": "33db6ec8529c2bed6920f0fb9d2fba720831d756301060dc06a0e8409c8087b6",
+      "sha256": "7c7d56cf1444265cb53ad9f7ec719e41db8f22bbf578a892255ba2c1e9bb5079",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
