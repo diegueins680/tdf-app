@@ -20332,7 +20332,7 @@
     },
     {
       "path": "docs/payments/consolidation-2026-10-15.md",
-      "sha256": "fe8ebb14a0c951d30bb4573780bf592caf0f2f23855788eaa7d193c0dc1c4238",
+      "sha256": "79c06e183ab3dd6aa981716fae641bd7def46d25b46226682db1cf6ff3b409c6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

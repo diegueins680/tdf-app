@@ -14,8 +14,9 @@ combined automatic-migration/startup harness passes on a disposable database.
 
 The migration manifest retains the complete 204-entry prefix from main
 `2781ddc2a3c9fd661684742550918d653afdc0cf`, followed by ledger posting,
-checkout-line snapshots, and terms identity. Original introduction commits are
-retained. The unmerged terms migration has a new checksum: its preflight and
+checkout-line snapshots, terms identity, and historical terms identity: 208
+entries in total. Original introduction commits are retained. The unmerged
+October 13 terms migration has a reviewed-candidate checksum change: its preflight and
 trigger installation now share a transaction and writer-excluding table locks.
 This checksum revision needs review before production use.
 
@@ -26,6 +27,43 @@ Running that same test against the original #569 SQL fails its named assertion
 for each scope. The bounded TermsIdentityUpgrade model and three counterexample
 controls cover this installation protocol; they are not universal proofs or a
 refinement proof of PostgreSQL.
+
+## Current review repairs
+
+The October 15 additive historical-identity migration checks append-only policy
+snapshots as well as current rows. Deleting the last live draft cannot permit
+the same terms version to name different text. Current and history tables are
+locked together across preflight and installation; conflicting or incomplete
+historical snapshots refuse installation. Retain this guard and its indexes
+across application rollback. The earlier rollback file must not be used to
+remove the historical protection, and historical snapshots must not be rewritten
+to make the preflight pass.
+
+Completed PayPal captures with invalid provider binding remain fenced against
+another payment method. The uncertainty check now holds the checkout lock before
+reading payment attempts, and failure writers take that same lock. Existing
+event-before-checkout ordering is preserved. Ledger and ticket-payment fixtures
+use the shared parsed URI authority guard, including rejection of userinfo-based
+remote-host substitution and inherited libpq routing overrides.
+
+On clean implementation `1c41ffbc40e6213a4dfdcc8aa4e7f9cd493e4bab`, all 11 compiled
+payment PostgreSQL cases pass. Removing the binding repair or pre-read lock in
+isolated control worktrees fails the corresponding assertion; the latter control
+actually admits the competing payment attempt after the failure writer commits.
+The repaired race uses observed PostgreSQL blocking, bounded waits and cleanup
+that releases the lock holder before cancelling a blocked task. All 10 ledger
+cases and 23 URI/runner tests also pass.
+
+All 208 migrations applied and replayed on a fresh owned PostgreSQL 16.10
+database. Canonical introduction ancestry and checksums pass. Course/event
+history tests reject changed-text reuse and accept identical replay and new
+versions; both original live-only guard controls reproduce forbidden reuse,
+and both conflicting-history preflights refuse installation. Three affected
+bounded model configurations and six expected counterexamples pass. Repository
+quality, formal inventory, traceability, changed-surface mapping and
+`npm run verify:formal` pass. Full current-head hosted integration and independent
+review remain required; the earlier complete-suite results below retain their
+original source scope. No new migration has been applied to production.
 
 ## Executed local checks
 
