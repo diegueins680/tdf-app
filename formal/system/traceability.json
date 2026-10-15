@@ -9953,7 +9953,7 @@
       },
       "allowedTransitions": [
         "Advance the selector clock through the real 300 ms debounce; assert no request at 299 ms.",
-        "Await the new tab load boundary, then check the unchanged bounded application redirect and visible profile.",
+        "Activate the new tab as a reader would and await its load boundary, then check the unchanged bounded application redirect and visible profile.",
         "Reset mocked responses and timers between cases."
       ],
       "forbiddenTransitions": [
@@ -10017,7 +10017,7 @@
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
     "e2e/web/music-player-native.spec.mjs": "8a1ef90f2a060ff4ae4e16add3001c09280e8224e06a8d28b49c9793eefb5112",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
-    "e2e/web/notification-navigation.spec.mjs": "5d04504bd04248df9d799507bf5c6600557077e6f0128a819c30ea820b3dfef1",
+    "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
     "e2e/web/persona-public.spec.mjs": "48fe60d98e00d221022e7d1411e3c487037c7587deb17521b0fdc63dee71a27e",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
@@ -19112,7 +19112,7 @@
     {
       "id": "SURFACE-1650513d8810b7f7",
       "path": "e2e/web/notification-navigation.spec.mjs",
-      "sha256": "5d04504bd04248df9d799507bf5c6600557077e6f0128a819c30ea820b3dfef1",
+      "sha256": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45097,7 +45097,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f9dfe0419e541cacb59ca81f5cfd71b96696ca5156e18f2c142cc5cf388fa0d1",
+      "sourceSha256": "736914cc69b9cd4cb0d17067121ac987d13fde1b9cafb4485119c249035d0f45",
       "definition": {
         "states": [
           "absent",

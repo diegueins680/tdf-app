@@ -9,7 +9,8 @@ responses and restores real timers after unmount. Existing selection, failed-rea
 pagination, deduplication, request-abort and late-response assertions remain.
 
 A new-tab page event occurs before document loading completes. The notification
-fixture awaits the same load boundary used by page.goto before its existing redirect
+fixture activates the new tab as a reader would and awaits the same load boundary
+used by page.goto before its existing redirect
 assertion. It retains the eight-second application assertion, real tab-opening
 interaction, owned profile content, original-tab URL and no unrelated mutations.
 
