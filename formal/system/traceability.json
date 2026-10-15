@@ -9948,7 +9948,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+    "docs/catalog-persistence/catalog-list-decisions.json": "7f0fdd599036d309287a342b160fee5897b2d74450ea320e36b01591eb187d7d",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
