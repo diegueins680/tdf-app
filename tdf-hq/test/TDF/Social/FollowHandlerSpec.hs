@@ -75,7 +75,8 @@ import TDF.DB (Env (..))
 import TDF.Models (Party (..), RoleEnum (Admin, Fan))
 import TDF.Models.SocialEventsModels
 import TDF.Server.SocialEventsHandlers
-    ( postgresVisibleImportedMetadataClause
+    ( assignMissingEventOrganizer
+    , postgresVisibleImportedMetadataClause
     , decodeStoredPromoCodeTierIds
     , followArtistDb
     , removeSocialEventAssets
@@ -334,6 +335,26 @@ spec = describe "social event handler helpers" $ do
                             }
                 )
                 pool
+
+            let unownedEventKey = toSqlKey 31 :: SocialEventId
+            runSqlPool
+                (insertKey unownedEventKey (seedSocialEvent "3" "Unowned event" now){socialEventOrganizerPartyId = Nothing})
+                pool
+            unowned <-
+                runHandler $
+                    runReaderT
+                        (socialEventImageUploadHandlerFor (socialEventUser 2) "31" uploadForm)
+                        env
+            case unowned of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err) `shouldContain` "This event has no organizer"
+                Right response ->
+                    expectationFailure ("Expected the unowned event upload to fail, got: " <> show response)
+            fmap socialEventOrganizerPartyId <$> runSqlPool (get unownedEventKey) pool
+                `shouldReturn` Just Nothing
+            doesDirectoryExist (assetsRoot </> "social-events" </> "events" </> "31")
+                `shouldReturn` False
 
             uploaded <-
                 runHandler $
@@ -1052,6 +1073,7 @@ spec = describe "social event handler helpers" $ do
                             Nothing
                             Nothing
                             Nothing
+                            Nothing
                         )
                     )
                     env
@@ -1308,6 +1330,58 @@ spec = describe "social event handler helpers" $ do
         stored <- runSqlPool (get eventKey) pool
         fmap socialEventTitle stored `shouldBe` Just "Original event"
 
+    it "does not hand an event without an organizer to the first user who edits it" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 7
+            env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused by social event update auth tests"
+                    }
+        runSqlPool
+            ( insertKey
+                eventKey
+                (seedSocialEvent "1" "Unowned event" now){socialEventOrganizerPartyId = Nothing}
+            )
+            pool
+        result <-
+            runHandler $
+                runReaderT
+                    (socialEventUpdateHandlerFor (socialEventUser 2) "7" (socialEventUpdatePayload "Hijacked event"))
+                    env
+        case result of
+            Left err -> do
+                errHTTPCode err `shouldBe` 403
+                BL8.unpack (errBody err) `shouldContain` "This event has no organizer"
+            Right updated ->
+                expectationFailure ("Expected the unowned event update to fail, got: " <> show updated)
+        stored <- runSqlPool (get eventKey) pool
+        fmap socialEventOrganizerPartyId stored `shouldBe` Just Nothing
+        fmap socialEventTitle stored `shouldBe` Just "Unowned event"
+
+        -- A strict administrator passes the gate, but an edit that is then
+        -- refused assigns nobody.
+        refusedEdit <-
+            runHandler $
+                runReaderT
+                    (socialEventUpdateHandlerFor (strictAdminSocialEventUser 3) "7" (socialEventUpdatePayload "Admin edit"))
+                    env
+        either errHTTPCode (const 200) refusedEdit `shouldBe` 422
+        afterRefusal <- runSqlPool (get eventKey) pool
+        fmap socialEventOrganizerPartyId afterRefusal `shouldBe` Just Nothing
+
+        -- The assignment itself happens once; a later party is refused by
+        -- the stored organizer.
+        assigned <- runSqlPool (assignMissingEventOrganizer "3" now eventKey) pool
+        fmap socialEventOrganizerPartyId assigned `shouldSatisfy` either (const False) (== Just "3")
+        late <- runSqlPool (assignMissingEventOrganizer "4" now eventKey) pool
+        either errHTTPCode (const 200) late `shouldBe` 403
+        afterwards <- runSqlPool (get eventKey) pool
+        fmap socialEventOrganizerPartyId afterwards `shouldBe` Just (Just "3")
+
     it "allows strict admins, but not unrelated users, to delete another organizer's event" $ do
         now <- getCurrentTime
         let event = seedSocialEvent "1" "Admin-managed event" now
@@ -1434,6 +1508,53 @@ spec = describe "social event handler helpers" $ do
             Left err ->
                 expectationFailure
                     ("Expected strict-admin event list to succeed, got: " <> show err)
+
+    it "reports RSVP eligibility in the event list exactly as the event detail does" $ do
+        cfg <- Config.loadConfig
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 28
+            user = strictAdminSocialEventUser 1
+            env = Env{envPool = pool, envConfig = cfg}
+        runSqlPool
+            ( do
+                rawExecute
+                    "INSERT INTO workflow_state_capability(state_id,capability_code,enabled) VALUES (?, 'public-listable', 1), (?, 'rsvp', 1)"
+                    [toPersistValue socialEventWorkflowStateFixtureId, toPersistValue socialEventWorkflowStateFixtureId]
+                insertKey eventKey
+                    ((seedSocialEvent "1" "Listed RSVP event" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        })
+            )
+            pool
+        listed <-
+            runHandler $
+                runReaderT
+                    ( socialEventListHandlerFor
+                        user
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                    )
+                    env
+        detail <- runHandler $ runReaderT (socialEventGetHandlerFor user "28") env
+        case (listed, detail) of
+            (Right [listedEvent], Right detailEvent) -> do
+                eventRsvpEligible detailEvent `shouldBe` Just True
+                eventRsvpEligible listedEvent `shouldBe` Just True
+                eventPublicListable listedEvent `shouldBe` eventPublicListable detailEvent
+            other ->
+                expectationFailure
+                    ("Expected one listed event and its detail, got: " <> show other)
 
     it "turns an imported event deletion into a private tombstone" $ do
         let suppressed =

@@ -599,6 +599,101 @@
       "conflict": "PRIV-WHATSAPP-001 promised at most one confirmation request per number per 24 hours and that a person can confirm by messaging SI themselves. The implementation cleared confirmation_requested_at on every opt-out and confirmation, so the unauthenticated opt-out reopened the interval and allowed unlimited requests to any number; it also cleared the pending request when the provider rejected the send, so the success page's SI button could never activate consent; simultaneous first requests for one number could fail on the unique row.",
       "authority": "The 2026-10-06 double opt-in decision (AUTHORITY-052) and the requirement statement govern; the implementation behavior was a defect, not policy.",
       "resolution": "Every writer keeps the request instant; a request is invalidated by revoked_at at or after it, and a withdrawal's transaction raises revoked_at to the request instant when its clock was read earlier. A rejected send marks only its own request pending_unsent; for 1 hour from the request it stays confirmable and may be retried without changing the instant, so retries cannot extend that window. Delivered requests are at least 23 hours apart. Row creation is conflict-safe. No schema change. The 1-hour window is an engineering default pending product-owner confirmation."
+    },
+    {
+      "id": "AUTHORITY-056",
+      "sources": [
+        "tdf-hq/src/TDF/Invoice/Datil.hs",
+        "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
+        "docs/events/ticket-electronic-invoices.md",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "EVT-TICKET-INVOICE-001 says a provider refusal becomes failed (resendable), status query failures retry, and an invoiced event cannot sell until invoicing is configured. The worker turned a refusal with a long message, an unreadable status answer or any internal error while polling into uncertain, which has no in-app recovery, and sales opened while the submission worker was switched off.",
+      "authority": "The 2026-10-06 invoicing decision and the requirement's failure rules govern; the worker behavior was a defect.",
+      "resolution": "Stored diagnostics are bounded to the column; a submitted document stays submitted through failed, refused or unreadable queries and internal errors; readiness also requires TAX_INVOICE_WORKER_ENABLED=true. No schema change. Recovery for uncertain and rejected documents remains an open product and tax decision."
+    },
+    {
+      "id": "AUTHORITY-057",
+      "sources": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "docs/event-operations/repository-audit-2026-09-14.md"
+      ],
+      "conflict": "The event handlers made any signed-in caller the organizer of an event without one, including from read routes and with an unconditional write, while the event-operations foundation migration records such events as owner_missing and disabled until reviewed, and the 2026-09-14 audit lists the claiming behavior as high severity to be removed.",
+      "authority": "The event-operations migration rule and the audit remediation govern; claim-on-touch was a legacy compatibility behavior, never a product decision.",
+      "resolution": "Organizer-only routes refuse an event without an organizer and never write. Only a strict administrator whose edit of the event is accepted is assigned, in the same locked transaction, by one conditional update whose stored result decides the outcome. Administrative routes that never assigned are unchanged. No schema change. A client surface for the assignment, a transfer route, auditing and reconciling event_operation_relationship remain open."
+    },
+    {
+      "id": "AUTHORITY-058",
+      "sources": [
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "docs/music-releases/architecture-and-data-model.md",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "PAY-MUSIC-DOWNLOAD-001 says verified provider evidence marks an order paid and grants one entitlement, and that downloads are bounded per entitlement. The music payment record omitted the merchant reference the shared checkout store requires, so every verified payment stopped with an error after the charge; a repeated download request identifier produced fresh signed URLs without limit; and a revoked free grant was reactivated by asking again.",
+      "authority": "The requirement and ADR-005 of the music release architecture govern; the three behaviors were defects in recovered, unreviewed code.",
+      "resolution": "The payment record carries the order identifier as merchant reference; a repeated request identifier is honoured only for the 300-second lifetime of its signed URL and belongs to one entitlement; a repeated free request leaves an existing grant unchanged; the commerce flag must be enabled for the checkout environment as well as the process environment. No schema change. The failure-path defects listed in formal/system/music-purchase-entitlement.md remain open and music_releases.commerce must stay disabled until they are repaired."
+    },
+    {
+      "id": "AUTHORITY-059",
+      "sources": [
+        "tdf-hq/src/TDF/Interactions/Server.hs",
+        "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
+        "formal/interactions/README.md"
+      ],
+      "conflict": "The interaction contract states that a rejected write cannot roll back its consumed budget, while the HTTP boundary ran the charge and the write in one transaction, so any write that raised a database error (for example a payload with a NUL escape, or a deadlock) aborted the charge and cost the account nothing.",
+      "authority": "The interaction contract and SOC-ABUSE-001 govern; the refund on database errors was an unexamined consequence of transaction scope, never a decision.",
+      "resolution": "The write runs after a savepoint taken once the charge is made; a database error returns to the savepoint and the transaction commits the counter. A NUL escape refused by jsonb is answered 400 instead of 500; other statuses are unchanged. No schema change. Charging requests rejected before database work and pruning past counters remain open."
+    },
+    {
+      "id": "AUTHORITY-060",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/WhatsApp/History.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs"
+      ],
+      "conflict": "Inbound WhatsApp storage treats a repeated provider message as a duplicate delivery that must not change the stored message, while the webhook handler applied the opt-out keyword and sent the enrolment reply on every delivery, so a redelivered STOP withdrew a later subscription and a redelivered enrolment message was answered again.",
+      "authority": "The storage rule governs: a provider message is one event however often it is delivered. Re-running effects on redelivery was never a decision.",
+      "resolution": "The delivery that stores the message applies its opt-out or consent confirmation in the same transaction and alone sends the confirmation notice; a delivery that finds the message stored applies nothing again. The course registration still runs on every delivery (it is idempotent) and the automatic reply is sent by the one delivery that claims it. Deliveries of one message are serialized by an advisory lock. No schema change. Delayed first delivery of an old STOP, the reply worker, delivery updates and other Meta channels remain open."
+    },
+    {
+      "id": "AUTHORITY-061",
+      "sources": [
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/WhatsApp/History.hs",
+        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+      ],
+      "conflict": "WhatsApp history states that a duplicate delivery must not rewrite the stored inbound message, while the Instagram and Facebook webhooks and the backfill overwrote the stored text, set the direction to incoming and reset the reply status to pending on every repeat, so a message held for a person or failed was taken up by the reply worker again; a unit test expected a late repeat to replace the text of a deleted message.",
+      "authority": "The WhatsApp history rule governs for every Meta channel: a provider message is one event. The overwrite came from using an upsert, and the unit-test expectation recorded that behaviour, not a decision.",
+      "resolution": "Instagram and Facebook messages are inserted when absent and otherwise left as stored, filling only a missing sender name or attribution, or metadata that lacked the receiving account; a repeated deletion keeps its first time. A backfill no longer returns held or failed messages to the worker; the unhold action remains. The webhooks and the backfill share the function. The unit test now expects the original text. No schema change. Erasing deleted text, handling edits and the inbound capture triggers that never fire remain open."
+    },
+    {
+      "id": "AUTHORITY-062",
+      "sources": [
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
+        "tdf-hq/src/TDF/WhatsApp/History.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "scripts/lib/operations_conformance.py"
+      ],
+      "conflict": "The Operations control center captures inbound communication through triggers that accept only the directions inbound and received, while the application stores every inbound WhatsApp, Instagram and Facebook message with the direction incoming, so no inbound message has produced an Operations event; the conformance test inserted the direction inbound and passed.",
+      "authority": "The control center design governs: inbound communication becomes a reception work item. The direction literal in the triggers was a mismatch with the application, not a decision to exclude it.",
+      "resolution": "A new migration replaces the two trigger functions so that they accept incoming as well, skip deletion records and history imports, and contain a capture failure so the message is still stored; a rollback file restores the previous functions; the conformance test uses the application's direction. No table changes and no retroactive capture. Applying it in production starts opening reception work items for inbound messages, which has never happened there, and writes sender telephone numbers to append-only Operations rows."
+    },
+    {
+      "id": "AUTHORITY-063",
+      "sources": [
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/WhatsApp/History.hs"
+      ],
+      "conflict": "Twenty-three model lines named Index… were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
+      "authority": "The application's behaviour governs: conversations hold many messages and a reply is recorded beside its message. The names, the absence of any unique-key lookup or conflict clause on these keys and the plain indexes production holds on the campaign tables under the same naming show the uniqueness was never intended.",
+      "resolution": "A new migration replaces the nine constraints with plain indexes of the same names and columns, and the twenty-three lines leave the models so that a development database no longer recreates them. A rollback file restores the constraints while no stored row violates them. The identity constraints (for example the WhatsApp provider message id) are unchanged."
     }
   ]
 }
