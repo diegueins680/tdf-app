@@ -732,6 +732,19 @@
       "conflict": "DEPLOY-MIGRATION-001 requires immutable correspondence between applied history and the manifest, but the batch inserted each ledger row as a separate statement after the migration's own COMMIT (a crash between them left effects applied and unrecorded, re-applied by the next run) and its lock-refusal branch ended with \\quit 3, which psql ignores, so an active concurrent migration made the batch exit 0 and the entrypoint report success without applying or verifying. The batch also ignores ledger rows its manifest does not know while preparation rejects them.",
       "authority": "The requirement statement and docs/automatic-production-migrations.md (\"A concurrent runner also exits nonzero\"); the batch's tolerance of unknown ledger rows is a code fact that image rollback relies on, recorded here as the decision, not a documented policy.",
       "resolution": "The batch opens a transaction before the ledger row so a file's own COMMIT commits row and effects together, and raises an SQL error under ON_ERROR_STOP (exit 3) while the lock is held; every manifest file is checked to end with its COMMIT and to avoid non-transactional statements. The batch keeps tolerating unknown ledger rows (image rollback) while preparation keeps rejecting them; holes are applied after later entries and reported pending by preparation. Both recorded as ambiguities; checked by the bounded MigrationLedger model and the psql batch test."
+    },
+    {
+      "id": "AUTHORITY-077",
+      "sources": [
+        "formal/system/requirements.json#DEPLOY-STARTUP-001",
+        "scripts/lib/production-release.mjs",
+        "formal/system/startup-gates.md",
+        "formal/event-operations/StartupGates.tla",
+        "scripts/__tests__/startup-gates-postgres.mjs"
+      ],
+      "conflict": "DEPLOY-STARTUP-001 described only the six provider gates, while the startup verifier also requires the three manual-settlement gates and the two marketplace gates enabled and the service-booking and two course gates disabled; a flag change in any of those nine would pass unnoticed by the requirement and fail every later container start, as checkout.paypal.refunds did on 2026-10-07 (AUTHORITY-050).",
+      "authority": "The verifier as reviewed, read as the current policy (AUTHORITY-050 for the PayPal and Datafast gates; no separate product decision is on record for the service-booking, course and staged-provider gates, whose disabled state is taken from the code).",
+      "resolution": "The requirement is completed with the full asserted set and the rule that enabling or disabling an asserted gate is a verifier change in the same release; the code is unchanged. The policy is pinned by the exhaustive one-state model and by running the real verification for every flag in every state. The verifier also asserts data toggles outside revenue_feature_flag (artist_update interaction kind disabled, artist invitation policy and artist-profile category active, directory audit clean, catalog backfill statuses, minimum row counts); they are listed with the flag policy as restart hazards."
     }
   ]
 }

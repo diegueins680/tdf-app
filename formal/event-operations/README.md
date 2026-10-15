@@ -109,6 +109,9 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `MigrationLedger.cfg` (2026-10-12) | 3 manifest entries, 2 source versions, 3 batch runs; source changes with or without a declared compatible checksum, image rollback, preparation | PASS; 1,282,056 generated, 334,720 distinct states, depth 26; `EffectsRecorded`, `SingleApplication`, `NoRunPastDrift`, `PreparationSound` (`LedgerImpliesEffects` as a sanity invariant) |
 | `MigrationLedgerRecordAfterCommit.cfg`, `MigrationLedgerBatchUnchecked.cfg`, `MigrationLedgerPrepareUnchecked.cfg`, `MigrationLedgerUnknownAccepted.cfg` | Negative controls: ledger row written after the migration's commit, batch checksum check removed, preparation checksum check removed, unknown ledger rows accepted by preparation | Expected non-zero exit with `EffectsRecorded`, `NoRunPastDrift`, `PreparationSound`, `PreparationSound` violated |
+
+| `StartupGates.cfg` (2026-10-12) | One state; the fourteen production flags the startup verifier asserts, each over {missing, disabled, enabled} (4,782,969 configurations per invariant) | PASS; `ApprovedStarts`, `StartImpliesApproved` |
+| `StartupGatesStagedAccepted.cfg`, `StartupGatesMissingAccepted.cfg`, `StartupGatesEitherRejected.cfg`, `StartupGatesRequiredUnchecked.cfg` | Negative controls: an enabled staged provider accepted, a missing gate accepted, PayPal/Datafast gates required disabled (a coarser stand-in for the pre-AUTHORITY-050 verifier), required states unchecked | Expected non-zero exit with "The invariant of ... is equal to FALSE" for `StartImpliesApproved`, `StartImpliesApproved`, `ApprovedStarts`, `StartImpliesApproved` |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
@@ -672,6 +675,26 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+## Index declarations
+
+`IndexDeclaration.tla` and four configurations check the rule in
+[index-declarations.md](../system/index-declarations.md): a row with a new identity
+is stored whatever key and time it carries, and an identity is stored once. The
+positive model and three negative controls are mandatory in the formal runner.
+## Interaction write budget
+
+`InteractionWriteBudget.tla` and five configurations check the rule in
+[interaction-write-budget.md](../system/interaction-write-budget.md): every ended
+write attempt is counted, no minute runs more writes than the limit, and an attempt
+is refused only when its own minute was spent. The positive model and four negative
+controls are mandatory in the formal runner.
+## Ticket invoice submission
+
+`InvoiceSubmission.tla` and five configurations check the worker rules in
+[ticket-invoice-worker.md](../system/ticket-invoice-worker.md): leased claims, the
+persisted submission mark, lease-fenced results and administrator resend. The positive
+model and four negative controls are mandatory in the formal runner. Bounds, provider
+assumptions and the recovery gaps found are stated there.
 
 
 `MigrationLedger.tla` checks the production migration correspondence of
@@ -686,3 +709,15 @@ remove one guard (`RecordAfterCommit`, `BatchUnchecked`, `PrepareUnchecked`,
 below the model; `scripts/__tests__/migration-batch-postgres.mjs` runs the
 rendered batch through psql. Bounds and exclusions are in
 `formal/system/migration-correspondence.md`.
+
+
+`StartupGates.tla` is not a state machine: it copies the capability-gate policy
+of the startup schema verification (DEPLOY-STARTUP-001) for the fourteen
+production flags it asserts and checks, over every assignment of those flags
+to missing, disabled or enabled, that every approved configuration starts and
+that a configuration that starts has every flag in an approved state. Four
+controls each remove one guard and must violate the named invariant (these are
+constant-level failures, reported by TLC as "The invariant of X is equal to
+FALSE"). `scripts/__tests__/startup-gates-postgres.mjs` runs the real
+verification SQL for each flag in each state. Bounds are in
+`formal/system/startup-gates.md`.

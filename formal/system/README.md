@@ -79,6 +79,8 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [ticket-invoice-worker.md](ticket-invoice-worker.md): tax document submission worker rules, bounded model, four negative controls, PostgreSQL worker tests and the uncertain/rejected recovery gaps.
 - [whatsapp-consent.md](whatsapp-consent.md): double opt-in request, reply, withdrawal and undelivered-request rules with a bounded model, eight negative controls and PostgreSQL concurrency checks.
 - [migration-correspondence.md](migration-correspondence.md): production migration batch and release preparation: atomic ledger rows, fail-closed lock refusal (AUTHORITY-075), checksum drift, unknown rows and holes, bounded negative controls.
+
+- [startup-gates.md](startup-gates.md): the capability-gate policy of the startup verifier, every asserted flag in every state against the real SQL, the restart-hazard list (AUTHORITY-077), exhaustive one-state model with controls.
 - [access-grant.md](access-grant.md): reviewed access-request decisions, self-service correction (AUTHORITY-054), invitation-link claims, expiry repair and bounded negative controls.
 - [messaging.md](messaging.md): current-session/consent authority, rejected mutation rollback, bounded model and delivery/idempotency exclusions.
 - Domain contracts retain their existing source locations. This index references
