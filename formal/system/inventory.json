@@ -4418,7 +4418,7 @@
     {
       "id": "SURFACE-d9c2acee16d60d4a",
       "path": "scripts/qualify-current-image-shutdown.py",
-      "sha256": "421f9a01a0e5933e75a5ad2860aaa69e0d73c7c6329092b0b0662dcf143bc45f",
+      "sha256": "43ddd106ca17c08b24a966aaafa79cb065b5b9bab5169844f18874541fcb4b9a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5042,7 +5042,7 @@
     {
       "id": "SURFACE-f376a7082c7694cc",
       "path": "scripts/test-current-image-shutdown.py",
-      "sha256": "f69833a344861ee42b2a9b7c1de18904cd8db6e609cc9454843547c2256244f0",
+      "sha256": "fdfa1f03d699897b94ab06143bda784f355139484cc2f8e7674315599a82a971",
       "semanticConformance": "not-established-by-discovery"
     },
     {

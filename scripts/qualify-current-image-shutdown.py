@@ -21,7 +21,7 @@ IMAGE = 'diegueins680/tdf-hq@sha256:a5e6f5e8dd1d7a267c7b00ef6d4263bf11d02dd23842
 REVISION = '7ab344400d0878838b9b12742ca4cc5cd7f38f94'
 POSTGRES = 'pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21'
 LABEL = 'net.tdf.synthetic-current-image-shutdown'
-HTTP = "exec 3<>/dev/tcp/127.0.0.1/8080; printf 'GET %s HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' \"$1\" >&3; cat <&3"
+HTTP = "exec 3<>/dev/tcp/127.0.0.1/8080; printf 'GET %s HTTP/1.0\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' \"$1\" >&3; cat <&3"
 APP_ENV = {
     'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
     'LANG': 'C.UTF-8', 'APP_ENV': 'production', 'APP_PORT': '8080',
@@ -101,7 +101,8 @@ class Fixture:
         require(sep and len(body) <= 65536)
         status = head.split(b'\r\n')[0].split()
         require(len(status) >= 2 and status[1].isdigit())
-        # Warp normally emits Content-Length for these fixed JSON responses.
+        # Request HTTP/1.0 with Connection: close so EOF frames the bounded body.
+        # Chunked transfer coding is not valid on this selected protocol.
         headers = dict(line.split(b':', 1) for line in head.split(b'\r\n')[1:] if b':' in line)
         require(not any(key.lower() == b'transfer-encoding' for key in headers))
         value = json.loads(body)

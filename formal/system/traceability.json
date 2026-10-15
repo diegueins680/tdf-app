@@ -10990,7 +10990,7 @@
     "scripts/production-migrations.json": "4cfb306aad56cef7821d69d4a608ee2f3cfc61b29621c1f353c86f33edd79c7a",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
-    "scripts/qualify-current-image-shutdown.py": "421f9a01a0e5933e75a5ad2860aaa69e0d73c7c6329092b0b0662dcf143bc45f",
+    "scripts/qualify-current-image-shutdown.py": "43ddd106ca17c08b24a966aaafa79cb065b5b9bab5169844f18874541fcb4b9a",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "a701525a1028187bc17366e1163493f5d44e17df8749d67efa564817dd5b8267",
@@ -11015,7 +11015,7 @@
     "scripts/test-backend-version-rebuild.py": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
     "scripts/test-booking-conformance.py": "a9b322e5122b02b2fdf62fd0a7324cac68b73f3d41024023be71c4cd68fe7877",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
-    "scripts/test-current-image-shutdown.py": "f69833a344861ee42b2a9b7c1de18904cd8db6e609cc9454843547c2256244f0",
+    "scripts/test-current-image-shutdown.py": "fdfa1f03d699897b94ab06143bda784f355139484cc2f8e7674315599a82a971",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -23203,7 +23203,7 @@
     {
       "id": "SURFACE-d9c2acee16d60d4a",
       "path": "scripts/qualify-current-image-shutdown.py",
-      "sha256": "421f9a01a0e5933e75a5ad2860aaa69e0d73c7c6329092b0b0662dcf143bc45f",
+      "sha256": "43ddd106ca17c08b24a966aaafa79cb065b5b9bab5169844f18874541fcb4b9a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24236,7 +24236,7 @@
     {
       "id": "SURFACE-f376a7082c7694cc",
       "path": "scripts/test-current-image-shutdown.py",
-      "sha256": "f69833a344861ee42b2a9b7c1de18904cd8db6e609cc9454843547c2256244f0",
+      "sha256": "fdfa1f03d699897b94ab06143bda784f355139484cc2f8e7674315599a82a971",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

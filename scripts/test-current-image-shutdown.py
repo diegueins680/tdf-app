@@ -117,6 +117,14 @@ class BoundaryTests(unittest.TestCase):
             self.assertFalse(fixture.report['releaseAuthorized'])
             self.assertFalse(fixture.report['activeRequestDrainVerified'])
 
+    def test_fixed_http10_probe_accepts_eof_framed_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = self.fixture(directory); fixture.app = 'synthetic'
+            raw = b'HTTP/1.0 200 OK\r\nContent-Type: application/json\r\n\r\n{"status":"ok","db":"ok"}'
+            with patch.object(fixture, 'docker', return_value=completed(raw)) as docker:
+                self.assertEqual(fixture.probe('/health'), {'status': 200, 'body': {'status': 'ok', 'db': 'ok'}})
+                self.assertIn('HTTP/1.0', docker.call_args.args[0][4])
+
     def test_malformed_or_nonmetadata_http_response_rejects(self):
         for raw in (b'invalid', b'HTTP/1.1 200 OK\r\n\r\n{"token":"never-allowed"}',
                     b'HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n{}'):
