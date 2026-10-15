@@ -8459,13 +8459,13 @@
     {
       "id": "SURFACE-fd4d2654b87334c2",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
-      "sha256": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
+      "sha256": "46c374c150cc8b5ec599fc597a636cf7a48973ac9ce8e2f00b255cafbd702dba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
+      "sha256": "c12dde7fb46cd996cd24a04a9195ba1f0e01faf19a2967be9ab445977047c21b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24770,7 +24770,7 @@
     },
     {
       "path": "formal/system/mobile-entry-ux.md",
-      "sha256": "e5591040ee08cf1fad49a7c10a6349705cee350578302a0301f520e93f398509",
+      "sha256": "554ece8a8f8e6cd33acebe8c37d43c5cd6b8cc4bdab1510cd4eb9977eb44d218",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24889,7 +24889,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6cf93726853a8ccef4316b964d12c1462046f823d6330e6a0fa3a7269c60022d",
+      "sha256": "20db5589e82cf35124497819a3e101fdbca6b02569e1303bd7cf75bef004f382",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

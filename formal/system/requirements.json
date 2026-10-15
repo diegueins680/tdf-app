@@ -8815,12 +8815,14 @@
       "allowedTransitions": [
         "CTA/sticky CTA/deep link -> dialog focused on first missing field",
         "valid submit -> received or order checkout",
-        "server field error -> message beside field"
+        "server field error -> message beside field",
+        "close -> completed dialog exit -> remove resume parameter, preserve attribution and restore trigger focus"
       ],
       "forbiddenTransitions": [
         "form discovered only by scrolling",
         "raw local phone sent as E.164",
-        "raw server text shown"
+        "raw server text shown",
+        "navigation interrupts closing and retains a modal"
       ],
       "effects": [
         "Draft preserved across login round-trip and cleared on success."
