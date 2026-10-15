@@ -105,6 +105,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `CommandPrivacyExistenceLeak.cfg`, `CommandPrivacyReceiptLeak.cfg` | Negative controls: distinct hidden-event error / receipt response before visibility | Expected exit 12 with `OpaqueTarget`; both detected |
 | `SessionFence.cfg` | 1 authentication/transaction; 32 token records; 2 actors; witness present/absent; read/new/replay | PASS; 12,685 generated, 1,153 distinct states, depth 5 |
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
+| `MusicAssetProcessing.cfg` (2026-10-12) | One processing job, two worker processes sharing a name, bytes matching or not, 3 attempts plus one reclaim past the bound; claim, lease expiry, fenced stop, promote, fail for any reason | PASS; 934 generated, 554 distinct states; `PromotedOnlyVerified`, `CompletionIsCurrent`, `LiveLeaseIsCurrent`, `OneLiveLease` |
+| `MusicAssetProcessingUnfenced/Preempt/Unverified.cfg` | Negative controls: no attempt token, reclaim before lease expiry, promotion without checksum | Expected exit 12 with `CompletionIsCurrent`, `LiveLeaseIsCurrent`, `PromotedOnlyVerified` |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
@@ -230,6 +232,12 @@ The runner requires the exact named failures from all three negative controls.
 - `CommandPrivacy.tla`: paired absent/unreadable status/body equality for fresh commands and all
   receipt classes, while retaining read-only mutation denial. The atomic observation assumes the
   existing current-authorization fence; it does not prove session revocation or constant-time access.
+- `MusicAssetProcessing.tla` (2026-10-12): leased processing of one uploaded
+  music asset by worker runs that may share a name; the attempt is the fencing
+  token, a running job is reclaimed only after its lease expired, promotion
+  needs the recomputed checksum. See
+  [music asset processing](../system/music-asset-processing.md). Rendering,
+  object storage and the heartbeat are outside the model.
 - `SessionFence.tla`: request-local token/party/credential binding, recheck after token locking and
   lock retention through the event decision. It models current validity, not permanent revocation
   epochs: explicit reactivation of the same credential reauthorizes it. Global role/catalog changes

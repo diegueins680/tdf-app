@@ -7905,14 +7905,21 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicAssetProcessing.tla",
+        "formal/event-operations/MusicAssetProcessing.cfg",
+        "formal/event-operations/MusicAssetProcessingUnfenced.cfg",
+        "formal/event-operations/MusicAssetProcessingPreempt.cfg",
+        "formal/event-operations/MusicAssetProcessingUnverified.cfg",
+        "formal/event-operations/MusicAssetProcessingOverLimit.cfg"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-ASSET-001",
       "title": "Quarantined uploads, reproducible processing and signed asset access",
       "domain": "MEDIA",
       "critical": true,
       "statement": "Audio and artwork uploads go by scoped SigV4 multipart to a quarantine bucket under a UUID key. The worker re-downloads, recomputes SHA-256, inspects the real type, produces reproducible derivatives (AAC/FLAC/preview/artwork) with a versioned manifest, and only then promotes the original bytes as immutable. Public asset URLs are signed for five minutes only after music_public_asset_accessible re-resolves version, embargo, territory and policy; masters are never publicly signed.",
-      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md",
+      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md; AUTHORITY-067 (state sets and lease guard recorded)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/worker-multipart.md",
       "contract": "docs/music-releases/api-and-configuration.md",
       "property": "Every served derivative is traceable to a checksum-verified, promoted original; no master is signable for public access.",
@@ -7933,20 +7940,38 @@
       "state": {
         "asset": [
           "quarantined",
+          "uploaded",
+          "inspecting",
+          "valid",
+          "invalid",
           "processing",
-          "promoted",
-          "failed"
+          "ready",
+          "failed",
+          "deleted"
         ],
-        "authority": "Database job rows and worker"
+        "job": [
+          "queued",
+          "running",
+          "retry",
+          "succeeded",
+          "failed",
+          "dead_letter",
+          "cancelled"
+        ],
+        "authority": "music_asset.processing_state and music_processing_job.status; the worker's lease guard (pg_temp.music_worker_guard) fences every write of a run on worker name, claimed attempt and lease age"
       },
       "allowedTransitions": [
-        "uploaded -> quarantined -> processing -> promoted",
-        "processing -> failed -> retried"
+        "upload session initiated -> uploading -> completed; confirmation creates the asset as uploaded and one job per session",
+        "asset uploaded -> inspecting -> valid (master, immutable, master bucket) with derivatives inserted ready and immutable",
+        "job queued/retry -> running (claim, attempt+1) -> succeeded | retry (run_after delayed) | dead_letter at or beyond max_attempts (an expired last attempt is reclaimed once more)",
+        "running -> reclaimed by another run only after the lease expired"
       ],
       "forbiddenTransitions": [
         "Promotion without matching recomputed SHA-256",
         "Public signature for a master asset",
-        "Mutation of promoted bytes"
+        "Mutation of promoted bytes",
+        "A completion written by a run whose job was reclaimed (attempt token mismatch)",
+        "Reclaiming a job whose lease is still live"
       ],
       "effects": [
         "Immutable original location and checksum",
@@ -7954,10 +7979,10 @@
       ],
       "authorization": "Upload sessions require authoring permission; signatures are scoped to one key and short-lived.",
       "privacy": "Quarantine and master buckets are private; territory comes from CF-IPCountry only behind Cloudflare, otherwise specific rules fail closed.",
-      "concurrency": "Worker claims jobs with row locks; multipart completion is idempotent per upload.",
+      "concurrency": "Worker claims one due job FOR UPDATE SKIP LOCKED; every later statement of the run is prefixed by the lease guard (version row FOR NO KEY UPDATE, job row FOR UPDATE, status running, same worker name, same attempt, lease younger than the ttl); multipart completion is idempotent per upload; derivatives are unique per (version, role, sha256).",
       "idempotency": "Re-running a job reproduces identical derivatives for identical input.",
-      "failure": "Type, size or checksum mismatch fails the job without promotion.",
-      "recovery": "Failed jobs are retried; orphan multipart uploads are aborted per worker-multipart.md.",
+      "failure": "Type, size or checksum mismatch fails the attempt without promotion; the job retries with a growing delay until max_attempts, then dead_letter, and the version becomes validation_failed. A lost or expired lease stops the run (lease-lost marker, USR1) and the job is reclaimed.",
+      "recovery": "Failed jobs are retried with a growing delay; an expired lease lets another run reclaim the job. Orphan multipart uploads created by the worker's own PUTs are aborted per worker-multipart.md; client upload sessions have no purge (ambiguity). A corrected re-upload after a checksum-mismatch dead letter is not inspected (defect recorded 2026-10-12 in formal/system/music-asset-processing.md): the only recovery is a new release version.",
       "observability": "Worker logs and job status rows; worker-regression-diagnostics.md.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
@@ -7999,15 +8024,19 @@
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/utils/incrementalSha256.test.ts"
       ],
-      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3",
-      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16)",
-      "confidence": "Medium: local-only evidence; no deployed worker or real buckets.",
+      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md)",
+      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12)",
+      "confidence": "Medium: lease guard, claim and promotion rules read from source and model-checked in a bounded scope; local-only runtime evidence; no deployed worker or real buckets.",
       "ambiguity": [
-        "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only)."
+        "Defect (recorded 2026-10-12, not fixed): confirmMusicUpload binds a re-upload with the same declared SHA-256 to the existing non-promoted asset row and the worker re-inspects the old quarantine object, so a checksum-mismatch dead letter cannot be recovered by uploading the correct bytes.",
+        "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only).",
+        "Abandoned upload sessions are never marked expired and purge_abandoned_upload is never enqueued (formal/system/music-asset-processing.md).",
+        "A checksum mismatch is retried up to max_attempts before dead_letter although it cannot succeed.",
+        "A dead-lettered source asset keeps processing_state = 'inspecting'."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local integration evidence only; no deployment."
+        "reason": "Lease guard, claim and checksum-gated promotion read from source and model-checked (2026-10-12); one recorded defect (re-upload after mismatch not inspected) awaits a fix; local-only runtime evidence; not deployed."
       }
     },
     {

@@ -277,6 +277,11 @@ expect_counterexample() {
   echo "Expected mutation counterexample: ${config}: ${invariant}"
   printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc MusicAssetProcessing.tla MusicAssetProcessing.cfg music-asset-processing
+run_negative_tlc MusicAssetProcessingUnfenced.cfg music-asset-processing-unfenced 'Invariant CompletionIsCurrent is violated' MusicAssetProcessing.tla
+run_negative_tlc MusicAssetProcessingPreempt.cfg music-asset-processing-preempt 'Invariant LiveLeaseIsCurrent is violated' MusicAssetProcessing.tla
+run_negative_tlc MusicAssetProcessingUnverified.cfg music-asset-processing-unverified 'Invariant PromotedOnlyVerified is violated' MusicAssetProcessing.tla
+run_negative_tlc MusicAssetProcessingOverLimit.cfg music-asset-processing-overlimit 'Invariant NoOverLimitRun is violated' MusicAssetProcessing.tla
 run_tlc PaymentRecovery.tla PaymentRecovery.cfg payment-recovery
 expect_counterexample PaymentRecoveryOverwrite.cfg NoLostRecovery payment-recovery-overwrite PaymentRecovery.tla
 expect_counterexample PaymentRecoveryReturn.cfg CorrectReturn payment-recovery-return PaymentRecovery.tla
