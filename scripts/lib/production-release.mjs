@@ -694,6 +694,7 @@ export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
   'music_check_submission(uuid)',
   'music_create_release_correction(uuid,uuid,bigint)',
   'music_merge_party_identifiers(jsonb,jsonb)',
+  'music_minor_units_json(bigint)',
   'music_preview_matches(uuid)',
   'music_preview_spec(bigint,bigint,bigint)',
   'music_public_asset_accessible(uuid,text)',

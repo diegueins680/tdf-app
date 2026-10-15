@@ -31,12 +31,50 @@ jest.unstable_mockModule('../api/musicReleases', () => ({ musicReleases: {
 const { default: Studio } = await import('./MusicReleaseStudioPage');
 
 beforeEach(() => {
+  version.availability = [];
+  version.assets = [];
+  version.tracks = [];
   saveMetadata.mockReset().mockResolvedValue({ ...version, updatedAt: '2026-09-15T00:00:01Z' });
   saveContent.mockReset().mockResolvedValue({ ...version, updatedAt: '2026-09-15T00:00:02Z' });
   acceptTerms.mockReset().mockResolvedValue(undefined);
   validate.mockReset().mockResolvedValue({ valid: true, errors: [] });
   transition.mockReset().mockResolvedValue(undefined);
   uploadAsset.mockReset().mockResolvedValue(undefined);
+});
+
+it('keeps a large authored price as exact decimal text through the actual form', async () => {
+  const assetId = '00000000-0000-4000-8000-000000000001';
+  version.tracks = [{ trackId: '00000000-0000-4000-8000-000000000002',
+    recordingId: '00000000-0000-4000-8000-000000000003', discNumber: 1, trackNumber: 1,
+    displayArtist: 'Artista sintético', isPrimaryResource: true, previewStartMs: null,
+    previewDurationMs: null, title: 'Pista sintética', subtitle: null, versionTitle: null,
+    titleLanguage: 'es', titleScript: null, durationMs: 60000, explicitContent: 'not_explicit' }];
+  version.availability = [{ territory_mode: 'include', territories: ['Worldwide'],
+    starts_at: null, ends_at: null, listening_policy: 'none', download_policy: 'purchase',
+    purchasable: true, price_minor: '9007199254740993', currency: 'USD', downloadable_asset_id: assetId }];
+  version.assets = [{ id: assetId, recordingId: null, parentAssetId: 'source', role: 'stream_audio',
+    originalFilename: 'synthetic.mp3', mediaType: 'audio/mpeg', byteSize: 4, sha256: 'a'.repeat(64),
+    processingState: 'ready', technicalMetadata: {}, createdAt: version.updatedAt, readyAt: version.updatedAt }];
+  saveMetadata.mockResolvedValue({ ...version, updatedAt: '2026-09-15T00:00:01Z' });
+  saveContent.mockResolvedValue({ ...version, updatedAt: '2026-09-15T00:00:02Z' });
+  const close = await openStudio();
+  try {
+    const field = await screen.findByRole<HTMLInputElement>('textbox', { name: 'Precio (unidad menor)' });
+    expect(field.type).toBe('text');
+    expect(field.inputMode).toBe('numeric');
+    expect(field.value).toBe('9007199254740993');
+    fireEvent.change(field, { target: { value: '9007199254740994' } });
+    fireEvent.keyDown(field, { key: 'ArrowUp' });
+    expect(() => field.stepUp()).toThrow();
+    expect(field.value).toBe('9007199254740994');
+    fireEvent.change(field, { target: { value: '9223372036854775807' } });
+    expect(field.value).toBe('9223372036854775807');
+    await click('Guardar ahora');
+    await waitFor(() => expect(saveContent).toHaveBeenCalledTimes(1));
+    expect(saveContent).toHaveBeenCalledWith('release', 'version', expect.objectContaining({
+      availability: [expect.objectContaining({ priceMinor: '9223372036854775807' })],
+    }));
+  } finally { close(); version.availability = []; version.assets = []; version.tracks = []; }
 });
 
 async function openStudio() {

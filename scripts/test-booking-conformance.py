@@ -716,6 +716,9 @@ try:
     from operations_conformance import verify_operations
     verify_operations(sql, request, check, ENV, NAME, OUTPUT, actors)
 
+    from music_money_conformance import verify_music_money
+    verify_music_money(sql, request, check, actor, ROOT)
+
     from readiness_conformance import verify_readiness
     verify_readiness(run, NAME, http_port, check)
 

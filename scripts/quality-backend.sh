@@ -30,6 +30,17 @@ fi
 )
 
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-cors-boundary.py"
+
+# SYS-MUSIC-TEST-ENTRY-001: listing a module in Cabal does not execute its
+# specs. Missing any of these four canonical groups must fail, even if the
+# remaining large aggregate suite is green. Reuse the binary just built.
+(
+  cd "$BACKEND_DIR"
+  test_binary="$(STACK_ROOT="$STACK_ROOT_DIR" stack path --dist-dir)/build/tdf-hq-test/tdf-hq-test"
+  for group in music-unit-domain music-unit-content music-unit-ddex music-unit-storage; do
+    "$test_binary" "--match=$group" --fail-on=empty
+  done
+)
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-request-failures.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-readiness.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-invoice-receipts.py"
