@@ -11488,7 +11488,7 @@ export interface components {
              * @description Fixed safe classification, not raw stored exception text
              * @enum {string}
              */
-            creReason: "closed_checkout_approval" | "scheduled_query_review" | "binding_mismatch" | "unknown_provider_state" | "unrecognized";
+            creReason: "closed_checkout_approval" | "scheduled_query_review" | "binding_mismatch" | "unknown_provider_state" | "music_paid_closed_order" | "unrecognized";
             /** Format: uuid */
             creCheckoutId: string | null;
             /** Format: uuid */

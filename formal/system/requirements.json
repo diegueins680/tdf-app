@@ -9922,7 +9922,8 @@
         "music_download checkout linked to its canonical purchase",
         "Existing before-trigger validates succeeded attempt and immutable provider binding before paid",
         "Migration refuses existing active purchase entitlements whose order is not paid",
-        "Music commerce remains disabled until separate provider runtime/recovery obligations are satisfied"
+        "Music commerce remains disabled until separate provider runtime/recovery obligations are satisfied",
+        "Release schema verifier requires music_checkout_payment_attempt_allowed(uuid) before candidate admission"
       ],
       "inputs": [
         "Checkout status transition",
@@ -9967,7 +9968,8 @@
       "effects": [
         "Canonical settlement and unique entitlement when payable",
         "Existing reconciliation exception with checkout-scoped internal reference and exact provider/resource metadata when closed",
-        "Idempotent purchase_payment_requires_review audit event"
+        "Idempotent purchase_payment_requires_review audit event",
+        "Safe known music_paid_closed_order administrative reason represented in OpenAPI and generated web/mobile clients"
       ],
       "authorization": "Existing verified-payment admission and immutable binding checks remain prerequisites. Reconciliation report remains strict-administrator-only; this migration grants no new privilege.",
       "privacy": "Existing financial reconciliation/audit boundaries; no message payload, credential or new public data. The report omits merchant/provider references. Retention policy and operational resolution are separate obligations.",
@@ -9981,7 +9983,11 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Server/CommerceOperations.hs",
         "scripts/production-migrations.json",
-        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "tests": [
         "tdf-hq/test/sql/music_payment_outcomes.sql",

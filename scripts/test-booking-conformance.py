@@ -140,7 +140,7 @@ try:
                  # Invalid synthetic credentials only exercise stored-binding responses;
                  # the music fixture never calls a provider or starts a new attempt.
                  'PAYPAL_ENV': 'sandbox', 'PAYPAL_CLIENT_ID': 'synthetic-local-client',
-                 'PAYPAL_CLIENT_SECRET': 'synthetic-local-secret', 'PAYPAL_MERCHANT_ID': 'SYNTHETICMERCHANT',
+                 'PAYPAL_CLIENT_SECRET': 'synthetic-local-secret', 'PAYPAL_MERCHANT_ID': 'music-state-fixture',
                  'COMMERCE_CHECKOUT_ENV': 'sandbox',
                  'DDEX_STORAGE_BACKEND': 'local-private', 'DDEX_PRIVATE_STORAGE_ROOT': str(OUTPUT / 'ddex-private'),
                  'EVENT_DISCOVERY_ENABLED': 'false', 'ARTIST_ENRICHMENT_ENABLED': 'false',

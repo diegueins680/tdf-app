@@ -41,7 +41,10 @@ money, the projection preserves payment evidence, leaves fulfillment closed and
 grants no entitlement. It creates an existing commerce reconciliation exception
 and an idempotent audit event. The case's internal reference is the checkout ID;
 the strict-administrator report links that ID to the unique matching attempt and
-provider binding. This is not recovery of a cancelled or expired **checkout**:
+provider binding. The known reason `music_paid_closed_order` is allowlisted by the
+report, OpenAPI and generated web/mobile clients. The release schema verifier
+requires the exact admission-function signature before application admission.
+This is not recovery of a cancelled or expired **checkout**:
 the shared payment recorder excludes those states and that recovery remains open.
 
 Application rollback must retain this compatibility migration and its admission

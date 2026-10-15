@@ -154,6 +154,8 @@ def verify_music_payment_outcomes(sql, check, env, database, output, root, reque
                     '&checkoutId=' + row['checkout_id'])
             status, body = request(path)
             entries = json.loads(body).get('crrEntries', []) if status == 200 else []
+            (output / ('music-reconciliation-' + kind + '.json')).write_text(
+                json.dumps({'status': status, 'response': json.loads(body) if status == 200 else body}, indent=2) + '\n')
             check('music closed-order exception links through administrative API: ' + kind,
                   status == 200 and len(entries) == 1
                   and entries[0].get('creCheckoutId') == row['checkout_id']
