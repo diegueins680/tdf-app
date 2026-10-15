@@ -388,7 +388,8 @@
         "scripts/test-ticket-manual-review.sh",
         "scripts/test-ledger-posting.sh",
         "tdf-hq/test/TDF/LedgerPostingSpec.hs",
-        "scripts/__tests__/ledger-posting-upgrade.py"
+        "scripts/__tests__/ledger-posting-upgrade.py",
+        "tdf-hq/test/TDF/Test/DisposablePostgres.hs"
       ],
       "formalModels": [
         "formal/event-operations/LedgerPosting.tla",
@@ -3428,9 +3429,9 @@
       ],
       "authorization": "Current checkout lookup capability and provider/environment/method scope remain required; idempotency keys alone grant no authority.",
       "privacy": "Synthetic integration tests do not contact real providers or expose customer lookup capabilities.",
-      "concurrency": "Atomic transaction abstraction requires actual PostgreSQL row locks and rollback; separate integration tests must establish the implementation boundary.",
+      "concurrency": "Atomic transaction abstraction requires actual PostgreSQL row locks and rollback; separate integration tests must establish the implementation boundary. Ticket cross-rail admission reads capture uncertainty under the checkout lock, after the event sales lock; failure recording acquires checkout before attempt. A two-transaction finite model covers stale reads and unfenced writers, with a real PostgreSQL blocking-observation regression.",
       "idempotency": "Key domain is provider, merchant account, operation and key; exact replay additionally binds checkout, environment, amount and currency. Provider operation hashes retain additional request binding.",
-      "failure": "Ambiguous provider response retains original identity and blocks fresh-charge fallback pending reconciliation. Conflicting replay rejects without repairing historical evidence. Ticket capture fallback treats missing, unknown and refunded nested captures as unresolved; only explicit declined/failed captures establish no-charge.",
+      "failure": "Ambiguous provider response retains original identity and blocks fresh-charge fallback pending reconciliation. Conflicting replay rejects without repairing historical evidence. Ticket capture fallback treats missing, unknown and refunded nested captures as unresolved; only explicit declined/failed captures establish no-charge. Completed captures with mismatched binding/money remain fenced pending reconciliation.",
       "recovery": "Reconcile the original operation; allow a fresh reference only after authoritative no-charge and current payable-state admission.",
       "observability": "Retain attempt/intent/provider operation identity and redacted reconciliation outcomes; exact candidate integration and bounded-model receipts.",
       "implementation": [
@@ -3458,7 +3459,12 @@
         "formal/event-operations/TicketCaptureClassification.tla",
         "formal/event-operations/TicketCaptureClassification.cfg",
         "formal/event-operations/TicketCaptureClassificationUnsafeReadback.cfg",
-        "formal/event-operations/TicketCaptureClassificationUnsafeResponse.cfg"
+        "formal/event-operations/TicketCaptureClassificationUnsafeResponse.cfg",
+        "formal/event-operations/TicketCaptureClassificationBindingMismatch.cfg",
+        "formal/event-operations/TicketCaptureFence.tla",
+        "formal/event-operations/TicketCaptureFence.cfg",
+        "formal/event-operations/TicketCaptureFenceStaleRead.cfg",
+        "formal/event-operations/TicketCaptureFenceUnlockedWriter.cfg"
       ],
       "verification": "Bounded TLC positive and five named mutation counterexamples plus environment-enabled actual PostgreSQL provider retry integration.",
       "evidence": "Exact candidate formal and PostgreSQL integration logs; ordinary Hspec without integration environment is insufficient.",
@@ -9390,7 +9396,8 @@
         "tdf-mobile/src/api/client.ts",
         "tdf-mobile/src/types/index.ts",
         "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql",
-        "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql"
+        "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql",
+        "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
@@ -9401,16 +9408,21 @@
         "tdf-mobile/__tests__/TicketCheckout.test.tsx",
         "tdf-mobile/__tests__/apiClient.test.ts",
         "scripts/test-checkout-policy-terms-identity-migration.sh",
-        "scripts/test-checkout-terms-upgrade-concurrency.py"
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
+        "scripts/test-checkout-terms-history.sh",
+        "tdf-hq/test/integration/checkout_terms_history_identity.sql"
       ],
       "formalModels": [
         "formal/event-operations/TermsIdentityUpgrade.tla",
         "formal/event-operations/TermsIdentityUpgrade.cfg",
         "formal/event-operations/TermsIdentityUpgradeUnfenced.cfg",
         "formal/event-operations/TermsIdentityUpgradeEarlyUnlock.cfg",
-        "formal/event-operations/TermsIdentityUpgradeUnchecked.cfg"
+        "formal/event-operations/TermsIdentityUpgradeUnchecked.cfg",
+        "formal/event-operations/TermsIdentityHistory.tla",
+        "formal/event-operations/TermsIdentityHistory.cfg",
+        "formal/event-operations/TermsIdentityHistoryLiveOnly.cfg"
       ],
-      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required. Database test of the terms-version identity triggers (scripts/test-checkout-policy-terms-identity-migration.sh). Scope-only course/event reassignment is checked against destination terms; matching and unused destination versions remain permitted. Independent guard-removal controls reproduce conflicting reassignments for each table. A controlled PostgreSQL barrier witnesses a conflicting writer after preflight and before trigger DDL for each table; the original migration admits both texts, while the fenced migration blocks and then rejects the writer. TermsIdentityUpgrade checks the finite two-scope upgrade boundary with three expected counterexamples; this does not prove whole checkout consent, arbitrary schedules or SQL refinement.",
+      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required. Database test of the terms-version identity triggers (scripts/test-checkout-policy-terms-identity-migration.sh). Scope-only course/event reassignment is checked against destination terms; matching and unused destination versions remain permitted. Independent guard-removal controls reproduce conflicting reassignments for each table. A controlled PostgreSQL barrier witnesses a conflicting writer after preflight and before trigger DDL for each table; the original migration admits both texts, while the fenced migration blocks and then rejects the writer. TermsIdentityUpgrade checks the finite two-scope upgrade boundary with three expected counterexamples; this does not prove whole checkout consent, arbitrary schedules or SQL refinement. Historical policy snapshots also fence version reuse after deleting the last live policy or editing it in place. Full-schema SQL checks cover course and event history, identical replay and a distinct new version. Independent old-guard controls admit the forbidden reuse; conflicting historical preflight controls fail closed. The finite history model covers two scopes, one version and two texts, not all production schedules.",
       "evidence": "Exact-revision CI receipt required before claiming conformance.",
       "status": "specified and implemented",
       "historicalStatus": "new",

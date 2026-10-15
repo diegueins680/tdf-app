@@ -1,10 +1,10 @@
 ---- MODULE TicketCaptureClassification ----
 EXTENDS Naturals
-CONSTANTS UnsafeErrorReadback, UnsafeSuccessResponse
+CONSTANTS UnsafeErrorReadback, UnsafeSuccessResponse, UnsafeBindingMismatch
 VARIABLES phase, status, path, locked, otherRail
 vars == <<phase, status, path, locked, otherRail>>
 Statuses == {"MISSING", "UNKNOWN", "PENDING", "PARTIALLY_REFUNDED", "REFUNDED",
-             "DECLINED", "FAILED", "FUTURE_STATUS"}
+             "DECLINED", "FAILED", "FUTURE_STATUS", "COMPLETED_BINDING_MISMATCH"}
 NoCharge == {"DECLINED", "FAILED"}
 Init == /\ phase = "initial"
         /\ status = "MISSING"
@@ -20,7 +20,8 @@ Observe(s, p) ==
                    THEN s \in {"MISSING", "PENDING"}
                    ELSE IF p = "response" /\ UnsafeSuccessResponse
                         THEN s = "PENDING"
-                        ELSE s \notin NoCharge
+                        ELSE IF UnsafeBindingMismatch /\ s = "COMPLETED_BINDING_MISMATCH"
+                             THEN FALSE ELSE s \notin NoCharge
   /\ UNCHANGED otherRail
 StartOtherRail == /\ phase = "observed"
                   /\ ~locked

@@ -1131,13 +1131,15 @@ paypalMethodCode = Checkout.paymentProviderText Checkout.ProviderPayPal
 
 -- | Whether the checkout's PayPal capture ended without the provider confirming
 -- either outcome. A later capture attempt replays the same attempt row, so its
--- definite result (succeeded, or a different failure code) clears this.
+-- definite result (succeeded, or a confirmed no-charge failure) clears this.
+-- A completed capture with mismatched binding/money still may have charged the
+-- buyer, so its reconciliation exception must keep other rails fenced.
 ticketCaptureUnverified :: Checkout.CheckoutReference -> SqlPersistT IO Bool
 ticketCaptureUnverified checkout = do
   rows <- rawSql
     "SELECT EXISTS (SELECT 1 FROM commerce_payment_attempt\
     \ WHERE checkout_id = ?::uuid AND provider = ? AND operation = 'capture'\
-    \ AND status = 'failed' AND failure_code = ?)"
+    \ AND status = 'failed' AND failure_code IN (?, 'provider_binding_mismatch'))"
     [ PersistText (Checkout.checkoutReferenceId checkout)
     , PersistText paypalMethodCode
     , PersistText paypalCaptureUnverifiedCode
@@ -1148,6 +1150,12 @@ ticketCaptureUnverified checkout = do
 -- capture for the same checkout is unverified.
 ticketUnverifiedCaptureRefusal :: Checkout.CheckoutReference -> SqlPersistT IO (Maybe Text)
 ticketUnverifiedCaptureRefusal checkout = do
+  -- Sales guards take the event lock first. Take the checkout lock next and
+  -- only then read capture uncertainty; beginPaymentAttempt will retain this
+  -- same lock through intent/attempt creation. Failure writers use this lock
+  -- before updating attempts, so a blocked reader observes their committed code.
+  _ <- rawSql "SELECT id::text FROM commerce_checkout_session WHERE id = ?::uuid FOR UPDATE"
+    [PersistText (Checkout.checkoutReferenceId checkout)] :: SqlPersistT IO [Single Text]
   unverified <- ticketCaptureUnverified checkout
   pure $ if unverified
     then Just "A PayPal payment for this order could not be verified; retry PayPal so it is reconciled before using another payment method"

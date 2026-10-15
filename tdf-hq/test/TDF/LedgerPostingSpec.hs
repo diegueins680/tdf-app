@@ -3,10 +3,10 @@ module TDF.LedgerPostingSpec (spec) where
 
 import Control.Concurrent.Async (concurrently)
 import Control.Exception (finally, try)
+import Control.Monad (forM_)
 import Control.Monad.Logger (runNoLoggingT)
 import qualified Data.ByteString.Char8 as BS
 import Data.Int (Int64)
-import Data.List (isPrefixOf, isSuffixOf)
 import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -16,6 +16,7 @@ import Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute
 import Database.PostgreSQL.Simple (SqlError(..))
 import System.Environment (lookupEnv)
 import System.Random (randomRIO)
+import TDF.Test.DisposablePostgres (isDisposablePostgresUrl)
 import Test.Hspec
 
 -- Posting rules of commerce_ledger_transaction against the fully migrated
@@ -25,14 +26,33 @@ import Test.Hspec
 spec :: Spec
 spec = describe "ledger-posting-postgresql" $ do
   configured <- runIO (lookupEnv "TDF_LEDGER_POSTING_DATABASE_URL")
+  ci <- runIO ((== Just "true") <$> lookupEnv "CI")
   routingOverrides <- runIO (traverse lookupEnv ["PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"])
+  it "validates the actual destination before opening a ledger connection" $ do
+    forM_
+      [ "postgresql://localhost:secret@db.example/orders_test"
+      , "postgresql://127.0.0.1:5432@db.example/orders_test"
+      , "postgresql://localhost.evil/orders_test"
+      , "postgresql://localhost/orders_test?host=db.example"
+      , "postgresql://localhost/orders%5ftest"
+      , "postgresql://localhost:0/orders_test"
+      , "postgresql://localhost:65536/orders_test"
+      , "postgresql://localhost/production"
+      ] $ \connection -> isDisposablePostgresUrl True connection `shouldBe` False
+    forM_
+      [ "postgres://localhost/orders_test"
+      , "postgresql://fixture:synthetic@127.0.0.1:5432/orders-local_test"
+      ] $ \connection -> isDisposablePostgresUrl False connection `shouldBe` True
+    let service = "postgresql://postgres:postgres@postgres:5432/orders_test"
+    isDisposablePostgresUrl False service `shouldBe` False
+    isDisposablePostgresUrl True service `shouldBe` True
   case configured of
     Nothing -> it "requires the isolated fully migrated integration runner" $
       pendingWith "Run scripts/test-ledger-posting.sh"
     Just _ | any (maybe False (not . null)) routingOverrides ->
       it "refuses inherited libpq routing overrides" $
         expectationFailure "Unset PGHOSTADDR, PGSERVICE and PGSERVICEFILE for the isolated runner"
-    Just connection | not (safeConnection connection) ->
+    Just connection | not (isDisposablePostgresUrl ci connection) ->
       it "refuses a non-disposable database" $ expectationFailure "Use the isolated integration runner"
     Just connection -> beforeAll (runNoLoggingT (createPostgresqlPool (BS.pack connection) 3)) $
       afterAll (\pool -> runSqlPool forget pool `finally` destroyAllResources pool) $ do
@@ -126,12 +146,6 @@ spec = describe "ledger-posting-postgresql" $ do
             (Right (), Left _, "draft") -> balance `shouldBe` 1
             (Left _, Right (), "posted") -> balance `shouldBe` 0
             other -> expectationFailure ("Unexpected race outcome: " <> show other)
-
-safeConnection :: String -> Bool
-safeConnection value = not (any (`elem` value) ['?', '#'])
-  && "_test" `isSuffixOf` value && any (`isPrefixOf` value)
-  ["postgresql://127.0.0.1/", "postgresql://127.0.0.1:", "postgresql://localhost/",
-   "postgresql://localhost:", "postgresql://postgres:postgres@postgres:5432/"]
 
 sourcePrefix :: Text
 sourcePrefix = "ledger-posting-spec."

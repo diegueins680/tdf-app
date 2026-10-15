@@ -719,3 +719,30 @@ assumptions and the recovery gaps found are stated there.
 with two scope classes; unfenced, early-unlock and unchecked-history variants
 violate `InstalledHistoryValid`. PostgreSQL barrier tests exercise the shipped SQL.
 This is a bounded upgrade model, not a proof of complete checkout consent.
+
+### Ticket capture reconciliation and rail admission
+
+`TicketCaptureClassification` includes a completed capture whose order, merchant,
+amount or currency binding failed validation. This observation does not establish
+that no money moved; another rail remains fenced until reconciliation. The
+binding-mismatch mutation demonstrates the missing failure-code fence.
+
+`TicketCaptureFence` enumerates one capture-failure writer and one alternative-rail
+reader. Both serialize on the checkout row; the reader evaluates uncertainty only
+after acquiring that lock. Its two negative controls read before the lock or let
+the writer bypass it. The model distinguishes a new rail admitted before the
+failure commits from a stale admission after that commit. It abstracts event
+sales locking, transaction rollback, provider calls, intent states and arbitrary
+numbers of actors; it is not a complete refinement proof. The PostgreSQL
+`TicketPaymentGateSpec` observes the actual blocking PID before committing the
+failure writer, then checks refusal and absence of any alternative-rail attempt.
+
+`TermsIdentityHistory` checks two independent scopes, one terms version and two
+possible texts. Deleting the last live policy must preserve its history identity;
+the live-only mutation permits a conflicting replacement. PostgreSQL tests also
+cover identical reuse, self-updates and new-version acceptance. The additive
+`2026-10-15_checkout_terms_historical_identity` migration queries existing history
+snapshots and fails closed on historical conflicts. Keep this guard and its indexes
+when rolling application code back; removing it would restore the consent bug.
+Previous migration bytes remain unchanged. This does not authorize rewriting
+historical snapshots or applying the migration to production.

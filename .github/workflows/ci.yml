@@ -537,6 +537,11 @@ jobs:
           TDF_CHECKOUT_AMOUNT_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: node scripts/__tests__/checkout-amount-postgres.mjs
 
+      - name: Verify terms identities survive policy deletion and edits
+        env:
+          TDF_TERMS_HISTORY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-checkout-terms-history.sh
+
       - name: Verify music purchase payment record, entitlement and download limits
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
