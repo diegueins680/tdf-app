@@ -1775,6 +1775,7 @@
       "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql",
       "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
       "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
+      "tdf-hq/sql/2026-10-13_operations_inbound_capture_policy.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -3303,7 +3304,7 @@
     {
       "id": "SURFACE-b1dae8bd0d7ae4ca",
       "path": "scripts/__tests__/hetzner-preparation.test.mjs",
-      "sha256": "b8f8b49cf4fa4e19eb84ebb9436033cc7f52d178cc45ed9d0cec6c902a48575f",
+      "sha256": "dd8cb85e356d8feac2e1e41fe2fd4f0e3a516b16f8c7d24fe1bae02857f30f2f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4065,7 +4066,7 @@
     {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
-      "sha256": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
+      "sha256": "f83ae197b89242406cc9476b0f6d1bc80f51606c060796bae24e3719d47e1886",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4173,7 +4174,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "e0ff663aee7f816df7a06418223d41065d69e0681675a05f3fb6a0592e0f911a",
+      "sha256": "1cf556f9982d1eb598a24c8f6b51439f8022ec3cb56fb27b3a6587f9666efe10",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4347,7 +4348,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "5a2894568e5baf251a0a882438f5153dd3e703157e9c42dbb8a8bd89c13878bb",
+      "sha256": "8a7875cb0f4e66d5eaf894236f1996f3b1957cb495c5f98e519046be35f8163e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5673,7 +5674,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
+      "sha256": "c5b08222dfa5d3a5557bd5302cc01d02d6153087dc026684b1e0bd9f35570c29",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13069,6 +13070,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-5e7b630c39be7b60",
+      "path": "tdf-hq/sql/2026-10-13_operations_inbound_capture_policy.sql",
+      "sha256": "7bfc6c12d5f3d43f4639532a0931a0131840ed52b9c778a7290304971100072c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -14895,7 +14902,7 @@
     {
       "id": "SURFACE-eba437673d8ebcc8",
       "path": "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs",
-      "sha256": "db0fe1b18f5de503774821849453accc4ab9a8735336053b9e5242cf6e880ef0",
+      "sha256": "3a3aeb59ce2c378361aa9a9ff9787deb3eb51ce164643b61ae37b2c575b3ea39",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22033,35 +22040,42 @@
     },
     {
       "path": "formal/event-operations/InboundCapture.cfg",
-      "sha256": "361c77df05021a8ea3514a513f463ce6c81ad624a1e04884ba8a29d808194ff5",
+      "sha256": "0ca2865e026a31d94ccda9880e10dc3d5f0fef60444bfcbeabf07ff82bf0490d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/InboundCapture.tla",
-      "sha256": "e6e8fb2c7c16a43ccaf9faecc085e7b173faa53d68043057cb5a1688f9bace0f",
+      "sha256": "3f579c3b923f2691b692923337d10ccd26961166c4ba66fc405e884078ad2584",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
     },
     {
       "path": "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg",
-      "sha256": "9f85ed6fcb673fe53ee1787e1495f5f1f9260b2daffd339939a88f414f598020",
+      "sha256": "bd2121b6f1186418895729b5afb57ee66b817bae9a78f932d1cd9f74b28176a6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InboundCaptureDisabled.cfg",
+      "sha256": "2d03441196b8beeca703e0b0324a3d7aef8705ae4611984a721855f3067b083d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/InboundCaptureEveryDelivery.cfg",
-      "sha256": "a4db800625e51f436765321bf7b7e1e0523d4ca0e04ef2533533162ed60e3884",
+      "sha256": "3fcdcc69ff4e3713fc5a8133f6b20830db1836848342c343f3b63e7f6a5c3b39",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/InboundCaptureEveryIncomingRow.cfg",
-      "sha256": "588b8e5d6f34a02521808f5eea85513c49e82337fb31730290cc9f004a71a583",
+      "sha256": "df00e8392abaaa1fe0851980977157f8be243e09064eeb2454868b145a8777a3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -24504,7 +24518,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "e58f0ca38df1369384dff84dfe20ee0c5f270f3e65da33e7afad166815053d23",
+      "sha256": "3e730db4766f700142af125fa146aca26fd8db90925e9c0dd7a27cb1e2fb5fce",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24749,7 +24763,7 @@
     },
     {
       "path": "formal/system/operations-inbound-capture.md",
-      "sha256": "9fefac5a1360942411fec3831c39517af72460bd03221b5f4f182ecc0d099cc4",
+      "sha256": "6c7f8dfc669d787af814af1facfc0b6ea307dc217ee4f96b8bc40dd35d277145",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24833,14 +24847,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
+      "sha256": "bf7492215c0c26f6f70016d5e15c928315aa66fa61c42ed0a4058aaa95badfbe",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "3d6630e4dfe2b3c36d2f95617616e0cb602345c8e7811a1b099bce530799dc76",
+      "sha256": "3b5bc863884d3118b856245ae8c3420ebdf276d9ec5646924f227d374b45e4b1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -33510,12 +33524,14 @@
         "  MaxDeliveries = 3",
         "  AcceptApplicationDirection = TRUE",
         "  SkipNonRequests = TRUE",
+        "  RequireEnabled = TRUE",
         "  CaptureOnInsertOnly = TRUE",
         "INVARIANTS",
         "  TypeOK",
         "  RequestsCaptured",
         "  OnlyRequestsCaptured",
-        "  CapturedOnce"
+        "  CapturedOnce",
+        "  CaptureRespectsEnablement"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -33530,12 +33546,36 @@
         "  MaxDeliveries = 3",
         "  AcceptApplicationDirection = FALSE",
         "  SkipNonRequests = TRUE",
+        "  RequireEnabled = TRUE",
         "  CaptureOnInsertOnly = TRUE",
         "INVARIANTS",
         "  TypeOK",
         "  RequestsCaptured",
         "  OnlyRequestsCaptured",
-        "  CapturedOnce"
+        "  CapturedOnce",
+        "  CaptureRespectsEnablement"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InboundCaptureDisabled.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Messages = {m1, m2}",
+        "  MaxDeliveries = 3",
+        "  AcceptApplicationDirection = TRUE",
+        "  SkipNonRequests = TRUE",
+        "  RequireEnabled = FALSE",
+        "  CaptureOnInsertOnly = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  RequestsCaptured",
+        "  OnlyRequestsCaptured",
+        "  CapturedOnce",
+        "  CaptureRespectsEnablement"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -33550,12 +33590,14 @@
         "  MaxDeliveries = 3",
         "  AcceptApplicationDirection = TRUE",
         "  SkipNonRequests = TRUE",
+        "  RequireEnabled = TRUE",
         "  CaptureOnInsertOnly = FALSE",
         "INVARIANTS",
         "  TypeOK",
         "  RequestsCaptured",
         "  OnlyRequestsCaptured",
-        "  CapturedOnce"
+        "  CapturedOnce",
+        "  CaptureRespectsEnablement"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -33570,12 +33612,14 @@
         "  MaxDeliveries = 3",
         "  AcceptApplicationDirection = TRUE",
         "  SkipNonRequests = FALSE",
+        "  RequireEnabled = TRUE",
         "  CaptureOnInsertOnly = TRUE",
         "INVARIANTS",
         "  TypeOK",
         "  RequestsCaptured",
         "  OnlyRequestsCaptured",
-        "  CapturedOnce"
+        "  CapturedOnce",
+        "  CaptureRespectsEnablement"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

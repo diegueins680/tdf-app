@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "394e8ba1db3ead9328f2",
+      "currentId": "4610aff4763a46a3444e",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 204,
-      "change": "append 2026-10-11_index_declarations_not_unique",
+      "valueCount": 205,
+      "change": "Append the enabled-only Operations capture guard after the immutable current-main migration sequence; retain the separate retention activation blocker.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "5f2e374ddc077e6b8418",
