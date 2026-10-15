@@ -18757,7 +18757,7 @@
     },
     {
       "path": "docs/discovery/community-search-navigation.md",
-      "sha256": "635f324496abe62b1c2064c25295cb872ab94ea1cfffa99e00192ee243104bda",
+      "sha256": "8d1039f85be05323ae636773c997d80528d92fee2b471bf020339e64794e872a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

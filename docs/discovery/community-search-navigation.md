@@ -110,7 +110,7 @@ its separate feed and management behavior. Discovery never filters that dataset
 in the browser. Physical Redmi/iPhone devices and installed PWA behavior require
 separate device evidence; viewport emulation does not establish those outcomes.
 
-## Delivery evidence and remaining release gates
+## Historical delivery evidence and release gates
 
 | Requirement | Root cause / previous limitation | Implementation | Files changed | Tests | Verification |
 |---|---|---|---|---|---|
@@ -197,7 +197,7 @@ states that the guarded routine release executor remains unfinished. The retired
 `scripts/production-release.mjs` rejects before provider or database actions.
 Preparing artifacts is not deployment; this task does not bypass that boundary.
 
-## October 14 continuation
+## Historical October 14 continuation
 
 Hosted CI for `fa349d854` completed with all 3,236 UI tests across 294 suites,
 488 browser journeys (22 skipped), ten rollout checks and all 20 discovery
@@ -218,3 +218,32 @@ or production feature verification is claimed.
 The continuation also passes 67 catalog/release-helper tests. Read-only production
 availability checks on October 14 (local time) returned HTTP200 for `/fans` and
 `/buscar`; these remain checks of the existing release, not this candidate.
+
+
+## Current consolidation contract
+
+The authoritative migration sequence is `scripts/production-migrations.json`.
+This candidate preserves current main's 204 entries and appends the community
+search indexes and the October 14 event-alias resynchronization migration, in
+that order (206 entries). Their original introduction commits remain ancestors.
+Earlier counts and test snapshots above describe historical candidates only.
+
+The alias repair from PR586 refreshes event projections when a genre alias changes,
+including old and new normalized names or genre identities. Its rollback removes
+its trigger/function before the older event-search rollback; the canonical
+migration test exercises retry, rollback, reapply and the stale-index negative
+control. The community indexes change no data or public visibility and remain
+compatible with the previous application. An application rollback may retain them;
+removing them is optional performance cleanup, not a data rollback prerequisite.
+
+Mobile is pinned to `57e6c3f9612b5dbd0bc8a55b80b9c9a79a880677`, whose tree equals
+Mobile main `5cafe319f040034be717ee1674b66fe308425e70` at this audit. Web and native
+clients are generated from this parent's OpenAPI, including optional `profileKind`.
+The ticket prerequisite PR545 is retained by full merge ancestry.
+
+Catalog decisions preserve their original inline retirement record. Repeated
+nested copies of the migration review are replaced with hashes and file/entry
+references to retained source commits, as documented in the catalog README.
+The review references are evidence; the migration manifest remains the authority
+for execution order. No production deployment or new feature activation is
+established by this consolidation.
