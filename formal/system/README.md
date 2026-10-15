@@ -88,6 +88,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [manual-bank-transfer.md](manual-bank-transfer.md): staff-verified ticket transfer review on the production schema, approval and ticket issuance in one transaction, bounded model with eight mutation controls and explicit bank exclusions.
 - [payment-retry.md](payment-retry.md): serialized retry admission, immutable evidence, bounded mutation controls and retirement of the conflicting non-runtime checkout table.
 - [operations-failure-replay.md](operations-failure-replay.md): a manager's retry of a dead-lettered Operations projection re-queues it; the failure follows the projection to resolved or back to dead letter.
+- [ticket-manual-review.md](ticket-manual-review.md): staff review of a ticket bank transfer keeps its row locks to commit; bounded model, three negative controls and PostgreSQL race tests.
 - [index-declarations.md](index-declarations.md): nine uniqueness constraints created from index declarations become plain indexes; bounded model, three negative controls and PostgreSQL tests.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
   and [identity-recovery.md](identity-recovery.md) define narrow verification

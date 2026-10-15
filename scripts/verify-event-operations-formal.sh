@@ -407,6 +407,11 @@ run_tlc OperationsFailureReplay.tla OperationsFailureReplay.cfg operations-failu
 run_negative_tlc OperationsFailureReplayRelabelOnly.cfg operations-failure-replay-relabel-only 'Invariant RetryingIsQueued is violated' OperationsFailureReplay.tla
 run_negative_tlc OperationsFailureReplayUnsettled.cfg operations-failure-replay-unsettled 'Invariant RunIsSettled is violated' OperationsFailureReplay.tla
 run_negative_tlc OperationsFailureReplayUnmerged.cfg operations-failure-replay-unmerged 'Invariant OneOpenFailure is violated' OperationsFailureReplay.tla
+run_tlc TicketManualReview.tla TicketManualReview.cfg ticket-manual-review
+run_tlc TicketManualReview.tla TicketManualReviewLockReleasedGuarded.cfg ticket-manual-review-lock-released-guarded
+run_negative_tlc TicketManualReviewLockReleased.cfg ticket-manual-review-lock-released 'Invariant EveryoneAnswered is violated' TicketManualReview.tla
+run_negative_tlc TicketManualReviewSubmitterReviews.cfg ticket-manual-review-submitter-reviews 'Invariant NoSelfApproval is violated' TicketManualReview.tla
+run_negative_tlc TicketManualReviewLockReleasedUnguarded.cfg ticket-manual-review-lock-released-unguarded 'Invariant OnePayment is violated' TicketManualReview.tla
 run_tlc IndexDeclaration.tla IndexDeclaration.cfg index-declaration
 run_negative_tlc IndexDeclarationKeyUnique.cfg index-declaration-key-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla
 run_negative_tlc IndexDeclarationKeyTimeUnique.cfg index-declaration-key-time-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla
