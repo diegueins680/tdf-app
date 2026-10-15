@@ -328,7 +328,7 @@
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql"
       ],
-      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control. Bounded TLC model of ledger posting with four negative controls and the ledger-posting-postgresql spec against the fully migrated schema (formal/system/ledger-posting.md).",
+      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control. Bounded TLC model of ledger posting with five negative controls and the ledger-posting-postgresql spec against the fully migrated schema (formal/system/ledger-posting.md). Legacy-upgrade fixtures and witnessed two-session reversal races under READ COMMITTED and REPEATABLE READ run in scripts/__tests__/ledger-posting-upgrade.py.",
       "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output; 2026-10-09 local PG16 run of ledger_posting_balance.sql via scripts/test-ticket-manual-review.sh.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -379,7 +379,7 @@
       "privacy": "Do not put credentials or customer payloads in verification receipts.",
       "concurrency": "No global interleaving guarantee follows from this requirement; bounds remain in the mapped contract. In the database an entry write locks its transaction row, so an entry and a posting of one transaction serialise: the entry lands in the draft and the posting validates it, or the posting lands first and the entry is refused.",
       "idempotency": "No additional runtime retry permission; repeat checks must bind to their actual inputs.",
-      "failure": "Reject the invalid operation or verification result as defined by the mapped contract. Database: SQLSTATE 23514 for creation in any status but draft, posting without entries or unbalanced in any currency, entries inserted/updated/deleted after posting, posted -> draft, draft -> reversed, reversal by a non-posted transaction, and any change of a reversed transaction.",
+      "failure": "Reject the invalid operation or verification result as defined by the mapped contract. Database: SQLSTATE 23514 for creation in any status but draft, posting without entries or unbalanced in any currency, entries inserted/updated/deleted after posting, posted -> draft, draft -> reversed, reversal by a non-posted transaction, and any change of a reversed transaction. A referenced posted reverser cannot itself be reversed. Migration rejects existing empty/unbalanced posted rows and self, draft or reversed reversal targets before installing new guards.",
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation. Posted transactions found unbalanced or empty when the 2026-10-12 migration runs are reported with warnings and left as they are; a correction is a reviewed reversing transaction.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
@@ -387,7 +387,8 @@
         "tdf-hq/test/integration/ledger_posting_balance.sql",
         "scripts/test-ticket-manual-review.sh",
         "scripts/test-ledger-posting.sh",
-        "tdf-hq/test/TDF/LedgerPostingSpec.hs"
+        "tdf-hq/test/TDF/LedgerPostingSpec.hs",
+        "scripts/__tests__/ledger-posting-upgrade.py"
       ],
       "formalModels": [
         "formal/event-operations/LedgerPosting.tla",
@@ -395,7 +396,8 @@
         "formal/event-operations/LedgerPostingAppend.cfg",
         "formal/event-operations/LedgerPostingUnvalidated.cfg",
         "formal/event-operations/LedgerPostingReopen.cfg",
-        "formal/event-operations/LedgerPostingInsertPosted.cfg"
+        "formal/event-operations/LedgerPostingInsertPosted.cfg",
+        "formal/event-operations/LedgerPostingReverserMutable.cfg"
       ],
       "confidence": "high for the stated local boundary and for the database posting rules as tested; no system-wide completion claim; deployed correspondence pending",
       "ambiguity": [
@@ -407,7 +409,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Live writers and the posting trigger conform; the database does not reject transactions inserted as posted or entries appended after posting."
+        "reason": "Local database tests verify draft-only creation, immutable balanced posted entries, stable posted reversal targets and rejection of inconsistent legacy history. Production application and deployed correspondence remain unverified."
       }
     },
     {

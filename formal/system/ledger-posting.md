@@ -46,25 +46,26 @@ draft and the posting sees it, or the posting lands first and the entry is
 refused. A reversed transaction changes neither status nor `reversal_of`. The
 migration adds the missing index on `commerce_ledger_entry(transaction_id)`,
 which posting, the entry rule and the foreign key all read by. Posted
-transactions found unbalanced or empty at migration time are reported with
-warnings, not altered: the correction is a reviewed reversing transaction.
-The report is one pass over the entries, run while the trigger replacement
-holds its locks; negligible at today's size. No Haskell change. Rollback restores the 2026-08-13 functions and
+transactions found unbalanced or empty, and reversed transactions with a self,
+draft or reversed target, cause migration to fail before replacing guards.
+History must be reconciled explicitly; the migration does not alter amounts.
+Validation and guard installation hold table locks against concurrent writers. No Haskell change. Rollback restores the 2026-08-13 functions and
 triggers. Decision in AUTHORITY-069.
 
 ## Model
 
 `formal/event-operations/LedgerPosting.tla`: one transaction, two
 currencies, entries of amounts -2..2, at most four entries, a reversing
-transaction with its own draft/posted lifecycle. Actions: create (as draft, or
+transaction with its own draft/posted/reversed lifecycle. Actions: create (as draft, or
 in any status when `DraftOnly` is off), add entry, post, reopen, advance the
 reverser, reverse. Invariants: `PostedBalanced` (posted or reversed =>
 entries and zero sum per currency), `PostedImmutable` (the entries are those
 of the posting), `PostedHistory` (of the first posting), `ReversedByPosted`.
-3,272 states generated, 747 distinct. Four controls remove one guard each:
+4,444 states generated, 995 distinct. Five controls remove one guard each:
 `Append` (`EntriesFixed` off: `PostedImmutable`), `Unvalidated`
 (`PostValidated` off: `PostedBalanced`), `Reopen` (`NoReopen` off:
-`PostedHistory`), `InsertPosted` (`DraftOnly` off: `PostedBalanced`).
+`PostedHistory`), `InsertPosted` (`DraftOnly` off: `PostedBalanced`); `ReverserMutable` violates `ReversedByPosted`
+by allowing a referenced posted reverser to become reversed.
 Abstractions: entries are a per-currency balance and a count, so an entry's
 update, deletion or move between transactions are not actions (the rule is
 tested, not modelled); amounts are small integers (the exactness of the SQL
@@ -77,15 +78,15 @@ case).
 
 | Check | Where | Result (2026-10-12, local) |
 | --- | --- | --- |
-| Model and four controls | `scripts/verify-event-operations-formal.sh` | PASS; controls fail on their named invariant |
-| `ledger-posting-postgresql` (8 cases: balanced post; unbalanced and empty refused; two `maxBound` entries and -2 refused, which a 64-bit sum would accept; no insert, update, delete or move once posted; no reopening; draft-only creation; reversal rules incl. no re-pointing; an entry racing a posting leaves a draft with the entry or a posted balanced transaction; cleanup needs table ownership for `DISABLE TRIGGER`) | `scripts/test-ledger-posting.sh`, CI step with the credential lifecycle spec | see PR |
+| Model and five controls | `scripts/verify-event-operations-formal.sh` | PASS; controls fail on their named invariant |
+| `ledger-posting-postgresql` (9 cases: balanced post; unbalanced and empty refused; two `maxBound` entries and +2 refused, which a 64-bit sum would accept; no insert, update, delete or move once posted; no reopening; draft-only creation; reversal rules incl. no re-pointing and stable posted reversers; an entry racing a posting leaves a draft with the entry or a posted balanced transaction; cleanup needs table ownership for `DISABLE TRIGGER`) | `scripts/test-ledger-posting.sh`, CI step with the credential lifecycle spec | see PR |
 | Migration twice, rollback twice, forward again; the ten probes above after the migration | schema copy | clean; every gap refused, valid paths pass |
 | Automatic-migration production-schema test | `scripts/test-automatic-migrations-production-schema.sh` | see PR |
 
 ## Left open
 
 - Production was not queried: whether any posted transaction has drifted is
-  unknown until the migration's warnings are read at release time.
+  unknown until migration preflight validates the deployed data.
 - `reversed` is not used by any writer today; the reversal rule is a boundary
   for a future writer.
 - The Haskell `validateLedgerBalance` (Integer sums) still has no runtime
@@ -93,3 +94,12 @@ case).
 - A `commerce_ledger_entry` of a currency other than the checkout's is
   accepted; balance is per currency, so a stray currency needs its own
   counter-entry to post.
+
+The reversal guard writes the target row without changing its `created_at` value.
+This serializes a new reference with reversal of its target and forces a stale
+REPEATABLE READ snapshot to abort; a read lock alone permits write skew there.
+The database regression witnesses the blocked session before committing the
+reference, then checks refusal under READ COMMITTED and serialization failure
+under REPEATABLE READ. Five legacy fixtures (empty, unbalanced, self-reference,
+draft target and reversed target) refuse migration without replacing guards;
+clean repeated application passes. These cases run in `ledger-posting-upgrade.py`.

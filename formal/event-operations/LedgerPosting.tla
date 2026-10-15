@@ -16,7 +16,7 @@
      DraftOnly        a transaction is created as draft *)
 EXTENDS Integers, FiniteSets
 
-CONSTANTS EntriesFixed, PostValidated, NoReopen, DraftOnly, MaxEntries
+CONSTANTS EntriesFixed, PostValidated, NoReopen, DraftOnly, ReverserFixed, MaxEntries
 
 Currencies == {"USD", "EUR"}
 Amounts == {-2, -1, 1, 2}
@@ -35,7 +35,7 @@ TypeOK ==
   /\ status \in {"absent", "draft", "posted", "reversed"}
   /\ balance \in [Currencies -> Int]
   /\ entries \in 0..MaxEntries
-  /\ reverser \in {"none", "draft", "posted"}
+  /\ reverser \in {"none", "draft", "posted", "reversed"}
 
 Init ==
   /\ status = "absent"
@@ -79,7 +79,7 @@ Reopen ==
 (* The reversing transaction goes through its own lifecycle. *)
 ReverserAdvance ==
   /\ reverser' = IF reverser = "none" THEN "draft" ELSE "posted"
-  /\ reverser # "posted"
+  /\ reverser \in {"none", "draft"}
   /\ UNCHANGED <<status, balance, entries, postedShape, firstShape>>
 
 Reverse ==
@@ -87,10 +87,18 @@ Reverse ==
   /\ status' = "reversed"
   /\ UNCHANGED <<balance, entries, postedShape, firstShape, reverser>>
 
+(* A posted reverser can itself be reversed only while nothing references it.
+   The SQL guard and physical write fence preserve this across transactions. *)
+ReverseReverser ==
+  /\ reverser = "posted"
+  /\ ~ReverserFixed \/ status # "reversed"
+  /\ reverser' = "reversed"
+  /\ UNCHANGED <<status, balance, entries, postedShape, firstShape>>
+
 Next ==
   \/ Create
   \/ \E c \in Currencies, a \in Amounts : AddEntry(c, a)
-  \/ Post \/ Reopen \/ ReverserAdvance \/ Reverse
+  \/ Post \/ Reopen \/ ReverserAdvance \/ Reverse \/ ReverseReverser
 
 Spec == Init /\ [][Next]_vars
 

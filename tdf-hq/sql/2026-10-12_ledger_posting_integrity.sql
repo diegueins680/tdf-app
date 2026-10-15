@@ -9,6 +9,32 @@
 BEGIN;
 SET LOCAL lock_timeout = '10s';
 
+-- Freeze writers while validating the legacy data and replacing guards. Refuse
+-- inconsistent history before installing immutability; never silently repair money.
+LOCK TABLE commerce_ledger_transaction, commerce_ledger_entry IN SHARE ROW EXCLUSIVE MODE;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM commerce_ledger_transaction txn
+    WHERE txn.status IN ('posted', 'reversed')
+      AND (NOT EXISTS (SELECT 1 FROM commerce_ledger_entry WHERE transaction_id = txn.id)
+           OR EXISTS (SELECT 1 FROM commerce_ledger_entry WHERE transaction_id = txn.id
+                      GROUP BY currency HAVING SUM(amount_minor::numeric) <> 0))
+  ) THEN
+    RAISE EXCEPTION 'Legacy posted ledger transactions are empty or unbalanced; reconcile before migration'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM commerce_ledger_transaction txn
+    LEFT JOIN commerce_ledger_transaction reverser ON reverser.id = txn.reversal_of
+    WHERE txn.status = 'reversed'
+      AND (txn.reversal_of = txn.id OR reverser.status IS DISTINCT FROM 'posted')
+  ) THEN
+    RAISE EXCEPTION 'Legacy reversed ledger transactions lack a distinct posted reverser; reconcile before migration'
+      USING ERRCODE = 'check_violation';
+  END IF;
+END $$;
+
 CREATE OR REPLACE FUNCTION commerce_validate_ledger_posting()
 RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
@@ -36,8 +62,21 @@ BEGIN
       USING ERRCODE = 'check_violation';
   END IF;
   IF NEW.status = 'reversed' AND OLD.status <> 'reversed' THEN
-    SELECT status INTO reversed_status FROM commerce_ledger_transaction WHERE id = NEW.reversal_of;
-    IF reversed_status IS DISTINCT FROM 'posted' OR NEW.reversal_of = NEW.id THEN
+    IF EXISTS (SELECT 1 FROM commerce_ledger_transaction
+               WHERE status = 'reversed' AND reversal_of = NEW.id) THEN
+      RAISE EXCEPTION 'Ledger transaction % is a posted reverser and cannot be reversed', NEW.id
+        USING ERRCODE = 'check_violation';
+    END IF;
+    IF NEW.reversal_of = NEW.id THEN
+      RAISE EXCEPTION 'Ledger transaction % can only be reversed by a posted transaction', NEW.id
+        USING ERRCODE = 'check_violation';
+    END IF;
+    -- A physical write fences concurrent reversal of the target even under
+    -- repeatable-read snapshots. Its value stays unchanged; a lock-only read
+    -- would permit write skew with a transaction reversing this target.
+    UPDATE commerce_ledger_transaction SET created_at = created_at
+      WHERE id = NEW.reversal_of RETURNING status INTO reversed_status;
+    IF reversed_status IS DISTINCT FROM 'posted' THEN
       RAISE EXCEPTION 'Ledger transaction % can only be reversed by a posted transaction', NEW.id
         USING ERRCODE = 'check_violation';
     END IF;
@@ -104,30 +143,5 @@ CREATE TRIGGER trg_commerce_ledger_entry_immutable
 CREATE INDEX IF NOT EXISTS idx_commerce_ledger_entry_transaction
   ON commerce_ledger_entry(transaction_id);
 
--- Existing posted transactions that the old rules let drift are reported,
--- not altered: a correction is a reviewed reversing transaction.
-DO $$
-DECLARE
-  drifted RECORD;
-BEGIN
-  FOR drifted IN
-    SELECT txn.id, entry.currency, SUM(entry.amount_minor::numeric) AS balance
-    FROM commerce_ledger_transaction txn
-    JOIN commerce_ledger_entry entry ON entry.transaction_id = txn.id
-    WHERE txn.status IN ('posted', 'reversed')
-    GROUP BY txn.id, entry.currency
-    HAVING SUM(entry.amount_minor::numeric) <> 0
-  LOOP
-    RAISE WARNING 'Posted ledger transaction % is unbalanced in % by %',
-      drifted.id, drifted.currency, drifted.balance;
-  END LOOP;
-  FOR drifted IN
-    SELECT txn.id FROM commerce_ledger_transaction txn
-    WHERE txn.status IN ('posted', 'reversed')
-      AND NOT EXISTS (SELECT 1 FROM commerce_ledger_entry WHERE transaction_id = txn.id)
-  LOOP
-    RAISE WARNING 'Posted ledger transaction % has no entries', drifted.id;
-  END LOOP;
-END $$;
 
 COMMIT;

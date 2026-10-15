@@ -611,7 +611,7 @@
       ],
       "conflict": "The 2026-08-13 ledger rules promised balanced, immutable posted transactions but validated only the draft -> posted change and protected entries only against update and delete: a posted transaction could gain entries, return to draft, or be inserted already posted or reversed with no entries. SYS-MONEY-003 named SQL ledger correctness an open obligation.",
       "authority": "SYS-MONEY-003 and the ledger's own stated rule (posted entries are immutable; create a reversing transaction), which every writer already follows by inserting a draft, its entries, then posting.",
-      "resolution": "The posting trigger fires on insert and on status/reversal_of changes and refuses every path but draft creation, validated posting and reversal by a posted transaction; the entry trigger fires on insert too and locks the transaction row. Sums compare as numeric. Drifted posted transactions are reported, not altered. No Haskell change; LedgerPosting.tla and the ledger-posting-postgresql spec are the evidence."
+      "resolution": "The posting trigger fires on insert and on status/reversal_of changes and refuses every path but draft creation, validated posting and reversal by a posted transaction; the entry trigger fires on insert too and locks the transaction row. Sums compare as numeric. Migration refuses drifted posted or invalid reversed transactions before installing guards; history must be reconciled explicitly. Referenced reversing transactions remain posted, with a physical no-value-change write on the target fencing concurrent reversals under snapshot isolation. No Haskell change; LedgerPosting.tla and the ledger-posting-postgresql spec are the evidence."
     }
   ]
 }

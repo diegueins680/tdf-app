@@ -58,7 +58,7 @@ spec = describe "ledger-posting-postgresql" $ do
           txn <- draft pool
           addEntry pool txn "cash.spec" "USD" maxBound
           addEntry pool txn "cash.spec" "USD" maxBound
-          addEntry pool txn "revenue.spec" "USD" (-2)
+          addEntry pool txn "revenue.spec" "USD" 2
           post pool txn `shouldReturn` Left "is not balanced by currency"
 
         it "takes no entry once posted, nor an update, a deletion or a move of one" $ \pool -> do
@@ -74,6 +74,16 @@ spec = describe "ledger-posting-postgresql" $ do
           sqlEither pool "UPDATE commerce_ledger_entry SET transaction_id = ?::uuid WHERE transaction_id = ?::uuid"
             [PersistText txn, PersistText other] `shouldReturn` Left "cannot move between transactions"
           balanceOf pool txn `shouldReturn` 0
+
+        it "keeps a referenced reversing transaction posted" $ \pool -> do
+          original <- posted pool
+          reverser <- posted pool
+          replacement <- posted pool
+          reverseWith pool original reverser `shouldReturn` Right ()
+          reverseWith pool reverser replacement
+            `shouldReturn` Left "is a posted reverser and cannot be reversed"
+          statusOf pool original `shouldReturn` "reversed"
+          statusOf pool reverser `shouldReturn` "posted"
 
         it "does not return a posted transaction to draft" $ \pool -> do
           txn <- posted pool
@@ -213,7 +223,7 @@ sqlEither pool statement params = do
       [ "has no entries", "is not balanced by currency", "Posted ledger entries are immutable"
       , "is posted; create a reversing transaction", "must be created as draft", "cannot move between transactions"
       , "can only be reversed by a posted transaction", "is reversed and cannot change status"
-      , "is a draft and has nothing to reverse" ]
+      , "is a draft and has nothing to reverse", "is a posted reverser and cannot be reversed" ]
 
 -- Removes only the transactions this spec created.
 forget :: SqlPersistT IO ()
