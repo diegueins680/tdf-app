@@ -1032,6 +1032,16 @@
       "introducedBy": "116da0bad8d63e3a2db8e6b951ea37bbaedb2860"
     },
     {
+      "id": "2026-10-11_operations_inbound_capture_direction",
+      "path": "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
+      "introducedBy": "57a79d693b0607ac0b7142cc6ab6d2e7f7b2084e"
+    },
+    {
+      "id": "2026-10-11_index_declarations_not_unique",
+      "path": "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
+      "introducedBy": "9edcb9460afd79aaa7040221ccae1c72cb14a795"
+    },
+    {
       "id": "2026-10-12_checkout_line_snapshot_fixed",
       "path": "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql",
       "introducedBy": "ba43d3f9537cde1a2993aaaf7520b30f8985255a"

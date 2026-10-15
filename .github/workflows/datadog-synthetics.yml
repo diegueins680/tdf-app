@@ -50,6 +50,8 @@ jobs:
         api_key: ${{ secrets.DD_API_KEY }}
         app_key: ${{ secrets.DD_APP_KEY }}
         datadog_site: datadoghq.com # TDF Records, US1
+        # Follows the Pages -> www.tdfrecords.net canonical redirect (see datadog-ci.json).
+        config_path: datadog-ci.json
         test_search_query: 'tag:e2e-tests' #Modify this tag to suit your tagging strategy
         fail_on_critical_errors: true
         fail_on_missing_tests: true
