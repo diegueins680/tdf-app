@@ -4169,8 +4169,9 @@ persistMetaInbound channel now incoming =
           MetaFacebook ->
             tombstoneFacebook igInboundDeletedExternalId igInboundDeletedSenderId igInboundDeletedSenderName igInboundDeletedMetadata
   where
-    upsertInstagram externalId senderId senderName body adExt adName campExt campName meta = do
-      _ <- upsert (M.InstagramMessage externalId
+    upsertInstagram externalId senderId senderName body adExt adName campExt campName meta =
+      storeInstagramInboundOnce
+        (M.InstagramMessage externalId
                     senderId
                     senderName
                     (Just body)
@@ -4190,21 +4191,10 @@ persistMetaInbound channel now incoming =
                     Nothing
                     Nothing
                     now)
-           ( [ M.InstagramMessageDirection =. "incoming"
-             , M.InstagramMessageReplyStatus =. "pending"
-             , M.InstagramMessageText =. Just body
-             ]
-             ++ maybe [] (\value -> [M.InstagramMessageSenderName =. Just value]) senderName
-             ++ maybe [] (\value -> [M.InstagramMessageAdExternalId =. Just value]) adExt
-             ++ maybe [] (\value -> [M.InstagramMessageAdName =. Just value]) adName
-             ++ maybe [] (\value -> [M.InstagramMessageCampaignExternalId =. Just value]) campExt
-             ++ maybe [] (\value -> [M.InstagramMessageCampaignName =. Just value]) campName
-             ++ maybe [] (\value -> [M.InstagramMessageMetadata =. Just value]) meta
-           )
-      pure ()
 
-    upsertFacebook externalId senderId senderName body adExt adName campExt campName meta = do
-      _ <- upsert (ME.FacebookMessage externalId
+    upsertFacebook externalId senderId senderName body adExt adName campExt campName meta =
+      storeFacebookInboundOnce
+        (ME.FacebookMessage externalId
                     senderId
                     senderName
                     (Just body)
@@ -4224,21 +4214,13 @@ persistMetaInbound channel now incoming =
                     Nothing
                     Nothing
                     now)
-           ( [ ME.FacebookMessageDirection =. "incoming"
-             , ME.FacebookMessageReplyStatus =. "pending"
-             , ME.FacebookMessageText =. Just body
-             ]
-             ++ maybe [] (\value -> [ME.FacebookMessageSenderName =. Just value]) senderName
-             ++ maybe [] (\value -> [ME.FacebookMessageAdExternalId =. Just value]) adExt
-             ++ maybe [] (\value -> [ME.FacebookMessageAdName =. Just value]) adName
-             ++ maybe [] (\value -> [ME.FacebookMessageCampaignExternalId =. Just value]) campExt
-             ++ maybe [] (\value -> [ME.FacebookMessageCampaignName =. Just value]) campName
-             ++ maybe [] (\value -> [ME.FacebookMessageMetadata =. Just value]) meta
-           )
-      pure ()
 
+    -- A deletion inserts its tombstone or changes nothing, in one statement,
+    -- and only an undeleted row takes the deletion time: two deletions of one
+    -- message at once neither fail nor move the time forward.
     tombstoneInstagram externalId senderId senderName meta = do
-      _ <- upsert (M.InstagramMessage externalId
+      Entity key stored <- upsert
+          (M.InstagramMessage externalId
                     senderId
                     senderName
                     Nothing
@@ -4258,14 +4240,17 @@ persistMetaInbound channel now incoming =
                     Nothing
                     (Just now)
                     now)
-           ( [ M.InstagramMessageDeletedAt =. Just now ]
-             ++ maybe [] (\value -> [M.InstagramMessageSenderName =. Just value]) senderName
-             ++ maybe [] (\value -> [M.InstagramMessageMetadata =. Just value]) meta
-           )
-      pure ()
+          [M.InstagramMessageExternalId =. externalId]
+      updateWhere [M.InstagramMessageId ==. key, M.InstagramMessageDeletedAt ==. Nothing]
+        [M.InstagramMessageDeletedAt =. Just now]
+      update key $ fillBlank (M.instagramMessageSenderName stored) M.InstagramMessageSenderName senderName
 
+    -- A deletion inserts its tombstone or changes nothing, in one statement,
+    -- and only an undeleted row takes the deletion time: two deletions of one
+    -- message at once neither fail nor move the time forward.
     tombstoneFacebook externalId senderId senderName meta = do
-      _ <- upsert (ME.FacebookMessage externalId
+      Entity key stored <- upsert
+          (ME.FacebookMessage externalId
                     senderId
                     senderName
                     Nothing
@@ -4285,11 +4270,47 @@ persistMetaInbound channel now incoming =
                     Nothing
                     (Just now)
                     now)
-           ( [ ME.FacebookMessageDeletedAt =. Just now ]
-             ++ maybe [] (\value -> [ME.FacebookMessageSenderName =. Just value]) senderName
-             ++ maybe [] (\value -> [ME.FacebookMessageMetadata =. Just value]) meta
-           )
-      pure ()
+          [ME.FacebookMessageExternalId =. externalId]
+      updateWhere [ME.FacebookMessageId ==. key, ME.FacebookMessageDeletedAt ==. Nothing]
+        [ME.FacebookMessageDeletedAt =. Just now]
+      update key $ fillBlank (ME.facebookMessageSenderName stored) ME.FacebookMessageSenderName senderName
+
+-- | Stores an inbound Instagram message unless a message with its id is already
+-- stored. Meta delivers a message more than once and a backfill reads messages
+-- that webhooks already delivered. A stored message keeps its text, direction,
+-- deletion and reply state; a repeat may only fill a sender name or advertising
+-- attribution that was missing, or metadata that lacked the receiving account.
+storeInstagramInboundOnce :: MonadIO m => M.InstagramMessage -> SqlPersistT m ()
+storeInstagramInboundOnce row = do
+  -- The update names the id it already has, so the statement inserts the row
+  -- or changes nothing, in one step even when two deliveries arrive at once.
+  Entity key stored <- upsert row [M.InstagramMessageExternalId =. M.instagramMessageExternalId row]
+  update key $
+    fillBlank (M.instagramMessageSenderName stored) M.InstagramMessageSenderName (M.instagramMessageSenderName row)
+    ++ fillBlank (M.instagramMessageAdExternalId stored) M.InstagramMessageAdExternalId (M.instagramMessageAdExternalId row)
+    ++ fillBlank (M.instagramMessageAdName stored) M.InstagramMessageAdName (M.instagramMessageAdName row)
+    ++ fillBlank (M.instagramMessageCampaignExternalId stored) M.InstagramMessageCampaignExternalId (M.instagramMessageCampaignExternalId row)
+    ++ fillBlank (M.instagramMessageCampaignName stored) M.InstagramMessageCampaignName (M.instagramMessageCampaignName row)
+    ++ fillRecipient (M.instagramMessageMetadata stored) M.InstagramMessageMetadata (M.instagramMessageMetadata row)
+
+-- | 'storeInstagramInboundOnce' for Facebook messages.
+storeFacebookInboundOnce :: MonadIO m => ME.FacebookMessage -> SqlPersistT m ()
+storeFacebookInboundOnce row = do
+  -- The update names the id it already has, so the statement inserts the row
+  -- or changes nothing, in one step even when two deliveries arrive at once.
+  Entity key stored <- upsert row [ME.FacebookMessageExternalId =. ME.facebookMessageExternalId row]
+  update key $
+    fillBlank (ME.facebookMessageSenderName stored) ME.FacebookMessageSenderName (ME.facebookMessageSenderName row)
+    ++ fillBlank (ME.facebookMessageAdExternalId stored) ME.FacebookMessageAdExternalId (ME.facebookMessageAdExternalId row)
+    ++ fillBlank (ME.facebookMessageAdName stored) ME.FacebookMessageAdName (ME.facebookMessageAdName row)
+    ++ fillBlank (ME.facebookMessageCampaignExternalId stored) ME.FacebookMessageCampaignExternalId (ME.facebookMessageCampaignExternalId row)
+    ++ fillBlank (ME.facebookMessageCampaignName stored) ME.FacebookMessageCampaignName (ME.facebookMessageCampaignName row)
+    ++ fillRecipient (ME.facebookMessageMetadata stored) ME.FacebookMessageMetadata (ME.facebookMessageMetadata row)
+
+-- A field is written only when nothing is stored in it and a value arrived.
+fillBlank :: PersistField a => Maybe T.Text -> EntityField record (Maybe a) -> Maybe a -> [Update record]
+fillBlank stored field incoming =
+  [ field =. incoming | maybe True (T.null . T.strip) stored, isJust incoming ]
 
 verifyMetaWebhook
   :: ( MonadReader Env m
@@ -5205,3 +5226,27 @@ loadBandForParty partyKey = do
         else selectList [M.PartyId <-. requiredPartyIds] []
       let partyMap = Map.fromList [ (entityKey p, p) | p <- partyList ]
       pure (Just (toBandDTO partyMap bandEnt members))
+
+-- Replies are sent from the account that received the message, which is read
+-- from the stored metadata with the same parser the reply uses. Metadata
+-- without a usable id (a backfilled row, a delivery in the changes shape, a
+-- null or nested value) gives way to metadata that names it. Only a top-level
+-- recipient_id settles the question: a referral's source_id is advertising
+-- attribution that the reply parser accepts as a last resort, so metadata
+-- holding only that still gives way to metadata naming the real recipient.
+fillRecipient :: Maybe T.Text -> EntityField record (Maybe T.Text) -> Maybe T.Text -> [Update record]
+fillRecipient stored field incoming =
+  [ field =. incoming
+  | isJust incoming
+  , not (maybe False namesRecipient stored)
+  , maybe False namesRecipient incoming
+      || (not (maybe False named stored)
+          && (maybe False named incoming || maybe True (T.null . T.strip) stored))
+  ]
+  where
+    named = isJust . extractRecipientIdFromMetadata . Just
+    namesRecipient raw = fromMaybe False $ do
+      payload <- A.decodeStrict' (TE.encodeUtf8 raw)
+      recipient <- parseMaybe
+        (withObject "MetaMessageMetadata" (\o -> o .:? "recipient_id")) payload
+      pure (isJust (stripNonEmptyText recipient))

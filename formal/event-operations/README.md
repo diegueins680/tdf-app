@@ -276,6 +276,14 @@ The runner requires the exact named failures from all three negative controls.
 3. TLC rejected invitation transitions that did not explicitly preserve `now`. The missing
    `UNCHANGED now` clauses were added before the passing run.
 
+## Inbound capture
+
+`InboundCapture.tla` and four configurations check the rule in
+[operations-inbound-capture.md](../system/operations-inbound-capture.md): a stored
+request from a customer has an Operations event, nothing else has one, and a
+message has at most one. The positive model and three negative controls are
+mandatory in the formal runner.
+
 ## Public Live Session credential validation
 
 `AccessCodeValidation.tla` checks one request, two code edits (including an ABA return),
@@ -524,6 +532,14 @@ render, A→B→A, cache races, and persisted timestamps. The model abstracts pr
 exchange/persistence, selected-calendar identities and query-library scheduling; those
 require HTTP and component/browser conformance tests. It does not prove Google OAuth
 consent, token revocation, server authorization or arbitrary calendar handlers.
+## Meta redelivery
+
+`MetaRedelivery.tla` and four configurations check the rule in
+[meta-redelivery.md](../system/meta-redelivery.md): the reply worker takes up a
+message once, a stored message keeps its text, a message deleted first never gains
+text, and a deletion keeps its first time. The positive model and three negative
+controls are mandatory in the formal runner.
+
 ## Directory favorite authority (2026-09-18)
 
 `DirectoryFavoriteAuthority` bounds one read/save request, three session occurrences,
@@ -532,6 +548,15 @@ current-session dispatch/receipt and authoritative persistence. Weak fairness as
 dispatch and eventual success/failure response; terminal quiescence is permitted.
 Unsafe dispatch/receipt variants must violate their named invariants (29/63states).
 [Implementation, counterexamples and limits](../../docs/ux-ui-audit/2026-09-17/directory-entry.md).
+
+## Music entitlement and downloads
+
+`MusicEntitlement.tla` and seven configurations check the rules in
+[music-purchase-entitlement.md](../system/music-purchase-entitlement.md): paid only on
+verified evidence, one entitlement per order, the download limit, replay of a request
+identifier only inside its URL lifetime, a replayed URL that ends with the original one,
+and no URL without an active entitlement. The positive model and six negative controls
+are mandatory in the formal runner.
 
 ## Marketplace optional storage boundary (2026-09-18)
 
@@ -600,6 +625,21 @@ existing payment models and HTTP contracts remain separate evidence.
     invariant counterexamples. A separate sandbox RMI denial required an approved unsandboxed
     rerun. The complete corrected suite passed; no safety assertion was weakened or omitted.
 
+## WhatsApp redelivery
+
+`WhatsAppRedelivery.tla` and five configurations check the rule in
+[whatsapp-redelivery.md](../system/whatsapp-redelivery.md): a message is stored
+once, what it asks for is applied at most once, an enrolment message is answered at
+most once, and a stored opt-out has been applied. The positive model and four
+negative controls are mandatory in the formal runner.
+## Organizer assignment
+
+`EventOrganizer.tla` and four configurations check the rule in
+[event-organizer-assignment.md](../system/event-organizer-assignment.md): an event
+without an organizer is assigned at most once, only to a caller allowed to be
+assigned, and nobody manages an event whose stored organizer is another party. The
+positive model and three negative controls are mandatory in the formal runner.
+
 ## Provider retry admission
 
 `ProviderRetryAdmission.tla` and six configurations check the scoped payment retry
@@ -632,3 +672,23 @@ reversed only by a posted transaction. Bounded: small integer amounts, the
 reverser's own entries and concurrency are not modelled; the exact `numeric`
 sum and the row lock are tested by the `ledger-posting-postgresql` spec. See
 [ledger posting](../system/ledger-posting.md).
+## Index declarations
+
+`IndexDeclaration.tla` and four configurations check the rule in
+[index-declarations.md](../system/index-declarations.md): a row with a new identity
+is stored whatever key and time it carries, and an identity is stored once. The
+positive model and three negative controls are mandatory in the formal runner.
+## Interaction write budget
+
+`InteractionWriteBudget.tla` and five configurations check the rule in
+[interaction-write-budget.md](../system/interaction-write-budget.md): every ended
+write attempt is counted, no minute runs more writes than the limit, and an attempt
+is refused only when its own minute was spent. The positive model and four negative
+controls are mandatory in the formal runner.
+## Ticket invoice submission
+
+`InvoiceSubmission.tla` and five configurations check the worker rules in
+[ticket-invoice-worker.md](../system/ticket-invoice-worker.md): leased claims, the
+persisted submission mark, lease-fenced results and administrator resend. The positive
+model and four negative controls are mandatory in the formal runner. Bounds, provider
+assumptions and the recovery gaps found are stated there.

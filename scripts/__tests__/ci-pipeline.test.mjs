@@ -99,6 +99,13 @@ test('configured Datadog checks fail when tests or results are missing', async (
   assert.match(workflow, /steps\.datadog-config\.outputs\.configured == 'true'/);
 });
 
+test('Datadog synthetic web test follows the Pages canonical redirect', async () => {
+  const workflow = await source('.github/workflows/datadog-synthetics.yml');
+  assert.match(workflow, /config_path: datadog-ci\.json/);
+  const config = JSON.parse(await source('datadog-ci.json'));
+  assert.deepEqual(config, { defaultTestOverrides: { followRedirects: true } });
+});
+
 test('migration CI runs the owning merch checkout expiry assertions without waiving failures', async () => {
   const workflow = await source('.github/workflows/ci.yml');
   const migrationJob = workflow.split('  migration-tests:')[1].split('\n  production-migrations:')[0];
