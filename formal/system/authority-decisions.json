@@ -718,6 +718,18 @@
       "conflict": "EVT-TICKET-MANUAL-001 states that the review locks the checkout, attempt and evidence rows. The function took those locks and then committed before writing, which released them; a second concurrent reviewer read the same submitted evidence and had the write refused by the database as an error instead of being told the transfer was already decided.",
       "authority": "The requirement governs: the review is serialized by its row locks. The database's evidence transition guard remains the last line of defence, not the means of serialization.",
       "resolution": "The intermediate commit is removed so the locks last until the review commits. A second reviewer waits and is answered from the decided state; the buyer's concurrent writes are not covered by this. The requirement gains a direct PostgreSQL test of the review transaction, including races, and a bounded model."
+    },
+    {
+      "id": "AUTHORITY-072",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/operations-aux-write.md",
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "docs/operations-control-center/rbac.md"
+      ],
+      "conflict": "OPS-AUX-WRITE-001 had no formal model; its verification field limits formal coverage to explicitly mapped abstractions, and the four handlers' guards (current authority under locks, atomic result and audit, one retry admission, encrypted push token) were stated only in prose.",
+      "authority": "The requirement's property, allowed and forbidden transitions and concurrency fields, and the handlers as read on 2026-10-12 (runOperationsWrite, lockOperationsScope, withLockedWorkItem, replayFailureHandler, createSavedViewHandler, createPushSubscriptionHandler).",
+      "resolution": "OperationsAuxiliaryWrite.tla states the four guards as invariants under bounded checking (two commands, one actor, one scope) with one negative configuration per guard; correspondence to the Haskell is by reading, not refinement, and the PostgreSQL/HTTP conformance harness remains the execution evidence. No code change."
     }
   ]
 }

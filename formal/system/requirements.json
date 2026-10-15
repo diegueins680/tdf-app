@@ -5183,10 +5183,10 @@
       ]
     },
     {
-      "authority": "reconciled",
+      "authority": "reconciled; AUTHORITY-072",
       "contract": "formal/system/operations-projection-boundary.md",
       "critical": true,
-      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05; formal/system/operations-aux-write.md",
       "status": "specified and implemented",
       "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
       "conformance": {
@@ -5196,7 +5196,7 @@
       "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
       "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
       "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
-      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions. 2026-10-12: OperationsAuxiliaryWrite.tla (34,172 states, 13,744 distinct) states the four guards with four single-guard controls (formal/system/operations-aux-write.md); the handlers were read against the requirement with no discrepancy found; the conformance harness remains the execution evidence.",
       "id": "OPS-AUX-WRITE-001",
       "title": "Current authority and atomic evidence for auxiliary Operations mutations",
       "domain": "OPS",
@@ -5261,7 +5261,14 @@
         "scripts/test-booking-conformance.py",
         "scripts/__tests__/operations-api-schema.test.mjs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/OperationsAuxiliaryWrite.tla",
+        "formal/event-operations/OperationsAuxiliaryWrite.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteUnlocked.cfg",
+        "formal/event-operations/OperationsAuxiliaryWritePartialAudit.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteRetryTwice.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteUnencrypted.cfg"
+      ],
       "ambiguity": [
         "Actual push delivery is not established.",
         "Note success replay, cross-owner token rotation and deletion remain separate obligations; not formally covered."
