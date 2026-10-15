@@ -127,17 +127,22 @@ def execute(command, output, timeout=45):
 
 def run(report_dir, tools, out):
     out.mkdir(mode=0o700)
+    contracts = {}
     receipt = {'schemaVersion': 1, 'startedAt': datetime.now(timezone.utc).isoformat(),
                'executionPassed': False, 'crossSolver': [], 'certificates': [], 'error': None,
                'limitations': 'Formula refutations only. Source translation, Ethos/CPC rules, compilers, GMP and host remain trusted. No implementation/refinement status or release permission is promoted.'}
     try:
-        requirements = json.loads((ROOT/'formal/system/requirements.json').read_text())['requirements']
-        before = assurance.fingerprint(requirements)
+        metadata = assurance.capture_metadata()
+        requirements = json.loads(metadata['formal/system/requirements.json'])['requirements']
+        before = assurance.fingerprint(requirements, metadata)
+        contracts = {suite: assurance.metadata_json(config['contract'], before, metadata)['obligations']
+                     for suite, config in assurance.SUITES.items()}
         receipt['provenance'] = before
-        report = json.loads((report_dir/'report.json').read_text())
+        report_bytes = (report_dir/'report.json').read_bytes()
+        report = json.loads(report_bytes)
         if report['provenance'] != before or report['execution']['passed'] is not True:
             raise ValueError('Assurance evidence is stale or execution failed')
-        receipt['reportSha256'] = sha((report_dir/'report.json').read_bytes())
+        receipt['reportSha256'] = sha(report_bytes)
         installation = json.loads((tools/'installation.json').read_text())
         configuration = ROOT/'formal/system/certificate-tools.json'
         if installation['configurationSha256'] != sha(configuration.read_bytes()):
@@ -165,10 +170,13 @@ def run(report_dir, tools, out):
             for identity, expected in expectations.items():
                 key = suite+'/'+identity+'.smt2'
                 original = report_dir/key
-                if original.is_symlink() or original.parent.is_symlink() or sha(original.read_bytes()) != report['evidenceHashes'].get(key):
+                if original.is_symlink() or original.parent.is_symlink():
+                    raise ValueError('SMT input must be retained directly: '+key)
+                original_bytes = original.read_bytes()
+                if sha(original_bytes) != report['evidenceHashes'].get(key):
                     raise ValueError('Missing/changed SMT input: '+key)
                 target = directory/(identity+'.smt2')
-                target.write_bytes(original.read_bytes())
+                target.write_bytes(original_bytes)
                 result = execute([str(tools/'cvc5'), '--lang=smt2', '--tlimit=30000', str(target)], target)
                 lines = result.stdout.splitlines()
                 matched = result.returncode == 0 and not result.stderr and (lines == [expected] or
@@ -245,8 +253,6 @@ def run(report_dir, tools, out):
          'reason': 'Independent certificate validation not supported by this configured job; conditional SMT result remains separate'}
         for suite, expectations in EXPECTATIONS.items() for name, expected in expectations.items()
         if expected == 'unsat' and name not in CERTIFICATES.get(suite, ())]
-    contracts = {suite: json.loads((ROOT/config['contract']).read_text())['obligations']
-                 for suite, config in assurance.SUITES.items()}
     for entry in receipt['certificates'] + receipt['pendingCertificateObligations']:
         suite, identity = entry['id'].split(':')
         if suite == 'arithmetic':
@@ -254,10 +260,10 @@ def run(report_dir, tools, out):
             entry['sourceObligationIds'] = [req+':'+identity.split('-', 1)[1]]
             entry['requirementIds'] = [req]
         else:
-            rows = [c for c in contracts[suite] if c['id'] == identity]
+            rows = [c for c in contracts.get(suite, []) if c['id'] == identity]
             entry['sourceObligationIds'] = [c['requirementId']+':'+c['id'] for c in rows]
-            entry['supportingLemma'] = not bool(rows)
-            entry['requirementIds'] = sorted({c['requirementId'] for c in rows or contracts[suite]})
+            entry['supportingLemma'] = not bool(rows) if suite in contracts else None
+            entry['requirementIds'] = sorted({c['requirementId'] for c in rows or contracts.get(suite, [])})
         entry['category'] = 'independently-checked-CPC'
         entry['risk'] = 'P0'
     counts = Counter(entry['status'] for entry in receipt['certificates'] + receipt['pendingCertificateObligations'])

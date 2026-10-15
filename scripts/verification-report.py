@@ -63,7 +63,21 @@ def git(*args):
     return subprocess.check_output(['git', *args], cwd=ROOT, text=True).strip()
 
 
-def fingerprint(requirements):
+def capture_metadata():
+    paths = ['formal/system/requirements.json'] + [s['contract'] for s in SUITES.values()]
+    return {path: (ROOT/path).read_bytes() for path in paths}
+
+
+def metadata_json(path, provenance, metadata=None):
+    content = metadata[path] if metadata is not None else (ROOT/path).read_bytes()
+    if (provenance.get('available') is not False
+            and provenance.get('files', {}).get(path) != sha(content)):
+        raise ValueError('Metadata differs from initial fingerprint: ' + path)
+    return json.loads(content)
+
+
+def fingerprint(requirements, metadata=None):
+    captured = dict(metadata) if metadata is not None else capture_metadata()
     paths = {'formal/system/requirements.json', 'formal/system/authority-decisions.json',
              'formal/system/assurance-report.md', 'formal/system/payment-arithmetic.md',
              'docs/payments/ecuador-payment-platform-audit-2026-09-09.md',
@@ -74,16 +88,16 @@ def fingerprint(requirements):
              '.github/workflows/event-operations-formal.yml'}
     paths.update({'formal/system/auth-predicates.json', 'formal/system/auth-predicates.md',
                   'scripts/verify-auth-predicates.py', 'scripts/test-auth-predicates.py'})
-    paths.update(json.loads((ROOT/'formal/system/auth-predicates.json').read_text())['reviewedSources'])
+    paths.update(json.loads(captured['formal/system/auth-predicates.json'])['reviewedSources'])
     paths.update({'formal/system/recovery-expiry-arithmetic.json', 'formal/system/recovery-expiry-arithmetic.md',
                   'scripts/verify-recovery-expiry.py', 'scripts/test-recovery-expiry-verifier.py',
                   'scripts/recovery-time-boundaries.py', 'scripts/test-recovery-time-postgres.sh'})
-    paths.update(json.loads((ROOT/'formal/system/recovery-expiry-arithmetic.json').read_text())['reviewedSources'])
+    paths.update(json.loads(captured['formal/system/recovery-expiry-arithmetic.json'])['reviewedSources'])
     paths.update({'formal/system/certificate-tools.json', 'formal/system/proof-certificates.md'})
     for row in requirements:
         for field in ('implementation', 'tests', 'formalModels'):
             paths.update(row[field])
-    files = {p: sha((ROOT/p).read_bytes()) for p in sorted(paths)}
+    files = {p: sha(captured[p] if p in captured else (ROOT/p).read_bytes()) for p in sorted(paths)}
     return {'files': files, 'digest': sha(json.dumps(files, sort_keys=True).encode()),
             'revision': git('rev-parse', 'HEAD'), 'mobileGitlink': git('ls-tree', 'HEAD', 'tdf-mobile'),
             'worktreeDirty': bool(git('status', '--porcelain'))}
@@ -96,7 +110,8 @@ def count_status(rows):
     return {status: counts[status] for status in STATUSES}
 
 
-def build_report(requirements, provenance, arithmetic_ok, reason, refuted=(), authorization=None, recovery=None):
+def build_report(requirements, provenance, arithmetic_ok, reason, refuted=(), authorization=None,
+                 recovery=None, metadata=None):
     rows, obligations = [], []
     for req in requirements:
         # Legacy PARTIAL/PASS labels never establish a mathematical proof.
@@ -143,7 +158,7 @@ def build_report(requirements, provenance, arithmetic_ok, reason, refuted=(), au
     for name, receipt, contract_path in (
         ('authorization', authorization, 'formal/system/auth-predicates.json'),
         ('recovery', recovery, 'formal/system/recovery-expiry-arithmetic.json')):
-        contract = json.loads((ROOT/contract_path).read_text())
+        contract = metadata_json(contract_path, provenance, metadata)
         for claim in contract['obligations']:
             identity = claim['requirementId'] + ':' + claim['id']
             actual = next((o for o in (receipt or {}).get('obligations', [])
@@ -235,14 +250,14 @@ def replay_arithmetic(directory, artifacts):
     return replay
 
 
-def admit_receipt(name, directory, receipt, provenance, exit_code):
+def admit_receipt(name, directory, receipt, provenance, exit_code, metadata=None):
     """Replay every obligation/control before admitting any producer proof label."""
     suite = SUITES[name]
     source = receipt['provenance']
     if (source['revision'] != provenance['revision']
             or source['worktreeDirty'] is not provenance['worktreeDirty']):
         raise ValueError('Receipt revision or dirty-state mismatch')
-    contract = json.loads((ROOT/suite['contract']).read_text())
+    contract = metadata_json(suite['contract'], provenance, metadata)
     files = source['files']
     if source.get('digest') != sha(json.dumps(files, sort_keys=True).encode()):
         raise ValueError('Receipt source digest mismatch')
@@ -307,8 +322,9 @@ def run(out, require_release):
     started = datetime.now(timezone.utc).isoformat()
     requirements = None
     try:
-        requirements = json.loads((ROOT/'formal/system/requirements.json').read_text())['requirements']
-        before = fingerprint(requirements)
+        metadata = capture_metadata()
+        requirements = json.loads(metadata['formal/system/requirements.json'])['requirements']
+        before = fingerprint(requirements, metadata)
     except Exception as error:
         reason = 'Source fingerprint unavailable: ' + str(error)
         before = {'revision': None, 'digest': None, 'worktreeDirty': None,
@@ -325,7 +341,7 @@ def run(out, require_release):
                                   'criticalUnprovenRequirements': None, 'acceptedRisks': [],
                                   'reason': reason}}
         else:
-            report = build_report(requirements, before, False, reason)
+            report = build_report(requirements, before, False, reason, metadata=metadata)
         return finish_report(out, report, started, False, reason, require_release)
     (out/'sources.json').write_text(json.dumps(before, indent=2) + '\n')
 
@@ -379,7 +395,7 @@ def run(out, require_release):
             with (out/(name + '-execution.log')).open('x') as log:
                 result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, timeout=180)
             receipt = json.loads((out/name/'result.json').read_text())
-            receipt = admit_receipt(name, out/name, receipt, before, result.returncode)
+            receipt = admit_receipt(name, out/name, receipt, before, result.returncode, metadata)
             passed = receipt['executionPassed']
             receipts[name] = receipt
             if not passed:
@@ -390,7 +406,7 @@ def run(out, require_release):
     if not sources_unchanged():
         ok, receipts, refuted = False, {}, []
         reason = 'Sources changed or became unreadable during verification; all claims stale'
-    report = build_report(requirements, before, ok, reason, refuted, **receipts)
+    report = build_report(requirements, before, ok, reason, refuted, metadata=metadata, **receipts)
     ok = ok and all(runs)
     return finish_report(out, report, started, ok, reason, require_release, receipts)
 

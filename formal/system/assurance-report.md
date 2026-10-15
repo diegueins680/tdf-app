@@ -35,6 +35,13 @@ report. Platform cancellation or runner loss can still prevent artifact upload.
 it. `sources.json` hashes every registered implementation, model and test and the
 report's direct dependencies, binding a dirty working tree explicitly to both its
 base commit and content digest. This is not a complete compiler dependency graph.
+The requirement register and authorization/recovery contract metadata are retained
+as byte snapshots before fingerprinting. Enumeration, receipt admission and report
+claims use those same bytes; the final reread only detects persistent source drift.
+Certificate requirement mappings also use fingerprinted metadata, and report/SMT
+inputs are parsed or copied from the exact byte buffers checked by their hashes.
+This prevents transient rereads from attaching a valid formula to a different
+claim; it does not defend against a compromised Python process or hostile host.
 Exact commit alone is insufficient for dirty-source evidence. `arithmetic/*.smt2`
 are the ten exact formulas; `result.json`, `replay.json`, logs and output hashes
 preserve execution evidence. Replay with pinned `z3 -smt2 FILE.smt2` or Z3Py

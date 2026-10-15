@@ -10388,7 +10388,7 @@
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
-    "scripts/test-proof-certificates.py": "87c9a0da68e682c20ae86e6cefed5be38d6d38f78399ad60cbcfabaf8fd300cf",
+    "scripts/test-proof-certificates.py": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
     "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
@@ -10412,13 +10412,13 @@
     "scripts/test-ticket-manual-review-concurrency.sh": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
-    "scripts/test-verification-report.py": "ca7447ea0d950b2c0ecfe848f587ad7a70a828d27432a769601abd1b6bda7b98",
+    "scripts/test-verification-report.py": "5c0c2423d689f6760a46fa928082f6c801cff8254de3bbb744021254fc1de3d1",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
-    "scripts/verification-report.py": "28c813e2fe1c8bff64cb8679619ce6f62e8d5d988f034db02f10f92abee27d75",
+    "scripts/verification-report.py": "2848a83f12b5f5499a4ebc642ad5a72333c19c861ca574aca33657f38fc31064",
     "scripts/verify-auth-predicates.py": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
@@ -10427,7 +10427,7 @@
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-payment-arithmetic.py": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
-    "scripts/verify-proof-certificates.py": "d14c09e243b543d61169113050c73ee2fc6e11b051d2ecc4abf840afffb69899",
+    "scripts/verify-proof-certificates.py": "8f591e51689a84df4ecbc9af0b37adb8fafe771ddcaddf13dc65763024aeeb46",
     "scripts/verify-readiness.py": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
     "scripts/verify-recovery-expiry.py": "05aaa2a08d1381939d4f48d9d25dcd0b1076d7f596dee2f07db414c2f1bf96c5",
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
@@ -23679,7 +23679,7 @@
     {
       "id": "SURFACE-8e3764761ce42dca",
       "path": "scripts/test-proof-certificates.py",
-      "sha256": "87c9a0da68e682c20ae86e6cefed5be38d6d38f78399ad60cbcfabaf8fd300cf",
+      "sha256": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24127,7 +24127,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "ca7447ea0d950b2c0ecfe848f587ad7a70a828d27432a769601abd1b6bda7b98",
+      "sha256": "5c0c2423d689f6760a46fa928082f6c801cff8254de3bbb744021254fc1de3d1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24235,7 +24235,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "28c813e2fe1c8bff64cb8679619ce6f62e8d5d988f034db02f10f92abee27d75",
+      "sha256": "2848a83f12b5f5499a4ebc642ad5a72333c19c861ca574aca33657f38fc31064",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24446,7 +24446,7 @@
     {
       "id": "SURFACE-d8f74623732a7a92",
       "path": "scripts/verify-proof-certificates.py",
-      "sha256": "d14c09e243b543d61169113050c73ee2fc6e11b051d2ecc4abf840afffb69899",
+      "sha256": "8f591e51689a84df4ecbc9af0b37adb8fafe771ddcaddf13dc65763024aeeb46",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

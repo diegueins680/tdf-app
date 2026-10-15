@@ -5422,7 +5422,7 @@
     {
       "id": "SURFACE-8e3764761ce42dca",
       "path": "scripts/test-proof-certificates.py",
-      "sha256": "87c9a0da68e682c20ae86e6cefed5be38d6d38f78399ad60cbcfabaf8fd300cf",
+      "sha256": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5662,7 +5662,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "ca7447ea0d950b2c0ecfe848f587ad7a70a828d27432a769601abd1b6bda7b98",
+      "sha256": "5c0c2423d689f6760a46fa928082f6c801cff8254de3bbb744021254fc1de3d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5722,7 +5722,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "28c813e2fe1c8bff64cb8679619ce6f62e8d5d988f034db02f10f92abee27d75",
+      "sha256": "2848a83f12b5f5499a4ebc642ad5a72333c19c861ca574aca33657f38fc31064",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5782,7 +5782,7 @@
     {
       "id": "SURFACE-d8f74623732a7a92",
       "path": "scripts/verify-proof-certificates.py",
-      "sha256": "d14c09e243b543d61169113050c73ee2fc6e11b051d2ecc4abf840afffb69899",
+      "sha256": "8f591e51689a84df4ecbc9af0b37adb8fafe771ddcaddf13dc65763024aeeb46",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24637,7 +24637,7 @@
     },
     {
       "path": "formal/system/assurance-report.md",
-      "sha256": "6e0c038f122cf4385e2d922a7edaef923940eadacabb928f692c546ba34a1cf6",
+      "sha256": "4349c7c347ca316e62a8068867c9d63390834b8360702f45c80200a9fb865ee1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

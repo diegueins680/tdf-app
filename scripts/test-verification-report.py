@@ -21,7 +21,70 @@ spec.loader.exec_module(report)
 class AssuranceTests(unittest.TestCase):
     def setUp(self):
         self.requirements = json.loads((ROOT/'formal/system/requirements.json').read_text())['requirements']
-        self.provenance = {'revision': 'a'*40, 'digest': 'b'*64, 'worktreeDirty': False}
+        paths = ['formal/system/requirements.json'] + [s['contract'] for s in report.SUITES.values()]
+        self.provenance = {'revision': 'a'*40, 'digest': 'b'*64, 'worktreeDirty': False,
+                           'files': {p: report.sha((ROOT/p).read_bytes()) for p in paths}}
+
+    def test_report_uses_initial_contract_metadata_after_receipt_admission(self):
+        # Substitute metadata only during final report construction, restoring it
+        # before any source recheck. The same obligation ID cannot relabel a proof.
+        for name, suite in report.SUITES.items():
+            path = ROOT/suite['contract']
+            contract = json.loads(path.read_bytes())
+            expected = dict(contract['obligations'][0])
+            contract['obligations'][0].update(claim='transient unrelated claim', risk='P3',
+                                              category='transient-category', requirementId='SYS-MONEY-001')
+            changed = json.dumps(contract).encode()
+            read_bytes, read_text = Path.read_bytes, Path.read_text
+            original_build = report.build_report
+            def build(*args, **kwargs):
+                with patch.object(Path, 'read_bytes', lambda p: changed if p == path else read_bytes(p)), \
+                     patch.object(Path, 'read_text', lambda p, *a, **k:
+                                  changed.decode() if p == path else read_text(p, *a, **k)):
+                    return original_build(*args, **kwargs)
+            with self.subTest(suite=name), tempfile.TemporaryDirectory() as tmp:
+                out = Path(tmp)/'report'
+                with patch.object(report, 'build_report', build):
+                    self.assertEqual(report.run(out, False), 0)
+                saved = json.loads((out/'report.json').read_bytes())
+                identity = expected['requirementId'] + ':' + expected['id']
+                actual = next((o for o in saved['obligations'] if o['id'] == identity), None)
+                self.assertIsNotNone(actual)
+                self.assertEqual(actual['status'], 'PROVEN')
+                for field in ('claim', 'risk', 'category', 'requirementId'):
+                    self.assertEqual(actual[field], expected[field])
+
+    def test_admission_rejects_contract_bytes_outside_initial_fingerprint(self):
+        for name, suite in report.SUITES.items():
+            with self.subTest(suite=name), tempfile.TemporaryDirectory() as tmp:
+                directory = Path(tmp)/name
+                receipt, provenance = self.synthetic_receipt(name, directory)
+                path = ROOT/suite['contract']
+                contract = json.loads(path.read_bytes())
+                contract['obligations'][0]['claim'] = 'transient unrelated claim'
+                changed = json.dumps(contract).encode()
+                read_bytes, read_text = Path.read_bytes, Path.read_text
+                with patch.object(Path, 'read_bytes', lambda p: changed if p == path else read_bytes(p)), \
+                     patch.object(Path, 'read_text', lambda p, *a, **k:
+                                  changed.decode() if p == path else read_text(p, *a, **k)):
+                    with self.assertRaisesRegex(ValueError, 'Metadata differs from initial fingerprint'):
+                        report.admit_receipt(name, directory, receipt, provenance, 0)
+
+    def test_fingerprint_enumerates_and_hashes_the_same_contract_bytes(self):
+        for suite in report.SUITES.values():
+            path = ROOT/suite['contract']
+            original = path.read_bytes()
+            reads = []
+            read_bytes, read_text = Path.read_bytes, Path.read_text
+            def content():
+                reads.append(True)
+                return original if len(reads) == 1 else b'{"reviewedSources": {}}'
+            with patch.object(Path, 'read_bytes', lambda p: content() if p == path else read_bytes(p)), \
+                 patch.object(Path, 'read_text', lambda p, *a, **k:
+                              content().decode() if p == path else read_text(p, *a, **k)):
+                provenance = report.fingerprint(self.requirements)
+            self.assertEqual(len(reads), 1)
+            self.assertEqual(provenance['files'][suite['contract']], report.sha(original))
 
     def synthetic_receipt(self, name, directory):
         suite = report.SUITES[name]
@@ -29,7 +92,7 @@ class AssuranceTests(unittest.TestCase):
         contract = json.loads((ROOT/suite['contract']).read_text())
         files = {p: report.sha((ROOT/p).read_bytes()) for p in set(contract['reviewedSources']) | {
             suite['contract'], suite['script'], 'formal/system/requirements.json'}}
-        provenance = {**self.provenance, 'files': files}
+        provenance = {**self.provenance, 'files': {**self.provenance['files'], **files}}
         source = {**provenance, 'files': dict(files),
                   'digest': report.sha(json.dumps(files, sort_keys=True).encode())}
         artifacts = []

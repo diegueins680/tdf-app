@@ -75,12 +75,15 @@ class RealChecker(unittest.TestCase):
         # Real producer/checker, synthetic proof inputs and explicitly mocked
         # provenance: exercises receipt admission, not application conformance.
         tools = Path(os.environ['PROOF_CHECKER_TOOLS']).resolve()
-        provenance = {'revision': 'synthetic-certificate-reuse-fixture', 'worktreeDirty': True}
+        metadata = certificates.assurance.capture_metadata()
+        provenance = {'revision': 'synthetic-certificate-reuse-fixture', 'worktreeDirty': True,
+                      'files': {p: certificates.sha(content) for p, content in metadata.items()}}
         with tempfile.TemporaryDirectory(prefix='tdf-certificate-reuse-') as directory:
             root = Path(directory)
-            for mutated in (False, True):
-                with self.subTest(mutated=mutated):
-                    report = root/('mutated' if mutated else 'identical')
+            for mode in ('identical', 'mutated', 'transient-input', 'transient-contract'):
+                with self.subTest(mode=mode):
+                    mutated = mode == 'mutated'
+                    report = root/mode
                     report.mkdir()
                     hashes = {}
                     for suite, expectations in certificates.EXPECTATIONS.items():
@@ -94,8 +97,23 @@ class RealChecker(unittest.TestCase):
                             hashes[key] = certificates.sha(text.encode())
                     (report/'report.json').write_text(json.dumps({'provenance': provenance,
                         'execution': {'passed': True}, 'evidenceHashes': hashes}))
-                    with patch.object(certificates.assurance, 'fingerprint', return_value=provenance):
-                        result = certificates.run(report, tools, root/('changed-output' if mutated else 'same-output'))
+                    read_bytes, read_text = Path.read_bytes, Path.read_text
+                    input_reads = []
+                    def bytes_at(path):
+                        if mode == 'transient-input' and path == report/'arithmetic/capture-safety.smt2':
+                            input_reads.append(True)
+                            if len(input_reads) == 2:
+                                return INPUT.replace('(< x x)', '(= x x)').encode()
+                        return read_bytes(path)
+                    def text_at(path, *args, **kwargs):
+                        if mode == 'transient-contract' and path == certificates.ROOT/'formal/system/auth-predicates.json':
+                            contract = json.loads(read_bytes(path))
+                            contract['obligations'][0]['requirementId'] = 'SYS-MONEY-001'
+                            return json.dumps(contract)
+                        return read_text(path, *args, **kwargs)
+                    with patch.object(certificates.assurance, 'fingerprint', return_value=provenance), \
+                         patch.object(Path, 'read_bytes', bytes_at), patch.object(Path, 'read_text', text_at):
+                        result = certificates.run(report, tools, root/(mode+'-output'))
                     rows = {entry['id']: entry for entry in result['certificates']}
                     if not mutated:
                         self.assertTrue(result['executionPassed'], result['error'])
@@ -109,6 +127,11 @@ class RealChecker(unittest.TestCase):
                             for name in names:
                                 entry = rows[suite+':'+name]
                                 self.assertEqual(entry['input'], suite+'/'+name+'.smt2')
+                        expected = json.loads(metadata['formal/system/auth-predicates.json'])['obligations'][0]
+                        self.assertEqual(rows['authorization:'+expected['id']]['requirementIds'],
+                                         [expected['requirementId']])
+                        if mode == 'transient-input':
+                            self.assertEqual(len(input_reads), 1)
                     else:
                         self.assertFalse(result['executionPassed'])
                         self.assertEqual(rows['arithmetic:refund-safety']['status'], 'UNPROVEN')
