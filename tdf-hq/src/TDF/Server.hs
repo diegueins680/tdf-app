@@ -21,6 +21,7 @@ import TDF.Social.Server (socialV2Server)
 import qualified TDF.Interactions.Legacy as InteractionLegacy
 import qualified TDF.Interactions.Server as InteractionsServer
 import qualified TDF.Interactions.Notifications as InteractionNotifications
+import qualified Database.Persist.Sql as PersistSql
 import           Control.Applicative ((<|>))
 import           Control.Exception (Exception, SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
 import qualified Control.Exception.Safe as Safe
@@ -291,7 +292,7 @@ import           TDF.WhatsApp.History ( IncomingWhatsAppRecord(..)
                                       , WhatsAppDeliveryUpdate(..)
                                       , applyWhatsAppDeliveryUpdate
                                       , normalizeWhatsAppPhone
-                                      , recordIncomingWhatsAppMessage
+                                      , receiveIncomingWhatsAppMessage
                                       , recordOutgoingWhatsAppMessage
                                       )
 import           TDF.WhatsApp.Transport (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTemplateIO, sendWhatsAppTextIO)
@@ -1406,6 +1407,104 @@ listEngineersPublic = do
       [Asc PartyDisplayName]
     pure [PublicEngineerDTO (fromSqlKey pid) (M.partyDisplayName p) | Entity pid p <- parties]
 
+data WhatsAppReceipt = WhatsAppReceipt
+  { warFirst :: Bool
+  -- ^ This delivery stored the message; False for a redelivery.
+  , warConfirmed :: Bool
+  -- ^ This delivery turned a pending consent request into consent.
+  , warMessage :: Entity ME.WhatsAppMessage
+  }
+
+-- | Stores one inbound WhatsApp message and, in the same transaction, applies
+-- what it asks for (opt-out keyword, consent confirmation). Meta delivers a
+-- message again when an earlier delivery was slow or failed, and a signed body
+-- stays valid, so a delivery that finds the message already stored changes
+-- nothing: an earlier STOP must not undo a later subscription. Deliveries of
+-- one message are taken one at a time.
+receiveWhatsAppInbound :: UTCTime -> Maybe UTCTime -> IncomingWhatsAppRecord -> SqlPersistT IO WhatsAppReceipt
+receiveWhatsAppInbound now sentAt record = do
+  let externalId = T.strip (iwrExternalId record)
+  unless (T.null externalId) $ do
+    _ <- rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
+      [PersistText ("whatsapp-inbound:" <> externalId)] :: SqlPersistT IO [Single Int64]
+    pure ()
+  (first, message) <- receiveIncomingWhatsAppMessage now record
+  -- Earlier versions stored the message and applied its effects in separate,
+  -- later transactions, which may never have committed; such a row has no
+  -- 'effects_applied' entry. Its next delivery applies them, once, so a STOP
+  -- from before this version cannot stay ineffective. A row stored by this
+  -- version carries the entry from its storing transaction.
+  applied <- if first then pure False else whatsAppEffectsApplied (entityKey message)
+  if applied
+    then pure (WhatsAppReceipt False False message)
+    else do
+      when (CampaignAutomation.isWhatsAppCampaignOptOutMessage (iwrText record)) $
+        CampaignAutomation.applyWhatsAppCampaignOptOut now (iwrSenderId record)
+          (ME.whatsAppMessagePartyId (entityVal message))
+      confirmed <-
+        if isWhatsAppConsentConfirmationMessage (iwrText record)
+          then applyWhatsAppConsentConfirmation now sentAt (iwrSenderId record)
+          else pure False
+      markWhatsAppEffectsApplied now (entityKey message)
+      pure (WhatsAppReceipt first confirmed message)
+
+whatsAppEffectsApplied :: Key ME.WhatsAppMessage -> SqlPersistT IO Bool
+whatsAppEffectsApplied messageKey = do
+  rows <- rawSql
+    "SELECT 1::bigint FROM audit_log WHERE entity = 'whatsapp_message' AND entity_id = ? \
+    \AND action = 'effects_applied' LIMIT 1"
+    [PersistText (T.pack (show (fromSqlKey messageKey)))] :: SqlPersistT IO [Single Int64]
+  pure (not (null rows))
+
+markWhatsAppEffectsApplied :: UTCTime -> Key ME.WhatsAppMessage -> SqlPersistT IO ()
+markWhatsAppEffectsApplied now messageKey =
+  PersistSql.rawExecute
+    "INSERT INTO audit_log(entity, entity_id, action, created_at) \
+    \VALUES ('whatsapp_message', ?, 'effects_applied', ?)"
+    [PersistText (T.pack (show (fromSqlKey messageKey))), toPersistValue now]
+
+-- | Takes the one automatic reply an inbound message may receive. True for the
+-- first caller only; the claim is an audit entry of the message, written
+-- before the reply is sent, so a message is answered at most once. A message
+-- answered before this version has no claim entry but carries its reply time,
+-- which refuses the claim too.
+-- | The idempotency key of the course registration a WhatsApp message makes.
+whatsAppCourseRegistrationKey :: Key ME.WhatsAppMessage -> Text
+whatsAppCourseRegistrationKey messageKey =
+  "whatsapp-message-" <> T.pack (show (fromSqlKey messageKey))
+
+-- | Whether a delivery of this message may reach the registration: the sender
+-- is under the hourly cap, or this message already made its registration. The
+-- second case is a redelivery after the registration committed and before the
+-- reply was claimed; it creates nothing and must still complete the reply,
+-- even when that registration was the one that filled the cap.
+whatsAppCourseRegistrationAdmitted
+  :: UTCTime -> Text -> Key ME.WhatsAppMessage -> SqlPersistT IO Bool
+whatsAppCourseRegistrationAdmitted now phone messageKey = do
+  rows <- rawSql
+    "SELECT (SELECT count(*) FROM course_registration \
+    \WHERE phone_e164 = ? AND source = 'whatsapp' AND created_at >= ?) < 3 \
+    \OR EXISTS (SELECT 1 FROM identity_course_registration_request \
+    \WHERE request_scope LIKE 'whatsapp-course:%' AND request_key = ?)"
+    [ PersistText phone, PersistUTCTime (addUTCTime (-3600) now)
+    , PersistText (whatsAppCourseRegistrationKey messageKey) ]
+    :: SqlPersistT IO [Single Bool]
+  pure (rows == [Single True])
+
+claimWhatsAppAutoReply :: UTCTime -> Key ME.WhatsAppMessage -> SqlPersistT IO Bool
+claimWhatsAppAutoReply now messageKey = do
+  let messageId = T.pack (show (fromSqlKey messageKey))
+  _ <- rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
+    [PersistText ("whatsapp-auto-reply:" <> messageId)] :: SqlPersistT IO [Single Int64]
+  inserted <- PersistSql.rawExecuteCount
+    "INSERT INTO audit_log(entity, entity_id, action, created_at) \
+    \SELECT 'whatsapp_message', ?, 'auto_reply_claimed', ? \
+    \WHERE NOT EXISTS (SELECT 1 FROM audit_log WHERE entity = 'whatsapp_message' \
+    \AND entity_id = ? AND action = 'auto_reply_claimed') \
+    \AND EXISTS (SELECT 1 FROM whats_app_message WHERE id = ? AND replied_at IS NULL)"
+    [PersistText messageId, toPersistValue now, PersistText messageId, toPersistValue (fromSqlKey messageKey)]
+  pure (inserted == 1)
+
 whatsappWebhookServer :: ServerT WhatsAppWebhookAPI AppM
 whatsappWebhookServer =
        verifyHook
@@ -1438,47 +1537,38 @@ whatsappWebhookServer =
             }
           pure ()
       for_ inbound $ \WAInbound{..} -> do
-        incomingEntity <- liftIO $ flip runSqlPool envPool $
-          recordIncomingWhatsAppMessage now IncomingWhatsAppRecord
-            { iwrExternalId = waInboundExternalId
-            , iwrSenderId = waInboundSenderId
-            , iwrSenderName = waInboundSenderName
-            , iwrText = waInboundText
-            , iwrAdExternalId = waInboundAdExternalId
-            , iwrAdName = waInboundAdName
-            , iwrCampaignExternalId = waInboundCampaignExternalId
-            , iwrCampaignName = waInboundCampaignName
-            , iwrMetadata = waInboundMetadata
-            , iwrTransportPayload = Nothing
-            , iwrSource = Just "whatsapp_webhook"
-            }
-        when (CampaignAutomation.isWhatsAppCampaignOptOutMessage waInboundText) $
+        WhatsAppReceipt{warConfirmed, warMessage = incomingEntity} <-
           liftIO $ flip runSqlPool envPool $
-            CampaignAutomation.applyWhatsAppCampaignOptOut
-              now
-              waInboundSenderId
-              (ME.whatsAppMessagePartyId (entityVal incomingEntity))
-        when (isWhatsAppConsentConfirmationMessage waInboundText) $ do
-          confirmed <- liftIO $ flip runSqlPool envPool $
-            applyWhatsAppConsentConfirmation now waInboundSentAt waInboundSenderId
-          when confirmed $
-            sendWhatsAppConsentNotice now waInboundSenderId waInboundSenderName "consent_confirmation"
-              "Gracias, confirmamos tu suscripción a los mensajes de TDF Records por WhatsApp. Responde STOP para dejar de recibirlos."
+            receiveWhatsAppInbound now waInboundSentAt IncomingWhatsAppRecord
+              { iwrExternalId = waInboundExternalId
+              , iwrSenderId = waInboundSenderId
+              , iwrSenderName = waInboundSenderName
+              , iwrText = waInboundText
+              , iwrAdExternalId = waInboundAdExternalId
+              , iwrAdName = waInboundAdName
+              , iwrCampaignExternalId = waInboundCampaignExternalId
+              , iwrCampaignName = waInboundCampaignName
+              , iwrMetadata = waInboundMetadata
+              , iwrTransportPayload = Nothing
+              , iwrSource = Just "whatsapp_webhook"
+              }
+        when warConfirmed $
+          sendWhatsAppConsentNotice now waInboundSenderId waInboundSenderName "consent_confirmation"
+            "Gracias, confirmamos tu suscripción a los mensajes de TDF Records por WhatsApp. Responde STOP para dejar de recibirlos."
         let lowerBody = T.toLower (T.strip waInboundText)
+        -- Every delivery reaches the registration, which is keyed by the stored
+        -- message and so is made once; a delivery that follows a failed one
+        -- completes it. The reply is sent by the one delivery that claims it.
         when ("inscribirme" `T.isInfixOf` lowerBody) $ do
           case normalizePhone waInboundSenderId of
             Nothing -> pure ()
             Just phone -> do
-              let oneHourAgo = addUTCTime (-3600) now
-              recentCount <- liftIO $ flip runSqlPool envPool $
-                count
-                  [ ME.CourseRegistrationPhoneE164 ==. Just phone
-                  , ME.CourseRegistrationSource ==. "whatsapp"
-                  , ME.CourseRegistrationCreatedAt >=. oneHourAgo
-                  ]
-              when (recentCount < 3) $ do
+              admitted <- liftIO $ flip runSqlPool envPool $
+                whatsAppCourseRegistrationAdmitted now phone (entityKey incomingEntity)
+              when admitted $ do
                 _ <- createCourseRegistrationInScope "whatsapp-course" (productionCourseSlug envConfig)
-                  (Just ("whatsapp-message-" <> T.pack (show (fromSqlKey (entityKey incomingEntity))))) CourseRegistrationRequest
+                  (Just (whatsAppCourseRegistrationKey (entityKey incomingEntity)))
+                  CourseRegistrationRequest
                   { fullName = Nothing
                   , email = Nothing
                   , phoneE164 = Just phone
@@ -1489,23 +1579,26 @@ whatsappWebhookServer =
                   , acceptedTermsVersion = Nothing
                   }
                 let incomingMsg = entityVal incomingEntity
-                (replyTxt, replyRes) <- sendWhatsappReply cfg phone
-                liftIO $ flip runSqlPool envPool $ do
-                  _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
-                    { owrRecipientPhone = phone
-                    , owrRecipientPartyId = ME.whatsAppMessagePartyId incomingMsg
-                    , owrRecipientName = waInboundSenderName <|> ME.whatsAppMessageSenderName incomingMsg
-                    , owrRecipientEmail = ME.whatsAppMessageContactEmail incomingMsg
-                    , owrActorPartyId = Nothing
-                    , owrBody = replyTxt
-                    , owrSource = Just "course_enrollment_auto_reply"
-                    , owrReplyToMessageId = Just (entityKey incomingEntity)
-                    , owrReplyToExternalId = Just (ME.whatsAppMessageExternalId incomingMsg)
-                    , owrResendOfMessageId = Nothing
-                    , owrMetadata = Nothing
-                    }
-                    replyRes
-                  pure ()
+                claimed <- liftIO $ flip runSqlPool envPool $
+                  claimWhatsAppAutoReply now (entityKey incomingEntity)
+                when claimed $ do
+                  (replyTxt, replyRes) <- sendWhatsappReply cfg phone
+                  liftIO $ flip runSqlPool envPool $ do
+                    _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+                      { owrRecipientPhone = phone
+                      , owrRecipientPartyId = ME.whatsAppMessagePartyId incomingMsg
+                      , owrRecipientName = waInboundSenderName <|> ME.whatsAppMessageSenderName incomingMsg
+                      , owrRecipientEmail = ME.whatsAppMessageContactEmail incomingMsg
+                      , owrActorPartyId = Nothing
+                      , owrBody = replyTxt
+                      , owrSource = Just "course_enrollment_auto_reply"
+                      , owrReplyToMessageId = Just (entityKey incomingEntity)
+                      , owrReplyToExternalId = Just (ME.whatsAppMessageExternalId incomingMsg)
+                      , owrResendOfMessageId = Nothing
+                      , owrMetadata = Nothing
+                      }
+                      replyRes
+                    pure ()
       pure NoContent
 
 whatsappHooksServer :: ServerT WhatsAppHooksAPI AppM
@@ -2785,63 +2878,51 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
         else do
           case channel of
             MetaInstagram ->
-              runDB $ do
-                _ <- upsert (InstagramMessage extId
-                              sid
-                              senderName
-                              (Just body)
-                              "incoming"
-                              Nothing
-                              Nothing
-                              Nothing
-                              Nothing
-                              (Just metadata)
-                              "pending"
-                              Nothing
-                              Nothing
-                              Nothing
-                              0
-                              Nothing
-                              Nothing
-                              Nothing
-                              Nothing
-                              createdAt)
-                     [ InstagramMessageSenderName =. senderName
-                     , InstagramMessageText =. Just body
-                     , InstagramMessageDirection =. "incoming"
-                     , InstagramMessageMetadata =. Just metadata
-                     , InstagramMessageReplyStatus =. "pending"
-                     ]
-                pure ()
+              -- A message already stored (delivered by webhook, or read by an
+              -- earlier backfill) is left as it is.
+              runDB $ ServerExtra.storeInstagramInboundOnce
+                (InstagramMessage extId
+                    sid
+                    senderName
+                    (Just body)
+                    "incoming"
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    (Just metadata)
+                    "pending"
+                    Nothing
+                    Nothing
+                    Nothing
+                    0
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    createdAt)
             MetaFacebook ->
-              runDB $ do
-                _ <- upsert (ME.FacebookMessage extId
-                              sid
-                              senderName
-                              (Just body)
-                              "incoming"
-                              Nothing
-                              Nothing
-                              Nothing
-                              Nothing
-                              (Just metadata)
-                              "pending"
-                              Nothing
-                              Nothing
-                              Nothing
-                              0
-                              Nothing
-                              Nothing
-                              Nothing
-                              Nothing
-                              createdAt)
-                     [ ME.FacebookMessageSenderName =. senderName
-                     , ME.FacebookMessageText =. Just body
-                     , ME.FacebookMessageDirection =. "incoming"
-                     , ME.FacebookMessageMetadata =. Just metadata
-                     , ME.FacebookMessageReplyStatus =. "pending"
-                     ]
-                pure ()
+              runDB $ ServerExtra.storeFacebookInboundOnce
+                (ME.FacebookMessage extId
+                    sid
+                    senderName
+                    (Just body)
+                    "incoming"
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    (Just metadata)
+                    "pending"
+                    Nothing
+                    Nothing
+                    Nothing
+                    0
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    createdAt)
           pure True
     _ -> pure False
 

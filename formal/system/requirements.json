@@ -4448,6 +4448,88 @@
       }
     },
     {
+      "id": "EVT-OWNER-CLAIM-001",
+      "title": "Never hand an event without an organizer to the first caller",
+      "domain": "EVT",
+      "statement": "An event is managed by its stored organizer and no request path replaces a stored organizer. On an event without an organizer, organizer-only routes refuse and never write; strict administrators keep the administrative routes that never depended on assignment. Only a strict administrator whose edit of the event is accepted becomes its organizer, in the same transaction, through one conditional update whose stored result decides the outcome.",
+      "authority": "Event-operations foundation migration of 2026-09-14 (events without a resolved owner stay disabled until reviewed) and repository audit of 2026-09-14 (remove organizer-null claiming)",
+      "source": "formal/system/event-organizer-assignment.md",
+      "contract": "formal/system/event-organizer-assignment.md",
+      "actors": [
+        "Event organizer",
+        "Strict administrator",
+        "Authenticated user",
+        "Logistics team member"
+      ],
+      "preconditions": [
+        "Authenticated session",
+        "Event visible to the caller, or caller is a strict administrator"
+      ],
+      "inputs": [
+        "Event identifier",
+        "Caller party and roles"
+      ],
+      "state": {
+        "boundary": "social_event.organizer_party_id",
+        "authority": "PostgreSQL conditional update and row lock"
+      },
+      "allowedTransitions": [
+        "No organizer -> strict administrator whose edit of the event is accepted"
+      ],
+      "forbiddenTransitions": [
+        "No organizer -> any caller of a read route",
+        "No organizer -> ordinary user",
+        "No organizer -> administrator whose edit was refused",
+        "Organizer A -> organizer B through any organizer-only route",
+        "Acting as organizer when the stored organizer is another party"
+      ],
+      "effects": [
+        "Organizer assigned once",
+        "updated_at refreshed on assignment"
+      ],
+      "authorization": "Organizer-only routes require the stored organizer; an event without one is refused with 403 except for the strict-administrator edit that assigns it. Administrative refund, payment-review, invoice-resend, deletion and invitation routes admit strict administrators as before.",
+      "privacy": "Buyer, refund and invoice data of an event without an organizer are no longer reachable by an arbitrary signed-in account.",
+      "concurrency": "Assignment runs under the event row lock together with the accepted edit and is one UPDATE conditional on the organizer still being missing; the row is reread and the edit proceeds only if the stored organizer is the caller.",
+      "idempotency": "Repeating the edit as the assigned organizer is an ordinary organizer request; a second assignment changes nothing.",
+      "failure": "403 for an event without an organizer; 403 for a caller who lost a simultaneous assignment; 404 if the event disappeared.",
+      "recovery": "A strict administrator edits the event through the API to become its organizer, or an owner is assigned by a reviewed database change; no shipped client exposes the administrator edit.",
+      "observability": "The organizer field and updated_at; no audit row is written.",
+      "property": "A stored organizer never changes through a request, and a missing organizer is filled at most once and only by a strict administrator.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "formal/event-operations/EventOrganizer.tla",
+        "scripts/test-event-organizer.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/EventOrganizerSpec.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+        "scripts/test-event-organizer.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/EventOrganizer.tla",
+        "formal/event-operations/EventOrganizer.cfg",
+        "formal/event-operations/EventOrganizerAnyoneClaims.cfg",
+        "formal/event-operations/EventOrganizerUnconditionalWrite.cfg",
+        "formal/event-operations/EventOrganizerTrustEarlierRead.cfg"
+      ],
+      "verification": "Bounded TLA+ model with three negative controls; PostgreSQL assignment tests including simultaneous callers and a lock-wait case; SQLite handler tests of the edit and image-upload routes, including a refused administrator edit.",
+      "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "The helper and its seven call sites were read in full; other organizer checks compare the stored organizer directly and never wrote.",
+      "ambiguity": [
+        "How many production events lack an organizer is unknown; none is created by current code.",
+        "The assignment is not audited and does not update event_operation_relationship.",
+        "The assigning administrator stays organizer; there is no transfer route and no client surface for the assignment.",
+        "Whether a non-administrator should ever be able to request ownership of such an event is a product decision; today the answer is no."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Assignment is modeled within bounds and exercised on PostgreSQL; a successful administrator edit and the remaining organizer-only call sites are covered by reading, not by per-route tests, and production data was not inspected."
+      }
+    },
+    {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
       "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase.",
@@ -5251,7 +5333,10 @@
       "property": "Validation selected for main and release; configured provider failures cannot be green.",
       "implementation": [
         "tdf-mobile/.github/workflows/mobile-validate.yml",
-        "tdf-mobile/.github/workflows/datadog-synthetics.yml"
+        "tdf-mobile/.github/workflows/datadog-synthetics.yml",
+        ".github/workflows/datadog-synthetics.yml",
+        "datadog-ci.json",
+        "tdf-mobile/datadog-ci.json"
       ],
       "tests": [
         "scripts/__tests__/ci-pipeline.test.mjs"
@@ -6731,10 +6816,30 @@
         "tdf-hq-ui/public/mobile-app/support.html",
         "tdf-hq-ui/public/mobile-app/terms.html",
         "tdf-hq-ui/public/mobile-distribution.json",
-        "tdf-hq-ui/src/pages/MobileAppPage.tsx"
+        ".github/workflows/check-mobile-distribution.yml",
+        "scripts/check-mobile-distribution.mjs",
+        "tdf-hq-ui/src/pages/MobileAppPage.tsx",
+        "tdf-hq-ui/src/mobile/telemetry.ts",
+        "tdf-hq-ui/src/mobile/MobilePromoContent.tsx",
+        "tdf-hq-ui/src/components/SessionMenu.tsx",
+        "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
+        "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
+        "functions/_shared/app-smart-link.mjs",
+        "functions/descargar.js",
+        "functions/download.js",
+        "tdf-hq-ui/src/analytics/growthAttribution.ts",
+        "tdf-hq-ui/src/i18n/index.ts",
+        "tdf-mobile/src/i18n/index.ts"
       ],
       "tests": [
-        "tdf-hq-ui/src/mobile/MobileApp.test.tsx"
+        "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
+        "scripts/__tests__/mobile-distribution-expiry.test.mjs",
+        "scripts/__tests__/app-smart-link.test.mjs",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "e2e/web/mobile-program.spec.mjs",
+        "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
+        "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts",
+        "tdf-mobile/src/notifications/NotificationScreen.test.tsx"
       ],
       "formalModels": [],
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
@@ -6756,7 +6861,7 @@
       "idempotency": "Repeated reads have no application mutation.",
       "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
       "recovery": "Correct source under review and reverify deployed content and links.",
-      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence."
+      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence. A daily read-only workflow reports a published store channel within 48 hours of its validUntil; it never renews the manifest. Funnel exposure (mobile_landing_viewed), entry surfaces, the /descargar and /download aliases and the shared smart link are covered by component and edge-function tests; receipt of events in PostHog remains a separate production check."
     },
     {
       "id": "OPS-INTEGRATION-001",
@@ -6936,8 +7041,8 @@
     {
       "id": "SOC-ABUSE-001",
       "title": "Rejected interaction writes consume the exact per-account minute budget",
-      "statement": "Authenticated interaction write attempts, including domain authorization denials, consume a durable per-account calendar-minute counter; increment 91 returns HTTP 429.",
-      "authority": "Existing canonical interaction_integrity SQL limiter and routed HTTP behavior; CI regression preserves the existing threshold.",
+      "statement": "Authenticated interaction write attempts consume a durable per-account calendar-minute counter after the session is confirmed and before the write runs. The charge is kept whether the write is answered, refused by a domain rule or refused by the database with an error; increment 91 returns HTTP 429 without running the write.",
+      "authority": "Existing canonical interaction_integrity SQL limiter and routed HTTP behavior; AUTHORITY-059 for database-error outcomes.",
       "domain": "SOC",
       "actors": [
         "Authenticated interaction actor"
@@ -6952,10 +7057,12 @@
         "boundary": "directory_rate_limit interaction:write scope and HTTP queryWith"
       },
       "allowedTransitions": [
-        "Increment budget before domain command; return HTTP 429 when the minute counter exceeds 90"
+        "Increment budget before the write; return HTTP 429 when the minute counter exceeds 90",
+        "Write raises a database error -> write undone to a savepoint, charge committed"
       ],
       "forbiddenTransitions": [
         "Rejected domain writes roll back their consumed budget",
+        "A write refused by the database with an error rolls back its consumed budget",
         "Allow increment 91 within a minute",
         "Treat a fixed-minute rollover as a missing budget"
       ],
@@ -6964,32 +7071,38 @@
       ],
       "authorization": "Current HTTP session remains required; rate limiting never grants domain authority.",
       "privacy": "Budget key is the existing hashed account identifier; no new PII collection.",
-      "concurrency": "Atomic PostgreSQL upsert serializes increments for the same account and minute.",
+      "concurrency": "Atomic PostgreSQL upsert serializes increments for the same account and minute; the row stays locked until the attempt's transaction ends.",
       "idempotency": "Repeated write attempts consume the budget even if the domain command is a replay.",
-      "failure": "Domain rejection preserves the committed budget; quota exhaustion returns 429.",
+      "failure": "Domain rejection and database errors preserve the committed budget; a NUL escape refused by jsonb returns 400; quota exhaustion returns 429. A transaction that cannot commit cannot keep its charge.",
       "recovery": "The next database calendar-minute bucket has its own budget.",
       "observability": "Actual HTTP responses and persisted isolated-test counter, without bearer tokens.",
-      "source": "tdf-hq/sql/2026-09-28_interaction_integrity.sql; scripts/interactions/test-api.py",
-      "property": "HTTP rejection at exactly counter 91, including unauthorized commands; regression spans at most two calendar windows.",
-      "contract": "formal/interactions/README.md",
+      "source": "tdf-hq/sql/2026-09-28_interaction_integrity.sql; tdf-hq/src/TDF/Interactions/Server.hs; scripts/interactions/test-api.py",
+      "property": "HTTP rejection at exactly counter 91, including unauthorized commands; ChargeCounted, LimitHolds and RefusedOnlyWhenSpent in the bounded model; the charge survives a raised write in PostgreSQL.",
+      "contract": "formal/system/interaction-write-budget.md",
       "implementation": [
         "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
         "tdf-hq/src/TDF/Interactions/Server.hs"
       ],
       "tests": [
         "scripts/interactions/test-api.py",
-        "scripts/interactions/test-http.sh"
+        "scripts/interactions/test-http.sh",
+        "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
+        "scripts/test-interaction-write-budget.sh"
       ],
-      "formalModels": [],
-      "verification": "Isolated real HTTP/PostgreSQL test checks 429 and exact persisted counter; no simulated payment or production evidence.",
-      "evidence": "CI run 37380322736 crossed 22:22 to 22:23 UTC during the old single-window assertion; corrected HTTP regression awaits execution.",
+      "formalModels": [
+        "formal/event-operations/InteractionWriteBudget.tla"
+      ],
+      "verification": "Bounded TLC model with four single-guard controls; PostgreSQL test of the charge against the migrated limiter, including raised writes and simultaneous attempts; isolated real HTTP/PostgreSQL test of 429 and the exact persisted counter.",
+      "evidence": "formal/system/interaction-write-budget.md",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Actual SQL and HTTP boundary inspected; revised runtime test pending.",
-      "ambiguity": [],
+      "confidence": "SQL limiter and HTTP boundary inspected; savepoint repair run locally against PostgreSQL 16 on 2026-10-11; pre-database rejections and uncommittable transactions are documented as uncharged.",
+      "ambiguity": [
+        "Whether requests rejected before database work (malformed identifier, oversized payload) should also be charged is undecided."
+      ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing implementation unchanged; current revised HTTP test must execute."
+        "reason": "Charge durability repaired and tested at the database boundary; the HTTP boundary's commit after a raised write and its 400 mapping have no HTTP test and counter rows are never pruned."
       }
     },
     {
@@ -7986,17 +8099,26 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicEntitlement.tla",
+        "formal/event-operations/MusicEntitlement.cfg",
+        "formal/event-operations/MusicEntitlementForgedPaid.cfg",
+        "formal/event-operations/MusicEntitlementRepeatedGrant.cfg",
+        "formal/event-operations/MusicEntitlementNoLimit.cfg",
+        "formal/event-operations/MusicEntitlementEndlessReplay.cfg",
+        "formal/event-operations/MusicEntitlementFreshReplayUrl.cfg",
+        "formal/event-operations/MusicEntitlementRefundedDownload.cfg"
+      ],
       "status": "specified and implemented",
       "id": "PAY-MUSIC-DOWNLOAD-001",
       "title": "Music downloads only through verified purchase entitlements",
       "domain": "PAY",
       "critical": true,
-      "statement": "A music purchase order references one rule, version and asset in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence marks it paid; triggers create exactly one entitlement and revoke it on refund. Both free-grant and entitled download handlers use the same downloadable-asset predicate, bounded per-request UUID limits, audit rows and short-lived URLs.",
+      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; triggers then grant exactly one entitlement and end it on refund or chargeback. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request.",
       "authority": "Unreviewed recovered local implementation; ADR-005 in docs/music-releases/architecture-and-data-model.md",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
-      "contract": "docs/music-releases/architecture-and-data-model.md",
-      "property": "A non-free download URL is issued only for an active entitlement whose order is provider-verified paid and not refunded.",
+      "contract": "formal/system/music-purchase-entitlement.md",
+      "property": "A purchase entitlement is granted once, by the paid transition of a checkout carrying bound verified evidence, and a download URL is issued only for an active entitlement of the requesting buyer within its counted limit.",
       "actors": [
         "Buyer",
         "Payment provider"
@@ -8011,13 +8133,18 @@
       ],
       "state": {
         "order": [
-          "open",
+          "pending",
+          "awaiting_payment",
           "paid",
-          "refunded"
+          "cancelled",
+          "refunded",
+          "chargeback"
         ],
         "entitlement": [
           "active",
-          "revoked"
+          "revoked",
+          "refunded",
+          "expired"
         ]
       },
       "allowedTransitions": [
@@ -8027,7 +8154,10 @@
       "forbiddenTransitions": [
         "Client-asserted payment -> paid",
         "Download of master or unavailable asset",
-        "Duplicate entitlements per order"
+        "Duplicate entitlements per order",
+        "More counted downloads than the entitlement limit",
+        "A signed URL for a request identifier whose first URL has expired",
+        "revoked or expired free grant -> active by request"
       ],
       "effects": [
         "One entitlement per paid order",
@@ -8035,27 +8165,38 @@
       ],
       "authorization": "Entitlement owner only; free grants follow the release rule.",
       "privacy": "Purchase and download audit is visible only to the buyer and authorized staff.",
-      "concurrency": "Entitlement creation is trigger-enforced unique.",
-      "idempotency": "Repeated provider evidence and download request UUIDs are idempotent.",
-      "failure": "Unverified or failed payment leaves no entitlement.",
+      "concurrency": "One order per buyer and idempotency key by unique constraint; entitlement creation is trigger-enforced and unique per order; download authorization holds the entitlement row lock while it counts and inserts.",
+      "idempotency": "Repeated order creation and repeated recording of the same verified payment change nothing; a repeated download request identifier is answered without counting for 300 seconds and refused afterwards.",
+      "failure": "Unverified payment leaves no entitlement. A recorded provider failure cancels the order permanently and a later verified payment can still grant an entitlement on it (open defects, see contract).",
       "recovery": "Refund revokes entitlement; no royalties, subscriptions or settlement.",
       "observability": "Download audit rows and checkout session events.",
       "implementation": [
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-        "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs"
+        "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "formal/event-operations/MusicEntitlement.tla",
+        "scripts/test-music-purchase.sh"
       ],
       "tests": [
-        "scripts/test-music-download-predicate.mjs"
+        "scripts/test-music-download-predicate.mjs",
+        "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
+        "scripts/test-music-purchase.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "verification": "Read-only SQL contract of the shared predicate; handler E2E not covered by this test",
-      "evidence": "Local execution only",
-      "confidence": "Low-medium: predicate contract only; no provider round-trip evidence.",
+      "verification": "Bounded TLA+ model with five negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
+      "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
+      "confidence": "Medium for the payment record, entitlement and download rules, which run on PostgreSQL in tests; low for the provider calls and failure handling, which are untested and have open defects.",
       "ambiguity": [
-        "No live payment provider wiring for music_download has been verified."
+        "No live payment provider wiring for music_download has been verified.",
+        "Music payments bypass the shared payment runtime and the production provider switches; only the commerce flag for the checkout environment gates them.",
+        "A recorded provider failure cancels the order irreversibly while the payment may still complete, and an entitlement can end up active on a cancelled order; repair needs a trigger migration and a product decision.",
+        "A failure after the provider charged leaves no reconciliation record; no webhook or reconciliation path exists for this domain.",
+        "Partial refunds keep the entitlement and disputes revoke it permanently; both need a product decision.",
+        "Download limits count authorizations, not transferred bytes; one counted download gives access for just under 600 seconds."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Predicate contract only; commerce disabled by default."
+        "reason": "Payment record, entitlement and download rules are modeled within bounds and exercised on PostgreSQL; provider calls are untested and several failure-path defects are open. Commerce is disabled by default and should stay disabled until they are closed."
       }
     },
     {
@@ -8358,7 +8499,8 @@
         "tdf-hq/src/TDF/Catalog/Security.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Profiles/Artist.hs",
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-mobile/app/access-requests/review.tsx"
       ],
       "tests": [
         "scripts/test-artist-self-service.sh",
@@ -9229,31 +9371,40 @@
       "forbiddenTransitions": [
         "Private or suppressed event visible in public search",
         "Upcoming public event hidden only because it has not started",
-        "Non-HTTPS image projected into search results"
+        "Image URL that the public event detail rejects (non-HTTPS, credentials, backslash) projected into search results",
+        "Event excluded from the Eventos results by a profession, service, instrument, availability or remote filter it cannot carry",
+        "Event without an end time listed forever"
       ],
       "effects": [
         "Search document upsert/delete",
-        "Venue city_id resolution"
+        "Venue city_id resolution",
+        "Lineup genres mapped to catalog genre ids and lineup names added to the event search text"
       ],
       "authorization": "Derived data only; written by database triggers on source changes.",
       "privacy": "Projection from the privacy-reviewed public views; reads still re-check the views.",
-      "concurrency": "Runs inside the source transaction; upserts keyed by (entity_kind, entity_id).",
-      "idempotency": "Re-running a sync or the full refresh converges to the same rows.",
+      "concurrency": "Runs inside the source transaction; upserts keyed by (entity_kind, entity_id); every sync and the full refresh take the same advisory lock first.",
+      "idempotency": "Re-running a sync, the full refresh or directory_event_search_reindex() converges to the same rows and keeps versions of unchanged documents.",
       "failure": "A sync failure aborts the source write, so documents never diverge silently.",
-      "recovery": "directory_refresh_legacy_event_search() rebuilds all event and venue documents from the same projection.",
-      "observability": "Saved-search alerts fire for newly inserted documents through the existing trigger.",
-      "property": "For every event, a publicly searchable document exists if and only if the event is in directory_public_event.",
+      "recovery": "directory_event_search_reindex() rebuilds all event and venue documents from the same projection and reports examined, eligible, skipped, inserted, updated, unchanged, paused and deleted counts plus events whose venue city could not be resolved.",
+      "observability": "Saved-search alerts fire for newly inserted documents through the existing trigger; the migration log carries the reindex counts.",
+      "property": "For every event, a publicly searchable document exists if and only if the event is in directory_public_event; /directory/search applies people-only filters to profiles and classifieds only and counts every entity type under the current filters.",
       "implementation": [
         "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
-        "scripts/production-migrations.json"
+        "scripts/production-migrations.json",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "docs/directory/event-search-sync.md"
       ],
       "tests": [
         "tdf-hq/test/integration/directory_event_search_sync.sql",
-        "scripts/test-music-directory-migration.sh"
+        "tdf-hq/test/integration/directory_event_search_http_seed.sql",
+        "scripts/__tests__/directory-event-search-http.mjs",
+        "scripts/test-music-directory-migration.sh",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
       ],
       "formalModels": [],
-      "verification": "PostgreSQL integration checks for create, edit, unsafe image, private, republish, suppression, venue rename, delete, city resolution, kind words and full-refresh agreement; rollback and reapply.",
+      "verification": "PostgreSQL integration checks for create, edit, unsafe image, same-origin image, lineup genres, bounded expiry, private, republish, suppression, venue rename, delete, city resolution, kind words, reindex metrics and full-refresh agreement; rollback and reapply; HTTP checks of /directory/search (Eventos + city, Todo, tab counts, people-only filters, lineup genre, card fields) against the real API; web page tests for the deep link, tab counts, event date and history back.",
       "evidence": "Local PostgreSQL 16 run on a fully migrated schema on 2026-10-09; CI directory migration test.",
       "status": "specified and implemented",
       "critical": false,
@@ -9349,7 +9500,8 @@
         "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts",
-        "tdf-mobile/__tests__/directoryPreviewImage.test.tsx"
+        "tdf-mobile/__tests__/directoryPreviewImage.test.tsx",
+        "tdf-mobile/__tests__/DirectoryManage.test.tsx"
       ],
       "formalModels": [],
       "verification": "PostgreSQL 16 production-shaped schema: image priority, creation, sync, privacy, lifecycle, idempotency, real two-session race, backfill twice, rollback/re-apply and the HTTP flow through the built API; Jest web and mobile component tests; production schema verification gate.",
@@ -9455,6 +9607,393 @@
       "verification": "AppleSignInSpec negative controls (signature, issuer, audience, expiry, nonce, kid, alg=none), ServerAuthSpec input and consent tests, config tests.",
       "evidence": "tdf-hq-test AppleSignInSpec, ServerAuthSpec, Spec config cases.",
       "contract": "tdf-hq/docs/openapi/api.yaml"
+    },
+    {
+      "id": "MSG-WHATSAPP-REDELIVERY-001",
+      "title": "A redelivered WhatsApp message changes nothing and is not answered again",
+      "domain": "MSG",
+      "statement": "The webhook delivery that stores an inbound WhatsApp message applies what it asks for (opt-out keyword, consent confirmation) in the same transaction and sends its automatic reply; a delivery that finds the message already stored applies nothing again. An enrolment message is registered once and answered by the one delivery that claims its reply.",
+      "authority": "AUTHORITY-060; Meta delivers webhooks at least once and a signed body stays valid.",
+      "source": "formal/system/whatsapp-redelivery.md",
+      "contract": "formal/system/whatsapp-redelivery.md",
+      "actors": [
+        "Meta webhook delivery",
+        "WhatsApp sender"
+      ],
+      "preconditions": [
+        "Valid X-Hub-Signature-256 over the raw body (AUTH-WEBHOOK-001)"
+      ],
+      "inputs": [
+        "Provider message id, sender number, text and sent time"
+      ],
+      "state": {
+        "boundary": "whats_app_message.external_id, whats_app_consent",
+        "authority": "PostgreSQL unique index, advisory lock and one transaction"
+      },
+      "allowedTransitions": [
+        "Message absent -> stored, opt-out or confirmation applied, reply sent once"
+      ],
+      "forbiddenTransitions": [
+        "Stored message delivered again -> consent withdrawn again",
+        "Stored message delivered again -> automatic reply sent again",
+        "Opt-out message stored without its opt-out applied",
+        "Two stored copies of one provider message"
+      ],
+      "effects": [
+        "One whats_app_message row and one received audit entry per provider message",
+        "Consent withdrawn or confirmed at most once per message"
+      ],
+      "authorization": "Unauthenticated route admitted only by the Meta signature; the effect is limited to the sender's own number.",
+      "privacy": "No new data; the stored message and consent rows are unchanged in shape.",
+      "concurrency": "Deliveries of one provider message take a transaction-scoped advisory lock on its id; the unique index on external_id refuses a second copy.",
+      "idempotency": "Keyed by the provider message id, or for a message without one by an id derived from sender, sent time and body. The course registration is keyed by the stored message; the reply by an auto_reply_claimed audit entry.",
+      "failure": "A failed transaction stores nothing and applies nothing, so the next delivery is again the first.",
+      "recovery": "Meta redelivers; a registration that failed is retried by the next delivery. A reply already claimed, or a notice whose confirmation already committed, is not sent later.",
+      "observability": "whats_app_message row, its received audit entry and whats_app_consent.",
+      "property": "What a message asks for is applied at most once however often it is delivered, a stored opt-out has been applied, and an enrolment message is answered at most once.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/WhatsApp/History.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
+        "scripts/test-whatsapp-redelivery.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/WhatsAppRedelivery.tla",
+        "formal/event-operations/WhatsAppRedelivery.cfg",
+        "formal/event-operations/WhatsAppRedeliveryEveryDeliveryApplies.cfg",
+        "formal/event-operations/WhatsAppRedeliveryDuplicateStore.cfg",
+        "formal/event-operations/WhatsAppRedeliveryEffectAfterStore.cfg",
+        "formal/event-operations/WhatsAppRedeliveryEveryDeliveryReplies.cfg"
+      ],
+      "verification": "Bounded TLC model with four single-guard controls; PostgreSQL test of the function the webhook calls, including redelivery after a new subscription and simultaneous deliveries.",
+      "evidence": "formal/system/whatsapp-redelivery.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Handler and storage read; database behaviour run locally against PostgreSQL 16 on 2026-10-11; the handler's use of the reply claim is covered by reading only.",
+      "ambiguity": [
+        "Whether a delayed first delivery of an old STOP should defeat a later subscription is undecided; it currently does."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Database effects repaired and tested; no signed HTTP test, and the reply worker, delivery updates and other Meta channels were not examined."
+      }
+    },
+    {
+      "id": "MSG-META-REDELIVERY-001",
+      "title": "A repeated Instagram or Facebook message leaves the stored message as it is",
+      "domain": "MSG",
+      "statement": "A stored inbound Instagram or Facebook message keeps its text, direction, deletion and reply state however often a webhook delivers it again or a backfill reads it again; a repeat may only fill a missing sender name or advertising attribution, or metadata that lacked the receiving account, and a repeated deletion keeps its first time.",
+      "authority": "AUTHORITY-061; Meta delivers webhooks at least once, and the WhatsApp history rule that a duplicate delivery must not rewrite the stored message.",
+      "source": "formal/system/meta-redelivery.md",
+      "contract": "formal/system/meta-redelivery.md",
+      "actors": [
+        "Meta webhook delivery",
+        "Administrator running a backfill",
+        "Reply worker"
+      ],
+      "preconditions": [
+        "Valid X-Hub-Signature-256 over the raw body (AUTH-WEBHOOK-001), or an authorized backfill"
+      ],
+      "inputs": [
+        "Provider message id, sender, text, attribution, deletion event"
+      ],
+      "state": {
+        "boundary": "instagram_message, facebook_message",
+        "authority": "PostgreSQL unique index on external_id; one insert-or-leave statement"
+      },
+      "allowedTransitions": [
+        "Message absent -> stored as pending",
+        "Stored without sender name or attribution -> filled",
+        "Stored and not deleted -> deleted at the first deletion"
+      ],
+      "forbiddenTransitions": [
+        "On hold or failed -> pending because the message was delivered or backfilled again",
+        "Stored text -> other text",
+        "Outgoing -> incoming",
+        "Deletion time -> later deletion time",
+        "Deleted before stored -> text"
+      ],
+      "effects": [
+        "One row per provider message",
+        "A repeat never returns a message to the reply worker"
+      ],
+      "authorization": "Unauthenticated webhook routes admitted only by the Meta signature; the backfill keeps its existing authorization.",
+      "privacy": "A repeat can no longer write new text into a message its sender deleted. Text stored before a deletion is still kept.",
+      "concurrency": "The store is one insert-or-leave statement on the unique index, so simultaneous first deliveries all succeed and leave one row.",
+      "idempotency": "Keyed by the provider message id.",
+      "failure": "A failed transaction stores nothing.",
+      "recovery": "Meta redelivers; a repeat is harmless.",
+      "observability": "The message row.",
+      "property": "Delivering or backfilling a stored message again changes neither its text nor its direction, deletion or reply state.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MetaRedeliverySpec.hs",
+        "tdf-hq/test/TDF/ServerExtraSpec.hs",
+        "scripts/test-meta-redelivery.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/MetaRedelivery.tla",
+        "formal/event-operations/MetaRedelivery.cfg",
+        "formal/event-operations/MetaRedeliveryRepeatResetsReply.cfg",
+        "formal/event-operations/MetaRedeliveryRepeatRewritesText.cfg",
+        "formal/event-operations/MetaRedeliveryRepeatMovesDeletion.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test of the function both webhooks call.",
+      "evidence": "formal/system/meta-redelivery.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Webhook, backfill and reply worker read; storage behaviour run locally against PostgreSQL 16 on 2026-10-11; the backfill path is covered by reading only.",
+      "ambiguity": [
+        "Whether the text of a message deleted by its sender should be erased is undecided; it is kept."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Storage repaired and tested; no signed HTTP or backfill-route test, and the reply worker was not changed."
+      }
+    },
+    {
+      "id": "MOB-FEEDBACK-001",
+      "title": "Consented mobile tester feedback with minimized diagnostics",
+      "statement": "The mobile tester feedback form enables submission only with consent, nonempty text and published catalog choices. Optional diagnostics use an explicit field allowlist and coarse device class; full device model, tokens and arbitrary input fields are not spread into metadata. Prompt eligibility honors opt-out and dismissal.",
+      "property": "ConsentedSubmission; AllowlistedDiagnostics; CoarseDeviceClass; PromptOptOut",
+      "domain": "MOB",
+      "authority": "Existing shipped client behavior; explicit traceability submitted for independent review in parent PR #542.",
+      "source": "TDF-mobile src/feedback/FeedbackEntry.tsx and metadata.ts; parent integration of Mobile #157 through #158.",
+      "contract": "formal/system/mobile-tester-feedback.md",
+      "actors": [
+        "Authenticated or anonymous tester using the existing feedback endpoint"
+      ],
+      "preconditions": [
+        "Published feedback category and severity resolve",
+        "Consent and nonempty description",
+        "Valid optional image"
+      ],
+      "inputs": [
+        "Feedback text",
+        "Consent toggle",
+        "Technical-details toggle",
+        "Optional attachment",
+        "Version, platform, locale and fixed entry surface",
+        "Coarse phone/tablet/unknown classification"
+      ],
+      "state": {
+        "form": [
+          "closed",
+          "editing",
+          "pending",
+          "succeeded",
+          "failed"
+        ],
+        "prompt": [
+          "eligible",
+          "dismissed",
+          "opted-out"
+        ]
+      },
+      "allowedTransitions": [
+        "Editing to pending only when submission controls admit it",
+        "Successful response to confirmation",
+        "Failed response retains input for retry",
+        "Prompt dismissal and opt-out suppress future prompts"
+      ],
+      "forbiddenTransitions": [
+        "Submitting through the disabled control without consent",
+        "Spreading arbitrary input properties into diagnostic metadata",
+        "Claiming successful submission before the server accepts it"
+      ],
+      "effects": [
+        "Existing feedback request with optional attachment",
+        "Minimized submission analytics after accepted response"
+      ],
+      "implementation": [
+        "tdf-mobile/src/feedback/FeedbackEntry.tsx",
+        "tdf-mobile/src/feedback/metadata.ts"
+      ],
+      "tests": [
+        "tdf-mobile/__tests__/TesterParticipation.test.ts",
+        "tdf-mobile/__tests__/TesterFeedback.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Existing implementation unit/component tests; no bounded model or universal proof claimed.",
+      "evidence": "Parent PR #542 and Mobile PR #158 current-head gate receipts; local full mobile suite 97 suites / 625 tests.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Scoped client behavior covered by tests; production upload and physical-device qualification remain separate.",
+      "ambiguity": [
+        "No production feedback submission or upload was performed during this audit."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client mappings and regression tests are present; production upload and device release qualification remain external release gates."
+      },
+      "authorization": "Existing API authentication and feedback policy remain authoritative; this client mapping does not grant new backend permissions.",
+      "privacy": "The diagnostic payload uses an explicit field allowlist; device class is phone, tablet or unknown, not a device model. Free-text feedback and an optional screenshot are user supplied and are not claimed to be intrinsically anonymous.",
+      "concurrency": "React Query pending state disables repeated submission; no exactly-once server delivery claim is made.",
+      "idempotency": "Participation counters advance only after the 30-minute session interval; feedback network retries have no new server deduplication guarantee.",
+      "failure": "Failed submission preserves editable state; optional storage errors must not block navigation.",
+      "recovery": "Retry from retained form input; corrupted participation storage falls back to safe defaults.",
+      "observability": "TesterParticipation unit tests cover metadata allowlisting, coarse device class, opt-out, dismissal and corrupted storage; TesterFeedback component tests exercise the form."
+    },
+    {
+      "id": "OPS-INBOUND-CAPTURE-001",
+      "title": "Inbound messages stored by the application reach Operations once",
+      "domain": "OPS",
+      "statement": "A WhatsApp, Instagram or Facebook message that the application stores as a request from a customer produces one Operations domain event in the storing transaction, or is stored without one (with a logged warning) if the event cannot be recorded; outgoing messages, deletion records, rows more than a day old when inserted and repeated deliveries produce none.",
+      "authority": "AUTHORITY-062; Operations control center design of 2026-08-09 (inbound communication becomes a reception work item).",
+      "source": "formal/system/operations-inbound-capture.md",
+      "contract": "formal/system/operations-inbound-capture.md",
+      "actors": [
+        "Meta webhook delivery",
+        "Operations outbox worker",
+        "Reception"
+      ],
+      "preconditions": [
+        "Message stored by the application in whats_app_message, instagram_message or facebook_message"
+      ],
+      "inputs": [
+        "Message direction, sender, provider message id, deletion and creation times"
+      ],
+      "state": {
+        "boundary": "AFTER INSERT triggers on the message tables; operations_domain_event",
+        "authority": "PostgreSQL triggers and the unique provider event index"
+      },
+      "allowedTransitions": [
+        "Inbound request stored -> one communication.<channel>.received event"
+      ],
+      "forbiddenTransitions": [
+        "Inbound request stored with the application's direction -> no event",
+        "Outgoing message, deletion record or history import -> event",
+        "Message delivered again -> second event"
+      ],
+      "effects": [
+        "One domain event and outbox entry per inbound request",
+        "A reception work item per sender and channel once projected"
+      ],
+      "authorization": "No request path; the trigger runs with the storing transaction. Reading the resulting work items follows the existing Operations read policy.",
+      "privacy": "The sender identifier (the telephone number on WhatsApp) is written to append-only event and audit rows that have no erasure path. This is the control center's existing design, exercised in production for the first time by this change.",
+      "concurrency": "The event is recorded in the storing transaction; operations_record_event resolves a duplicate provider event to the existing one.",
+      "idempotency": "Keyed by channel and provider message id; a repeated delivery inserts no row and fires no trigger.",
+      "failure": "If the event cannot be recorded the message is stored without one and a warning naming the message id is logged.",
+      "recovery": "Rollback file restores the previous functions; recorded events stay.",
+      "observability": "operations_domain_event, operations_outbox and the reception work item.",
+      "property": "At most one event per inbound request stored by the application, exactly one unless recording fails, and none for anything else.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
+        "scripts/production-migrations.json"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs",
+        "scripts/test-operations-inbound-capture.sh",
+        "scripts/lib/operations_conformance.py",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/InboundCapture.tla",
+        "formal/event-operations/InboundCapture.cfg",
+        "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg",
+        "formal/event-operations/InboundCaptureEveryIncomingRow.cfg",
+        "formal/event-operations/InboundCaptureEveryDelivery.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test through the application's storage functions against the migrated triggers, with a run against the rolled-back functions as control.",
+      "evidence": "formal/system/operations-inbound-capture.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Trigger functions, application storage and the conformance fixture read; behaviour run locally against PostgreSQL 16 on 2026-10-11. Not applied to production.",
+      "ambiguity": [
+        "Whether opt-out and consent-confirmation messages should open a reception item is undecided; they do."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repaired and tested at the database boundary; the migration is not applied in production, and the projection and reception handling were not examined."
+      }
+    },
+    {
+      "id": "DATA-INDEX-DECLARATION-001",
+      "title": "A lookup index never refuses a legitimate row",
+      "domain": "DATA",
+      "statement": "A conversation stores every message sent in it; a WhatsApp message and the reply recorded at the same instant, and two messages from one sender received together, are all stored; course registrations, receipts and follow-ups written at the same instant or sharing a reminder time are all stored. A message identity given by the provider is still stored once.",
+      "authority": "AUTHORITY-063; the application's chat, WhatsApp history and course follow-up behaviour.",
+      "source": "formal/system/index-declarations.md",
+      "contract": "formal/system/index-declarations.md",
+      "actors": [
+        "Signed-in person in a conversation",
+        "Meta webhook delivery",
+        "Staff recording course follow-ups",
+        "Person registering for a course"
+      ],
+      "preconditions": [
+        "A row with an identity not yet stored, written through the application"
+      ],
+      "inputs": [
+        "Conversation, contact, telephone number or registration; the row's timestamp; the reminder time"
+      ],
+      "state": {
+        "boundary": "chat_message, whats_app_message, course_registration, course_registration_receipt, course_registration_follow_up",
+        "authority": "PostgreSQL constraints and indexes"
+      },
+      "allowedTransitions": [
+        "New row with a new identity -> stored, whatever key and time it carries"
+      ],
+      "forbiddenTransitions": [
+        "Second message in a conversation -> refused",
+        "Reply recorded at the instant of its message -> refused",
+        "Second follow-up with the same reminder time -> refused",
+        "Provider message identity already stored -> second row"
+      ],
+      "effects": [
+        "Nine plain indexes in place of nine uniqueness constraints; no row changed"
+      ],
+      "authorization": "Unchanged; the existing conversation, staff and webhook checks decide who may write.",
+      "privacy": "No new data is stored or exposed.",
+      "concurrency": "Removing the constraints removes a source of refusals between concurrent writers; identity constraints still serialize repeated deliveries.",
+      "idempotency": "Unchanged: the WhatsApp provider message id and the other identity constraints remain unique.",
+      "failure": "Before the migration the refused write raises a database error and the request fails; a WhatsApp webhook request fails after the reply has been sent.",
+      "recovery": "Rollback file restores the constraints while no stored row violates them.",
+      "observability": "pg_constraint and pg_indexes; the request no longer fails with a unique violation on an index_ name.",
+      "property": "No row with a new identity is refused by a lookup index, and an identity is stored at most once.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql",
+        "scripts/production-migrations.json",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
+        "scripts/test-index-declarations.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/IndexDeclaration.tla",
+        "formal/event-operations/IndexDeclaration.cfg",
+        "formal/event-operations/IndexDeclarationKeyUnique.cfg",
+        "formal/event-operations/IndexDeclarationKeyTimeUnique.cfg",
+        "formal/event-operations/IndexDeclarationIdentityNotUnique.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test against the migrated schema, through the application's storage functions where one exists, with a manual local run against the schema before the migration as control (not repeated in CI).",
+      "evidence": "formal/system/index-declarations.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Models, production schema snapshot and writers read; behaviour run locally against PostgreSQL 16 on 2026-10-11. The production database itself was not queried, and the migration is not applied there.",
+      "ambiguity": [
+        "Whether production still carries the nine constraints of the 2026-08-14 snapshot was not checked against the live database."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
+      }
     }
   ]
 }

@@ -52,7 +52,9 @@ import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
+import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
+import qualified TDF.IndexDeclarationSpec as IndexDeclarationSpec
 import qualified TDF.InvoiceWorkerSpec as InvoiceWorkerSpec
 import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
@@ -624,10 +626,15 @@ import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
 import qualified TDF.TicketPaymentGateSpec as TicketPaymentGateSpec
 import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
+import qualified TDF.OperationsInboundCaptureSpec as OperationsInboundCaptureSpec
+import qualified TDF.MetaRedeliverySpec as MetaRedeliverySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
 import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
+import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
+import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
+import qualified TDF.WhatsAppRedeliverySpec as WhatsAppRedeliverySpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
@@ -878,7 +885,9 @@ main = hspec $ do
     CheckoutMoneySpec.spec
     EmailHeadersSpec.spec
     TicketConfirmationSpec.spec
+    EventOrganizerSpec.spec
     InvoiceDatilSpec.spec
+    IndexDeclarationSpec.spec
     InvoiceWorkerSpec.spec
     describe "merch commercial reputation formula v1" $ do
         it "publishes only after five evaluable orders and at least one review" $ do
@@ -17909,11 +17918,16 @@ main = hspec $ do
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
     AppleSignInSpec.spec
+    OperationsInboundCaptureSpec.spec
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
     WhatsAppConsentSpec.spec
+    InteractionWriteBudgetSpec.spec
+    MusicPurchaseSpec.spec
     DriveReplaySpec.spec
+    WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec
+    MetaRedeliverySpec.spec
     TrialIdentitySpec.spec
     CourseIdentitySpec.spec
     TicketPaymentGateSpec.spec
