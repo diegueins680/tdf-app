@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "53d252725b0b2ab6ec3033fd7c70953d0aeaa908",
+  "mobileRevision": "4c84c60a5836f7d39f18e10d34d136996bb0f63f",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -9754,83 +9754,156 @@
       "observability": "TesterParticipation unit tests cover metadata allowlisting, coarse device class, opt-out, dismissal and corrupted storage; TesterFeedback component tests exercise the form."
     },
     {
-      "domain": "MSG",
+      "id": "OPS-INBOUND-CAPTURE-001",
+      "title": "Inbound messages stored by the application reach Operations once",
+      "domain": "OPS",
+      "statement": "A WhatsApp, Instagram or Facebook message that the application stores as a request from a customer produces one Operations domain event in the storing transaction, or is stored without one (with a logged warning) if the event cannot be recorded; outgoing messages, deletion records, rows more than a day old when inserted and repeated deliveries produce none.",
+      "authority": "AUTHORITY-062; Operations control center design of 2026-08-09 (inbound communication becomes a reception work item).",
+      "source": "formal/system/operations-inbound-capture.md",
+      "contract": "formal/system/operations-inbound-capture.md",
       "actors": [
-        "Authenticated direct-message participant",
-        "Other participant controlling their own consent/block",
-        "Administrator subject to canonical participant/consent policy"
+        "Meta webhook delivery",
+        "Operations outbox worker",
+        "Reception"
       ],
-      "authority": "explicit operator requirement",
-      "source": "Operator confirmation on 2026-10-13; docs/notifications/chat-delivery-2026-10-13.md",
-      "contract": "docs/notifications/chat-delivery-2026-10-13.md",
-      "status": "specified and implemented",
-      "critical": true,
-      "privacy": "In-app notice has generic content; canonical chat read authority gates list/detail/count.",
-      "idempotency": "Normalized direct-message open returns one unique pair thread. Send has no idempotency key: an uncertain accepted response can cause a duplicate on retry; no exactly-once guarantee.",
-      "recovery": "Preserve notices, mappings, visibility policy and non-unique history index across application rollback; never reintroduce one-message uniqueness.",
-      "observability": "Synthetic regression evidence and aggregate read-only incident facts only.",
-      "confidence": "SQL runtime and web regression evidence; external delivery and production rollout remain unverified.",
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "In-app implementation has local SQL/web evidence; required CI, production rollout and recipient-side verification remain pending."
-      },
-      "id": "MSG-NOTIFY-001",
-      "title": "Atomic recipient inbox notifications and multi-message conversations",
-      "statement": "Every newly committed direct message must have one minimized notice for the other participant, and a conversation must support subsequent messages and replies. Inbox reads apply current chat visibility and links select only an authorized existing thread.",
-      "property": "Accepted message and recipient notice commit together; a rejected or rolled-back send leaves neither. Current chat read authority (including canonical block, revoked consent and inactive-account rules) and message deletion govern notice visibility.",
       "preconditions": [
-        "Governed production migration installed; existing chat session/consent authority remains in force."
+        "Message stored by the application in whats_app_message, instagram_message or facebook_message"
       ],
       "inputs": [
-        "Authorized message insert",
-        "Recipient notification reads and typed thread links"
+        "Message direction, sender, provider message id, deletion and creation times"
       ],
       "state": {
-        "variables": [
-          "Persisted messages, recipient notices and one-to-one mappings",
-          "Current consent, block and account lifecycle"
-        ],
-        "bounds": "Synthetic PostgreSQL assertions and web tests; no universal proof."
+        "boundary": "AFTER INSERT triggers on the message tables; operations_domain_event",
+        "authority": "PostgreSQL triggers and the unique provider event index"
       },
       "allowedTransitions": [
-        "Authorized send atomically stores a message, notice and mapping.",
-        "Recipient follows a notice to an already authorized thread.",
-        "Current policy denial hides an old notice."
+        "Inbound request stored -> one communication.<channel>.received event"
       ],
       "forbiddenTransitions": [
-        "A second message is rejected solely because a thread already has one message.",
-        "Notification text contains private message contents.",
-        "A failed send leaves a notice or a notice-storage failure leaves a message."
+        "Inbound request stored with the application's direction -> no event",
+        "Outgoing message, deletion record or history import -> event",
+        "Message delivered again -> second event"
       ],
       "effects": [
-        "Durable recipient notice; repeatable migration; no historical replay or external sends."
+        "One domain event and outbox entry per inbound request",
+        "A reception work item per sender and channel once projected"
       ],
-      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights.",
-      "concurrency": "Existing Party and credential locks serialize send/block. Message and notice share the database transaction; read visibility uses statement snapshot semantics.",
-      "failure": "Notification insert failure aborts the send; unavailable/foreign thread links show a generic unavailable state.",
+      "authorization": "No request path; the trigger runs with the storing transaction. Reading the resulting work items follows the existing Operations read policy.",
+      "privacy": "The sender identifier (the telephone number on WhatsApp) is written to append-only event and audit rows that have no erasure path. This is the control center's existing design, exercised in production for the first time by this change.",
+      "concurrency": "The event is recorded in the storing transaction; operations_record_event resolves a duplicate provider event to the existing one.",
+      "idempotency": "Keyed by channel and provider message id; a repeated delivery inserts no row and fires no trigger.",
+      "failure": "If the event cannot be recorded the message is stored without one and a warning naming the message id is logged.",
+      "recovery": "Rollback file restores the previous functions; recorded events stay.",
+      "observability": "operations_domain_event, operations_outbox and the reception work item.",
+      "property": "At most one event per inbound request stored by the application, exactly one unless recording fails, and none for anything else.",
       "implementation": [
-        "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
-        "tdf-hq/src/TDF/Models.hs",
-        "tdf-hq-ui/src/components/notificationTarget.ts",
-        "tdf-hq-ui/src/pages/ChatPage.tsx",
-        "scripts/production-migrations.json",
-        ".github/workflows/ci.yml",
-        "tdf-mobile/src/navigation/notificationTarget.ts"
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
+        "scripts/production-migrations.json"
       ],
       "tests": [
-        "scripts/test-chat-notifications.sh",
-        "scripts/social/chat-notifications.sql",
-        "tdf-hq-ui/src/components/notificationTarget.test.ts",
-        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-        "tdf-mobile/src/navigation/notificationResponses.test.ts",
-        "tdf-hq/test/integration/interactions/notification-properties.sql"
+        "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs",
+        "scripts/test-operations-inbound-capture.sh",
+        "scripts/lib/operations_conformance.py",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "formalModels": [],
-      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests.",
-      "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
+      "formalModels": [
+        "formal/event-operations/InboundCapture.tla",
+        "formal/event-operations/InboundCapture.cfg",
+        "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg",
+        "formal/event-operations/InboundCaptureEveryIncomingRow.cfg",
+        "formal/event-operations/InboundCaptureEveryDelivery.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test through the application's storage functions against the migrated triggers, with a run against the rolled-back functions as control.",
+      "evidence": "formal/system/operations-inbound-capture.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Trigger functions, application storage and the conformance fixture read; behaviour run locally against PostgreSQL 16 on 2026-10-11. Not applied to production.",
       "ambiguity": [
-        "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."
-      ]
+        "Whether opt-out and consent-confirmation messages should open a reception item is undecided; they do."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repaired and tested at the database boundary; the migration is not applied in production, and the projection and reception handling were not examined."
+      }
+    },
+    {
+      "id": "DATA-INDEX-DECLARATION-001",
+      "title": "A lookup index never refuses a legitimate row",
+      "domain": "DATA",
+      "statement": "A conversation stores every message sent in it; a WhatsApp message and the reply recorded at the same instant, and two messages from one sender received together, are all stored; course registrations, receipts and follow-ups written at the same instant or sharing a reminder time are all stored. A message identity given by the provider is still stored once.",
+      "authority": "AUTHORITY-063; the application's chat, WhatsApp history and course follow-up behaviour.",
+      "source": "formal/system/index-declarations.md",
+      "contract": "formal/system/index-declarations.md",
+      "actors": [
+        "Signed-in person in a conversation",
+        "Meta webhook delivery",
+        "Staff recording course follow-ups",
+        "Person registering for a course"
+      ],
+      "preconditions": [
+        "A row with an identity not yet stored, written through the application"
+      ],
+      "inputs": [
+        "Conversation, contact, telephone number or registration; the row's timestamp; the reminder time"
+      ],
+      "state": {
+        "boundary": "chat_message, whats_app_message, course_registration, course_registration_receipt, course_registration_follow_up",
+        "authority": "PostgreSQL constraints and indexes"
+      },
+      "allowedTransitions": [
+        "New row with a new identity -> stored, whatever key and time it carries"
+      ],
+      "forbiddenTransitions": [
+        "Second message in a conversation -> refused",
+        "Reply recorded at the instant of its message -> refused",
+        "Second follow-up with the same reminder time -> refused",
+        "Provider message identity already stored -> second row"
+      ],
+      "effects": [
+        "Nine plain indexes in place of nine uniqueness constraints; no row changed"
+      ],
+      "authorization": "Unchanged; the existing conversation, staff and webhook checks decide who may write.",
+      "privacy": "No new data is stored or exposed.",
+      "concurrency": "Removing the constraints removes a source of refusals between concurrent writers; identity constraints still serialize repeated deliveries.",
+      "idempotency": "Unchanged: the WhatsApp provider message id and the other identity constraints remain unique.",
+      "failure": "Before the migration the refused write raises a database error and the request fails; a WhatsApp webhook request fails after the reply has been sent.",
+      "recovery": "Rollback file restores the constraints while no stored row violates them.",
+      "observability": "pg_constraint and pg_indexes; the request no longer fails with a unique violation on an index_ name.",
+      "property": "No row with a new identity is refused by a lookup index, and an identity is stored at most once.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql",
+        "scripts/production-migrations.json",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
+        "scripts/test-index-declarations.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/IndexDeclaration.tla",
+        "formal/event-operations/IndexDeclaration.cfg",
+        "formal/event-operations/IndexDeclarationKeyUnique.cfg",
+        "formal/event-operations/IndexDeclarationKeyTimeUnique.cfg",
+        "formal/event-operations/IndexDeclarationIdentityNotUnique.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test against the migrated schema, through the application's storage functions where one exists, with a manual local run against the schema before the migration as control (not repeated in CI).",
+      "evidence": "formal/system/index-declarations.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Models, production schema snapshot and writers read; behaviour run locally against PostgreSQL 16 on 2026-10-11. The production database itself was not queried, and the migration is not applied there.",
+      "ambiguity": [
+        "Whether production still carries the nine constraints of the 2026-08-14 snapshot was not checked against the live database."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -9838,7 +9911,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "b9b90a2cb1dff0236b6ce45ddac522beacd74cd9857094b14a5eeb022fb106b9",
+    ".github/workflows/ci.yml": "bd53987b42af93029c3f3b71ccfe800bf631678b7c299eb078834a60e3a5c0b3",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
@@ -9846,7 +9919,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "523713b74e9b1bd1529405a4d7208ccd1006eb5fd5ba56900a3cf27984dab636",
+    "docs/catalog-persistence/catalog-list-decisions.json": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -9903,6 +9976,16 @@
     "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
     "formal/event-operations/HostedServicePaymentProgress.cfg": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
+    "formal/event-operations/InboundCapture.cfg": "361c77df05021a8ea3514a513f463ce6c81ad624a1e04884ba8a29d808194ff5",
+    "formal/event-operations/InboundCapture.tla": "e6e8fb2c7c16a43ccaf9faecc085e7b173faa53d68043057cb5a1688f9bace0f",
+    "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg": "9f85ed6fcb673fe53ee1787e1495f5f1f9260b2daffd339939a88f414f598020",
+    "formal/event-operations/InboundCaptureEveryDelivery.cfg": "a4db800625e51f436765321bf7b7e1e0523d4ca0e04ef2533533162ed60e3884",
+    "formal/event-operations/InboundCaptureEveryIncomingRow.cfg": "588b8e5d6f34a02521808f5eea85513c49e82337fb31730290cc9f004a71a583",
+    "formal/event-operations/IndexDeclaration.cfg": "6da2310ea72d3b8415253bd26302cfae8e0ceffa601045d9e1582127649a89a3",
+    "formal/event-operations/IndexDeclaration.tla": "bb5f936380117713f7098e8d40a18883f40ead9a1bce3bb1f9e4bd92d4a49836",
+    "formal/event-operations/IndexDeclarationIdentityNotUnique.cfg": "57807fc0522e2e8b48766b2aa0d61371a11c44325791b7861695df1fb008b190",
+    "formal/event-operations/IndexDeclarationKeyTimeUnique.cfg": "81fa3174a93205af07c0dc392d2b8f5be264278f1332b05cb05b2a24a3de0e37",
+    "formal/event-operations/IndexDeclarationKeyUnique.cfg": "49d5a50a11d0b741567941383f801b1cf505ffa162d134a2c8957f546681054e",
     "formal/event-operations/InteractionWriteBudget.tla": "45dce5e8395e15ce6af5134d3bdec6b98bc3b703391afd8b16bb9e680d0febcd",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/InvoiceSubmission.cfg": "f3f33e7679d0703bb496917d87741436062391fa411d0a394d89d86dce9e7ce5",
@@ -10069,7 +10152,7 @@
     "scripts/__tests__/persistent-uploads.test.mjs": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
     "scripts/__tests__/production-entrypoint.test.mjs": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
-    "scripts/__tests__/production-release.test.mjs": "03542f10f973a508cf0f9ba30f5f55308aa9a3291d2d1515684a66afcd87e8dc",
+    "scripts/__tests__/production-release.test.mjs": "e457c1521db3347e64a96b3c09f7eeba9b73495a29ff72f72f3613054cb3b626",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
@@ -10114,9 +10197,9 @@
     "scripts/lib/music-test-database.mjs": "8c55bbb8607ab1c0d229dc8485999cb8decba00b4580f1c2dec18fee62243b7a",
     "scripts/lib/music-worker-image-smoke.sh": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
-    "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
+    "scripts/lib/operations_conformance.py": "e0ff663aee7f816df7a06418223d41065d69e0681675a05f3fb6a0592e0f911a",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
+    "scripts/lib/production-release.mjs": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -10129,7 +10212,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "562c90449a87663e7e6e56b6b3eb13a46bc0e671155e0981db9b5b7c8ecdd441",
+    "scripts/production-migrations.json": "5a2894568e5baf251a0a882438f5153dd3e703157e9c42dbb8a8bd89c13878bb",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -10142,7 +10225,6 @@
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
-    "scripts/social/chat-notifications.sql": "1bb1b293aabacbeede286dba05911f20f8a85b59faf18f12d1b399288a32a734",
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
@@ -10153,15 +10235,15 @@
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-automatic-migrations-production-schema.sh": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
+    "scripts/test-automatic-migrations-production-schema.sh": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
-    "scripts/test-chat-notifications.sh": "d01a8cbf2c0852222f53b36bd813a7f2dc8875ae6f3b53ea0ab108fba1f2b552",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
+    "scripts/test-index-declarations.sh": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
     "scripts/test-isolated-application-canary.py": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
@@ -10184,6 +10266,7 @@
     "scripts/test-music-s3-local.mjs": "882173441c83b1eaa823bcdad88f54a37573de2fdae3375302523b7f2dc43d61",
     "scripts/test-music-worker-image.mjs": "77621bf3782591ee259de08068c291ecefd88f939d5db4667b082093041707e3",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
+    "scripts/test-operations-inbound-capture.sh": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
@@ -10216,7 +10299,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "1b022f16d9eecfc48ce8a46a413347c7b54a5ad9991c0a03fb629972d38a0794",
+    "scripts/verify-event-operations-formal.sh": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -10318,8 +10401,8 @@
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
-    "tdf-hq-ui/src/components/notificationTarget.test.ts": "7d62d164ca1a01e7f59dcfbafc6a2e23a2f16e36ecf2293e999563dbcd6916da",
-    "tdf-hq-ui/src/components/notificationTarget.ts": "8eedd6fc0b3c12ba8448053b1304fe5b9d50c3946b0b45a8b36dd6e885086a85",
+    "tdf-hq-ui/src/components/notificationTarget.test.ts": "37f0a06226e1f81208416a1e33ddaae9e4235ca8932eb767b29fe0b7d51fdb6d",
+    "tdf-hq-ui/src/components/notificationTarget.ts": "170f6a854078d866df645bb72d09a1f34296249d489667ebde4dce951af84c23",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "cb2e829fb4c40dfbbc9f6b7cc7b94cf40f63471a23db7df3f04bb496b4638408",
@@ -10359,8 +10442,6 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
-    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "ad2656623345183648fd7808d5890cc0a25be7cf6d78ee307d73107eb2254fcc",
-    "tdf-hq-ui/src/pages/ChatPage.tsx": "f14bee1cbedc5b756c1736e529c7afd02b976eff2d5ca4f192fe61c6612a06e5",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
@@ -10543,7 +10624,10 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "bafc9d13e6a40650082e07b89dddbbe293713bd6a302dcc53d9ad27e780fa9eb",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "be18726df45a30041e753ae1bc6bc40431bf0529ab2f3279d6dd027dac7353bb",
-    "tdf-hq/sql/2026-10-13_chat_message_notifications.sql": "6ea36a745b1b9a282528aab96f76dcfe10fde7eec849687ce3e57025d2909d1e",
+    "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql": "a45fb398f49dbf49be4fac8ae23bf0a5f0ff4ab5d4d51f748918e3137f0adb39",
+    "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql": "2d33a0b6285c8425d582732d86d43420e590267d7e30d263a84d91fb5cddebfb",
+    "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
+    "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -10595,8 +10679,8 @@
     "tdf-hq/src/TDF/Invoice/Datil.hs": "83703af73bc1195ce5483cf68b9afe61eb4107dc6ca72015a2f7ed86200d7eae",
     "tdf-hq/src/TDF/Invoice/Receipt.hs": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
-    "tdf-hq/src/TDF/Models.hs": "d54ccc2b1992865566ae71d7cf875605e4b792d21cb8611e45ac069167e9b92a",
-    "tdf-hq/src/TDF/ModelsExtra.hs": "88d571f82c7883b151c3e3292d8219ac753c74af520cae7518e8bb97b693aa3f",
+    "tdf-hq/src/TDF/Models.hs": "ea779e770eecdec1391b130137642a4839e0585db40dd0ffe2dfedbd0dabcf1f",
+    "tdf-hq/src/TDF/ModelsExtra.hs": "c6ce1dcd223e1ab57d26d980f41359abb5c020f765d1d8cf1726e2a564298da2",
     "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs": "1c3b5fae0cc4e5f4605aea8a1a0118badcafb8d83dbef671fce27f6cbf3d65d2",
     "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs": "4dec7b8d3065fb925231203efe76181a645eb3701b3560b635eb364ece867677",
     "tdf-hq/src/TDF/MusicRelease/Domain.hs": "0f22bc111131e3a52d3d68bd6d9614c4b1005dd51dae59ac9fea1b92f0b7a193",
@@ -10652,12 +10736,12 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "78127889e4f003b3b115b08cb3ce5ce63cafe235c9e6fc0866ce5877cc2a27f6",
+    "tdf-hq/tdf-hq.cabal": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "e52a126e5c6d2996a01083afcac2f61bf8c4f8ba45427209fe15a807137f96be",
+    "tdf-hq/test/Spec.hs": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -10675,6 +10759,7 @@
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "bf9d46cd50c4563639019e5a83a3750e5ffb27a636f236ff236d3a405b6891ec",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
+    "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "de7e62fd390a1286f6daacc67042af69b557adc1c1e8e4fa40c6f2538c32a65d",
@@ -10686,6 +10771,7 @@
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
     "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs": "fef56adf244a0b899797b6b6f465233f135259cd52a762185611c5ba08c0d735",
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
+    "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": "db0fe1b18f5de503774821849453accc4ab9a8735336053b9e5242cf6e880ef0",
     "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
@@ -10707,7 +10793,6 @@
     "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql": "24aaa4ff608d40f59798c622a7265cedf2da496b2df5e20e145e441e7e2ffdaa",
     "tdf-hq/test/integration/directory_event_search_http_seed.sql": "b00c06818bcc42e8cee4ff9101f73a2a1311cf411edb68535257a01c038dce12",
     "tdf-hq/test/integration/directory_event_search_sync.sql": "5bb5a92c5403719e7398b2613a2c7956a152a69d0f88c7b0646e9b743206f8f6",
-    "tdf-hq/test/integration/interactions/notification-properties.sql": "65d0697ff1ba05a77d8d79d3120e24877c49c23c1b8a45de778096e39adb2d91",
     "tdf-hq/test/integration/ledger_posting_balance.sql": "a84597480d8d2b5844dfb725c8f17289bc45dbe5477426d0e13bb8a58f4da325",
     "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
     "tdf-hq/test/integration/ticket_confirmation_delivery.sql": "9a6222ff1d4c604e263da81d9da92d6a42a6ab2b78384b0c7e5a83bd6cb6e46d",
@@ -10811,8 +10896,7 @@
     "tdf-mobile/src/lib/savedEvents.ts": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
     "tdf-mobile/src/localization/eventExperienceCopy.ts": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
     "tdf-mobile/src/localization/onboardingCopy.ts": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
-    "tdf-mobile/src/navigation/notificationResponses.test.ts": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
-    "tdf-mobile/src/navigation/notificationTarget.ts": "268e351ae62df86868dfc8c0a6bb02c73315356f7b3030d79fafa9ab1a8275a4",
+    "tdf-mobile/src/navigation/notificationTarget.ts": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
     "tdf-mobile/src/notifications/NotificationScreen.test.tsx": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
@@ -10948,6 +11032,14 @@
       },
       {
         "requirement": "MSG-META-REDELIVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
         "relationship": "tests"
       }
     ],
@@ -11396,10 +11488,6 @@
       },
       {
         "requirement": "OPS-CI-REGISTRY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-NOTIFY-001",
         "relationship": "implementation"
       }
     ],
@@ -11947,7 +12035,11 @@
         "relationship": "implementation"
       },
       {
-        "requirement": "MSG-NOTIFY-001",
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
         "relationship": "implementation"
       }
     ],
@@ -14323,6 +14415,10 @@
       {
         "requirement": "OPS-AUX-WRITE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/operations-api-schema.test.mjs": [
@@ -14691,7 +14787,7 @@
         "relationship": "implementation"
       },
       {
-        "requirement": "MSG-NOTIFY-001",
+        "requirement": "DATA-INDEX-DECLARATION-001",
         "relationship": "implementation"
       }
     ],
@@ -16197,6 +16293,10 @@
       {
         "requirement": "PRIV-WHATSAPP-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/CampaignAutomation.hs": [
@@ -17051,10 +17151,6 @@
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-NOTIFY-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": [
@@ -17119,10 +17215,6 @@
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-NOTIFY-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/player/PlayerProvider.test.tsx": [
@@ -17158,10 +17250,6 @@
     "tdf-hq-ui/src/components/notificationTarget.test.ts": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MSG-NOTIFY-001",
         "relationship": "tests"
       }
     ],
@@ -18305,46 +18393,112 @@
         "relationship": "tests"
       }
     ],
-    "tdf-hq/sql/2026-10-13_chat_message_notifications.sql": [
+    "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": [
       {
-        "requirement": "MSG-NOTIFY-001",
+        "requirement": "OPS-INBOUND-CAPTURE-001",
         "relationship": "implementation"
       }
     ],
-    "tdf-hq-ui/src/pages/ChatPage.tsx": [
+    "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": [
       {
-        "requirement": "MSG-NOTIFY-001",
+        "requirement": "OPS-INBOUND-CAPTURE-001",
         "relationship": "implementation"
       }
     ],
-    "scripts/test-chat-notifications.sh": [
+    "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": [
       {
-        "requirement": "MSG-NOTIFY-001",
+        "requirement": "OPS-INBOUND-CAPTURE-001",
         "relationship": "tests"
       }
     ],
-    "scripts/social/chat-notifications.sql": [
+    "scripts/test-operations-inbound-capture.sh": [
       {
-        "requirement": "MSG-NOTIFY-001",
+        "requirement": "OPS-INBOUND-CAPTURE-001",
         "relationship": "tests"
       }
     ],
-    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": [
+    "formal/event-operations/InboundCapture.tla": [
       {
-        "requirement": "MSG-NOTIFY-001",
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/InboundCapture.cfg": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/InboundCaptureEveryIncomingRow.cfg": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/InboundCaptureEveryDelivery.cfg": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/IndexDeclarationSpec.hs": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
         "relationship": "tests"
       }
     ],
-    "tdf-mobile/src/navigation/notificationResponses.test.ts": [
+    "scripts/test-index-declarations.sh": [
       {
-        "requirement": "MSG-NOTIFY-001",
+        "requirement": "DATA-INDEX-DECLARATION-001",
         "relationship": "tests"
       }
     ],
-    "tdf-hq/test/integration/interactions/notification-properties.sql": [
+    "formal/event-operations/IndexDeclaration.tla": [
       {
-        "requirement": "MSG-NOTIFY-001",
-        "relationship": "tests"
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/IndexDeclaration.cfg": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/IndexDeclarationKeyUnique.cfg": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/IndexDeclarationKeyTimeUnique.cfg": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/IndexDeclarationIdentityNotUnique.cfg": [
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "formalModels"
       }
     ]
   },
@@ -18414,7 +18568,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "b9b90a2cb1dff0236b6ce45ddac522beacd74cd9857094b14a5eeb022fb106b9",
+      "sha256": "bd53987b42af93029c3f3b71ccfe800bf631678b7c299eb078834a60e3a5c0b3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18435,10 +18589,6 @@
         },
         {
           "requirement": "OPS-CI-REGISTRY-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MSG-NOTIFY-001",
           "relationship": "implementation"
         }
       ]
@@ -20065,7 +20215,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "03542f10f973a508cf0f9ba30f5f55308aa9a3291d2d1515684a66afcd87e8dc",
+      "sha256": "e457c1521db3347e64a96b3c09f7eeba9b73495a29ff72f72f3613054cb3b626",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21121,7 +21271,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
+      "sha256": "e0ff663aee7f816df7a06418223d41065d69e0681675a05f3fb6a0592e0f911a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21151,6 +21301,10 @@
         {
           "requirement": "OPS-AUX-WRITE-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -21169,7 +21323,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
+      "sha256": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21451,7 +21605,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "562c90449a87663e7e6e56b6b3eb13a46bc0e671155e0981db9b5b7c8ecdd441",
+      "sha256": "5a2894568e5baf251a0a882438f5153dd3e703157e9c42dbb8a8bd89c13878bb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21475,7 +21629,11 @@
           "relationship": "implementation"
         },
         {
-          "requirement": "MSG-NOTIFY-001",
+          "requirement": "OPS-INBOUND-CAPTURE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
           "relationship": "implementation"
         }
       ]
@@ -21877,18 +22035,6 @@
       "sha256": "de2c24e9524e62fcae978eac8390507be2cb49544c4deccdb7bc0e9b066ea07d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
-    },
-    {
-      "id": "SURFACE-fd6a709b91c00b14",
-      "path": "scripts/social/chat-notifications.sql",
-      "sha256": "1bb1b293aabacbeede286dba05911f20f8a85b59faf18f12d1b399288a32a734",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MSG-NOTIFY-001",
-          "relationship": "tests"
-        }
-      ]
     },
     {
       "id": "SURFACE-2e0e93e57b6c8565",
@@ -22354,7 +22500,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
+      "sha256": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22464,18 +22610,6 @@
       "sha256": "04656c31ef9f3e5c34dbb70c1a3d82cf851a43e07af5f1ec0b67a9875d178b64",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
-    },
-    {
-      "id": "SURFACE-325b7de63b17b31f",
-      "path": "scripts/test-chat-notifications.sh",
-      "sha256": "d01a8cbf2c0852222f53b36bd813a7f2dc8875ae6f3b53ea0ab108fba1f2b552",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MSG-NOTIFY-001",
-          "relationship": "tests"
-        }
-      ]
     },
     {
       "id": "SURFACE-1910077a9107778a",
@@ -22768,6 +22902,18 @@
       "sha256": "7a0a057ed0d5aa4c453a7ca50ab81a644f0ff184c664b16f2c131ac577b04175",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-7842f199f23fca5a",
+      "path": "scripts/test-index-declarations.sh",
+      "sha256": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-38e572568da4fe30",
@@ -23103,6 +23249,18 @@
       "sha256": "e228287ed0d416ec6fe5b4039e62f02aefd3c1a22065cfd9fe8fb511c4daaf7f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-605ec09d958d0931",
+      "path": "scripts/test-operations-inbound-capture.sh",
+      "sha256": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-9649a5eac5beddfa",
@@ -23713,7 +23871,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "1b022f16d9eecfc48ce8a46a413347c7b54a5ad9991c0a03fb629972d38a0794",
+      "sha256": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23790,6 +23948,14 @@
         },
         {
           "requirement": "MSG-META-REDELIVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
           "relationship": "tests"
         }
       ]
@@ -26413,15 +26579,11 @@
     {
       "id": "SURFACE-5a528805907175e9",
       "path": "tdf-hq-ui/src/components/notificationTarget.test.ts",
-      "sha256": "7d62d164ca1a01e7f59dcfbafc6a2e23a2f16e36ecf2293e999563dbcd6916da",
+      "sha256": "37f0a06226e1f81208416a1e33ddaae9e4235ca8932eb767b29fe0b7d51fdb6d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
-          "relationship": "tests"
-        },
-        {
-          "requirement": "MSG-NOTIFY-001",
           "relationship": "tests"
         }
       ]
@@ -26429,15 +26591,11 @@
     {
       "id": "SURFACE-45942cefd314d415",
       "path": "tdf-hq-ui/src/components/notificationTarget.ts",
-      "sha256": "8eedd6fc0b3c12ba8448053b1304fe5b9d50c3946b0b45a8b36dd6e885086a85",
+      "sha256": "170f6a854078d866df645bb72d09a1f34296249d489667ebde4dce951af84c23",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MSG-NOTIFY-001",
           "relationship": "implementation"
         }
       ]
@@ -27789,26 +27947,16 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "ad2656623345183648fd7808d5890cc0a25be7cf6d78ee307d73107eb2254fcc",
+      "sha256": "f0af38ca2b084257aaf7155b1f28511f79739077abc79ad726d8449212aae0f8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MSG-NOTIFY-001",
-          "relationship": "tests"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "f14bee1cbedc5b756c1736e529c7afd02b976eff2d5ca4f192fe61c6612a06e5",
+      "sha256": "bdc1c46558aec39ba26cedaefac9c3d385f51920df1ecd7bc6cee5c14a790635",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MSG-NOTIFY-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-79ffba0a412d33ff",
@@ -34356,13 +34504,49 @@
       ]
     },
     {
-      "id": "SURFACE-08a4bdf7ae24c182",
-      "path": "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
-      "sha256": "6ea36a745b1b9a282528aab96f76dcfe10fde7eec849687ce3e57025d2909d1e",
+      "id": "SURFACE-2ea4fa983f6c4814",
+      "path": "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
+      "sha256": "a45fb398f49dbf49be4fac8ae23bf0a5f0ff4ab5d4d51f748918e3137f0adb39",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "MSG-NOTIFY-001",
+          "requirement": "DATA-INDEX-DECLARATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1180f7716e42349e",
+      "path": "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql",
+      "sha256": "2d33a0b6285c8425d582732d86d43420e590267d7e30d263a84d91fb5cddebfb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-672fc61c890788b0",
+      "path": "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
+      "sha256": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1f2645f2629f4bbe",
+      "path": "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
+      "sha256": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
           "relationship": "implementation"
         }
       ]
@@ -35810,7 +35994,7 @@
     {
       "id": "SURFACE-a97719441b71656b",
       "path": "tdf-hq/src/TDF/Models.hs",
-      "sha256": "d54ccc2b1992865566ae71d7cf875605e4b792d21cb8611e45ac069167e9b92a",
+      "sha256": "ea779e770eecdec1391b130137642a4839e0585db40dd0ffe2dfedbd0dabcf1f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35818,7 +36002,7 @@
           "relationship": "implementation"
         },
         {
-          "requirement": "MSG-NOTIFY-001",
+          "requirement": "DATA-INDEX-DECLARATION-001",
           "relationship": "implementation"
         }
       ]
@@ -35833,11 +36017,15 @@
     {
       "id": "SURFACE-de59a337fc1e94a1",
       "path": "tdf-hq/src/TDF/ModelsExtra.hs",
-      "sha256": "88d571f82c7883b151c3e3292d8219ac753c74af520cae7518e8bb97b693aa3f",
+      "sha256": "c6ce1dcd223e1ab57d26d980f41359abb5c020f765d1d8cf1726e2a564298da2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PRIV-WHATSAPP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
           "relationship": "implementation"
         }
       ]
@@ -37039,7 +37227,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "78127889e4f003b3b115b08cb3ce5ce63cafe235c9e6fc0866ce5877cc2a27f6",
+      "sha256": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37153,7 +37341,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "e52a126e5c6d2996a01083afcac2f61bf8c4f8ba45427209fe15a807137f96be",
+      "sha256": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37521,6 +37709,18 @@
       ]
     },
     {
+      "id": "SURFACE-53f917e22cc25447",
+      "path": "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
+      "sha256": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DATA-INDEX-DECLARATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-33e5f75ed002393a",
       "path": "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
       "sha256": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
@@ -37662,6 +37862,18 @@
       "requirements": [
         {
           "requirement": "AUTH-OPS-READ-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-eba437673d8ebcc8",
+      "path": "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs",
+      "sha256": "db0fe1b18f5de503774821849453accc4ab9a8735336053b9e5242cf6e880ef0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
           "relationship": "tests"
         }
       ]
@@ -38379,14 +38591,9 @@
     {
       "id": "SURFACE-28ff3265c4f989aa",
       "path": "tdf-hq/test/integration/interactions/notification-properties.sql",
-      "sha256": "65d0697ff1ba05a77d8d79d3120e24877c49c23c1b8a45de778096e39adb2d91",
+      "sha256": "5c167f28a91dfaa2fb057742c89c531a724126cd9178cdfa0e43d878c8a31f87",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MSG-NOTIFY-001",
-          "relationship": "tests"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-f85498eb4c6d81a5",
@@ -41517,14 +41724,9 @@
     {
       "id": "SURFACE-335f0e863443a35b",
       "path": "tdf-mobile/src/navigation/notificationResponses.test.ts",
-      "sha256": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
+      "sha256": "b9a8dc89fb624e2f30f371ff4fe8a2213e2358cdb2f3aacd119071aa00dd8153",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MSG-NOTIFY-001",
-          "relationship": "tests"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-1d9d50d0957c7af7",
@@ -41536,15 +41738,11 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "268e351ae62df86868dfc8c0a6bb02c73315356f7b3030d79fafa9ab1a8275a4",
+      "sha256": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MSG-NOTIFY-001",
           "relationship": "implementation"
         }
       ]
@@ -42415,6 +42613,8 @@
     "SURFACE-cb26a654f47a190f",
     "SURFACE-57945788e4512e48",
     "SURFACE-7dcbd0bbd9154a13",
+    "SURFACE-2db984964b19dd3c",
+    "SURFACE-57bb44e2fffdfbce",
     "SURFACE-79ffba0a412d33ff",
     "SURFACE-10a1b2ad11b92606",
     "SURFACE-9ec3af8f42eacde2",
@@ -43233,6 +43433,7 @@
     "SURFACE-06b18fb009ca1064",
     "SURFACE-855a59bba05a4b3d",
     "SURFACE-eafd02f6b2c8a758",
+    "SURFACE-28ff3265c4f989aa",
     "SURFACE-f85498eb4c6d81a5",
     "SURFACE-df2fcadfcd879971",
     "SURFACE-7a81570adb93f7f1",
@@ -43499,6 +43700,7 @@
     "SURFACE-67d021717b413c4f",
     "SURFACE-e4d65d8b68003724",
     "SURFACE-ab2f22b78d9a1a9a",
+    "SURFACE-335f0e863443a35b",
     "SURFACE-1d9d50d0957c7af7",
     "SURFACE-861d18c6230228f5",
     "SURFACE-8610f72192678eb2",
@@ -43583,8 +43785,7 @@
     "MEDIA-MUSIC-DDEX-001",
     "MEDIA-MUSIC-PLAYER-001",
     "SYS-WEB-SHELL-001",
-    "AUTH-ENTRY-002",
-    "MSG-NOTIFY-001"
+    "AUTH-ENTRY-002"
   ],
   "stateMachines": [
     {
@@ -44703,7 +44904,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "705d700d2b3e5a8e3a86fc384b182823e9ccda2317b3ed65e5e5731b10a874af",
+      "sourceSha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
       "definition": {
         "states": [
           "absent",
@@ -66900,7 +67101,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 121,
+    "PARTIAL": 122,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
