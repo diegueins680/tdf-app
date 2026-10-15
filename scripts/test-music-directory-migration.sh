@@ -965,6 +965,49 @@ psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sy
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sync.sql" >/dev/null
+# The artist-listing migration follows the event sync in the manifest and
+# redefines the venue projection (venue image); keep the database in release
+# order before serving searches from it.
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql" >/dev/null
+
+# /directory/search over the migrated database: Eventos + city, Todo, tab
+# counts, people-only filters, lineup genre, event card fields.
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_http_seed.sql" >/dev/null
+event_search_genre_id=$(psql_exec -Atc "SELECT id FROM genre WHERE active ORDER BY sort_order, id LIMIT 1;")
+event_search_profession_id=$(psql_exec -Atc "SELECT id FROM profession WHERE active ORDER BY sort_order, id LIMIT 1;")
+(
+  cd "$TDF_DIRECTORY_ROOT/tdf-hq"
+  DB_HOST=127.0.0.1 \
+  DB_PORT="$TDF_DIRECTORY_DB_PORT" \
+  DB_USER=postgres \
+  DB_PASS=unused-local-test-value \
+  DB_NAME="$TDF_DIRECTORY_DATABASE" \
+  APP_PORT="$TDF_DIRECTORY_API_PORT" \
+  RUN_MIGRATIONS=false \
+  RESET_DB=false \
+  SEED_DB=false \
+  EVENT_DISCOVERY_ENABLED=false \
+  sh -c 'if [ -n "${TDF_DIRECTORY_SERVER_BIN:-}" ]; then exec "$TDF_DIRECTORY_SERVER_BIN"; else exec stack exec -- tdf-hq-exe; fi'
+) >"$TDF_DIRECTORY_API_LOG" 2>&1 &
+TDF_DIRECTORY_API_PID=$!
+attempt=0
+until curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/health" 2>/dev/null | grep -q '"db":"ok"'; do
+  if ! kill -0 "$TDF_DIRECTORY_API_PID" >/dev/null 2>&1; then
+    tail -80 "$TDF_DIRECTORY_API_LOG" >&2
+    echo "Backend exited before the event search HTTP checks" >&2
+    exit 1
+  fi
+  attempt=$((attempt + 1))
+  if [ "$attempt" -ge 60 ]; then
+    tail -80 "$TDF_DIRECTORY_API_LOG" >&2
+    echo "Backend did not become ready for the event search HTTP checks" >&2
+    exit 1
+  fi
+  sleep 1
+done
+node "$TDF_DIRECTORY_ROOT/scripts/__tests__/directory-event-search-http.mjs" \
+  "http://127.0.0.1:$TDF_DIRECTORY_API_PORT" "$event_search_genre_id" "$event_search_profession_id"
+stop_api
 
 # Two real sessions: a venue rename that overlaps an uncommitted event edit
 # must not overwrite the event's newer projection with an older snapshot.

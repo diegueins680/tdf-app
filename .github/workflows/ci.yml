@@ -525,15 +525,30 @@ jobs:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
           TDF_IDENTITY_HTTP_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: |
+          sh scripts/test-operations-inbound-capture.sh
           bash scripts/test-auth-recovery-migration.sh
+          sh scripts/test-meta-redelivery.sh
           node scripts/__tests__/identity-http-runtime.mjs
+          sh scripts/test-whatsapp-redelivery.sh
           sh scripts/test-credential-lifecycle.sh
           sh scripts/test-whatsapp-consent.sh
+          sh scripts/test-index-declarations.sh
+          sh scripts/test-interaction-write-budget.sh
+
+      - name: Verify single assignment of an event without an organizer
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-event-organizer.sh
 
       - name: Verify checkout monetary snapshots and invalid-schema controls
         env:
           TDF_CHECKOUT_AMOUNT_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: node scripts/__tests__/checkout-amount-postgres.mjs
+
+      - name: Verify music purchase payment record, entitlement and download limits
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-music-purchase.sh
 
       - name: Verify artist claim preparation concurrency and privacy
         env:
