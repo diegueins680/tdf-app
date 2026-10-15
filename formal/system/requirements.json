@@ -10024,6 +10024,89 @@
         "classification": "PARTIAL",
         "reason": "Canonical projection repair, executable controls and bounded model are implemented; final exact-candidate gates, combined-main delivery and provider/recovery obligations remain outstanding."
       }
+    },
+    {
+      "id": "DEPLOY-VERSION-001",
+      "title": "Refresh backend identity through restored build caches",
+      "domain": "DEPLOY",
+      "critical": true,
+      "statement": "The canonical backend quality build must regenerate compiled Git identity for the checked-out HEAD despite restored incremental objects and unchanged Haskell source; runtime overrides cannot substitute for refreshed compiled metadata.",
+      "authority": "Derived technical requirement from observed cached metadata failure; no product activation authorization.",
+      "source": "Hosted backend job116275638317 at candidate849b and synthetic checkoutf3f5b873; formal/system/backend-version.md",
+      "contract": "formal/system/backend-version.md",
+      "property": "After Git HEAD changes without Haskell edits, canonical cached build reports the new HEAD; independently removing either required cache-layer refresh must reproduce stale identity.",
+      "actors": [
+        "Backend CI",
+        "Operator of the canonical local quality gate"
+      ],
+      "preconditions": [
+        "Repository Stack/GHC toolchain; controlled build checkout and trusted unchanged runtime fixture.",
+        "No runtime commit environment or /app/COMMIT override in the identity probe.",
+        "Canonical build has a trusted accessible Git checkout; independently bound image-packaging metadata remains a separate path."
+      ],
+      "inputs": [
+        "Git HEAD",
+        "Incremental Stack/GHC objects",
+        "Actual TDF.Version source",
+        "Repository Stack snapshot/lock"
+      ],
+      "state": {
+        "states": [
+          "cached",
+          "building",
+          "metadata_checked",
+          "failed"
+        ],
+        "initial": "cached",
+        "terminal": [
+          "metadata_checked",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "cached -> building -> metadata_checked after executable reports current HEAD",
+        "building -> failed on build, identity, cache-control or deadline failure"
+      ],
+      "forbiddenTransitions": [
+        "cached -> metadata_checked solely by runtime metadata override",
+        "Accepting stale identity after a source-identical Git HEAD change"
+      ],
+      "effects": [
+        "Refresh Git/time Template Haskell inputs during canonical build",
+        "Retain private source-bound logs and executable identity evidence"
+      ],
+      "authorization": "This gate grants no production or provider permission.",
+      "privacy": "Synthetic Git identities and private test directories only; no application data or credentials in output.",
+      "concurrency": "Probe packages and process groups are isolated; ordinary Stack dependency-cache locking is trusted. Concurrent privileged source/cache replacement is outside the fixture boundary.",
+      "idempotency": "Each test run uses a new evidence directory; existing evidence is never overwritten.",
+      "failure": "Any failed build or mismatched identity fails the gate. Negative controls require the known stale identity, not an arbitrary process failure.",
+      "recovery": "Preserve failed receipts; retry in a new directory after repair. No production rollback or schema changes.",
+      "observability": "Per-build logs, Git HEADs, returned identities, executable hash and unchanged unrelated object witness.",
+      "implementation": [
+        "tdf-hq/src/TDF/Version.hs",
+        "scripts/quality-backend.sh",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        "scripts/test-backend-version-rebuild.py",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-hq/test/Spec.hs",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "verification": "Actual repository module compiled through Stack in a cached minimal package; README-only HEAD advance; independent Stack/GHC cache controls; final backend/HTTP gates still required.",
+      "evidence": "Current candidate receipts and hosted logs must be retained; older849b failed CI is diagnosis only.",
+      "confidence": "High for selected cache layers after actual regression; no whole-binary source attestation or universal build-system proof.",
+      "ambiguity": [
+        "Direct arbitrary developer Stack invocations without the canonical dirty flag may skip an unchanged package.",
+        "Runtime metadata can be overridden by trusted deployment configuration; those paths do not prove compiled identity."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Cache repair and executable controls implemented; exact final-candidate full backend/HTTP validation, merge and deployed identity remain required."
+      }
     }
   ]
 }

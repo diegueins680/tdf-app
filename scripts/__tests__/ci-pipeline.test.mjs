@@ -131,9 +131,19 @@ test('persona browser journeys are artifacted and gate aggregate quality', async
 
 test('backend quality compiles, tests and exports the binary in one Stack pass', async () => {
   const script = await source('scripts/quality-backend.sh');
-  assert.match(script, /build_args=\(--no-terminal test tdf-hq\)/);
+  assert.match(script, /build_args=\(--no-terminal test --force-dirty tdf-hq\)/);
   assert.equal((script.match(/stack "\$\{build_args\[@\]\}"/g) ?? []).length, 1);
   assert.doesNotMatch(script, /stack --no-terminal test/);
+  assert.match(script, /python3 "\$ROOT\/scripts\/test-backend-version-rebuild\.py"/);
+  const workflow = await source('.github/workflows/ci.yml');
+  assert.match(workflow, /TDF_VERSION_REBUILD_OUTPUT: \$\{\{ github\.workspace \}\}\/tmp\/specification\/backend-version-rebuild/);
+  const step = parseYaml(workflow).jobs['backend-quality'].steps.find(row => row.name === 'Retain synthetic backend version cache evidence');
+  assert.equal(step.if, 'always()');
+  assert.deepEqual(step.with.path.trim().split('\n'), [
+    'tmp/specification/backend-version-rebuild/result.json',
+    'tmp/specification/backend-version-rebuild/*/*.log',
+    'tmp/specification/backend-version-rebuild/*/*.json',
+  ]);
 });
 
 test('backend quality requires the canonical payment PostgreSQL regressions', async () => {

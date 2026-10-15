@@ -10025,6 +10025,89 @@
         "classification": "PARTIAL",
         "reason": "Canonical projection repair, executable controls and bounded model are implemented; final exact-candidate gates, combined-main delivery and provider/recovery obligations remain outstanding."
       }
+    },
+    {
+      "id": "DEPLOY-VERSION-001",
+      "title": "Refresh backend identity through restored build caches",
+      "domain": "DEPLOY",
+      "critical": true,
+      "statement": "The canonical backend quality build must regenerate compiled Git identity for the checked-out HEAD despite restored incremental objects and unchanged Haskell source; runtime overrides cannot substitute for refreshed compiled metadata.",
+      "authority": "Derived technical requirement from observed cached metadata failure; no product activation authorization.",
+      "source": "Hosted backend job116275638317 at candidate849b and synthetic checkoutf3f5b873; formal/system/backend-version.md",
+      "contract": "formal/system/backend-version.md",
+      "property": "After Git HEAD changes without Haskell edits, canonical cached build reports the new HEAD; independently removing either required cache-layer refresh must reproduce stale identity.",
+      "actors": [
+        "Backend CI",
+        "Operator of the canonical local quality gate"
+      ],
+      "preconditions": [
+        "Repository Stack/GHC toolchain; controlled build checkout and trusted unchanged runtime fixture.",
+        "No runtime commit environment or /app/COMMIT override in the identity probe.",
+        "Canonical build has a trusted accessible Git checkout; independently bound image-packaging metadata remains a separate path."
+      ],
+      "inputs": [
+        "Git HEAD",
+        "Incremental Stack/GHC objects",
+        "Actual TDF.Version source",
+        "Repository Stack snapshot/lock"
+      ],
+      "state": {
+        "states": [
+          "cached",
+          "building",
+          "metadata_checked",
+          "failed"
+        ],
+        "initial": "cached",
+        "terminal": [
+          "metadata_checked",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "cached -> building -> metadata_checked after executable reports current HEAD",
+        "building -> failed on build, identity, cache-control or deadline failure"
+      ],
+      "forbiddenTransitions": [
+        "cached -> metadata_checked solely by runtime metadata override",
+        "Accepting stale identity after a source-identical Git HEAD change"
+      ],
+      "effects": [
+        "Refresh Git/time Template Haskell inputs during canonical build",
+        "Retain private source-bound logs and executable identity evidence"
+      ],
+      "authorization": "This gate grants no production or provider permission.",
+      "privacy": "Synthetic Git identities and private test directories only; no application data or credentials in output.",
+      "concurrency": "Probe packages and process groups are isolated; ordinary Stack dependency-cache locking is trusted. Concurrent privileged source/cache replacement is outside the fixture boundary.",
+      "idempotency": "Each test run uses a new evidence directory; existing evidence is never overwritten.",
+      "failure": "Any failed build or mismatched identity fails the gate. Negative controls require the known stale identity, not an arbitrary process failure.",
+      "recovery": "Preserve failed receipts; retry in a new directory after repair. No production rollback or schema changes.",
+      "observability": "Per-build logs, Git HEADs, returned identities, executable hash and unchanged unrelated object witness.",
+      "implementation": [
+        "tdf-hq/src/TDF/Version.hs",
+        "scripts/quality-backend.sh",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        "scripts/test-backend-version-rebuild.py",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-hq/test/Spec.hs",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "verification": "Actual repository module compiled through Stack in a cached minimal package; README-only HEAD advance; independent Stack/GHC cache controls; final backend/HTTP gates still required.",
+      "evidence": "Current candidate receipts and hosted logs must be retained; older849b failed CI is diagnosis only.",
+      "confidence": "High for selected cache layers after actual regression; no whole-binary source attestation or universal build-system proof.",
+      "ambiguity": [
+        "Direct arbitrary developer Stack invocations without the canonical dirty flag may skip an unchanged package.",
+        "Runtime metadata can be overridden by trusted deployment configuration; those paths do not prove compiled identity."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Cache repair and executable controls implemented; exact final-candidate full backend/HTTP validation, merge and deployed identity remain required."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -10032,7 +10115,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "4fd2813a07c4890600b94a2d4f28f5bc1e432a90afe821792c6583555c9c4887",
+    ".github/workflows/ci.yml": "4cbb812c6125604981abf2eb3c25d883612f7b3ecb46e1bbf7798a03f57971d0",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
@@ -10246,7 +10329,7 @@
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
-    "scripts/__tests__/ci-pipeline.test.mjs": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
+    "scripts/__tests__/ci-pipeline.test.mjs": "7cd67b064f105fb39c34c3c7798c6b1031c4892bcb90edbfeb85806bbe8c8bad",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
@@ -10345,7 +10428,7 @@
     "scripts/production-migrations.json": "ac9645a67c5a04c95010cfab4270b8c51ebd2fcb68b8d644a8315fe3e2d983b1",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
-    "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
+    "scripts/quality-backend.sh": "851d6266e1d280911978575f6f9f77929c77d009f2133930453922eb0a3791e8",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "a5041669e3881d019e35512e8b4e7febcc2ebd98ebea0d3eb05568ea9f0f83c8",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -10366,6 +10449,7 @@
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
+    "scripts/test-backend-version-rebuild.py": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
     "scripts/test-booking-conformance.py": "c6f8294cf0bcf25cb03be0aa86e8d24c3815139d2a9b59087b1df02d7ec33f64",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
@@ -10869,6 +10953,7 @@
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
+    "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
@@ -11634,6 +11719,10 @@
       {
         "requirement": "OPS-CI-REGISTRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-VERSION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/api/generated/types.ts": [
@@ -11721,6 +11810,10 @@
       },
       {
         "requirement": "SYS-CI-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-VERSION-001",
         "relationship": "tests"
       }
     ],
@@ -12270,6 +12363,10 @@
       {
         "requirement": "DEPLOY-READINESS-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-VERSION-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/build-trust.test.mjs": [
@@ -12645,6 +12742,10 @@
       },
       {
         "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-VERSION-001",
         "relationship": "tests"
       }
     ],
@@ -13257,6 +13358,10 @@
       },
       {
         "requirement": "PAY-MUSIC-OUTCOME-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-VERSION-001",
         "relationship": "tests"
       }
     ],
@@ -18769,6 +18874,18 @@
         "requirement": "PAY-MUSIC-OUTCOME-001",
         "relationship": "formalModels"
       }
+    ],
+    "tdf-hq/src/TDF/Version.hs": [
+      {
+        "requirement": "DEPLOY-VERSION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-backend-version-rebuild.py": [
+      {
+        "requirement": "DEPLOY-VERSION-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -18837,7 +18954,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4fd2813a07c4890600b94a2d4f28f5bc1e432a90afe821792c6583555c9c4887",
+      "sha256": "4cbb812c6125604981abf2eb3c25d883612f7b3ecb46e1bbf7798a03f57971d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18858,6 +18975,10 @@
         },
         {
           "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-VERSION-001",
           "relationship": "implementation"
         }
       ]
@@ -19788,7 +19909,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
+      "sha256": "7cd67b064f105fb39c34c3c7798c6b1031c4892bcb90edbfeb85806bbe8c8bad",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19809,6 +19930,10 @@
         },
         {
           "requirement": "SYS-CI-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-VERSION-001",
           "relationship": "tests"
         }
       ]
@@ -21970,7 +22095,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
+      "sha256": "851d6266e1d280911978575f6f9f77929c77d009f2133930453922eb0a3791e8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21988,6 +22113,10 @@
         {
           "requirement": "DEPLOY-READINESS-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-VERSION-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -22799,6 +22928,18 @@
       ]
     },
     {
+      "id": "SURFACE-d48fe23154c42420",
+      "path": "scripts/test-backend-version-rebuild.py",
+      "sha256": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-VERSION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
       "sha256": "c6f8294cf0bcf25cb03be0aa86e8d24c3815139d2a9b59087b1df02d7ec33f64",
@@ -22886,6 +23027,10 @@
         },
         {
           "requirement": "PAY-MUSIC-OUTCOME-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-VERSION-001",
           "relationship": "tests"
         }
       ]
@@ -37520,9 +37665,14 @@
     {
       "id": "SURFACE-8e95ce26cbe1127d",
       "path": "tdf-hq/src/TDF/Version.hs",
-      "sha256": "f0ee9bb7f48a77bf52e52e9a0a3efb70a747b951e384c6cac4792d996ceeef48",
+      "sha256": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-VERSION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5460b30af99d955f",
@@ -37730,6 +37880,10 @@
         },
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-VERSION-001",
           "relationship": "tests"
         }
       ]
@@ -43729,7 +43883,6 @@
     "SURFACE-8f34cfa4bb16ce16",
     "SURFACE-35696a048b2fd035",
     "SURFACE-41f19892e354f9ef",
-    "SURFACE-8e95ce26cbe1127d",
     "SURFACE-5460b30af99d955f",
     "SURFACE-6f165e3ac5d9480f",
     "SURFACE-424d590d8771f755",
@@ -44162,7 +44315,8 @@
     "MEDIA-MUSIC-DDEX-001",
     "MEDIA-MUSIC-PLAYER-001",
     "SYS-WEB-SHELL-001",
-    "AUTH-ENTRY-002"
+    "AUTH-ENTRY-002",
+    "DEPLOY-VERSION-001"
   ],
   "stateMachines": [
     {
@@ -45281,7 +45435,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fa7afdf376173cc627f05e8fa5cf0f0f909e02d274bc5f86b9f98cde525192d8",
+      "sourceSha256": "780704d116bfa660fd654f364ef98e412926666e809501a82301516a471b98b9",
       "definition": {
         "states": [
           "absent",
@@ -67478,7 +67632,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 123,
+    "PARTIAL": 124,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

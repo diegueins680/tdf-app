@@ -23,6 +23,8 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 ## Canonical package
 
+- [backend-version.md](backend-version.md): fresh compiled metadata through restored Stack/GHC caches, actual two-build regression and independent cache-layer controls.
+
 - [physical-recovery.md](physical-recovery.md): verified cold PG17 copy startup, isolated configuration and explicit coordinated-recovery exclusions.
 
 - [recovery-envelope.md](recovery-envelope.md): sealed executable encryption/decryption and explicit off-host recovery obligations.
