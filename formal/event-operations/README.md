@@ -556,6 +556,12 @@ identifier only inside its URL lifetime, a replayed URL that ends with the origi
 and no URL without an active entitlement. The positive model and six negative controls
 are mandatory in the formal runner.
 
+`MusicPaymentOutcome.tla` complements that download model with failed attempts,
+closed-order money and locked retry admission with durable failure quarantine. Its intended configuration and six
+named negative controls are mandatory. See
+[music-payment-outcome.md](../system/music-payment-outcome.md) for bounds, SQL and
+concurrency evidence, abstraction assumptions and provider/recovery exclusions.
+
 ## Marketplace optional storage boundary (2026-09-18)
 
 `MarketplaceStorage.tla` connects UX-260917-007 to the page's optional

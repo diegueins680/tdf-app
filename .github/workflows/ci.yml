@@ -550,6 +550,11 @@ jobs:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: sh scripts/test-music-purchase.sh
 
+      - name: Verify music payment outcome and closed-order reconciliation
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-music-payment-outcomes.sh
+
       - name: Verify artist claim preparation concurrency and privacy
         env:
           TDF_CLAIM_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test

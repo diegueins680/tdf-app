@@ -1040,6 +1040,11 @@
       "id": "2026-10-11_index_declarations_not_unique",
       "path": "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
       "introducedBy": "9edcb9460afd79aaa7040221ccae1c72cb14a795"
+    },
+    {
+      "id": "2026-10-15_music_payment_outcome_consistency",
+      "path": "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
+      "introducedBy": "8ad5722fa885c1970b20c57449eed4fc54d088eb"
     }
   ]
 }

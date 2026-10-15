@@ -15621,19 +15621,19 @@
       }
     },
     {
-      "id": "394e8ba1db3ead9328f2",
+      "id": "7f2803455cf4b4e8e6db",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 204-entry manifest keeps the reviewed 203 entries unchanged and appends the migration that replaces nine uniqueness constraints with plain indexes of the same names (no row or column change) with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 205-entry release manifest preserves all reviewed204 entries and historical SQL bytes, and appends the music payment outcome compatibility migration with introduction commit8ad5722fa885c1970b20c57449eed4fc54d088eb. It repairs failed-attempt fulfillment and closed-order verified-money projection, and adds checkout-locked retry quarantine. This is not an applied migration or activation approval; full rehearsal, canonical writer fencing and recovery remain separate gates. Old application rollback requires commerce disabled.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "index-declarations-2026-10-11",
+      "reviewBatch": "music-payment-outcome-2026-10-15",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57225,7 +57225,26 @@
             "reviewMethod": "successor-of-reviewed-decision"
           }
         }
-      }
+      },
+      "supersededReviews": [
+        {
+          "id": "394e8ba1db3ead9328f2",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Ordered 204-entry manifest keeps the reviewed 203 entries unchanged and appends the migration that replaces nine uniqueness constraints with plain indexes of the same names (no row or column change) with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+          "reviewed": true,
+          "reviewBatch": "index-declarations-2026-10-11",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3
+          },
+          "history": "Full pre-existing nested decision provenance remains on the containing successor unchanged."
+        }
+      ]
     },
     {
       "id": "8d92943abad9c2a47c8f",

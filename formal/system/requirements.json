@@ -8114,7 +8114,7 @@
       "title": "Music downloads only through verified purchase entitlements",
       "domain": "PAY",
       "critical": true,
-      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; triggers then grant exactly one entitlement and end it on refund or chargeback. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request.",
+      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; the projection settles a payable purchase and grants exactly one entitlement, ending it on refund or chargeback. Verified money for a closed purchase follows PAY-MUSIC-OUTCOME-001 and grants no entitlement. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request.",
       "authority": "Unreviewed recovered local implementation; ADR-005 in docs/music-releases/architecture-and-data-model.md",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
       "contract": "formal/system/music-purchase-entitlement.md",
@@ -8167,7 +8167,7 @@
       "privacy": "Purchase and download audit is visible only to the buyer and authorized staff.",
       "concurrency": "One order per buyer and idempotency key by unique constraint; entitlement creation is trigger-enforced and unique per order; download authorization holds the entitlement row lock while it counts and inserts.",
       "idempotency": "Repeated order creation and repeated recording of the same verified payment change nothing; a repeated download request identifier is answered without counting for 300 seconds and refused afterwards.",
-      "failure": "Unverified payment leaves no entitlement. A recorded provider failure cancels the order permanently and a later verified payment can still grant an entitlement on it (open defects, see contract).",
+      "failure": "Unverified payment leaves no entitlement. Payment-attempt failure does not cancel the purchase. Verified money received for a closed purchase is retained for reconciliation without reopening fulfillment under PAY-MUSIC-OUTCOME-001. Ambiguous provider transport and recovery remain open.",
       "recovery": "Refund revokes entitlement; no royalties, subscriptions or settlement.",
       "observability": "Download audit rows and checkout session events.",
       "implementation": [
@@ -8183,16 +8183,15 @@
         "scripts/test-music-purchase.sh",
         "scripts/verify-event-operations-formal.sh"
       ],
-      "verification": "Bounded TLA+ model with five negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
+      "verification": "Bounded TLA+ model with six negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
       "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
       "confidence": "Medium for the payment record, entitlement and download rules, which run on PostgreSQL in tests; low for the provider calls and failure handling, which are untested and have open defects.",
       "ambiguity": [
         "No live payment provider wiring for music_download has been verified.",
         "Music payments bypass the shared payment runtime and the production provider switches; only the commerce flag for the checkout environment gates them.",
-        "A recorded provider failure cancels the order irreversibly while the payment may still complete, and an entitlement can end up active on a cancelled order; repair needs a trigger migration and a product decision.",
         "A failure after the provider charged leaves no reconciliation record; no webhook or reconciliation path exists for this domain.",
         "Partial refunds keep the entitlement and disputes revoke it permanently; both need a product decision.",
-        "Download limits count authorizations, not transferred bytes; one counted download gives access for just under 600 seconds."
+        "Download limits count authorizations, not transferred bytes; a replay retains the original 300-second expiry. Cross-provider admission and ambiguous transport recovery are not established."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9902,6 +9901,120 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
+      }
+    },
+    {
+      "id": "PAY-MUSIC-OUTCOME-001",
+      "title": "Project verified music money without reopening closed fulfillment",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "At the music_download checkout-to-purchase projection, a failed payment attempt must not cancel a pending or awaiting-payment purchase. A verified paid transition settles and grants one entitlement only for an eligible purchase. If the purchase is already cancelled, refunded or in chargeback, retain verified money, leave fulfillment closed, grant no entitlement and atomically open one provider/account/environment-bound reconciliation exception linked by checkout ID plus an idempotent audit event. A paid replay creates no additional effect. Failed or closed checkouts must deny subsequent music payment-attempt creation or replay under the checkout lock before a new provider create/capture call. Persisted attempt failure/status markers must continue denying admission and existing binding replay when a late pending or binding response reopens checkout/attempt status.",
+      "authority": "AUTHORITY-MUSIC-OUTCOME-20261015; existing distinct checkout-attempt/purchase states, ADR-005 purchase entitlement and the user mandate to repair financial contradictions rather than preserve bugs.",
+      "source": "formal/system/music-payment-outcome.md; reproduced current-main trigger counterexample on synthetic PostgreSQL17.",
+      "contract": "formal/system/music-payment-outcome.md",
+      "property": "A committed canonical music checkout projection never grants an active entitlement to a closed purchase; failed attempts leave payable fulfillment intact; verified money for closed fulfillment has a linked reconciliation record. Failed-checkout retry admission remains blocked under the same row lock.",
+      "actors": [
+        "Verified-payment recorder",
+        "Canonical checkout projection",
+        "Strict administrator reading reconciliation"
+      ],
+      "preconditions": [
+        "music_download checkout linked to its canonical purchase",
+        "Existing before-trigger validates succeeded attempt and immutable provider binding before paid",
+        "Migration refuses existing active purchase entitlements whose order is not paid",
+        "Music commerce remains disabled until separate provider runtime/recovery obligations are satisfied"
+      ],
+      "inputs": [
+        "Checkout status transition",
+        "Bound verified provider/account/environment/resource/merchant reference",
+        "Purchase state and fixed amount/currency"
+      ],
+      "state": {
+        "purchase": [
+          "pending",
+          "awaiting_payment",
+          "paid",
+          "cancelled",
+          "refunded",
+          "chargeback"
+        ],
+        "projection": [
+          "payable",
+          "settled",
+          "closed-needs-reconciliation"
+        ],
+        "reconciliation": [
+          "open",
+          "assigned",
+          "resolved",
+          "ignored"
+        ]
+      },
+      "allowedTransitions": [
+        "Payment attempt failure -> failed checkout while purchase remains payable",
+        "Verified paid checkout + payable purchase -> paid purchase and one entitlement",
+        "Verified paid checkout + closed purchase -> unchanged closed fulfillment plus reconciliation",
+        "Refund/dispute -> end active fulfillment"
+      ],
+      "forbiddenTransitions": [
+        "Attempt failure alone -> cancelled purchase",
+        "Verified money for a closed purchase -> active entitlement",
+        "Paid replay -> duplicate entitlement or case",
+        "Unverified payment -> paid fulfillment",
+        "Failed checkout -> another provider create/capture operation via new or replayed music attempt",
+        "Late binding/pending status -> new payment or existing widget replay despite persisted failure marker"
+      ],
+      "effects": [
+        "Canonical settlement and unique entitlement when payable",
+        "Existing reconciliation exception with checkout-scoped internal reference and exact provider/resource metadata when closed",
+        "Idempotent purchase_payment_requires_review audit event"
+      ],
+      "authorization": "Existing verified-payment admission and immutable binding checks remain prerequisites. Reconciliation report remains strict-administrator-only; this migration grants no new privilege.",
+      "privacy": "Existing financial reconciliation/audit boundaries; no message payload, credential or new public data. The report omits merchant/provider references. Retention policy and operational resolution are separate obligations.",
+      "concurrency": "Checkout update serializes before the trigger locks the canonical purchase FOR UPDATE; exception and audit uniqueness deduplicate. Executable projection races use explicit Read Committed and witnessed PostgreSQL locks. Other isolation modes and whole provider-handler locking/recovery are not inferred.",
+      "idempotency": "Unchanged paid status returns before projection; existing entitlement, open-case fingerprint and audit idempotency indexes enforce their scoped uniqueness.",
+      "failure": "Statement or trigger error rolls back its projection transaction. Contradictory historical grants block migration for explicit review. Transport uncertainty and failed/cancelled checkout recovery remain separate unresolved P1 obligations. Fulfillment awaiting payment does not mean payment retry is admitted; failed checkout admission returns HTTP409.",
+      "recovery": "Keep the additive migration on application rollback; restoring the old function reopens the defect. Closed-order money requires authorized reconciliation; no automatic refund, reopening or provider request is introduced. Any rollback to older application code requires music commerce disabled because older handlers bypass the admission function.",
+      "observability": "commerce_reconciliation_exception, checkout-filtered administrative reconciliation report and purchase_payment_requires_review audit event.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server/CommerceOperations.hs",
+        "scripts/production-migrations.json",
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/sql/music_payment_outcomes.sql",
+        "tdf-hq/test/sql/music_payment_state_fixture.sql",
+        "scripts/test-music-payment-outcomes.sh",
+        "scripts/lib/music_payment_conformance.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/MusicPaymentOutcome.tla",
+        "formal/event-operations/MusicPaymentOutcome.cfg",
+        "formal/event-operations/MusicPaymentOutcomeFailure.cfg",
+        "formal/event-operations/MusicPaymentOutcomeClosed.cfg",
+        "formal/event-operations/MusicPaymentOutcomeReview.cfg",
+        "formal/event-operations/MusicPaymentOutcomeReplay.cfg",
+        "formal/event-operations/MusicPaymentOutcomeRetry.cfg",
+        "formal/event-operations/MusicPaymentOutcomeFence.cfg"
+      ],
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "verification": "Eighteen PostgreSQL assertions; intended SQL function plus six controlled mutations; seven witnessed row-lock schedules; administrative HTTP linkage/denial and existing-binding replay checks; bounded TLA+ intended model and six named negative controls. Full exact-candidate gates and deployment pending.",
+      "evidence": "Working-source baseline and repair evidence recorded 2026-10-15; exact candidate receipts must be rerun and retained after final commit.",
+      "confidence": "High for the reproduced projection defect and scoped working-source SQL/model checks; production, provider transport and whole-program refinement not established.",
+      "ambiguity": [
+        "Provider runtime admission, ambiguous response reconciliation and recovery of closed checkouts remain open; feature must stay disabled.",
+        "Partial-refund entitlement and dispute-restoration product decisions remain open.",
+        "Trusted direct SQL bypassing canonical projection is outside this requirement; this is not a global database constraint on every entitlement write.",
+        "Existing music routes lack current OpenAPI/client coverage; this repair introduces no endpoint or DTO."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Canonical projection repair, executable controls and bounded model are implemented; final exact-candidate gates, combined-main delivery and provider/recovery obligations remain outstanding."
       }
     }
   ]

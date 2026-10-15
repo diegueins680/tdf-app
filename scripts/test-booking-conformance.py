@@ -137,6 +137,11 @@ try:
                  'AUTO_APPLY_PRODUCTION_MIGRATIONS': 'false', 'SEED_DB': 'false',
                  'HQ_ASSETS_DIR': str(assets), 'DEFAULT_LOCALE': 'es',
                  'FACEBOOK_APP_SECRET': 'synthetic-local-webhook-secret',
+                 # Invalid synthetic credentials only exercise stored-binding responses;
+                 # the music fixture never calls a provider or starts a new attempt.
+                 'PAYPAL_ENV': 'sandbox', 'PAYPAL_CLIENT_ID': 'synthetic-local-client',
+                 'PAYPAL_CLIENT_SECRET': 'synthetic-local-secret', 'PAYPAL_MERCHANT_ID': 'SYNTHETICMERCHANT',
+                 'COMMERCE_CHECKOUT_ENV': 'sandbox',
                  'DDEX_STORAGE_BACKEND': 'local-private', 'DDEX_PRIVATE_STORAGE_ROOT': str(OUTPUT / 'ddex-private'),
                  'EVENT_DISCOVERY_ENABLED': 'false', 'ARTIST_ENRICHMENT_ENABLED': 'false',
                  'EVENT_LOGISTICS_RECHECK_ENABLED': 'false', 'REPUTATION_AGGREGATION_WORKER_ENABLED': 'false'}
@@ -715,6 +720,9 @@ try:
     verify_invoice_receipts(sql, request, check, ENV, NAME, OUTPUT, actors)
     from operations_conformance import verify_operations
     verify_operations(sql, request, check, ENV, NAME, OUTPUT, actors)
+
+    from music_payment_conformance import verify_music_payment_outcomes
+    verify_music_payment_outcomes(sql, check, ENV, NAME, OUTPUT, ROOT, request)
 
     from readiness_conformance import verify_readiness
     verify_readiness(run, NAME, http_port, check)

@@ -416,14 +416,35 @@ beginAttempt
   -> UTCTime
   -> AppM Checkout.PaymentAttemptReference
 beginAttempt context checkout provider environment merchantRef operation idempotencyKey now = do
-  result <- runDB $ Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
-    { Checkout.pacCheckout = checkout, Checkout.pacProvider = provider, Checkout.pacEnvironment = environment
-    , Checkout.pacOperation = operation, Checkout.pacAmountMinor = purchaseAmountMinor context
-    , Checkout.pacCurrency = purchaseCurrency context, Checkout.pacMerchantRef = merchantRef
-    , Checkout.pacIdempotencyKey = idempotencyKey, Checkout.pacCreatedAt = now
-    , Checkout.pacCorrelationId = "music-payment-attempt:" <> UUID.toText (purchaseId context)
-    }
-  either (throwError . providerError) pure result
+  result <- runDB $ do
+    admitted <- musicCheckoutAttemptAllowed checkout
+    if not admitted
+      then pure (Left musicAttemptAdmissionError)
+      else Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+        { Checkout.pacCheckout = checkout, Checkout.pacProvider = provider, Checkout.pacEnvironment = environment
+        , Checkout.pacOperation = operation, Checkout.pacAmountMinor = purchaseAmountMinor context
+        , Checkout.pacCurrency = purchaseCurrency context, Checkout.pacMerchantRef = merchantRef
+        , Checkout.pacIdempotencyKey = idempotencyKey, Checkout.pacCreatedAt = now
+        , Checkout.pacCorrelationId = "music-payment-attempt:" <> UUID.toText (purchaseId context)
+        }
+  either (\message -> throwError $
+    if message == musicAttemptAdmissionError
+      then musicAttemptAdmissionDenied
+      else providerError message) pure result
+
+musicAttemptAdmissionError :: Text
+musicAttemptAdmissionError =
+  "Music payment outcome requires reconciliation before another payment attempt"
+
+musicAttemptAdmissionDenied :: ServerError
+musicAttemptAdmissionDenied = err409
+  { errBody = BL.fromStrict (TE.encodeUtf8 musicAttemptAdmissionError) }
+
+musicCheckoutAttemptAllowed :: Checkout.CheckoutReference -> SqlPersistT IO Bool
+musicCheckoutAttemptAllowed checkout = do
+  admitted <- rawSql "SELECT music_checkout_payment_attempt_allowed(?::uuid)"
+    [PersistText (Checkout.checkoutReferenceId checkout)]
+  pure (admitted == [Single True])
 
 failAttempt
   :: Checkout.CheckoutReference
@@ -468,10 +489,15 @@ requirePayable context = unless (purchaseState context `elem` ["pending","awaiti
 
 providerBinding :: UUID -> Text -> Text -> AppM (Maybe (Text, Maybe Text))
 providerBinding checkoutId provider resourceType = do
-  rows <- runDB (rawSql
-    "SELECT binding.provider_resource_id,binding.provider_resource_path FROM commerce_provider_binding binding JOIN commerce_payment_attempt attempt ON attempt.id=binding.payment_attempt_id WHERE attempt.checkout_id=?::uuid AND binding.provider=? AND binding.resource_type=? ORDER BY binding.created_at DESC LIMIT 1"
-    [toPersistValue checkoutId, PersistText provider, PersistText resourceType]
-    :: SqlPersistT IO [(Single Text, Single (Maybe Text))])
+  result <- runDB $ do
+    admitted <- musicCheckoutAttemptAllowed (Checkout.CheckoutReference (UUID.toText checkoutId))
+    if not admitted
+      then pure Nothing
+      else Just <$> (rawSql
+        "SELECT binding.provider_resource_id,binding.provider_resource_path FROM commerce_provider_binding binding JOIN commerce_payment_attempt attempt ON attempt.id=binding.payment_attempt_id WHERE attempt.checkout_id=?::uuid AND binding.provider=? AND binding.resource_type=? ORDER BY binding.created_at DESC LIMIT 1"
+        [toPersistValue checkoutId, PersistText provider, PersistText resourceType]
+        :: SqlPersistT IO [(Single Text, Single (Maybe Text))])
+  rows <- maybe (throwError musicAttemptAdmissionDenied) pure result
   pure $ case rows of
     [(Single resourceId, Single resourcePath)] -> Just (resourceId, resourcePath)
     _ -> Nothing
