@@ -10008,7 +10008,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+    "docs/catalog-persistence/catalog-list-decisions.json": "16ff7e63f67b8df1f0c4581e002ed06b9bf398895db76a088997a838b2cd8940",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -10779,7 +10779,7 @@
     "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs": "09335044ca513a60132b452ea6dd5cf65f6d62523236ab809099158be1f2eb5b",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
     "tdf-hq/src/TDF/Operations/Model.hs": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
-    "tdf-hq/src/TDF/Operations/Server.hs": "750a3b1bbf10820aaf0ea5f6fdae1fe175c09fa87f358574b09afb03b9e62207",
+    "tdf-hq/src/TDF/Operations/Server.hs": "f18686f90348c7e095d3243641578c2f557b0856318235ddcb431737e3e62208",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
@@ -36271,7 +36271,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "750a3b1bbf10820aaf0ea5f6fdae1fe175c09fa87f358574b09afb03b9e62207",
+      "sha256": "f18686f90348c7e095d3243641578c2f557b0856318235ddcb431737e3e62208",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
