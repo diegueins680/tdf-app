@@ -10045,6 +10045,77 @@
         "The model's liveness property assumes the worker runs; with the worker disabled a retry stays retrying."
       ],
       "historicalStatus": "retry-relabelled-without-execution"
+    },
+    {
+      "id": "SYS-UI-FIXTURE-001",
+      "title": "Explicit clock and document boundaries in UI regression fixtures",
+      "domain": "SYS",
+      "statement": "UI regression fixtures must distinguish debounce time and new-document loading from application behavior, while retaining assertions for cancellation, late responses, selected identities, owned notification routing and absence of unrelated writes.",
+      "authority": "Existing behavior and tests reconciled under the requested verification audit",
+      "source": "docs/party-selector.md; docs/notifications/navigation-2026-09-17.md",
+      "contract": "formal/system/ui-fixture-boundaries.md",
+      "critical": false,
+      "status": "specified and implemented",
+      "actors": [
+        "Test runner",
+        "Synthetic visitor"
+      ],
+      "preconditions": [
+        "Synthetic API fixtures; production bundle for browser checks; isolated QueryClient for selector cases."
+      ],
+      "inputs": [
+        "Search text and controlled timer progression",
+        "A real middle-click or platform modified click opening a notification tab"
+      ],
+      "state": {
+        "selector": [
+          "debouncing",
+          "requesting",
+          "selected",
+          "failed",
+          "cancelled"
+        ],
+        "newTab": [
+          "created",
+          "document loaded",
+          "owned destination rendered"
+        ]
+      },
+      "allowedTransitions": [
+        "Advance the selector clock through the real 300 ms debounce; assert no request at 299 ms.",
+        "Activate the new tab as a reader would and await its load boundary, then check the unchanged bounded application redirect and visible profile.",
+        "Reset mocked responses and timers between cases."
+      ],
+      "forbiddenTransitions": [
+        "Replace cancellation, late-response, selection or routing assertions with unconditional success.",
+        "Treat a new page event as document-load completion.",
+        "Leak a queued mock response into another test."
+      ],
+      "effects": [
+        "Synthetic UI requests and revision-bound verification evidence only."
+      ],
+      "authorization": "Fixtures do not grant production authority; notification checks retain owner-specific resolution and no access-request mutation assertions.",
+      "privacy": "Only synthetic identities and local fixture endpoints are used.",
+      "concurrency": "Selector tests retain request-abort and late-response exclusion assertions; browser checks retain original-tab location.",
+      "idempotency": "Each case starts with fresh mocks, controlled timers and query scope; repeated runs retain their individual results.",
+      "failure": "A missing result, missed cancellation, wrong destination or unexpected mutation fails the test.",
+      "recovery": "Repair the fixture or implementation from retained failure evidence, then rerun the affected and full gates.",
+      "observability": "Record exact source, passed/failed/skipped counts and browser artifacts; isolated success does not erase full-run failure.",
+      "property": "Lifecycle synchronization cannot bypass the existing behavioral assertions.",
+      "implementation": [
+        "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
+        "e2e/web/notification-navigation.spec.mjs"
+      ],
+      "verification": "Existing six selector cases, repeated notification navigation on five browser/device configurations and full UI/browser gates. Finite examples, not universal proof.",
+      "evidence": "Revision-bound Jest results and Playwright logs/traces; retained initial failures.",
+      "confidence": "Scoped test-infrastructure contract; does not establish complete selector or notification authorization correctness.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused selector checks pass; complete current-candidate web/browser gates still required."
+      },
+      "tests": [],
+      "formalModels": [],
+      "ambiguity": []
     }
   ]
 }

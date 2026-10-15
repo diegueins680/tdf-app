@@ -10046,6 +10046,77 @@
         "The model's liveness property assumes the worker runs; with the worker disabled a retry stays retrying."
       ],
       "historicalStatus": "retry-relabelled-without-execution"
+    },
+    {
+      "id": "SYS-UI-FIXTURE-001",
+      "title": "Explicit clock and document boundaries in UI regression fixtures",
+      "domain": "SYS",
+      "statement": "UI regression fixtures must distinguish debounce time and new-document loading from application behavior, while retaining assertions for cancellation, late responses, selected identities, owned notification routing and absence of unrelated writes.",
+      "authority": "Existing behavior and tests reconciled under the requested verification audit",
+      "source": "docs/party-selector.md; docs/notifications/navigation-2026-09-17.md",
+      "contract": "formal/system/ui-fixture-boundaries.md",
+      "critical": false,
+      "status": "specified and implemented",
+      "actors": [
+        "Test runner",
+        "Synthetic visitor"
+      ],
+      "preconditions": [
+        "Synthetic API fixtures; production bundle for browser checks; isolated QueryClient for selector cases."
+      ],
+      "inputs": [
+        "Search text and controlled timer progression",
+        "A real middle-click or platform modified click opening a notification tab"
+      ],
+      "state": {
+        "selector": [
+          "debouncing",
+          "requesting",
+          "selected",
+          "failed",
+          "cancelled"
+        ],
+        "newTab": [
+          "created",
+          "document loaded",
+          "owned destination rendered"
+        ]
+      },
+      "allowedTransitions": [
+        "Advance the selector clock through the real 300 ms debounce; assert no request at 299 ms.",
+        "Activate the new tab as a reader would and await its load boundary, then check the unchanged bounded application redirect and visible profile.",
+        "Reset mocked responses and timers between cases."
+      ],
+      "forbiddenTransitions": [
+        "Replace cancellation, late-response, selection or routing assertions with unconditional success.",
+        "Treat a new page event as document-load completion.",
+        "Leak a queued mock response into another test."
+      ],
+      "effects": [
+        "Synthetic UI requests and revision-bound verification evidence only."
+      ],
+      "authorization": "Fixtures do not grant production authority; notification checks retain owner-specific resolution and no access-request mutation assertions.",
+      "privacy": "Only synthetic identities and local fixture endpoints are used.",
+      "concurrency": "Selector tests retain request-abort and late-response exclusion assertions; browser checks retain original-tab location.",
+      "idempotency": "Each case starts with fresh mocks, controlled timers and query scope; repeated runs retain their individual results.",
+      "failure": "A missing result, missed cancellation, wrong destination or unexpected mutation fails the test.",
+      "recovery": "Repair the fixture or implementation from retained failure evidence, then rerun the affected and full gates.",
+      "observability": "Record exact source, passed/failed/skipped counts and browser artifacts; isolated success does not erase full-run failure.",
+      "property": "Lifecycle synchronization cannot bypass the existing behavioral assertions.",
+      "implementation": [
+        "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
+        "e2e/web/notification-navigation.spec.mjs"
+      ],
+      "verification": "Existing six selector cases, repeated notification navigation on five browser/device configurations and full UI/browser gates. Finite examples, not universal proof.",
+      "evidence": "Revision-bound Jest results and Playwright logs/traces; retained initial failures.",
+      "confidence": "Scoped test-infrastructure contract; does not establish complete selector or notification authorization correctness.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused selector checks pass; complete current-candidate web/browser gates still required."
+      },
+      "tests": [],
+      "formalModels": [],
+      "ambiguity": []
     }
   ],
   "sourceFingerprints": {
@@ -10077,6 +10148,7 @@
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
     "e2e/web/music-player-native.spec.mjs": "8a1ef90f2a060ff4ae4e16add3001c09280e8224e06a8d28b49c9793eefb5112",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
+    "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
     "e2e/web/persona-public.spec.mjs": "48fe60d98e00d221022e7d1411e3c487037c7587deb17521b0fdc63dee71a27e",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
@@ -10575,6 +10647,7 @@
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
     "tdf-hq-ui/src/components/notificationTarget.test.ts": "37f0a06226e1f81208416a1e33ddaae9e4235ca8932eb767b29fe0b7d51fdb6d",
     "tdf-hq-ui/src/components/notificationTarget.ts": "170f6a854078d866df645bb72d09a1f34296249d489667ebde4dce951af84c23",
+    "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "cb2e829fb4c40dfbbc9f6b7cc7b94cf40f63471a23db7df3f04bb496b4638408",
@@ -18911,6 +18984,18 @@
         "requirement": "OPS-FAILURE-REPLAY-001",
         "relationship": "formalModels"
       }
+    ],
+    "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": [
+      {
+        "requirement": "SYS-UI-FIXTURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "e2e/web/notification-navigation.spec.mjs": [
+      {
+        "requirement": "SYS-UI-FIXTURE-001",
+        "relationship": "implementation"
+      }
     ]
   },
   "surfaces": [
@@ -19367,9 +19452,14 @@
     {
       "id": "SURFACE-1650513d8810b7f7",
       "path": "e2e/web/notification-navigation.spec.mjs",
-      "sha256": "c0272c3de6e41821cf0fd9512758b60cc764a1e3f7275fe7755cd9d50409ee97",
+      "sha256": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UI-FIXTURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8e97f033e44df926",
@@ -27063,9 +27153,14 @@
     {
       "id": "SURFACE-772702b32840fda1",
       "path": "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
-      "sha256": "e5b8043323a2ac5f0761e78c9499552de166b072bdd4482779547e7eac586d16",
+      "sha256": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UI-FIXTURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e1fc722d5c6ece7f",
@@ -42565,7 +42660,6 @@
     "SURFACE-f40804c1455f8bad",
     "SURFACE-acbdfac127b57e53",
     "SURFACE-d8799e5a0806f908",
-    "SURFACE-1650513d8810b7f7",
     "SURFACE-e5280fb6cf4274bc",
     "SURFACE-bb80adee648c0293",
     "SURFACE-d3c9dbc473fd46d6",
@@ -43013,7 +43107,6 @@
     "SURFACE-85bd4c6fc1a45c48",
     "SURFACE-793045e8bae5158b",
     "SURFACE-8162aa14f44a2da9",
-    "SURFACE-772702b32840fda1",
     "SURFACE-e1fc722d5c6ece7f",
     "SURFACE-388d446af04495d3",
     "SURFACE-65cbecbfc60140c5",
@@ -44242,7 +44335,8 @@
     "SURFACE-21b31fbb27b536c4"
   ],
   "untestedRequirements": [
-    "OPS-CI-REGISTRY-001"
+    "OPS-CI-REGISTRY-001",
+    "SYS-UI-FIXTURE-001"
   ],
   "unmodeledCriticalRequirements": [
     "SYS-VERIFY-001",
@@ -45416,7 +45510,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9d57710a887a2e39a6c1d58ce85980e1abcccd397813f446ae1ee35f4ffb2b07",
+      "sourceSha256": "20769e2af6a022ad817fe06619b2b4aefcc846afc0e80908287a636493d6a2c0",
       "definition": {
         "states": [
           "absent",
@@ -67613,7 +67707,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 123,
+    "PARTIAL": 124,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
