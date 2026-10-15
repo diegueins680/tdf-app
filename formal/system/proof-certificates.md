@@ -112,8 +112,10 @@ python scripts/verify-proof-certificates.py --report /absolute/new-report --tool
 ```
 
 The existing specification job runs these checks on PRs, main and weekly. Its
-35-minute budget includes the checker build and larger payment certificates;
-no existing check is removed. It retains SMT/CPC files, solver/checker streams,
+certificate step allows 35 minutes, with a separate eight-minute checker build.
+All step budgets total 97 minutes inside a 110-minute job; assurance uploads
+precede the checker work and retain an incomplete fallback on generation timeout.
+No existing check is removed. It retains SMT/CPC files, solver/checker streams,
 hashes, installation/build receipts and failures. All 41 cross-checks and
 fourteen supported certificate obligations must succeed.
 Passing this job grants no release permission.

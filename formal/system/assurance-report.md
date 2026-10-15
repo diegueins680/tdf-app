@@ -140,13 +140,13 @@ The existing event-operations workflow runs on every PR, main push and weekly
 Monday 05:23 UTC schedule. Its specification job now produces this report and
 archives the complete evidence even when a later check fails. Each SMT query has
 a 30-second timeout in the ordinary Z3 report; its proof/control subprocesses
-have 180-second deadlines. The separate CPC job has the longer generation and
+have 180-second deadlines. The separate CPC step has the longer generation and
 checker budgets documented in `proof-certificates.md`. CI's
 job deadline is the outer limit. Unknown, unsupported source, timeouts and changed
 fingerprints never become PROVEN. Every run conservatively regenerates all four
 arithmetic, three authorization predicate and four recovery-time obligations; no unsafe incremental dependency assumption is made.
 
-Release decision: **BLOCKED**. Every unresolved critical requirement is enumerated
+Release decision: **BLOCKED**. When the requirement register is readable, every unresolved critical requirement is enumerated
 in `release.criticalUnprovenRequirements`; accepted risks is empty. This initial
 reporter intentionally cannot issue READY or consume unauthenticated approval JSON.
 Implementing owner-authenticated, exact-artifact risk acceptance is future work,

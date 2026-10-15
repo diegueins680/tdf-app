@@ -24581,7 +24581,7 @@
     },
     {
       "path": "formal/system/assurance-report.md",
-      "sha256": "fe8b5b9b48136eae3359c7be2e330fc4c598f2176f0e05497f3ef25e94113caa",
+      "sha256": "6e0c038f122cf4385e2d922a7edaef923940eadacabb928f692c546ba34a1cf6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24882,7 +24882,7 @@
     },
     {
       "path": "formal/system/proof-certificates.md",
-      "sha256": "d6e047ab17d93679b864a67809e3a9de9489ab1b90def061bd11f2900d4c80c1",
+      "sha256": "147227e350f5b47377eb6eaa5f31b899425d43857a14eb92dc97002c32b633a3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
