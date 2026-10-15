@@ -2601,14 +2601,15 @@
         "tdf-mobile/package.json"
       ],
       "tests": [
-        "scripts/__tests__/dependency-security.test.mjs"
+        "scripts/__tests__/dependency-security.test.mjs",
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "High for scoped deterministic version rejection; partial dependency reachability assessment.",
       "ambiguity": [
         "No universal reachability or transitive supply-chain proof.",
-        "Runtime URI decoder compatibility repair and build-tool high-severity advisories remain open."
+        "Other unresolved high/moderate dependency advisories and release exposure remain open."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9903,6 +9904,76 @@
         "classification": "PARTIAL",
         "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
       }
+    },
+    {
+      "id": "SYS-URI-DECODE-001",
+      "title": "Patched URI decoding preserves the installed CommonJS caller",
+      "statement": "The exact pinned Mobile query-string7 decoder must use the integrity-pinned upstream0.5.0 algorithm through a callable adapter, preserving literal-plus normalization, valid Unicode and non-string rejection; the named repeated-invalid-byte regression oracle must reject the legacy0.2.2 implementation.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Mobile user",
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Install the committed Mobile npm v3 lock under the supported Node20.19.4 toolchain; use the exact root gitlink."
+      ],
+      "inputs": [
+        "URI component string",
+        "Malformed percent-encoded bytes",
+        "Non-string input",
+        "Committed dependency lock and local adapter"
+      ],
+      "state": {
+        "boundary": "Stateless synchronous codec; immutable module resolution; no persistence or lifecycle mutation."
+      },
+      "allowedTransitions": [
+        "Replace the affected dependency with the pinned upstream algorithm and reviewed caller adapter after client qualification."
+      ],
+      "forbiddenTransitions": [
+        "Implicitly dispatch the ES module namespace as a function",
+        "Fallback to the legacy vulnerable decoder",
+        "Claim a universal complexity or current incoming-link exploit proof from scoped tests"
+      ],
+      "effects": [
+        "Return a decoded string preserving the caller contract; perform no network or database action."
+      ],
+      "authorization": "Pure decoding grants no capability and performs no authenticated action. Dependency repair does not authorize Mobile distribution or importing newer Mobile-main product behavior.",
+      "privacy": "Neither the adapter nor its evidence collection logs real URI payloads; regression inputs are synthetic.",
+      "concurrency": "Synchronous calls per JavaScript runtime; instrumentation is confined to serialized tests and always restored.",
+      "idempotency": "The same input and pinned decoder yield the same output without persistent effects.",
+      "failure": "Non-string values raise TypeError; no silent legacy fallback. The budget is an executable test oracle, not a production timeout or input-size limit.",
+      "recovery": "Retain the matched reviewed adapter/upstream pair and reproducible lock; repair compatibility rather than restoring the affected algorithm.",
+      "observability": "Record exact Mobile/root revisions, lock integrity, clean-install result, client gates, scoped negative-control results and bundle evidence.",
+      "source": "User audit sections10,18,21-25; upstream GHSA-vcc3-ghjq-m6fr; npm override documentation; fresh inspection of installed Expo6.0.24 and React Navigation parser sources.",
+      "contract": "formal/system/uri-decoder.md",
+      "implementation": [
+        "tdf-mobile/package.json",
+        "tdf-mobile/package-lock.json",
+        "tdf-mobile/vendor/decode-uri-component/package.json",
+        "tdf-mobile/vendor/decode-uri-component/index.cjs",
+        "tdf-mobile/jest.config.js"
+      ],
+      "tests": [
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "High for the actual installed consumer and stated empirical domains; no universal decoder or app attack-path proof.",
+      "ambiguity": [
+        "Device/store distribution remains separately qualified.",
+        "Source inspection does not prove every possible future or dynamic parser call is unreachable."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Canonical catalog declares the obligation; PASS belongs only in an exact-revision execution receipt. Mobile7d9481d scoped codec/client/native-bundle checks pass; global dependency security and device/store distribution remain separate."
+      },
+      "authority": "approved",
+      "property": "For N in{4,8,16,32}, decoding repeated%FF preserves the input and makes1..8N+8 built-in decode calls; legacy0.2.2 violates that same oracle atN=32. Actual query-string7 remains callable and preserves covered query semantics.",
+      "verification": "Actual-consumer Jest tests, deterministic Unicode properties, genuine old-release and unadapted-namespace controls; clean npm installation and native bundle checks.",
+      "evidence": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
     }
   ]
 }

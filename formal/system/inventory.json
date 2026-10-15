@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "4c84c60a5836f7d39f18e10d34d136996bb0f63f",
+  "mobileRevision": "7d9481d77e822a466f364d262f39a22048c08ddb",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -2381,6 +2381,7 @@
       "tdf-mobile/scripts/check-ios-iphone16-smoke-lane.sh",
       "tdf-mobile/scripts/check-release-assets.mjs",
       "tdf-mobile/scripts/check-vcard-release-truth.sh",
+      "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
       "tdf-mobile/scripts/generate-release-assets.mjs",
       "tdf-mobile/scripts/generate-release-assets.py",
       "tdf-mobile/scripts/generate_release_assets.py",
@@ -2483,6 +2484,7 @@
       "tdf-mobile/src/hooks/useSessionOwnership.ts",
       "tdf-mobile/src/hooks/useToast.ts",
       "tdf-mobile/src/i18n/index.ts",
+      "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
       "tdf-mobile/src/lib/api.ts",
       "tdf-mobile/src/lib/assertNever.ts",
       "tdf-mobile/src/lib/authConfig.ts",
@@ -2550,7 +2552,9 @@
       "tdf-mobile/src/theme/designTokens.ts",
       "tdf-mobile/src/types/index.ts",
       "tdf-mobile/src/utils/haptics.ts",
-      "tdf-mobile/tsconfig.json"
+      "tdf-mobile/tsconfig.json",
+      "tdf-mobile/vendor/decode-uri-component/index.cjs",
+      "tdf-mobile/vendor/decode-uri-component/package.json"
     ],
     "test": [
       "test/fixtures/music-worker/curl.mjs",
@@ -16623,7 +16627,7 @@
     {
       "id": "SURFACE-724d67db609973ab",
       "path": "tdf-mobile/jest.config.js",
-      "sha256": "eddb3b1783f7b56c7470c9c29b98dca2946dab618ad0d69b6c2b38471dffa413",
+      "sha256": "b8a9bb07eccf8b0264cde1f9f2f4b1db7e11a9586e3db480c66f09d6bf90813d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16641,13 +16645,13 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "f6693769eddfec57f75c62329e0d01c98c5f9e3bb073559aa8ced0eb8c8553d4",
+      "sha256": "50bda772355ed38f4eacc3ac15274f64f7421616c2979328da18c7ee421b2f67",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+      "sha256": "cc342409add828358cdb6fd927b5123e1972f69bd6077eddc21091ec7ab8d5f2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16690,6 +16694,12 @@
       "id": "SURFACE-7067508915fffa03",
       "path": "tdf-mobile/scripts/check-vcard-release-truth.sh",
       "sha256": "ffc92945ac0a97d84202b2c4d2744d075fd5def7c0a17bbd190dfded0893fb8f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2725976c616ae240",
+      "path": "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
+      "sha256": "3b8ba0a765e1089d11bba9a919d0d8789ecd9a6833ea078d8d9114e1db093863",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17305,6 +17315,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-356eac9f42f687b8",
+      "path": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
+      "sha256": "6b861ade99be7ab2b1b30e845f22dd17074c1e81b3abadd15d3678fc0493896e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-a24ed6b998974bde",
       "path": "tdf-mobile/src/lib/api.ts",
       "sha256": "4395c833e024308d1f59287254bdd3d0345bb61a60507ea8f3fd2eac18920955",
@@ -17710,6 +17726,18 @@
       "id": "SURFACE-170f8ccb5c8eba22",
       "path": "tdf-mobile/tsconfig.json",
       "sha256": "235a3431fcf05ff379c5027fcc07a65ad7b34128bee3bf85bb4725c31e1d69c5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9c0085c076f97ad3",
+      "path": "tdf-mobile/vendor/decode-uri-component/index.cjs",
+      "sha256": "d37c0eb2888700a268e79c7f49f1789f40625076bb0325705aaaf3e16bc09fac",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-96f4d37d77970170",
+      "path": "tdf-mobile/vendor/decode-uri-component/package.json",
+      "sha256": "02d2570a2b831e3aa84f58b0140ef10b7a83799828490c61a3351c4665fba06e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24490,7 +24518,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "7d1323244fefb6ad45da11e534b1f74a0000c94950aaf4bec50f4b4b86fd6767",
+      "sha256": "bb9fab1b2247e45f899fd71fd24c2a2b78e9337e2f382be0b4035fc1f4c2b5d2",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24504,7 +24532,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "e58f0ca38df1369384dff84dfe20ee0c5f270f3e65da33e7afad166815053d23",
+      "sha256": "00cbc2dd6178ae6068d1b446b855d2b00c07574cff5b69c974df8a5c16fa7d06",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24574,14 +24602,14 @@
     },
     {
       "path": "formal/system/dependency-security.json",
-      "sha256": "b6616e9a4f13afcbd96c4051d4d65cc5f65ac90166b3e283224315f932c0147e",
+      "sha256": "dd8d22223b956cec6ce5252a8bb7d3ea5fd8836e5b55bdbc6b02d10ea93a982d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/dependency-security.md",
-      "sha256": "cb5ae6a52cb03b4a4a5da244ef11b8fe1c69186e2641ddb3690aa8f8b15ac7ea",
+      "sha256": "f84c693d4fa21ab3ec2fc8fde84606cdf1582bb7d3a2c86462232d5591710383",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24833,14 +24861,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
+      "sha256": "d58ee67da045b882584023740cb409bf1790c06f6d694d7776b2e117c3fb25be",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "3d6630e4dfe2b3c36d2f95617616e0cb602345c8e7811a1b099bce530799dc76",
+      "sha256": "203a5246ead2e71493a58c12c71c5f6cee3a84cc5691d27700f713d8bbf80b1d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24883,6 +24911,13 @@
     {
       "path": "formal/system/ticket-invoice-worker.md",
       "sha256": "bb3eb733b9bb1985d4d6691ed73e8762c01689cb0db7cb44756abd453381b0e0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/uri-decoder.md",
+      "sha256": "da1f49a442447084e9035e10ebdeac5620bfaa66fa1e6c1a223a7ba5902a5b34",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
