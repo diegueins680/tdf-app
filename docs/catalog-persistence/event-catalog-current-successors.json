@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "3faf47acb6c139801a16",
+      "currentId": "f95bc53ef5e33e741588",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 205,
-      "change": "append 2026-10-11_operations_failure_replay",
+      "valueCount": 206,
+      "change": "Ordered 206-entry manifest preserves main2781ddc2 complete204-entry prefix and appends Operations failure replay followed by enabled-only inbound capture. Both original introduction commits are ancestors; the replay source includes the reviewed lock-order repair. Four replay lifecycle triggers are required. Capture remains disabled unless Operations is enabled, and production activation still requires an approved retention policy. Migration checksum, apply/replay and rollback checks remain mandatory; no pending migration is represented as applied.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "394e8ba1db3ead9328f2",
@@ -50519,7 +50519,22 @@
             }
           }
         }
-      }
+      },
+      "integrationPredecessors": [
+        {
+          "historicalReplacementId": "7578a30aa3cc5aa23870",
+          "currentId": "3faf47acb6c139801a16",
+          "file": "scripts/production-migrations.json",
+          "kind": "json-array",
+          "name": "migrations",
+          "valueCount": 205,
+          "change": "append 2026-10-11_operations_failure_replay"
+        },
+        {
+          "currentId": "4610aff4763a46a3444e",
+          "sourceRevision": "846fc6d944f28feb9c15a76741fa4192c9103ccd"
+        }
+      ]
     }
   ]
 }

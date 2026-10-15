@@ -656,13 +656,13 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "3faf47acb6c139801a16",
-      "reason": "Ordered 184-entry manifest preserves both parent migration sequences, every introduction commit and SQL byte: canonical 181 entries, invoice receipt snapshot, per-ticket refund allocation, then immutable refund request binding. Current combined rehearsal and production deployment remain independently gated; no migration is represented as applied.",
+      "replacementId": "f95bc53ef5e33e741588",
+      "reason": "Ordered 206-entry manifest preserves main2781ddc2 complete204-entry prefix and appends Operations failure replay followed by enabled-only inbound capture. Both original introduction commits are ancestors; the replay source includes the reviewed lock-order repair. Four replay lifecycle triggers are required. Capture remains disabled unless Operations is enabled, and production activation still requires an approved retention policy. Migration checksum, apply/replay and rollback checks remain mandatory; no pending migration is represented as applied.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
-        "mainRevision": "3a2ab395c233e16641eb3d574afc941809ac43f1",
-        "valueCount": 182,
-        "reason": "Ordered 182-entry manifest preserves consolidated main3a2ab395c complete181-entry prefix and appends invoice receipt snapshot. Every original SQL byte and introduction commit is unchanged. Fresh combined migration application and replay are required; no pending migration is represented as applied."
+        "mainRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+        "valueCount": 206,
+        "reason": "Ordered 206-entry manifest preserves main2781ddc2 complete204-entry prefix and appends Operations failure replay followed by enabled-only inbound capture. Both original introduction commits are ancestors; the replay source includes the reviewed lock-order repair. Four replay lifecycle triggers are required. Capture remains disabled unless Operations is enabled, and production activation still requires an approved retention policy. Migration checksum, apply/replay and rollback checks remain mandatory; no pending migration is represented as applied."
       },
       "previousResolution": {
         "originalDecision": {
@@ -41724,6 +41724,15 @@
         "previousId": "e69bb0b8d1949d201d8a",
         "recordSha256": "049e972465248f7f3c1103677501c873b1554b8f7ca4995a499cd524f57d90ef",
         "reason": "All existing nested history fields remain present; current pointer advances to the combined 184-entry manifest."
+      },
+      "integrationPredecessor": {
+        "replacementId": "3faf47acb6c139801a16",
+        "reason": "Ordered 184-entry manifest preserves both parent migration sequences, every introduction commit and SQL byte: canonical 181 entries, invoice receipt snapshot, per-ticket refund allocation, then immutable refund request binding. Current combined rehearsal and production deployment remain independently gated; no migration is represented as applied.",
+        "currentResolution": {
+          "mainRevision": "3a2ab395c233e16641eb3d574afc941809ac43f1",
+          "valueCount": 182,
+          "reason": "Ordered 182-entry manifest preserves consolidated main3a2ab395c complete181-entry prefix and appends invoice receipt snapshot. Every original SQL byte and introduction commit is unchanged. Fresh combined migration application and replay are required; no pending migration is represented as applied."
+        }
       }
     }
   ]

@@ -31,7 +31,14 @@ SELECT 'archived:'||count(*) FROM archived;`;
 const previousTick = `BEGIN; ${tickBody} COMMIT;`;
 const tick = `BEGIN; SET CONSTRAINTS ALL IMMEDIATE; ${tickBody} COMMIT;`;
 
-const scope = pass(`SELECT organization_id||','||coalesce(branch_id::text, '') FROM operations_domain_event WHERE branch_id IS NOT NULL ORDER BY recorded_at LIMIT 1;`, 'scope').split(',');
+// A fresh migrated fixture need not have captured any messages or domain events.
+// Read its installed scope directly; keep inbound capture disabled.
+const scope = pass(`SELECT organization.id||','||branch.id
+  FROM operations_organization organization
+  JOIN operations_branch branch ON branch.organization_id = organization.id
+  ORDER BY organization.id, branch.id LIMIT 1;`, 'scope').split(',');
+assert.match(scope[0], /^[0-9a-f-]{36}$/, 'the migrated fixture must hold an organization');
+assert.match(scope[1], /^[0-9a-f-]{36}$/, 'the migrated fixture must hold a branch');
 const [org, branch] = [scope[0], scope[1] ? `'${scope[1]}'` : 'NULL'];
 const liveParty = pass(`SELECT id FROM party ORDER BY id LIMIT 1;`, 'live party');
 assert.match(liveParty, /^\d+$/, 'the fixture must hold a party');
