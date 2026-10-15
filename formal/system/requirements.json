@@ -3468,7 +3468,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -7431,7 +7431,7 @@
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
       "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
-      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (D\u00e1til)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
@@ -7531,7 +7531,7 @@
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
+      "confidence": "Provider contract taken from D\u00e1til public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
@@ -7543,7 +7543,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real D\u00e1til pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -7957,7 +7957,7 @@
       "domain": "MEDIA",
       "critical": true,
       "statement": "Audio and artwork uploads go by scoped SigV4 multipart to a quarantine bucket under a UUID key. The worker re-downloads, recomputes SHA-256, inspects the real type, produces reproducible derivatives (AAC/FLAC/preview/artwork) with a versioned manifest, and only then promotes the original bytes as immutable. Public asset URLs are signed for five minutes only after music_public_asset_accessible re-resolves version, embargo, territory and policy; masters are never publicly signed.",
-      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md; AUTHORITY-067 (state sets and lease guard recorded)",
+      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md; AUTHORITY-067 (state sets and lease guard recorded); AUTHORITY-068 (re-upload rebinding)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/worker-multipart.md",
       "contract": "docs/music-releases/api-and-configuration.md",
       "property": "Every served derivative is traceable to a checksum-verified, promoted original; no master is signable for public access.",
@@ -8018,9 +8018,9 @@
       "authorization": "Upload sessions require authoring permission; signatures are scoped to one key and short-lived.",
       "privacy": "Quarantine and master buckets are private; territory comes from CF-IPCountry only behind Cloudflare, otherwise specific rules fail closed.",
       "concurrency": "Worker claims one due job FOR UPDATE SKIP LOCKED; every later statement of the run is prefixed by the lease guard (version row FOR NO KEY UPDATE, job row FOR UPDATE, status running, same worker name, same attempt, lease younger than the ttl); multipart completion is idempotent per upload; derivatives are unique per (version, role, sha256).",
-      "idempotency": "Re-running a job reproduces identical derivatives for identical input.",
+      "idempotency": "Re-running a job reproduces identical derivatives for identical input. A re-upload with the same declared SHA-256 binds to the existing non-promoted asset row and re-points it at the new object before inspection (trg_music_rebind_upload_asset); the asset's queued, retry, running and dead-lettered attempts are cancelled (a cancelled run is stopped by the lease guard).",
       "failure": "Type, size or checksum mismatch fails the attempt without promotion; the job retries with a growing delay until max_attempts, then dead_letter, and the version becomes validation_failed. A lost or expired lease stops the run (lease-lost marker, USR1) and the job is reclaimed.",
-      "recovery": "Failed jobs are retried with a growing delay; an expired lease lets another run reclaim the job. Orphan multipart uploads created by the worker's own PUTs are aborted per worker-multipart.md; client upload sessions have no purge (ambiguity). A corrected re-upload after a checksum-mismatch dead letter is not inspected (defect recorded 2026-10-12 in formal/system/music-asset-processing.md): the only recovery is a new release version.",
+      "recovery": "Failed jobs are retried with a growing delay; an expired lease lets another run reclaim the job. Orphan multipart uploads created by the worker's own PUTs are aborted per worker-multipart.md; client upload sessions have no purge (ambiguity). After a checksum-mismatch dead letter, uploading the correct bytes under the same declared hash is inspected and the earlier attempts, running ones included, are cancelled (2026-10-12_music_upload_rebind).",
       "observability": "Worker logs and job status rows; worker-regression-diagnostics.md.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
@@ -8035,7 +8035,9 @@
         "scripts/run-music-release-worker.sh",
         "scripts/run-music-release-worker-once.sh",
         "tdf-hq-ui/src/api/musicStorageResponse.ts",
-        "tdf-hq-ui/src/utils/incrementalSha256.ts"
+        "tdf-hq-ui/src/utils/incrementalSha256.ts",
+        "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+        "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
@@ -8063,10 +8065,9 @@
         "tdf-hq-ui/src/utils/incrementalSha256.test.ts"
       ],
       "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md)",
-      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12)",
+      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12); re-upload runtime scenario and migration apply/rollback in formal/system/music-upload-rebind.md (2026-10-12, historical local evidence)",
       "confidence": "Medium: lease guard, claim and promotion rules read from source and model-checked in a bounded scope; local-only runtime evidence; no deployed worker or real buckets.",
       "ambiguity": [
-        "Defect (recorded 2026-10-12, not fixed): confirmMusicUpload binds a re-upload with the same declared SHA-256 to the existing non-promoted asset row and the worker re-inspects the old quarantine object, so a checksum-mismatch dead letter cannot be recovered by uploading the correct bytes.",
         "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only).",
         "Abandoned upload sessions are never marked expired and purge_abandoned_upload is never enqueued (formal/system/music-asset-processing.md).",
         "A checksum mismatch is retried up to max_attempts before dead_letter although it cannot succeed.",
@@ -8074,7 +8075,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Lease guard, claim and checksum-gated promotion read from source and model-checked (2026-10-12); one recorded defect (re-upload after mismatch not inspected) awaits a fix; local-only runtime evidence; not deployed."
+        "reason": "Lease guard, claim and checksum-gated promotion read from source and bounded-model checked; re-upload recovery implemented by AUTHORITY-068. Remaining upload lifecycle gaps and local-only evidence; not deployed."
       }
     },
     {
@@ -9200,7 +9201,7 @@
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
-      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
+      "idempotency": "Re-tapping Asistir\u00e9 re-upserts the same accepted RSVP.",
       "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",

@@ -1045,6 +1045,11 @@
       "id": "2026-10-11_music_publication_isolation",
       "path": "tdf-hq/sql/2026-10-11_music_publication_isolation.sql",
       "introducedBy": "598de30e3e1bf47b9f37cea86bd73f5b65eb5fac"
+    },
+    {
+      "id": "2026-10-12_music_upload_rebind",
+      "path": "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+      "introducedBy": "3f71add5783d9aefe818686abf4ee1c37ef6092b"
     }
   ]
 }
