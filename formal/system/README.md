@@ -1,6 +1,6 @@
 # TDF authoritative specification and conformance
 
-Status: active reconciliation on consolidated main, 2026-10-13. **System-wide
+Status: active reconciliation on consolidated main, 2026-10-15. **System-wide
 conformance and delivery are not yet established.** The prior audit remains in
 [history-2026-09-20.md](history-2026-09-20.md), with its original limitations.
 Historical green results are not current-candidate evidence.
