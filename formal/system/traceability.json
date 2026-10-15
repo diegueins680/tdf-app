@@ -1096,7 +1096,7 @@
       "formalModels": [],
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for finite middleware cases and observed configuration; deployed correction pending.",
+      "confidence": "High for finite middleware cases; October13 configuration and two health-origin requests observed. Full deployed contract remains unverified.",
       "ambiguity": [
         "Endpoint CSRF defenses and every alternate deployment environment are not established by these CORS tests."
       ],
@@ -1108,7 +1108,7 @@
       "property": "Production credentialed origin admission requires an explicitly trusted origin; arbitrary origins cannot reach the handler.",
       "contract": "formal/system/cors-boundary.md",
       "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins.",
-      "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts."
+      "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts. October13 runtime configuration and two health-origin smoke observations are retained in formal/system/evidence/2026-10-13-runtime-controls/; they supersede the October4 allow-all observation for that instant."
     },
     {
       "id": "AUTH-REGISTRY-001",
@@ -2220,7 +2220,7 @@
       "idempotency": "Read-only repeat observations do not mutate application state. Exclusive receipt creation rejects accidental overwrite.",
       "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider.",
       "recovery": "Retry observation after authorized configuration correction; retain previous receipts. No database restoration or image rollback is performed.",
-      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata.",
+      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata. Known backend boolean controls must be represented even when absent; record CORS boolean aliases and preserve absent/empty/false distinctions. Conservative source discovery must reject newly introduced literal controls missing from the collector register.",
       "formalModels": [],
       "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established.",
       "evidence": "Exact-revision inspection receipt and repository quality-gate logs.",
@@ -2230,7 +2230,8 @@
         "Absent environment variables need effective-default analysis.",
         "Container image/public version observations require artifact metadata correspondence before release.",
         "Optional event-operations flag-table absence and missing merchandise flag rows remain explicit unknowns; observed flag state alone is not authorization to enable or mount features.",
-        "The catalog-role SQL requires separately authorized provisioning; read-only monitoring does not authorize sending mail, suppressing recipients or modifying application records."
+        "The catalog-role SQL requires separately authorized provisioning; read-only monitoring does not authorize sending mail, suppressing recipients or modifying application records.",
+        "Lexical boolean discovery excludes computed environment names and does not resolve effective defaults or CORS alias precedence; that analysis must use the observed backend revision."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3143,7 +3144,7 @@
       "critical": true,
       "ambiguity": [
         "Full upload lifecycle, DB/file atomicity, retries, retention, quotas and deletion require separate reconciliation.",
-        "Production storage rollout and coordinated backup/restore remain unimplemented and unverified."
+        "Canonical writable production bind observed October13; legacy file preservation, deployed startup admission and coordinated backup/restore remain unverified."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3153,7 +3154,7 @@
       "property": "Production starts only after private upload storage admission, and replacement preserves accepted legacy files.",
       "contract": "formal/system/private-upload-persistence.md",
       "verification": "Actual shell negative controls, digest-pinned synthetic Linux container replacement, redacted production mount inspection and guarded coordinated recovery verification.",
-      "evidence": "Exact-revision CI logs and private runtime receipts; current production observation is nonconforming, not repaired by source edits."
+      "evidence": "The October13 source-bound runtime receipt at formal/system/evidence/2026-10-13-runtime-controls/runtime.json observes the canonical writable private bind. It supersedes the October5 missing-mount observation, not the remaining preservation, startup, file-access and recovery obligations."
     },
     {
       "id": "SYS-API-003",
@@ -10093,7 +10094,7 @@
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
-    "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
+    "ops/hetzner/inspect-runtime.py": "5ae47f442f22033847fa7b7b7f1e21e1eabe73e3d600b258302c1334b416767c",
     "ops/hetzner/isolated-application-canary.py": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
@@ -10241,7 +10242,7 @@
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
-    "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
+    "scripts/test-hetzner-inspection.py": "a224448f3cc9cacb92814c92646cc29aeb1f9d54156651bedd8dd6f287d450e4",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
     "scripts/test-index-declarations.sh": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
@@ -19231,7 +19232,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
+      "sha256": "5ae47f442f22033847fa7b7b7f1e21e1eabe73e3d600b258302c1334b416767c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22859,7 +22860,7 @@
     {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
+      "sha256": "a224448f3cc9cacb92814c92646cc29aeb1f9d54156651bedd8dd6f287d450e4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44904,7 +44905,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
+      "sourceSha256": "d9a87087a2cd68477dec2a9c737d02000d653c5c56d22e6f825ad980e06e92dd",
       "definition": {
         "states": [
           "absent",
