@@ -1050,6 +1050,11 @@
       "id": "2026-10-14_directory_event_search_alias_sync",
       "path": "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
       "introducedBy": "7c74b3c3e14f53870ee8a09ba6fcc80bc645e251"
+    },
+    {
+      "id": "2026-10-13_chat_message_notifications",
+      "path": "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
+      "introducedBy": "1be9d0d7dba613ced9cfe553529a5445b000ecf9"
     }
   ]
 }

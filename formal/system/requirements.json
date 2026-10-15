@@ -10187,6 +10187,87 @@
         "classification": "PARTIAL",
         "reason": "Implementation and local validation; hosted checks, review, merge, production and physical-device evidence are separate gates."
       }
+    },
+    {
+      "domain": "MSG",
+      "actors": [
+        "Authenticated direct-message participant",
+        "Other participant controlling their own consent/block",
+        "Administrator subject to canonical participant/consent policy"
+      ],
+      "authority": "explicit operator requirement",
+      "source": "Operator confirmation on 2026-10-13; docs/notifications/chat-delivery-2026-10-13.md",
+      "contract": "docs/notifications/chat-delivery-2026-10-13.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "privacy": "In-app notice has generic content; canonical chat read authority gates list/detail/count.",
+      "idempotency": "Normalized direct-message open returns one unique pair thread. Send has no idempotency key: an uncertain accepted response can cause a duplicate on retry; no exactly-once guarantee.",
+      "recovery": "Preserve notices, mappings, visibility policy and non-unique history index across application rollback; never reintroduce one-message uniqueness.",
+      "observability": "Synthetic regression evidence and aggregate read-only incident facts only.",
+      "confidence": "SQL runtime and web regression evidence; external delivery and production rollout remain unverified.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "In-app implementation has local SQL/web evidence; required CI, production rollout and recipient-side verification remain pending."
+      },
+      "id": "MSG-NOTIFY-001",
+      "title": "Atomic recipient inbox notifications and multi-message conversations",
+      "statement": "Every newly committed direct message must have one minimized notice for the other participant, and a conversation must support subsequent messages and replies. Inbox reads apply current chat visibility and links select only an authorized existing thread.",
+      "property": "Accepted message and recipient notice commit together; a rejected or rolled-back send leaves neither. Current chat read authority (including canonical block, revoked consent and inactive-account rules) and message deletion govern notice visibility.",
+      "preconditions": [
+        "Governed production migration installed; existing chat session/consent authority remains in force."
+      ],
+      "inputs": [
+        "Authorized message insert",
+        "Recipient notification reads and typed thread links"
+      ],
+      "state": {
+        "variables": [
+          "Persisted messages, recipient notices and one-to-one mappings",
+          "Current consent, block and account lifecycle"
+        ],
+        "bounds": "Synthetic PostgreSQL assertions and web tests; no universal proof. Notification model: one cached target, Boolean display/read history, no ordinary background-polling or backend-policy refinement proof."
+      },
+      "allowedTransitions": [
+        "Authorized send atomically stores a message, notice and mapping.",
+        "Recipient follows a notice to an already authorized thread.",
+        "Current policy denial hides an old notice."
+      ],
+      "forbiddenTransitions": [
+        "A second message is rejected solely because a thread already has one message.",
+        "Notification text contains private message contents.",
+        "A failed send leaves a notice or a notice-storage failure leaves a message."
+      ],
+      "effects": [
+        "Durable recipient notice; repeatable migration; no historical replay or external sends."
+      ],
+      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights. A notification target cannot use cached previews, message bodies or read bookkeeping while its fresh thread-list authorization is pending.",
+      "concurrency": "Existing Party and credential locks serialize send/block. Message and notice share the database transaction; read visibility uses statement snapshot semantics.",
+      "failure": "Notification insert failure aborts the send; transient list errors retain the notification target for recovery; unavailable/foreign links show a generic unavailable state and never auto-select or mark another thread read.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-hq-ui/src/pages/ChatPage.tsx",
+        "scripts/production-migrations.json",
+        ".github/workflows/ci.yml",
+        "tdf-mobile/src/navigation/notificationTarget.ts"
+      ],
+      "tests": [
+        "scripts/test-chat-notifications.sh",
+        "scripts/social/chat-notifications.sql",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
+        "tdf-mobile/src/navigation/notificationResponses.test.ts",
+        "tdf-hq/test/integration/interactions/notification-properties.sql"
+      ],
+      "formalModels": [
+        "formal/event-operations/ChatNotificationAuthorization.tla"
+      ],
+      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response. An offline-paused, cache-success regression requires an actual post-mount authorization response and preserves the link until reconnection.",
+      "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
+      "ambiguity": [
+        "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."
+      ]
     }
   ]
 }

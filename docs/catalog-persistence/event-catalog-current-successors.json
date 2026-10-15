@@ -347,8 +347,8 @@
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 206,
-      "change": "Ordered 206-entry manifest preserves the complete reviewed main204 prefix, followed by community-search indexes and genre-alias event resynchronization. Original introduction commits and migration bytes are preserved; alias rollback precedes event-search-sync rollback. Apply/replay and rollback verification remain required; no production application is implied.",
+      "valueCount": 207,
+      "change": "Ordered 207-entry manifest preserves main204, then community-search indexes, genre-alias event resynchronization and chat notification delivery. All three introduction commits and SQL bytes are retained. Combined apply/replay and rollback qualification are required; no production application is implied.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "9100a97e6ea74a9c5a976a966a2bae18ff1ba29b",
@@ -369,6 +369,28 @@
             "index": 8
           },
           "sourceEntryCanonicalSha256": "b8ab882157776f6f9151ec5fb8ac00fd624fbaeb05f092922fe1403f1f96b058",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review and nested provenance retained in this immutable ancestor; no recursive duplication."
+        },
+        {
+          "sourceRevision": "122708f1aaf3c0e7e5a524802d6fef2e9b37e36f",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "c1d73ea5648eb33cf7a51c2b8977c49d1bff388e281f7e52b8cb01246d64173b",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "0fad596819265dcab0cb835cb7dbd5576a67a820ac61db66cd9b8104990e8bbd",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review and nested provenance retained in this immutable ancestor; no recursive duplication."
+        },
+        {
+          "sourceRevision": "f565909c67efec6f0f9b9ae43589ba020ea5ec00",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "fe6d7cb1158f416d19db074fe267ad89a7e162629079303f9378a5507512dd29",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "aa5a3253954f07983d1676f56efb8537196651ea60c4eca8c9248e725e3ddc39",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Complete source review and nested provenance retained in this immutable ancestor; no recursive duplication."
         }
