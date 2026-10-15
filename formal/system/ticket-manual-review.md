@@ -102,6 +102,15 @@ The schema allows one posted capture per attempt, so the payment count in these
 cases can only be 0 or 1; a second payment would appear as an error, which the
 overlap cases would report.
 
+The integrated harness also checks an observation failure after both reviewers
+are witnessed waiting for the checkout lock. Cleanup must release the holder
+before waiting for either reviewer's cancellation, since a PostgreSQL query can
+defer cancellation while blocked on that lock. This thirteenth case checks that
+the failure returns and the checkout remains reviewable with one payment. The
+whole overlap has a 30-second deadline; a synthetic unmatched observation query
+separately checks the actual deadline path. These are harness execution checks,
+not a liveness proof for arbitrary database failures.
+
 ## Not covered
 
 - Ticket issuance after approval (`finalizePaidTicketOrder`) and the HTTP

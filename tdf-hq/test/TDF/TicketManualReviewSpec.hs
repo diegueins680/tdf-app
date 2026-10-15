@@ -3,10 +3,10 @@
 module TDF.TicketManualReviewSpec (spec) where
 
 import Control.Concurrent (threadDelay)
-import Control.Concurrent.Async (wait, withAsync)
-import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
-import Control.Exception (SomeException, try)
-import Control.Monad (forM_)
+import Control.Concurrent.Async (async, cancel, wait, withAsync)
+import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar, tryPutMVar)
+import Control.Exception (SomeException, bracket, try)
+import Control.Monad (forM_, void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import qualified Data.ByteString.Char8 as BS
@@ -29,6 +29,7 @@ import Database.Persist.Sql (
   toSqlKey,
  )
 import System.Environment (lookupEnv)
+import System.IO.Error (ioeGetErrorString)
 import System.Timeout (timeout)
 import TDF.Server.TicketManualPayments (
   ManualReviewAction (..),
@@ -183,6 +184,15 @@ spec = describe "ticket-manual-review-postgresql" $ do
             state pool c `shouldReturn` ("approved", "succeeded", "paid", 2000)
             payments pool c `shouldReturn` 1
 
+        it "releases the holder before cancelling reviewers after an observation failure" $
+          \pool -> do
+            c <- transfer made pool
+            let approve = review pool c (organizer c) ManualApprove
+            overlappingWithObservation (fail "Synthetic observation failure") pool c approve approve
+              `shouldThrow` ((== "Synthetic observation failure") . ioeGetErrorString)
+            review pool c (organizer c) ManualApprove `shouldReturn` Right True
+            payments pool c `shouldReturn` 1
+
 -- A decision (Just) or a refusal (Nothing).
 decided :: Either Text Bool -> Maybe Bool
 decided = either (const Nothing) Just
@@ -195,7 +205,11 @@ withinDeadline action = do
   maybe (fail "Ticket manual review overlap timed out waiting for both transactions") pure result
 
 overlapping :: ConnectionPool -> Case -> IO a -> IO b -> IO (Either String a, Either String b)
-overlapping pool c one' two = withinDeadline $ do
+overlapping = overlappingWithObservation (pure ())
+
+overlappingWithObservation ::
+  IO () -> ConnectionPool -> Case -> IO a -> IO b -> IO (Either String a, Either String b)
+overlappingWithObservation observed pool c one' two = withinDeadline $ do
   held <- newEmptyMVar
   release <- newEmptyMVar
   withAsync
@@ -212,8 +226,14 @@ overlapping pool c one' two = withinDeadline $ do
     )
     $ \holder -> do
       takeMVar held
-      outcome <- withAsync (attempt one') $ \first -> withAsync (attempt two) $ \second -> do
+      -- A PostgreSQL query can defer cancellation while waiting on the holder.
+      -- Release that lock before waiting for either reviewer to acknowledge cancellation.
+      let withReviewer action = bracket (async (attempt action)) $ \worker -> do
+            void (tryPutMVar release ())
+            cancel worker
+      outcome <- withReviewer one' $ \first -> withReviewer two $ \second -> do
         bothWaiting
+        observed
         putMVar release ()
         (,) <$> wait first <*> wait second
       wait holder
