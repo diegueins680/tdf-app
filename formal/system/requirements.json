@@ -9967,8 +9967,8 @@
         "Source inspection does not prove every possible future or dynamic parser call is unreachable."
       ],
       "conformance": {
-        "classification": "PASS",
-        "reason": "Scoped codec/caller contract empirically validated on Mobile7d9481d77e822a466f364d262f39a22048c08ddb: clean npm install,649 tests including24-case regression/250 Unicode samples/two semantic controls, release/lint/typecheck and both native Metro/Hermes bundles. No global complexity, current app attack-path or device/store proof."
+        "classification": "PARTIAL",
+        "reason": "Canonical catalog declares the obligation; PASS belongs only in an exact-revision execution receipt. Mobile7d9481d scoped codec/client/native-bundle checks pass; global dependency security and device/store distribution remain separate."
       },
       "authority": "approved",
       "property": "For N in{4,8,16,32}, decoding repeated%FF preserves the input and makes1..8N+8 built-in decode calls; legacy0.2.2 violates that same oracle atN=32. Actual query-string7 remains callable and preserves covered query semantics.",

@@ -9969,7 +9969,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Focused24-case regression,250 Unicode samples and two semantic controls pass; final exact-head client/bundle/CI/review qualification is still pending."
+        "reason": "Canonical catalog declares the obligation; PASS belongs only in an exact-revision execution receipt. Mobile7d9481d scoped codec/client/native-bundle checks pass; global dependency security and device/store distribution remain separate."
       },
       "authority": "approved",
       "property": "For N in{4,8,16,32}, decoding repeated%FF preserves the input and makes1..8N+8 built-in decode calls; legacy0.2.2 violates that same oracle atN=32. Actual query-string7 remains callable and preserves covered query semantics.",
@@ -45086,7 +45086,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b073436240acd13625f297eb92b918acd01a2e381e6a3779bb92f3728864d25c",
+      "sourceSha256": "d58ee67da045b882584023740cb409bf1790c06f6d694d7776b2e117c3fb25be",
       "definition": {
         "states": [
           "absent",
