@@ -2725,7 +2725,7 @@
     {
       "id": "SURFACE-593f65650b716b87",
       "path": "e2e/web/course-enrollment.spec.mjs",
-      "sha256": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
+      "sha256": "ba5deb1dac8bc596519e4755b6c4dd30d9fb2e653f740e8c6668ec06e5e9e1b6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
