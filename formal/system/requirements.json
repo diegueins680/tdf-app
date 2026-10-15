@@ -1791,11 +1791,11 @@
     {
       "id": "PAY-CHECKOUT-002",
       "title": "Immutable checkout payable snapshot correspondence",
-      "statement": "Every committed canonical checkout has at least one line whose exact payable sum equals its immutable parent payable total; preserve currency and monetary terms after creation.",
+      "statement": "Every committed canonical checkout has at least one line whose exact payable sum equals its immutable parent payable total; preserve currency and monetary terms after creation. Lines are created only in the transaction that creates their checkout: no line, whatever its amount, joins a committed checkout.",
       "domain": "PAY",
-      "authority": "inferred",
-      "source": "formal/system/checkout-arithmetic.md; tdf-hq/src/TDF/Server/Merch.hs; tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-      "property": "Nonempty line snapshot and exact numeric sum(line.total_minor)=checkout.total_minor; parent monetary fields immutable.",
+      "authority": "inferred; AUTHORITY-070",
+      "source": "formal/system/checkout-arithmetic.md; tdf-hq/src/TDF/Server/Merch.hs; tdf-hq/src/TDF/Commerce/CheckoutStore.hs; formal/system/checkout-snapshot.md",
+      "property": "Nonempty line snapshot and exact numeric sum(line.total_minor)=checkout.total_minor; parent monetary fields immutable; the line set of a committed checkout is the one it was committed with.",
       "contract": "formal/system/checkout-arithmetic.md",
       "actors": [
         "CheckoutStore adapter",
@@ -1817,44 +1817,59 @@
         ]
       },
       "allowedTransitions": [
-        "Create header and all lines in one transaction.",
+        "Create header and all lines in one transaction (subtransactions included).",
         "Advance lifecycle/payment/refund counters while preserving monetary terms."
       ],
       "forbiddenTransitions": [
         "Commit missing lines or mismatched/overflowing aggregate.",
-        "Rewrite parent currency or monetary terms."
+        "Rewrite parent currency or monetary terms.",
+        "Insert a line for a checkout that the inserting transaction did not create (committed by another transaction, only updated or upserted-without-insert by this one, uncommitted elsewhere, rolled back to a savepoint, or unknown)."
       ],
       "effects": [
-        "Deferred commit-time validation; reject without committed financial mutation."
+        "Deferred commit-time validation; reject without committed financial mutation.",
+        "A line for a checkout not created by the inserting transaction is refused at insert (SQLSTATE 23514)."
       ],
-      "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization.",
+      "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization. The 2026-10-12 registry is a transaction-local setting any SQL writer with INSERT privilege could set by hand: it guards against mistaken writers and is not a privilege boundary.",
       "privacy": "Synthetic tests use no real customer data or provider credentials.",
-      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable. A migration-created visible singleton fences pre-enforcement repeatable-read snapshots; SQLSTATE40001 requests retry.",
+      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable. A migration-created visible singleton fences pre-enforcement repeatable-read snapshots; SQLSTATE40001 requests retry. Since 2026-10-12 the header insert (an AFTER ROW trigger, so only rows actually inserted) records the checkout id in a transaction-local setting and a line is accepted only for a recorded id, so zero-total appends are closed whatever the isolation level, the order in which transactions began, or updates of the header; a creating transaction holding its uncommitted header is not waited on and still commits with its own lines.",
       "idempotency": "Deterministic arithmetic is repeatable for identical inputs; this adds no provider replay permission.",
-      "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch.",
-      "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence.",
+      "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch. A line for a checkout the transaction did not create is refused with SQLSTATE 23514 at insert.",
+      "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence. The 2026-10-12 rule has a rollback that leaves the 2026-10-04 rules in place; a line appended before it is not identifiable from the rows (xmin is re-stamped by header updates), only from audit and domain records.",
       "observability": "Record exact source SHA/hash, fixed QuickCheck seed, negative-control results and HTTP/database evidence without personal payloads.",
       "implementation": [
         "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
+        "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql",
+        "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql",
         "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "scripts/__tests__/checkout-amount-postgres.mjs",
-        "scripts/test-marketplace-contact-identity.sh"
+        "scripts/test-marketplace-contact-identity.sh",
+        "scripts/__tests__/test-process-session.test.mjs",
+        "scripts/lib/test-process-session.mjs"
       ],
-      "formalModels": [],
-      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls.",
-      "evidence": "checkout-amount-postgres-fence.log",
+      "formalModels": [
+        "formal/event-operations/CheckoutSnapshot.tla",
+        "formal/event-operations/CheckoutSnapshot.cfg",
+        "formal/event-operations/CheckoutSnapshotLateLines.cfg",
+        "formal/event-operations/CheckoutSnapshotUnvalidated.cfg",
+        "formal/event-operations/CheckoutSnapshotMutableTerms.cfg"
+      ],
+      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls. 2026-10-12: CheckoutSnapshot.tla (200 states, 85 distinct) with three single-guard controls checks that the guard implies the invariants; the PostgreSQL test exercises the mechanism: fixed-snapshot cases, a header update before the append, a session that began before the checkout was created, subtransactions, upserts that insert nothing or update the header, a header and line in one statement, two negative controls and the structural check of both new triggers. Interactive PostgreSQL test sessions reject spawn errors and early exits before readiness and bound stalled waits; focused child-process tests cover those failure paths.",
+      "evidence": "checkout-amount-postgres-fence.log; formal/system/checkout-snapshot.md",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "high within immutable/nonnegative schema assumptions; final hosted and deployed execution pending",
       "ambiguity": [
         "Privileged DDL, TRUNCATE and disabled triggers excluded.",
-        "Component subtotals intentionally differ for merchandise shipping."
+        "Component subtotals intentionally differ for merchandise shipping.",
+        "A line of total zero is a line: it may not join a committed checkout even though it leaves the sum unchanged (2026-10-12).",
+        "A header and its line in one statement (data-modifying CTE) is refused since 2026-10-12; no writer uses that shape.",
+        "The 2026-10-12 registry can be forged by any SQL writer via set_config; hostile SQL writers remain out of scope, as for disabled triggers."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local PG16 boundary, five negative controls and migration-era snapshot race pass; final PG17 CI and deployment pending."
+        "reason": "Local PG16 boundary, seven negative controls, migration-era snapshot race and the fixed line snapshot (mechanism tested, not modelled) pass; final PG17 CI and deployment pending."
       }
     },
     {

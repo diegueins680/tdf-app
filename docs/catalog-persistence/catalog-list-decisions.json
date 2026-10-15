@@ -15621,19 +15621,19 @@
       }
     },
     {
-      "id": "394e8ba1db3ead9328f2",
+      "id": "5644619a65c0da1913cb",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 204-entry manifest keeps the reviewed 203 entries unchanged and appends the migration that replaces nine uniqueness constraints with plain indexes of the same names (no row or column change) with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 205-entry manifest preserves all 204 current-main migrations and appends the fixed checkout line snapshot migration with its introduction commit. It prevents late line appends while retaining exact monetary correspondence. Real PostgreSQL transaction and schema-drift cases plus the bounded snapshot model verify the local boundary; production application remains separately gated.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "index-declarations-2026-10-11",
+      "reviewBatch": "checkout-snapshot-queue-20261014",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57225,6 +57225,23 @@
             "reviewMethod": "successor-of-reviewed-decision"
           }
         }
+      },
+      "checkoutQueuePreviousDecision": {
+        "id": "394e8ba1db3ead9328f2",
+        "classification": "genuine-technical-constant",
+        "disposition": "explicit-allowlist",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Ordered 204-entry manifest keeps the reviewed 203 entries unchanged and appends the migration that replaces nine uniqueness constraints with plain indexes of the same names (no row or column change) with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+        "reviewed": true,
+        "evidence": {
+          "file": "scripts/production-migrations.json",
+          "line": 3
+        },
+        "reviewBatch": "index-declarations-2026-10-11",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf"
       }
     },
     {
@@ -59012,6 +59029,21 @@
         "name": "CAMPAIGN_TAGS",
         "valueCount": 5
       }
+    },
+    {
+      "id": "cf264a325e5b4853ecac",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the synthetic child command can invalidate the bounded readiness-wait regression.",
+      "justification": "Node CLI arguments deliberately start a stalled synthetic child to verify timeout and process cleanup. This is test-process plumbing, not a selectable service catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/__tests__/test-process-session.test.mjs",
+        "line": 33
+      },
+      "reviewBatch": "checkout-session-readiness-2026-10-14"
     }
   ]
 }
