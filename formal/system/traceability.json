@@ -9584,14 +9584,32 @@
         "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql",
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq-ui/src/api/generated/types.ts",
-        "scripts/production-migrations.json"
+        "scripts/production-migrations.json",
+        "tdf-mobile/app/auth.tsx",
+        "tdf-mobile/app.config.ts",
+        "tdf-mobile/app.json",
+        "tdf-mobile/ios/Podfile.lock",
+        "tdf-mobile/ios/TDFRecords/Info.plist",
+        "tdf-mobile/ios/TDFRecords/TDFRecords.entitlements",
+        "tdf-mobile/package-lock.json",
+        "tdf-mobile/package.json",
+        "tdf-mobile/scripts/ios-signing.py",
+        "tdf-mobile/scripts/verify-ios-artifact.py",
+        "tdf-mobile/src/api/auth.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/lib/appleSignIn.ts",
+        "tdf-mobile/src/lib/nativeAppleAuthentication.ts",
+        "tdf-mobile/src/localization/onboardingCopy.ts"
       ],
       "tests": [
         "tdf-hq/test/TDF/AppleSignInSpec.hs",
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs"
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
+        "tdf-mobile/__tests__/AuthScreen.test.tsx",
+        "tdf-mobile/__tests__/appleSignIn.test.ts",
+        "tdf-mobile/scripts/tests/test_ios_signing.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -10924,6 +10942,7 @@
     "tdf-mobile/__tests__/TicketCheckout.test.tsx": "eaf60203acf718ae2b4760cadb773cf96f0d4ac0864c349a842c97b340467ddf",
     "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx": "f09ef80d0a302e5bb6902d1521dc9cf23c2e8b7f447bd000e75d0d0376611ed3",
     "tdf-mobile/__tests__/apiClient.test.ts": "8054d64aa2c394f51a77be5398b54218f3fbb53dcb4741371a2a824f3aa40472",
+    "tdf-mobile/__tests__/appleSignIn.test.ts": "d4a43f065bbeba5e59429ffdcc5a67d535e809a2bd4e9d3be6eaf12aa5a4f267",
     "tdf-mobile/__tests__/ddexApi.test.ts": "c9e274d52a3bab8063c84a79c398c68657d2a07774722f64caecec0b25d4518b",
     "tdf-mobile/__tests__/directoryApi.test.ts": "477010a59bdff0576ab9cab6f2d79f5fddb9a8e4ed9b63f0ebc8a329adaf39a4",
     "tdf-mobile/__tests__/directoryPreviewImage.test.tsx": "122e3f361d7262710b8db15b677a6c1a458e71cc57ec84f0376768df90c5b1d7",
@@ -10952,6 +10971,9 @@
     "tdf-mobile/app/ticketCheckout.tsx": "009598287928ffbeab933b348f727d5de8c2ebbf9979dc886ff6f250efc1ba8d",
     "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
     "tdf-mobile/datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
+    "tdf-mobile/ios/Podfile.lock": "396f4289d7affe994421e417c36603d828ef51e8b7f3df66e275647b2b74c158",
+    "tdf-mobile/ios/TDFRecords/Info.plist": "d40bbaac1da4cb28972fcd49e5fa7ad71509bbf97e1b92da09d9164a9193f937",
+    "tdf-mobile/ios/TDFRecords/TDFRecords.entitlements": "f58047e3b53aa61d6a2b0ebdf89e42fc9e9a2c1b4878c7515826cb964cfcbe1e",
     "tdf-mobile/package-lock.json": "8957c44f255629bc3bf2d48cdce023abf01e5647674322122f36be498e64c74a",
     "tdf-mobile/package.json": "170b6bdb788c44a7eaf6f82f6c7af2499bee240297fefe0e6491ca0eb09f22c8",
     "tdf-mobile/scripts/android-release.py": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
@@ -10959,6 +10981,8 @@
     "tdf-mobile/scripts/release-check.mjs": "134c027743c05c08d93d7696a4b5af88448f375cee8641ea9298907a37a689c4",
     "tdf-mobile/scripts/tests/test_android_release.py": "9fe8727e8da7a4de515e663ce232bec40fae0bcc3bf9cc491bde36d1c8b3fab7",
     "tdf-mobile/scripts/tests/test_ios_signing.py": "813e4ccf52f8ac74b2b2ef71ae722231befef47dc7e88f5fd5e3cddcf21fa9e0",
+    "tdf-mobile/scripts/verify-ios-artifact.py": "7ca1bd0302cfd33cb4f08b0432471a0675c879194e9f661da8b242d0a034e6e9",
+    "tdf-mobile/src/api/auth.ts": "c6055384470420e8d0a626304ce85fa851b1c6f57ef5669e686eb8e5408f7a65",
     "tdf-mobile/src/api/client.ts": "406ab62be2e1a562c231d0a3a296a4bd206bb483e91cd3d8a52aebffd1771312",
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
@@ -10979,6 +11003,7 @@
     "tdf-mobile/src/feedback/metadata.ts": "62336d3a2cf7f055624bdb4f4bd20aedbfd47afc3fbddb2cefaa2d4ce1e26861",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
     "tdf-mobile/src/i18n/index.ts": "42437bc42384674d3611d372c648f7d4ff220659c15f364ed58339b725411952",
+    "tdf-mobile/src/lib/appleSignIn.ts": "7ee73cccb843776bc44e45717972284ac2798675cfed3fa1abaf52517b51d0ea",
     "tdf-mobile/src/lib/eventMoments.ts": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
     "tdf-mobile/src/lib/eventMomentsRepository.ts": "3fc6bd9bff601d1b03a311b57a384b385a87a2e3413a5c3452fb3fdb06b17a7e",
     "tdf-mobile/src/lib/eventSharing.test.ts": "24ee454071d2e4cb8191a20270e3ba52bd1f6ef8a4a9f7b981361d77e20236ac",
@@ -10986,6 +11011,7 @@
     "tdf-mobile/src/lib/firstValueCompletion.ts": "d5c2580eddea4ea7907eac147bd5b84870aec6409f9c51e1bdf051c57171c7a7",
     "tdf-mobile/src/lib/liveBroadcastPublishing.ts": "9b00774ddd70fd6f3425e6877cb52d9c6fa933f5c0af13f3af3327a5db042b98",
     "tdf-mobile/src/lib/liveBroadcastsRepository.ts": "b7fed7ab7c9ad18a065f59ecc1cb2dcf7abf841aae555cee3fc8c0121036083c",
+    "tdf-mobile/src/lib/nativeAppleAuthentication.ts": "0db06290f7287ceb4ce8d4d929987b334a45351950f2cca96b43a0d6a2183e9e",
     "tdf-mobile/src/lib/onboardingIntent.ts": "cfe60e2d5ce8cc09314d2e8728c5603ceca0dceffbe920c91b9ff7234d1d4f4e",
     "tdf-mobile/src/lib/queryClient.ts": "149f05c3a7463dfe5de259414a14fa30619277ce4f46adc6f166b51e775a4ff2",
     "tdf-mobile/src/lib/savedEvents.ts": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
@@ -11635,6 +11661,10 @@
       },
       {
         "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -12974,6 +13004,10 @@
       {
         "requirement": "SYS-DEPENDENCY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "package.json": [
@@ -12985,6 +13019,10 @@
     "tdf-mobile/package.json": [
       {
         "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -15206,6 +15244,10 @@
       {
         "requirement": "MOB-ONBOARD-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/providers/FirstRunProvider.tsx": [
@@ -15217,6 +15259,10 @@
     "tdf-mobile/__tests__/AuthScreen.test.tsx": [
       {
         "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "tests"
       }
     ],
@@ -15428,6 +15474,10 @@
       {
         "requirement": "MOB-BUILD-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/scripts/release-check.mjs": [
@@ -15445,6 +15495,10 @@
     "tdf-mobile/scripts/tests/test_ios_signing.py": [
       {
         "requirement": "MOB-BUILD-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "tests"
       }
     ],
@@ -18060,17 +18114,29 @@
       {
         "requirement": "WEB-CANONICAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/app.json": [
       {
         "requirement": "WEB-CANONICAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/app/auth.tsx": [
       {
         "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -18438,6 +18504,48 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-mobile/ios/Podfile.lock": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/ios/TDFRecords/Info.plist": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/ios/TDFRecords/TDFRecords.entitlements": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/scripts/verify-ios-artifact.py": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/api/auth.ts": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/appleSignIn.ts": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/nativeAppleAuthentication.ts": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/AppleSignInSpec.hs": [
       {
         "requirement": "AUTH-APPLE-SIGNIN-001",
@@ -18445,6 +18553,12 @@
       }
     ],
     "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/appleSignIn.test.ts": [
       {
         "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "tests"
@@ -39331,6 +39445,10 @@
         {
           "requirement": "MOB-ONBOARD-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -39668,7 +39786,12 @@
       "path": "tdf-mobile/__tests__/appleSignIn.test.ts",
       "sha256": "d4a43f065bbeba5e59429ffdcc5a67d535e809a2bd4e9d3be6eaf12aa5a4f267",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-4539ccabdae7a1f5",
@@ -40014,6 +40137,10 @@
         {
           "requirement": "WEB-CANONICAL-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -40025,6 +40152,10 @@
       "requirements": [
         {
           "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -40209,6 +40340,10 @@
       "requirements": [
         {
           "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -40701,6 +40836,10 @@
         {
           "requirement": "SYS-DEPENDENCY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -40712,6 +40851,10 @@
       "requirements": [
         {
           "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -40807,6 +40950,10 @@
         {
           "requirement": "MOB-BUILD-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -40843,6 +40990,10 @@
         {
           "requirement": "MOB-BUILD-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -40851,7 +41002,12 @@
       "path": "tdf-mobile/scripts/verify-ios-artifact.py",
       "sha256": "7ca1bd0302cfd33cb4f08b0432471a0675c879194e9f661da8b242d0a034e6e9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-3aa70a7b24875247",
@@ -40893,7 +41049,12 @@
       "path": "tdf-mobile/src/api/auth.ts",
       "sha256": "c6055384470420e8d0a626304ce85fa851b1c6f57ef5669e686eb8e5408f7a65",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e8c55bfb71a219d9",
@@ -41016,6 +41177,10 @@
         },
         {
           "requirement": "MKT-ARTIST-LISTING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -41632,7 +41797,12 @@
       "path": "tdf-mobile/src/lib/appleSignIn.ts",
       "sha256": "7ee73cccb843776bc44e45717972284ac2798675cfed3fa1abaf52517b51d0ea",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-cf527443eb0b7210",
@@ -41835,7 +42005,12 @@
       "path": "tdf-mobile/src/lib/nativeAppleAuthentication.ts",
       "sha256": "0db06290f7287ceb4ce8d4d929987b334a45351950f2cca96b43a0d6a2183e9e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d0a53a40b5d73f1e",
@@ -42005,6 +42180,10 @@
       "requirements": [
         {
           "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -43790,7 +43969,6 @@
     "SURFACE-8487f846bf4e8547",
     "SURFACE-8bd34e14602ba906",
     "SURFACE-335a8d72ecdce55f",
-    "SURFACE-bf9f4dbede91e7f9",
     "SURFACE-4539ccabdae7a1f5",
     "SURFACE-896c51af6808024a",
     "SURFACE-1a9c6b490ed4d09a",
@@ -43899,13 +44077,11 @@
     "SURFACE-2663e424dec4b0da",
     "SURFACE-0365adce5821e515",
     "SURFACE-43b48bb1049e5324",
-    "SURFACE-85dc8ac2c70e20e0",
     "SURFACE-3aa70a7b24875247",
     "SURFACE-3469b2a00ddfcab0",
     "SURFACE-837d0ebca6fefd3b",
     "SURFACE-5755b7368095cc8f",
     "SURFACE-c3ef7b9d8509d838",
-    "SURFACE-406527fabc5f6e84",
     "SURFACE-e8c55bfb71a219d9",
     "SURFACE-befc4b8bb8e310b8",
     "SURFACE-5bea0425bb03c75c",
@@ -43974,7 +44150,6 @@
     "SURFACE-d15aa021ceb88208",
     "SURFACE-cdc665d26aa25ed8",
     "SURFACE-a24ed6b998974bde",
-    "SURFACE-dc8c7a4da3e2d7be",
     "SURFACE-cf527443eb0b7210",
     "SURFACE-f944f2bcb4ffa17d",
     "SURFACE-53aadf3e9a01c85f",
@@ -43991,7 +44166,6 @@
     "SURFACE-fefcd38d58b49124",
     "SURFACE-98ec2a53efd9fb83",
     "SURFACE-9402fc6818e454b1",
-    "SURFACE-6aa42015db0f0b54",
     "SURFACE-d0a53a40b5d73f1e",
     "SURFACE-f1ca11df9f79103d",
     "SURFACE-d230acf12b1223f0",
@@ -45216,7 +45390,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "250eab3cec21618d83f67bb6bc94fc4cc1728bfdfc60b61140ac533cfe4a3bce",
+      "sourceSha256": "db6c78b64b048fa771cb49ba391e9c63c7a37f5e44d13e52758a7c211ff7d8e8",
       "definition": {
         "states": [
           "absent",
