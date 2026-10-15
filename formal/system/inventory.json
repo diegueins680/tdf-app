@@ -553,6 +553,7 @@
       "scripts/verify-cors-boundary.py",
       "scripts/verify-event-operations-formal.sh",
       "scripts/verify-event-operations-pluscal.mjs",
+      "scripts/verify-http-shutdown.py",
       "scripts/verify-improvement-loop.mjs",
       "scripts/verify-invoice-receipt-api.mjs",
       "scripts/verify-invoice-receipts.py",
@@ -1850,6 +1851,7 @@
       "tdf-hq/src/TDF/App/Boot.hs",
       "tdf-hq/src/TDF/App/FailureBoundary.hs",
       "tdf-hq/src/TDF/App/Readiness.hs",
+      "tdf-hq/src/TDF/App/Shutdown.hs",
       "tdf-hq/src/TDF/App/StartupResponse.hs",
       "tdf-hq/src/TDF/Artists/Enrichment.hs",
       "tdf-hq/src/TDF/Artists/Promotion.hs",
@@ -2054,6 +2056,7 @@
       "tdf-hq/test/EventOperationsHttpMain.hs",
       "tdf-hq/test/EventPilotCountMain.hs",
       "tdf-hq/test/EventRaciBrowserMain.hs",
+      "tdf-hq/test/HttpShutdownMain.hs",
       "tdf-hq/test/MusicCorsProbeMain.hs",
       "tdf-hq/test/MusicDdexCreditsFixtureMain.hs",
       "tdf-hq/test/MusicReleaseSpecMain.hs",
@@ -2121,6 +2124,7 @@
       "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
       "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs",
       "tdf-hq/test/TDF/Services/YouTubeSpec.hs",
+      "tdf-hq/test/TDF/ShutdownSpec.hs",
       "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "tdf-hq/test/TDF/StartupResponseSpec.hs",
@@ -4432,7 +4436,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
+      "sha256": "74b0305ed0c0ce5480e410dbe867fa09a4935eaa61c2ab95ac92122d9b4a4bc6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5794,13 +5798,19 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "78d0fccc3742108a49d292a6d0b955c249ab55c5816aa8069ff491c5d2f37cb2",
+      "sha256": "e3907a0a7b532de3b48ad41ed80c237803672080662bdc5be6b45923cc45f054",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6c75a638587af83c",
       "path": "scripts/verify-event-operations-pluscal.mjs",
       "sha256": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d5932c3e0804ef13",
+      "path": "scripts/verify-http-shutdown.py",
+      "sha256": "c36e0ee24c717ebcfa90198069ee9f45f413b7c43f6bcfc52d83b679211b184e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13534,7 +13544,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "57c86179cffe22308c646d23eb781b4bfd0da4222e75da16f0d4fe4fe3424c27",
+      "sha256": "0838a2466b27229612863144d8015be08cb6cc6bb47e50ca017d2c54cc561662",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13547,6 +13557,12 @@
       "id": "SURFACE-9b25f2b06da83696",
       "path": "tdf-hq/src/TDF/App/Readiness.hs",
       "sha256": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ce454e8b64bdee25",
+      "path": "tdf-hq/src/TDF/App/Shutdown.hs",
+      "sha256": "5ccd6691f0a3427dcf46f9d1e24b85dce3f398726ea8ac6d0eb8f7b94169135f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14746,7 +14762,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "2a7e7f1ba3900e5fa854e7722ff815e5252b9d43e9b25ad8ddf1cbe30dcc87a2",
+      "sha256": "1ef8179df3934d673b4784940ac2a34a7fbb2b4e7acc2c0d3f588ec4758116f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14771,6 +14787,12 @@
       "id": "SURFACE-347e9f1684b17032",
       "path": "tdf-hq/test/EventRaciBrowserMain.hs",
       "sha256": "1c1ab8b3bcf3ee73e7be8a46c30b7c791c345e45c5e0dc58d08d8cb9b30b1bb1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-73f8753880263822",
+      "path": "tdf-hq/test/HttpShutdownMain.hs",
+      "sha256": "c1ae9e7975f9274f66724f75991081b56ff1d58ad6794c6f0b24a7d586064e15",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14812,7 +14834,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1d424039e69e8b7ecb36f6d474384299978857dee92ed5e916f8421840e8a64b",
+      "sha256": "ebd7e13e4d66f5fb573bb16ed231eadd681ed601c7c7756a7d25eb836d8fddcd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15173,6 +15195,12 @@
       "id": "SURFACE-eef0c0019f0d35ca",
       "path": "tdf-hq/test/TDF/Services/YouTubeSpec.hs",
       "sha256": "ded535c29c8e2e1d0eb68009d557c082cd590bdf0b191217624a05af5697cd29",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-79dd1d28011aa447",
+      "path": "tdf-hq/test/TDF/ShutdownSpec.hs",
+      "sha256": "8d8b578ca04db43763f8bc6e43fd363ac55bd37a57954eed82686ff74f2eca16",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22249,6 +22277,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/HttpShutdown.cfg",
+      "sha256": "c483027b07479d3e14176f33d36c20b17ffa4db34bae0a0a343b5bb07a8a901f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/HttpShutdown.tla",
+      "sha256": "1b17feb0088ccb82e50fae144bed7e59d6bf0022d1503d0bfa1d553b86e35884",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/HttpShutdownEarlyAbort.cfg",
+      "sha256": "94ef4964eec37298020425b5a32a5607246d4e23c67fd1e38259a6df32590802",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/HttpShutdownOpenListener.cfg",
+      "sha256": "c4cdf620af0a20ba7b6453c9ad663c478db14fa950ebae461605e38aeb593b4f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/HttpShutdownSwallowFailure.cfg",
+      "sha256": "f588e289a650da4fa231aed6df392b2cd871050cd93a88e6846c868ae0d98f29",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/InboundCapture.cfg",
       "sha256": "0ca2865e026a31d94ccda9880e10dc3d5f0fef60444bfcbeabf07ff82bf0490d",
       "authority": "inferred",
@@ -24931,7 +24994,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "773454e413d10c9956ce7e72b0bda1f7a88aed38668241e2bb1038d80529af93",
+      "sha256": "89fc80cb211048896da162b662ea7e7ec9fa7226ecb2bdbdbf1cc63d841c7f2f",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-15. **System-wide",
       "kind": "requirement-candidate"
@@ -24952,7 +25015,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "cfbc781a51117a3174c29e92a1d6e1a16a3711f0cab1023b62b1e399f8e30c0e",
+      "sha256": "ae85bafe5a85d1a1cae6dba25c31c6b10af101e20b79ff60d06a740e85310e85",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25067,6 +25130,13 @@
       "sha256": "90cac67147210c90fbb604934c5f6a998d936396d70fec554c235187554d4d53",
       "authority": "historical",
       "authorityBasis": "Status: historical — superseded as the current system index by README.md.",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/http-shutdown.md",
+      "sha256": "458ed4481a4762f722a2a9318a4d33ed372ca69b0b3970c0c08c6e67c20bcc94",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
@@ -25323,14 +25393,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b9f33e2acf70610e931e8a6e2fe3681756c8c1174bcda1a809afdf77df0e8ac4",
+      "sha256": "ea631443d96bd0b2b72e78e2a4f26a5d9b56607d58ed2d9b37d439765a6865ad",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "3e99d1e09dcbdf42f5ce612b3eac8331bc7715363489b2d769d6587b29557a7a",
+      "sha256": "5ad2236e096ac55b96d774a83233999c3248f8907ddc8074f0ea357618eb46b9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -34007,6 +34077,74 @@
         "CHECK_DEADLOCK FALSE",
         "INVARIANTS",
         "  ExactlyOnePaidAudit"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HttpShutdown.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Requests = {first, second}",
+        "  DrainTicks = 2",
+        "  UnsafeOpenListener = FALSE",
+        "  UnsafeEarlyAbort = FALSE",
+        "  UnsafeSuccessOnFailure = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK NoNewAdmissionAfterStop NoEarlyAbort NoFailureSuccess TerminalCancelsStartup RequestAccounting",
+        "PROPERTY EventuallyTerminal"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HttpShutdownEarlyAbort.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Requests = {first, second}",
+        "  DrainTicks = 2",
+        "  UnsafeOpenListener = FALSE",
+        "  UnsafeEarlyAbort = TRUE",
+        "  UnsafeSuccessOnFailure = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK NoNewAdmissionAfterStop NoEarlyAbort NoFailureSuccess TerminalCancelsStartup RequestAccounting",
+        "PROPERTY EventuallyTerminal"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HttpShutdownOpenListener.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Requests = {first, second}",
+        "  DrainTicks = 2",
+        "  UnsafeOpenListener = TRUE",
+        "  UnsafeEarlyAbort = FALSE",
+        "  UnsafeSuccessOnFailure = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK NoNewAdmissionAfterStop NoEarlyAbort NoFailureSuccess TerminalCancelsStartup RequestAccounting",
+        "PROPERTY EventuallyTerminal"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HttpShutdownSwallowFailure.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Requests = {first, second}",
+        "  DrainTicks = 2",
+        "  UnsafeOpenListener = FALSE",
+        "  UnsafeEarlyAbort = FALSE",
+        "  UnsafeSuccessOnFailure = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK NoNewAdmissionAfterStop NoEarlyAbort NoFailureSuccess TerminalCancelsStartup RequestAccounting",
+        "PROPERTY EventuallyTerminal"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

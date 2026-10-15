@@ -7,7 +7,7 @@ module TDF.App.Boot
   , validateSeedDatabaseStartup
   ) where
 
-import Control.Concurrent (forkFinally, newEmptyMVar, putMVar, takeMVar, threadDelay)
+import Control.Concurrent (threadDelay)
 import Control.Exception (SomeException, throwIO, try)
 import Control.Monad (forM, forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
@@ -94,6 +94,7 @@ import TDF.Reputation.Worker (startReputationWorker)
 import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
 import TDF.Server (mkApp)
 import TDF.App.StartupResponse (startupApp)
+import TDF.App.Shutdown (runManagedWarp)
 import TDF.App.FailureBoundary (requestExceptionBoundary, reportUnhandledException)
 import TDF.Trials.Models (migrateTrials)
 
@@ -163,19 +164,12 @@ runBootServer = do
         startTaxInvoiceWorker env
         startReputationWorker env
 
-  serverResult <- newEmptyMVar
-  _ <-
-    forkFinally
-      (Warp.runSettings warpSettings $ \req send -> do
-        app <- readIORef appRef
-        app req send)
-      (putMVar serverResult)
-
-  -- Keep initialization on the main thread so a failed migration or startup
-  -- registry check always terminates the process with a non-zero exit status.
-  -- Warp runs concurrently only to expose the bounded `starting` health state.
-  setupApp
-  takeMVar serverResult >>= either throwIO pure
+  -- A startup exception must terminate with failure. HTTP completion cancels
+  -- unfinished startup, so a stop while connecting to the database cannot wait
+  -- for all startup retries. Completed worker forks are outside HTTP drainage.
+  runManagedWarp warpSettings setupApp $ \req send -> do
+    app <- readIORef appRef
+    app req send
 
 validateSeedDatabaseStartup :: Bool -> [(String, String)] -> Either String ()
 validateSeedDatabaseStartup shouldSeed env

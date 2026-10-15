@@ -123,6 +123,7 @@ import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
 import qualified TDF.CorsSpec as CorsSpec
 import qualified TDF.FailureBoundarySpec as FailureBoundarySpec
 import qualified TDF.ReadinessSpec as ReadinessSpec
+import qualified TDF.ShutdownSpec as ShutdownSpec
 import qualified TDF.Invoice.ReceiptSpec as ReceiptSpec
 import TDF.Cors
     ( corsPolicy,
@@ -881,6 +882,7 @@ main :: IO ()
 main = hspec $ do
     FailureBoundarySpec.spec
     ReadinessSpec.spec
+    ShutdownSpec.spec
     ReceiptSpec.spec
     StartupResponseSpec.spec
     WorkerLoggingSpec.spec

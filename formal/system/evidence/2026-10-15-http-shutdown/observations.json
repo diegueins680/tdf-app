@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+  "scope": "Focused source-bound local POSIX/Warp execution and bounded model, not complete current-root backend/container/deployed qualification.",
+  "sourceFingerprints": {
+    "tdf-hq/src/TDF/App/Shutdown.hs": "5ccd6691f0a3427dcf46f9d1e24b85dce3f398726ea8ac6d0eb8f7b94169135f",
+    "tdf-hq/src/TDF/App/Boot.hs": "0838a2466b27229612863144d8015be08cb6cc6bb47e50ca017d2c54cc561662",
+    "tdf-hq/test/HttpShutdownMain.hs": "c1ae9e7975f9274f66724f75991081b56ff1d58ad6794c6f0b24a7d586064e15",
+    "tdf-hq/test/TDF/ShutdownSpec.hs": "8d8b578ca04db43763f8bc6e43fd363ac55bd37a57954eed82686ff74f2eca16",
+    "scripts/verify-http-shutdown.py": "c36e0ee24c717ebcfa90198069ee9f45f413b7c43f6bcfc52d83b679211b184e",
+    "formal/event-operations/HttpShutdown.tla": "1b17feb0088ccb82e50fae144bed7e59d6bf0022d1503d0bfa1d553b86e35884",
+    "formal/event-operations/HttpShutdown.cfg": "c483027b07479d3e14176f33d36c20b17ffa4db34bae0a0a343b5bb07a8a901f",
+    "formal/event-operations/HttpShutdownOpenListener.cfg": "c4cdf620af0a20ba7b6453c9ad663c478db14fa950ebae461605e38aeb593b4f",
+    "formal/event-operations/HttpShutdownEarlyAbort.cfg": "94ef4964eec37298020425b5a32a5607246d4e23c67fd1e38259a6df32590802",
+    "formal/event-operations/HttpShutdownSwallowFailure.cfg": "f588e289a650da4fa231aed6df392b2cd871050cd93a88e6846c868ae0d98f29"
+  },
+  "supervisorExamples": 4,
+  "actualRuntime": [
+    {
+      "control": "intended",
+      "status": "passed",
+      "scenarios": [
+        {
+          "scenario": "hold",
+          "signal": "SIGTERM",
+          "exitCode": 0,
+          "elapsedSeconds": 1.522,
+          "acceptedRequestCompleted": true,
+          "repeatedSignals": false
+        },
+        {
+          "scenario": "hold",
+          "signal": "SIGINT",
+          "exitCode": 0,
+          "elapsedSeconds": 1.521,
+          "acceptedRequestCompleted": true,
+          "repeatedSignals": false
+        },
+        {
+          "scenario": "hold",
+          "signal": "SIGTERM",
+          "exitCode": 0,
+          "elapsedSeconds": 1.518,
+          "acceptedRequestCompleted": true,
+          "repeatedSignals": true
+        },
+        {
+          "scenario": "stuck",
+          "signal": "SIGTERM",
+          "exitCode": 0,
+          "elapsedSeconds": 5.033,
+          "acceptedRequestCompleted": false,
+          "repeatedSignals": false
+        },
+        {
+          "scenario": "startup-wait",
+          "signal": "SIGTERM",
+          "exitCode": 0,
+          "elapsedSeconds": 0.017,
+          "acceptedRequestCompleted": false,
+          "repeatedSignals": false
+        },
+        {
+          "scenario": "startup-failure",
+          "exitCode": 1,
+          "failurePropagated": true
+        },
+        {
+          "scenario": "bind-failure",
+          "exitCode": 1,
+          "failurePropagated": true
+        }
+      ]
+    },
+    {
+      "control": "listener-not-closed",
+      "status": "detected",
+      "assertion": "listener must close before accepted request completes"
+    },
+    {
+      "control": "no-request-drain",
+      "status": "detected",
+      "assertion": "accepted request must finish during graceful drain"
+    }
+  ],
+  "actualRuntimeLogSha256": "aa07769d50e00221b6c51198aa22e57637648a68980b5fd4870423e5a3f75b9d",
+  "boundedModel": [
+    {
+      "configuration": "HttpShutdown.cfg",
+      "exitCode": 0,
+      "expectedInvariant": null,
+      "logSha256": "54b5c2ee9524569c823f153ba46031cdd1b333f8946a003e3fc2aceff162bb45",
+      "status": "passed"
+    },
+    {
+      "configuration": "HttpShutdownOpenListener.cfg",
+      "exitCode": 12,
+      "expectedInvariant": "NoNewAdmissionAfterStop",
+      "logSha256": "02131b62458939961c23e5e4b377a3efe5b7a67355ad01e3737cb3a3b1e11d5e",
+      "status": "detected"
+    },
+    {
+      "configuration": "HttpShutdownEarlyAbort.cfg",
+      "exitCode": 12,
+      "expectedInvariant": "NoEarlyAbort",
+      "logSha256": "4252d126be18da6881ff67deb0de7b65ac827bb15f74ede9c18a423c11b2ef69",
+      "status": "detected"
+    },
+    {
+      "configuration": "HttpShutdownSwallowFailure.cfg",
+      "exitCode": 12,
+      "expectedInvariant": "NoFailureSuccess",
+      "logSha256": "da749ab133d54859063815e040121698061cb6ff5a45348f51120b3510f716c8",
+      "status": "detected"
+    }
+  ],
+  "modelBounds": {
+    "requests": 2,
+    "abstractExpirationTicks": 2,
+    "weakFairness": [
+      "stop",
+      "tick",
+      "finishDrain",
+      "supervise"
+    ]
+  },
+  "modelScope": "Stop means completed listener close; repeated signals stutter. No scheduling, worker, HTTP2/PID1 or external-effect refinement proof.",
+  "releaseAuthorized": false,
+  "workerDrainVerified": false,
+  "productionEffects": false,
+  "remaining": [
+    "Fresh full candidate gates",
+    "Linux PID1 immutable candidate-image qualification",
+    "Worker/external-effect fencing",
+    "Production rollout and observations"
+  ]
+}

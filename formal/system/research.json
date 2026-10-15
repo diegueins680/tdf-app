@@ -766,6 +766,36 @@
       "decision": "adopted",
       "rationale": "The adapter selects default; an actual-consumer namespace substitution fails in the negative control. Native Metro/Hermes qualification remains separate from Node interoperability.",
       "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-HTTP-SHUTDOWN-001",
+      "source": "https://hackage-content.haskell.org/package/warp-3.4.9/docs/Network-Wai-Handler-Warp.html",
+      "title": "Warp3.4.9 listener shutdown and graceful timeout",
+      "recommendation": "Install a listener-close action for POSIX signals and bound the otherwise indefinite graceful interval.",
+      "applicability": "Stack resolves Warp3.4.9; current image lacks graceful TERM behavior.",
+      "decision": "adopted",
+      "rationale": "Use the existing Warp facilities with a five-second cooperative request interval; do not infer background worker/provider drainage.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-HTTP-SHUTDOWN-002",
+      "source": "https://hackage-content.haskell.org/package/async-2.2.5/docs/Control-Concurrent-Async.html",
+      "title": "Scoped async supervision",
+      "recommendation": "Use scoped asynchronous actions so exceptions propagate and unfinished peers are cancelled.",
+      "applicability": "Startup errors must remain fatal while HTTP stop must cancel unfinished initialization.",
+      "decision": "adopted",
+      "rationale": "waitEither within withAsync preserves exception propagation and peer cleanup; Haskell cancellation remains cooperative, not a hard OS deadline.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-HTTP-SHUTDOWN-003",
+      "source": "https://hackage-content.haskell.org/package/unix-2.8.7.0/docs/System-Posix-Signals.html",
+      "title": "POSIX signal handlers",
+      "recommendation": "Install explicit process handlers and retain previous handlers for restoration.",
+      "applicability": "SIGTERM/SIGINT handling for the single managed HTTP server.",
+      "decision": "adopted",
+      "rationale": "Atomically bind both signals to one close action; scoped restoration avoids stale handlers after server completion.",
+      "verifiedAt": "2026-10-15"
     }
   ]
 }

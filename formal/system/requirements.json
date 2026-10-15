@@ -10736,6 +10736,99 @@
       "property": "Automatic focus completion requires current-layout visible evidence; layout invalidation cannot strand an otherwise permitted destination after one unavailable measurement; user control cancels anchoring.",
       "verification": "Rendered React Native tests reproduce old retry failure and detect removal of the layout-epoch guard. Fresh installed Android/iOS journeys must retain the original automatic-visibility assertion. No formal refinement proof.",
       "evidence": "formal/system/evidence/2026-10-15-mobile-discussion-focus/observations.json"
+    },
+    {
+      "id": "DEPLOY-HTTP-SHUTDOWN-001",
+      "title": "POSIX HTTP shutdown and startup supervision",
+      "statement": "After listener shutdown registration, SIGTERM and SIGINT close HTTP admission once, allow accepted work a five-second cooperative Warp grace interval and preserve failure propagation; server completion cancels unfinished startup.",
+      "domain": "DEPLOY",
+      "authority": "User requirement to repair high-risk runtime/recovery discrepancies; AUTHORITY-HTTP-SHUTDOWN-001",
+      "source": "tdf-hq/src/TDF/App/Boot.hs; exact current-image diagnostic; official Warp3.4.9 shutdown contract",
+      "contract": "formal/system/http-shutdown.md",
+      "critical": true,
+      "actors": [
+        "Application process",
+        "Deployment operator",
+        "HTTP caller"
+      ],
+      "preconditions": [
+        "POSIX runtime; Warp listener-close action installed; cancellation and scheduler cooperate."
+      ],
+      "inputs": [
+        "SIGTERM",
+        "SIGINT",
+        "Startup completion/failure",
+        "Server completion/failure",
+        "Accepted HTTP request",
+        "Grace expiration"
+      ],
+      "state": {
+        "states": [
+          "starting",
+          "serving",
+          "draining",
+          "stopped",
+          "failed"
+        ],
+        "initial": "starting",
+        "terminal": [
+          "stopped",
+          "failed"
+        ],
+        "concurrent": "Startup completion is independent of server listener/drain state."
+      },
+      "allowedTransitions": [
+        "starting -> serving on successful initialization",
+        "starting/serving -> draining on TERM/INT after listener registration",
+        "draining -> stopped after accepted work finishes or grace expires",
+        "startup/server failure -> failed with peer cancellation",
+        "normal server completion -> stopped with unfinished startup cancelled"
+      ],
+      "forbiddenTransitions": [
+        "Accept a new listener connection after close completes",
+        "Report startup/server failure as successful process completion",
+        "Repeated signal invokes an already-used listener close action",
+        "Wait for all startup retries after HTTP server has stopped",
+        "Claim worker or external-provider drainage from HTTP-only evidence"
+      ],
+      "effects": [
+        "Close listener once; use Warp grace interval; propagate startup/server exceptions; restore prior signal handlers."
+      ],
+      "authorization": "Signals require operating-system process authority; no new HTTP capability or production feature activation.",
+      "privacy": "Synthetic loopback fixtures and source hashes only; no production credentials or customer data.",
+      "concurrency": "Scoped async supervision cancels the peer; completion/cancellation is cooperative. Five seconds is Warp request grace, not a hard whole-process wall-clock guarantee. Background forks are excluded.",
+      "idempotency": "One atomic stop flag binds both signals to one listener close action; repeated signals are harmless during the managed scope.",
+      "failure": "Startup/listener exceptions propagate and must exit nonzero; overdue accepted work may be disconnected and must not receive fabricated success.",
+      "recovery": "A process restart and client retry still need applicable mutation receipts/reconciliation. This requirement does not authorize retries of uncertain external effects.",
+      "observability": "Bind subprocess/model results, negative controls, exact source and release image to receipts; retain failed fixture setup separately.",
+      "implementation": [
+        "tdf-hq/src/TDF/App/Shutdown.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/tdf-hq.cabal"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ShutdownSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/HttpShutdownMain.hs",
+        "scripts/verify-http-shutdown.py",
+        "scripts/quality-backend.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/HttpShutdown.tla"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Scoped actual POSIX/Warp tests and bounded model; final candidate/container/deployed correspondence remains outstanding.",
+      "ambiguity": [
+        "Worker/external-effect drainage and fencing are separate open release obligations."
+      ],
+      "property": "No new admission after listener close; bounded cooperative HTTP drain; observed failure cannot become successful process result; completed server cannot leave pending initialization.",
+      "verification": "Four canonical Haskell supervisor cases; seven real subprocess scenarios; two runtime source mutations; bounded TLC safety/liveness with three failing controls. No universal proof or formal runtime refinement.",
+      "evidence": "Source-bound local receipts; exact release image and deployed observations remain required.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local focused verification is scoped; full final-head backend, Linux PID1 release image and production verification remain outstanding."
+      }
     }
   ]
 }

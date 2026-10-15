@@ -52,6 +52,8 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 - [isolated-canary.md](isolated-canary.md): candidate startup/identity/failure-recovery on a disconnected disposable restore, with explicit deployment exclusions.
 
+- [http-shutdown.md](http-shutdown.md): POSIX listener closure, request grace, startup supervision, bounded model and runtime mutations; worker and production qualification remain separate.
+
 - [readiness.md](readiness.md): fresh database probe, fixed unavailable responses and cancellation/deadline controls.
 
 - [meta-redelivery.md](meta-redelivery.md): a repeated or backfilled Instagram or Facebook message keeps its stored text, deletion and reply state; bounded model, three negative controls and PostgreSQL tests.

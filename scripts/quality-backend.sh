@@ -45,6 +45,7 @@ STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-cors-boundary.py"
 )
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-request-failures.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-readiness.py"
+STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-http-shutdown.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-invoice-receipts.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-checkout-money.py"
 

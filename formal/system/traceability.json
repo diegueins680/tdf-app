@@ -10737,6 +10737,99 @@
       "property": "Automatic focus completion requires current-layout visible evidence; layout invalidation cannot strand an otherwise permitted destination after one unavailable measurement; user control cancels anchoring.",
       "verification": "Rendered React Native tests reproduce old retry failure and detect removal of the layout-epoch guard. Fresh installed Android/iOS journeys must retain the original automatic-visibility assertion. No formal refinement proof.",
       "evidence": "formal/system/evidence/2026-10-15-mobile-discussion-focus/observations.json"
+    },
+    {
+      "id": "DEPLOY-HTTP-SHUTDOWN-001",
+      "title": "POSIX HTTP shutdown and startup supervision",
+      "statement": "After listener shutdown registration, SIGTERM and SIGINT close HTTP admission once, allow accepted work a five-second cooperative Warp grace interval and preserve failure propagation; server completion cancels unfinished startup.",
+      "domain": "DEPLOY",
+      "authority": "User requirement to repair high-risk runtime/recovery discrepancies; AUTHORITY-HTTP-SHUTDOWN-001",
+      "source": "tdf-hq/src/TDF/App/Boot.hs; exact current-image diagnostic; official Warp3.4.9 shutdown contract",
+      "contract": "formal/system/http-shutdown.md",
+      "critical": true,
+      "actors": [
+        "Application process",
+        "Deployment operator",
+        "HTTP caller"
+      ],
+      "preconditions": [
+        "POSIX runtime; Warp listener-close action installed; cancellation and scheduler cooperate."
+      ],
+      "inputs": [
+        "SIGTERM",
+        "SIGINT",
+        "Startup completion/failure",
+        "Server completion/failure",
+        "Accepted HTTP request",
+        "Grace expiration"
+      ],
+      "state": {
+        "states": [
+          "starting",
+          "serving",
+          "draining",
+          "stopped",
+          "failed"
+        ],
+        "initial": "starting",
+        "terminal": [
+          "stopped",
+          "failed"
+        ],
+        "concurrent": "Startup completion is independent of server listener/drain state."
+      },
+      "allowedTransitions": [
+        "starting -> serving on successful initialization",
+        "starting/serving -> draining on TERM/INT after listener registration",
+        "draining -> stopped after accepted work finishes or grace expires",
+        "startup/server failure -> failed with peer cancellation",
+        "normal server completion -> stopped with unfinished startup cancelled"
+      ],
+      "forbiddenTransitions": [
+        "Accept a new listener connection after close completes",
+        "Report startup/server failure as successful process completion",
+        "Repeated signal invokes an already-used listener close action",
+        "Wait for all startup retries after HTTP server has stopped",
+        "Claim worker or external-provider drainage from HTTP-only evidence"
+      ],
+      "effects": [
+        "Close listener once; use Warp grace interval; propagate startup/server exceptions; restore prior signal handlers."
+      ],
+      "authorization": "Signals require operating-system process authority; no new HTTP capability or production feature activation.",
+      "privacy": "Synthetic loopback fixtures and source hashes only; no production credentials or customer data.",
+      "concurrency": "Scoped async supervision cancels the peer; completion/cancellation is cooperative. Five seconds is Warp request grace, not a hard whole-process wall-clock guarantee. Background forks are excluded.",
+      "idempotency": "One atomic stop flag binds both signals to one listener close action; repeated signals are harmless during the managed scope.",
+      "failure": "Startup/listener exceptions propagate and must exit nonzero; overdue accepted work may be disconnected and must not receive fabricated success.",
+      "recovery": "A process restart and client retry still need applicable mutation receipts/reconciliation. This requirement does not authorize retries of uncertain external effects.",
+      "observability": "Bind subprocess/model results, negative controls, exact source and release image to receipts; retain failed fixture setup separately.",
+      "implementation": [
+        "tdf-hq/src/TDF/App/Shutdown.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/tdf-hq.cabal"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ShutdownSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/HttpShutdownMain.hs",
+        "scripts/verify-http-shutdown.py",
+        "scripts/quality-backend.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/HttpShutdown.tla"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Scoped actual POSIX/Warp tests and bounded model; final candidate/container/deployed correspondence remains outstanding.",
+      "ambiguity": [
+        "Worker/external-effect drainage and fencing are separate open release obligations."
+      ],
+      "property": "No new admission after listener close; bounded cooperative HTTP drain; observed failure cannot become successful process result; completed server cannot leave pending initialization.",
+      "verification": "Four canonical Haskell supervisor cases; seven real subprocess scenarios; two runtime source mutations; bounded TLC safety/liveness with three failing controls. No universal proof or formal runtime refinement.",
+      "evidence": "Source-bound local receipts; exact release image and deployed observations remain required.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local focused verification is scoped; full final-head backend, Linux PID1 release image and production verification remain outstanding."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -10810,6 +10903,7 @@
     "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
     "formal/event-operations/HostedServicePaymentProgress.cfg": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
+    "formal/event-operations/HttpShutdown.tla": "1b17feb0088ccb82e50fae144bed7e59d6bf0022d1503d0bfa1d553b86e35884",
     "formal/event-operations/InboundCapture.cfg": "0ca2865e026a31d94ccda9880e10dc3d5f0fef60444bfcbeabf07ff82bf0490d",
     "formal/event-operations/InboundCapture.tla": "3f579c3b923f2691b692923337d10ccd26961166c4ba66fc405e884078ad2584",
     "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg": "bd2121b6f1186418895729b5afb57ee66b817bae9a78f932d1cd9f74b28176a6",
@@ -11079,7 +11173,7 @@
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/qualify-current-image-shutdown.py": "43ddd106ca17c08b24a966aaafa79cb065b5b9bab5169844f18874541fcb4b9a",
-    "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
+    "scripts/quality-backend.sh": "74b0305ed0c0ce5480e410dbe867fa09a4935eaa61c2ab95ac92122d9b4a4bc6",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "01e4a9bd51a0728c5f45c627a408be0dfe0cc41f5bff770b91a6a1e0d1f8c05f",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -11172,8 +11266,9 @@
     "scripts/verify-alloy-controls.mjs": "3a609d6e22e004563fba4a4c58ec9e62267b1db572b073d880bd7feb19870e9c",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "78d0fccc3742108a49d292a6d0b955c249ab55c5816aa8069ff491c5d2f37cb2",
+    "scripts/verify-event-operations-formal.sh": "e3907a0a7b532de3b48ad41ed80c237803672080662bdc5be6b45923cc45f054",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
+    "scripts/verify-http-shutdown.py": "c36e0ee24c717ebcfa90198069ee9f45f413b7c43f6bcfc52d83b679211b184e",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -11522,9 +11617,10 @@
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "482550244d657c508ae4ac02fab442d72054ebce72f9ba7d487f69c449c0b180",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
-    "tdf-hq/src/TDF/App/Boot.hs": "57c86179cffe22308c646d23eb781b4bfd0da4222e75da16f0d4fe4fe3424c27",
+    "tdf-hq/src/TDF/App/Boot.hs": "0838a2466b27229612863144d8015be08cb6cc6bb47e50ca017d2c54cc561662",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
     "tdf-hq/src/TDF/App/Readiness.hs": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
+    "tdf-hq/src/TDF/App/Shutdown.hs": "5ccd6691f0a3427dcf46f9d1e24b85dce3f398726ea8ac6d0eb8f7b94169135f",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
     "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
     "tdf-hq/src/TDF/CampaignAutomation.hs": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
@@ -11622,12 +11718,13 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "2a7e7f1ba3900e5fa854e7722ff815e5252b9d43e9b25ad8ddf1cbe30dcc87a2",
+    "tdf-hq/tdf-hq.cabal": "1ef8179df3934d673b4784940ac2a34a7fbb2b4e7acc2c0d3f588ec4758116f6",
+    "tdf-hq/test/HttpShutdownMain.hs": "c1ae9e7975f9274f66724f75991081b56ff1d58ad6794c6f0b24a7d586064e15",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "1d424039e69e8b7ecb36f6d474384299978857dee92ed5e916f8421840e8a64b",
+    "tdf-hq/test/Spec.hs": "ebd7e13e4d66f5fb573bb16ed231eadd681ed601c7c7756a7d25eb836d8fddcd",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -11666,6 +11763,7 @@
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
     "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
+    "tdf-hq/test/TDF/ShutdownSpec.hs": "8d8b578ca04db43763f8bc6e43fd363ac55bd37a57954eed82686ff74f2eca16",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "fd4185d685f407ba3dc7c0775abf1221258cd6153859df68198a3f0a1d22aae8",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "2cf526501ba7c9b310916ba6ea78dfa7e2176f6421fa857ee1626e161c4cd92b",
@@ -11962,6 +12060,10 @@
       },
       {
         "requirement": "PAY-MUSIC-OUTCOME-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
         "relationship": "tests"
       }
     ],
@@ -13141,6 +13243,10 @@
       {
         "requirement": "PAY-MUSIC-MONEY-WIRE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/check-build-trust.mjs": [
@@ -13181,6 +13287,10 @@
       {
         "requirement": "DEPLOY-VERSION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/build-trust.test.mjs": [
@@ -13572,6 +13682,10 @@
       },
       {
         "requirement": "DEPLOY-VERSION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
         "relationship": "tests"
       }
     ],
@@ -15688,6 +15802,10 @@
       },
       {
         "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
         "relationship": "implementation"
       }
     ],
@@ -20044,6 +20162,36 @@
         "requirement": "SOC-FOCUS-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/src/TDF/App/Shutdown.hs": [
+      {
+        "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/ShutdownSpec.hs": [
+      {
+        "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/HttpShutdownMain.hs": [
+      {
+        "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-http-shutdown.py": [
+      {
+        "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/HttpShutdown.tla": [
+      {
+        "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -23360,7 +23508,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
+      "sha256": "74b0305ed0c0ce5480e410dbe867fa09a4935eaa61c2ab95ac92122d9b4a4bc6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23390,6 +23538,10 @@
         {
           "requirement": "DEPLOY-VERSION-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -25702,7 +25854,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "78d0fccc3742108a49d292a6d0b955c249ab55c5816aa8069ff491c5d2f37cb2",
+      "sha256": "e3907a0a7b532de3b48ad41ed80c237803672080662bdc5be6b45923cc45f054",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25800,6 +25952,10 @@
         {
           "requirement": "PAY-MUSIC-OUTCOME-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -25812,6 +25968,18 @@
         {
           "requirement": "SYS-VERIFY-001",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d5932c3e0804ef13",
+      "path": "scripts/verify-http-shutdown.py",
+      "sha256": "c36e0ee24c717ebcfa90198069ee9f45f413b7c43f6bcfc52d83b679211b184e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -36981,7 +37149,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "57c86179cffe22308c646d23eb781b4bfd0da4222e75da16f0d4fe4fe3424c27",
+      "sha256": "0838a2466b27229612863144d8015be08cb6cc6bb47e50ca017d2c54cc561662",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36994,6 +37162,10 @@
         },
         {
           "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
           "relationship": "implementation"
         }
       ]
@@ -37018,6 +37190,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-READINESS-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ce454e8b64bdee25",
+      "path": "tdf-hq/src/TDF/App/Shutdown.hs",
+      "sha256": "5ccd6691f0a3427dcf46f9d1e24b85dce3f398726ea8ac6d0eb8f7b94169135f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
           "relationship": "implementation"
         }
       ]
@@ -39267,7 +39451,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "2a7e7f1ba3900e5fa854e7722ff815e5252b9d43e9b25ad8ddf1cbe30dcc87a2",
+      "sha256": "1ef8179df3934d673b4784940ac2a34a7fbb2b4e7acc2c0d3f588ec4758116f6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39292,6 +39476,10 @@
         },
         {
           "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
           "relationship": "implementation"
         }
       ]
@@ -39323,6 +39511,18 @@
       "sha256": "1c1ab8b3bcf3ee73e7be8a46c30b7c791c345e45c5e0dc58d08d8cb9b30b1bb1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-73f8753880263822",
+      "path": "tdf-hq/test/HttpShutdownMain.hs",
+      "sha256": "c1ae9e7975f9274f66724f75991081b56ff1d58ad6794c6f0b24a7d586064e15",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-27858c425701c951",
@@ -39393,7 +39593,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1d424039e69e8b7ecb36f6d474384299978857dee92ed5e916f8421840e8a64b",
+      "sha256": "ebd7e13e4d66f5fb573bb16ed231eadd681ed601c7c7756a7d25eb836d8fddcd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39442,6 +39642,10 @@
         },
         {
           "requirement": "DEPLOY-VERSION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
           "relationship": "tests"
         }
       ]
@@ -40175,6 +40379,18 @@
       "sha256": "ded535c29c8e2e1d0eb68009d557c082cd590bdf0b191217624a05af5697cd29",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-79dd1d28011aa447",
+      "path": "tdf-hq/test/TDF/ShutdownSpec.hs",
+      "sha256": "8d8b578ca04db43763f8bc6e43fd363ac55bd37a57954eed82686ff74f2eca16",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0874fb5da2116211",
@@ -47125,7 +47341,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b9f33e2acf70610e931e8a6e2fe3681756c8c1174bcda1a809afdf77df0e8ac4",
+      "sourceSha256": "ea631443d96bd0b2b72e78e2a4f26a5d9b56607d58ed2d9b37d439765a6865ad",
       "definition": {
         "states": [
           "absent",
@@ -69357,7 +69573,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 131,
+    "PARTIAL": 132,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

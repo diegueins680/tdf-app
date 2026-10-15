@@ -833,6 +833,17 @@
       "conflict": "The isolated abuse-budget HTTP probe required every intermediate response to be403/429, while the existing backend explicitly maps transaction conflicts to an empty503 with Retry-After1 and no-store. An older final-root iOS run failed at that intermediate response before native assertions.",
       "authority": "The source-derived transaction-error contract and the original exact per-account quota/authorization requirement both apply;503 is not an authorization success.",
       "resolution": "Retry only the exact declared response with one unchanged actor/resource/payload/requestKey, at most3 attempts within5seconds, and still require final403/429 and the persisted exact91 threshold. Permanent/unrecognized503 and other failures must fail. Verify the real SQL-error HTTP path, savepoint charges and revocation between retries on an owned fixture, retaining the original native assertions."
+    },
+    {
+      "id": "AUTHORITY-HTTP-SHUTDOWN-001",
+      "sources": [
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "formal/system/http-shutdown.md",
+        "ops/hetzner/README.md"
+      ],
+      "conflict": "Current source installs no signal-close hook; exact current-image rehearsal needs SIGKILL after TERM and exits nonzero on INT. Startup waiting can also outlive server completion.",
+      "authority": "User requires actual runtime/recovery repair and safe deployment; official pinned Warp shutdown facilities refine the HTTP boundary.",
+      "resolution": "Add scoped TERM/INT listener closure with a finite cooperative request grace interval and supervised startup/server completion; prove bounded abstract invariants and exercise actual signals. Retain worker, provider, PID1 and production qualification as separate obligations; do not weaken release policy."
     }
   ]
 }

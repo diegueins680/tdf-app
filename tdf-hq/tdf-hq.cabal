@@ -12,6 +12,7 @@ executable tdf-hq-exe
   hs-source-dirs:   app, src
   other-modules:
     TDF.App.Boot
+    TDF.App.Shutdown
     TDF.App.StartupResponse
     TDF.App.FailureBoundary
     TDF.App.Readiness
@@ -262,6 +263,8 @@ executable tdf-hq-exe
   ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -Werror=missing-fields -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base                 >=4.14 && <5
+    , async
+    , unix
     , aeson                >=2.0
     , bytestring
     , case-insensitive
@@ -364,6 +367,7 @@ test-suite tdf-hq-test
     TDF.Invoice.ReceiptSpec
     TDF.FailureBoundarySpec
     TDF.ReadinessSpec
+    TDF.ShutdownSpec
     TDF.TicketConfirmationSpec
     TDF.EventOrganizerSpec
     TDF.InvoiceDatilSpec
@@ -379,6 +383,7 @@ test-suite tdf-hq-test
     TDF.API.ServiceStorefront
     TDF.API.ServiceStorefrontTypes
     TDF.App.Boot
+    TDF.App.Shutdown
     TDF.App.StartupResponse
     TDF.App.FailureBoundary
     TDF.App.Readiness
@@ -655,6 +660,7 @@ test-suite tdf-hq-test
   default-language:  Haskell2010
   build-depends:
     async,
+    unix,
       base                 >=4.14 && <5
     , aeson                >=2.0
     , bytestring
