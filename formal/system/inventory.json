@@ -2735,7 +2735,7 @@
     {
       "id": "SURFACE-593f65650b716b87",
       "path": "e2e/web/course-enrollment.spec.mjs",
-      "sha256": "ba472872afceae558496077caf2525bb11b0460592851a616a7cc06cc0866b9d",
+      "sha256": "fceb783370a3a0fbdf7e44dbb417814e9b9dd9825ad884ae78636aa252bc78ba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3419,7 +3419,7 @@
     {
       "id": "SURFACE-74ff895c2372bf2b",
       "path": "scripts/__tests__/music-test-database.test.mjs",
-      "sha256": "dd838d3ed7fa0d400a3a654e5849c850a43642e1961b703a6d4400080d5326c6",
+      "sha256": "b959b1430823162445ce77bdd7124f9f06967bdbc9f0f0f8f60662cd4aa66b3b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4157,7 +4157,7 @@
     {
       "id": "SURFACE-c379a5800de4a2de",
       "path": "scripts/lib/music-test-database.mjs",
-      "sha256": "bb247eee144c879dab7aae4228a21ae4e9189f365fa06e3c3f50f07a5684aaff",
+      "sha256": "b63039bc86ab6dd58a17cd7448bf26ad439e27e23a0c7ab7b67b3eca94d7ebaf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5321,7 +5321,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "4dae48715852b0f9734f9282a6806da0dfade9d9b28fc08a10b713ccaeae2da4",
+      "sha256": "cf8ed92b7f4a702051cef5705308171f17fcbdf55a7bf18190cd5a019d28b5a5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8471,13 +8471,13 @@
     {
       "id": "SURFACE-fd4d2654b87334c2",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
-      "sha256": "46c374c150cc8b5ec599fc597a636cf7a48973ac9ce8e2f00b255cafbd702dba",
+      "sha256": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "c12dde7fb46cd996cd24a04a9195ba1f0e01faf19a2967be9ab445977047c21b",
+      "sha256": "d76dc8fb08d5a21235267a9a64c199272d2b4351e24811534580ab9c85aa90f4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17783,7 +17783,7 @@
     {
       "id": "SURFACE-5afd6c5788f20c50",
       "path": "test/fixtures/music-worker/ddex-render.mjs",
-      "sha256": "01535b16eef4eb7d449c95386e2b13e6fcf5426af359d281a1d934242187bd96",
+      "sha256": "529eb232ca7550638a0d88d8f64cfcff8ca1fbdec46b338b02e121d887596bc2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
