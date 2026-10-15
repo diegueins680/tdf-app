@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "394e8ba1db3ead9328f2",
+      "currentId": "7f2803455cf4b4e8e6db",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 204,
-      "change": "append 2026-10-11_index_declarations_not_unique",
+      "valueCount": 205,
+      "change": "Append the reviewed music payment outcome compatibility migration after204 unchanged entries; preserve the prior active pointer and all archived review provenance.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "5f2e374ddc077e6b8418",
@@ -50510,7 +50510,19 @@
             }
           }
         }
-      }
+      },
+      "subsequentResolutions": [
+        {
+          "previousCurrentId": "394e8ba1db3ead9328f2",
+          "previousValueCount": 204,
+          "previousChange": "append 2026-10-11_index_declarations_not_unique",
+          "sourceMain": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceMobile": "74e0e6da42cd37ca09a86a57db1d21f12d31cd2f",
+          "migrationIntroduction": "8ad5722fa885c1970b20c57449eed4fc54d088eb",
+          "currentId": "7f2803455cf4b4e8e6db",
+          "valueCount": 205
+        }
+      ]
     }
   ]
 }
