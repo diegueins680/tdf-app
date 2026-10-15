@@ -4956,7 +4956,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
+      "sha256": "a5e6a9437be4b0c0b4db2e466bd851b288f2003debc5d0aff30ddd5e80ef49dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20304,7 +20304,7 @@
     },
     {
       "path": "docs/payments/consolidation-2026-10-15.md",
-      "sha256": "93ae9d0bfa1d66c5de133eddc4321cc9a12e436538c8dfc2879f1387e2ded712",
+      "sha256": "fe8ebb14a0c951d30bb4573780bf592caf0f2f23855788eaa7d193c0dc1c4238",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25155,7 +25155,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "fa846f57975d73ccd33997e015ba234455a140933393d37ab9b9f32085101589",
+      "sha256": "a5c5b25532736922c32d7cdffdc639b7f136aa739ac60509389f17c984efc8fd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

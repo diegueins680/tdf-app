@@ -2760,7 +2760,8 @@
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/test-hetzner-inspection.py",
         "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/test-automatic-migrations-production-schema.sh"
       ],
       "critical": true
     },
@@ -10418,7 +10419,7 @@
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-automatic-migrations-production-schema.sh": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
+    "scripts/test-automatic-migrations-production-schema.sh": "a5e6a9437be4b0c0b4db2e466bd851b288f2003debc5d0aff30ddd5e80ef49dc",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
     "scripts/test-checkout-policy-terms-identity-migration.sh": "ceded6be2927dfcb777863190ea62779d58c3637e706d48c6dce5a58b97096c1",
     "scripts/test-checkout-terms-upgrade-concurrency.py": "7f0d4db4046fa61057d2198469529b92bdeb9b05cf0b55233f8a047e042ba504",
@@ -13243,6 +13244,16 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-automatic-migrations-production-schema.sh": [
+      {
+        "requirement": "DEPLOY-RESTORE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/RestoreIsolation.tla": [
       {
         "requirement": "DEPLOY-RESTORE-001",
@@ -13301,12 +13312,6 @@
       {
         "requirement": "MEDIA-PERSIST-001",
         "relationship": "implementation"
-      }
-    ],
-    "scripts/test-automatic-migrations-production-schema.sh": [
-      {
-        "requirement": "DEPLOY-STARTUP-001",
-        "relationship": "tests"
       }
     ],
     "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": [
@@ -23032,9 +23037,13 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
+      "sha256": "a5e6a9437be4b0c0b4db2e466bd851b288f2003debc5d0aff30ddd5e80ef49dc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "DEPLOY-STARTUP-001",
           "relationship": "tests"
@@ -45601,7 +45610,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fa846f57975d73ccd33997e015ba234455a140933393d37ab9b9f32085101589",
+      "sourceSha256": "a5c5b25532736922c32d7cdffdc639b7f136aa739ac60509389f17c984efc8fd",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -45629,7 +45638,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fa846f57975d73ccd33997e015ba234455a140933393d37ab9b9f32085101589",
+      "sourceSha256": "a5c5b25532736922c32d7cdffdc639b7f136aa739ac60509389f17c984efc8fd",
       "definition": {
         "states": [
           "absent",

@@ -5,6 +5,13 @@ PR #551 preserves the ancestry of ledger posting (#551), fixed checkout lines
 branch also retains ticket review and browser repairs from #545/#579. Source PRs
 and branches must remain until a successor has merged and its tree is verified.
 
+The orphan `fix/release-gate-paypal-refunds` at `c81c4c98d7` is also retained by
+ancestry. Its old Datafast-disabled rule was superseded by merged PR #506 and
+AUTHORITY-050; the current verifier policy is preserved. Its unique regression
+checks that both enabled PayPal webhook and refund flags survive an actual
+backend restart, beyond merely accepting those states in a SQL verifier. The
+combined automatic-migration/startup harness passes on a disposable database.
+
 The migration manifest retains the complete 204-entry prefix from main
 `2781ddc2a3c9fd661684742550918d653afdc0cf`, followed by ledger posting,
 checkout-line snapshots, and terms identity. Original introduction commits are
@@ -45,6 +52,17 @@ before the subsequent provider-harness/documentation update):
 These results have separate scopes. The 19 pending backend examples are not
 reported as executed by the ordinary backend run. Hosted CI and independent
 review must qualify the actual published head before merge.
+
+Subsequent verification executed all 19 environment-dependent groups separately:
+188 database examples passed. Hosted CI on `1ec64e5ab` passed 3,231 web tests
+across 293 suites and 625 Mobile tests across 97 suites, but failed an older
+ledger arithmetic fixture: it caught generic P0001 while the posting-integrity
+guard returns SQLSTATE23514. The repaired fixture requires the typed rejection
+and exact ledger diagnostic. All six arithmetic cases and the standalone
+manual-review harness's nine examples pass; disabling the posting guard or
+raising an unrelated constraint error still makes the fixture fail. This changes
+test admission, not production SQL. Historical CI remains failed; the follow-up
+head requires its own current checks and review.
 
 ## Full-schema provider diagnostic: unresolved
 
