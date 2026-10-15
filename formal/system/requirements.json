@@ -10805,7 +10805,10 @@
         "tdf-hq/src/TDF/App/Shutdown.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq/tdf-hq.cabal",
-        "tdf-hq/src/TDF/App/StartupRetry.hs"
+        "tdf-hq/src/TDF/App/StartupRetry.hs",
+        "scripts/qualify-candidate-image-shutdown.py",
+        "scripts/qualify-current-image-shutdown.py",
+        ".github/workflows/build.yml"
       ],
       "tests": [
         "tdf-hq/test/TDF/ShutdownSpec.hs",
@@ -10813,7 +10816,10 @@
         "tdf-hq/test/HttpShutdownMain.hs",
         "scripts/verify-http-shutdown.py",
         "scripts/quality-backend.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/test-candidate-image-shutdown.py",
+        "scripts/test-current-image-shutdown.py",
+        "scripts/quality-repo.sh"
       ],
       "formalModels": [
         "formal/event-operations/HttpShutdown.tla"
@@ -10824,11 +10830,11 @@
         "Worker/external-effect drainage and fencing are separate open release obligations."
       ],
       "property": "No new admission after listener close; bounded cooperative HTTP drain; observed failure cannot become successful process result; completed server cannot leave pending initialization.",
-      "verification": "Eight canonical Haskell supervisor/retry cases; seven real subprocess scenarios; three runtime source mutations; bounded TLC safety/liveness with three failing controls. No universal proof or formal runtime refinement.",
+      "verification": "Eight canonical Haskell supervisor/retry cases; seven real subprocess scenarios; three runtime source mutations; bounded TLC safety/liveness with three failing controls. No universal proof or formal runtime refinement. The canonical image workflow adds isolated Linux PID1, tested-binary/migration binding, quiescent stops and witnessed blocked public reads for both signals. Nine candidate guard tests are separate from actual image execution.",
       "evidence": "Source-bound local receipts; exact release image and deployed observations remain required.",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local focused verification is scoped; full final-head backend, Linux PID1 release image and production verification remain outstanding."
+        "reason": "Focused local verification is scoped; exact final-head full gates, real Linux image execution, worker fencing and production verification remain required."
       }
     }
   ]

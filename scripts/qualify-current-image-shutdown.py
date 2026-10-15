@@ -44,6 +44,10 @@ def require(condition):
 
 
 class Fixture:
+    image = IMAGE
+    revision = REVISION
+    migration_count = 188
+
     def __init__(self, output):
         require(sys.platform == 'linux')
         info = output.lstat()
@@ -52,7 +56,7 @@ class Fixture:
         self.output, self.nonce = output, uuid.uuid4().hex
         self.containers, self.volumes = [], []
         self.environment = {'PATH': os.environ['PATH'], 'LANG': 'C.UTF-8'}
-        self.report = {'schemaVersion': 1, 'image': IMAGE, 'imageRevision': REVISION,
+        self.report = {'schemaVersion': 1, 'image': self.image, 'imageRevision': self.revision,
                        'postgresImage': POSTGRES, 'fixtureNonce': self.nonce,
                        'status': 'running', 'observations': [], 'productionWritten': False,
                        'releaseAuthorized': False, 'activeRequestDrainVerified': False,
@@ -118,7 +122,7 @@ class Fixture:
             health = self.probe('/health')
             if health and health['status'] == 200 and health['body'].get('db') == 'ok':
                 version = self.probe('/version')
-                require(version and version['status'] == 200 and version['body'].get('commit') == REVISION)
+                require(version and version['status'] == 200 and version['body'].get('commit') == self.revision)
                 return version
             time.sleep(.25)
         require(False)
@@ -127,16 +131,16 @@ class Fixture:
         # Resolve both immutable historical fixtures before any Docker request.
         schemas = {}
         for file in ['production-schema-20260814.sql', 'catalog-production-source-fixture.sql']:
-            data = self.run(['git', '-C', str(ROOT), 'show', REVISION+':scripts/__tests__/fixtures/'+file]).stdout
+            data = self.run(['git', '-C', str(ROOT), 'show', self.revision+':scripts/__tests__/fixtures/'+file]).stdout
             require(data and len(data) < 32*1024*1024)
             schemas[file] = data
-        self.report['fixtureSourceRevision'] = REVISION
+        self.report['fixtureSourceRevision'] = self.revision
         self.report['fixtureSourceHashes'] = {name: hashlib.sha256(data).hexdigest() for name, data in schemas.items()}
-        info = json.loads(self.docker(['image', 'inspect', IMAGE]).stdout)[0]
-        require(IMAGE in info['RepoDigests'] and info['Architecture'] == 'amd64' and info['Os'] == 'linux')
+        info = json.loads(self.docker(['image', 'inspect', self.image]).stdout)[0]
+        require(self.image in info['RepoDigests'] and info['Architecture'] == 'amd64' and info['Os'] == 'linux')
         require(not info['Config'].get('Entrypoint'))
         env = dict(line.split('=', 1) for line in info['Config']['Env'])
-        require(env.get('SOURCE_COMMIT') == env.get('GIT_SHA') == REVISION)
+        require(env.get('SOURCE_COMMIT') == env.get('GIT_SHA') == self.revision)
         require(not any(re.search('PASSWORD|TOKEN|SECRET|API_KEY|DB_PASS', key) for key in env))
         self.report['imageId'] = info['Id']
         pg = json.loads(self.docker(['image', 'inspect', POSTGRES]).stdout)[0]
@@ -170,13 +174,13 @@ class Fixture:
             self.docker(['volume', 'create', '--label', LABEL+'='+self.nonce, volume])
             mounts += ['--mount', 'type=volume,src='+volume+',dst='+destination]
         init = self.create('init', ['--network=none', '--user=0:0', '--cap-add=CHOWN', '--cap-add=FOWNER', *mounts,
-            IMAGE, 'env', '-i', 'PATH=/usr/bin:/bin', 'sh', '-c',
+            self.image, 'env', '-i', 'PATH=/usr/bin:/bin', 'sh', '-c',
             'chown 1000:1000 /app/uploads /data/assets; chmod 700 /app/uploads /data/assets'])
         self.docker(['start', '-a', init])
         require(self.inspect(init)['State']['ExitCode'] == 0)
         self.app = self.create('application', ['--network=container:'+self.database, '--user=1000:1000',
             '--workdir=/app', '--tmpfs=/tmp:rw,nosuid,nodev,size=16777216', *mounts,
-            IMAGE, 'env', '-i', *[key+'='+value for key, value in APP_ENV.items()], '/app/production-entrypoint.sh'])
+            self.image, 'env', '-i', *[key+'='+value for key, value in APP_ENV.items()], '/app/production-entrypoint.sh'])
         # Read only the immutable packaged SQL before this application can start.
         migration = self.docker(['cp', self.app+':/app/production-migrations.sql', '-']).stdout
         import io, tarfile
@@ -184,13 +188,17 @@ class Fixture:
             members = archive.getmembers()
             require(len(members) == 1 and members[0].isfile() and members[0].size < 32*1024*1024)
             sql = archive.extractfile(members[0]).read()
+        self.validate_migration_bundle(sql)
         self.report['packagedMigrationsSha256'] = hashlib.sha256(sql).hexdigest()
         self.sql(sql)
         self.report['migrationCount'] = int(self.sql(b'SELECT count(*) FROM tdf_schema_migration;').strip())
-        require(self.report['migrationCount'] == 188)
+        require(self.report['migrationCount'] == self.migration_count)
         self.sql(b'CREATE TABLE synthetic_shutdown_evidence(value text PRIMARY KEY); INSERT INTO synthetic_shutdown_evidence VALUES (\'committed-before-shutdown\');')
         self.docker(['start', self.app])
         self.report['version'] = self.healthy()
+
+    def validate_migration_bundle(self, sql):
+        pass  # Fixed historical diagnostic binds the observed immutable bundle.
 
     def observe(self, signal):
         require(signal in ('SIGTERM', 'SIGINT'))

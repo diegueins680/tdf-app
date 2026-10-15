@@ -323,6 +323,7 @@
       "scripts/production-migrations.json",
       "scripts/production-release.mjs",
       "scripts/production_access.py",
+      "scripts/qualify-candidate-image-shutdown.py",
       "scripts/qualify-current-image-shutdown.py",
       "scripts/quality-backend.sh",
       "scripts/quality-check.sh",
@@ -420,6 +421,7 @@
       "scripts/test-automatic-migrations-production-schema.sh",
       "scripts/test-backend-version-rebuild.py",
       "scripts/test-booking-conformance.py",
+      "scripts/test-candidate-image-shutdown.py",
       "scripts/test-canonical-payment-lifecycle-migration.sh",
       "scripts/test-catalog-production-cutover.sh",
       "scripts/test-checkout-event-refund-runtime-migration.sh",
@@ -2619,7 +2621,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
+      "sha256": "75d03a2ba931a009504025ae40983a713b2523d1d3dc3799c08f6743c8fef261",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4429,9 +4431,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8d4c2e73231e3e0c",
+      "path": "scripts/qualify-candidate-image-shutdown.py",
+      "sha256": "49bfd58d94c2bdc8961f0aaf70e2ccf8cc3302026253b00ce8644a0dc875449e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d9c2acee16d60d4a",
       "path": "scripts/qualify-current-image-shutdown.py",
-      "sha256": "43ddd106ca17c08b24a966aaafa79cb065b5b9bab5169844f18874541fcb4b9a",
+      "sha256": "8c4eee4c31b1ce07b51a3bce74c784f1158ee24d2b2e6db38cdc1ffaa0cb97dd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4455,7 +4463,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "01e4a9bd51a0728c5f45c627a408be0dfe0cc41f5bff770b91a6a1e0d1f8c05f",
+      "sha256": "d1d1144a3399396e845ad979a98139106bc499a04d88c5b82d2e09219d7a63ee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5008,6 +5016,12 @@
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
       "sha256": "a9b322e5122b02b2fdf62fd0a7324cac68b73f3d41024023be71c4cd68fe7877",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-53388725107cdabc",
+      "path": "scripts/test-candidate-image-shutdown.py",
+      "sha256": "b4785bd52a83410b7d8d9d920089e101cfe829702d64ee16959c9ea710c7ba9e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25141,7 +25155,7 @@
     },
     {
       "path": "formal/system/http-shutdown.md",
-      "sha256": "15ec79737de12a0ec738b08d759185ffa1f8d7fad0bd872ef15b2c47d751a149",
+      "sha256": "5ca38c908c2eb529d9092eed8f9428f5b67622f5a4c777b6bc901c9a74601f66",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25400,7 +25414,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "84ebb23d45e55ab96db2093a575b1a32a98e6f54b04a6afdd235b5d5df5c954c",
+      "sha256": "b403e3a73074caacfb35d6f79e1206b76f01885ff2a140fdc381665397b90a5a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

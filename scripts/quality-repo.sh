@@ -20,6 +20,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-new-specification-surfaces
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-readiness-conformance.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-interaction-conflict-probe.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-current-image-shutdown.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-candidate-image-shutdown.py"
 node --test "$ROOT/scripts/__tests__/compiled-api-surface.test.mjs"
 node "$ROOT/scripts/check-api-availability.mjs"
 node "$ROOT/scripts/check-dependency-security.mjs"

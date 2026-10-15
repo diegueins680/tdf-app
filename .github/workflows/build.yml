@@ -47,6 +47,8 @@ jobs:
       publish_backend_artifact: true
 
   docker:
+    outputs:
+      digest: ${{ steps.image-build.outputs.digest }}
     needs: required-tests
     runs-on: ubuntu-latest
     steps:
@@ -86,6 +88,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Build and push
+        id: image-build
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -98,3 +101,43 @@ jobs:
             BUILD_TIME=${{ steps.image-metadata.outputs.build_time }}
           tags: |
             ${{ env.DOCKER_IMAGE_REPO }}:${{ env.DOCKER_IMAGE_TAG }}
+
+  qualify-image-shutdown:
+    needs: docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Download the exact tested executable
+        uses: actions/download-artifact@v8
+        with:
+          name: tdf-hq-binary-${{ github.sha }}
+          path: tdf-hq/.release
+      - name: Check isolated fixture admission and negative controls
+        run: |
+          python3 scripts/test-current-image-shutdown.py
+          python3 scripts/test-candidate-image-shutdown.py
+      - name: Qualify immutable image on synthetic isolated resources
+        env:
+          IMAGE_DIGEST: ${{ needs.docker.outputs.digest }}
+        run: |
+          set -euo pipefail
+          [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          image="$DOCKER_IMAGE_REPO@$IMAGE_DIGEST"
+          docker pull "$image"
+          docker pull pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21
+          mkdir -m700 "$RUNNER_TEMP/candidate-image-shutdown"
+          python3 scripts/qualify-candidate-image-shutdown.py "$image" "$GITHUB_SHA" tdf-hq/.release/tdf-hq-exe "$RUNNER_TEMP/candidate-image-shutdown"
+      - name: Retain candidate qualification, including failed observations
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: candidate-image-shutdown-${{ github.sha }}
+          path: ${{ runner.temp }}/candidate-image-shutdown
+          if-no-files-found: ignore

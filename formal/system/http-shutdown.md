@@ -60,3 +60,36 @@ Background worker forks, database writer fencing, in-flight provider effects,
 WebSocket client recovery, HTTP/2 wire behavior, load-balancer removal, pre-listener
 signal handling, backup coordination, immutable image admission and production
 rollout remain separate obligations. Stopping HTTP does not prove they are drained.
+
+## Immutable candidate image gate
+
+The canonical `Build Image` workflow publishes a commit tag after required tests,
+then qualifies the resulting immutable digest on a fresh Linux runner. Until the
+qualification job succeeds, that workflow is not green. The gate supports the
+current canonical `diegueins680/tdf-hq` repository; a foreign repository override
+cannot qualify for this production target.
+
+The new candidate runner retains the fixed historical diagnostic and its original
+188-migration target. It requires the current checkout SHA, the tested executable
+artifact, the digest, matching baked identity, byte-identical canonical migration
+SQL, the exact manifest count and the expected backend as `/proc/1/exe`. Caller
+Docker routing, Node options, application secrets and database routing cannot enter
+the isolated fixture. The producer workflow, artifact service, Docker engine and
+kernel remain trusted; hashes do not prove the entire supply chain secure.
+
+Both TERM and INT must stop an idle application with exit0 within seven observed
+seconds and restart with committed synthetic data preserved. Each signal also
+stops a real public missing-course lookup while its SQL statement is witnessed
+waiting behind an exclusive fixture lock. Explicit listener refusal is witnessed while PID1 remains alive before the lock
+is released during the grace interval; the accepted request must finish with its expected404 before successful
+process exit. The HTTP client lives in the database container's namespace so
+application PID1 exit cannot kill the observer prematurely. These two read cases
+do not establish graceful completion of every mutation, HTTP2, WebSocket, worker
+or external effect. `activeRequestDrainVerified` refers only to these cases.
+
+The database has no external network, public ports or host mounts. Only nonce-owned
+labelled containers/volumes are removed; partial failures and cleanup results are
+retained. Qualification never changes production or grants release authorization.
+Nine deterministic candidate controls and the eleven shared boundary controls run
+in the repository gate; actual Linux execution remains a separate required image
+job. A passing control suite is not a passing image execution.
