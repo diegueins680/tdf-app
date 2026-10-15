@@ -10260,7 +10260,8 @@
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
         "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
-        "tdf-hq/test/integration/interactions/notification-properties.sql"
+        "tdf-hq/test/integration/interactions/notification-properties.sql",
+        "e2e/web/chat-notification-navigation.spec.mjs"
       ],
       "formalModels": [
         "formal/event-operations/ChatNotificationAuthorization.tla",
@@ -10293,6 +10294,7 @@
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
+    "e2e/web/chat-notification-navigation.spec.mjs": "1a8c9744ffcd4de50bc4a68fedaa4c55259d907793363760244583c5542c1c56",
     "e2e/web/community-discovery.spec.mjs": "9fb22467b072db50eeffc2deb009c2361c21d0ac496e96a07076a9af367d6260",
     "e2e/web/course-enrollment.spec.mjs": "fceb783370a3a0fbdf7e44dbb417814e9b9dd9825ad884ae78636aa252bc78ba",
     "e2e/web/directory-entry.spec.mjs": "17d56aaa082a13e71c2442b6f09ee29b158413e9a41eb7b07969e3bee61c8c97",
@@ -10839,8 +10841,8 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
-    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "557a22077b926d96abded74447abf5868f3ebc33a176af7cdb3ea8729dc57839",
-    "tdf-hq-ui/src/pages/ChatPage.tsx": "4338589839f88107cedcf55b9f0285cc4752b44be77492c1e441b835261ddc91",
+    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "cdee9c63a639afb203b48308e0a08783ca7581f3c6413cf0abacbb4f4cb5625d",
+    "tdf-hq-ui/src/pages/ChatPage.tsx": "22bc99dd0dcdd78f19a3425c395794e2591ce1305c7418d83f31df0c5e4a4ef0",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "d76dc8fb08d5a21235267a9a64c199272d2b4351e24811534580ab9c85aa90f4",
@@ -19349,6 +19351,12 @@
         "relationship": "tests"
       }
     ],
+    "e2e/web/chat-notification-navigation.spec.mjs": [
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/ChatNotificationAuthorization.tla": [
       {
         "requirement": "MSG-NOTIFY-001",
@@ -19653,6 +19661,18 @@
       "sha256": "a139094a63cf3084ff1f5a47c7d282db5864e9ba9a052dd55df2087984904f95",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-2b332f1e11171387",
+      "path": "e2e/web/chat-notification-navigation.spec.mjs",
+      "sha256": "1a8c9744ffcd4de50bc4a68fedaa4c55259d907793363760244583c5542c1c56",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MSG-NOTIFY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-e442d994f4a6caf5",
@@ -29036,7 +29056,7 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "557a22077b926d96abded74447abf5868f3ebc33a176af7cdb3ea8729dc57839",
+      "sha256": "cdee9c63a639afb203b48308e0a08783ca7581f3c6413cf0abacbb4f4cb5625d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29048,7 +29068,7 @@
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "4338589839f88107cedcf55b9f0285cc4752b44be77492c1e441b835261ddc91",
+      "sha256": "22bc99dd0dcdd78f19a3425c395794e2591ce1305c7418d83f31df0c5e4a4ef0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46189,7 +46209,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8991da0617f4eb8d1750a88e88b1fbeda9c273485f50c60ab60f4e8a9f8673ba",
+      "sourceSha256": "c8e1d1f2113f870fff606a9d6a19d9f7622d3858378a662b8003e076c1e67d5f",
       "definition": {
         "states": [
           "absent",

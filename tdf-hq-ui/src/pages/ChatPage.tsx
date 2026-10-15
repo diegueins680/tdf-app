@@ -18,6 +18,7 @@ import {
   Divider,
   IconButton,
   List,
+  ListItem,
   ListItemButton,
   ListItemText,
   Stack,
@@ -114,33 +115,35 @@ function ThreadListItem({ thread, selected, unread, onSelect }: ThreadListItemPr
   const displayName = thread.ctOtherDisplayName.trim() ? thread.ctOtherDisplayName : 'Perfil no disponible';
 
   return (
-    <ListItemButton
-      selected={selected}
-      tabIndex={0}
-      onClick={(event) => {
-        event.currentTarget.focus();
-        onSelect(thread.ctThreadId);
-      }}
-      sx={{ px: 2, py: 1.25 }}
-    >
-      <ListItemText
-        primary={
-          <Stack direction="row" spacing={1} alignItems="baseline" justifyContent="space-between">
-            <Typography fontWeight={700} sx={{ mr: 1 }} noWrap>
-              {displayName}
-              {unread && <FiberManualRecordIcon sx={{ ml: 1, fontSize: 10, color: 'error.main', verticalAlign: 'middle' }} />}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {formatTimestamp(thread.ctLastMessageAt ?? thread.ctUpdatedAt)}
-            </Typography>
-          </Stack>
-        }
-        secondary={thread.ctLastMessage
-          ? truncate(thread.ctLastMessage, CHAT_PAGE_DISPLAY_CONTRACTS.threadLastMessagePreviewChars)
-          : 'Sin mensajes aún'}
-        secondaryTypographyProps={{ noWrap: true }}
-      />
-    </ListItemButton>
+    <ListItem disablePadding>
+      <ListItemButton
+        selected={selected}
+        tabIndex={0}
+        onClick={(event) => {
+          event.currentTarget.focus();
+          onSelect(thread.ctThreadId);
+        }}
+        sx={{ px: 2, py: 1.25 }}
+      >
+        <ListItemText
+          primary={
+            <Stack direction="row" spacing={1} alignItems="baseline" justifyContent="space-between">
+              <Typography fontWeight={700} sx={{ mr: 1 }} noWrap>
+                {displayName}
+                {unread && <FiberManualRecordIcon sx={{ ml: 1, fontSize: 10, color: 'error.main', verticalAlign: 'middle' }} />}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {formatTimestamp(thread.ctLastMessageAt ?? thread.ctUpdatedAt)}
+              </Typography>
+            </Stack>
+          }
+          secondary={thread.ctLastMessage
+            ? truncate(thread.ctLastMessage, CHAT_PAGE_DISPLAY_CONTRACTS.threadLastMessagePreviewChars)
+            : 'Sin mensajes aún'}
+          secondaryTypographyProps={{ noWrap: true }}
+        />
+      </ListItemButton>
+    </ListItem>
   );
 }
 
@@ -563,7 +566,7 @@ function ChatWorkspace() {
                       tabIndex={0}
                       onClick={(event) => {
                         event.currentTarget.focus();
-                        void qc.invalidateQueries({ queryKey: ['chat-threads', myPartyId] });
+                        void threadsQuery.refetch();
                       }}
                     >
                       Reintentar

@@ -232,16 +232,16 @@ it.each(['999', '0', '-1', '9007199254740992', 'https://evil.example'])('rejects
   expect(screen.queryByText('La conversación de esta notificación no está disponible.')).toBeNull();
 });
 
-it('retains a notification link through a failed list request and opens it after recovery', async () => {
+it('retains a notification link through a failed list request and opens it through the retry button', async () => {
   listThreads.mockRejectedValue(new Error('Temporary network outage'));
-  const { client } = setup('/chat?threadId=10');
+  setup('/chat?threadId=10');
   await screen.findByText('Temporary network outage');
   expect(screen.getByTestId('location').textContent).toBe('?threadId=10');
   expect(listMessages).not.toHaveBeenCalled();
   expect(screen.queryByText('La conversación de esta notificación no está disponible.')).toBeNull();
   listThreads.mockResolvedValue([{ ...thread, ctThreadId: 20 }, thread]);
-  await act(async () => { await client.refetchQueries({ queryKey: ['chat-notification-authorization', 1] }); });
-  await screen.findByText('Private body');
+  fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
+  await screen.findByText('Private body', {}, { timeout: 2000 });
   await waitFor(() => expect(screen.getByTestId('location').textContent).toBe(''));
   expect(listMessages.mock.calls.every(([threadId]) => threadId === 10)).toBe(true);
   expect(getOrCreateDmThread).not.toHaveBeenCalled();

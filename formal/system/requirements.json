@@ -10259,7 +10259,8 @@
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
         "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
-        "tdf-hq/test/integration/interactions/notification-properties.sql"
+        "tdf-hq/test/integration/interactions/notification-properties.sql",
+        "e2e/web/chat-notification-navigation.spec.mjs"
       ],
       "formalModels": [
         "formal/event-operations/ChatNotificationAuthorization.tla",
