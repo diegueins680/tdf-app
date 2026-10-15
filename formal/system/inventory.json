@@ -2627,7 +2627,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
+      "sha256": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15035,7 +15035,7 @@
     {
       "id": "SURFACE-89f49f12c8c895f1",
       "path": "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
-      "sha256": "bdb90a94182dcf5027b69da0725f4214f207bf38b82031e8f72791367e1d4684",
+      "sha256": "edd38c224377f4e8a22975526ffcad7a0fe655a97cdc14399fce3e2e8939f1ba",
       "semanticConformance": "not-established-by-discovery"
     },
     {

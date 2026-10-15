@@ -189,6 +189,11 @@ decided = either (const Nothing) Just
 
 -- Runs two reviews so that they overlap: the checkout row is held until both
 -- are waiting for it, then released. A database error in either is kept.
+withinDeadline :: IO a -> IO a
+withinDeadline action = do
+  result <- timeout 30000000 action
+  maybe (fail "Ticket manual review overlap timed out waiting for both transactions") pure result
+
 overlapping :: ConnectionPool -> Case -> IO a -> IO b -> IO (Either String a, Either String b)
 overlapping pool c one' two = withinDeadline $ do
   held <- newEmptyMVar
