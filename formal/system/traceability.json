@@ -1023,7 +1023,7 @@
       ],
       "formalModels": [],
       "verification": "Catalog comparison, plus static comparison of ten bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals, operations work items, directory profiles, claims, classifieds, applications and invitations); guards, actors and effects are not covered",
-      "evidence": "Gate output on the migrated CI database, twelve database negative controls and fifty-three database-free validator controls",
+      "evidence": "Gate output on the migrated CI database, twelve database negative controls and fifty-five database-free validator controls",
       "status": "specified and implemented",
       "critical": true,
       "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the ten bound validators' transition relations; no claim about guards, actors, effects or unbound application code.",
@@ -44942,7 +44942,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "38f158a6ca3545e8abc32ddb464caa89160a5418e1a59bcd455a9f373f41811a",
+      "sourceSha256": "41746f109df2da9b5e865585a1d707f582e26ec9197f9b62820b60ef652cd2e0",
       "definition": {
         "states": [
           "absent",
