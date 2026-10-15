@@ -14709,34 +14709,50 @@
       "reviewBatch": "universal-interactions-2026-09-28"
     },
     {
-      "id": "9de842d0529aa06faf6b",
+      "id": "4beaac5c476079656a0a",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
+      "justification": "Pinned Mobile retains the reviewed notification destination allowlist and adds chat_thread with a positive-safe-integer threadId and /chat fallback. These client routes grant no thread access; recipient and thread membership remain backend authorities. Arbitrary URL navigation remains excluded.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-mobile/src/navigation/notificationTarget.ts",
         "line": 15
       },
-      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewBatch": "booking-mobile-pin-consolidation-2026-10-15",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
-        "id": "2c23d0fa2bac40b01a98",
+        "id": "9de842d0529aa06faf6b",
         "classification": "security-system-registry",
         "disposition": "canonical-contract",
         "specializedModel": "notification_destination_registry",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+        "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
         "reviewed": true,
         "evidence": {
           "file": "tdf-mobile/src/navigation/notificationTarget.ts",
           "line": 15
         },
-        "reviewBatch": "universal-interactions-2026-09-28"
+        "reviewBatch": "music-release-platform-sync-2026-10-07",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "2c23d0fa2bac40b01a98",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+            "line": 15
+          },
+          "reviewBatch": "universal-interactions-2026-09-28"
+        }
       }
     },
     {
@@ -17586,7 +17602,7 @@
                   "specializedModel": "technical_constant_allowlist",
                   "priority": "P1-integrity",
                   "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                  "justification": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                  "justification": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                   "reviewed": true,
                   "evidence": {
                     "file": "scripts/production-migrations.json",
@@ -17601,7 +17617,7 @@
                     "specializedModel": "technical_constant_allowlist",
                     "priority": "P1-integrity",
                     "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                    "justification": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                    "justification": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                     "reviewed": true,
                     "evidence": {
                       "file": "scripts/production-migrations.json",
@@ -24870,7 +24886,7 @@
                   "specializedModel": "technical_constant_allowlist",
                   "priority": "P1-integrity",
                   "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                  "justification": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                  "justification": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                   "reviewed": true,
                   "evidence": {
                     "file": "scripts/production-migrations.json",
@@ -24885,7 +24901,7 @@
                     "specializedModel": "technical_constant_allowlist",
                     "priority": "P1-integrity",
                     "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                    "justification": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                    "justification": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                     "reviewed": true,
                     "evidence": {
                       "file": "scripts/production-migrations.json",
@@ -34498,7 +34514,7 @@
                     "specializedModel": "technical_constant_allowlist",
                     "priority": "P1-integrity",
                     "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                    "justification": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                    "justification": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                     "reviewed": true,
                     "evidence": {
                       "file": "scripts/production-migrations.json",
@@ -34513,7 +34529,7 @@
                       "specializedModel": "technical_constant_allowlist",
                       "priority": "P1-integrity",
                       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                      "justification": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                      "justification": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                       "reviewed": true,
                       "evidence": {
                         "file": "scripts/production-migrations.json",
@@ -41782,7 +41798,7 @@
                     "specializedModel": "technical_constant_allowlist",
                     "priority": "P1-integrity",
                     "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                    "justification": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                    "justification": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                     "reviewed": true,
                     "evidence": {
                       "file": "scripts/production-migrations.json",
@@ -41797,7 +41813,7 @@
                       "specializedModel": "technical_constant_allowlist",
                       "priority": "P1-integrity",
                       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                      "justification": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                      "justification": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                       "reviewed": true,
                       "evidence": {
                         "file": "scripts/production-migrations.json",
@@ -49509,7 +49525,7 @@
                 "specializedModel": "technical_constant_allowlist",
                 "priority": "P1-integrity",
                 "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                "justification": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                "justification": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
                 "reviewed": true,
                 "evidence": {
                   "file": "scripts/production-migrations.json",
@@ -49524,7 +49540,7 @@
                   "specializedModel": "technical_constant_allowlist",
                   "priority": "P1-integrity",
                   "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                  "justification": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                  "justification": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                   "reviewed": true,
                   "evidence": {
                     "file": "scripts/production-migrations.json",
@@ -57320,7 +57336,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Offering an identification type the SRI does not accept would produce rejected invoices.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
@@ -57335,7 +57351,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Contract drift could let clients send identification types the SRI rejects.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
@@ -57350,7 +57366,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Accepting unsupported identification types would store invoices that cannot be issued.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -57365,7 +57381,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Mixing environments would send test invoices to production or the reverse.",
-      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producción; a closed technical domain.",
+      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producci\u00f3n; a closed technical domain.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -57395,7 +57411,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Adding document kinds without SRI document semantics could emit unsupported tax documents.",
-      "justification": "SRI document kinds handled by the invoice worker (factura and nota de crédito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
+      "justification": "SRI document kinds handled by the invoice worker (factura and nota de cr\u00e9dito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
