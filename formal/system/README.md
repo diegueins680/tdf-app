@@ -1,6 +1,6 @@
 # TDF authoritative specification and conformance
 
-Status: active reconciliation on consolidated main, 2026-10-04. **System-wide
+Status: active reconciliation on consolidated main, 2026-10-13. **System-wide
 conformance and delivery are not yet established.** The prior audit remains in
 [history-2026-09-20.md](history-2026-09-20.md), with its original limitations.
 Historical green results are not current-candidate evidence.
@@ -31,6 +31,9 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [music-purchase-replay.md](music-purchase-replay.md): buyer/request-bound purchase
   replay, concurrent reservation, conflict semantics and bounded negative controls.
 - [backend-version.md](backend-version.md): fresh compiled metadata through restored Stack/GHC caches, actual two-build regression and independent cache-layer controls.
+
+- [alloy-negative-controls.md](alloy-negative-controls.md): assertion-preserving
+  mutations, named counterexample admission and retained bounded solver evidence.
 
 - [physical-recovery.md](physical-recovery.md): verified cold PG17 copy startup, isolated configuration and explicit coordinated-recovery exclusions.
 
@@ -127,7 +130,27 @@ Conflicts lacking an applicable decision remain `SPECIFICATION AMBIGUITY` or
 `PARTIAL`. Do not silently choose whichever source is easiest to satisfy. Full
 paths identify ADRs: the two historical ADR-0105 filenames are distinct decisions.
 
-## Verified starting baseline
+## Current audit checkpoint
+
+The October13 isolated audit starts at root
+`75f1a7ce85cdbf062b13b31e7f79d9efa62ed290`, with exact pinned Mobile gitlink
+`67ee1afac203741aac5771d130a18498c4d4835a`. Fresh read-only inspection observed
+backend `7ab344400d0878838b9b12742ca4cc5cd7f38f94` (`0.1.0.0`), 188 applied
+migrations and 14 pending in the candidate manifest. The public web entry bundle
+embeds the root baseline SHA. These observations are dated evidence, not a claim
+that later production or main remains unchanged.
+
+[The baseline package](evidence/2026-10-13-consolidated-baseline/baseline.json)
+binds source hashes, the exact Mobile revision, current branch protection, runtime
+flags and the read-only migration plan. Inventory and generated-client freshness
+checks passed. The existing register contains 116 requirements, all PARTIAL;
+discovery contains 430 candidate clauses. It lists 1,715 unmapped material surfaces,
+one untested registered requirement and 58 critical requirements without formal
+model mappings. These counts describe coverage debt, not implementation verdicts.
+The current release plan rejects execution; guarded routine deployment remains an
+open obligation. The following checkpoints are historical provenance only.
+
+## Historical reconciliation checkpoints
 
 The clean isolated branch starts at root `b07f67c3ebe2022d5f70e94578944b6401616696`
 and Mobile `ede1f2a0ccf75f3794c7892f291e1751b279d19e`. The shared dirty checkout

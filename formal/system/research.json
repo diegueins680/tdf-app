@@ -695,6 +695,17 @@
       "decision": "adopted",
       "rationale": "Use module-local -fforce-recomp together with Stack dirty admission. Independent controls removing either layer reproduce the stale metadata; unrelated Main object remains reused in the probe. No global force-recompile or source attestation claim.",
       "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-ALLOY-CONTROLS-001",
+      "source": "https://alloytools.org/spec.html",
+      "supportingSource": "https://alloytools.org/tutorials/online/sidenote-format-fact.html",
+      "title": "Alloy language specification and fact overconstraint guidance",
+      "recommendation": "A check searches for a counterexample under facts and finite scopes; inconsistent or overly restrictive facts can conceal assertion violations. Run commands witness consistency.",
+      "applicability": "EventStructure and TaskReadStructure assertion admission",
+      "decision": "adopted",
+      "rationale": "Keep original satisfiable scenarios; remove selected guards in separate copies without weakening assertions or enlarging scopes, and require their counterexamples. Retain original scope limits and separate implementation refinement.",
+      "verifiedAt": "2026-10-13"
     }
   ]
 }

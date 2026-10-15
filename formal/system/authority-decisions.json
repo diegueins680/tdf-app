@@ -613,6 +613,18 @@
       "resolution": "Stored diagnostics are bounded to the column; a submitted document stays submitted through failed, refused or unreadable queries and internal errors; readiness also requires TAX_INVOICE_WORKER_ENABLED=true. No schema change. Recovery for uncertain and rejected documents remains an open product and tax decision."
     },
     {
+      "id": "AUTHORITY-ALLOY-CONTROLS-001",
+      "sources": [
+        "formal/event-operations/EventStructure.als",
+        "formal/event-operations/TaskReadStructure.als",
+        "scripts/verify-event-operations-formal.sh",
+        "formal/system/alloy-negative-controls.md"
+      ],
+      "conflict": "The existing formal runner admitted 13 UNSAT structural Alloy assertions without any guard-removal negative controls; several assertions repeat facts that constrain the search. Positive completion alone did not demonstrate sensitivity to a broken guard.",
+      "authority": "User consolidated audit sections 7 and 8 require finite-scope claims and known-invalid controls; SYS-VERIFY-002 governs evidence admission.",
+      "resolution": "Retain the intended models and original scopes. Require each assertion to have an independently executed fact/predicate mutation yielding a named SAT counterexample, plus consistent original scenarios and UNSAT original assertions. Preserve solver receipts. This strengthens verification, not product authority or implementation-refinement claims."
+    },
+    {
       "id": "AUTHORITY-057",
       "sources": [
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
