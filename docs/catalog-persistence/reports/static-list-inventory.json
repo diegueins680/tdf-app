@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-15T08:16:22.538Z",
+  "generatedAt": "2026-10-15T08:37:31.540Z",
   "repositoryRoot": ".",
-  "filesScanned": 2292,
+  "filesScanned": 2293,
   "candidateCount": 1324,
   "byClassification": {
     "dynamic-business-catalog": 852,
@@ -4149,7 +4149,7 @@
       "lines": [
         126
       ],
-      "consumerCount": 295,
+      "consumerCount": 296,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -6652,7 +6652,7 @@
       "lines": [
         167
       ],
-      "consumerCount": 225,
+      "consumerCount": 226,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -7174,7 +7174,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 219,
+      "consumerCount": 220,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -7323,10 +7323,10 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-course-identity.sh",
         "scripts/test-event-raci-editor-context-migration.sh",
-        "scripts/test-hetzner-backup.py",
-        "scripts/test-hetzner-inspection.py"
+        "scripts/test-hetzner-backup.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -12896,7 +12896,7 @@
       "lines": [
         140
       ],
-      "consumerCount": 190,
+      "consumerCount": 191,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -13047,12 +13047,12 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-course-identity.sh",
         "scripts/test-event-raci-editor-context-migration.sh",
         "scripts/test-hetzner-backup.py",
         "scripts/test-hetzner-restore.py",
-        "scripts/test-live-intake-identity.sh",
-        "scripts/test-marketplace-contact-identity.sh"
+        "scripts/test-live-intake-identity.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -13434,7 +13434,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 188,
+      "consumerCount": 189,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -13585,8 +13585,8 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
-        "scripts/test-course-identity.sh",
-        "scripts/test-event-raci-editor-context-migration.sh"
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
+        "scripts/test-course-identity.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -13651,7 +13651,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 218,
+      "consumerCount": 219,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -13800,10 +13800,10 @@
         "scripts/sync-artist-drive.js",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-course-identity.sh",
         "scripts/test-event-raci-editor-context-migration.sh",
-        "scripts/test-hetzner-backup.py",
-        "scripts/test-hetzner-inspection.py"
+        "scripts/test-hetzner-backup.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -13867,7 +13867,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 797,
+      "consumerCount": 798,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14620,7 +14620,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 798,
+      "consumerCount": 799,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14910,7 +14910,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 798,
+      "consumerCount": 799,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -19367,7 +19367,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 193,
+      "consumerCount": 194,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -19527,10 +19527,10 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-course-identity.sh",
         "scripts/test-event-raci-editor-context-migration.sh",
-        "scripts/test-hetzner-backup.py",
-        "scripts/test-hetzner-restore.py"
+        "scripts/test-hetzner-backup.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -19832,7 +19832,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 37,
+      "consumerCount": 38,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
@@ -19876,7 +19876,8 @@
         "scripts/__tests__/merch-runtime-safety.test.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/test-checkout-terms-upgrade-concurrency.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -22301,7 +22302,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 855,
+      "consumerCount": 856,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -43299,7 +43300,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 888,
+      "consumerCount": 889,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -46238,7 +46239,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 288,
+      "consumerCount": 289,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -46387,6 +46388,7 @@
         "scripts/specification-inventory.py",
         "scripts/test-artist-claim-target-http.sh",
         "scripts/test-booking-conformance.py",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-directory-artist-listings.sh",
         "scripts/test-directory-event-visibility-migration.sh",
         "scripts/test-hetzner-backup.py",
@@ -46401,8 +46403,7 @@
         "scripts/test-recovery-envelope.py",
         "scripts/test-recovery-files.py",
         "scripts/test-requirement-declarations.py",
-        "scripts/test-specification-conformance.py",
-        "scripts/test-state-machines.py"
+        "scripts/test-specification-conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -47846,7 +47847,7 @@
       "lines": [
         4441
       ],
-      "consumerCount": 288,
+      "consumerCount": 289,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -47995,6 +47996,7 @@
         "scripts/specification-inventory.py",
         "scripts/test-artist-claim-target-http.sh",
         "scripts/test-booking-conformance.py",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-directory-artist-listings.sh",
         "scripts/test-directory-event-visibility-migration.sh",
         "scripts/test-hetzner-backup.py",
@@ -48009,8 +48011,7 @@
         "scripts/test-recovery-envelope.py",
         "scripts/test-recovery-files.py",
         "scripts/test-requirement-declarations.py",
-        "scripts/test-specification-conformance.py",
-        "scripts/test-state-machines.py"
+        "scripts/test-specification-conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -52530,7 +52531,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 888,
+      "consumerCount": 889,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -59210,7 +59211,7 @@
         102,
         111
       ],
-      "consumerCount": 478,
+      "consumerCount": 479,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -62024,7 +62025,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 888,
+      "consumerCount": 889,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -62324,7 +62325,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 888,
+      "consumerCount": 889,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -63720,7 +63721,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 888,
+      "consumerCount": 889,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -74054,7 +74055,7 @@
       "lines": [
         61
       ],
-      "consumerCount": 182,
+      "consumerCount": 183,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -74203,11 +74204,11 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-course-identity.sh",
         "scripts/test-event-raci-editor-context-migration.sh",
         "scripts/test-hetzner-backup.py",
-        "scripts/test-hetzner-restore.py",
-        "scripts/test-live-intake-identity.sh"
+        "scripts/test-hetzner-restore.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -75793,7 +75794,7 @@
       "lines": [
         10620
       ],
-      "consumerCount": 881,
+      "consumerCount": 882,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -80511,7 +80512,7 @@
       "lines": [
         15136
       ],
-      "consumerCount": 517,
+      "consumerCount": 518,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -80788,7 +80789,7 @@
       "lines": [
         15151
       ],
-      "consumerCount": 482,
+      "consumerCount": 483,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -81268,7 +81269,7 @@
       "lines": [
         15197
       ],
-      "consumerCount": 503,
+      "consumerCount": 504,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -83934,7 +83935,7 @@
       "lines": [
         18135
       ],
-      "consumerCount": 877,
+      "consumerCount": 878,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -84809,7 +84810,7 @@
       "lines": [
         254
       ],
-      "consumerCount": 105,
+      "consumerCount": 106,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -84908,6 +84909,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-booking-conformance.py",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-directory-event-visibility-migration.sh",
         "scripts/test-event-ingestion-boundaries.sh",
         "scripts/test-hetzner-inspection.py",
@@ -102632,7 +102634,7 @@
         797,
         1036
       ],
-      "consumerCount": 129,
+      "consumerCount": 130,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -102743,6 +102745,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-booking-conformance.py",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-directory-artist-listings.sh",
         "scripts/test-directory-event-visibility-migration.sh",
         "scripts/test-event-ingestion-boundaries.sh",
@@ -104101,7 +104104,7 @@
       "lines": [
         905
       ],
-      "consumerCount": 138,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -104214,6 +104217,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-booking-conformance.py",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-directory-artist-listings.sh",
         "scripts/test-directory-event-visibility-migration.sh",
         "scripts/test-event-ingestion-boundaries.sh",
@@ -106244,7 +106248,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 138,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -106357,6 +106361,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-booking-conformance.py",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-directory-artist-listings.sh",
         "scripts/test-directory-event-visibility-migration.sh",
         "scripts/test-event-ingestion-boundaries.sh",
@@ -110430,7 +110435,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 102,
+      "consumerCount": 103,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -110527,6 +110532,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-booking-conformance.py",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-directory-event-visibility-migration.sh",
         "scripts/test-event-ingestion-boundaries.sh",
         "scripts/test-hetzner-inspection.py",
@@ -133028,7 +133034,7 @@
       "lines": [
         208
       ],
-      "consumerCount": 130,
+      "consumerCount": 131,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -133138,6 +133144,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-booking-conformance.py",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-directory-event-visibility-migration.sh",
         "scripts/test-event-ingestion-boundaries.sh",
         "scripts/test-hetzner-inspection.py",
@@ -133187,7 +133194,7 @@
       "lines": [
         261
       ],
-      "consumerCount": 160,
+      "consumerCount": 161,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -133318,6 +133325,7 @@
         "scripts/specification-inventory.py",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
         "scripts/test-event-operations-api-migration.sh",
         "scripts/test-event-rsvp-identity-migration.sh",
@@ -133370,7 +133378,7 @@
       "lines": [
         282
       ],
-      "consumerCount": 162,
+      "consumerCount": 163,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -133501,6 +133509,7 @@
         "scripts/specification-inventory.py",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
         "scripts/test-event-operations-api-migration.sh",
         "scripts/test-event-operations-foundation-migration.sh",
@@ -146703,7 +146712,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 888,
+      "consumerCount": 889,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",

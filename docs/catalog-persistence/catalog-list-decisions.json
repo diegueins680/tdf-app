@@ -580,7 +580,7 @@
         "kind": "object-registry",
         "name": "options",
         "valueCount": 4,
-        "consumerCount": 219,
+        "consumerCount": 220,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
