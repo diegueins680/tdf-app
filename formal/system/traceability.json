@@ -10100,7 +10100,7 @@
     "formal/system/proof-certificates.md": "147227e350f5b47377eb6eaa5f31b899425d43857a14eb92dc97002c32b633a3",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
-    "formal/system/receipt-admission.md": "576c96dec2b58b447a96e047a1aad93f02f8c1b6bd589f5ee130be230215b0dd",
+    "formal/system/receipt-admission.md": "0fd124c68578340daf13d6cc2eacf24768e6f5f5fd5e5dc410b1a12ffa49cce3",
     "formal/system/recovery-expiry-arithmetic.json": "e08bf9b4373381ab605521aabe7e5dfe2d30a6b2e3709e9a8de7f3aad7ffcc6f",
     "formal/system/state-machine-bindings.json": "33b63d2076dc6bf55f812bd12b8eadd93cd9aa1a85966ca38ddadb1ca5b45655",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
@@ -10321,13 +10321,13 @@
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
-    "scripts/test-verification-report.py": "7ba722d75adef3bf69f80f74836a13abb1676176c37681ec2ec8eb711975e144",
+    "scripts/test-verification-report.py": "ca7447ea0d950b2c0ecfe848f587ad7a70a828d27432a769601abd1b6bda7b98",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
-    "scripts/verification-report.py": "13e8db85804298706e040230162b98356ca303ec4eed74b09e2d813d939a9118",
+    "scripts/verification-report.py": "28c813e2fe1c8bff64cb8679619ce6f62e8d5d988f034db02f10f92abee27d75",
     "scripts/verify-auth-predicates.py": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
@@ -23953,7 +23953,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "7ba722d75adef3bf69f80f74836a13abb1676176c37681ec2ec8eb711975e144",
+      "sha256": "ca7447ea0d950b2c0ecfe848f587ad7a70a828d27432a769601abd1b6bda7b98",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24061,7 +24061,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "13e8db85804298706e040230162b98356ca303ec4eed74b09e2d813d939a9118",
+      "sha256": "28c813e2fe1c8bff64cb8679619ce6f62e8d5d988f034db02f10f92abee27d75",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -42,6 +42,13 @@ above hold. A string such as `"true"` does not meet that contract. The report
 still checks its entire registered source fingerprint after all executions;
 source drift makes every affected claim stale and UNPROVEN.
 
+For payment arithmetic, the producer's `source` must name exactly
+`tdf-hq/src/TDF/Commerce/StateMachine.hs`, and its `sha256` must match that
+entry in the initial report fingerprint. Both successful-suite admission and
+partial counterexample admission enforce this binding before replay. A stale
+receipt cannot prove or refute the current source even if its formulas replay
+successfully or a concurrent source edit was restored before the final check.
+
 A fresh SAT result for a retained negated contract establishes a counterexample
 within that formula's semantics and trusted translation boundary. It becomes
 REFUTED there, even if the producer called it PROVEN. Other claims and supporting

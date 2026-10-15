@@ -5654,7 +5654,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "7ba722d75adef3bf69f80f74836a13abb1676176c37681ec2ec8eb711975e144",
+      "sha256": "ca7447ea0d950b2c0ecfe848f587ad7a70a828d27432a769601abd1b6bda7b98",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5714,7 +5714,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "13e8db85804298706e040230162b98356ca303ec4eed74b09e2d813d939a9118",
+      "sha256": "28c813e2fe1c8bff64cb8679619ce6f62e8d5d988f034db02f10f92abee27d75",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24903,7 +24903,7 @@
     },
     {
       "path": "formal/system/receipt-admission.md",
-      "sha256": "576c96dec2b58b447a96e047a1aad93f02f8c1b6bd589f5ee130be230215b0dd",
+      "sha256": "0fd124c68578340daf13d6cc2eacf24768e6f5f5fd5e5dc410b1a12ffa49cce3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

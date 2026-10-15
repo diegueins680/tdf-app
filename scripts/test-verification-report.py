@@ -161,6 +161,48 @@ class AssuranceTests(unittest.TestCase):
             replay = json.loads((output/'authorization-replay.json').read_text())
             self.assertEqual(next(r['result'] for r in replay if r['id'] == 'strict-admin'), 'sat')
 
+    def test_arithmetic_receipt_must_match_initial_source_path_and_hash(self):
+        source = 'tdf-hq/src/TDF/Commerce/StateMachine.hs'
+        provenance = {'files': {source: 'a' * 64}}
+        receipt = {'source': source, 'sha256': 'a' * 64}
+        report.validate_arithmetic_source(receipt, provenance)
+        for field, value in [('source', None), ('source', 'other.hs'),
+                             ('sha256', None), ('sha256', 'b' * 64)]:
+            with self.subTest(field=field, value=value):
+                with self.assertRaisesRegex(ValueError, 'initial fingerprint'):
+                    report.validate_arithmetic_source({**receipt, field: value}, provenance)
+        with self.assertRaisesRegex(ValueError, 'initial fingerprint'):
+            report.validate_arithmetic_source(receipt, {'files': {}})
+
+    def test_stale_arithmetic_receipt_cannot_prove_or_refute_current_source(self):
+        original = report.subprocess.run
+        for counterexample in (False, True):
+            def producer_fault(command, **kwargs):
+                result = original(command, **kwargs)
+                if 'scripts/verify-payment-arithmetic.py' in command:
+                    directory = Path(command[command.index('--output') + 1])
+                    receipt = json.loads((directory/'result.json').read_text())
+                    receipt['sha256'] = '0' * 64
+                    if counterexample:
+                        artifact = next(a for a in receipt['artifacts'] if a['id'] == 'capture-safety')
+                        content = b'(assert true)'
+                        (directory/artifact['file']).write_bytes(content)
+                        artifact.update(actual='sat', sha256=report.sha(content))
+                        receipt['executionPassed'] = False
+                    (directory/'result.json').write_text(json.dumps(receipt))
+                    if counterexample:
+                        return subprocess.CompletedProcess(command, 1)
+                return result
+            with self.subTest(counterexample=counterexample), tempfile.TemporaryDirectory() as tmp:
+                output = Path(tmp)/'report'
+                with patch.object(report.subprocess, 'run', producer_fault):
+                    self.assertEqual(report.run(output, False), 1)
+                result = json.loads((output/'report.json').read_text())
+                self.assertEqual(result['metrics']['obligationsByCategory']['source-derived-SMT'],
+                                 {'PROVEN': 0, 'REFUTED': 0, 'UNPROVEN': 4, 'NOT_APPLICABLE': 0})
+                self.assertFalse(result['release']['executionAllowed'])
+                self.assertFalse((output/'arithmetic-counterexample-replay.json').exists())
+
     def test_producer_false_refutation_requires_fresh_sat_counterexample(self):
         original = report.subprocess.run
         def producer_fault(command, **kwargs):

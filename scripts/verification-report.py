@@ -221,6 +221,13 @@ def replay_smt(directory, artifacts, expectations, complete=True):
     return replay
 
 
+def validate_arithmetic_source(receipt, provenance):
+    source = 'tdf-hq/src/TDF/Commerce/StateMachine.hs'
+    expected = provenance.get('files', {}).get(source)
+    if not expected or receipt.get('source') != source or receipt.get('sha256') != expected:
+        raise ValueError('Arithmetic receipt source differs from initial fingerprint')
+
+
 def replay_arithmetic(directory, artifacts):
     replay = replay_smt(directory, artifacts, ARITHMETIC_EXPECTATIONS)
     if any(row['result'] != row['expected'] for row in replay):
@@ -340,6 +347,7 @@ def run(out, require_release):
         # Reparse serialized formulas in a fresh solver. This catches serialization
         # drift but does not remove the same solver or translator from the TCB.
         arithmetic = json.loads((out/'arithmetic/result.json').read_text())
+        validate_arithmetic_source(arithmetic, before)
         if arithmetic.get('executionPassed') is not True or arithmetic.get('error') is not None:
             raise ValueError('Arithmetic producer did not report successful execution')
         replay = replay_arithmetic(out/'arithmetic', arithmetic['artifacts'])
@@ -354,6 +362,7 @@ def run(out, require_release):
     if not ok and arithmetic_path.is_file() and sources_unchanged():
         try:
             failed = json.loads(arithmetic_path.read_text())
+            validate_arithmetic_source(failed, before)
             replay = replay_smt(out/'arithmetic', failed.get('artifacts', []),
                                 ARITHMETIC_EXPECTATIONS, complete=False)
             (out/'arithmetic-counterexample-replay.json').write_text(json.dumps(replay, indent=2) + '\n')
