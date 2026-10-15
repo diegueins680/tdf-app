@@ -94,6 +94,9 @@ or real payment is needed for this verification.
   migration and sends exact confirmation on initial purchase and replay. Its
   previous selected-migration setup failed the first private version GET with500;
   this setup failure is not a passing monetary semantic negative control.
+  The completed fixture also binds graph-corruption inserts and repair to its
+  exactly one processed master for the cloned version/recording; uploaded
+  historical masters are retained and all rejection/rollback assertions remain.
 - The OpenAPI declaration documents purchase POST/GET and the generated client
   types are used by the web adapter. Other undocumented music operations remain
   a separate API completeness obligation.

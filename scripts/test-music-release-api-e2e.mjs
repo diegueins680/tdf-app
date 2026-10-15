@@ -27,6 +27,21 @@ const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}
 const assertUuid = (value, label) => assert.match(value, uuidPattern, `${label} must be a UUID`);
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
+// Uploaded/quarantined masters may coexist with the processed master. A
+// corruption fixture must target exactly one usable master for this version's
+// own recording, rather than insert one fixed UUID for every historical asset.
+function fixtureMaster(version) {
+  const recording = version.tracks[0].recordingId;
+  assertUuid(recording, 'fixture recording');
+  const matches = JSON.parse(sql(`SELECT COALESCE(json_agg(id),'[]'::json)
+    FROM music_asset WHERE release_version_id='${version.id}'
+      AND recording_id='${recording}' AND asset_role='master_audio'
+      AND processing_state IN ('ready','valid')`));
+  assert.equal(matches.length, 1, 'corruption fixture needs exactly one processed master');
+  assertUuid(matches[0], 'fixture master');
+  return matches[0];
+}
+
 function sql(statement) {
   return execFileSync(
     'psql',
@@ -948,13 +963,14 @@ const malformed = await request(replayPath, {
   token: artist.token, method: 'POST', expected: 201, idempotencyKey: 'music-e2e-malformed-source',
 });
 const malformedAsset = randomUUID();
+const malformedMaster = fixtureMaster(malformed);
 sql(`INSERT INTO music_asset(id,release_version_id,recording_id,parent_asset_id,asset_role,
   storage_provider,bucket_name,object_key,media_type,byte_size,sha256,processing_state,
   created_by,ready_at,provenance)
   SELECT '${malformedAsset}',release_version_id,recording_id,id,'preview_audio',
     storage_provider,bucket_name,'synthetic/legacy-cycle-do-not-serve','audio/mp4',1,
     repeat('e',64),'ready',created_by,NOW(),'{"fixture":"legacy-corruption"}'::jsonb
-  FROM music_asset WHERE release_version_id='${malformed.id}' AND asset_role='master_audio';
+  FROM music_asset WHERE id='${malformedMaster}';
   UPDATE music_asset SET parent_asset_id=id WHERE id='${malformedAsset}';`);
 await request(`/music/releases/${single.id}/versions/${malformed.id}/terms`, {
   token: artist.token, method: 'POST', expected: 201,
@@ -1021,12 +1037,13 @@ const graphDraft = await request(replayPath, {
   token: artist.token, method: 'POST', expected: 201, idempotencyKey: 'music-e2e-graph-draft',
 });
 const draftFaultId = randomUUID();
+const draftMaster = fixtureMaster(graphDraft);
 sql(`INSERT INTO music_asset(id,release_version_id,recording_id,parent_asset_id,asset_role,
   storage_provider,bucket_name,object_key,media_type,byte_size,sha256,processing_state,created_by,ready_at)
   SELECT '${draftFaultId}',release_version_id,recording_id,'${draftFaultId}','preview_audio',
     storage_provider,bucket_name,'synthetic/draft-cycle-do-not-serve','audio/mp4',1,
     repeat('e',64),'ready',created_by,NOW() FROM music_asset
-  WHERE release_version_id='${graphDraft.id}' AND asset_role='master_audio';`);
+  WHERE id='${draftMaster}';`);
 await request(`/music/releases/${single.id}/versions/${graphDraft.id}/terms`, {
   token: artist.token, method: 'POST', expected: 201,
   json: { kind: 'publication_authority', version: 'publication-authority-e2e-v1', accepted: true,
@@ -1049,8 +1066,7 @@ assert.equal(sql(`SELECT count(*) FROM music_release_audit_event WHERE release_v
   AND idempotency_key='music-e2e-graph-submit'`), '0');
 // Repair only synthetic provenance, not master bytes. Real sanitation requires
 // operator evidence; this is not an upload/reprocessing UI implementation.
-sql(`UPDATE music_asset SET parent_asset_id=(SELECT id FROM music_asset
-  WHERE release_version_id='${graphDraft.id}' AND asset_role='master_audio')
+sql(`UPDATE music_asset SET parent_asset_id='${draftMaster}'
   WHERE id='${draftFaultId}';`);
 const fixedDraft = await request(`/music/releases/${single.id}/versions/${graphDraft.id}/validate`,
   { token: artist.token, method: 'POST' });

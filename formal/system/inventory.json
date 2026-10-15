@@ -5297,7 +5297,7 @@
     {
       "id": "SURFACE-d3a3e80fe4c29da0",
       "path": "scripts/test-music-release-api-e2e.mjs",
-      "sha256": "6cb0b0a202da491ef34f7b4454f064985a84a434528a753fe5e6c43d1b57ba77",
+      "sha256": "46c88d6264901d60a7b813fa39f950daf6f4179f94ca439e6397523281ac6eb2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24826,7 +24826,7 @@
     },
     {
       "path": "formal/system/music-money-wire.md",
-      "sha256": "74e19f78799a497638f6b9c5c2e61467c0184baa4f6c2464c22c9ed53e510f07",
+      "sha256": "1ee2c7a4cfa15e33d33f7dcf66a6586e1248dea0630d5f2b755e518511cc57ee",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
