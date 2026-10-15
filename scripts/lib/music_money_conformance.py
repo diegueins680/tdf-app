@@ -48,7 +48,12 @@ def verify_music_money(sql, request, check, actor, root):
         try:
             sql('CREATE OR REPLACE FUNCTION public.music_minor_units_json(amount BIGINT) '
                 'RETURNS JSONB LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE AS $$ SELECT to_jsonb(amount) $$;')
-            check('music lossy SQL mutation fails the actual HTTP exact-price oracle', not exact_public())
+            status, body = request('/music/releases/' + slug, token=None)
+            mutated_price = json.loads(body)['availability'][0]['priceMinor']
+            check('music lossy SQL mutation preserves a healthy HTTP response',
+                  status == 200 and type(mutated_price) is int and mutated_price == 9007199254740993)
+            check('music lossy SQL mutation fails the actual HTTP exact-price oracle',
+                  mutated_price != '9007199254740993')
         finally:
             sql((root / 'tdf-hq/sql/2026-10-15_music_exact_minor_units.sql').read_text())
         check('music exact SQL encoding is restored', exact_public())

@@ -10479,7 +10479,7 @@
     "scripts/lib/music-test-database.mjs": "8c55bbb8607ab1c0d229dc8485999cb8decba00b4580f1c2dec18fee62243b7a",
     "scripts/lib/music-worker-image-smoke.sh": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
-    "scripts/lib/music_money_conformance.py": "e60c28caf43f01aa005a3d89a8864160d32bd9b210661c919a7b6cff4b6c0fdf",
+    "scripts/lib/music_money_conformance.py": "10061003159fb347c163524b3a9450c64f9553877316ece564971ba36f4a47cd",
     "scripts/lib/operations_conformance.py": "e0ff663aee7f816df7a06418223d41065d69e0681675a05f3fb6a0592e0f911a",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "f964eb5657627888dccf15fec7994cedaa124e24c433537af9a5408033693397",
@@ -21772,7 +21772,7 @@
     {
       "id": "SURFACE-f907013f6fb607d5",
       "path": "scripts/lib/music_money_conformance.py",
-      "sha256": "e60c28caf43f01aa005a3d89a8864160d32bd9b210661c919a7b6cff4b6c0fdf",
+      "sha256": "10061003159fb347c163524b3a9450c64f9553877316ece564971ba36f4a47cd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
