@@ -98,7 +98,6 @@ CampaignAutomation
     updatedAt   UTCTime default=now()
     UniqueCampaignAutomationCampaign campaignId
     UniqueCampaignAutomationTemplate templateKey
-    IndexCampaignAutomationStatus status startAt !force
     deriving Show Generic
 
 CampaignAutomationStep
@@ -114,7 +113,6 @@ CampaignAutomationStep
     createdAt            UTCTime default=now()
     updatedAt            UTCTime default=now()
     UniqueCampaignAutomationStep automationId position
-    IndexCampaignAutomationStepActive automationId active position !force
     deriving Show Generic
 
 CampaignEnrollment
@@ -129,8 +127,6 @@ CampaignEnrollment
     createdAt      UTCTime default=now()
     updatedAt      UTCTime default=now()
     UniqueCampaignEnrollment automationId partyId
-    IndexCampaignEnrollmentDue automationId status nextRunAt !force
-    IndexCampaignEnrollmentParty partyId createdAt !force
     deriving Show Generic
 
 CampaignDelivery
@@ -149,7 +145,6 @@ CampaignDelivery
     createdAt         UTCTime default=now()
     updatedAt         UTCTime default=now()
     UniqueCampaignDelivery enrollmentId stepId
-    IndexCampaignDeliveryAutomation automationId status createdAt !force
     deriving Show Generic
 
 AdCreative
@@ -217,8 +212,6 @@ WhatsAppMessage
     resendOfMessageId  WhatsAppMessageId Maybe
     createdAt          UTCTime
     UniqueWhatsAppMessage externalId
-    IndexWhatsAppMessageParty partyId createdAt !force
-    IndexWhatsAppMessagePhone phoneE164 createdAt !force
     deriving Show Generic
 
 FacebookMessage
@@ -278,7 +271,6 @@ CourseRegistration
     subscriptionStatus    Text Maybe
     createdAt    UTCTime default=now()
     updatedAt    UTCTime default=now()
-    IndexCourseRegistrationParty partyId createdAt !force
     UniqueCourseRegistrationStripePaymentIntent stripePaymentIntentId !force
     UniqueCourseRegistrationStripeSubscription stripeSubscriptionId !force
     deriving Show Generic
@@ -293,8 +285,6 @@ CourseRegistrationReceipt
     uploadedBy     PartyId Maybe
     createdAt      UTCTime default=now()
     updatedAt      UTCTime default=now()
-    IndexCourseRegistrationReceiptRegistration registrationId createdAt !force
-    IndexCourseRegistrationReceiptParty partyId createdAt !force
     deriving Show Generic
 
 CourseRegistrationFollowUp
@@ -309,9 +299,6 @@ CourseRegistrationFollowUp
     createdBy      PartyId Maybe
     createdAt      UTCTime default=now()
     updatedAt      UTCTime default=now()
-    IndexCourseRegistrationFollowUpRegistration registrationId createdAt !force
-    IndexCourseRegistrationFollowUpParty partyId createdAt !force
-    IndexCourseRegistrationFollowUpNext nextFollowUpAt !force
     deriving Show Generic
 
 CourseEmailEvent
@@ -1086,7 +1073,6 @@ ArtistTip
     message               Text Maybe
     createdAt             UTCTime default=now()
     updatedAt             UTCTime default=now()
-    IndexArtistTipArtist artistProfileId createdAt !force
     UniqueArtistTipStripePaymentIntent stripePaymentIntentId !force
     deriving Show Generic
 
@@ -1192,9 +1178,6 @@ FeatureAccessRequest sql=feature_access_requests
     decidedAt UTCTime Maybe
     cancelledAt UTCTime Maybe
     expiresAt UTCTime Maybe
-    IndexFeatureAccessRequestRequester requesterPartyId requestedAt !force
-    IndexFeatureAccessRequestQueue status reviewerGroup requestedAt !force
-    IndexFeatureAccessRequestDuplicate requesterPartyId featureId action status !force
     deriving Show Generic
 
 FeatureAccessRequestHistory sql=feature_access_request_history
@@ -1205,7 +1188,6 @@ FeatureAccessRequestHistory sql=feature_access_request_history
     toStatus Text
     note Text Maybe
     createdAt UTCTime
-    IndexFeatureAccessRequestHistory requestId createdAt !force
     deriving Show Generic
 
 FeatureNavigationPreference sql=feature_navigation_preferences
@@ -1218,8 +1200,6 @@ FeatureNavigationPreference sql=feature_navigation_preferences
     useCount Int default=0
     updatedAt UTCTime
     UniqueFeatureNavigationPreference partyId featureId
-    IndexFeatureNavigationPreferencePinned partyId pinned pinOrder !force
-    IndexFeatureNavigationPreferenceRecent partyId lastVisitedAt !force
     deriving Show Generic
 
 |]
