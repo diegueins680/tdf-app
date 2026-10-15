@@ -7,7 +7,7 @@ Historical green results are not current-candidate evidence.
 
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
 
-- [assurance-report.md](assurance-report.md): generated four-state proof matrix, replayable source-derived SMT evidence and explicit blocked release decision.
+- [assurance-report.md](assurance-report.md): generated four-state proof matrix, replayable source-derived SMT evidence (including payment-validator preconditions) and explicit blocked release decision.
 - [receipt-admission.md](receipt-admission.md): source-bound consumer replay for every SMT suite, false-proof/refutation controls and an auditable synthetic counterexample.
 
 - [auth-predicates.md](auth-predicates.md): three conditional authorization predicate contracts, cardinality lemmas, source mutation controls and explicit endpoint/refinement exclusions.
