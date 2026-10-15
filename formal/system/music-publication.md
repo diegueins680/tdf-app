@@ -84,6 +84,16 @@ Not modelled: the chain `published -> replacement_pending -> takedown_scheduled
 -> withdrawn` (one step), the content of `music_check_submission` (a boolean
 that may flip), several releases, and lock interleaving with the API handler.
 
+`MusicWithdrawalFairness.tla` separately models a finite queue of three due
+versions (one permanent failure and two healthy withdrawals), a one-row batch
+and a weakly fair recurring worker. Updating failed attempts moves the head to
+the tail; `HealthyEventuallyWithdrawn` requires both healthy rows to complete.
+The `MusicWithdrawalStarvation.cfg` control disables that rotation and must
+violate the temporal property. This abstraction assumes successful persistence
+of priority and increasing transaction timestamps. It does not prove progress
+with clock regression, continual external rescheduling or unbounded arrivals.
+The real PostgreSQL one-row regression test connects the ordering to SQL.
+
 ## Evidence
 
 | Check | Where | Result (2026-10-11, local) |
@@ -91,7 +101,7 @@ that may flip), several releases, and lock interleaving with the API handler.
 | Reproduction on the unmodified schema | SQL scenarios on a schema copy | batch aborts with `uq_music_release_one_published_version`, unrelated release stays `scheduled`; correction of withdrawn release stays `scheduled`; pointer stays on withdrawn version |
 | PostgreSQL spec | `tdf-hq/test/TDF/MusicPublicationSpec.hs` via `scripts/test-music-publication.sh` (CI step "Verify contact HTTP concurrency…") | 8 cases: one-row withdrawal progress past a permanent failure, isolation with a synthetic lasting failure, a failing correction leaving the live version and the release untouched, a synthetic transient failure leaving the candidate scheduled and publishing next run, retire-all with two corrections, reopen after withdrawal, pointer cleared on the API path, withdrawal isolation recorded once. Against the unmigrated schema all cases that depend on the migration fail (control). |
 | Migration twice, rollback twice, forward again | schema copy | clean |
-| TLC | the five configurations above | pass / expected failures |
+| TLC | publication positive + four controls; withdrawal fairness + starvation control | pass / expected failures. Withdrawal fairness: 4 distinct states, depth 4 (2026-10-14); disabling rotation reproduces starvation. |
 
 The synthetic failures are triggers raising `P0001` or `40P01` on one version;
 the reproducible real cause (unique violation) cannot occur once retirement

@@ -268,6 +268,8 @@ run_negative_tlc MusicPublicationBatch.cfg music-publication-batch 'Temporal pro
 run_negative_tlc MusicPublicationReplacedOnly.cfg music-publication-replaced-only 'Invariant OnlyInvalidFails is violated' MusicPublication.tla
 run_negative_tlc MusicPublicationStayWithdrawn.cfg music-publication-stay-withdrawn 'Temporal properties were violated' MusicPublication.tla
 run_negative_tlc MusicPublicationPointerStale.cfg music-publication-pointer-stale 'Invariant PointerLive is violated' MusicPublication.tla
+run_tlc MusicWithdrawalFairness.tla MusicWithdrawalFairness.cfg music-withdrawal-fairness
+run_negative_tlc MusicWithdrawalStarvation.cfg music-withdrawal-starvation 'Temporal properties were violated' MusicWithdrawalFairness.tla
 run_tlc PaymentRecovery.tla PaymentRecovery.cfg payment-recovery
 expect_counterexample PaymentRecoveryOverwrite.cfg NoLostRecovery payment-recovery-overwrite PaymentRecovery.tla
 expect_counterexample PaymentRecoveryReturn.cfg CorrectReturn payment-recovery-return PaymentRecovery.tla
