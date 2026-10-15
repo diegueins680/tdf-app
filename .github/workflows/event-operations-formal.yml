@@ -18,7 +18,7 @@ concurrency:
 jobs:
   specification-contracts:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         env:
@@ -63,6 +63,22 @@ jobs:
           python scripts/test-verification-report.py
           python scripts/test-auth-predicates.py
           python scripts/test-recovery-expiry-verifier.py
+      - name: Build pinned independent proof checker
+        run: python scripts/install-proof-checkers.py --output "${{ runner.temp }}/proof-checkers"
+      - name: Independently check SMT inputs and CPC refutations
+        run: |
+          PROOF_CHECKER_TOOLS="${{ runner.temp }}/proof-checkers" python scripts/test-proof-certificates.py
+          python scripts/verify-proof-certificates.py --report "${{ runner.temp }}/assurance-report" --tools "${{ runner.temp }}/proof-checkers" --output "${{ runner.temp }}/proof-certificates"
+      - name: Preserve independent proof evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: proof-certificates-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/proof-certificates
+            ${{ runner.temp }}/proof-checkers/installation.json
+            ${{ runner.temp }}/proof-checkers/build.log
+          if-no-files-found: warn
       - name: Preserve formal assurance report
         if: always()
         uses: actions/upload-artifact@v7

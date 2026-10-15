@@ -138,10 +138,14 @@
         ".github/workflows/event-operations-formal.yml",
         "scripts/lib/formal-result-summary.mjs",
         "scripts/verification-report.py",
-        "formal/system/receipt-admission.md"
+        "formal/system/receipt-admission.md",
+        "scripts/install-proof-checkers.py",
+        "scripts/verify-proof-certificates.py",
+        "formal/system/certificate-tools.json",
+        "formal/system/proof-certificates.md"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence.",
-      "evidence": "formal CI source/result manifests and regression output",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks eight exact formula refutations, with six other certificate obligations UNPROVEN and all source/refinement limitations retained.",
+      "evidence": "formal CI source/result manifests and regression output; independent CPC result.json, exact SMT/proof/signature hashes, reference-binding and incompleteness controls",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -180,7 +184,8 @@
         "scripts/__tests__/verification-evidence.test.mjs",
         "scripts/__tests__/formal-result-summary.test.mjs",
         "scripts/test-verification-report.py",
-        "formal/system/receipt-admission-counterexample.json"
+        "formal/system/receipt-admission-counterexample.json",
+        "scripts/test-proof-certificates.py"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
@@ -9926,7 +9931,7 @@
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci.yml": "bd53987b42af93029c3f3b71ccfe800bf631678b7c299eb078834a60e3a5c0b3",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "8bd15cdecaec5dfd55474be31a5ea5a8ffa7576dc1a4ac73819f7ee5a18238b4",
+    ".github/workflows/event-operations-formal.yml": "a4aa1386f2eed30a5fdf15e43804c3a7d7d6621add4c1e7d52d59bf16e52169e",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -10090,7 +10095,9 @@
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
+    "formal/system/certificate-tools.json": "4082359a048ca64c39e40df31ee9fbf6aee35496a92ce40f2a2356478e75da44",
     "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
+    "formal/system/proof-certificates.md": "bf02d5a72f4337080b7ff18e94da3f5b7857a3fcdb575979a76d1ac97718ca46",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "576c96dec2b58b447a96e047a1aad93f02f8c1b6bd589f5ee130be230215b0dd",
@@ -10194,6 +10201,7 @@
     "scripts/get-instagram-token.mjs": "0b00f6cc1ad6793f029339bc006ed520245af87ea55e285658faf48ba978e592",
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
+    "scripts/install-proof-checkers.py": "1a14b7fa50dd6666db4a0fd5feb8e6993104a779b019b7a0dfd3562cf37736bb",
     "scripts/install-recovery-tools.py": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
     "scripts/interactions/test-api.py": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
     "scripts/interactions/test-http.sh": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
@@ -10290,6 +10298,7 @@
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
+    "scripts/test-proof-certificates.py": "6b0e3ef92a08c150ff50df58e761c07ecfb5aa1e06a4c0856861ae8db41b55e5",
     "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
@@ -10318,7 +10327,7 @@
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
-    "scripts/verification-report.py": "1e739093989bd5df8f88d97375b354c098068cc2feb3c55335b55bf9afe06e05",
+    "scripts/verification-report.py": "a50488742ef8719a32fc64a4bac93d532db5a010ae0f9160857d2cb869a8462a",
     "scripts/verify-auth-predicates.py": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
@@ -10327,6 +10336,7 @@
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-payment-arithmetic.py": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
+    "scripts/verify-proof-certificates.py": "d7ece3270a02a465d61e4ea7081aa86f464abc3b6eff04367cbc2f050726d07e",
     "scripts/verify-readiness.py": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
     "scripts/verify-recovery-expiry.py": "9d13c03cb82102530b3163e3f0dd3893ce1ff60bddba8ff6a96bcae74fe9947d",
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
@@ -11125,6 +11135,30 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/install-proof-checkers.py": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/verify-proof-certificates.py": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/system/certificate-tools.json": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/system/proof-certificates.md": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/verification-evidence.test.mjs": [
       {
         "requirement": "SYS-VERIFY-002",
@@ -11144,6 +11178,12 @@
       }
     ],
     "formal/system/receipt-admission-counterexample.json": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-proof-certificates.py": [
       {
         "requirement": "SYS-VERIFY-002",
         "relationship": "tests"
@@ -18706,7 +18746,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "8bd15cdecaec5dfd55474be31a5ea5a8ffa7576dc1a4ac73819f7ee5a18238b4",
+      "sha256": "a4aa1386f2eed30a5fdf15e43804c3a7d7d6621add4c1e7d52d59bf16e52169e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20999,6 +21039,18 @@
       "sha256": "75c2c6f4934ff07fd6f00dec4bb2c8133047ca54c0632bea7739581871d56cdc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-37ed76fba61da70f",
+      "path": "scripts/install-proof-checkers.py",
+      "sha256": "1a14b7fa50dd6666db4a0fd5feb8e6993104a779b019b7a0dfd3562cf37736bb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-b85e7ba1c3709ca8",
@@ -23463,6 +23515,18 @@
       ]
     },
     {
+      "id": "SURFACE-8e3764761ce42dca",
+      "path": "scripts/test-proof-certificates.py",
+      "sha256": "6b0e3ef92a08c150ff50df58e761c07ecfb5aa1e06a4c0856861ae8db41b55e5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-3c9e2b2fae1ee373",
       "path": "scripts/test-provider-event-operations-migration.sh",
       "sha256": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
@@ -23997,7 +24061,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "1e739093989bd5df8f88d97375b354c098068cc2feb3c55335b55bf9afe06e05",
+      "sha256": "a50488742ef8719a32fc64a4bac93d532db5a010ae0f9160857d2cb869a8462a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24198,6 +24262,18 @@
         {
           "requirement": "SYS-MONEY-002",
           "relationship": "formalModels"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d8f74623732a7a92",
+      "path": "scripts/verify-proof-certificates.py",
+      "sha256": "d7ece3270a02a465d61e4ea7081aa86f464abc3b6eff04367cbc2f050726d07e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "implementation"
         }
       ]
     },
@@ -45106,7 +45182,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4349ba44a3abe2b44639b149474df907e0200aefd5b0dd45bf8370678b67c997",
+      "sourceSha256": "5faf4f3c425d2d257bcdaf070b8aae51959e4ec2fa03ce83920375cfe5fbcd1b",
       "definition": {
         "states": [
           "absent",

@@ -79,6 +79,7 @@ def fingerprint(requirements):
                   'scripts/verify-recovery-expiry.py', 'scripts/test-recovery-expiry-verifier.py',
                   'scripts/recovery-time-boundaries.py', 'scripts/test-recovery-time-postgres.sh'})
     paths.update(json.loads((ROOT/'formal/system/recovery-expiry-arithmetic.json').read_text())['reviewedSources'])
+    paths.update({'formal/system/certificate-tools.json', 'formal/system/proof-certificates.md'})
     for row in requirements:
         for field in ('implementation', 'tests', 'formalModels'):
             paths.update(row[field])

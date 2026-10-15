@@ -137,10 +137,14 @@
         ".github/workflows/event-operations-formal.yml",
         "scripts/lib/formal-result-summary.mjs",
         "scripts/verification-report.py",
-        "formal/system/receipt-admission.md"
+        "formal/system/receipt-admission.md",
+        "scripts/install-proof-checkers.py",
+        "scripts/verify-proof-certificates.py",
+        "formal/system/certificate-tools.json",
+        "formal/system/proof-certificates.md"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence.",
-      "evidence": "formal CI source/result manifests and regression output",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks eight exact formula refutations, with six other certificate obligations UNPROVEN and all source/refinement limitations retained.",
+      "evidence": "formal CI source/result manifests and regression output; independent CPC result.json, exact SMT/proof/signature hashes, reference-binding and incompleteness controls",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -179,7 +183,8 @@
         "scripts/__tests__/verification-evidence.test.mjs",
         "scripts/__tests__/formal-result-summary.test.mjs",
         "scripts/test-verification-report.py",
-        "formal/system/receipt-admission-counterexample.json"
+        "formal/system/receipt-admission-counterexample.json",
+        "scripts/test-proof-certificates.py"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",

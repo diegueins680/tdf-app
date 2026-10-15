@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "cvc5Version": "1.3.1",
+  "ethosVersion": "0.2.1",
+  "cvc5Source": {
+    "url": "https://github.com/cvc5/cvc5/archive/ea1b484fa54bfe56c0f8b3ac90a6e3e2f46441e7.tar.gz",
+    "sha256": "fb3d90b60378ef7cda9d05b7cc239fe721c0c2d79325b24b1a66651512fe48ec"
+  },
+  "ethosSource": {
+    "url": "https://github.com/cvc5/ethos/archive/7059fc50a12d1efa6c075163d445f34edceab1ae.tar.gz",
+    "sha256": "8aa641605cf80e3bf62a547b8dd150f66273166b742cc22fce12b3bb302bcf53"
+  },
+  "platforms": {
+    "linux-x86_64": {
+      "asset": "cvc5-Linux-x86_64-static",
+      "sha256": "1a1cda20d2df4938fa4944a69f33ddc9172e319ece0eed0aa09c4d7abede3ed1"
+    },
+    "darwin-x86_64": {
+      "asset": "cvc5-macOS-x86_64-static",
+      "sha256": "e7fe4af9491bd7c0db7591c0a483775735bd1a98b23933fd337a73ae39c10ff9"
+    },
+    "darwin-arm64": {
+      "asset": "cvc5-macOS-arm64-static",
+      "sha256": "a0e7f5b03b1bc4284fbfff7cdfb08c704801701cf7ece83a13f8a505e7581215"
+    }
+  }
+}

@@ -346,5 +346,10 @@ PRIV-ANALYTICS-001 keeps the same serializer boundary and mapped regression suit
 
 Invoice receipt authority and bounded verification scope: [invoice-receipts.md](invoice-receipts.md) (`PAY-INVOICE-001`). The additive migration rejects incompatible historical receipts; no automatic financial-evidence rewrite is permitted.
 
+Independent cross-solver and CPC certificate checking, its exact eight-formula
+scope and remaining six unchecked UNSAT certificates:
+[proof-certificates.md](proof-certificates.md). These results never discharge
+complete implementation or refinement obligations.
+
 The [release intent journal](release-journal.md) orders durable operations and rejects
 uncertain replay. It remains a library, not a guarded production executor.
