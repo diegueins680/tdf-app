@@ -691,9 +691,70 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/WhatsApp/History.hs"
       ],
-      "conflict": "Twenty-three model lines named Index… were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
+      "conflict": "Twenty-three model lines named Index\u2026 were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
       "authority": "The application's behaviour governs: conversations hold many messages and a reply is recorded beside its message. The names, the absence of any unique-key lookup or conflict clause on these keys and the plain indexes production holds on the campaign tables under the same naming show the uniqueness was never intended.",
       "resolution": "A new migration replaces the nine constraints with plain indexes of the same names and columns, and the twenty-three lines leave the models so that a development database no longer recreates them. A rollback file restores the constraints while no stored row violates them. The identity constraints (for example the WhatsApp provider message id) are unchanged."
+    },
+    {
+      "id": "AUTHORITY-066",
+      "sources": [
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "docs/music-releases/architecture-and-data-model.md",
+        "formal/system/music-publication.md"
+      ],
+      "conflict": "music_publish_due retired only the version a candidate was created from and ran every candidate in one transaction, so a second correction of the same source made the batch violate uq_music_release_one_published_version on every run; music_withdraw_due set music_release.withdrawn_at and nothing cleared it, so a scheduled correction of a withdrawn release never published; API-side withdrawal or re-approval left published_version_id on a version that was no longer live. The architecture document says the schedulers 'update the single public version' and does not say what happens to other live versions, to a withdrawn release, or to a failing candidate.",
+      "authority": "The requirement's forbidden transitions (one public version per release, no silent stuck state) and the scheduler-only publication rule of transitionReleaseVersion.",
+      "resolution": "Decided 2026-10-11: (1) publishing a version retires every other formerly published version of its release that is still published, replacement_pending or takedown_scheduled through the lifecycle chain, not only the one it replaces; this overrides a staff-chosen future takedown date on the superseded version (one live version per release); versions never published (e.g. parked in replacement_pending from approved) and suspended versions are left alone; when several due versions of one release are in one batch they publish in release-time order and each supersedes the previous one, with the intermediate notifications that implies; (2) publication clears withdrawn_at, so scheduling a correction of a withdrawn release (staff-only) republishes it; (3) each due candidate publishes or withdraws in its own subtransaction; a candidate that fails at publication for a transient reason (SQLSTATE class 40, 55P03) stays scheduled for the next run, any other failure makes it suspended with a publication_failed audit event; a failed withdrawal is retried and, unless transient, recorded once as withdrawal_failed; (4) published_version_id is kept by one trigger: set on published, cleared when the version leaves published, suspended, replacement_pending or takedown_scheduled; suspended keeps the pointer. Migration 2026-10-11_music_publication_isolation (manifest entry 203) and MusicPublication.tla."
+    },
+    {
+      "id": "AUTHORITY-064",
+      "sources": [
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "EVT-TICKET-MANUAL-001 states that the review locks the checkout, attempt and evidence rows. The function took those locks and then committed before writing, which released them; a second concurrent reviewer read the same submitted evidence and had the write refused by the database as an error instead of being told the transfer was already decided.",
+      "authority": "The requirement governs: the review is serialized by its row locks. The database's evidence transition guard remains the last line of defence, not the means of serialization.",
+      "resolution": "The intermediate commit is removed so the locks last until the review commits. A second reviewer waits and is answered from the decided state; the buyer's concurrent writes are not covered by this. The requirement gains a direct PostgreSQL test of the review transaction, including races, and a bounded model."
+    },
+    {
+      "id": "AUTHORITY-067",
+      "sources": [
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "formal/system/music-asset-processing.md"
+      ],
+      "conflict": "MEDIA-MUSIC-ASSET-001 listed four asset states (quarantined, processing, promoted, failed) and transitions 'processing -> failed -> retried'; music_asset.processing_state allows nine values and the worker never writes 'failed' or 'promoted' (a promoted master is 'valid' and immutable, a derivative is 'ready'). Retry and dead-letter live on music_processing_job, not on the asset.",
+      "authority": "The column CHECK constraints and the worker script, which the requirement's own tests exercise.",
+      "resolution": "Decided 2026-10-12: the requirement lists the column's asset states and the job statuses; the lease guard (worker name, claimed attempt as fencing token, lease age on the job row, reclaim only after expiry) and checksum-gated promotion are the stated concurrency rules and are modelled in MusicAssetProcessing.tla. The three gaps (no purge of abandoned uploads, checksum mismatch retried until max_attempts, dead-lettered asset left 'inspecting') are recorded as ambiguities, not fixed; the defect the independent review found (a re-upload with the same declared hash is bound to the old asset row and never inspected) is recorded on the requirement for a follow-up slice."
+    },
+    {
+      "id": "AUTHORITY-068",
+      "sources": [
+        "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "formal/system/music-upload-rebind.md"
+      ],
+      "conflict": "confirmMusicUpload binds a re-upload with the same declared SHA-256 to the existing asset row (unique on version, role, sha256) but leaves the row's quarantine object, so after a checksum-mismatch dead letter the corrected bytes were never inspected; the requirement's recovery text ('failed jobs are retried') assumed a retry could succeed.",
+      "authority": "MEDIA-MUSIC-ASSET-001's statement that the worker re-downloads and recomputes the hash of the uploaded bytes, and its idempotency rule (identical input, identical result).",
+      "resolution": "Decided 2026-10-12: enqueueing a processing job for an upload session re-points the session's non-promoted asset (same version, same declared hash, different object) at the session's object, resets it to uploaded, records the previous key in provenance and cancels the asset's queued, retry, running and dead-lettered jobs (the lease guard stops a cancelled run before it writes; a running final attempt left alone would dead-letter and keep the version validation_failed); promoted assets are never re-pointed; the trigger runs AFTER INSERT so a conflicting insert that creates no job changes nothing, and locks the version row first like the worker. Migration 2026-10-12_music_upload_rebind (manifest entry 203). No handler change."
+    },
+    {
+      "id": "AUTHORITY-082",
+      "sources": [
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
+        "docs/music-releases/ddex-queued-validation.md",
+        "docs/music-releases/ddex-atomic-enqueue.md",
+        "formal/system/music-ddex-export.md"
+      ],
+      "conflict": "MEDIA-MUSIC-DDEX-001 listed export states queued, rendering, validated, failed, retired and a transition 'suspended -> retired'; music_ddex_export.status allows queued, generating, validation_failed, valid, failed and nothing is ever retired. ddex-queued-validation.md promises that export failure messages contain no object keys, SQL or secrets, but mark_failed copied the last twenty lines of the worker's stderr (truncated to 1,000 characters) into the export's validation_report for every failure that was not a gate refusal, and that report is served to every release downloader.",
+      "authority": "The column CHECK constraint and the worker script for the state set; the queued-validation ADR's privacy rule and PRIV-ERROR-001 for the report.",
+      "resolution": "Decided 2026-10-13: the requirement lists the column's export states and the job statuses with the worker's transition relation; the lease guard, the two gates, valid finality, failed finality and the queued-only replay repair are the stated rules and are modelled in MusicDdexExport.tla with five single-guard controls. The worker now stores a fixed message with the error code for non-gate failures, keeps the stderr summary on the job row, and never moves a failed export back to validation_failed when a dead-lettered job is re-queued by hand; the runtime test covers both. The absence of any recovery for a dead-lettered export is recorded as an open product decision, not changed."
     }
   ]
 }

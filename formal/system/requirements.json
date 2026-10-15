@@ -922,13 +922,14 @@
       "observability": "Exact source fingerprint, Mobile pin, command, result and negative-control log.",
       "authority": "approved",
       "source": "User specification-conformance instruction 2026-10-04, sections 3, 9, 10, 19 and 24",
-      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions.",
+      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions. Catalog refresh preserves historical review provenance while recomputing discovery counters.",
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
         ".github/workflows/ci.yml",
-        "docs/catalog-persistence/catalog-list-decisions.json"
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "scripts/build-catalog-decisions.mjs"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
@@ -3468,7 +3469,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -7399,12 +7400,21 @@
         "tdf-hq-ui/src/api/eventTickets.test.ts",
         "tdf-hq/test/TicketManualReviewMain.hs",
         "tdf-hq/test/integration/ticket_manual_review_fixture.sql",
-        "scripts/test-ticket-manual-review.sh"
+        "scripts/test-ticket-manual-review.sh",
+        "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+        "scripts/test-ticket-manual-review-concurrency.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
       "formalModels": [
-        "formal/event-operations/ManualBankTransfer.tla"
+        "formal/event-operations/ManualBankTransfer.tla",
+        "formal/event-operations/TicketManualReview.tla",
+        "formal/event-operations/TicketManualReview.cfg",
+        "formal/event-operations/TicketManualReviewLockReleased.cfg",
+        "formal/event-operations/TicketManualReviewSubmitterReviews.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg"
       ],
-      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests.",
+      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests. Additional TicketManualReviewSpec cases and its separate bounded TicketManualReview model preserve the independent reviewer-overlap evidence from PR #545; see formal/system/ticket-manual-review.md.",
       "evidence": "2026-10-09 local disposable PostgreSQL 16: scripts/test-ticket-manual-review.sh 7/7 after the fix (the concurrency case failed 3/3 before it with deadlock 40P01 or an invalid evidence transition); TLC 1.7.2 positive model and seven expected counterexamples. Those local counts predate the issuance cases; the current nine Hspec cases and eight mutation controls are evidenced by hosted CI on 5112f2ed0 (2026-10-11): backend-quality ran scripts/test-ticket-manual-review.sh 9/9, and Event operations verification ran the positive model plus the eight negative configurations, each failing on its expected invariant. A production transfer remains separate evidence.",
       "status": "specified and implemented",
       "critical": true,
@@ -7422,7 +7432,7 @@
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
       "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
-      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (D\u00e1til)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
@@ -7522,7 +7532,7 @@
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
+      "confidence": "Provider contract taken from D\u00e1til public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
@@ -7534,7 +7544,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real D\u00e1til pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -7790,14 +7800,24 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicPublication.tla",
+        "formal/event-operations/MusicPublication.cfg",
+        "formal/event-operations/MusicPublicationBatch.cfg",
+        "formal/event-operations/MusicPublicationReplacedOnly.cfg",
+        "formal/event-operations/MusicPublicationStayWithdrawn.cfg",
+        "formal/event-operations/MusicPublicationPointerStale.cfg",
+        "formal/event-operations/MusicWithdrawalFairness.tla",
+        "formal/event-operations/MusicWithdrawalFairness.cfg",
+        "formal/event-operations/MusicWithdrawalStarvation.cfg"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-RELEASE-001",
       "title": "Canonical music releases with immutable approved versions",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "Music releases are authored as versions owned by a verified artist or authorized team. Each version moves only through music_valid_transition; approval freezes an immutable snapshot and SHA-256; correcting a published release creates a related version that references the same immutable asset bytes. Publication and withdrawal are applied by locked database functions and only a published, in-embargo-window, territory-allowed version is public.",
-      "authority": "Unreviewed recovered local implementation (2026-09-11..16); accepted ADR-001/ADR-003 in docs/music-releases/architecture-and-data-model.md; not yet independently reviewed or deployed",
+      "statement": "Music releases are authored as versions owned by a verified artist or authorized team. Each version moves only through music_valid_transition; approval freezes an immutable snapshot and SHA-256; correcting a published release creates a related version that references the same immutable asset bytes. Publication and withdrawal are applied by locked database functions that handle each due candidate on its own: a candidate that fails at publication is suspended with its error and the other candidates still publish; publishing a version retires every other formerly published version of its release that is still published, replacement_pending or takedown_scheduled, and reopens a withdrawn release; a failure that is transient (deadlock, serialization failure, lock timeout) leaves the candidate scheduled for the next run; the release points at the version it last published only while that version is published, suspended, replacement_pending or takedown_scheduled. Only a published, in-embargo-window, territory-allowed version is public.",
+      "authority": "Unreviewed recovered local implementation (2026-09-11..16); accepted ADR-001/ADR-003 in docs/music-releases/architecture-and-data-model.md; not yet independently reviewed or deployed; AUTHORITY-066 (scheduler isolation, retirement, reopening, pointer)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
       "contract": "docs/music-releases/architecture-and-data-model.md",
       "property": "No public projection exists for a version that is not published, approved by snapshot hash and allowed in the trusted territory.",
@@ -7820,24 +7840,40 @@
       "state": {
         "version": [
           "draft",
+          "uploading",
+          "processing",
+          "validation_failed",
           "ready_for_review",
+          "in_review",
+          "changes_requested",
           "approved",
           "scheduled",
           "published",
-          "withdrawn",
-          "superseded"
+          "suspended",
+          "cancelled",
+          "replacement_pending",
+          "takedown_scheduled",
+          "withdrawn"
         ],
-        "authority": "PostgreSQL triggers and music_valid_transition"
+        "release": "published_version_id points at the version last published while it stays published, suspended, replacement_pending or takedown_scheduled, otherwise null; withdrawn_at is set while the release points at nothing after it pointed at something",
+        "authority": "PostgreSQL triggers, music_valid_transition, music_publish_due, music_withdraw_due, trg_music_release_live_version"
       },
       "allowedTransitions": [
-        "draft -> ready_for_review -> approved -> published/scheduled",
+        "draft -> ready_for_review -> in_review -> approved -> scheduled -> published (scheduler only)",
         "published -> correction version (new draft linked by correction_of_version_id)",
-        "published -> withdrawn by locked withdraw function"
+        "published -> takedown_scheduled -> withdrawn (takedown scheduler)",
+        "published/scheduled -> suspended -> approved (re-approval re-validates)",
+        "scheduled -> suspended with publication_failed audit when publication fails",
+        "publication of a version retires every other formerly published version still published, replacement_pending or takedown_scheduled through replacement_pending -> takedown_scheduled -> withdrawn; never-published and suspended versions stay",
+        "scheduled stays scheduled after a transient publication failure (SQLSTATE class 40, 55P03)"
       ],
       "forbiddenTransitions": [
         "Editing an approved snapshot in place",
         "Two simultaneously public versions of one release",
-        "Public exposure before embargo or outside allowed territory"
+        "Public exposure before embargo or outside allowed territory",
+        "One failed candidate aborting the publication or withdrawal of other candidates",
+        "A release pointing at a version that is not live",
+        "A scheduled correction of a withdrawn release that never publishes"
       ],
       "effects": [
         "Single public version per release",
@@ -7845,10 +7881,10 @@
       ],
       "authorization": "music_can(actor, artist, permission) re-checked by backend for every mutation; public reads require the public flag and territory rule.",
       "privacy": "Masters and quarantined uploads are never public; collaborator identifiers are only shown to authorized editors.",
-      "concurrency": "Correction and transition requests serialize on version rows with optimistic revision checks (correction-concurrency.md).",
+      "concurrency": "Correction and transition requests serialize on version rows with optimistic revision checks (correction-concurrency.md). The schedulers lock candidate and release FOR UPDATE SKIP LOCKED and run each candidate in its own subtransaction. The API handler locks the version row before the release row and the scheduler the other way round, so a handler move of a pointed sibling during the same release's publication can deadlock: the victim's candidate stays scheduled and publishes on the next run.",
       "idempotency": "Correction creation and publication are idempotent per request key and locked rows.",
-      "failure": "Invalid transitions raise database errors surfaced as actionable API errors.",
-      "recovery": "Rollback SQL exists for each migration; corrections never rewrite history.",
+      "failure": "Invalid transitions raise database errors surfaced as actionable API errors. A publication that raises a transient error (class 40, 55P03) leaves the candidate scheduled with a warning; any other failure suspends only that version and records publication_failed (SQLSTATE, message); a withdrawal that raises stays takedown_scheduled, is recorded once as withdrawal_failed unless transient, and moves behind other eligible withdrawals by updating its last-attempt priority, including with a one-row batch.",
+      "recovery": "Rollback SQL exists for each migration; corrections never rewrite history. 2026-10-11_music_publication_isolation repairs release rows pointing at non-live versions and releases marked withdrawn while a version is published.",
       "observability": "Editorial notifications and audit rows per transition.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
@@ -7873,7 +7909,9 @@
         "tdf-hq/sql/2026-09-16_music_correction_concurrency.sql",
         "tdf-hq/sql/2026-09-16_music_correction_concurrency_rollback.sql",
         "tdf-hq/sql/2026-09-16_music_resource_graph_validation.sql",
-        "tdf-hq/sql/2026-09-16_music_resource_graph_validation_rollback.sql"
+        "tdf-hq/sql/2026-09-16_music_resource_graph_validation_rollback.sql",
+        "tdf-hq/sql/2026-10-11_music_publication_isolation.sql",
+        "tdf-hq/sql/2026-10-11_music_publication_isolation_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
@@ -7889,30 +7927,38 @@
         "scripts/__tests__/music-test-database.test.mjs",
         "scripts/lib/music-test-database.mjs",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts",
-        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx"
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
+        "tdf-hq/test/TDF/MusicPublicationSpec.hs",
+        "scripts/test-music-publication.sh"
       ],
-      "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script",
-      "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); no CI or production evidence on current main",
-      "confidence": "Medium: extensive local evidence on a 2026-09-10 base; not re-verified against current main.",
+      "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script; PostgreSQL spec of the schedulers (scripts/test-music-publication.sh); bounded TLC model of scheduled publication with four negative controls (formal/system/music-publication.md); bounded one-row withdrawal fairness model with a permanent failure and a starvation mutation control",
+      "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); scheduler reproduction, spec and model results in formal/system/music-publication.md (2026-10-11); no production evidence (migrations not applied in production)",
+      "confidence": "Medium: scheduler isolation, retirement, reopening and pointer rules are exercised on the migrated schema and model-checked in a bounded scope; authoring and public reads keep the 2026-09-16 local evidence only.",
       "ambiguity": [
-        "Migrations are not registered in scripts/production-migrations.json; deployment order is only documented in prose.",
         "Feature flags are created disabled; production enablement has no approved decision."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Recovered implementation and tests exist; CI on current main and deployment are pending."
+        "reason": "Scheduler isolation, retirement, reopening and release pointer are verified on the migrated schema (2026-10-11); authoring and public reads keep local 2026-09-16 evidence; not deployed."
       }
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicAssetProcessing.tla",
+        "formal/event-operations/MusicAssetProcessing.cfg",
+        "formal/event-operations/MusicAssetProcessingUnfenced.cfg",
+        "formal/event-operations/MusicAssetProcessingPreempt.cfg",
+        "formal/event-operations/MusicAssetProcessingUnverified.cfg",
+        "formal/event-operations/MusicAssetProcessingOverLimit.cfg"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-ASSET-001",
       "title": "Quarantined uploads, reproducible processing and signed asset access",
       "domain": "MEDIA",
       "critical": true,
       "statement": "Audio and artwork uploads go by scoped SigV4 multipart to a quarantine bucket under a UUID key. The worker re-downloads, recomputes SHA-256, inspects the real type, produces reproducible derivatives (AAC/FLAC/preview/artwork) with a versioned manifest, and only then promotes the original bytes as immutable. Public asset URLs are signed for five minutes only after music_public_asset_accessible re-resolves version, embargo, territory and policy; masters are never publicly signed.",
-      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md",
+      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md; AUTHORITY-067 (state sets and lease guard recorded); AUTHORITY-068 (re-upload rebinding)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/worker-multipart.md",
       "contract": "docs/music-releases/api-and-configuration.md",
       "property": "Every served derivative is traceable to a checksum-verified, promoted original; no master is signable for public access.",
@@ -7933,20 +7979,38 @@
       "state": {
         "asset": [
           "quarantined",
+          "uploaded",
+          "inspecting",
+          "valid",
+          "invalid",
           "processing",
-          "promoted",
-          "failed"
+          "ready",
+          "failed",
+          "deleted"
         ],
-        "authority": "Database job rows and worker"
+        "job": [
+          "queued",
+          "running",
+          "retry",
+          "succeeded",
+          "failed",
+          "dead_letter",
+          "cancelled"
+        ],
+        "authority": "music_asset.processing_state and music_processing_job.status; the worker's lease guard (pg_temp.music_worker_guard) fences every write of a run on worker name, claimed attempt and lease age"
       },
       "allowedTransitions": [
-        "uploaded -> quarantined -> processing -> promoted",
-        "processing -> failed -> retried"
+        "upload session initiated -> uploading -> completed; confirmation creates the asset as uploaded and one job per session",
+        "asset uploaded -> inspecting -> valid (master, immutable, master bucket) with derivatives inserted ready and immutable",
+        "job queued/retry -> running (claim, attempt+1) -> succeeded | retry (run_after delayed) | dead_letter at or beyond max_attempts (an expired last attempt is reclaimed once more)",
+        "running -> reclaimed by another run only after the lease expired"
       ],
       "forbiddenTransitions": [
         "Promotion without matching recomputed SHA-256",
         "Public signature for a master asset",
-        "Mutation of promoted bytes"
+        "Mutation of promoted bytes",
+        "A completion written by a run whose job was reclaimed (attempt token mismatch)",
+        "Reclaiming a job whose lease is still live"
       ],
       "effects": [
         "Immutable original location and checksum",
@@ -7954,10 +8018,10 @@
       ],
       "authorization": "Upload sessions require authoring permission; signatures are scoped to one key and short-lived.",
       "privacy": "Quarantine and master buckets are private; territory comes from CF-IPCountry only behind Cloudflare, otherwise specific rules fail closed.",
-      "concurrency": "Worker claims jobs with row locks; multipart completion is idempotent per upload.",
-      "idempotency": "Re-running a job reproduces identical derivatives for identical input.",
-      "failure": "Type, size or checksum mismatch fails the job without promotion.",
-      "recovery": "Failed jobs are retried; orphan multipart uploads are aborted per worker-multipart.md.",
+      "concurrency": "Worker claims one due job FOR UPDATE SKIP LOCKED; every later statement of the run is prefixed by the lease guard (version row FOR NO KEY UPDATE, job row FOR UPDATE, status running, same worker name, same attempt, lease younger than the ttl); multipart completion is idempotent per upload; derivatives are unique per (version, role, sha256).",
+      "idempotency": "Re-running a job reproduces identical derivatives for identical input. A re-upload with the same declared SHA-256 binds to the existing non-promoted asset row and re-points it at the new object before inspection (trg_music_rebind_upload_asset); the asset's queued, retry, running and dead-lettered attempts are cancelled (a cancelled run is stopped by the lease guard).",
+      "failure": "Type, size or checksum mismatch fails the attempt without promotion; the job retries with a growing delay until max_attempts, then dead_letter, and the version becomes validation_failed. A lost or expired lease stops the run (lease-lost marker, USR1) and the job is reclaimed.",
+      "recovery": "Failed jobs are retried with a growing delay; an expired lease lets another run reclaim the job. Orphan multipart uploads created by the worker's own PUTs are aborted per worker-multipart.md; client upload sessions have no purge (ambiguity). After a checksum-mismatch dead letter, uploading the correct bytes under the same declared hash is inspected and the earlier attempts, running ones included, are cancelled (2026-10-12_music_upload_rebind).",
       "observability": "Worker logs and job status rows; worker-regression-diagnostics.md.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
@@ -7972,7 +8036,9 @@
         "scripts/run-music-release-worker.sh",
         "scripts/run-music-release-worker-once.sh",
         "tdf-hq-ui/src/api/musicStorageResponse.ts",
-        "tdf-hq-ui/src/utils/incrementalSha256.ts"
+        "tdf-hq-ui/src/utils/incrementalSha256.ts",
+        "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+        "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
@@ -7999,27 +8065,38 @@
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/utils/incrementalSha256.test.ts"
       ],
-      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3",
-      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16)",
-      "confidence": "Medium: local-only evidence; no deployed worker or real buckets.",
+      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md)",
+      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12); re-upload runtime scenario and migration apply/rollback in formal/system/music-upload-rebind.md (2026-10-12, historical local evidence)",
+      "confidence": "Medium: lease guard, claim and promotion rules read from source and model-checked in a bounded scope; local-only runtime evidence; no deployed worker or real buckets.",
       "ambiguity": [
-        "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only)."
+        "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only).",
+        "Abandoned upload sessions are never marked expired and purge_abandoned_upload is never enqueued (formal/system/music-asset-processing.md).",
+        "A checksum mismatch is retried up to max_attempts before dead_letter although it cannot succeed.",
+        "A dead-lettered source asset keeps processing_state = 'inspecting'."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local integration evidence only; no deployment."
+        "reason": "Lease guard, claim and checksum-gated promotion read from source and bounded-model checked; re-upload recovery implemented by AUTHORITY-068. Remaining upload lifecycle gaps and local-only evidence; not deployed."
       }
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicDdexExport.tla",
+        "formal/event-operations/MusicDdexExport.cfg",
+        "formal/event-operations/MusicDdexExportUnfenced.cfg",
+        "formal/event-operations/MusicDdexExportReopen.cfg",
+        "formal/event-operations/MusicDdexExportNoCommitGate.cfg",
+        "formal/event-operations/MusicDdexExportReplayFailed.cfg",
+        "formal/event-operations/MusicDdexExportSplitDeadLetter.cfg"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-DDEX-001",
       "title": "Private reproducible DDEX ERN 4.3.2 export of approved versions",
       "domain": "MEDIA",
       "critical": true,
       "statement": "A DDEX ERN 4.3.2 message is a projection of one approved version snapshot hash. The API commits export and job atomically, serializes per actor/key and version, revalidates queued exports against the same rules used by API, renderer and worker, and produces a private, reproducible package with message-bound file names. No delivery to partners is performed.",
-      "authority": "Unreviewed recovered local implementation; docs/music-releases/ddex-*.md",
+      "authority": "Unreviewed recovered local implementation; docs/music-releases/ddex-*.md; AUTHORITY-082 (state sets, lifecycle guards and failure-report privacy recorded)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/ddex-operation-lifecycle.md",
       "contract": "docs/music-releases/ddex-offline-bundle.md",
       "property": "Every exported package is reproducible from, and bound to, exactly one approved snapshot hash.",
@@ -8040,33 +8117,80 @@
       "state": {
         "export": [
           "queued",
-          "rendering",
-          "validated",
-          "failed",
-          "retired"
+          "generating",
+          "validation_failed",
+          "valid",
+          "failed"
         ],
-        "authority": "ddex export/job rows"
+        "job": [
+          "queued",
+          "running",
+          "retry",
+          "succeeded",
+          "failed",
+          "dead_letter",
+          "cancelled"
+        ],
+        "states": [
+          "queued",
+          "generating",
+          "validation_failed",
+          "valid",
+          "failed"
+        ],
+        "initial": "queued",
+        "terminal": [
+          "valid",
+          "failed"
+        ],
+        "transitions": {
+          "queued": [
+            "generating",
+            "validation_failed",
+            "failed"
+          ],
+          "generating": [
+            "generating",
+            "valid",
+            "validation_failed",
+            "failed"
+          ],
+          "validation_failed": [
+            "generating",
+            "validation_failed",
+            "failed"
+          ],
+          "valid": [],
+          "failed": []
+        },
+        "authority": "music_ddex_export.status and music_processing_job.status; transitions are enforced by the worker's conditional UPDATEs under the lease guard, not by a trigger"
       },
       "allowedTransitions": [
-        "queued -> rendering -> validated",
-        "queued -> failed on revalidation",
-        "suspended -> retired"
+        "API: request -> export queued + generate_ddex job queued in one transaction (actor/key advisory lock, version row lock)",
+        "Worker gate 1 (rules re-checked under the lease guard): queued | validation_failed | generating -> generating",
+        "Worker gate 2 (rules re-checked, same snapshot hash): generating -> valid with xml/manifest/package assets, then job succeeded",
+        "Any failure of an attempt: not-valid export -> validation_failed and job retry; on the last attempt -> failed and job dead_letter, in one write",
+        "A valid export whose job did not close is recovered as is: job succeeded, nothing regenerated",
+        "Authorized replay of the original request: a queued export without a job gets its job; otherwise the existing export is returned unchanged"
       ],
       "forbiddenTransitions": [
         "Export of a non-approved version",
         "Export job committed without its export row",
+        "valid -> any other status; a valid package is never regenerated or re-pointed",
+        "failed -> any other status; no replay re-enqueues a failed export",
+        "A write by a process whose claimed attempt is no longer the job's attempt",
         "Partner delivery"
       ],
       "effects": [
         "Private package with credits, parties and identifiers of that version"
       ],
-      "authorization": "Export requires DDEX export permission re-checked by backend.",
+      "authorization": "Creating an export requires strict administrator access (and the music_releases.ddex_export flag); listing and downloading require release.downloads on the release or strict administrator access, re-checked by the backend.",
       "privacy": "Packages are private and contain collaborator identifiers; never public.",
-      "concurrency": "Per actor/key/version serialization; orphaned queued exports recovered by replay.",
-      "idempotency": "Replaying an export request returns the existing operation.",
-      "failure": "Validation errors fail the export with actionable messages.",
-      "recovery": "Queued revalidation and replay per ddex-queued-validation.md and ddex-atomic-enqueue.md.",
-      "observability": "Export and job status rows.",
+      "concurrency": "API: pg_advisory_xact_lock(music-ddex:<actor>:<key>) then the version row FOR UPDATE; export and job commit together. Worker: FOR UPDATE SKIP LOCKED claim; every later statement runs under pg_temp.music_worker_guard (version FOR NO KEY UPDATE, job FOR UPDATE, status running, same worker name, claimed attempt as fencing token, lease younger than the ttl); a running job is reclaimed only after its lease expired. Gate 1 and gate 2 lock both registry rows FOR SHARE in UUID order and share their transaction with the status write. Bounded model: MusicDdexExport.tla.",
+      "idempotency": "Replaying the request with the same actor, key, version, operation, sender and recipient returns the existing export; a different body under the same key is 409; the natural key (version, recipient, operation, snapshot) is unique, so a second request for the same package is 409 whatever its key. The replay recreates only a missing job of a queued export and never resets attempts.",
+      "failure": "A gate refusal stores the field-level report (valid=false, code ddex_preconditions_failed, errors[]). Any other failure of an attempt (renderer, transfer, checksum, crash handler) stores a fixed message with its error code; the worker's stderr summary is kept on the job row until the next claim clears it, and permanently once dead-lettered. The export becomes validation_failed while attempts remain and failed with the dead letter; a valid or failed export is never changed by a later attempt.",
+      "recovery": "Queued revalidation and replay per ddex-queued-validation.md and ddex-atomic-enqueue.md; a valid export is recovered without regeneration after a crash between gate 2 and job closure. A failed (dead-lettered) export has no recovery path: see ambiguity.",
+      "observability": "Export status and validation report (release downloaders); job status, attempts, error code and stderr summary (operators).",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
@@ -8074,7 +8198,8 @@
         "scripts/build-ddex-ern432-package.sh",
         "scripts/fetch-ddex-ern432-schema.sh",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
-        "tdf-hq/sql/2026-09-16_music_ddex_operations_rollback.sql"
+        "tdf-hq/sql/2026-09-16_music_ddex_operations_rollback.sql",
+        "scripts/run-music-release-worker-once.sh"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
@@ -8084,17 +8209,22 @@
         "scripts/test-music-ddex-credits.sh",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
         "test/fixtures/music-worker/ddex-package.mjs",
-        "test/fixtures/music-worker/ddex-render.mjs"
+        "test/fixtures/music-worker/ddex-render.mjs",
+        "scripts/test-music-release-worker-runtime.mjs",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "verification": "ERN spec against fixture and schema, package builder tests, enqueue fault-injection probe",
-      "evidence": "Local results in docs/music-releases/ddex-atomic-enqueue.md (2026-09-16)",
+      "verification": "ERN spec against fixture and schema, package builder tests, enqueue fault-injection probe. Bounded TLA+ model of the export/job lifecycle under two leased processes with five single-guard negative controls (formal/system/music-ddex-export.md). Worker runtime test (PostgreSQL, substitute renderer/packager/transport): commit gate, revocation during rendering, valid recovery, queued revalidation, and the processing-failure report that excludes worker stderr and recovers to valid on retry.",
+      "evidence": "Local results in docs/music-releases/ddex-atomic-enqueue.md (2026-09-16); TLC 1.7.2 and the worker runtime test on PostgreSQL 16, 2026-10-13 (formal/system/music-ddex-export.md).",
       "confidence": "Medium for schema conformance; partner acceptance unknown.",
       "ambiguity": [
-        "Partner-specific profiles and delivery are out of scope; compatibility matrix is a 2026-09-12 snapshot."
+        "Partner-specific profiles and delivery are out of scope; compatibility matrix is a 2026-09-12 snapshot.",
+        "A dead-lettered export (status failed) has no recovery path: the natural unique key (version, recipient, operation, snapshot) rejects a new request for the same package and the replay never re-enqueues a failed export, so a transient outage lasting the five attempts (about 15 minutes) blocks that operation for that version and recipient until an operator edits the rows. The same holds for any non-queued export whose job was cancelled by hand. ADR-018 chose no blind retry; an audited operator retry is an open product decision.",
+        "The job's stderr summary is served to the uploader through the upload status endpoint (MusicReleaseUpload.hs); that surface belongs to MEDIA-MUSIC-ASSET-001 and is not changed here.",
+        "The export's validation_failed status is also used for processing failures that are not validation refusals; the report's code distinguishes them."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local evidence only; not deployed."
+        "reason": "Lifecycle, fencing, finality and failure-report privacy are modelled within bounds and exercised by the worker runtime test locally; the export feature flag is off in production, and dead-letter recovery is undecided."
       }
     },
     {
@@ -8806,12 +8936,14 @@
       "allowedTransitions": [
         "CTA/sticky CTA/deep link -> dialog focused on first missing field",
         "valid submit -> received or order checkout",
-        "server field error -> message beside field"
+        "server field error -> message beside field",
+        "close -> completed dialog exit -> remove resume parameter, preserve attribution and restore trigger focus"
       ],
       "forbiddenTransitions": [
         "form discovered only by scrolling",
         "raw local phone sent as E.164",
-        "raw server text shown"
+        "raw server text shown",
+        "navigation interrupts closing and retains a modal"
       ],
       "effects": [
         "Draft preserved across login round-trip and cleared on success."
@@ -9022,34 +9154,35 @@
     },
     {
       "id": "OPS-CI-REGISTRY-001",
-      "title": "Authenticate Docker Hub pulls in CI",
+      "title": "Public CI image pulls and authenticated release publication",
       "domain": "OPS",
       "critical": false,
-      "statement": "Trusted CI jobs authenticate Docker Hub image pulls with the existing repository secrets before pulling test images. Job and service containers receive credentials at initialization; reusable CI callers forward the declared credentials. Authentication does not bypass tests, reviews or release admission.",
+      "statement": "GitHub-hosted verification uses runner access for public test images without repository Docker Hub credential overrides. Release image publication still authenticates using repository secrets. Neither image access nor authentication bypasses tests, reviews or release admission.",
       "authority": "User authorized CI authentication on 2026-10-09",
-      "source": "User instruction 2026-10-09: Authenticate, following observed Docker Hub unauthenticated pull rate limits.",
+      "source": "Original user authentication instruction 2026-10-09; current consolidation authorization and observed authenticated-container pull failures on 2026-10-15; GitHub Actions hosted-runner Docker Hub rate-limit documentation.",
       "contract": ".github/workflows/ci.yml",
-      "property": "Shell pulls follow Docker login; job and service image pulls receive registry credentials; no credential literal is committed or printed.",
+      "property": "Public test pulls retain runner access; release pushes require authentication; image identities and all checks remain unchanged.",
       "actors": [
         "GitHub-hosted CI runner",
         "Repository secret administrator"
       ],
       "preconditions": [
-        "Existing DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets are valid and available to the trusted run."
+        "Public test images on GitHub-hosted runners; publishing secrets available only to authorized release jobs."
       ],
       "inputs": [
-        "Repository secret references",
-        "Existing Docker Hub image tags and immutable digests"
+        "Existing public image tags/digests",
+        "Repository secret references for release publication"
       ],
       "state": {
         "registry": [
-          "unauthenticated",
-          "authenticated",
-          "authentication-failed"
+          "public runner access",
+          "authenticated release publication",
+          "pull or login failure"
         ]
       },
       "allowedTransitions": [
-        "Available credentials -> authenticate -> pull existing test images -> execute unchanged checks"
+        "Pull the existing public test image using runner access, then execute every selected check.",
+        "Authenticate an authorized release publishing job before pushing its image."
       ],
       "forbiddenTransitions": [
         "Expose secret values in source or logs",
@@ -9057,14 +9190,14 @@
         "Use pull_request_target to expose secrets to fork code"
       ],
       "effects": [
-        "Authenticated test-image downloads in ephemeral CI runners"
+        "Test-image downloads and independently authorized image publication"
       ],
-      "authorization": "Existing repository secret access governs credentials; fork and Dependabot login steps are skipped. Protected-main review and checks remain independent.",
-      "privacy": "Pass credentials through GitHub secrets to docker/login-action or native container credentials; never copy values into source.",
-      "concurrency": "Each hosted job authenticates its own runner; registry account quotas remain shared.",
+      "authorization": "Public test-image access requires no repository secret; release publication retains Docker Hub authentication and protected-main prerequisites.",
+      "privacy": "Publishing secrets remain secret references; no values are printed or committed.",
+      "concurrency": "Each job retains runner-local public access; provider availability still constrains execution.",
       "idempotency": "Repeated runs can log in and pull the same images without changing application or production data.",
-      "failure": "Invalid available credentials fail authentication; absent fork credentials do not gain privileged access. Authenticated registry quotas and outages can still fail pulls.",
-      "recovery": "Repair or rotate repository secrets through the authorized secret store and rerun CI; do not weaken required tests.",
+      "failure": "A failed image pull, login or test remains a failure. No exemption is treated as guaranteed image availability.",
+      "recovery": "Inspect exact job/container logs and repair access configuration; rerun all affected current-head checks.",
       "observability": "GitHub login-step and container-initialization results, image-pull results and subsequent test outcomes; never secret values.",
       "implementation": [
         ".github/workflows/build.yml",
@@ -9074,19 +9207,19 @@
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/social-verification.yml"
       ],
-      "verification": "Actionlint validates workflow syntax, secret declarations and reusable-workflow references. Hosted CI must verify the stored token and actual authenticated image pulls.",
-      "evidence": "Actionlint v1.7.12 local execution and exact-commit GitHub Actions login/pull logs.",
+      "verification": "Parsed workflow comparison preserves image references, service configuration and test commands; current-head hosted jobs must actually pull images and execute tests.",
+      "evidence": "Current-head GitHub container initialization and downstream test results; repository CI regression tests.",
       "tests": [],
       "formalModels": [],
       "status": "specified and implemented",
-      "historicalStatus": null,
-      "confidence": "Workflow syntax verified locally; hosted authentication requires execution with repository secrets.",
+      "historicalStatus": "The October9 authenticated-pull policy was superseded after October15 hosted logs showed unauthenticated quota failures despite explicit Docker login.",
+      "confidence": "Source-level configuration verified; hosted pull and test completion remain independent evidence.",
       "ambiguity": [
-        "Authentication does not guarantee registry availability or unlimited pull quota."
+        "GitHub hosted-runner public-image allowance does not guarantee provider availability or successful tests."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local workflow validation passed; exact-commit hosted credential verification remains pending."
+        "reason": "Public credential overrides removed after observed failures; fresh hosted pull and test gates remain required."
       }
     },
     {
@@ -9130,7 +9263,7 @@
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
-      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
+      "idempotency": "Re-tapping Asistir\u00e9 re-upserts the same accepted RSVP.",
       "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
@@ -9903,6 +10036,77 @@
         "classification": "PARTIAL",
         "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
       }
+    },
+    {
+      "id": "SYS-UI-FIXTURE-001",
+      "title": "Explicit clock and document boundaries in UI regression fixtures",
+      "domain": "SYS",
+      "statement": "UI regression fixtures must distinguish debounce time and new-document loading from application behavior, while retaining assertions for cancellation, late responses, selected identities, owned notification routing and absence of unrelated writes.",
+      "authority": "Existing behavior and tests reconciled under the requested verification audit",
+      "source": "docs/party-selector.md; docs/notifications/navigation-2026-09-17.md",
+      "contract": "formal/system/ui-fixture-boundaries.md",
+      "critical": false,
+      "status": "specified and implemented",
+      "actors": [
+        "Test runner",
+        "Synthetic visitor"
+      ],
+      "preconditions": [
+        "Synthetic API fixtures; production bundle for browser checks; isolated QueryClient for selector cases."
+      ],
+      "inputs": [
+        "Search text and controlled timer progression",
+        "A real middle-click or platform modified click opening a notification tab"
+      ],
+      "state": {
+        "selector": [
+          "debouncing",
+          "requesting",
+          "selected",
+          "failed",
+          "cancelled"
+        ],
+        "newTab": [
+          "created",
+          "document loaded",
+          "owned destination rendered"
+        ]
+      },
+      "allowedTransitions": [
+        "Advance the selector clock through the real 300 ms debounce; assert no request at 299 ms.",
+        "Activate the new tab as a reader would and await its load boundary, then check the unchanged bounded application redirect and visible profile.",
+        "Reset mocked responses and timers between cases."
+      ],
+      "forbiddenTransitions": [
+        "Replace cancellation, late-response, selection or routing assertions with unconditional success.",
+        "Treat a new page event as document-load completion.",
+        "Leak a queued mock response into another test."
+      ],
+      "effects": [
+        "Synthetic UI requests and revision-bound verification evidence only."
+      ],
+      "authorization": "Fixtures do not grant production authority; notification checks retain owner-specific resolution and no access-request mutation assertions.",
+      "privacy": "Only synthetic identities and local fixture endpoints are used.",
+      "concurrency": "Selector tests retain request-abort and late-response exclusion assertions; browser checks retain original-tab location.",
+      "idempotency": "Each case starts with fresh mocks, controlled timers and query scope; repeated runs retain their individual results.",
+      "failure": "A missing result, missed cancellation, wrong destination or unexpected mutation fails the test.",
+      "recovery": "Repair the fixture or implementation from retained failure evidence, then rerun the affected and full gates.",
+      "observability": "Record exact source, passed/failed/skipped counts and browser artifacts; isolated success does not erase full-run failure.",
+      "property": "Lifecycle synchronization cannot bypass the existing behavioral assertions.",
+      "implementation": [
+        "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
+        "e2e/web/notification-navigation.spec.mjs"
+      ],
+      "verification": "Existing six selector cases, repeated notification navigation on five browser/device configurations and full UI/browser gates. Finite examples, not universal proof.",
+      "evidence": "Revision-bound Jest results and Playwright logs/traces; retained initial failures.",
+      "confidence": "Scoped test-infrastructure contract; does not establish complete selector or notification authorization correctness.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused selector checks pass; complete current-candidate web/browser gates still required."
+      },
+      "tests": [],
+      "formalModels": [],
+      "ambiguity": []
     }
   ]
 }

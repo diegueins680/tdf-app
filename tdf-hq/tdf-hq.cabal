@@ -346,6 +346,7 @@ test-suite tdf-hq-test
     TDF.ProviderIdentitySpec
     TDF.CredentialLifecycleSpec
     TDF.WhatsAppConsentSpec
+    TDF.MusicPublicationSpec
     TDF.InteractionWriteBudgetSpec
     TDF.MusicPurchaseSpec
     TDF.DriveReplaySpec
@@ -365,6 +366,7 @@ test-suite tdf-hq-test
     TDF.TicketConfirmationSpec
     TDF.EventOrganizerSpec
     TDF.InvoiceDatilSpec
+    TDF.TicketManualReviewSpec
     TDF.IndexDeclarationSpec
     TDF.InvoiceWorkerSpec
     Paths_tdf_hq

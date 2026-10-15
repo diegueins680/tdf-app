@@ -237,6 +237,12 @@ run_negative_tlc InvoiceSubmissionUnknownAsRefused.cfg invoice-submission-unknow
 run_negative_tlc InvoiceSubmissionRetryUncertain.cfg invoice-submission-retry-uncertain 'Invariant AtMostOneProviderDocument is violated' InvoiceSubmission.tla
 run_negative_tlc MarketplaceStorageUnsafeCache.cfg marketplace-storage-cache 'Invariant NoStorageExceptionEscapes is violated' MarketplaceStorage.tla
 run_negative_tlc MarketplaceStorageUnsafeKey.cfg marketplace-storage-key 'Invariant NoDispatchWithoutDurableKey is violated' MarketplaceStorage.tla
+run_tlc MusicDdexExport.tla MusicDdexExport.cfg music-ddex-export
+run_negative_tlc MusicDdexExportUnfenced.cfg music-ddex-export-unfenced 'Invariant CurrentWriter is violated' MusicDdexExport.tla
+run_negative_tlc MusicDdexExportReopen.cfg music-ddex-export-reopen 'Invariant ValidForever is violated' MusicDdexExport.tla
+run_negative_tlc MusicDdexExportNoCommitGate.cfg music-ddex-export-no-commit-gate 'Invariant ValidOnlyUnderRules is violated' MusicDdexExport.tla
+run_negative_tlc MusicDdexExportReplayFailed.cfg music-ddex-export-replay-failed 'Invariant FailedIsFinal is violated' MusicDdexExport.tla
+run_negative_tlc MusicDdexExportSplitDeadLetter.cfg music-ddex-export-split-dead-letter 'Invariant PendingHasLiveJob is violated' MusicDdexExport.tla
 run_tlc OptionalTokenRecovery.tla OptionalTokenRecovery.cfg optional-token-recovery
 run_negative_tlc OptionalTokenRecoveryUnsafeStorage.cfg optional-token-storage 'Temporal properties were violated' OptionalTokenRecovery.tla
 run_negative_tlc OptionalTokenRecoveryUnsafeFragment.cfg optional-token-fragment 'Invariant FragmentPrecedence is violated' OptionalTokenRecovery.tla
@@ -277,6 +283,18 @@ expect_counterexample() {
   echo "Expected mutation counterexample: ${config}: ${invariant}"
   printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc MusicPublication.tla MusicPublication.cfg music-publication
+run_negative_tlc MusicPublicationBatch.cfg music-publication-batch 'Temporal properties were violated' MusicPublication.tla
+run_negative_tlc MusicPublicationReplacedOnly.cfg music-publication-replaced-only 'Invariant OnlyInvalidFails is violated' MusicPublication.tla
+run_negative_tlc MusicPublicationStayWithdrawn.cfg music-publication-stay-withdrawn 'Temporal properties were violated' MusicPublication.tla
+run_negative_tlc MusicPublicationPointerStale.cfg music-publication-pointer-stale 'Invariant PointerLive is violated' MusicPublication.tla
+run_tlc MusicWithdrawalFairness.tla MusicWithdrawalFairness.cfg music-withdrawal-fairness
+run_negative_tlc MusicWithdrawalStarvation.cfg music-withdrawal-starvation 'Temporal properties were violated' MusicWithdrawalFairness.tla
+run_tlc MusicAssetProcessing.tla MusicAssetProcessing.cfg music-asset-processing
+run_negative_tlc MusicAssetProcessingUnfenced.cfg music-asset-processing-unfenced 'Invariant CompletionIsCurrent is violated' MusicAssetProcessing.tla
+run_negative_tlc MusicAssetProcessingPreempt.cfg music-asset-processing-preempt 'Invariant LiveLeaseIsCurrent is violated' MusicAssetProcessing.tla
+run_negative_tlc MusicAssetProcessingUnverified.cfg music-asset-processing-unverified 'Invariant PromotedOnlyVerified is violated' MusicAssetProcessing.tla
+run_negative_tlc MusicAssetProcessingOverLimit.cfg music-asset-processing-overlimit 'Invariant NoOverLimitRun is violated' MusicAssetProcessing.tla
 run_tlc PaymentRecovery.tla PaymentRecovery.cfg payment-recovery
 expect_counterexample PaymentRecoveryOverwrite.cfg NoLostRecovery payment-recovery-overwrite PaymentRecovery.tla
 expect_counterexample PaymentRecoveryReturn.cfg CorrectReturn payment-recovery-return PaymentRecovery.tla
@@ -403,6 +421,11 @@ run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
 run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+run_tlc TicketManualReview.tla TicketManualReview.cfg ticket-manual-review
+run_tlc TicketManualReview.tla TicketManualReviewLockReleasedGuarded.cfg ticket-manual-review-lock-released-guarded
+run_negative_tlc TicketManualReviewLockReleased.cfg ticket-manual-review-lock-released 'Invariant EveryoneAnswered is violated' TicketManualReview.tla
+run_negative_tlc TicketManualReviewSubmitterReviews.cfg ticket-manual-review-submitter-reviews 'Invariant NoSelfApproval is violated' TicketManualReview.tla
+run_negative_tlc TicketManualReviewLockReleasedUnguarded.cfg ticket-manual-review-lock-released-unguarded 'Invariant OnePayment is violated' TicketManualReview.tla
 run_tlc IndexDeclaration.tla IndexDeclaration.cfg index-declaration
 run_negative_tlc IndexDeclarationKeyUnique.cfg index-declaration-key-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla
 run_negative_tlc IndexDeclarationKeyTimeUnique.cfg index-declaration-key-time-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla

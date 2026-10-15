@@ -216,6 +216,13 @@ test('decision reconciliation preserves reviewed entries, removes stale IDs, and
     }));
     await fs.writeFile(existingPath, JSON.stringify({
       schemaVersion: 1,
+      reconciliation: {
+        preservedDecisions: 999,
+        ticketMainMergeRetirements: {
+          sourceMain: 'previous-reviewed-revision',
+          decisions: [{ originalDecision: preserved, replacementId: preserved.id }],
+        },
+      },
       decisions: [
         preserved,
         { ...preserved, id: 'stale-id' },
@@ -249,6 +256,10 @@ test('decision reconciliation preserves reviewed entries, removes stale IDs, and
     assert.equal(report.decisions[3].classification, 'dynamic-business-catalog');
     assert.equal(report.decisions[3].specializedModel, 'onboarding_intent, onboarding_first_value, user_onboarding_progress');
     assert.deepEqual(report.reconciliation, {
+      ticketMainMergeRetirements: {
+        sourceMain: 'previous-reviewed-revision',
+        decisions: [{ originalDecision: preserved, replacementId: preserved.id }],
+      },
       preservedDecisions: 1,
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
