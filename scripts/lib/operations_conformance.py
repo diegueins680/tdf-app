@@ -494,8 +494,19 @@ def verify_operations(sql, request, check, env, database, output, actors):
                 else:
                     migrate()
 
-    check('operations rollback fixture admits a pending retry',
-          replay_of(stranded_failure)()[0] == 202 and outbox(stranded) == 'pending')
+    # Migration takes the failure table first. A replay waiting there must not
+    # hold the outbox table and prevent the migration from acquiring it next.
+    with held('LOCK TABLE operations_integration_failure IN SHARE ROW EXCLUSIVE MODE') as (release, barrier_pid):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            pending = executor.submit(replay_of(stranded_failure))
+            try:
+                blocked(1, barrier_pid)
+                sql('BEGIN; LOCK TABLE operations_outbox IN SHARE ROW EXCLUSIVE MODE NOWAIT; COMMIT')
+            finally:
+                release()
+            response = pending.result(timeout=15)
+    check('operations replay waits in migration table order and then admits the pending retry',
+          response[0] == 202 and outbox(stranded) == 'pending')
     rollback_path = (Path(__file__).resolve().parents[2]
                      / 'tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql')
     def rollback():

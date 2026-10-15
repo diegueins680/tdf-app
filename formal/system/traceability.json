@@ -10287,7 +10287,7 @@
     "scripts/lib/music-test-database.mjs": "8c55bbb8607ab1c0d229dc8485999cb8decba00b4580f1c2dec18fee62243b7a",
     "scripts/lib/music-worker-image-smoke.sh": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
-    "scripts/lib/operations_conformance.py": "79dc160535000dc1a76702d2f905ec729598f5de1f463b1a1cf781fadcd084a2",
+    "scripts/lib/operations_conformance.py": "a8491f1225af4298d3305f00ca6491e929253063e26eee0d25aa6700e9ce7e2f",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
@@ -10716,8 +10716,8 @@
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "be18726df45a30041e753ae1bc6bc40431bf0529ab2f3279d6dd027dac7353bb",
     "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql": "a45fb398f49dbf49be4fac8ae23bf0a5f0ff4ab5d4d51f748918e3137f0adb39",
     "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql": "2d33a0b6285c8425d582732d86d43420e590267d7e30d263a84d91fb5cddebfb",
-    "tdf-hq/sql/2026-10-11_operations_failure_replay.sql": "b60bb3cc9391d3f44fe604177983428f13941c0167dcf8aae0747ff7f35158bb",
-    "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql": "1e6c71ec8124595b4c147ff4c57992d22cbd37ef4d226eddfd97e2f2789f842c",
+    "tdf-hq/sql/2026-10-11_operations_failure_replay.sql": "52f822412409064d7828a01858de9efa8620b7d517672f1104795e4b8924ab1d",
+    "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql": "4e0449e9dc247400d898d5b2d4f99e2b75e3ee919e29b891cd583ecc2879d811",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
@@ -10779,7 +10779,7 @@
     "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs": "09335044ca513a60132b452ea6dd5cf65f6d62523236ab809099158be1f2eb5b",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
     "tdf-hq/src/TDF/Operations/Model.hs": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
-    "tdf-hq/src/TDF/Operations/Server.hs": "f18686f90348c7e095d3243641578c2f557b0856318235ddcb431737e3e62208",
+    "tdf-hq/src/TDF/Operations/Server.hs": "ce627b65766f24e40749077a9a15862177c495d46f2cc157a3b3825f579cd3d2",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
@@ -21393,7 +21393,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "79dc160535000dc1a76702d2f905ec729598f5de1f463b1a1cf781fadcd084a2",
+      "sha256": "a8491f1225af4298d3305f00ca6491e929253063e26eee0d25aa6700e9ce7e2f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34660,7 +34660,7 @@
     {
       "id": "SURFACE-b925364fa550109b",
       "path": "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
-      "sha256": "b60bb3cc9391d3f44fe604177983428f13941c0167dcf8aae0747ff7f35158bb",
+      "sha256": "52f822412409064d7828a01858de9efa8620b7d517672f1104795e4b8924ab1d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34672,7 +34672,7 @@
     {
       "id": "SURFACE-f1f2a0e3e6c50eef",
       "path": "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql",
-      "sha256": "1e6c71ec8124595b4c147ff4c57992d22cbd37ef4d226eddfd97e2f2789f842c",
+      "sha256": "4e0449e9dc247400d898d5b2d4f99e2b75e3ee919e29b891cd583ecc2879d811",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36271,7 +36271,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "f18686f90348c7e095d3243641578c2f557b0856318235ddcb431737e3e62208",
+      "sha256": "ce627b65766f24e40749077a9a15862177c495d46f2cc157a3b3825f579cd3d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
