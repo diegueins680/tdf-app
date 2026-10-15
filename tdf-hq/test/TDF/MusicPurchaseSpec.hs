@@ -1,9 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.MusicPurchaseSpec (spec) where
 
-import Control.Concurrent.Async (mapConcurrently)
-import Control.Exception (SomeException, bracket_, try)
-import Control.Monad (forM, forM_, replicateM)
+import Control.Concurrent (threadDelay)
+import Control.Concurrent.Async (mapConcurrently, withAsync, wait)
+import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar, tryPutMVar)
+import Control.Exception (SomeException, bracket_, finally, try)
+import Control.Monad (forM, forM_, replicateM, void)
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Reader (ReaderT, runReaderT)
 import Data.Aeson (Value(..))
@@ -21,7 +24,7 @@ import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (toPersistValue)
 import Database.Persist.Postgresql (createPostgresqlPool)
-import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool, toSqlKey)
+import Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool, toSqlKey)
 import Servant (Handler, ServerError(errHTTPCode))
 import Servant.Server.Internal.Handler (runHandler)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
@@ -65,6 +68,127 @@ spec = describe "music-purchase-postgresql" $ do
         other <- order pool offer "music-fixture-key-2"
         other `shouldNotBe` first
         ordersOf pool offer `shouldReturn` 2
+
+      it "refuses a purchase key replay with different accepted terms" $ \pool -> do
+        offer <- purchaseOffer pool
+        original <- order pool offer "music-fixture-replay-terms"
+        conflict <- run pool (createMusicPurchase (buyerOf offer)
+          (Just "music-fixture-replay-terms") Nothing
+          (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v2"))
+        either errHTTPCode (const 201) conflict `shouldBe` 409
+        order pool offer "music-fixture-replay-terms" `shouldReturn` original
+        ordersOf pool offer `shouldReturn` 1
+
+      it "binds a purchase key to the offer and the declared territory" $ \pool -> do
+        offer <- purchaseOffer pool
+        other <- purchaseOffer pool
+        let key = "music-fixture-replay-payload"
+        original <- order pool offer key
+        forM_ [(offerRule other, "EC"), (offerRule offer, "US")] $ \(rule, territory) -> do
+          conflict <- run pool (createMusicPurchase (buyerOf offer) (Just key) Nothing
+            (MusicPurchaseCreateRequest rule territory "fixture-terms-v1"))
+          either errHTTPCode (const 201) conflict `shouldBe` 409
+        order pool offer key `shouldReturn` original
+        ordersOf pool offer `shouldReturn` 1
+
+      it "normalizes replay inputs and preserves the original order" $ \pool -> do
+        offer <- purchaseOffer pool
+        let key = "music-fixture-replay-normalized"
+        original <- run pool (createMusicPurchase (buyerOf offer) (Just key) Nothing
+          (MusicPurchaseCreateRequest (offerRule offer) " ec " " fixture-terms-v1 "))
+        replay <- run pool (createMusicPurchase (buyerOf offer) (Just key) Nothing
+          (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1"))
+        replay `shouldBe` original
+        case replay of
+          Right (Object fields) -> KeyMap.lookup "grossMinor" fields `shouldBe` Just (Number 250)
+          _ -> expectationFailure "normalized replay did not return its original order"
+        ordersOf pool offer `shouldReturn` 1
+
+      it "scopes a purchase key to its buyer" $ \pool -> do
+        offer <- purchaseOffer pool
+        let otherBuyer = offer {offerBuyer = offerBuyer offer + 1}
+            key = "music-fixture-replay-buyer"
+        first <- order pool offer key
+        second <- order pool otherBuyer key
+        first `shouldNotBe` second
+        ordersOf pool offer `shouldReturn` 1
+        ordersOf pool otherBuyer `shouldReturn` 1
+
+      it "binds the effective edge territory and refuses missing replay evidence" $ \pool -> do
+        offer <- purchaseOffer pool
+        previous <- lookupEnv "MUSIC_TRUST_CF_IPCOUNTRY"
+        let restore = maybe (unsetEnv "MUSIC_TRUST_CF_IPCOUNTRY")
+              (setEnv "MUSIC_TRUST_CF_IPCOUNTRY") previous
+            key = "music-fixture-replay-edge"
+            request = MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1"
+        bracket_ (setEnv "MUSIC_TRUST_CF_IPCOUNTRY" "true") restore $ do
+          original <- run pool (createMusicPurchase (buyerOf offer) (Just key) (Just "EC") request)
+          either errHTTPCode (const 201) original `shouldBe` 201
+          changed <- run pool (createMusicPurchase (buyerOf offer) (Just key) (Just "US") request)
+          either errHTTPCode (const 201) changed `shouldBe` 409
+          -- Deliberately corrupt only this synthetic receipt to represent an
+          -- older/incomplete binding. Normal line-item writes are immutable.
+          runSqlPool (do
+            rawExecute "SET LOCAL session_replication_role=replica" []
+            rawExecute
+              "UPDATE commerce_checkout_line_item item SET snapshot=snapshot-'termsVersion' FROM music_purchase_order purchase WHERE item.checkout_id=purchase.checkout_id AND purchase.buyer_party_id=?"
+              [toPersistValue (offerBuyer offer)]) pool
+          missing <- run pool (createMusicPurchase (buyerOf offer) (Just key) (Just "EC") request)
+          either errHTTPCode (const 201) missing `shouldBe` 409
+        ordersOf pool offer `shouldReturn` 1
+
+      it "gives concurrent conflicting requests one order and one conflict" $ \pool -> do
+        offer <- purchaseOffer pool
+        forM_ [1 .. 12 :: Int] $ \attempt -> do
+          let key = "music-fixture-replay-race-" <> T.pack (show attempt)
+          outcomes <- within (mapConcurrently (\terms -> run pool
+            (createMusicPurchase (buyerOf offer) (Just key) Nothing
+              (MusicPurchaseCreateRequest (offerRule offer) "EC" terms)))
+            ["fixture-terms-v1", "fixture-terms-v2"])
+          length (filter isRight outcomes) `shouldBe` 1
+          [errHTTPCode err | Left err <- outcomes] `shouldBe` [409]
+        ordersOf pool offer `shouldReturn` 12
+
+      it "checks the winning snapshot after both requests have observed an empty key" $ \pool -> do
+        offer <- purchaseOffer pool
+        nonce <- T.filter (/= '-') . UUID.toText <$> nextRandom
+        let name = "music_replay_barrier_" <> nonce
+            key = "music-fixture-replay-locked-" <> nonce
+        lockKey <- randomRIO (4000000000, 8000000000 :: Int64)
+        ready <- newEmptyMVar
+        release <- newEmptyMVar
+        let install = runSqlPool (do
+              rawExecute ("CREATE FUNCTION " <> name <> "() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.idempotency_key='" <> key <> "' THEN PERFORM pg_advisory_xact_lock(" <> T.pack (show lockKey) <> "); END IF; RETURN NEW; END $$") []
+              rawExecute ("CREATE TRIGGER " <> name <> " BEFORE INSERT ON music_purchase_order FOR EACH ROW EXECUTE FUNCTION " <> name <> "()") []) pool
+            cleanup = runSqlPool (do
+              rawExecute ("DROP TRIGGER " <> name <> " ON music_purchase_order") []
+              rawExecute ("DROP FUNCTION " <> name <> "()") []) pool
+            hold = runSqlPool (do
+              _ <- rawSql "SELECT pg_advisory_xact_lock(?)::text" [toPersistValue lockKey]
+                :: SqlPersistT IO [Single Text]
+              [Single pid] <- rawSql "SELECT pg_backend_pid()" []
+              liftIO (putMVar ready (pid :: Int64))
+              liftIO (takeMVar release)) pool
+            awaitBoth pid = do
+              blocked <- runSqlPool (rawSql
+                "SELECT count(*) FROM pg_stat_activity WHERE ?=ANY(pg_blocking_pids(pid)) AND query LIKE 'INSERT INTO music_purchase_order%'"
+                [toPersistValue pid]) pool
+              if blocked == [Single (2 :: Int64)] then pure ()
+                else threadDelay 10000 >> awaitBoth pid
+            requests = mapConcurrently (\terms -> run pool
+              (createMusicPurchase (buyerOf offer) (Just key) Nothing
+                (MusicPurchaseCreateRequest (offerRule offer) "EC" terms)))
+              ["fixture-terms-v1", "fixture-terms-v2"]
+        bracket_ install cleanup $ within $ withAsync hold $ \holder -> do
+          pid <- takeMVar ready
+          withAsync requests $ \pending -> flip finally (void (tryPutMVar release ())) $ do
+            within (awaitBoth pid)
+            putMVar release ()
+            outcomes <- wait pending
+            length (filter isRight outcomes) `shouldBe` 1
+            [errHTTPCode err | Left err <- outcomes] `shouldBe` [409]
+          wait holder
+        ordersOf pool offer `shouldReturn` 1
 
       it "refuses to mark a checkout paid without bound verified evidence" $ \pool -> do
         offer <- purchaseOffer pool

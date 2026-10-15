@@ -393,6 +393,10 @@ run_negative_tlc LiveIntakeUnpersisted.cfg live-intake-unpersisted 'Invariant Pe
 run_tlc ArtistActivation.tla ArtistActivation.cfg artist-activation
 run_negative_tlc ArtistActivationUnsafe.cfg artist-activation-unsafe 'Invariant CurrentContext is violated' ArtistActivation.tla
 run_tlc MusicEntitlement.tla MusicEntitlement.cfg music-entitlement
+run_tlc MusicPurchaseReplay.tla MusicPurchaseReplay.cfg music-purchase-replay
+run_negative_tlc MusicPurchaseReplayUnbound.cfg music-purchase-replay-unbound 'Invariant ReplayPayloadMatches is violated' MusicPurchaseReplay.tla
+run_negative_tlc MusicPurchaseReplayGlobalKey.cfg music-purchase-replay-global-key 'Invariant ReplayOwnerMatches is violated' MusicPurchaseReplay.tla
+run_negative_tlc MusicPurchaseReplayStaleLookup.cfg music-purchase-replay-stale-lookup 'Invariant OneOrderPerBuyerKey is violated' MusicPurchaseReplay.tla
 run_negative_tlc MusicEntitlementForgedPaid.cfg music-entitlement-forged-paid 'Invariant PaidNeedsEvidence is violated' MusicEntitlement.tla
 run_negative_tlc MusicEntitlementRepeatedGrant.cfg music-entitlement-repeated-grant 'Invariant OneEntitlement is violated' MusicEntitlement.tla
 run_negative_tlc MusicEntitlementNoLimit.cfg music-entitlement-no-limit 'Invariant LimitHolds is violated' MusicEntitlement.tla

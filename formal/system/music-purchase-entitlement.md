@@ -78,6 +78,11 @@ under it; no other module had the fault.
 
 ## Open before the feature is enabled
 
+Order creation replay is additionally governed by
+[music-purchase-replay.md](music-purchase-replay.md): the same buyer/key must match
+the original offer, normalized terms/countries and checkout environment. A
+different payload is a conflict even when another transaction reserved the key.
+
 Independent review of the payment flow found problems this change does not repair.
 None is introduced here; together they mean `music_releases.commerce` should stay
 off until they are closed.
