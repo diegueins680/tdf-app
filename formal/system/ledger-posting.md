@@ -103,3 +103,9 @@ reference, then checks refusal under READ COMMITTED and serialization failure
 under REPEATABLE READ. Five legacy fixtures (empty, unbalanced, self-reference,
 draft target and reversed target) refuse migration without replacing guards;
 clean repeated application passes. These cases run in `ledger-posting-upgrade.py`.
+
+The provider retry/refund harness also applies the posting-integrity and fixed
+checkout-line migrations before exercising its actual payment and refund stores.
+This prevents that integration gate from silently omitting the new constraints.
+Its reduced domain fixtures do not establish compatibility with every production
+domain trigger; see `docs/payments/consolidation-2026-10-15.md` for that boundary.

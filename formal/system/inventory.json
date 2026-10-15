@@ -5460,7 +5460,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
+      "sha256": "8b788076c8f5e0056d5bf92312a34a9aba3d31f33bcd0ccdd9a615f597cf9d51",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20303,6 +20303,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/payments/consolidation-2026-10-15.md",
+      "sha256": "93ae9d0bfa1d66c5de133eddc4321cc9a12e436538c8dfc2879f1387e2ded712",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/payments/ecuador-payment-platform-audit-2026-09-09.md",
       "sha256": "68c288cad3593d6f88000d64f3411047bc97a9bdc97f2247f6aee89d531085f7",
       "authority": "inferred",
@@ -24966,7 +24973,7 @@
     },
     {
       "path": "formal/system/ledger-posting.md",
-      "sha256": "b986ab547fe4a1d2f04eabcbba1bd7dc35c76ff456567dc25f5fb7136de7b543",
+      "sha256": "174f0a844e8c4e83d48ef2c1a6b472b9144379fb9fe023bb49f5979a5a99a1da",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25148,7 +25155,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d2b3f9c329d8c9479663c3f7470fbce671197268af79a3102ab3cdacd2db8f27",
+      "sha256": "fa846f57975d73ccd33997e015ba234455a140933393d37ab9b9f32085101589",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
