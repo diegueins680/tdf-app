@@ -645,6 +645,16 @@
       "decision": "adopted",
       "rationale": "A customer-scoped key must be issued only to the authenticated owner of that customer; the legacy course route issued it to any caller presenting a sequential registration ID, so it was retired.",
       "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-MUSIC-PURCHASE-REPLAY-001",
+      "source": "https://docs.stripe.com/api/idempotent_requests",
+      "title": "Stripe API v1 parameter-bound idempotency",
+      "recommendation": "Compare replay parameters to the original request and reject a mismatch.",
+      "applicability": "Music purchase creation currently scopes keys to a buyer but omits payload binding.",
+      "decision": "adopted",
+      "rationale": "Compare TDF immutable snapshot fields after unique reservation, including the concurrent loser path. Do not copy provider response caching/24-hour expiry or treat this vendor contract as a universal HTTP mandate. RFC 9110 identical-request semantics are already indexed in RES-HTTP-001.",
+      "verifiedAt": "2026-10-15"
     }
   ]
 }

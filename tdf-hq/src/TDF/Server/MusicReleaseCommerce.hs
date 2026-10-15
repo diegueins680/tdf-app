@@ -134,11 +134,24 @@ createMusicPurchase user idempotencyHeader edgeCountry MusicPurchaseCreateReques
   now <- liftIO getCurrentTime
   candidateOrderId <- liftIO nextRandom
   createdOrderId <- runDB $ do
+    -- PAY-MUSIC-PURCHASE-REPLAY-001: the unique buyer/key reservation is
+    -- also bound to the original request, including after ON CONFLICT waits
+    -- for another transaction. Never silently answer a different purchase.
+    let reuseOrder existingId = do
+          matching <- rawSql
+            "SELECT EXISTS (SELECT 1 FROM music_purchase_order purchase JOIN commerce_checkout_session checkout ON checkout.id=purchase.checkout_id JOIN commerce_checkout_line_item item ON item.checkout_id=checkout.id AND item.line_number=1 WHERE purchase.id=?::uuid AND purchase.buyer_party_id=? AND purchase.availability_rule_id=?::uuid AND checkout.domain_type='music_download' AND checkout.environment=? AND item.snapshot->>'availabilityRuleId'=? AND item.snapshot->>'declaredTerritoryCode'=? AND item.snapshot->>'territoryCode'=? AND item.snapshot->>'termsVersion'=?)"
+            [ toPersistValue existingId, PersistInt64 actor
+            , toPersistValue musicPurchaseAvailabilityRuleId
+            , PersistText (Checkout.checkoutEnvironmentText checkoutEnvironment)
+            , PersistText (UUID.toText musicPurchaseAvailabilityRuleId)
+            , PersistText declaredTerritory, PersistText territory, PersistText termsVersion
+            ] :: SqlPersistT IO [Single Bool]
+          pure $ if matching == [Single True] then Just existingId else Nothing
     existing <- rawSql
       "SELECT id FROM music_purchase_order WHERE buyer_party_id=? AND idempotency_key=?"
       [PersistInt64 actor, PersistText idempotencyKey] :: SqlPersistT IO [Single UUID]
     case existing of
-      [Single existingId] -> pure existingId
+      [Single existingId] -> reuseOrder existingId
       [] -> do
         inserted <- rawSql
           "INSERT INTO music_purchase_order(id,buyer_party_id,release_version_id,availability_rule_id,state,gross_minor,net_minor,currency,idempotency_key) VALUES(?::uuid,?,?,?::uuid,'awaiting_payment',?,?,?,?) ON CONFLICT(buyer_party_id,idempotency_key) DO NOTHING RETURNING id"
@@ -181,17 +194,20 @@ createMusicPurchase user idempotencyHeader edgeCountry MusicPurchaseCreateReques
             rawExecute
               "INSERT INTO music_terms_acceptance(release_version_id,terms_kind,terms_version,accepted_by,evidence) VALUES(?::uuid,'download_sale',?,?,jsonb_build_object('purchase_order_id',?::text,'territory_code',?::text)) ON CONFLICT DO NOTHING"
               [toPersistValue releaseVersionId, PersistText termsVersion, PersistInt64 actor, PersistText orderReference, PersistText territory]
-            pure newOrderId
+            pure (Just newOrderId)
           [] -> do
             raced <- rawSql
               "SELECT id FROM music_purchase_order WHERE buyer_party_id=? AND idempotency_key=?"
               [PersistInt64 actor, PersistText idempotencyKey] :: SqlPersistT IO [Single UUID]
             case raced of
-              [Single racedId] -> pure racedId
+              [Single racedId] -> reuseOrder racedId
               _ -> fail "music purchase idempotency conflict could not be resolved"
           _ -> fail "music purchase insert returned an ambiguous result"
       _ -> fail "music purchase idempotency lookup was ambiguous"
-  purchaseJson actor createdOrderId
+  matchedOrderId <- maybe (throwError err409
+    {errBody = "Idempotency-Key is already bound to a different music purchase request"})
+    pure createdOrderId
+  purchaseJson actor matchedOrderId
 
 -- Purchase availability is authorization input. A browser-declared country
 -- is never trusted; without a protected edge header only Worldwide offers are

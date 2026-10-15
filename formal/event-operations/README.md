@@ -530,6 +530,17 @@ render, A→B→A, cache races, and persisted timestamps. The model abstracts pr
 exchange/persistence, selected-calendar identities and query-library scheduling; those
 require HTTP and component/browser conformance tests. It does not prove Google OAuth
 consent, token revocation, server authorization or arbitrary calendar handlers.
+## Music purchase replay
+
+`MusicPurchaseReplay.tla` separates lookup from reservation for two buyers, one
+key and two payloads. The intended finite graph has 4,096 distinct states and
+checks single creation and buyer/payload preservation under arbitrary retries.
+Three controls must violate `ReplayPayloadMatches`, `ReplayOwnerMatches` and
+`OneOrderPerBuyerKey` respectively. The canonical runner requires each named
+counterexample. See [music-purchase-replay.md](../system/music-purchase-replay.md)
+for the SQL/handler mapping, abstraction boundary and exclusions. These are
+safety checks without a liveness/fairness claim or universal refinement proof.
+
 ## Meta redelivery
 
 `MetaRedelivery.tla` and four configurations check the rule in

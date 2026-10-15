@@ -5673,7 +5673,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
+      "sha256": "46333535ad2da0d46030d5c12d857a4587712c43386c518d728b9f23dc0248aa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14187,7 +14187,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "92259a976c8c4e7d45c32bedb469ddb27e749319a180d4bf881cd2d3ef86a8c8",
+      "sha256": "a1be58aef6c20c4718892561a11ca0b7de0cbd42b1f81ecc9e86d83ddbfbd72d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14859,7 +14859,7 @@
     {
       "id": "SURFACE-7e8c0b5502e595f0",
       "path": "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
-      "sha256": "493863cd4117580ed376fd872342880fec5e569d809fd69e87a857987b9d0d1c",
+      "sha256": "12e951ab6764a46d6c764486f31e876587584bb0a9c36a6fd65e90baee03e1a5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22529,6 +22529,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/MusicPurchaseReplay.cfg",
+      "sha256": "5e9dfb1ee970257c61287e1f2ddb43f340234c9b1ddf6bedc0d656c8aa5b608f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPurchaseReplay.tla",
+      "sha256": "564aace9809fc6b2c5b75b4f3dd265de68d1187b70b4fd5be99c89d838a9f05c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/MusicPurchaseReplayGlobalKey.cfg",
+      "sha256": "e399bb689384c94b746be13d209d8badb3a8bbae325e89825c2627fecdb3f096",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPurchaseReplayStaleLookup.cfg",
+      "sha256": "ecc87a3caa99d8ed0f429eeaa2590bf26337c462dc56232921f46254926d92af",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPurchaseReplayUnbound.cfg",
+      "sha256": "df44977c82ee2fc30e8adee15b76dec819601b72c51f35c075e98fcb18ca2bae",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/NativeArtistFollow.cfg",
       "sha256": "dfef4ecafcf1daf1a0811e78feebd12644ca0d8561fe81c385380611b0af5c09",
       "authority": "inferred",
@@ -22964,7 +22999,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "5dbdf812b042d3e5ff177904154bb4b88384f4794c6692d58e1ff00d1ab20369",
+      "sha256": "76ff6affca044afa7e9c37e0e5453e0918e542994970d1f3fc48a35f5cbd4f8f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24490,7 +24525,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "7d1323244fefb6ad45da11e534b1f74a0000c94950aaf4bec50f4b4b86fd6767",
+      "sha256": "b9fffe394143d19fb9814f789a411a0c0a9ed08ed693530e8de34c5cda805fcb",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24504,7 +24539,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "e58f0ca38df1369384dff84dfe20ee0c5f270f3e65da33e7afad166815053d23",
+      "sha256": "8b91269344dfa1dae742fa404f221378830151a3933038045e57d6c12742dfbe",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24735,7 +24770,14 @@
     },
     {
       "path": "formal/system/music-purchase-entitlement.md",
-      "sha256": "b0dabf71329d1acb7c9f41ccad34bae2da72b5df4e2010cee0ce5520c1592b28",
+      "sha256": "6c9063c9e565fdc73988a2aea356ee33d81020af01c79e02de9150f08d571687",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/music-purchase-replay.md",
+      "sha256": "25a4b296c843c20197fdddece83d0e1b3b981a9e392c0a59307ddf9787e99f2b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24833,14 +24875,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
+      "sha256": "814f6e352002d409a2856d97ba6d999911cf2f8f09445126f24a0e2a8a6f3f43",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "3d6630e4dfe2b3c36d2f95617616e0cb602345c8e7811a1b099bce530799dc76",
+      "sha256": "ac77ab9452e1898cb53532bd50ea6f3362b253d5bb12b935228303c8a960edd0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -34678,6 +34720,78 @@
         "  LimitHolds",
         "  UrlsInsideLifetime",
         "  ActiveWhenIssued"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPurchaseReplay.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Actors = {buyer1, buyer2}",
+        "  Payloads = {payload1, payload2}",
+        "  None = none",
+        "  Shared = shared",
+        "  BindPayload = TRUE",
+        "  ScopeBuyer = TRUE",
+        "  ReserveAtomically = TRUE",
+        "INVARIANTS TypeOK OneOrderPerBuyerKey ReplayPayloadMatches ReplayOwnerMatches"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPurchaseReplayGlobalKey.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Actors = {buyer1, buyer2}",
+        "  Payloads = {payload1, payload2}",
+        "  None = none",
+        "  Shared = shared",
+        "  BindPayload = TRUE",
+        "  ScopeBuyer = FALSE",
+        "  ReserveAtomically = TRUE",
+        "INVARIANTS TypeOK OneOrderPerBuyerKey ReplayPayloadMatches ReplayOwnerMatches"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPurchaseReplayStaleLookup.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Actors = {buyer1, buyer2}",
+        "  Payloads = {payload1, payload2}",
+        "  None = none",
+        "  Shared = shared",
+        "  BindPayload = TRUE",
+        "  ScopeBuyer = TRUE",
+        "  ReserveAtomically = FALSE",
+        "INVARIANTS TypeOK OneOrderPerBuyerKey ReplayPayloadMatches ReplayOwnerMatches"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPurchaseReplayUnbound.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Actors = {buyer1, buyer2}",
+        "  Payloads = {payload1, payload2}",
+        "  None = none",
+        "  Shared = shared",
+        "  BindPayload = FALSE",
+        "  ScopeBuyer = TRUE",
+        "  ReserveAtomically = TRUE",
+        "INVARIANTS TypeOK OneOrderPerBuyerKey ReplayPayloadMatches ReplayOwnerMatches"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

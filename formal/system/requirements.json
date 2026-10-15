@@ -9903,6 +9903,94 @@
         "classification": "PARTIAL",
         "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
       }
+    },
+    {
+      "id": "PAY-MUSIC-PURCHASE-REPLAY-001",
+      "title": "Bind music purchase replay to its buyer and original request",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "A music purchase key is scoped to its authenticated buyer and bound to the original offer, normalized declared/effective country, terms version and checkout environment. Current admission is rechecked. Identical requests reuse the order; conflicting or incomplete binding evidence returns 409 without purchase effects, including after concurrent reservation.",
+      "authority": "User audit sections 14–15 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
+      "source": "User audit request; formal/system/music-purchase-replay.md; recovered createMusicPurchase implementation",
+      "contract": "formal/system/music-purchase-replay.md",
+      "property": "Single order per buyer/key; every accepted replay preserves original buyer and bound payload.",
+      "actors": [
+        "Authenticated buyer",
+        "Concurrent request from the same or another buyer"
+      ],
+      "preconditions": [
+        "Current feature enablement, valid input and currently eligible public offer; HTTP boundary authenticates the session."
+      ],
+      "inputs": [
+        "Buyer Party ID",
+        "Idempotency-Key",
+        "Availability rule UUID",
+        "Declared country",
+        "Trusted effective country or ZZ",
+        "Terms version",
+        "Checkout environment"
+      ],
+      "state": {
+        "request": [
+          "new",
+          "looked",
+          "accepted",
+          "conflict",
+          "failed"
+        ],
+        "binding": "Immutable checkout line-item snapshot; unique purchase buyer/key"
+      },
+      "allowedTransitions": [
+        "Absent buyer/key -> one committed order/checkout/terms snapshot",
+        "Matching replay -> original order in its current state",
+        "Conflicting or incomplete evidence -> 409 without purchase effects"
+      ],
+      "forbiddenTransitions": [
+        "Changed offer, terms, country or environment -> accepted old order",
+        "Another buyer -> original buyer order",
+        "Concurrent absent-key observations -> two orders for one buyer/key"
+      ],
+      "effects": [
+        "One initial purchase transaction; no additional purchase effects on replay or conflict"
+      ],
+      "authorization": "Authenticated buyer scopes every lookup; current feature and offer admission precede receipt reuse. Session revocation is delegated to the existing HTTP boundary and is outside this model.",
+      "privacy": "No new customer data class; existing private checkout snapshot remains authoritative. Fixed conflict text does not disclose stored terms or another buyer.",
+      "concurrency": "Default PostgreSQL READ COMMITTED; unique buyer/key INSERT ON CONFLICT, then a fresh statement compares the committed winner snapshot. Higher isolation serialization failures require retry.",
+      "idempotency": "Same buyer/key and bound normalized inputs reuse one order. Missing evidence or changed bound inputs conflict. Different buyers and keys are independent.",
+      "failure": "Validation/feature/eligibility may fail before replay; binding mismatch returns 409. Database errors fail and roll back; no provider call occurs at creation.",
+      "recovery": "Retry lost responses with identical inputs/key; new requests require a new key. Preserve immutable financial and terms records. No migration or destructive rollback.",
+      "observability": "HTTP status and original purchase identity; existing checkout/terms audit only for initial creation. Exact-revision test and bounded-model receipts remain separate execution outputs.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
+        "scripts/test-music-purchase.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/MusicPurchaseReplay.tla",
+        "formal/event-operations/MusicPurchaseReplay.cfg",
+        "formal/event-operations/MusicPurchaseReplayUnbound.cfg",
+        "formal/event-operations/MusicPurchaseReplayGlobalKey.cfg",
+        "formal/event-operations/MusicPurchaseReplayStaleLookup.cfg"
+      ],
+      "status": "specified and implemented",
+      "historicalStatus": "implemented but unspecified",
+      "verification": "Real-handler PostgreSQL regressions and concurrent barrier schedule; unchanged-main regression is a negative control. Bounded lookup/commit/retry model with three named invariant controls.",
+      "evidence": "Exact source-revision execution receipts are generated by validation; no historical green result certifies a later tree.",
+      "confidence": "Medium for this creation boundary; bounded model plus PostgreSQL conformance, not a global payment or session proof.",
+      "ambiguity": [
+        "Provider attempt keys still have a separate global collision domain; this repair does not change them.",
+        "Music provider recovery, partial refunds and activation remain separately unresolved.",
+        "Undocumented OpenAPI music operations remain an explicit API coverage obligation."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Creation replay has executable conformance checks and bounded properties; full HTTP/session and provider lifecycle coverage remains separate and incomplete."
+      }
     }
   ]
 }
