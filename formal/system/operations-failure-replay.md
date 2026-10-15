@@ -60,8 +60,10 @@ The migration also repairs rows written earlier: a failure left `retrying` while
 its projection is still dead-lettered returns to `dead_letter`; of several open
 failures for one record the oldest is kept; a failure whose projections have all
 run is resolved. Applying it again finds nothing to repair. The rollback script
-drops the index, triggers and functions and leaves rows as they are; the server
-must be rolled back first, since this server refuses retries without the trigger.
+locks the outbox and failure tables and refuses to run while an internal retry
+is active. Once retries settle, it drops the index, triggers and functions and
+leaves rows as they are. Roll the server back first; the new server refuses
+retries unless all four replay triggers are present and enabled.
 
 A retried projection gets eight more attempts with the worker's usual backoff
 (roughly five minutes in total) before it dead-letters again.
@@ -118,7 +120,9 @@ disabled in this harness, so the cases call the worker function themselves.
 | migration returns a stranded retry to dead letter, keeps one failure per record and keeps a queued retry | the three repairs touch only stale rows; index recreated |
 | retry with nothing left to run resolves the failure | 202 with `resolved` |
 | migration resolves a failure whose projections have all run | third repair |
-| retry is refused while its trigger is disabled | 503, queue unchanged |
+| each replay trigger is disabled or removed | 503, failure and queue unchanged |
+| rollback while a replay is pending | refused; all triggers and pending retry retained |
+| rollback after settlement, repeated | succeeds; migration can then be reapplied |
 
 Local result on 2026-10-11: 636 checks passed, including these. Against the
 server binary built before this change the run stops at the first case above

@@ -1,9 +1,20 @@
 -- Removes the triggers that make a failure retry re-queue its projection and
--- follow it. Failure and outbox rows are left as they are. Roll the server back
--- first: a server built with this migration refuses retries without them.
+-- follow it. Refuse rollback while an internal projection retry is in flight;
+-- let those projections settle before retrying rollback. Roll the server back
+-- first: a server built with this migration refuses retries without the triggers.
 -- Safe to apply again.
 BEGIN;
 SET LOCAL lock_timeout = '10s';
+-- Keep the check and trigger removal atomic with respect to retries and workers.
+LOCK TABLE operations_outbox, operations_integration_failure IN SHARE ROW EXCLUSIVE MODE;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM operations_integration_failure
+             WHERE provider = 'internal_outbox' AND status = 'retrying') THEN
+    RAISE EXCEPTION 'Cannot roll back failure replay while internal retries are active';
+  END IF;
+END;
+$$;
 DROP INDEX IF EXISTS operations_integration_failure_open_uidx;
 DROP TRIGGER IF EXISTS operations_integration_failure_resolved ON operations_integration_failure;
 DROP TRIGGER IF EXISTS operations_integration_failure_merge ON operations_integration_failure;

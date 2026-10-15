@@ -469,11 +469,56 @@ def verify_operations(sql, request, check, env, database, output, actors):
     sql("UPDATE operations_integration_failure SET status='dead_letter',resolved_at=NULL WHERE id=" + q(failures('c', 'id')))
     migrate()
     check('operations migration resolves a failure whose projections have all run', failures('c') == 'resolved')
-    sql('ALTER TABLE operations_integration_failure DISABLE TRIGGER operations_integration_failure_retry')
-    try:
-        check('operations retry is refused while its trigger is disabled', replay_of(failures('b', "min(id::text) FILTER (WHERE status='dead_letter')"))()[0] == 503
-              and outbox(stranded) == 'dead_letter')
-    finally: sql('ALTER TABLE operations_integration_failure ENABLE TRIGGER operations_integration_failure_retry')
+    replay_triggers = [
+        ('operations_integration_failure', 'operations_integration_failure_retry'),
+        ('operations_integration_failure', 'operations_integration_failure_merge'),
+        ('operations_integration_failure', 'operations_integration_failure_resolved'),
+        ('operations_outbox', 'operations_outbox_settle_failure'),
+    ]
+    stranded_failure = failures('b', "min(id::text) FILTER (WHERE status='dead_letter')")
+    for table, trigger in replay_triggers:
+        for drift in ['disabled', 'missing']:
+            if drift == 'disabled':
+                sql('ALTER TABLE ' + table + ' DISABLE TRIGGER ' + trigger)
+            else:
+                sql('DROP TRIGGER ' + trigger + ' ON ' + table)
+            try:
+                check('operations retry refuses ' + drift + ' trigger ' + trigger,
+                      replay_of(stranded_failure)()[0] == 503
+                      and outbox(stranded) == 'dead_letter'
+                      and sql('SELECT status FROM operations_integration_failure WHERE id='
+                              + q(stranded_failure)) == 'dead_letter')
+            finally:
+                if drift == 'disabled':
+                    sql('ALTER TABLE ' + table + ' ENABLE TRIGGER ' + trigger)
+                else:
+                    migrate()
+
+    check('operations rollback fixture admits a pending retry',
+          replay_of(stranded_failure)()[0] == 202 and outbox(stranded) == 'pending')
+    rollback_path = (Path(__file__).resolve().parents[2]
+                     / 'tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql')
+    def rollback():
+        return subprocess.run(['psql', '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-d', database,
+                               '-f', str(rollback_path)], env=env, capture_output=True, text=True)
+    refused = rollback()
+    check('operations rollback refuses active retries without removing triggers',
+          refused.returncode != 0 and 'internal retries are active' in refused.stderr
+          and outbox(stranded) == 'pending'
+          and sql('SELECT status FROM operations_integration_failure WHERE id='
+                  + q(stranded_failure)) == 'retrying'
+          and all(sql("SELECT count(*) FROM pg_trigger WHERE tgrelid=" + q(table)
+                      + "::regclass AND tgname=" + q(trigger)
+                      + " AND tgenabled IN ('O','A')") == '1'
+                  for table, trigger in replay_triggers))
+    project(stranded)
+    check('operations rollback succeeds after the replay settles',
+          outbox(stranded) == 'processed'
+          and sql('SELECT status FROM operations_integration_failure WHERE id='
+                  + q(stranded_failure)) == 'resolved'
+          and rollback().returncode == 0)
+    check('operations settled rollback is idempotent', rollback().returncode == 0)
+    migrate()
     sql('DROP FUNCTION synthetic_ops_projection_failure()')
 
     view = {'organizationId': org, 'name': 'Synthetic owned view', 'shared': False, 'filters': {},

@@ -985,12 +985,16 @@ replayFailureHandler original failureId command = runOperationsWrite original $ 
   -- Admitting any other failure would leave it in 'retrying' with no executor.
   unless (provider == "internal_outbox") $
     rejectCommand err409 {errBody = "No automatic retry exists for this failure"}
-  -- The database re-queues the projection when the failure is marked retrying,
-  -- or resolves the failure when nothing of the record is left to run. Without
-  -- that trigger, present and enabled (a function left behind by a dropped or
-  -- disabled trigger runs nothing), this update would only relabel the row.
+  -- Replay requires re-queueing, settlement, failure reuse and work-item closure.
+  -- A missing or disabled companion trigger would strand an admitted retry.
   installed <- rawSql
-    "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid='operations_integration_failure'::regclass AND tgname='operations_integration_failure_retry' AND tgenabled IN ('O','A'))" []
+    "SELECT NOT EXISTS (SELECT 1 FROM (VALUES\
+    \ ('operations_integration_failure'::regclass,'operations_integration_failure_retry'),\
+    \ ('operations_integration_failure'::regclass,'operations_integration_failure_merge'),\
+    \ ('operations_integration_failure'::regclass,'operations_integration_failure_resolved'),\
+    \ ('operations_outbox'::regclass,'operations_outbox_settle_failure')) AS required(rel,name)\
+    \ WHERE NOT EXISTS (SELECT 1 FROM pg_trigger t WHERE t.tgrelid=required.rel\
+    \ AND t.tgname=required.name AND NOT t.tgisinternal AND t.tgenabled IN ('O','A')))" []
     :: SqlPersistT IO [Single Bool]
   unless (installed == [Single True]) $
     rejectCommand err503 {errBody = "Failure retry is not installed"}
