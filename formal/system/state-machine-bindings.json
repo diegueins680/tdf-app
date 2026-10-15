@@ -104,31 +104,60 @@
       "source": "docs/music-directory/formal-model.yaml",
       "table": "directory_profile",
       "column": "profile_status",
-      "decision": "ADR-0105-music-directory-classifieds"
+      "decision": "ADR-0105-music-directory-classifieds",
+      "code": {
+        "file": "tdf-hq/src/TDF/Directory/Policy.hs",
+        "relation": "allowedProfileTransition",
+        "renderer": "parseProfileStatus",
+        "rendererFile": "tdf-hq/src/TDF/Server/Directory.hs"
+      }
     },
     "docs/music-directory/formal-model.yaml#classified": {
       "source": "docs/music-directory/formal-model.yaml",
       "table": "classified",
       "column": "status",
-      "decision": "ADR-0105-music-directory-classifieds"
+      "decision": "ADR-0105-music-directory-classifieds",
+      "code": {
+        "file": "tdf-hq/src/TDF/Directory/Policy.hs",
+        "relation": "allowedClassifiedTransition",
+        "renderer": "parseClassifiedStatus",
+        "rendererFile": "tdf-hq/src/TDF/Server/Directory.hs"
+      }
     },
     "docs/music-directory/formal-model.yaml#application": {
       "source": "docs/music-directory/formal-model.yaml",
       "table": "classified_application",
       "column": "status",
-      "decision": "ADR-0105-music-directory-classifieds"
+      "decision": "ADR-0105-music-directory-classifieds",
+      "code": {
+        "file": "tdf-hq/src/TDF/Directory/Policy.hs",
+        "relation": "allowedApplicationTransition",
+        "renderer": "parseApplicationStatus",
+        "rendererFile": "tdf-hq/src/TDF/Server/Directory.hs"
+      }
     },
     "docs/music-directory/formal-model.yaml#invitation": {
       "source": "docs/music-directory/formal-model.yaml",
       "table": "directory_invitation",
       "column": "status",
-      "decision": "ADR-0105-music-directory-classifieds"
+      "decision": "ADR-0105-music-directory-classifieds",
+      "code": {
+        "file": "tdf-hq/src/TDF/Directory/Policy.hs",
+        "relation": "allowedInvitationTransition",
+        "renderer": "parseInvitationStatus",
+        "rendererFile": "tdf-hq/src/TDF/Server/Directory.hs"
+      }
     },
     "docs/music-directory/formal-model.yaml#claim": {
       "source": "docs/music-directory/formal-model.yaml",
       "table": "directory_claim",
       "column": "status",
-      "decision": "ADR-0105-music-directory-classifieds"
+      "decision": "ADR-0105-music-directory-classifieds",
+      "code": {
+        "file": "tdf-hq/src/TDF/Directory/Policy.hs",
+        "relation": "allowedClaimTransition",
+        "renderer": "identity"
+      }
     },
     "docs/music-directory/formal-model.yaml#moderation_case": {
       "source": "docs/music-directory/formal-model.yaml",
@@ -146,7 +175,13 @@
       "source": "docs/operations-control-center/formal-model.yaml",
       "table": "operations_work_item",
       "column": "status",
-      "decision": "docs/operations-control-center/formal-model.yaml"
+      "decision": "docs/operations-control-center/formal-model.yaml",
+      "code": {
+        "file": "tdf-hq/src/TDF/Operations/Model.hs",
+        "targets": "allowedTargets",
+        "renderer": "workStatusText",
+        "rendererFile": "tdf-hq/src/TDF/Operations/Types.hs"
+      }
     }
   },
   "unbound": {
