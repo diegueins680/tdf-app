@@ -9925,8 +9925,8 @@
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
-    "e2e/web/auth-landing.spec.mjs": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
-    "e2e/web/course-enrollment.spec.mjs": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
+    "e2e/web/auth-landing.spec.mjs": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
+    "e2e/web/course-enrollment.spec.mjs": "ba472872afceae558496077caf2525bb11b0460592851a616a7cc06cc0866b9d",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
     "e2e/web/marketplace-cart.spec.mjs": "5b00ebfd4d2e2a4bcd3cb5ada9c06e6442c7d5e25fef286792e214e1dff8bdfa",
@@ -18762,7 +18762,7 @@
     {
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
-      "sha256": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
+      "sha256": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18792,7 +18792,7 @@
     {
       "id": "SURFACE-593f65650b716b87",
       "path": "e2e/web/course-enrollment.spec.mjs",
-      "sha256": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
+      "sha256": "ba472872afceae558496077caf2525bb11b0460592851a616a7cc06cc0866b9d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
