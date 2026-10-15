@@ -168,7 +168,7 @@ several records.
   SELECT status, count(*) FROM operations_integration_failure GROUP BY status;
   ```
 
-Replay, migration and rollback acquire the failure-table lock before the outbox
-table lock. The HTTP concurrency regression holds the first migration lock and
-proves a waiting replay has not taken the outbox lock, then admits the retry
+Replay, migration and rollback acquire the outbox table lock before the failure
+table lock, matching the projection worker. The HTTP concurrency regression holds the first migration lock and
+proves a waiting replay has not taken the failure-table lock, then admits the retry
 after release. Table locks also prevent trigger DDL between admission and commit.

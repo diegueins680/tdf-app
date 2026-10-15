@@ -541,14 +541,14 @@ def verify_operations(sql, request, check, env, database, output, actors):
                 else:
                     migrate()
 
-    # Migration takes the failure table first. A replay waiting there must not
-    # hold the outbox table and prevent the migration from acquiring it next.
-    with held('LOCK TABLE operations_integration_failure IN SHARE ROW EXCLUSIVE MODE') as (release, barrier_pid):
+    # The worker and migration take the outbox table first. A replay waiting
+    # there must not hold the failure table and block their next write.
+    with held('LOCK TABLE operations_outbox IN SHARE ROW EXCLUSIVE MODE') as (release, barrier_pid):
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             pending = executor.submit(replay_of(stranded_failure))
             try:
                 blocked(1, barrier_pid)
-                sql('BEGIN; LOCK TABLE operations_outbox IN SHARE ROW EXCLUSIVE MODE NOWAIT; COMMIT')
+                sql('BEGIN; LOCK TABLE operations_integration_failure IN SHARE ROW EXCLUSIVE MODE NOWAIT; COMMIT')
             finally:
                 release()
             response = pending.result(timeout=15)
