@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { act, cleanup, configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import type { ChatThreadDTO, ChatMessageDTO } from '../api/types';
 configure({ asyncUtilTimeout: 15000 });
@@ -38,7 +38,7 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = jest.fn();
   listThreads.mockResolvedValue([thread]); listMessages.mockResolvedValue([message]); sendMessage.mockResolvedValue(message);
 });
-afterEach(() => { cleanup(); clients.splice(0).forEach((client) => client.clear()); });
+afterEach(() => { cleanup(); clients.splice(0).forEach((client) => client.clear()); onlineManager.setOnline(true); });
 it('hides cached previews, headers, bodies and unread counts after a denied thread refetch', async () => {
   const { client } = setup();
   await screen.findByText('Private body');
@@ -124,6 +124,29 @@ it.each([
     expect(loadChatReadMap(1)).toEqual({});
   }
   expect(getOrCreateDmThread).not.toHaveBeenCalled();
+});
+it('withholds cached notification content while authorization is offline-paused', async () => {
+  onlineManager.setOnline(false);
+  let resolveThreads!: (threads: ChatThreadDTO[]) => void;
+  listThreads.mockReturnValue(new Promise((resolve) => { resolveThreads = resolve; }));
+  const { client } = setup('/chat?threadId=10', (cache) => {
+    cache.setQueryData(['chat-threads', 1], [thread]);
+    cache.setQueryData(['chat-messages', 1, 10], [message]);
+  });
+  expect(client.getQueryState(['chat-threads', 1])?.fetchStatus).toBe('paused');
+  expect(screen.queryByText('Private body')).toBeNull();
+  expect(screen.queryByText('Private preview')).toBeNull();
+  expect(loadChatReadMap(1)).toEqual({});
+  expect(listThreads).not.toHaveBeenCalled();
+  expect(listMessages).not.toHaveBeenCalled();
+  expect(screen.getByTestId('location').textContent).toBe('?threadId=10');
+  await act(async () => { onlineManager.setOnline(true); });
+  await waitFor(() => expect(listThreads).toHaveBeenCalled());
+  expect(screen.queryByText('Private body')).toBeNull();
+  await act(async () => { resolveThreads([]); });
+  await screen.findByText('La conversación de esta notificación no está disponible.');
+  expect(listMessages).not.toHaveBeenCalled();
+  expect(loadChatReadMap(1)).toEqual({});
 });
 it.each(['999', '0', '-1', '9007199254740992', 'https://evil.example'])('rejects an unavailable notification thread %s', async (id) => {
   const { client } = setup(`/chat?threadId=${encodeURIComponent(id)}`);

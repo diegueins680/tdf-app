@@ -243,7 +243,7 @@ function ChatWorkspace() {
   });
 
   const notificationAuthorizationPending = requestedThread !== null
-    && (!threadsQuery.isSuccess || threadsQuery.isFetching);
+    && (!threadsQuery.isFetchedAfterMount || !threadsQuery.isSuccess || threadsQuery.isFetching);
   const threads = useMemo(
     () => threadsQuery.isError || notificationAuthorizationPending ? [] : threadsQuery.data ?? [],
     [notificationAuthorizationPending, threadsQuery.data, threadsQuery.isError],
@@ -354,7 +354,7 @@ function ChatWorkspace() {
     const rawThread = params.get('threadId');
     if (rawThread !== null) {
       // Wait for a fresh authorized list; a link never opens or creates a thread.
-      if (!threadsQuery.isSuccess || threadsQuery.isFetching) return;
+      if (notificationAuthorizationPending) return;
       requestParamConsumed.current = location.key;
       navigate('/chat', { replace: true });
       const numeric = parsePositiveInt(rawThread);
@@ -381,7 +381,7 @@ function ChatWorkspace() {
     createThreadMutation.mutate(numeric, {
       onError: (err) => setBannerError(err.message),
     });
-  }, [createThreadMutation, location.key, location.search, navigate, threads, threadsQuery.isFetching, threadsQuery.isSuccess]);
+  }, [createThreadMutation, location.key, location.search, navigate, notificationAuthorizationPending, threads]);
 
   const sendMutation = useMutation({
     mutationFn: ({ threadId, body }: { threadId: number; body: string }) => ChatAPI.sendMessage(threadId, body),

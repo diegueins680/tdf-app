@@ -8376,13 +8376,13 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "5b53cbe54b056a4d936547ae91b5e46c187e45464195d28d5185f2cf7578920a",
+      "sha256": "49e25328808ff689c05236355e5d181201cfce92d7d4202a322b244d0463d676",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "75d8324dd5c95b39ea3d02d29bac17ba76f230bdfd160102405bf26cea18919f",
+      "sha256": "2b1ccb573a3e1c0f97237f2e631d2b53d47d18c557a7215e82a46d0e31b4a168",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20108,7 +20108,7 @@
     },
     {
       "path": "docs/notifications/chat-delivery-2026-10-13.md",
-      "sha256": "83bfdf4333d94fd8c765d0a464ada9935d567b38cbf8abca21a0111dadae353f",
+      "sha256": "ccbace9519aadcdb6318d92a283d837b5db064f13a03c39030e15a5fd8d587c7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24889,7 +24889,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7d3ccc77b51d5e99684cb6c32aaab5681c6261099f80665aa32cc74c745bf2bd",
+      "sha256": "b4da16d0268af68fdc15a0f7aa224ff5baf1d8b1a2309671be6f2336475d1f45",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

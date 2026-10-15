@@ -9980,7 +9980,7 @@
       "formalModels": [
         "formal/event-operations/ChatNotificationAuthorization.tla"
       ],
-      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response.",
+      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response. An offline-paused, cache-success regression requires an actual post-mount authorization response and preserves the link until reconnection.",
       "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
       "ambiguity": [
         "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."
@@ -10526,8 +10526,8 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
-    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "5b53cbe54b056a4d936547ae91b5e46c187e45464195d28d5185f2cf7578920a",
-    "tdf-hq-ui/src/pages/ChatPage.tsx": "75d8324dd5c95b39ea3d02d29bac17ba76f230bdfd160102405bf26cea18919f",
+    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "49e25328808ff689c05236355e5d181201cfce92d7d4202a322b244d0463d676",
+    "tdf-hq-ui/src/pages/ChatPage.tsx": "2b1ccb573a3e1c0f97237f2e631d2b53d47d18c557a7215e82a46d0e31b4a168",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
@@ -28148,7 +28148,7 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "5b53cbe54b056a4d936547ae91b5e46c187e45464195d28d5185f2cf7578920a",
+      "sha256": "49e25328808ff689c05236355e5d181201cfce92d7d4202a322b244d0463d676",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28160,7 +28160,7 @@
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "75d8324dd5c95b39ea3d02d29bac17ba76f230bdfd160102405bf26cea18919f",
+      "sha256": "2b1ccb573a3e1c0f97237f2e631d2b53d47d18c557a7215e82a46d0e31b4a168",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45141,7 +45141,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7d3ccc77b51d5e99684cb6c32aaab5681c6261099f80665aa32cc74c745bf2bd",
+      "sourceSha256": "b4da16d0268af68fdc15a0f7aa224ff5baf1d8b1a2309671be6f2336475d1f45",
       "definition": {
         "states": [
           "absent",
