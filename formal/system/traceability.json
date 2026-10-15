@@ -10673,8 +10673,7 @@
         "initial": "waiting-for-layout",
         "terminal": [
           "user-controlled",
-          "unmounted",
-          "stable-layout-retry-budget-exhausted"
+          "unmounted"
         ],
         "states": [
           "waiting-for-layout",
@@ -10691,7 +10690,8 @@
         "anchoring -> confirmed only after current native measurements place the target heading in the upper half of the viewport with room for its body",
         "confirmed -> layout-invalidated -> anchoring on late content layout before user interaction",
         "anchoring -> stable-layout-retry-budget-exhausted after at most120 attempts for that stable layout",
-        "any mounted state -> user-controlled on explicit user interaction; any state -> unmounted on component removal"
+        "any mounted state -> user-controlled on explicit user interaction; any state -> unmounted on component removal",
+        "anchoring or stable-layout-retry-budget-exhausted -> layout-invalidated -> anchoring on a later content-layout event before user interaction"
       ],
       "forbiddenTransitions": [
         "Announce focus from an earlier layout measurement or a stale virtualized visibility token.",
@@ -47046,7 +47046,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ce783befbffd33ddf10230579801f4d97fafb5554e9b3e5aaa504b1e1407c8ab",
+      "sourceSha256": "893b9d0b42718ec114a9c2fa3fca23732220035f1b45cce5fbc55e58cf3535d3",
       "definition": {
         "states": [
           "absent",
