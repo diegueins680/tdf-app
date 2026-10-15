@@ -55,7 +55,7 @@ run_tlc() {
   local config="$2"
   local slug="$3"
   local status=0
-  "${JAVA_BIN}" -XX:+UseParallelGC -jar "${TLA2TOOLS_JAR}" \
+  "${JAVA_BIN}" "-Djava.io.tmpdir=${run_root}" -XX:+UseParallelGC -jar "${TLA2TOOLS_JAR}" \
     -workers 1 \
     -metadir "${run_root}/tlc-${slug}" \
     -config "${config}" \
@@ -73,7 +73,8 @@ export JAVA_BIN TLA2TOOLS_JAR
 node "${SCRIPT_DIR}/verify-event-operations-pluscal.mjs"
 node --test "${SCRIPT_DIR}/__tests__/event-operations-pluscal.test.mjs"
 
-# Keep TLC sequential: 1.7.2 materializes standard modules through a shared temp location.
+# TLC 1.7.2 materializes standard modules under java.io.tmpdir. Keep calls
+# sequential within this run and isolate their temporary directory from other runs.
 run_tlc NativeLanding.tla NativeLanding.cfg native-landing
 run_tlc NativeArtistFollow.tla NativeArtistFollow.cfg native-artist-follow
 run_tlc ExperimentAuthority.tla ExperimentAuthority.cfg experiment-authority
@@ -382,6 +383,10 @@ run_negative_tlc FanHubOnboardingTerminal.cfg fanhub-terminal 'Invariant Termina
 run_tlc AccessCodeValidation.tla AccessCodeValidation.cfg access-code-validation
 run_negative_tlc AccessCodeValidationStale.cfg access-code-stale 'Invariant CurrentCredential is violated' AccessCodeValidation.tla
 run_negative_tlc AccessCodeValidationSuperficial.cfg access-code-superficial 'Invariant VerifiedAccount is violated' AccessCodeValidation.tla
+run_tlc InboundCapture.tla InboundCapture.cfg inbound-capture
+run_negative_tlc InboundCaptureApplicationDirectionRefused.cfg inbound-capture-application-direction-refused 'Invariant RequestsCaptured is violated' InboundCapture.tla
+run_negative_tlc InboundCaptureEveryIncomingRow.cfg inbound-capture-every-incoming-row 'Invariant OnlyRequestsCaptured is violated' InboundCapture.tla
+run_negative_tlc InboundCaptureEveryDelivery.cfg inbound-capture-every-delivery 'Invariant CapturedOnce is violated' InboundCapture.tla
 run_tlc LiveIntakeAuthority.tla LiveIntakeAuthority.cfg live-intake-authority
 run_negative_tlc LiveIntakeAmbient.cfg live-intake-ambient 'Invariant ExplicitAuthority is violated' LiveIntakeAuthority.tla
 run_negative_tlc LiveIntakeStale.cfg live-intake-stale 'Invariant CurrentReceipt is violated' LiveIntakeAuthority.tla
@@ -399,6 +404,10 @@ run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
 run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+run_tlc IndexDeclaration.tla IndexDeclaration.cfg index-declaration
+run_negative_tlc IndexDeclarationKeyUnique.cfg index-declaration-key-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla
+run_negative_tlc IndexDeclarationKeyTimeUnique.cfg index-declaration-key-time-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla
+run_negative_tlc IndexDeclarationIdentityNotUnique.cfg index-declaration-identity-not-unique 'Invariant IdentityStoredOnce is violated' IndexDeclaration.tla
 run_tlc InteractionWriteBudget.tla InteractionWriteBudget.cfg interaction-write-budget
 run_negative_tlc InteractionWriteBudgetErrorRefunds.cfg interaction-write-budget-error-refunds 'Invariant ChargeCounted is violated' InteractionWriteBudget.tla
 run_negative_tlc InteractionWriteBudgetOneExtra.cfg interaction-write-budget-one-extra 'Invariant LimitHolds is violated' InteractionWriteBudget.tla

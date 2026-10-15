@@ -54,6 +54,7 @@ import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
+import qualified TDF.IndexDeclarationSpec as IndexDeclarationSpec
 import qualified TDF.InvoiceWorkerSpec as InvoiceWorkerSpec
 import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
@@ -622,6 +623,7 @@ import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
 import qualified TDF.TicketPaymentGateSpec as TicketPaymentGateSpec
 import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
+import qualified TDF.OperationsInboundCaptureSpec as OperationsInboundCaptureSpec
 import qualified TDF.MetaRedeliverySpec as MetaRedeliverySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
@@ -882,6 +884,7 @@ main = hspec $ do
     TicketConfirmationSpec.spec
     EventOrganizerSpec.spec
     InvoiceDatilSpec.spec
+    IndexDeclarationSpec.spec
     InvoiceWorkerSpec.spec
     describe "merch commercial reputation formula v1" $ do
         it "publishes only after five evaluable orders and at least one review" $ do
@@ -17887,6 +17890,7 @@ main = hspec $ do
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
+    OperationsInboundCaptureSpec.spec
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
     WhatsAppConsentSpec.spec
