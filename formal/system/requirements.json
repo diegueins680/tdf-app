@@ -8303,7 +8303,8 @@
         "e2e/web/music-player.spec.mjs",
         "e2e/web/music-player-native.spec.mjs",
         "e2e/web/music-player-integration.spec.mjs",
-        "e2e/web/fixtures/native-music-setup.mjs"
+        "e2e/web/fixtures/native-music-setup.mjs",
+        "tdf-mobile/src/navigation/notificationResponses.test.ts"
       ],
       "verification": "Vitest unit tests, Playwright native and integration specs against local API/PostgreSQL/S3",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md",
