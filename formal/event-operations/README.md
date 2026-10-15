@@ -108,6 +108,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `MusicPublication.cfg` (2026-10-11) | One release, three versions (v2 and v3 correct v1); staff schedule, suspend, re-approve, take down and withdraw without fairness; a scheduled version may turn invalid; the two schedulers are weakly fair | PASS; 32,257 generated, 7,168 distinct states, depth 18; six invariants and the `Progress`/`ValidProgress` properties |
 | `MusicPublicationBatch.cfg`, `MusicPublicationStayWithdrawn.cfg` | Negative controls: whole-batch publication, a withdrawn release never republishes | Expected exit 13: `ValidProgress` (a valid due version stays scheduled because a sibling fails) and `Progress` (a due correction of a withdrawn release stays scheduled) violated |
 | `MusicPublicationReplacedOnly.cfg`, `MusicPublicationPointerStale.cfg` | Negative controls: retire only the replaced version, pointer kept on a version that left the live states | Expected exit 12 with `OnlyInvalidFails`, `PointerLive` |
+| `MusicAssetProcessing.cfg` (2026-10-12) | One processing job, two worker processes sharing a name, bytes matching or not, 3 attempts plus one reclaim past the bound; claim, lease expiry, fenced stop, promote, fail for any reason | PASS; 934 generated, 554 distinct states; `PromotedOnlyVerified`, `CompletionIsCurrent`, `LiveLeaseIsCurrent`, `OneLiveLease` |
+| `MusicAssetProcessingUnfenced/Preempt/Unverified.cfg` | Negative controls: no attempt token, reclaim before lease expiry, promotion without checksum | Expected exit 12 with `CompletionIsCurrent`, `LiveLeaseIsCurrent`, `PromotedOnlyVerified` |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
@@ -240,6 +242,12 @@ The runner requires the exact named failures from all three negative controls.
   [music publication](../system/music-publication.md). The retirement chain is
   one step and the submission rules are a boolean; SQL refinement is the
   PostgreSQL spec, not this model.
+- `MusicAssetProcessing.tla` (2026-10-12): leased processing of one uploaded
+  music asset by worker runs that may share a name; the attempt is the fencing
+  token, a running job is reclaimed only after its lease expired, promotion
+  needs the recomputed checksum. See
+  [music asset processing](../system/music-asset-processing.md). Rendering,
+  object storage and the heartbeat are outside the model.
 - `SessionFence.tla`: request-local token/party/credential binding, recheck after token locking and
   lock retention through the event decision. It models current validity, not permanent revocation
   epochs: explicit reactivation of the same credential reauthorizes it. Global role/catalog changes

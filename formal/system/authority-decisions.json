@@ -691,7 +691,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/WhatsApp/History.hs"
       ],
-      "conflict": "Twenty-three model lines named Index… were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
+      "conflict": "Twenty-three model lines named Index\u2026 were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
       "authority": "The application's behaviour governs: conversations hold many messages and a reply is recorded beside its message. The names, the absence of any unique-key lookup or conflict clause on these keys and the plain indexes production holds on the campaign tables under the same naming show the uniqueness was never intended.",
       "resolution": "A new migration replaces the nine constraints with plain indexes of the same names and columns, and the twenty-three lines leave the models so that a development database no longer recreates them. A rollback file restores the constraints while no stored row violates them. The identity constraints (for example the WhatsApp provider message id) are unchanged."
     },
@@ -717,6 +717,18 @@
       "conflict": "EVT-TICKET-MANUAL-001 states that the review locks the checkout, attempt and evidence rows. The function took those locks and then committed before writing, which released them; a second concurrent reviewer read the same submitted evidence and had the write refused by the database as an error instead of being told the transfer was already decided.",
       "authority": "The requirement governs: the review is serialized by its row locks. The database's evidence transition guard remains the last line of defence, not the means of serialization.",
       "resolution": "The intermediate commit is removed so the locks last until the review commits. A second reviewer waits and is answered from the decided state; the buyer's concurrent writes are not covered by this. The requirement gains a direct PostgreSQL test of the review transaction, including races, and a bounded model."
+    },
+    {
+      "id": "AUTHORITY-067",
+      "sources": [
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "formal/system/music-asset-processing.md"
+      ],
+      "conflict": "MEDIA-MUSIC-ASSET-001 listed four asset states (quarantined, processing, promoted, failed) and transitions 'processing -> failed -> retried'; music_asset.processing_state allows nine values and the worker never writes 'failed' or 'promoted' (a promoted master is 'valid' and immutable, a derivative is 'ready'). Retry and dead-letter live on music_processing_job, not on the asset.",
+      "authority": "The column CHECK constraints and the worker script, which the requirement's own tests exercise.",
+      "resolution": "Decided 2026-10-12: the requirement lists the column's asset states and the job statuses; the lease guard (worker name, claimed attempt as fencing token, lease age on the job row, reclaim only after expiry) and checksum-gated promotion are the stated concurrency rules and are modelled in MusicAssetProcessing.tla. The three gaps (no purge of abandoned uploads, checksum mismatch retried until max_attempts, dead-lettered asset left 'inspecting') are recorded as ambiguities, not fixed; the defect the independent review found (a re-upload with the same declared hash is bound to the old asset row and never inspected) is recorded on the requirement for a follow-up slice."
     }
   ]
 }

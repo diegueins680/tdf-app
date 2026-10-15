@@ -5691,7 +5691,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "8e7b42e454834e08c08d90ec3acb820cba3e19e4b9a7f5b271dd606f32ca9050",
+      "sha256": "f51a92e6d04ba48529062e1794baf31d8572c66caf1ed1d36219125b444a51dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22515,6 +22515,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/MusicAssetProcessing.cfg",
+      "sha256": "0972d9ab80204b322beb24dd99d49312b44c1e23595aa54ac846b973c4b1cf15",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicAssetProcessing.tla",
+      "sha256": "6f0167da2f93118739c333411bdb2de475188072ab6402c4b3aa4d383a8abfab",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/MusicAssetProcessingOverLimit.cfg",
+      "sha256": "64f463cf7a8356dab9d5f0bac790b586a3cd35e7d717dc3dfe667250d022b3c7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicAssetProcessingPreempt.cfg",
+      "sha256": "66f020b836a7aae643ff02e44fd0dbef4dad1241bfa9fcd13f8fd4d2e9457c19",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicAssetProcessingUnfenced.cfg",
+      "sha256": "9dd50d8e5a4e802760fd2a91fd4f0479c569816392ab14b56dcd6dfb768ae1b4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicAssetProcessingUnverified.cfg",
+      "sha256": "ed337a81bc1f02f30f7850b4d835ca5491e245b20669ce55100b005898b91d53",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/MusicEntitlement.cfg",
       "sha256": "1d01c4e7c22ffb65fdcd11c272eb6ffa9266ed87f46ad1493abd5b28bfb74ee5",
       "authority": "inferred",
@@ -23069,7 +23111,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "db291832f3f59d414b78b8c606d1f7515658aac43192599e3d7a31be402abbfb",
+      "sha256": "af0ba6fe4568be2813da70ea050e34698b4dfb7f2d750b2de532a254b349f5d5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24651,7 +24693,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "ba8b1083d9653484a9d8923d2c393909a79f7b4a42fad386bf75976bf6bf8e18",
+      "sha256": "bf3594813db19d8a49e3a92cb93364f44dfad92868d1bc0f4a7f5784d2ba78e6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24881,6 +24923,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-asset-processing.md",
+      "sha256": "ad3718231e9df2f1c131a6e29f1f4e750c8f80907a118f875cced63162faac7e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/music-publication.md",
       "sha256": "8fff70a9b563c4e3404827b97741bb256dde517a09a2102168b816c8e87a589d",
       "authority": "inferred",
@@ -24987,7 +25036,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b89487eb64a9022bc249fbc9f29a77039f59fcb5ba631256d0404ff7d8af073b",
+      "sha256": "f9de9f5b39df97af5d24a9b2d3d1b4fbfa89a6a8afb933f4a6f6dcc590946a1b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -34641,6 +34690,61 @@
         "  TextKept",
         "  NoTextAfterDeletion",
         "  DeletionTimeKept"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicAssetProcessing.cfg",
+      "declarations": [
+        "CONSTANTS Fence = TRUE ClaimOnlyExpired = TRUE VerifyChecksum = TRUE MaxAttempts = 3 MaxClaims = 4",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK PromotedOnlyVerified CompletionIsCurrent LiveLeaseIsCurrent OneLiveLease",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicAssetProcessingOverLimit.cfg",
+      "declarations": [
+        "CONSTANTS Fence = TRUE ClaimOnlyExpired = TRUE VerifyChecksum = TRUE MaxAttempts = 3 MaxClaims = 4",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK NoOverLimitRun",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicAssetProcessingPreempt.cfg",
+      "declarations": [
+        "CONSTANTS Fence = TRUE ClaimOnlyExpired = FALSE VerifyChecksum = TRUE MaxAttempts = 3 MaxClaims = 4",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK LiveLeaseIsCurrent",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicAssetProcessingUnfenced.cfg",
+      "declarations": [
+        "CONSTANTS Fence = FALSE ClaimOnlyExpired = TRUE VerifyChecksum = TRUE MaxAttempts = 3 MaxClaims = 4",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK CompletionIsCurrent",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicAssetProcessingUnverified.cfg",
+      "declarations": [
+        "CONSTANTS Fence = TRUE ClaimOnlyExpired = TRUE VerifyChecksum = FALSE MaxAttempts = 3 MaxClaims = 4",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK PromotedOnlyVerified",
+        "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
