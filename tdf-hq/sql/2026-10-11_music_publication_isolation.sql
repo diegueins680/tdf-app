@@ -127,8 +127,9 @@ BEGIN
 END;
 $$;
 
--- A failed withdrawal is retried on the next run and, unless the failure was
--- transient, recorded once; the other candidates still withdraw.
+-- A failed withdrawal moves behind the other eligible versions using updated_at
+-- as its last-attempt marker. Even a one-row batch therefore makes progress past
+-- a permanently failing version. Non-transient failures are still recorded once.
 CREATE OR REPLACE FUNCTION music_withdraw_due(batch_size INTEGER DEFAULT 100)
 RETURNS TABLE(release_id UUID, version_id UUID) LANGUAGE plpgsql AS $$
 DECLARE
@@ -146,7 +147,7 @@ BEGIN
     JOIN music_release release ON release.id = version.release_id
     WHERE version.state = 'takedown_scheduled'
       AND version.takedown_at_utc <= NOW()
-    ORDER BY version.takedown_at_utc, version.id
+    ORDER BY version.updated_at, version.takedown_at_utc, version.id
     FOR UPDATE OF version, release SKIP LOCKED
     LIMIT batch_size
   LOOP
@@ -161,6 +162,11 @@ BEGIN
       END IF;
     EXCEPTION WHEN OTHERS THEN
       GET STACKED DIAGNOSTICS failure_state = RETURNED_SQLSTATE, failure_message = MESSAGE_TEXT;
+      -- This update is outside the audit subtransaction: an audit-write failure
+      -- must not restore the poison row's old scheduling priority.
+      UPDATE music_release_version
+      SET updated_at = clock_timestamp()
+      WHERE id = candidate.id AND state = 'takedown_scheduled';
       IF failure_state LIKE '40%' OR failure_state = '55P03' THEN
         RAISE WARNING 'music withdrawal of version % postponed (%): %', candidate.id, failure_state, failure_message;
         CONTINUE;

@@ -134,6 +134,24 @@ spec = describe "music-publication-postgresql" $ do
           withdrawDue pool `shouldReturn` 1
           versionState pool failing `shouldReturn` "withdrawn"
 
+        it "advances a one-row withdrawal batch past a permanently failing version" $ \pool -> do
+          (_, failing) <- publishable pool "takedown-poison-first"
+          (_, other) <- publishable pool "takedown-behind-poison"
+          schedulePast pool failing
+          schedulePast pool other
+          publishDue pool `shouldReturn` 2
+          takedownPast pool failing
+          takedownPast pool other
+          let withdrawOne = count pool "SELECT count(*) FROM music_withdraw_due(1)" []
+          withWithdrawalFailure pool failing $ do
+            withdrawOne `shouldReturn` 0
+            withdrawOne `shouldReturn` 1
+            versionState pool failing `shouldReturn` "takedown_scheduled"
+            versionState pool other `shouldReturn` "withdrawn"
+            failedEvents pool failing `shouldReturn` 1
+          withdrawOne `shouldReturn` 1
+          versionState pool failing `shouldReturn` "withdrawn"
+
 safeConnection :: String -> Bool
 safeConnection value = not (any (`elem` value) ['?', '#'])
   && "_test" `isSuffixOf` value && any (`isPrefixOf` value)
