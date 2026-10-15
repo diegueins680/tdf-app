@@ -663,6 +663,14 @@ export default function CourseProductionLandingPage() {
   const handleEnrollmentExited = () => {
     if (!returnFocusOnExitRef.current) return;
     returnFocusOnExitRef.current = false;
+    // Finish the dialog exit before starting a router transition. Navigating
+    // while Slide is exiting can interrupt its completion and retain the modal.
+    const params = new URLSearchParams(location.search);
+    if (params.has(ENROLL_QUERY_PARAM)) {
+      params.delete(ENROLL_QUERY_PARAM);
+      const search = params.toString();
+      navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true });
+    }
     const target = [enrollTriggerRef.current, heroCtaRef.current].find(
       (candidate) => candidate?.isConnected && !candidate.hasAttribute('disabled'),
     );
@@ -676,13 +684,7 @@ export default function CourseProductionLandingPage() {
   const closeEnrollment = useCallback(() => {
     setEnrollOpen(false);
     returnFocusOnExitRef.current = true;
-    const params = new URLSearchParams(location.search);
-    if (params.has(ENROLL_QUERY_PARAM)) {
-      params.delete(ENROLL_QUERY_PARAM);
-      const search = params.toString();
-      navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true });
-    }
-  }, [location.pathname, location.search, navigate]);
+  }, []);
 
   // Deep link (?inscribirme=1), e.g. when coming back from login.
   useEffect(() => {

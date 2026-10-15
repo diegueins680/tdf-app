@@ -729,6 +729,17 @@
       "conflict": "Music unit modules and a convenience runner existed, but the canonical entrypoint did not invoke them and no scripts/workflow invocation of that runner was found.",
       "authority": "formal/system/music-test-entrypoint.md",
       "resolution": "Register the same four unit groups in Spec.hs and require nonempty probes in backend quality. Module presence and unrelated green examples are insufficient execution evidence."
+    },
+    {
+      "id": "AUTHORITY-064",
+      "sources": [
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "EVT-TICKET-MANUAL-001 states that the review locks the checkout, attempt and evidence rows. The function took those locks and then committed before writing, which released them; a second concurrent reviewer read the same submitted evidence and had the write refused by the database as an error instead of being told the transfer was already decided.",
+      "authority": "The requirement governs: the review is serialized by its row locks. The database's evidence transition guard remains the last line of defence, not the means of serialization.",
+      "resolution": "The intermediate commit is removed so the locks last until the review commits. A second reviewer waits and is answered from the decided state; the buyer's concurrent writes are not covered by this. The requirement gains a direct PostgreSQL test of the review transaction, including races, and a bounded model."
     }
   ]
 }
