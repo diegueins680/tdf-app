@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "4c84c60a5836f7d39f18e10d34d136996bb0f63f",
+  "mobileRevision": "74e0e6da42cd37ca09a86a57db1d21f12d31cd2f",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -4172,7 +4172,7 @@
     {
       "id": "SURFACE-ee87483424711c8a",
       "path": "scripts/lib/music_payment_conformance.py",
-      "sha256": "b84325a1be6910528e9242bba5e7b156ea57d7e4bd1127ff74039812dd72175c",
+      "sha256": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4196,7 +4196,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
+      "sha256": "477b99e3bcec565da9ebfa7b5c3a4e2ee5854b7a5b8e5deb3f22f025a5aab455",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4940,7 +4940,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "2fdfa7c1dc2bf058b3b6bac063dea0e7d2cc2735f2b9e950bc3a1fbd468d37af",
+      "sha256": "4fcf7c9f31e4fe43b66bb0f0f3977586b4783b5bf39ad8262141a4649225819d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6404,7 +6404,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+      "sha256": "6cff3a4ac7f6a88a71ac9d8529cea4afab0ad7b422364bcb328a2241d64b6551",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7496,13 +7496,13 @@
     {
       "id": "SURFACE-9fb827f13f2ab951",
       "path": "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
-      "sha256": "51ae6b0d232085def9519c716b62c63e348f5e8920fa356d537e633048af28b5",
+      "sha256": "6d374f89848428dc6636951465e899c9488ac588f958152982f46b75444aa75f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-cc4546803ae98fba",
       "path": "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
-      "sha256": "9544eb483c5460fde46a93e265f9bf9faf22cfa3c66eaa8e50af93adbac09fd5",
+      "sha256": "f65734eaafb845063f509d9a51a46815496669d75821658d35a6f7ae88f91316",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10622,7 +10622,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
+      "sha256": "ea4fd3ba4a9be53b9f5452c6b724e5b1e3fda4328a4ee8e94cdce1d2aa5b072f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14138,7 +14138,7 @@
     {
       "id": "SURFACE-5cbf72ef8bf21ded",
       "path": "tdf-hq/src/TDF/Server/CommerceOperations.hs",
-      "sha256": "fce3e53d4c0335488e7ae5f85f64cc9a85ea655b2419f9fc1b32e3259a661ae7",
+      "sha256": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16886,7 +16886,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+      "sha256": "6cff3a4ac7f6a88a71ac9d8529cea4afab0ad7b422364bcb328a2241d64b6551",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18379,7 +18379,7 @@
     },
     {
       "path": "docs/adr/0125-read-only-reconciliation-evidence.md",
-      "sha256": "b42c98c803addb68c1ac4d849a5b145f9476d4d4d98ad9d482c665756822375d",
+      "sha256": "ec94ac58f729086ded4c7c4450fa5e1a704a4220529f452c70310b20333a7025",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24826,7 +24826,7 @@
     },
     {
       "path": "formal/system/music-payment-outcome.md",
-      "sha256": "7c1d7711d67b46739d8627b1d6cef4051ebbed2bf289aa0e3e32078164b54ec8",
+      "sha256": "67a7b0ebcbdc6e20164407479cdacbc86f8fbb3f517eacdae743bec08a633ab8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24931,7 +24931,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d08d6d1b0464336bf1da89fb9437f46eab025701afb8d004287f3e275d556d18",
+      "sha256": "fa7afdf376173cc627f05e8fa5cf0f0f909e02d274bc5f86b9f98cde525192d8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -25267,7 +25267,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
+      "sha256": "ea4fd3ba4a9be53b9f5452c6b724e5b1e3fda4328a4ee8e94cdce1d2aa5b072f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

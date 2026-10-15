@@ -156,6 +156,12 @@ try:
         time.sleep(.25)
     else: raise RuntimeError('Fixture backend did not become ready')
 
+    status, body = request('/version', token='')
+    version_info = json.loads(body) if status == 200 else {}
+    (OUTPUT / 'backend-version.json').write_text(json.dumps(version_info, indent=2) + '\n')
+    check('fixture executable revision matches candidate source',
+          status == 200 and version_info.get('commit') == revision)
+
     # OpenAPI requires bearer authentication for party radio presence. A removed
     # shadow public declaration must never turn listener state into anonymous data.
     sql("INSERT INTO party_radio_presence(party_id,stream_url,station_name,updated_at) VALUES (" + owner + ",'https://example.invalid/synthetic-stream','SYNTHETIC_RADIO_STATION',now())")
@@ -727,7 +733,7 @@ try:
     from readiness_conformance import verify_readiness
     verify_readiness(run, NAME, http_port, check)
 
-    result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'checks': checks, 'status': 'passed'}
+    result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'reportedCommit': version_info.get('commit'), 'checks': checks, 'status': 'passed'}
 finally:
     if server is not None:
         server.terminate()

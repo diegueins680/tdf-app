@@ -74,7 +74,10 @@ verified projection; failure before retry admission; and failure before late bin
 responses. Each retry case must reject admission after its witnessed wait. Fixtures synthesize provider evidence; these
 checks do not exercise provider calls, the complete payment adapter, financial
 ledger/receipt posting or every isolation mode. Administrative HTTP checks verify
-case linkage and anonymous/unprivileged denial. A stored PayPal order first
+case linkage and anonymous/unprivileged denial. Before any behavioral checks,
+the fixture checks the running executable's `/version` against the candidate
+Git SHA and retains its identity beside the executable hash; stale cached build
+metadata cannot stand in for a candidate execution. A stored PayPal order first
 returns successfully without a provider call, then returns409 after failure even
 when checkout/attempt status reopens. Only the disposable test database temporarily
 enables sandbox commerce; it restores the prior flags in a finally block.

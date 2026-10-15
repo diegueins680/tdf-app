@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "4c84c60a5836f7d39f18e10d34d136996bb0f63f",
+  "mobileRevision": "74e0e6da42cd37ca09a86a57db1d21f12d31cd2f",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -9923,7 +9923,8 @@
         "music_download checkout linked to its canonical purchase",
         "Existing before-trigger validates succeeded attempt and immutable provider binding before paid",
         "Migration refuses existing active purchase entitlements whose order is not paid",
-        "Music commerce remains disabled until separate provider runtime/recovery obligations are satisfied"
+        "Music commerce remains disabled until separate provider runtime/recovery obligations are satisfied",
+        "Release schema verifier requires music_checkout_payment_attempt_allowed(uuid) before candidate admission"
       ],
       "inputs": [
         "Checkout status transition",
@@ -9968,7 +9969,8 @@
       "effects": [
         "Canonical settlement and unique entitlement when payable",
         "Existing reconciliation exception with checkout-scoped internal reference and exact provider/resource metadata when closed",
-        "Idempotent purchase_payment_requires_review audit event"
+        "Idempotent purchase_payment_requires_review audit event",
+        "Safe known music_paid_closed_order administrative reason represented in OpenAPI and generated web/mobile clients"
       ],
       "authorization": "Existing verified-payment admission and immutable binding checks remain prerequisites. Reconciliation report remains strict-administrator-only; this migration grants no new privilege.",
       "privacy": "Existing financial reconciliation/audit boundaries; no message payload, credential or new public data. The report omits merchant/provider references. Retention policy and operational resolution are separate obligations.",
@@ -9982,7 +9984,12 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Server/CommerceOperations.hs",
         "scripts/production-migrations.json",
-        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx"
       ],
       "tests": [
         "tdf-hq/test/sql/music_payment_outcomes.sql",
@@ -9990,7 +9997,8 @@
         "scripts/test-music-payment-outcomes.sh",
         "scripts/lib/music_payment_conformance.py",
         "scripts/test-booking-conformance.py",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx"
       ],
       "formalModels": [
         "formal/event-operations/MusicPaymentOutcome.tla",
@@ -10032,7 +10040,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "907c0feee6e700ec5b16ed8852911a988de10d2d3b7a49819056acaa5e75ad7a",
+    "docs/catalog-persistence/catalog-list-decisions.json": "0a6d29a59be341d064b400ceb9fbeca6445c447507e902b02b1e6df6e30834bf",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -10318,10 +10326,10 @@
     "scripts/lib/music-test-database.mjs": "8c55bbb8607ab1c0d229dc8485999cb8decba00b4580f1c2dec18fee62243b7a",
     "scripts/lib/music-worker-image-smoke.sh": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
-    "scripts/lib/music_payment_conformance.py": "b84325a1be6910528e9242bba5e7b156ea57d7e4bd1127ff74039812dd72175c",
+    "scripts/lib/music_payment_conformance.py": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
     "scripts/lib/operations_conformance.py": "e0ff663aee7f816df7a06418223d41065d69e0681675a05f3fb6a0592e0f911a",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
+    "scripts/lib/production-release.mjs": "477b99e3bcec565da9ebfa7b5c3a4e2ee5854b7a5b8e5deb3f22f025a5aab455",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -10358,7 +10366,7 @@
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
-    "scripts/test-booking-conformance.py": "2fdfa7c1dc2bf058b3b6bac063dea0e7d2cc2735f2b9e950bc3a1fbd468d37af",
+    "scripts/test-booking-conformance.py": "4fcf7c9f31e4fe43b66bb0f0f3977586b4783b5bf39ad8262141a4649225819d",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
@@ -10471,7 +10479,7 @@
     "tdf-hq-ui/src/api/eventTickets.ts": "9fa9ad85d2c14ebedd4186f7777c34c8a411a7a2adcadcfdaa7c41a7bfcc5f32",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+    "tdf-hq-ui/src/api/generated/types.ts": "6cff3a4ac7f6a88a71ac9d8529cea4afab0ad7b422364bcb328a2241d64b6551",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
@@ -10528,6 +10536,8 @@
     "tdf-hq-ui/src/components/notificationTarget.ts": "170f6a854078d866df645bb72d09a1f34296249d489667ebde4dce951af84c23",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
+    "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx": "6d374f89848428dc6636951465e899c9488ac588f958152982f46b75444aa75f",
+    "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx": "f65734eaafb845063f509d9a51a46815496669d75821658d35a6f7ae88f91316",
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "cb2e829fb4c40dfbbc9f6b7cc7b94cf40f63471a23db7df3f04bb496b4638408",
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx": "c237c4bdd984be7d3f9d3bd2191486d3ceaceb6b5181b0946f9b30ecd6313ff7",
     "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": "a32b108366282c451878b0a95dd4c9efb1cdfba44ea779d0069cd03f3b5c913f",
@@ -10674,7 +10684,7 @@
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
     "tdf-hq/assets/feature-registry.json": "f7cedcbd74d618503c961c98f8476d2ec4230ea62cf727ebc7bac529ab3dd250",
     "tdf-hq/config/default.env.example": "4f93f69efb3fd725dba533197e275cf70fb0d25ec2666ba9df77a428758125e9",
-    "tdf-hq/docs/openapi/api.yaml": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
+    "tdf-hq/docs/openapi/api.yaml": "ea4fd3ba4a9be53b9f5452c6b724e5b1e3fda4328a4ee8e94cdce1d2aa5b072f",
     "tdf-hq/docs/openapi/directory.yaml": "03a54c333f2212d5d2d26423a0bb8e9c931c9b956cce281e01080dc06ddf950e",
     "tdf-hq/music-worker/stack.yaml": "cd8794225ff4aa9550560653e371d570074d9f6dc261c1dfd138a4aa4fc37df8",
     "tdf-hq/music-worker/tdf-music-worker.cabal": "41abf425586e0213ce6607a8208bc6b99ba46a65bc92d7adacb8b23b116d87d2",
@@ -10821,7 +10831,7 @@
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
     "tdf-hq/src/TDF/Server.hs": "8b1f402fc6b630beb54b713571771bdeb4db872519f01e6ca3257a68a046e89e",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
-    "tdf-hq/src/TDF/Server/CommerceOperations.hs": "fce3e53d4c0335488e7ae5f85f64cc9a85ea655b2419f9fc1b32e3259a661ae7",
+    "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "97d466b4b45b9f13d1f1c1723008dbfaf651884cdaf27fcff67d7c8d03816fb5",
@@ -10995,7 +11005,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "3d4f86fa218c3f1cebbb88b3ad828082306221a95406de93cc31318aa033fad7",
-    "tdf-mobile/src/api/generated/types.ts": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+    "tdf-mobile/src/api/generated/types.ts": "6cff3a4ac7f6a88a71ac9d8529cea4afab0ad7b422364bcb328a2241d64b6551",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
@@ -11646,6 +11656,10 @@
       {
         "requirement": "MKT-ARTIST-LISTING-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MUSIC-OUTCOME-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/api/generated/types.ts": [
@@ -11659,6 +11673,10 @@
       },
       {
         "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MUSIC-OUTCOME-001",
         "relationship": "implementation"
       }
     ],
@@ -11961,6 +11979,10 @@
       },
       {
         "requirement": "LEGAL-CONSENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MUSIC-OUTCOME-001",
         "relationship": "implementation"
       }
     ],
@@ -12345,6 +12367,10 @@
       },
       {
         "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MUSIC-OUTCOME-001",
         "relationship": "implementation"
       }
     ],
@@ -18660,6 +18686,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx": [
+      {
+        "requirement": "PAY-MUSIC-OUTCOME-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/sql/music_payment_outcomes.sql": [
       {
         "requirement": "PAY-MUSIC-OUTCOME-001",
@@ -18679,6 +18711,12 @@
       }
     ],
     "scripts/lib/music_payment_conformance.py": [
+      {
+        "requirement": "PAY-MUSIC-OUTCOME-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx": [
       {
         "requirement": "PAY-MUSIC-OUTCOME-001",
         "relationship": "tests"
@@ -21495,7 +21533,7 @@
     {
       "id": "SURFACE-ee87483424711c8a",
       "path": "scripts/lib/music_payment_conformance.py",
-      "sha256": "b84325a1be6910528e9242bba5e7b156ea57d7e4bd1127ff74039812dd72175c",
+      "sha256": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21566,7 +21604,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
+      "sha256": "477b99e3bcec565da9ebfa7b5c3a4e2ee5854b7a5b8e5deb3f22f025a5aab455",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21595,6 +21633,10 @@
         },
         {
           "requirement": "MKT-ARTIST-LISTING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MUSIC-OUTCOME-001",
           "relationship": "implementation"
         }
       ]
@@ -22759,7 +22801,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "2fdfa7c1dc2bf058b3b6bac063dea0e7d2cc2735f2b9e950bc3a1fbd468d37af",
+      "sha256": "4fcf7c9f31e4fe43b66bb0f0f3977586b4783b5bf39ad8262141a4649225819d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25313,7 +25355,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+      "sha256": "6cff3a4ac7f6a88a71ac9d8529cea4afab0ad7b422364bcb328a2241d64b6551",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25334,6 +25376,10 @@
         },
         {
           "requirement": "MKT-ARTIST-LISTING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MUSIC-OUTCOME-001",
           "relationship": "implementation"
         }
       ]
@@ -26936,16 +26982,26 @@
     {
       "id": "SURFACE-9fb827f13f2ab951",
       "path": "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
-      "sha256": "51ae6b0d232085def9519c716b62c63e348f5e8920fa356d537e633048af28b5",
+      "sha256": "6d374f89848428dc6636951465e899c9488ac588f958152982f46b75444aa75f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-MUSIC-OUTCOME-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-cc4546803ae98fba",
       "path": "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
-      "sha256": "9544eb483c5460fde46a93e265f9bf9faf22cfa3c66eaa8e50af93adbac09fd5",
+      "sha256": "f65734eaafb845063f509d9a51a46815496669d75821658d35a6f7ae88f91316",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-MUSIC-OUTCOME-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4fbcad3f047cdd71",
@@ -31507,7 +31563,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
+      "sha256": "ea4fd3ba4a9be53b9f5452c6b724e5b1e3fda4328a4ee8e94cdce1d2aa5b072f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31544,6 +31600,10 @@
         },
         {
           "requirement": "LEGAL-CONSENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MUSIC-OUTCOME-001",
           "relationship": "implementation"
         }
       ]
@@ -36664,7 +36724,7 @@
     {
       "id": "SURFACE-5cbf72ef8bf21ded",
       "path": "tdf-hq/src/TDF/Server/CommerceOperations.hs",
-      "sha256": "fce3e53d4c0335488e7ae5f85f64cc9a85ea655b2419f9fc1b32e3259a661ae7",
+      "sha256": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41024,7 +41084,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+      "sha256": "6cff3a4ac7f6a88a71ac9d8529cea4afab0ad7b422364bcb328a2241d64b6551",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41037,6 +41097,10 @@
         },
         {
           "requirement": "MKT-ARTIST-LISTING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-MUSIC-OUTCOME-001",
           "relationship": "implementation"
         }
       ]
@@ -42819,8 +42883,6 @@
     "SURFACE-65cbecbfc60140c5",
     "SURFACE-24f155f2a25a5ede",
     "SURFACE-4bc4cdfae1ab1163",
-    "SURFACE-9fb827f13f2ab951",
-    "SURFACE-cc4546803ae98fba",
     "SURFACE-086f8353dd9f321c",
     "SURFACE-a5cd6f33c8f86f75",
     "SURFACE-907ec3db959e1b75",
@@ -45219,7 +45281,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d08d6d1b0464336bf1da89fb9437f46eab025701afb8d004287f3e275d556d18",
+      "sourceSha256": "fa7afdf376173cc627f05e8fa5cf0f0f909e02d274bc5f86b9f98cde525192d8",
       "definition": {
         "states": [
           "absent",

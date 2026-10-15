@@ -9987,7 +9987,8 @@
         "scripts/lib/production-release.mjs",
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-mobile/src/api/generated/types.ts"
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx"
       ],
       "tests": [
         "tdf-hq/test/sql/music_payment_outcomes.sql",
@@ -9995,7 +9996,8 @@
         "scripts/test-music-payment-outcomes.sh",
         "scripts/lib/music_payment_conformance.py",
         "scripts/test-booking-conformance.py",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx"
       ],
       "formalModels": [
         "formal/event-operations/MusicPaymentOutcome.tla",
