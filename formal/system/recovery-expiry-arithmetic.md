@@ -148,3 +148,17 @@ configuration. The Cabal pin was refreshed after reviewing that registration;
 the integrated candidate requires fresh solver execution and evidence hashes.
 This review does not establish the correctness of the newly merged index
 migration or promote its separate full requirement to PROVEN.
+
+## Verification-runner defect and correction
+
+Hosted run `38673959518` on candidate `4ca89a07e828cc459cf40d16e58c9cc73877f99c`
+passed the arithmetic job but failed the database probes before executing SQL.
+Unix-socket readiness can observe the pinned image's temporary initialization
+server; that server stops before the final PostgreSQL process starts. The runner
+now waits for an authenticated `SELECT 1` on container-loopback TCP and executes
+probes through that same endpoint. The pinned entrypoint starts its temporary
+server with `listen_addresses=''`, so it cannot satisfy this readiness check.
+A controlled bootstrap/final-server regression fixture rejects the prior socket
+behavior. This repairs evidence collection, not an application correctness bug.
+The failed hosted run remains part of the audit history; tests and proofs must
+be regenerated for the corrected runner revision.
