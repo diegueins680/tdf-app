@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "394e8ba1db3ead9328f2",
+      "currentId": "9dce5d95daef05f9ac10",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 204,
-      "change": "append 2026-10-11_index_declarations_not_unique",
+      "valueCount": 205,
+      "change": "Append ledger posting integrity to current main, preserving all 204 existing migration entries and their introduction commits.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "5f2e374ddc077e6b8418",
@@ -50510,6 +50510,16 @@
             }
           }
         }
+      },
+      "ledgerQueuePreviousMapping": {
+        "historicalReplacementId": "7578a30aa3cc5aa23870",
+        "currentId": "394e8ba1db3ead9328f2",
+        "file": "scripts/production-migrations.json",
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 204,
+        "change": "append 2026-10-11_index_declarations_not_unique",
+        "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf"
       }
     }
   ]

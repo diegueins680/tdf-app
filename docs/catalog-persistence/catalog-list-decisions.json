@@ -15621,19 +15621,19 @@
       }
     },
     {
-      "id": "394e8ba1db3ead9328f2",
+      "id": "9dce5d95daef05f9ac10",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 204-entry manifest keeps the reviewed 203 entries unchanged and appends the migration that replaces nine uniqueness constraints with plain indexes of the same names (no row or column change) with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 205-entry manifest preserves the 204 current-main entries and appends ledger posting integrity with its introduction commit. The migration requires draft-only creation, exact balanced posting, immutable entries and stable posted reversers; it rejects inconsistent legacy history before guard installation. PostgreSQL regression and concurrency tests plus bounded models verify the local slice; production application remains separately gated.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "index-declarations-2026-10-11",
+      "reviewBatch": "ledger-posting-queue-20261014",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57225,6 +57225,23 @@
             "reviewMethod": "successor-of-reviewed-decision"
           }
         }
+      },
+      "ledgerQueuePreviousDecision": {
+        "id": "394e8ba1db3ead9328f2",
+        "classification": "genuine-technical-constant",
+        "disposition": "explicit-allowlist",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Ordered 204-entry manifest keeps the reviewed 203 entries unchanged and appends the migration that replaces nine uniqueness constraints with plain indexes of the same names (no row or column change) with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+        "reviewed": true,
+        "evidence": {
+          "file": "scripts/production-migrations.json",
+          "line": 3
+        },
+        "reviewBatch": "index-declarations-2026-10-11",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf"
       }
     },
     {

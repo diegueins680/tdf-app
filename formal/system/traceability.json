@@ -316,8 +316,8 @@
     },
     {
       "id": "SYS-MONEY-003",
-      "statement": "Ledger balance validation must compare exact per-currency sums, not modular Int64 sums.",
-      "authority": "approved",
+      "statement": "Ledger balance validation must compare exact per-currency sums, not modular Int64 sums; in the database a commerce ledger transaction is created as draft, posts only with entries that sum to zero in every currency, keeps its entries unchanged once posted, never returns to draft, and is reversed only by a posted transaction.",
+      "authority": "approved AUTHORITY-069",
       "source": "docs/adr/0104-immutable-financial-ledger.md",
       "property": "per-currency accumulated sum uses arbitrary precision",
       "contract": "formal/system/payment-arithmetic.md",
@@ -325,9 +325,11 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-        "tdf-hq/src/TDF/Commerce/RefundStore.hs"
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
+        "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
+        "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql"
       ],
-      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control.",
+      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control. Bounded TLC model of ledger posting with five negative controls and the ledger-posting-postgresql spec against the fully migrated schema (formal/system/ledger-posting.md). Legacy-upgrade fixtures and witnessed two-session reversal races under READ COMMITTED and REPEATABLE READ run in scripts/__tests__/ledger-posting-upgrade.py.",
       "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output; 2026-10-09 local PG16 run of ledger_posting_balance.sql via scripts/test-ticket-manual-review.sh.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -344,8 +346,26 @@
         "Inputs and valid domains are defined by formal/system/payment-arithmetic.md"
       ],
       "state": {
-        "boundary": "formal/system/payment-arithmetic.md",
-        "property": "per-currency accumulated sum uses arbitrary precision"
+        "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
+        "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
+        "states": [
+          "draft",
+          "posted",
+          "reversed"
+        ],
+        "transitions": [
+          {
+            "from": "draft",
+            "to": "posted",
+            "guard": "entries present and zero sum per currency"
+          },
+          {
+            "from": "posted",
+            "to": "reversed",
+            "guard": "reversal_of names another posted transaction"
+          }
+        ],
+        "initial": "draft"
       },
       "allowedTransitions": [
         "per-currency accumulated sum uses arbitrary precision"
@@ -358,25 +378,39 @@
       ],
       "authorization": "Retain the authorization boundary in the mapped contract; verification of a helper does not authorize an HTTP caller.",
       "privacy": "Do not put credentials or customer payloads in verification receipts.",
-      "concurrency": "No global interleaving guarantee follows from this requirement; bounds remain in the mapped contract.",
+      "concurrency": "No global interleaving guarantee follows from this requirement; bounds remain in the mapped contract. In the database an entry write locks its transaction row, so an entry and a posting of one transaction serialise: the entry lands in the draft and the posting validates it, or the posting lands first and the entry is refused.",
       "idempotency": "No additional runtime retry permission; repeat checks must bind to their actual inputs.",
-      "failure": "Reject the invalid operation or verification result as defined by the mapped contract.",
-      "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
+      "failure": "Reject the invalid operation or verification result as defined by the mapped contract. Database: SQLSTATE 23514 for creation in any status but draft, posting without entries or unbalanced in any currency, entries inserted/updated/deleted after posting, posted -> draft, draft -> reversed, reversal by a non-posted transaction, and any change of a reversed transaction. A referenced posted reverser cannot itself be reversed. Migration rejects existing empty/unbalanced posted rows and self, draft or reversed reversal targets before installing new guards.",
+      "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation. Posted transactions found unbalanced or empty when the 2026-10-12 migration runs are reported with warnings and left as they are; a correction is a reviewed reversing transaction.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
         "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
         "tdf-hq/test/integration/ledger_posting_balance.sql",
-        "scripts/test-ticket-manual-review.sh"
+        "scripts/test-ticket-manual-review.sh",
+        "scripts/test-ledger-posting.sh",
+        "tdf-hq/test/TDF/LedgerPostingSpec.hs",
+        "scripts/__tests__/ledger-posting-upgrade.py"
       ],
-      "formalModels": [],
-      "confidence": "high for stated local boundary; no system-wide completion claim",
+      "formalModels": [
+        "formal/event-operations/LedgerPosting.tla",
+        "formal/event-operations/LedgerPosting.cfg",
+        "formal/event-operations/LedgerPostingAppend.cfg",
+        "formal/event-operations/LedgerPostingUnvalidated.cfg",
+        "formal/event-operations/LedgerPostingReopen.cfg",
+        "formal/event-operations/LedgerPostingInsertPosted.cfg",
+        "formal/event-operations/LedgerPostingReverserMutable.cfg"
+      ],
+      "confidence": "high for the stated local boundary and for the database posting rules as tested; no system-wide completion claim; deployed correspondence pending",
       "ambiguity": [
         "Full cross-system refinement and current deployed correspondence remain unverified.",
-        "The database validates balance only on draft -> posted; a transaction inserted as posted, or an entry appended after posting, is not rejected. No live writer does either."
+        "Production ledger drift is unknown until the migration's warnings are read at release time.",
+        "No writer uses 'reversed' today; the reversal rule bounds a future writer.",
+        "validateLedgerBalance (Haskell) has no runtime caller; the database rule is the enforced one.",
+        "Before 2026-10-12 the database validated balance only on draft -> posted, so a transaction inserted as posted or an entry appended after posting was not rejected; the ledger posting integrity migration closes both."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Live writers and the posting trigger conform; the database does not reject transactions inserted as posted or entries appended after posting."
+        "reason": "Local database tests verify draft-only creation, immutable balanced posted entries, stable posted reversal targets and rejection of inconsistent legacy history. Production application and deployed correspondence remain unverified."
       }
     },
     {
@@ -9911,7 +9945,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "bd53987b42af93029c3f3b71ccfe800bf631678b7c299eb078834a60e3a5c0b3",
+    ".github/workflows/ci.yml": "17562d44712ed8a3f4dcbe556975a1d6c59c2bfb3125efe51c560f2276c20ced",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
@@ -9919,7 +9953,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+    "docs/catalog-persistence/catalog-list-decisions.json": "a50d74a8b7dbee030ef7d867262d7eed50c8c14422ceefc89d0b6acf1597596b",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -9994,6 +10028,13 @@
     "formal/event-operations/InvoiceSubmissionStaleFinish.cfg": "0146a45dc8944a564e78422f32368bbe063143c339abb8b0a6b8c1d8a758750d",
     "formal/event-operations/InvoiceSubmissionUnfencedStart.cfg": "dab915f61d964da7720b82f0197513fd4455b3f2b0b73c34cae627cf35feb2d7",
     "formal/event-operations/InvoiceSubmissionUnknownAsRefused.cfg": "9cea081fe4f68063303cf47bdb2668186e4a65cdda284625a2e7d426b86b63e3",
+    "formal/event-operations/LedgerPosting.cfg": "c9bd256bf365910ea502ddbab1ca36a90c49dcfd5844266212614e7462f90079",
+    "formal/event-operations/LedgerPosting.tla": "1782b4e7cdcd96e9a38fd99ed17939a88961af26d3f5fec8472f655ff20576eb",
+    "formal/event-operations/LedgerPostingAppend.cfg": "f09d97280f6de2fd31d39a093062c124743e4de3af7a171302b96a1eba3f8905",
+    "formal/event-operations/LedgerPostingInsertPosted.cfg": "b6b26746ff878e12fbc7184a5769502cb5f2364ad0a35512877b82f0d2b0b01f",
+    "formal/event-operations/LedgerPostingReopen.cfg": "78d3b64415366b82bf28afac1938eeffab57e5acc089eb02d4f9fc7a3443932c",
+    "formal/event-operations/LedgerPostingReverserMutable.cfg": "979aa3ad107922440768d413c0d3c74ffc76c208ae45be81b9eb51ff01825244",
+    "formal/event-operations/LedgerPostingUnvalidated.cfg": "8c5604e88c2aff8b33363640efa19f3977d70bbf04818773ca8058cd9cfb4a7f",
     "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
     "formal/event-operations/ManualBankTransfer.tla": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
     "formal/event-operations/MetaRedelivery.cfg": "cf591fb7addfe8447ece3c9ce41981e7d84a8db4efff75dd04c80cf99b8f1277",
@@ -10079,7 +10120,7 @@
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
-    "formal/system/state-machine-bindings.json": "33b63d2076dc6bf55f812bd12b8eadd93cd9aa1a85966ca38ddadb1ca5b45655",
+    "formal/system/state-machine-bindings.json": "382d2a243880df64c52ed0265b271cb150974ca6b10d91c15f5f5729ac9d30d9",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
     "functions/_shared/event-preview.mjs": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
@@ -10134,6 +10175,7 @@
     "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/instagram-token-workflows.test.mjs": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
+    "scripts/__tests__/ledger-posting-upgrade.py": "71a163593cb81f3cff64a93b524279e01f2c518d9ea584453c81cd0e9fcd3f63",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
     "scripts/__tests__/merch-runtime-safety.test.mjs": "f6bb3266949645d3e7f8db366503e2d7104bbc2017da86837a9f6a7363246f02",
@@ -10212,7 +10254,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "5a2894568e5baf251a0a882438f5153dd3e703157e9c42dbb8a8bd89c13878bb",
+    "scripts/production-migrations.json": "eefe7d3fbaf7441c02bfbaec4e68328d81f59d2dbc901f847489384faba31919",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -10247,6 +10289,7 @@
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
     "scripts/test-isolated-application-canary.py": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
+    "scripts/test-ledger-posting.sh": "4e84c81490ba4c5dd61606df854014285cbdc525ffd0ecd51254b56c3816895f",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
     "scripts/test-meta-redelivery.sh": "ede4ee564fb1ff86e4d4da13342ab56eca7b382e411abc41eea4d7bce247616a",
@@ -10299,7 +10342,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
+    "scripts/verify-event-operations-formal.sh": "2091866439489607ed8b2f177e04ddf0cbc6898f3aa86dd2ef5cb6ebe9d69c51",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -10628,6 +10671,8 @@
     "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql": "2d33a0b6285c8425d582732d86d43420e590267d7e30d263a84d91fb5cddebfb",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
+    "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql": "9ccec46d936ceca2c1feb8155b1ef61444fb273898b7f5a3e5b307f4713d4648",
+    "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql": "5bf3cb0d88d30543a7c0d1d13cb3d972a8170ae60dc71873b828dba0c329a546",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -10736,12 +10781,12 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
+    "tdf-hq/tdf-hq.cabal": "7fa8a6b09b0ddd3c74b63bd3d4fffd6a0e3f3dd2472d138aae8a65cde17f659d",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
+    "tdf-hq/test/Spec.hs": "8dba35265324fa8f1b553ecf0be7d6cd7db4f10a09e2c855c220825de35f7eec",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -10764,6 +10809,7 @@
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "de7e62fd390a1286f6daacc67042af69b557adc1c1e8e4fa40c6f2538c32a65d",
     "tdf-hq/test/TDF/InvoiceWorkerSpec.hs": "bff4993ffb5608afabf5cc04b6fb27d06036c61a78600334fc72800ee68379f7",
+    "tdf-hq/test/TDF/LedgerPostingSpec.hs": "869763b97901cbe152a70aa4a8c43ee260a443b95f04792fd665c5fec3964e8b",
     "tdf-hq/test/TDF/MetaRedeliverySpec.hs": "e1e1dcf22068ce44f41ea985d546235c844e468cdfe35a23ff297d6d0b8782b4",
     "tdf-hq/test/TDF/MusicPurchaseSpec.hs": "493863cd4117580ed376fd872342880fec5e569d809fd69e87a857987b9d0d1c",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
@@ -11197,6 +11243,18 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/integration/ledger_posting_balance.sql": [
       {
         "requirement": "SYS-MONEY-003",
@@ -11211,6 +11269,66 @@
       {
         "requirement": "EVT-TICKET-MANUAL-001",
         "relationship": "tests"
+      }
+    ],
+    "scripts/test-ledger-posting.sh": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/LedgerPostingSpec.hs": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/ledger-posting-upgrade.py": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/LedgerPosting.tla": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LedgerPosting.cfg": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LedgerPostingAppend.cfg": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LedgerPostingUnvalidated.cfg": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LedgerPostingReopen.cfg": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LedgerPostingInsertPosted.cfg": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LedgerPostingReverserMutable.cfg": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "formalModels"
       }
     ],
     "scripts/specification-inventory.py": [
@@ -18568,7 +18686,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "bd53987b42af93029c3f3b71ccfe800bf631678b7c299eb078834a60e3a5c0b3",
+      "sha256": "17562d44712ed8a3f4dcbe556975a1d6c59c2bfb3125efe51c560f2276c20ced",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19909,6 +20027,18 @@
       "requirements": [
         {
           "requirement": "OPS-CLIENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f4cef1242676dea7",
+      "path": "scripts/__tests__/ledger-posting-upgrade.py",
+      "sha256": "71a163593cb81f3cff64a93b524279e01f2c518d9ea584453c81cd0e9fcd3f63",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
           "relationship": "tests"
         }
       ]
@@ -21605,7 +21735,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "5a2894568e5baf251a0a882438f5153dd3e703157e9c42dbb8a8bd89c13878bb",
+      "sha256": "eefe7d3fbaf7441c02bfbaec4e68328d81f59d2dbc901f847489384faba31919",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22963,6 +23093,18 @@
       ]
     },
     {
+      "id": "SURFACE-c3dd26e569b5cb41",
+      "path": "scripts/test-ledger-posting.sh",
+      "sha256": "4e84c81490ba4c5dd61606df854014285cbdc525ffd0ecd51254b56c3816895f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-6c0e76dafbb5a45f",
       "path": "scripts/test-live-intake-identity.sh",
       "sha256": "00362c34ed01b182a825ec767a0dfaaa8e1d65a5792592c9bd978364b702bd45",
@@ -23871,7 +24013,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
+      "sha256": "2091866439489607ed8b2f177e04ddf0cbc6898f3aa86dd2ef5cb6ebe9d69c51",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34552,6 +34694,30 @@
       ]
     },
     {
+      "id": "SURFACE-997107e9fdf27779",
+      "path": "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
+      "sha256": "9ccec46d936ceca2c1feb8155b1ef61444fb273898b7f5a3e5b307f4713d4648",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5e57444e40a2d228",
+      "path": "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
+      "sha256": "5bf3cb0d88d30543a7c0d1d13cb3d972a8170ae60dc71873b828dba0c329a546",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -37227,7 +37393,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
+      "sha256": "7fa8a6b09b0ddd3c74b63bd3d4fffd6a0e3f3dd2472d138aae8a65cde17f659d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37341,7 +37507,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
+      "sha256": "8dba35265324fa8f1b553ecf0be7d6cd7db4f10a09e2c855c220825de35f7eec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37764,6 +37930,18 @@
       "requirements": [
         {
           "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5f5dc3d94ae878f5",
+      "path": "tdf-hq/test/TDF/LedgerPostingSpec.hs",
+      "sha256": "869763b97901cbe152a70aa4a8c43ee260a443b95f04792fd665c5fec3964e8b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
           "relationship": "tests"
         }
       ]
@@ -43732,7 +43910,6 @@
   "unmodeledCriticalRequirements": [
     "SYS-VERIFY-001",
     "SYS-VERIFY-002",
-    "SYS-MONEY-003",
     "SYS-VERIFY-003",
     "SYS-ESCROW-001",
     "SYS-ESCROW-002",
@@ -44902,9 +45079,37 @@
       "correspondence": "states checked against migrated operations_work_item.status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
+      "id": "SYS-MONEY-003",
+      "source": "formal/system/requirements.json",
+      "sourceSha256": "675ae90514bc96c4786e50b23e14562ce7857ac997dcd23a91e406c166345bde",
+      "definition": {
+        "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
+        "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
+        "states": [
+          "draft",
+          "posted",
+          "reversed"
+        ],
+        "transitions": [
+          {
+            "from": "draft",
+            "to": "posted",
+            "guard": "entries present and zero sum per currency"
+          },
+          {
+            "from": "posted",
+            "to": "reversed",
+            "guard": "reversal_of names another posted transaction"
+          }
+        ],
+        "initial": "draft"
+      },
+      "correspondence": "Mapped requirement evidence required; enumeration alone is not conformance"
+    },
+    {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
+      "sourceSha256": "675ae90514bc96c4786e50b23e14562ce7857ac997dcd23a91e406c166345bde",
       "definition": {
         "states": [
           "absent",
