@@ -45,6 +45,7 @@ for (const allowed of [true, false]) {
       await page.getByRole('button',{name:'Notificaciones',exact:true}).click();
       await page.getByRole('link',{name:/Chat notification/}).click();
       await expect.poll(()=>pending.length,{timeout:3000}).toBeGreaterThan(0);
+      await expect(page.locator('.MuiPopover-root')).toHaveCount(0);
       await expect(page).toHaveURL(/\/chat\?threadId=10$/);
       await expect(page.getByText('Private body',{exact:true})).toHaveCount(0);
       await expect(page.getByText('Private preview',{exact:true})).toHaveCount(0);

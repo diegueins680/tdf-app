@@ -10294,7 +10294,7 @@
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
-    "e2e/web/chat-notification-navigation.spec.mjs": "1a8c9744ffcd4de50bc4a68fedaa4c55259d907793363760244583c5542c1c56",
+    "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
     "e2e/web/community-discovery.spec.mjs": "9fb22467b072db50eeffc2deb009c2361c21d0ac496e96a07076a9af367d6260",
     "e2e/web/course-enrollment.spec.mjs": "fceb783370a3a0fbdf7e44dbb417814e9b9dd9825ad884ae78636aa252bc78ba",
     "e2e/web/directory-entry.spec.mjs": "17d56aaa082a13e71c2442b6f09ee29b158413e9a41eb7b07969e3bee61c8c97",
@@ -19665,7 +19665,7 @@
     {
       "id": "SURFACE-2b332f1e11171387",
       "path": "e2e/web/chat-notification-navigation.spec.mjs",
-      "sha256": "1a8c9744ffcd4de50bc4a68fedaa4c55259d907793363760244583c5542c1c56",
+      "sha256": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26936,7 +26936,7 @@
     {
       "id": "SURFACE-90c681fa43de9fd3",
       "path": "tdf-hq-ui/src/components/NotificationBell.tsx",
-      "sha256": "c49c10c595ff7c0c18890421bca0537b98fe69d16a2109a72efcc08851419d1a",
+      "sha256": "de77bfc9b23e3deae24c65db63d5406bd30e077aea6e56a4804d0b2de3554d28",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },

@@ -2738,7 +2738,7 @@
     {
       "id": "SURFACE-2b332f1e11171387",
       "path": "e2e/web/chat-notification-navigation.spec.mjs",
-      "sha256": "1a8c9744ffcd4de50bc4a68fedaa4c55259d907793363760244583c5542c1c56",
+      "sha256": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7052,7 +7052,7 @@
     {
       "id": "SURFACE-90c681fa43de9fd3",
       "path": "tdf-hq-ui/src/components/NotificationBell.tsx",
-      "sha256": "c49c10c595ff7c0c18890421bca0537b98fe69d16a2109a72efcc08851419d1a",
+      "sha256": "de77bfc9b23e3deae24c65db63d5406bd30e077aea6e56a4804d0b2de3554d28",
       "semanticConformance": "not-established-by-discovery"
     },
     {
