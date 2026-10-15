@@ -109,6 +109,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `OperationsAuxiliaryWrite.cfg` (2026-10-12) | Two auxiliary Operations commands (note, retry, view or push) of one actor; session, grant, membership, assignment-dependent visibility, failure state and push key as the environment; lock, commit with audit, reject | PASS; 34,172 generated, 13,744 distinct states, depth 10; `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
 | `OperationsAuxiliaryWriteUnlocked.cfg`, `OperationsAuxiliaryWritePartialAudit.cfg`, `OperationsAuxiliaryWriteRetryTwice.cfg`, `OperationsAuxiliaryWriteUnencrypted.cfg` | Negative controls: environment moves while a command holds its locks, a result without its audit, a second retry admitted, a push token stored without the key | Expected exit 12 with `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
+| `OperationsReadPolicy.cfg` (2026-10-12) | One state; the grant table of `Model.hs` and the SQL scope filter evaluated over every subset of ten roles, both assignment flags and fifteen entity types (up to 30,720 cases per invariant) | PASS; `ReadersAgree`, `NoSecurityDisclosure`, `ReadOnlyNoWriteGain`, `SpecialistsAssigned`, `UnknownNothing` |
+| `OperationsReadPolicyWildcardSecurity.cfg`, `OperationsReadPolicySqlDrift.cfg`, `OperationsReadPolicyUnassigned.cfg`, `OperationsReadPolicyReadOnlyWrites.cfg`, `OperationsReadPolicyUnknownGrant.cfg` | Negative controls: the Haskell wildcard includes security, the SQL wildcard includes security, specialists see unassigned items, ReadOnly kept for write visibility, an unlisted role granted the wildcard | Expected non-zero exit with "The invariant of ... is equal to FALSE" for `NoSecurityDisclosure`, `ReadersAgree`, `SpecialistsAssigned`, `ReadOnlyNoWriteGain`, `UnknownNothing` |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
@@ -710,3 +712,16 @@ effect. Four single-guard controls. The model states the guards the
 handlers are read to apply; the PostgreSQL/HTTP conformance harness is the
 execution evidence. See
 [operations-aux-write.md](../system/operations-aux-write.md).
+## Operations read policy (2026-10-12)
+
+`OperationsReadPolicy.tla` is not a state machine: it copies the read grant
+table of `tdf-hq/src/TDF/Operations/Model.hs` and the SQL scope filter of
+`tdf-hq/src/TDF/Operations/Server.hs` and evaluates five invariants over
+every role set, assignment flag and entity type (AUTH-OPS-READ-001): detail
+(Haskell predicate) and list, metrics and stream (SQL filter) agree; only an
+Admin sees security incidents; ReadOnly adds no write visibility (by
+construction of the stripping rule each write site applies; the slice fixed
+the one site that did not); Teacher, Engineer and unlisted roles see
+nothing unassigned. Five controls each break one guard. The table is copied by hand; a change to `Model.hs` or
+`scopeFilterSql` must be mirrored here. See
+[operations-read-policy.md](../system/operations-read-policy.md).

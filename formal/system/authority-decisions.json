@@ -730,6 +730,19 @@
       "conflict": "OPS-AUX-WRITE-001 had no formal model; its verification field limits formal coverage to explicitly mapped abstractions, and the four handlers' guards (current authority under locks, atomic result and audit, one retry admission, encrypted push token) were stated only in prose.",
       "authority": "The requirement's property, allowed and forbidden transitions and concurrency fields, and the handlers as read on 2026-10-12 (runOperationsWrite, lockOperationsScope, withLockedWorkItem, replayFailureHandler, createSavedViewHandler, createPushSubscriptionHandler).",
       "resolution": "OperationsAuxiliaryWrite.tla states the four guards as invariants under bounded checking (two commands, one actor, one scope) with one negative configuration per guard; correspondence to the Haskell is by reading, not refinement, and the PostgreSQL/HTTP conformance harness remains the execution evidence. No code change."
+    },
+    {
+      "id": "AUTHORITY-073",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/operations-read-policy.md",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "docs/operations-control-center/rbac.md"
+      ],
+      "conflict": "AUTH-OPS-READ-001 had no formal model; the read policy exists twice (the Haskell predicate for detail and writes, the SQL scope filter for list, metrics and stream) and their agreement, the Admin-only security rule and ReadOnly's write neutrality were stated in prose and three Hspec examples. The independent review found the approval handler's linked-item check calling canViewEntityType with ReadOnly still present, unlike the three other write sites: Accounting plus ReadOnly could link an approval to a work item Accounting alone cannot see.",
+      "authority": "The requirement's property and forbidden transitions, docs/operations-control-center/rbac.md, and the two evaluators as read on 2026-10-12.",
+      "resolution": "OperationsReadPolicy.tla copies the grant table and both evaluators and checks the five invariants exhaustively over the finite policy (ten roles, two assignment flags, fifteen entity types) with one negative configuration per guard. The copy is by hand: it establishes the policy's properties, not the Haskell or SQL text, which ModelSpec and the conformance harness keep covering. One code change: the approval handler strips ReadOnly before the linked-item check, as docs/operations-control-center/rbac.md requires (ReadOnly cannot enlarge another role's write scope); the conformance harness gains the Accounting-plus-ReadOnly case. ReadOnlyNoWriteGain holds by construction once every write site strips ReadOnly; it records the rule, the harness checks the sites."
     }
   ]
 }

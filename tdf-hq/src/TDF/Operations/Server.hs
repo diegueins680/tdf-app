@@ -866,7 +866,8 @@ createApprovalHandler original command = runOperationsWrite original $ \user -> 
       :: SqlPersistT IO [Single Text]
     unless (length linked == 1) $ rejectCommand err404
     item <- fetchUpdatedItem itemId >>= maybe (rejectCommand err500) pure
-    unless (canViewEntityType (auRoles user)
+    -- A write: ReadOnly never widens the linking role's visibility.
+    unless (canViewEntityType (filter (/= ReadOnly) (auRoles user))
       (item.assigneePartyId == Just (fromSqlKey (auPartyId user))) (item.entityType)) $
       rejectCommand err404
   inserted <- rawSql
