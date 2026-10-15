@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "4c84c60a5836f7d39f18e10d34d136996bb0f63f",
+  "mobileRevision": "509c3b1571ffc054329fc73b6a2f80843b6d744c",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -5937,7 +5937,7 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "d19d89af41ebb1fc77a1521c069c308151e4dbbab694383ff56f26d443de3290",
+      "sha256": "a7e077b080ca25001794f43af1107b3040ce3b48c1d3ac3922769267ef9dd9ac",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6951,7 +6951,7 @@
     {
       "id": "SURFACE-19cebc297ff26373",
       "path": "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
-      "sha256": "edddb1aad7f779cb797f6a835cef66adac043417dff2ebddda5f1d7a7a1e1863",
+      "sha256": "b0f7c70bc37e4178d5a33e4104ad4083402da01262505a13d424f3299664fbfa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7071,13 +7071,13 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "45cdbe0adead908a76b5c0e57df5796fb4ece7a5e1903a5b62bcf040714a8cc9",
+      "sha256": "16b6e840fce5032cd7c87775aecd0921123c1c840c77c49eb3cc83cf985b5a3f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "46a846737d313b2f4bd7c308340463839e23cc7871a95d81ccd927d7b61798fd",
+      "sha256": "998fbc67c7604ae7266d4b7292fefb558c19075d6c6c743cf8e91a92af38945a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7707,7 +7707,7 @@
     {
       "id": "SURFACE-2ee656af772bf719",
       "path": "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "sha256": "4e3a97254efaf4f01fc0a7e596666f435c95fe4335a363ddeb0fb4900bb0632f",
+      "sha256": "7f091bdd2722c7eeea2a7003f098a6a265c6f2d1f8f6b7fc15288d009cebec33",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8043,13 +8043,13 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "ea01103678a76fead8cdedfd47de04db5dde9944a2e4ed46e77fdb644484a927",
+      "sha256": "1b31939d6d1fcc0eb9b62ff6a53773934a458990464be84c1d8ed4fa729bcfb1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "c29a63d86c4c7e6cf530b161369a5e54af75c5b815e40e4c8f6192a1e0757452",
+      "sha256": "3260bcde29c6fc5ce2e623c7f66f50b3c763c0239985b0f928982e03c61d05a0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8403,7 +8403,7 @@
     {
       "id": "SURFACE-db7880fb35bd421c",
       "path": "tdf-hq-ui/src/pages/CommerceHubPage.tsx",
-      "sha256": "c82c3e9f4f36e3809500c0b254371f1326400c14076305812a1254ffdb8da528",
+      "sha256": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8643,7 +8643,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "2c028fdc64f8638118d0825876568b3d5cbaa06631f1fd13a4bd814117f9fb1a",
+      "sha256": "03322f3298b11910303c2721e93e8f9a438b76670adc76e57751224b2731b86e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9165,7 +9165,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "edb6660d98c58ddb0a7d0f79d82022e92c1e3b732cf13b69b0b8e091dc87bc04",
+      "sha256": "88a11a1c2fb41893f985bfb7c92cb72cdb76a1c7e18d9ca397606292c9a2d8b2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9423,7 +9423,7 @@
     {
       "id": "SURFACE-a8a994f85758ab3a",
       "path": "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-      "sha256": "7cb3734cdf65fd66e880b6fde8cc7460da6dc0b4018aa5a3c5a1c95b316ab066",
+      "sha256": "f65878e0267a1d4a781b5b93e44f47ba4d99f2bd911c633e92e49ae3b57fceb4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9747,13 +9747,13 @@
     {
       "id": "SURFACE-dd805fb7a067baea",
       "path": "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
-      "sha256": "f572895cdb3b7965abbab1364ef480e9cce4e9e9247f55826bfddd546d6c9295",
+      "sha256": "b1d51f44ec9320845ae9fe0027eec9f45e088ae3b3d15b991f986e31448bbb5c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "47b1ac30ba2505c4ce36dfc98d5402c0486dc829586ee90b7534c7c66e97f636",
+      "sha256": "0f6ffdb7a973c5e0f419dd9dce384e326d82a4e8615a61deb4e713bc39e84629",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10317,7 +10317,7 @@
     {
       "id": "SURFACE-ee5ba63310165c5c",
       "path": "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
-      "sha256": "192c36ea04bb9b223d2f9d73dfd2ca628d79dc2e615be0fba30ab12767ff8a7f",
+      "sha256": "66d5ec3d66762d3e3af53bd9d29ef8a59c0a847194ff836ebbb2de8e278dcd9f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10545,7 +10545,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "f7cedcbd74d618503c961c98f8476d2ec4230ea62cf727ebc7bac529ab3dd250",
+      "sha256": "0930159122e545da4166de525b05449b4b22f5207f0bf645ae90d0bb7eee1e92",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15951,7 +15951,7 @@
     {
       "id": "SURFACE-7aafc197c0caae2e",
       "path": "tdf-mobile/__tests__/featureRegistry.test.ts",
-      "sha256": "37f19809fc84d5c70d6f625f2f2425a3a139797d55bc055131ed0aaaa2385941",
+      "sha256": "1ab135bf265b974320e20f3f5710fc64b0e23877b99beb8273267e7d021c7cad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17199,7 +17199,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "002a26af650ad454a8d20027c18cbb1299ce4e78d94815a810221890908d7d1a",
+      "sha256": "f9bd8a81e1e95afb53af970c6e3b165b1777ef709183528cac7126c3f08f72fe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24833,7 +24833,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
+      "sha256": "ab66c7589476a7d18903f38c9cfb52956cfe5d4c5f9f64ede76b5cac18c64a4a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
