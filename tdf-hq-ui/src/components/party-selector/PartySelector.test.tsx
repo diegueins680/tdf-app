@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import '@testing-library/jest-dom';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
 import type { PartySelectorOption, PartySelectorPage } from '../../api/partySelector';
@@ -67,10 +67,21 @@ const renderWithQueryClient = (element: ReactElement) => {
 
 const renderHarness = () => renderWithQueryClient(<Harness />);
 
+const finishSearchDebounce = async () => {
+  await act(async () => { await jest.advanceTimersByTimeAsync(300); });
+};
+
 describe('PartyMultiSelector', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.useFakeTimers();
+    jest.resetAllMocks();
     searchPartiesForSelector.mockResolvedValue({ items: [ana], nextCursor: null });
+  });
+
+  afterEach(() => {
+    cleanup();
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 
   it('does not treat typed text as a selection and renders an identity chip after choosing', async () => {
@@ -79,6 +90,9 @@ describe('PartyMultiSelector', () => {
 
     fireEvent.change(input, { target: { value: 'Ana' } });
     expect(screen.queryByText('Ana María Ruiz · @anaruiz')).not.toBeInTheDocument();
+    await act(async () => { await jest.advanceTimersByTimeAsync(299); });
+    expect(searchPartiesForSelector).not.toHaveBeenCalled();
+    await act(async () => { await jest.advanceTimersByTimeAsync(1); });
 
     const option = await screen.findByRole('option', { name: /Ana María Ruiz/i }, { timeout: 1500 });
     fireEvent.click(option);
@@ -112,10 +126,12 @@ describe('PartyMultiSelector', () => {
     renderHarness();
     const input = screen.getByRole('combobox', { name: 'Contactos de campaña' });
     fireEvent.change(input, { target: { value: 'Ana' } });
+    await finishSearchDebounce();
     fireEvent.click(await screen.findByRole('option', { name: /Ana María Ruiz/i }, { timeout: 1500 }));
 
     searchPartiesForSelector.mockRejectedValueOnce(new Error('sin conexión'));
     fireEvent.change(input, { target: { value: 'Beatriz' } });
+    await finishSearchDebounce();
 
     expect(await screen.findByRole('alert', {}, { timeout: 1500 })).toHaveTextContent(
       'No se modificaron las selecciones',
@@ -137,6 +153,7 @@ describe('PartyMultiSelector', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Contactos de campaña' }), {
       target: { value: 'artistas' },
     });
+    await finishSearchDebounce();
     expect(await screen.findByRole('option', { name: /Ana María Ruiz/i }, { timeout: 1500 })).toBeInTheDocument();
 
     fireEvent.mouseDown(screen.getByRole('button', { name: 'Ver más resultados' }));
@@ -161,9 +178,11 @@ describe('PartyMultiSelector', () => {
     const input = screen.getByRole('combobox', { name: 'Contactos de campaña' });
 
     fireEvent.change(input, { target: { value: 'Ana' } });
+    await finishSearchDebounce();
     await waitFor(() => expect(searchPartiesForSelector).toHaveBeenCalledTimes(1), { timeout: 1500 });
     const firstSignal = searchPartiesForSelector.mock.calls[0]?.[0].signal;
     fireEvent.change(input, { target: { value: 'Beatriz' } });
+    await finishSearchDebounce();
     await waitFor(() => expect(searchPartiesForSelector).toHaveBeenCalledTimes(2), { timeout: 1500 });
 
     expect(firstSignal?.aborted).toBe(true);
@@ -184,6 +203,7 @@ describe('PartyMultiSelector', () => {
     const inputs = screen.getAllByRole('combobox', { name: 'Contactos de campaña' });
     fireEvent.change(inputs[0]!, { target: { value: 'Ana' } });
     fireEvent.change(inputs[1]!, { target: { value: 'Ana' } });
+    await finishSearchDebounce();
 
     await waitFor(() => expect(screen.getAllByRole('option', { name: /Ana María Ruiz/i })).toHaveLength(2), {
       timeout: 1500,
