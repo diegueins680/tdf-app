@@ -157,11 +157,14 @@ def run(output):
     receipt = {'schemaVersion': 1, 'executionPassed': False, 'obligations': [], 'artifacts': [],
                'startedAt': datetime.now(timezone.utc).isoformat(), 'error': None}
     try:
-        spec = json.loads((ROOT/CONTRACT).read_text())
+        contract_bytes = (ROOT/CONTRACT).read_bytes()
+        spec = json.loads(contract_bytes)
         paths = set(spec['reviewedSources']) | {CONTRACT, 'scripts/verify-auth-predicates.py',
                 'scripts/test-auth-predicates.py', 'formal/system/auth-predicates.md',
                 'formal/system/requirements.json', '.github/workflows/event-operations-formal.yml'}
-        before = {p: digest((ROOT/p).read_bytes()) for p in sorted(paths)}
+        snapshot = {p: (contract_bytes if p == CONTRACT else (ROOT/p).read_bytes())
+                    for p in sorted(paths)}
+        before = {p: digest(data) for p, data in snapshot.items()}
         receipt['provenance'] = {'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                                  'worktreeDirty': bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True).strip()),
                                  'files': before, 'digest': digest(json.dumps(before, sort_keys=True).encode())}
@@ -172,7 +175,7 @@ def run(output):
         if z3.get_version_string() != '4.13.3':
             raise ValueError('Expected z3-solver 4.13.3.0')
         receipt['toolchain'] = {'python': sys.version, 'z3': z3.get_full_version()}
-        auth, models, ingestion = [(ROOT/p).read_text() for p in (AUTH, MODELS, INGESTION)]
+        auth, models, ingestion = [snapshot[p].decode('utf-8') for p in (AUTH, MODELS, INGESTION)]
         translated = lower(auth, models, ingestion)
         policies = properties(translated)
         def check(identity, formula, expected):

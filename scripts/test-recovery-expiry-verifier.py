@@ -24,6 +24,30 @@ class RecoveryProofTests(unittest.TestCase):
         self.source = (ROOT/proof.SOURCE).read_text()
         self.sql = (ROOT/proof.MIGRATION).read_text()
 
+    def test_translation_uses_exact_hashed_snapshot_despite_transient_reread(self):
+        paths = [ROOT/p for p in (proof.SOURCE, proof.MIGRATION)]
+        initial = [p.read_bytes().decode('utf-8') for p in paths]
+        real_read = Path.read_text
+        translated = []
+        original = proof.problems
+        def transient(path, *args, **kwargs):
+            text = real_read(path, *args, **kwargs)
+            return text + "\n-- transient unrecorded text\n" if path in paths else text
+        def capture(*args):
+            translated.append(args)
+            return original(*args)
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch.object(Path, 'read_text', transient), \
+             patch.object(proof, 'problems', capture):
+            out = Path(tmp)/'snapshot'
+            self.assertEqual(proof.run(out), 0)
+            self.assertEqual(list(translated[0]), initial)
+            receipt = json.loads((out/'result.json').read_text())
+            for path in paths:
+                key = str(path.relative_to(ROOT))
+                self.assertEqual(receipt['provenance']['files'][key],
+                                 proof.sha(path.read_bytes()))
+
     def test_all_contracts_witnesses_and_mutations(self):
         results = []
         for name, formula, expected in proof.problems(self.source, self.sql):

@@ -118,3 +118,12 @@ consumer replay, not an independent proof checker or checked UNSAT certificate.
 An incorrect source-to-formula translation can still generate an irrelevant
 UNSAT formula. No compiler refinement, hostile-runner authentication, general
 artifact-store integrity or whole-application correctness is established here.
+
+
+Authorization and recovery producers retain one byte snapshot of each input,
+including the reviewed contract. Fingerprints and translated UTF-8 text derive
+from those same buffers. A final reread rejects persistent drift; a transient
+edit restored before that check cannot change the formulas' source snapshot.
+Regression controls inject differing second-read text and require translation
+of the original fingerprinted bytes. This binding is local evidence integrity,
+not a trusted execution or hostile-host attestation.

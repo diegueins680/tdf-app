@@ -21,6 +21,30 @@ class AuthProofTests(unittest.TestCase):
     def setUp(self):
         self.auth, self.models, self.ingestion = [(ROOT/p).read_text() for p in (proof.AUTH, proof.MODELS, proof.INGESTION)]
 
+    def test_translation_uses_exact_hashed_snapshot_despite_transient_reread(self):
+        paths = [ROOT/p for p in (proof.AUTH, proof.MODELS, proof.INGESTION)]
+        initial = [p.read_bytes().decode('utf-8') for p in paths]
+        real_read = Path.read_text
+        translated = []
+        original = proof.lower
+        def transient(path, *args, **kwargs):
+            text = real_read(path, *args, **kwargs)
+            return text + "\n-- transient unrecorded text\n" if path in paths else text
+        def capture(*args):
+            translated.append(args)
+            return original(*args)
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch.object(Path, 'read_text', transient), \
+             patch.object(proof, 'lower', capture):
+            out = Path(tmp)/'snapshot'
+            self.assertEqual(proof.run(out), 0)
+            self.assertEqual(list(translated[0]), initial)
+            receipt = json.loads((out/'result.json').read_text())
+            for path in paths:
+                key = str(path.relative_to(ROOT))
+                self.assertEqual(receipt['provenance']['files'][key],
+                                 proof.digest(path.read_bytes()))
+
     def test_current_formulas_and_source_mutants(self):
         t = proof.lower(self.auth, self.models, self.ingestion)
         for name, policy in proof.properties(t).items():

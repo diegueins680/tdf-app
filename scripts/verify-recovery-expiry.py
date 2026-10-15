@@ -149,12 +149,15 @@ def run(out):
     record = {'schemaVersion': 1, 'executionPassed': False, 'artifacts': [], 'obligations': [],
               'startedAt': datetime.now(timezone.utc).isoformat(), 'error': None}
     try:
-        contract = json.loads((ROOT/CONTRACT).read_text())
+        contract_bytes = (ROOT/CONTRACT).read_bytes()
+        contract = json.loads(contract_bytes)
         paths = set(contract['reviewedSources']) | {CONTRACT, 'scripts/verify-recovery-expiry.py',
                  'scripts/test-recovery-expiry-verifier.py', 'formal/system/recovery-expiry-arithmetic.md',
                  'formal/system/requirements-verification.txt', 'formal/system/requirements.json',
                  '.github/workflows/event-operations-formal.yml'}
-        before = {p: sha((ROOT/p).read_bytes()) for p in sorted(paths)}
+        snapshot = {p: (contract_bytes if p == CONTRACT else (ROOT/p).read_bytes())
+                    for p in sorted(paths)}
+        before = {p: sha(data) for p, data in snapshot.items()}
         record['provenance'] = {'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                                'worktreeDirty': bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True).strip()),
                                'files': before, 'digest': sha(json.dumps(before, sort_keys=True).encode())}
@@ -166,7 +169,7 @@ def run(out):
             raise ValueError('Expected z3-solver 4.13.3.0')
         record['toolchain'] = {'python': sys.version, 'z3': z3.get_full_version()}
         passed = True
-        for name, formula, expected in problems((ROOT/SOURCE).read_text(), (ROOT/MIGRATION).read_text()):
+        for name, formula, expected in problems(snapshot[SOURCE].decode('utf-8'), snapshot[MIGRATION].decode('utf-8')):
             solver = z3.Solver()
             solver.set(timeout=30_000)
             solver.add(formula)

@@ -4942,7 +4942,7 @@
     {
       "id": "SURFACE-fc4c2b80fce6f504",
       "path": "scripts/test-auth-predicates.py",
-      "sha256": "c44fd9520009dc319638af969414b93745d0d02108723a8a968f1f4bc51a4646",
+      "sha256": "d84c51fe21419d6dc1ad6136be88b4231c4c53177c011be084444babb939c30b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5494,7 +5494,7 @@
     {
       "id": "SURFACE-8cb7488112ea1390",
       "path": "scripts/test-recovery-expiry-verifier.py",
-      "sha256": "afe155fe8ecc3616747f3c26094a952aaa9183462513831911eff4f84d6e9a3a",
+      "sha256": "9a192af0a5839dee66ad4b9f636e4ecbe58451d21087926893e3eaab87668d4e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5728,7 +5728,7 @@
     {
       "id": "SURFACE-b79d0bcd7aa10957",
       "path": "scripts/verify-auth-predicates.py",
-      "sha256": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
+      "sha256": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5794,7 +5794,7 @@
     {
       "id": "SURFACE-bbad9cbeb80c7494",
       "path": "scripts/verify-recovery-expiry.py",
-      "sha256": "9d13c03cb82102530b3163e3f0dd3893ce1ff60bddba8ff6a96bcae74fe9947d",
+      "sha256": "05aaa2a08d1381939d4f48d9d25dcd0b1076d7f596dee2f07db414c2f1bf96c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24959,7 +24959,7 @@
     },
     {
       "path": "formal/system/receipt-admission.md",
-      "sha256": "0fd124c68578340daf13d6cc2eacf24768e6f5f5fd5e5dc410b1a12ffa49cce3",
+      "sha256": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
