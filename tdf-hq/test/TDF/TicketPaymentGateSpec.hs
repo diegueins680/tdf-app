@@ -24,6 +24,7 @@ import Servant (Handler, ServerError, errBody, errHTTPCode, runHandler, (:<|>)(.
 import System.Environment (lookupEnv)
 import System.Timeout (timeout)
 import Test.Hspec
+import TDF.Test.DisposablePostgres (isDisposablePostgresUrl)
 
 import TDF.API.ProviderExecution (PaymentSessionCreateDTO(..))
 import qualified TDF.Commerce.CheckoutStore as Checkout
@@ -42,9 +43,13 @@ import TDF.Server.ProviderExecution (providerExecutionServer)
 spec :: Spec
 spec = describe "ticket-payment-gate-postgresql" $ do
   configured <- runIO (lookupEnv "TDF_TICKET_PAYMENT_GATE_TEST_DB")
+  ci <- runIO ((== Just "true") <$> lookupEnv "CI")
+  overrides <- runIO (traverse lookupEnv ["PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"])
   case configured of
     Nothing -> it "requires the isolated runner" $ pendingWith "Run scripts/test-ticket-payment-gate.sh"
-    Just connection | not ("dbname=tdf_ticket_payment_gate_test_" `isInfixOf` connection) ->
+    Just _ | any (maybe False (not . null)) overrides ->
+      it "refuses inherited database routing overrides" $ expectationFailure "Unset libpq routing overrides"
+    Just connection | not (isDisposablePostgresUrl ci connection) ->
       it "refuses a non-disposable database" $ expectationFailure "Use the isolated runner"
     Just connection -> beforeAll (runNoLoggingT (createPostgresqlPool (BS.pack connection) 4)) $ do
       it "lets a held order start payment while the event sells tickets" $ \pool -> do

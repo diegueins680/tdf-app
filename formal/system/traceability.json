@@ -10323,7 +10323,7 @@
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
-    "scripts/__tests__/disposable-postgres-url.test.mjs": "bc05c24381154b962eef119fd96d55728543f0dcc25cba55aa4f441eafc3ab3e",
+    "scripts/__tests__/disposable-postgres-url.test.mjs": "76cf3c7aaeed689164a94da6d79b6297b5bf84b95ef05782436c46c84e93e636",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": "186495b321cdc2ac067af786a72dffa740b289eb1ac22429c1d6e5c14ce85a9c",
@@ -10501,7 +10501,7 @@
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/test-ticket-manual-review-concurrency.sh": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
-    "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
+    "scripts/test-ticket-payment-gate.sh": "3d226d1c5413e352528c1a2b8a43db51a21408d2159d3129bf535a08b7e6679a",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
@@ -11002,7 +11002,7 @@
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
-    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "d942808638604f82b5c586947415b00087e9f2090b31456ac26f7bf1207be296",
+    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "817109ca5588d1a54d91b3bd0a2ec33bd825b71df838840c16b9baec380b7b0d",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -20203,7 +20203,7 @@
     {
       "id": "SURFACE-df96f3139c1e5e5b",
       "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
-      "sha256": "bc05c24381154b962eef119fd96d55728543f0dcc25cba55aa4f441eafc3ab3e",
+      "sha256": "76cf3c7aaeed689164a94da6d79b6297b5bf84b95ef05782436c46c84e93e636",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24405,7 +24405,7 @@
     {
       "id": "SURFACE-c98eef3148a1eabf",
       "path": "scripts/test-ticket-payment-gate.sh",
-      "sha256": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
+      "sha256": "3d226d1c5413e352528c1a2b8a43db51a21408d2159d3129bf535a08b7e6679a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38964,7 +38964,7 @@
     {
       "id": "SURFACE-b88bd7d333ae2b44",
       "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
-      "sha256": "d942808638604f82b5c586947415b00087e9f2090b31456ac26f7bf1207be296",
+      "sha256": "817109ca5588d1a54d91b3bd0a2ec33bd825b71df838840c16b9baec380b7b0d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
