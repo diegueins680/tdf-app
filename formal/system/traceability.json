@@ -10472,7 +10472,7 @@
     "scripts/lib/hetzner-preparation.mjs": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
     "scripts/lib/invoice_receipt_conformance.py": "c83a551fadd81cfe006dd6bc59f3a9f20ffea17629144efd9aba5d47e8cfa544",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
-    "scripts/lib/music-api-s3-probe.mjs": "8972e841d5ff83f6abfbf8f5a51d66e64e7be1290dfa49c67e76400824ffb105",
+    "scripts/lib/music-api-s3-probe.mjs": "75c5a83fb7d2e265c52147d769ba81d9dff99d6596afaa5ce661d3ca3273a95f",
     "scripts/lib/music-browser-probe.mjs": "ebd681787353e145bda8f792aa7a2ac9163eecae231df3bc5099c90d02077018",
     "scripts/lib/music-ddex-enqueue-probe.mjs": "34cedc5cb92ce4e55fac1a3d7ea74ab2cbdeb8e14b69b4504ee3d6e7ca1a1de2",
     "scripts/lib/music-linux-integration.mjs": "094ba7f2b7910c90c357662d2883f0eb1fb46e7767f65e2cc4371a1c33f76159",
@@ -21674,7 +21674,7 @@
     {
       "id": "SURFACE-3a426fa990072620",
       "path": "scripts/lib/music-api-s3-probe.mjs",
-      "sha256": "8972e841d5ff83f6abfbf8f5a51d66e64e7be1290dfa49c67e76400824ffb105",
+      "sha256": "75c5a83fb7d2e265c52147d769ba81d9dff99d6596afaa5ce661d3ca3273a95f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
