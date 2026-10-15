@@ -346,6 +346,27 @@ class AssuranceTests(unittest.TestCase):
             self.assertFalse(saved['release']['executionAllowed'])
             self.assertTrue((out/'report.md').is_file())
 
+    def test_malformed_requirement_rows_still_emit_unavailable_inventory_reports(self):
+        for missing in ('implementation', 'tests', 'formalModels'):
+            metadata = report.capture_metadata()
+            register = json.loads(metadata['formal/system/requirements.json'])
+            del register['requirements'][0][missing]
+            metadata['formal/system/requirements.json'] = json.dumps(register).encode()
+            with self.subTest(missing=missing), tempfile.TemporaryDirectory() as tmp:
+                out = Path(tmp)/'report'
+                with patch.object(report, 'capture_metadata', return_value=metadata), \
+                     patch.object(report.subprocess, 'run') as execute:
+                    self.assertEqual(report.run(out, True), 1)
+                execute.assert_not_called()
+                saved = json.loads((out/'report.json').read_text())
+                self.assertFalse(saved['execution']['passed'])
+                self.assertFalse(saved['metrics']['requirementInventoryAvailable'])
+                self.assertTrue(all(n is None for n in saved['metrics']['requirements'].values()))
+                self.assertIsNone(saved['release']['criticalUnprovenRequirements'])
+                self.assertFalse(saved['release']['executionAllowed'])
+                self.assertIn(missing, saved['execution']['reason'])
+                self.assertTrue((out/'report.md').is_file())
+
     def test_replay_rejects_self_consistent_relabelled_proof_formulas(self):
         # A producer regression emits a satisfiable safety/admission formula and
         # labels it SAT. Replaying against that self-declared expectation passed

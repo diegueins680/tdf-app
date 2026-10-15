@@ -5677,7 +5677,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "5c0c2423d689f6760a46fa928082f6c801cff8254de3bbb744021254fc1de3d1",
+      "sha256": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5737,7 +5737,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "2848a83f12b5f5499a4ebc642ad5a72333c19c861ca574aca33657f38fc31064",
+      "sha256": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
       "semanticConformance": "not-established-by-discovery"
     },
     {

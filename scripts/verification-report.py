@@ -314,6 +314,18 @@ def finish_report(out, report, started, ok, reason, require_release, receipts=No
     return 1 if not ok else (2 if require_release and report['release']['decision'] != 'READY' else 0)
 
 
+def unavailable_inventory_report(provenance, reason):
+    return {'schemaVersion': 1, 'provenance': provenance,
+            'scope': 'UNPROVEN: requirement inventory unavailable; counts and obligations cannot be enumerated.',
+            'requirements': [], 'obligations': [],
+            'metrics': {'requirementInventoryAvailable': False,
+                        'requirements': {status: None for status in STATUSES},
+                        'obligationsByCategory': {}},
+            'release': {'decision': 'BLOCKED', 'executionAllowed': False,
+                        'criticalUnprovenRequirements': None, 'acceptedRisks': [],
+                        'reason': reason}}
+
+
 def run(out, require_release):
     out = out.resolve()
     if out.is_relative_to(ROOT.resolve()):
@@ -331,17 +343,13 @@ def run(out, require_release):
                   'files': {}, 'available': False, 'error': reason}
         (out/'sources.json').write_text(json.dumps(before, indent=2) + '\n')
         if requirements is None:
-            report = {'schemaVersion': 1, 'provenance': before,
-                      'scope': 'UNPROVEN: requirement inventory unavailable; counts and obligations cannot be enumerated.',
-                      'requirements': [], 'obligations': [],
-                      'metrics': {'requirementInventoryAvailable': False,
-                                  'requirements': {status: None for status in STATUSES},
-                                  'obligationsByCategory': {}},
-                      'release': {'decision': 'BLOCKED', 'executionAllowed': False,
-                                  'criticalUnprovenRequirements': None, 'acceptedRisks': [],
-                                  'reason': reason}}
+            report = unavailable_inventory_report(before, reason)
         else:
-            report = build_report(requirements, before, False, reason, metadata=metadata)
+            try:
+                report = build_report(requirements, before, False, reason, metadata=metadata)
+            except Exception as inventory_error:
+                reason += '; requirement inventory cannot be enumerated: ' + str(inventory_error)
+                report = unavailable_inventory_report(before, reason)
         return finish_report(out, report, started, False, reason, require_release)
     (out/'sources.json').write_text(json.dumps(before, indent=2) + '\n')
 

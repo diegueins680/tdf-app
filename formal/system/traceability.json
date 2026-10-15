@@ -10429,13 +10429,13 @@
     "scripts/test-ticket-manual-review-concurrency.sh": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
-    "scripts/test-verification-report.py": "5c0c2423d689f6760a46fa928082f6c801cff8254de3bbb744021254fc1de3d1",
+    "scripts/test-verification-report.py": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
-    "scripts/verification-report.py": "2848a83f12b5f5499a4ebc642ad5a72333c19c861ca574aca33657f38fc31064",
+    "scripts/verification-report.py": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
     "scripts/verify-alloy-controls.mjs": "3a609d6e22e004563fba4a4c58ec9e62267b1db572b073d880bd7feb19870e9c",
     "scripts/verify-auth-predicates.py": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
@@ -24233,7 +24233,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "5c0c2423d689f6760a46fa928082f6c801cff8254de3bbb744021254fc1de3d1",
+      "sha256": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24341,7 +24341,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "2848a83f12b5f5499a4ebc642ad5a72333c19c861ca574aca33657f38fc31064",
+      "sha256": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
