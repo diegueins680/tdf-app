@@ -236,6 +236,9 @@ function ChatWorkspace() {
     queryKey: ['chat-threads', myPartyId],
     queryFn: ChatAPI.listThreads,
     enabled: Boolean(myPartyId),
+    // Consent can change during the session provider's 30-second cache window.
+    staleTime: 0,
+    refetchOnMount: 'always',
     refetchInterval: 10_000,
   });
 

@@ -10526,8 +10526,8 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
-    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "fd7bef138cb2b0569554e2dec23a0858e530447bc9ac3267e889af3bc76df7b5",
-    "tdf-hq-ui/src/pages/ChatPage.tsx": "429fa341c856d30fd9ff4cd7cd40154f88a3440ad193663170fd863adc7ae774",
+    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "5b53cbe54b056a4d936547ae91b5e46c187e45464195d28d5185f2cf7578920a",
+    "tdf-hq-ui/src/pages/ChatPage.tsx": "75d8324dd5c95b39ea3d02d29bac17ba76f230bdfd160102405bf26cea18919f",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
@@ -28148,7 +28148,7 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "fd7bef138cb2b0569554e2dec23a0858e530447bc9ac3267e889af3bc76df7b5",
+      "sha256": "5b53cbe54b056a4d936547ae91b5e46c187e45464195d28d5185f2cf7578920a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28160,7 +28160,7 @@
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "429fa341c856d30fd9ff4cd7cd40154f88a3440ad193663170fd863adc7ae774",
+      "sha256": "75d8324dd5c95b39ea3d02d29bac17ba76f230bdfd160102405bf26cea18919f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

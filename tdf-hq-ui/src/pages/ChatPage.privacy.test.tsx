@@ -25,8 +25,8 @@ const message: ChatMessageDTO = { cmId: 1, cmThreadId: 10, cmSenderPartyId: 2, c
 const clients: QueryClient[] = [];
 function CurrentLocation() { return <span data-testid="location">{useLocation().search}</span>; }
 function Unread() { const { unreadCount } = useChatUnreadCount(); return <span data-testid="badge">{unreadCount}</span>; }
-function setup(path = '/chat', seed?: (client: QueryClient) => void) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+function setup(path = '/chat', seed?: (client: QueryClient) => void, staleTime = 30_000) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime }, mutations: { retry: false } } });
   clients.push(client);
   seed?.(client);
   const tree = () => <QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}><ChatPage /><Unread /><CurrentLocation /></MemoryRouter></QueryClientProvider>;
@@ -93,16 +93,21 @@ it('opens the notification thread instead of the newest conversation without cre
   expect(listMessages.mock.calls.every(([threadId]) => threadId === 10)).toBe(true);
   expect(getOrCreateDmThread).not.toHaveBeenCalled();
 });
-it.each([true, false])('waits for fresh notification authorization before using cached messages (allowed=%s)', async (allowed) => {
+it.each([
+  { allowed: true, staleTime: 0 },
+  { allowed: false, staleTime: 0 },
+  { allowed: true, staleTime: 30_000 },
+  { allowed: false, staleTime: 30_000 },
+])('waits for fresh notification authorization (allowed=$allowed, staleTime=$staleTime)', async ({ allowed, staleTime }) => {
   let resolveThreads!: (threads: ChatThreadDTO[]) => void;
   listThreads.mockReturnValue(new Promise((resolve) => { resolveThreads = resolve; }));
   setup('/chat?threadId=10', (client) => {
     client.setQueryData(['chat-threads', 1], [thread]);
     client.setQueryData(['chat-messages', 1, 10], [message]);
-  });
-  await waitFor(() => expect(listThreads).toHaveBeenCalled());
+  }, staleTime);
   expect(screen.queryByText('Private body')).toBeNull();
   expect(screen.queryByText('Private preview')).toBeNull();
+  await waitFor(() => expect(listThreads).toHaveBeenCalled());
   expect(listMessages).not.toHaveBeenCalled();
   expect(loadChatReadMap(1)).toEqual({});
   expect(screen.getByRole('button', { name: 'Enviar mensaje' }).hasAttribute('disabled')).toBe(true);
@@ -111,7 +116,7 @@ it.each([true, false])('waits for fresh notification authorization before using 
   if (allowed) {
     await screen.findByText('Private body');
     await waitFor(() => expect(loadChatReadMap(1)['10']).toBe(message.cmCreatedAt));
-    expect(listMessages).toHaveBeenCalledWith(10, { limit: 80 });
+    if (staleTime === 0) expect(listMessages).toHaveBeenCalledWith(10, { limit: 80 });
   } else {
     await screen.findByText('La conversación de esta notificación no está disponible.');
     expect(screen.queryByText('Private body')).toBeNull();

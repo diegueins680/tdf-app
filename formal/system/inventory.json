@@ -8376,13 +8376,13 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "fd7bef138cb2b0569554e2dec23a0858e530447bc9ac3267e889af3bc76df7b5",
+      "sha256": "5b53cbe54b056a4d936547ae91b5e46c187e45464195d28d5185f2cf7578920a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "429fa341c856d30fd9ff4cd7cd40154f88a3440ad193663170fd863adc7ae774",
+      "sha256": "75d8324dd5c95b39ea3d02d29bac17ba76f230bdfd160102405bf26cea18919f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
