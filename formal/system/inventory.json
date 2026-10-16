@@ -5468,7 +5468,7 @@
     {
       "id": "SURFACE-a519de3cb1b5ff7f",
       "path": "scripts/test-provider-domain-binding.py",
-      "sha256": "91b3bc7b7863b202bda8e2b7ebecec8d5e329cce553002dc93853bf036b5b4a7",
+      "sha256": "9251e824f6c7811914a39a38147723dd23ac8cf5eb9d319a2baa1b88be651975",
       "semanticConformance": "not-established-by-discovery"
     },
     {

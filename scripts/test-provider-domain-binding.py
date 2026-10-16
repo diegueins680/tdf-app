@@ -187,6 +187,26 @@ def matrix():
     print(f'Provider/domain matrix: {count} cases passed', flush=True)
 
 
+
+def pricing():
+    for fee, tax in ((0, 0), (0, 261), (100, 0), (100, 261)):
+        with connect() as db:
+            checkout = one(db, "SELECT payment_test.checkout('event_ticket_order',%s,%s)::text", (fee, tax))
+            consistent = one(db, '''SELECT c.subtotal_minor=r.gross_face_value_minor
+              AND c.discount_minor=r.discount_minor AND c.tax_minor=r.tax_minor
+              AND c.total_minor=r.checkout_total_minor
+              AND l.subtotal_minor=c.subtotal_minor AND l.discount_minor=c.discount_minor
+              AND l.tax_minor=c.tax_minor AND l.total_minor=c.total_minor
+              AND r.platform_fee_minor=%s AND r.tax_minor=%s
+              FROM commerce_checkout_session c
+              JOIN commerce_checkout_line_item l ON l.checkout_id=c.id
+              JOIN event_ticket_checkout_runtime r ON r.checkout_id=c.id WHERE c.id=%s::uuid''',
+              (fee, tax, checkout))
+            assert consistent, (fee, tax)
+            db.rollback()
+    print('Commercial fee/tax snapshot consistency: 4 cases passed', flush=True)
+
+
 def races():
     count = 0
     for domain in DOMAINS:
@@ -298,5 +318,6 @@ if __name__ == '__main__':
         revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
         assert one(db, 'SELECT bool_and(source_commit=%s) FROM tdf_schema_migration', (revision,))
     matrix()
+    pricing()
     races()
     controls()

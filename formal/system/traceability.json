@@ -10553,7 +10553,7 @@
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
-    "scripts/test-provider-domain-binding.py": "91b3bc7b7863b202bda8e2b7ebecec8d5e329cce553002dc93853bf036b5b4a7",
+    "scripts/test-provider-domain-binding.py": "9251e824f6c7811914a39a38147723dd23ac8cf5eb9d319a2baa1b88be651975",
     "scripts/test-provider-retry-runtime.sh": "91b88aa6ab6f3f6ff26649b5d3ce8a10af6badee2474960e85d3a63476242ef8",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
@@ -24163,7 +24163,7 @@
     {
       "id": "SURFACE-a519de3cb1b5ff7f",
       "path": "scripts/test-provider-domain-binding.py",
-      "sha256": "91b3bc7b7863b202bda8e2b7ebecec8d5e329cce553002dc93853bf036b5b4a7",
+      "sha256": "9251e824f6c7811914a39a38147723dd23ac8cf5eb9d319a2baa1b88be651975",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
