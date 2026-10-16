@@ -107,7 +107,11 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `CheckoutSnapshot.cfg` (2026-10-12) | One canonical checkout, totals 1..3, lines of 0..2 (at most three), one later transaction appending lines; create, add line, commit, abort, late append, late commit or abort, change total | PASS; 200 generated, 85 distinct states, depth 7; `CommittedSum`, `SnapshotFixed`, `TermsFixed` |
+| `CheckoutSnapshotLateLines.cfg`, `CheckoutSnapshotUnvalidated.cfg`, `CheckoutSnapshotMutableTerms.cfg` | Negative controls: lines appended to a committed checkout, commit without the sum check, a committed total changed | Expected exit 12 with `SnapshotFixed`, `CommittedSum`, `TermsFixed` |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
+| `LedgerPosting.cfg` (2026-10-12) | One commerce ledger transaction, two currencies, entries of -2..2, at most four entries, a reversing transaction with its own lifecycle; create, add entry, post, reopen, reverse | PASS; 4,444 generated, 995 distinct states; `PostedBalanced`, `PostedImmutable`, `PostedHistory`, `ReversedByPosted` |
+| `LedgerPostingAppend.cfg`, `LedgerPostingUnvalidated.cfg`, `LedgerPostingReopen.cfg`, `LedgerPostingInsertPosted.cfg`, `LedgerPostingReverserMutable.cfg` | Negative controls: entries added after posting, posting without validation, a posted transaction reopened, a transaction created already posted, a referenced reversing transaction leaving posted | Expected exit 12 with `PostedImmutable`, `PostedBalanced`, `PostedHistory`, `PostedBalanced`, `ReversedByPosted` |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
 | `TaskReadStructure.als` assertions | Up to 4 atoms per top-level signature; owners abstracted as equivalent effective grants | PASS; all 5 checks UNSAT, including manager-gated and exact-task recipient options (no counterexample in scope) |
@@ -670,6 +674,26 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+## Ledger posting (2026-10-12)
+
+`LedgerPosting.tla` models the posting of one commerce ledger transaction in
+PostgreSQL (SYS-MONEY-003): created as draft, posted only with entries that
+sum to zero in every currency, entries fixed from then on, no return to draft,
+reversed only by a posted transaction. Bounded: small integer amounts, the
+reverser's own entries and concurrency are not modelled; the exact `numeric`
+sum and the row lock are tested by the `ledger-posting-postgresql` spec. See
+[ledger posting](../system/ledger-posting.md).
+## Checkout line snapshot (2026-10-12)
+
+`CheckoutSnapshot.tla` models the line snapshot of one canonical checkout in
+PostgreSQL (PAY-CHECKOUT-002): header and lines are created in one
+transaction, committed only with at least one line whose exact sum is the
+payable total, and from then on neither the lines nor the total change; a
+later transaction cannot append a line, whatever its amount. Bounded: small
+integer amounts, one late transaction, no isolation levels; the exact
+`numeric` sum, the six racing appends and the pre-enforcement snapshot fence
+are tested by `checkout-amount-postgres.mjs`. See
+[checkout line snapshot](../system/checkout-snapshot.md).
 ## Index declarations
 
 `IndexDeclaration.tla` and four configurations check the rule in
@@ -690,3 +714,35 @@ controls are mandatory in the formal runner.
 persisted submission mark, lease-fenced results and administrator resend. The positive
 model and four negative controls are mandatory in the formal runner. Bounds, provider
 assumptions and the recovery gaps found are stated there.
+
+`TermsIdentityUpgrade.tla` checks atomic terms-history validation/trigger installation
+with two scope classes; unfenced, early-unlock and unchecked-history variants
+violate `InstalledHistoryValid`. PostgreSQL barrier tests exercise the shipped SQL.
+This is a bounded upgrade model, not a proof of complete checkout consent.
+
+### Ticket capture reconciliation and rail admission
+
+`TicketCaptureClassification` includes a completed capture whose order, merchant,
+amount or currency binding failed validation. This observation does not establish
+that no money moved; another rail remains fenced until reconciliation. The
+binding-mismatch mutation demonstrates the missing failure-code fence.
+
+`TicketCaptureFence` enumerates one capture-failure writer and one alternative-rail
+reader. Both serialize on the checkout row; the reader evaluates uncertainty only
+after acquiring that lock. Its two negative controls read before the lock or let
+the writer bypass it. The model distinguishes a new rail admitted before the
+failure commits from a stale admission after that commit. It abstracts event
+sales locking, transaction rollback, provider calls, intent states and arbitrary
+numbers of actors; it is not a complete refinement proof. The PostgreSQL
+`TicketPaymentGateSpec` observes the actual blocking PID before committing the
+failure writer, then checks refusal and absence of any alternative-rail attempt.
+
+`TermsIdentityHistory` checks two independent scopes, one terms version and two
+possible texts. Deleting the last live policy must preserve its history identity;
+the live-only mutation permits a conflicting replacement. PostgreSQL tests also
+cover identical reuse, self-updates and new-version acceptance. The additive
+`2026-10-15_checkout_terms_historical_identity` migration queries existing history
+snapshots and fails closed on historical conflicts. Keep this guard and its indexes
+when rolling application code back; removing it would restore the consent bug.
+Previous migration bytes remain unchanged. This does not authorize rewriting
+historical snapshots or applying the migration to production.

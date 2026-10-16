@@ -147,6 +147,12 @@
       "table": "operations_work_item",
       "column": "status",
       "decision": "docs/operations-control-center/formal-model.yaml"
+    },
+    "SYS-MONEY-003": {
+      "source": "formal/system/requirements.json",
+      "table": "commerce_ledger_transaction",
+      "column": "status",
+      "decision": "AUTHORITY-069"
     }
   },
   "unbound": {

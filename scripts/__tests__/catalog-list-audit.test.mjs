@@ -177,6 +177,7 @@ test('decision reconciliation preserves reviewed entries, removes stale IDs, and
     justification: 'Existing reviewed justification remains unchanged.',
     reviewed: true,
   };
+  const historicalRetirements = { sourceMain: 'immutable-source', decisions: [preserved] };
   const candidate = (overrides) => ({
     id: 'new-id',
     file: 'scripts/artist-enrichment.mjs',
@@ -216,6 +217,10 @@ test('decision reconciliation preserves reviewed entries, removes stale IDs, and
     }));
     await fs.writeFile(existingPath, JSON.stringify({
       schemaVersion: 1,
+      reconciliation: {
+        preservedDecisions: 99,
+        ticketMainMergeRetirements: historicalRetirements,
+      },
       decisions: [
         preserved,
         { ...preserved, id: 'stale-id' },
@@ -238,6 +243,7 @@ test('decision reconciliation preserves reviewed entries, removes stale IDs, and
     ]);
 
     const report = JSON.parse(await fs.readFile(outputPath, 'utf8'));
+    assert.ok(!report.decisions.some(entry => entry.id === 'stale-id'));
     assert.deepEqual(report.decisions[0], preserved);
     assert.equal(report.decisions[1].classification, 'genuine-technical-constant');
     assert.equal(report.decisions[1].reviewBatch, 'unit-test-review');
@@ -249,6 +255,7 @@ test('decision reconciliation preserves reviewed entries, removes stale IDs, and
     assert.equal(report.decisions[3].classification, 'dynamic-business-catalog');
     assert.equal(report.decisions[3].specializedModel, 'onboarding_intent, onboarding_first_value, user_onboarding_progress');
     assert.deepEqual(report.reconciliation, {
+      ticketMainMergeRetirements: historicalRetirements,
       preservedDecisions: 1,
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,

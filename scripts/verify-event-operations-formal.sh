@@ -277,6 +277,12 @@ expect_counterexample() {
   echo "Expected mutation counterexample: ${config}: ${invariant}"
   printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc LedgerPosting.tla LedgerPosting.cfg ledger-posting
+run_negative_tlc LedgerPostingReverserMutable.cfg ledger-posting-reverser-mutable 'Invariant ReversedByPosted is violated' LedgerPosting.tla
+run_negative_tlc LedgerPostingAppend.cfg ledger-posting-append 'Invariant PostedImmutable is violated' LedgerPosting.tla
+run_negative_tlc LedgerPostingUnvalidated.cfg ledger-posting-unvalidated 'Invariant PostedBalanced is violated' LedgerPosting.tla
+run_negative_tlc LedgerPostingReopen.cfg ledger-posting-reopen 'Invariant PostedHistory is violated' LedgerPosting.tla
+run_negative_tlc LedgerPostingInsertPosted.cfg ledger-posting-insert-posted 'Invariant PostedBalanced is violated' LedgerPosting.tla
 run_tlc PaymentRecovery.tla PaymentRecovery.cfg payment-recovery
 expect_counterexample PaymentRecoveryOverwrite.cfg NoLostRecovery payment-recovery-overwrite PaymentRecovery.tla
 expect_counterexample PaymentRecoveryReturn.cfg CorrectReturn payment-recovery-return PaymentRecovery.tla
@@ -285,6 +291,13 @@ run_tlc WorkerCompletionEvidence.tla WorkerCompletionEvidence.cfg worker-complet
 expect_counterexample WorkerCompletionEvidenceFailed.cfg CompletedHasNoFailedItems worker-completion-failed WorkerCompletionEvidence.tla
 expect_counterexample WorkerCompletionEvidenceUnacknowledged.cfg SuccessfulReturnHasEvidence worker-completion-unacknowledged WorkerCompletionEvidence.tla
 run_tlc ProviderRetryAdmission.tla ProviderRetryAdmission.cfg provider-retry-admission
+run_tlc TicketCaptureClassification.tla TicketCaptureClassification.cfg ticket-capture-classification
+expect_counterexample TicketCaptureClassificationUnsafeReadback.cfg UnresolvedCaptureFenced ticket-capture-readback TicketCaptureClassification.tla
+expect_counterexample TicketCaptureClassificationUnsafeResponse.cfg UnresolvedCaptureFenced ticket-capture-response TicketCaptureClassification.tla
+expect_counterexample TicketCaptureClassificationBindingMismatch.cfg UnresolvedCaptureFenced ticket-capture-binding TicketCaptureClassification.tla
+run_tlc TicketCaptureFence.tla TicketCaptureFence.cfg ticket-capture-fence
+expect_counterexample TicketCaptureFenceStaleRead.cfg CommittedUncertaintyFencesAdmission ticket-capture-stale-read TicketCaptureFence.tla
+expect_counterexample TicketCaptureFenceUnlockedWriter.cfg CommittedUncertaintyFencesAdmission ticket-capture-unlocked-writer TicketCaptureFence.tla
 expect_counterexample ProviderRetryAdmissionAmbiguous.cfg OneLiveIntent provider-retry-ambiguous ProviderRetryAdmission.tla
 expect_counterexample ProviderRetryAdmissionDuplicate.cfg ImmutableKey provider-retry-duplicate ProviderRetryAdmission.tla
 expect_counterexample ProviderRetryAdmissionPayload.cfg BoundReplay provider-retry-payload ProviderRetryAdmission.tla
@@ -362,6 +375,17 @@ run_negative_tlc CheckoutCancellationPaymentUnsafe.cfg checkout-payment-unsafe '
 run_negative_tlc CheckoutReadinessUnavailable.cfg checkout-unavailable 'Invariant ReadyBeforeReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessStale.cfg checkout-stale 'Invariant CurrentReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessDuplicate.cfg checkout-duplicate 'Invariant SingleCurrentFlight is violated' CheckoutReadiness.tla
+run_tlc CheckoutSnapshot.tla CheckoutSnapshot.cfg checkout-snapshot
+run_negative_tlc CheckoutSnapshotLateLines.cfg checkout-snapshot-late-lines 'Invariant SnapshotFixed is violated' CheckoutSnapshot.tla
+run_negative_tlc CheckoutSnapshotUnvalidated.cfg checkout-snapshot-unvalidated 'Invariant CommittedSum is violated' CheckoutSnapshot.tla
+run_negative_tlc CheckoutSnapshotMutableTerms.cfg checkout-snapshot-mutable-terms 'Invariant TermsFixed is violated' CheckoutSnapshot.tla
+run_tlc TermsIdentityUpgrade.tla TermsIdentityUpgrade.cfg terms-identity-upgrade
+run_tlc TermsIdentityHistory.tla TermsIdentityHistory.cfg terms-identity-history
+expect_counterexample TermsIdentityHistoryLiveOnly.cfg HistoricalIdentityPreserved terms-identity-history-live-only TermsIdentityHistory.tla
+run_negative_tlc TermsIdentityUpgradeUnfenced.cfg terms-identity-upgrade-unfenced 'Invariant InstalledHistoryValid is violated' TermsIdentityUpgrade.tla
+run_negative_tlc TermsIdentityUpgradeEarlyUnlock.cfg terms-identity-upgrade-early-unlock 'Invariant InstalledHistoryValid is violated' TermsIdentityUpgrade.tla
+run_negative_tlc TermsIdentityUpgradeUnchecked.cfg terms-identity-upgrade-unchecked 'Invariant InstalledHistoryValid is violated' TermsIdentityUpgrade.tla
+
 run_tlc NavigationVisit.tla NavigationVisit.cfg navigation-visit
 run_negative_tlc NavigationVisitUnsafe.cfg navigation-visit-unsafe 'Invariant NoFailedVisits is violated' NavigationVisit.tla
 run_tlc ProviderRollback.tla ProviderRollback.cfg provider-rollback
