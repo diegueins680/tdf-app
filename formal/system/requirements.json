@@ -9987,6 +9987,83 @@
       "tests": [],
       "formalModels": [],
       "ambiguity": []
+    },
+    {
+      "id": "SYS-WEB-REQUEST-001",
+      "title": "Web requests bound the response read and preserve transport failures",
+      "statement": "The shared web API and auth transports keep one 30-second deadline through the response data they consume; body read failures do not become empty success, caller cancellation is preserved and request resources are released.",
+      "domain": "SYS",
+      "authority": "Product owner request 2026-10-16 to prioritize and repair user-value blockers; existing mobile-entry recovery contract.",
+      "source": "formal/system/http-request-deadline.md",
+      "property": "Response reads remain cancellable until completion; interrupted bodies never resolve as success.",
+      "contract": "formal/system/http-request-deadline.md",
+      "actors": [
+        "Visitor",
+        "Authenticated web user"
+      ],
+      "preconditions": [
+        "Requests use native browser Fetch with AbortController cancellation."
+      ],
+      "inputs": [
+        "Request headers/body",
+        "Response headers/body",
+        "Deadline expiry",
+        "Caller cancellation"
+      ],
+      "state": {
+        "phases": [
+          "fetching headers",
+          "reading body",
+          "completed",
+          "failed",
+          "cancelled"
+        ]
+      },
+      "allowedTransitions": [
+        "headers -> body with original deadline active",
+        "body -> completed and cleanup",
+        "deadline -> timeout and cleanup",
+        "caller abort -> cancellation and cleanup"
+      ],
+      "forbiddenTransitions": [
+        "headers -> discard deadline before required body read",
+        "failed body -> empty successful result",
+        "body failure -> automatic auth replay"
+      ],
+      "effects": [
+        "API activity returns to zero when a request settles.",
+        "Existing timeout/network presentation contracts are retained."
+      ],
+      "authorization": "Credentials, session epochs and server authorization remain authoritative; no new access or role policy.",
+      "privacy": "No response bodies, credentials or account data are added to logs or persistent storage.",
+      "concurrency": "The caller signal remains linked through body consumption; cancellation racing with completion discards the result.",
+      "idempotency": "No general API, signup or reset replay is added. Login retains bounded pre-header/503 retry; body failures are not replayed.",
+      "failure": "Deadline maps to auth timeout or API 408; interrupted bodies map to network error; caller abort remains caller abort.",
+      "recovery": "Existing UI retry paths remain available; a timeout does not establish that a server-side write rolled back.",
+      "observability": "Deterministic fake-clock transport regressions and existing session-isolation tests; no new telemetry.",
+      "implementation": [
+        "tdf-hq-ui/src/api/requestDeadline.ts",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/api/client.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/auth.test.ts",
+        "tdf-hq-ui/src/api/client.test.ts",
+        "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx",
+        "tdf-hq-ui/src/session/SessionProviders.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "High for deterministic native-Fetch cancellation boundary; browser/device and hosted gates remain separate.",
+      "ambiguity": [],
+      "critical": false,
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped transport regression coverage; no universal implementation proof, physical-device or deployment qualification."
+      },
+      "verification": "Deterministic fake-clock tests on body stalls, cancellation, shared deadline and replay boundaries; existing session isolation regressions.",
+      "evidence": "Current-candidate local transport and session tests; full web and hosted results must be qualified separately.",
+      "historicalStatus": "new"
     }
   ]
 }

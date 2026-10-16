@@ -321,4 +321,89 @@ describe('api client', () => {
     }
   });
 
+
+  it.each([true, false])('keeps the deadline while reading the body (ok=%s)', async (ok) => {
+    jest.useFakeTimers();
+    try {
+      fetchMock.mockImplementation(async (_path, init) => ({
+        ...buildResponse({ ok, status: ok ? 200 : 500 }),
+        text: () => new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
+        }),
+      }) as Response);
+      let outcome: unknown = 'pending';
+      void get('/stalled-body').then(() => { outcome = 'success'; }, (error: unknown) => { outcome = error; });
+      await jest.advanceTimersByTimeAsync(29_999);
+      expect(outcome).toBe('pending');
+      expect(getPendingApiRequestCount()).toBe(1);
+      await jest.advanceTimersByTimeAsync(1);
+      expect(outcome).toMatchObject({ status: HTTP_STATUS_REQUEST_TIMEOUT });
+      expect(getPendingApiRequestCount()).toBe(0);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(jest.getTimerCount()).toBe(0);
+    } finally { jest.useRealTimers(); }
+  });
+
+  it('preserves cancellation after headers and releases the loading indicator', async () => {
+    const controller = new AbortController();
+    let readingBody = false;
+    fetchMock.mockImplementation(async (_path, init) => ({
+      ...buildResponse(),
+      text: () => new Promise((_resolve, reject) => {
+        readingBody = true;
+        init?.signal?.addEventListener('abort', () => reject(new DOMException('Cancelled', 'AbortError')), { once: true });
+      }),
+    }) as Response);
+    let outcome: unknown = 'pending';
+    void get('/cancelled-body', { signal: controller.signal })
+      .then(() => { outcome = 'success'; }, (error: unknown) => { outcome = error; });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(readingBody).toBe(true);
+    controller.abort();
+    // Drain the async request/reader cleanup, without a real-time wait.
+    for (let turn = 0; turn < 12; turn += 1) await Promise.resolve();
+    expect(outcome).toMatchObject({ name: 'AbortError' });
+    expect(getPendingApiRequestCount()).toBe(0);
+  });
+
+  it('reports a disconnected body instead of treating a failed read as empty success', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ...buildResponse(),
+      text: async () => { throw new TypeError('Connection lost'); },
+    } as Response);
+    await expect(get('/disconnected-body')).rejects.toThrow('No se pudo conectar con el servicio.');
+    expect(getPendingApiRequestCount()).toBe(0);
+  });
+
+
+  it('uses one total deadline for headers and body rather than restarting the clock', async () => {
+    jest.useFakeTimers();
+    try {
+      fetchMock.mockImplementation((_path, init) => new Promise((resolve) => {
+        setTimeout(() => resolve({
+          ...buildResponse(),
+          text: () => new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
+          }),
+        } as Response), 20_000);
+      }));
+      let outcome: unknown = 'pending';
+      void get('/slow-headers-and-body').catch((error: unknown) => { outcome = error; });
+      await jest.advanceTimersByTimeAsync(29_999);
+      expect(outcome).toBe('pending');
+      await jest.advanceTimersByTimeAsync(1);
+      expect(outcome).toMatchObject({ status: HTTP_STATUS_REQUEST_TIMEOUT });
+      expect(getPendingApiRequestCount()).toBe(0);
+    } finally { jest.useRealTimers(); }
+  });
+
+  it('does not start an already cancelled request', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    await expect(get('/already-cancelled', { signal: controller.signal })).rejects.toMatchObject({ name: 'AbortError' });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(getPendingApiRequestCount()).toBe(0);
+  });
+
 });
