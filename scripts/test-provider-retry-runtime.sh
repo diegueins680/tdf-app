@@ -89,7 +89,9 @@ for migration in \
   2026-10-04_checkout_amount_correspondence \
   2026-10-05_ticket_admission_audit \
   2026-10-06_ticket_refund_allocation \
-  2026-10-06_ticket_refund_request_binding; do
+  2026-10-06_ticket_refund_request_binding \
+  2026-10-12_ledger_posting_integrity \
+  2026-10-12_checkout_line_snapshot_fixed; do
   psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
     -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/$migration.sql" >/dev/null
 done

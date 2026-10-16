@@ -691,9 +691,22 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/WhatsApp/History.hs"
       ],
-      "conflict": "Twenty-three model lines named Index… were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
+      "conflict": "Twenty-three model lines named Index\u2026 were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
       "authority": "The application's behaviour governs: conversations hold many messages and a reply is recorded beside its message. The names, the absence of any unique-key lookup or conflict clause on these keys and the plain indexes production holds on the campaign tables under the same naming show the uniqueness was never intended.",
       "resolution": "A new migration replaces the nine constraints with plain indexes of the same names and columns, and the twenty-three lines leave the models so that a development database no longer recreates them. A rollback file restores the constraints while no stored row violates them. The identity constraints (for example the WhatsApp provider message id) are unchanged."
+    },
+    {
+      "id": "AUTHORITY-069",
+      "sources": [
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
+        "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
+        "formal/system/payment-arithmetic.md"
+      ],
+      "conflict": "The 2026-08-13 ledger rules promised balanced, immutable posted transactions but validated only the draft -> posted change and protected entries only against update and delete: a posted transaction could gain entries, return to draft, or be inserted already posted or reversed with no entries. SYS-MONEY-003 named SQL ledger correctness an open obligation.",
+      "authority": "SYS-MONEY-003 and the ledger's own stated rule (posted entries are immutable; create a reversing transaction), which every writer already follows by inserting a draft, its entries, then posting.",
+      "resolution": "The posting trigger fires on insert and on status/reversal_of changes and refuses every path but draft creation, validated posting and reversal by a posted transaction; the entry trigger fires on insert too and locks the transaction row. Sums compare as numeric. Migration refuses drifted posted or invalid reversed transactions before installing guards; history must be reconciled explicitly. Referenced reversing transactions remain posted, with a physical no-value-change write on the target fencing concurrent reversals under snapshot isolation. No Haskell change; LedgerPosting.tla and the ledger-posting-postgresql spec are the evidence."
     },
     {
       "id": "AUTHORITY-064",
@@ -705,6 +718,19 @@
       "conflict": "EVT-TICKET-MANUAL-001 states that the review locks the checkout, attempt and evidence rows. The function took those locks and then committed before writing, which released them; a second concurrent reviewer read the same submitted evidence and had the write refused by the database as an error instead of being told the transfer was already decided.",
       "authority": "The requirement governs: the review is serialized by its row locks. The database's evidence transition guard remains the last line of defence, not the means of serialization.",
       "resolution": "The intermediate commit is removed so the locks last until the review commits. A second reviewer waits and is answered from the decided state; the buyer's concurrent writes are not covered by this. The requirement gains a direct PostgreSQL test of the review transaction, including races, and a bounded model."
+    },
+    {
+      "id": "AUTHORITY-070",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/checkout-arithmetic.md",
+        "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server/Merch.hs"
+      ],
+      "conflict": "PAY-CHECKOUT-002 and the 2026-10-04 migration describe a nonempty immutable line snapshot, while the rules only froze existing lines and checked the sum: a zero-total line could be appended to a committed checkout by a later transaction. The 2026-10-04 note treats zero appends as preserving the invariant.",
+      "authority": "The requirement statement and the migration's own comment (an immutable line snapshot); both current writers create header and lines in one transaction, and refund allocation and receipts read the lines, so a line nobody paid for must not join a paid checkout.",
+      "resolution": "Lines are created only in the transaction that creates their checkout: tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql records each actually inserted checkout id (AFTER ROW trigger; an upsert that inserts nothing registers nothing) in a transaction-local setting and refuses a line whose checkout id is not recorded there (an xmin-age design was rejected in review: header updates re-stamp xmin and xid order is not commit order). The sum check, the frozen lines and terms of 2026-10-04 stay. The requirement statement, property and transitions say so; CheckoutSnapshot.tla with three controls checks the guard implies the invariants, and the extended PostgreSQL test exercises the mechanism. Haskell is unchanged. The registry is forgeable by any SQL writer and is a guard against mistaken writers, not a privilege boundary; a header and its line in one statement is no longer accepted."
     }
   ]
 }

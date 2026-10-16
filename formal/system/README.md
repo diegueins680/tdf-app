@@ -90,6 +90,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [ticket-manual-review.md](ticket-manual-review.md): staff review of a ticket bank transfer keeps its row locks to commit; bounded model, three negative controls and PostgreSQL race tests.
 - [index-declarations.md](index-declarations.md): nine uniqueness constraints created from index declarations become plain indexes; bounded model, three negative controls and PostgreSQL tests.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
+- [ledger-posting.md](ledger-posting.md): commerce ledger posting rules in PostgreSQL (SYS-MONEY-003)
   and [identity-recovery.md](identity-recovery.md) define narrow verification
   boundaries. `formal/event-operations` and `formal/social` retain scoped
   TLA+/PlusCal/Alloy models and negative controls.

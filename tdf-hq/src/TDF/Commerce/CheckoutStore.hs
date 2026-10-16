@@ -512,6 +512,10 @@ recordPaymentFailure
   -> UTCTime
   -> SqlPersistT IO ()
 recordPaymentFailure checkout attempt provider failureCode correlationId occurredAt = do
+  -- Use the same checkout-before-attempt order as payment admission. In
+  -- particular, capture uncertainty must not commit behind a stale rail guard.
+  _ <- rawSql "SELECT id::text FROM commerce_checkout_session WHERE id = ?::uuid FOR UPDATE"
+    [PersistText (checkoutReferenceId checkout)] :: SqlPersistT IO [Single Text]
   rawExecute
     "UPDATE commerce_payment_attempt\
     \ SET status = 'failed', failure_code = ?, failure_summary = ?, updated_at = ?\
