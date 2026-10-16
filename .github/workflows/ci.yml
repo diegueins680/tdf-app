@@ -300,7 +300,7 @@ jobs:
       - name: Install native build dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 pkg-config git curl ca-certificates
+          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 python3-psycopg2 pkg-config git curl ca-certificates
 
       - name: Trust the exact container checkout for evidence Git reads
         # Container paths resolve to /__w while checkout may trust the host alias.

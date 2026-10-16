@@ -1060,6 +1060,11 @@
       "id": "2026-10-15_checkout_terms_historical_identity",
       "path": "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql",
       "introducedBy": "2af5a662f3e7acca133e154d0c890114f3436177"
+    },
+    {
+      "id": "2026-10-16_provider_domain_payment_binding",
+      "path": "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql",
+      "introducedBy": "456be073c944dd3d76eb9e3c2169fe7fbb4041ef"
     }
   ]
 }
