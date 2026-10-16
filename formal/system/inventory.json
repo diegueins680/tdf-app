@@ -2636,7 +2636,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "3699ae423746b1e638f5b86e1fefdd0db6d36b7ebcd3e5d03f7fb7a42142e8bc",
+      "sha256": "781f3e4da7cd1df240847cd0375f9417a81cc4330820a715903555a3c19be3ca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25281,7 +25281,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2a657f7224659d029b96420e1113e1660233d368e85ce89ccf52d5bf5d7ef057",
+      "sha256": "8867c2eaef10e3612475ba4ebf512acb71a14604fd51d3ea102b3889e9e5b751",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

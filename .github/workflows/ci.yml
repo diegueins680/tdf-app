@@ -333,7 +333,21 @@ jobs:
             stack-work-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Build and test backend once
-        run: bash scripts/quality-backend.sh
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p tmp/backend-verification
+          git rev-parse HEAD > tmp/backend-verification/source-commit.txt
+          bash scripts/quality-backend.sh 2>&1 | tee tmp/backend-verification/build.log
+
+      - name: Retain backend compilation and ordinary test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-verification-${{ github.sha }}
+          path: tmp/backend-verification
+          if-no-files-found: ignore
+          retention-days: 1
 
       - name: Verify authenticated account deletion and auditable resolution
         env:
@@ -499,12 +513,26 @@ jobs:
           bash scripts/test-directory-artist-listings.sh
 
       - name: Verify canonical provider retry concurrency and compatibility
+        shell: bash
         env:
           PGPASSWORD: postgres
           TDF_PROVIDER_RETRY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_provider_retry_test
         run: |
+          set -o pipefail
+          mkdir -p tmp/provider-verification
+          git rev-parse HEAD > tmp/provider-verification/source-commit.txt
           createdb -h postgres -U postgres tdf_provider_retry_test
-          sh scripts/test-provider-retry-runtime.sh
+          sh scripts/test-provider-retry-runtime.sh 2>&1 | tee tmp/provider-verification/runtime.log
+
+      - name: Retain full-schema provider PostgreSQL evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: provider-postgresql-${{ github.sha }}
+          path: tmp/provider-verification
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Verify invoice worker claim, submission mark and lease fencing
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test

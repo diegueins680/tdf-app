@@ -10124,7 +10124,8 @@
         "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
         "scripts/load-payment-test-schema.sh",
         "scripts/test-provider-retry-runtime.sh",
-        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        ".github/workflows/ci.yml"
       ],
       "formalModels": [],
       "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required.",
@@ -10146,7 +10147,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "3699ae423746b1e638f5b86e1fefdd0db6d36b7ebcd3e5d03f7fb7a42142e8bc",
+    ".github/workflows/ci.yml": "781f3e4da7cd1df240847cd0375f9417a81cc4330820a715903555a3c19be3ca",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -11871,6 +11872,10 @@
       {
         "requirement": "OPS-CI-REGISTRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/api/generated/types.ts": [
@@ -19266,7 +19271,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "3699ae423746b1e638f5b86e1fefdd0db6d36b7ebcd3e5d03f7fb7a42142e8bc",
+      "sha256": "781f3e4da7cd1df240847cd0375f9417a81cc4330820a715903555a3c19be3ca",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19288,6 +19293,10 @@
         {
           "requirement": "OPS-CI-REGISTRY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -45926,7 +45935,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "2a657f7224659d029b96420e1113e1660233d368e85ce89ccf52d5bf5d7ef057",
+      "sourceSha256": "8867c2eaef10e3612475ba4ebf512acb71a14604fd51d3ea102b3889e9e5b751",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -45954,7 +45963,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "2a657f7224659d029b96420e1113e1660233d368e85ce89ccf52d5bf5d7ef057",
+      "sourceSha256": "8867c2eaef10e3612475ba4ebf512acb71a14604fd51d3ea102b3889e9e5b751",
       "definition": {
         "states": [
           "absent",

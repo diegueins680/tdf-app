@@ -10123,7 +10123,8 @@
         "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
         "scripts/load-payment-test-schema.sh",
         "scripts/test-provider-retry-runtime.sh",
-        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        ".github/workflows/ci.yml"
       ],
       "formalModels": [],
       "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required.",
