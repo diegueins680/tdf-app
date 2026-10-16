@@ -38,9 +38,15 @@ for (const denial of ['getter', 'getItem', 'setItem']) {
     await expect(page.getByRole('combobox', { name: 'Ciudad', exact: true })).toHaveText('Cuenca');
     const search = page.getByRole('combobox', { name: '¿Qué necesitas?' });
     await expect(search).toHaveValue('music');
+    const suggestionsSettled = page.waitForResponse(response => {
+      const url = new URL(response.url());
+      return url.pathname.endsWith('/directory/suggestions') && url.searchParams.get('q') === 'concierto';
+    });
     await search.fill('concierto');
     await search.press('Enter');
     await expect.poll(() => searches.some(query => query.q === 'concierto' && query.cityId === 'cuenca-fixture')).toBe(true);
+    // Finish the fixture response before tearing down its document on WebKit.
+    await (await suggestionsSettled).finished();
     await page.reload();
     await expect(search).toHaveValue('concierto');
     await expect(page.getByRole('combobox', { name: 'Ciudad', exact: true })).toHaveText('Cuenca');

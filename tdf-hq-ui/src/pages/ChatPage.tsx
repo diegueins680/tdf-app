@@ -18,6 +18,7 @@ import {
   Divider,
   IconButton,
   List,
+  ListItem,
   ListItemButton,
   ListItemText,
   Stack,
@@ -114,33 +115,35 @@ function ThreadListItem({ thread, selected, unread, onSelect }: ThreadListItemPr
   const displayName = thread.ctOtherDisplayName.trim() ? thread.ctOtherDisplayName : 'Perfil no disponible';
 
   return (
-    <ListItemButton
-      selected={selected}
-      tabIndex={0}
-      onClick={(event) => {
-        event.currentTarget.focus();
-        onSelect(thread.ctThreadId);
-      }}
-      sx={{ px: 2, py: 1.25 }}
-    >
-      <ListItemText
-        primary={
-          <Stack direction="row" spacing={1} alignItems="baseline" justifyContent="space-between">
-            <Typography fontWeight={700} sx={{ mr: 1 }} noWrap>
-              {displayName}
-              {unread && <FiberManualRecordIcon sx={{ ml: 1, fontSize: 10, color: 'error.main', verticalAlign: 'middle' }} />}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {formatTimestamp(thread.ctLastMessageAt ?? thread.ctUpdatedAt)}
-            </Typography>
-          </Stack>
-        }
-        secondary={thread.ctLastMessage
-          ? truncate(thread.ctLastMessage, CHAT_PAGE_DISPLAY_CONTRACTS.threadLastMessagePreviewChars)
-          : 'Sin mensajes aún'}
-        secondaryTypographyProps={{ noWrap: true }}
-      />
-    </ListItemButton>
+    <ListItem disablePadding>
+      <ListItemButton
+        selected={selected}
+        tabIndex={0}
+        onClick={(event) => {
+          event.currentTarget.focus();
+          onSelect(thread.ctThreadId);
+        }}
+        sx={{ px: 2, py: 1.25 }}
+      >
+        <ListItemText
+          primary={
+            <Stack direction="row" spacing={1} alignItems="baseline" justifyContent="space-between">
+              <Typography fontWeight={700} sx={{ mr: 1 }} noWrap>
+                {displayName}
+                {unread && <FiberManualRecordIcon sx={{ ml: 1, fontSize: 10, color: 'error.main', verticalAlign: 'middle' }} />}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {formatTimestamp(thread.ctLastMessageAt ?? thread.ctUpdatedAt)}
+              </Typography>
+            </Stack>
+          }
+          secondary={thread.ctLastMessage
+            ? truncate(thread.ctLastMessage, CHAT_PAGE_DISPLAY_CONTRACTS.threadLastMessagePreviewChars)
+            : 'Sin mensajes aún'}
+          secondaryTypographyProps={{ noWrap: true }}
+        />
+      </ListItemButton>
+    </ListItem>
   );
 }
 
@@ -194,16 +197,19 @@ function ChatWorkspace() {
   const location = useLocation();
   const navigate = useNavigate();
   const myPartyId = session?.partyId ?? null;
-  const [selectedThreadId, setSelectedThreadId] = useState(() => loadSelectedThreadId(myPartyId));
+  const requestedThread = new URLSearchParams(location.search).get('threadId');
+  const [selectedThreadId, setSelectedThreadId] = useState(() => requestedThread === null
+    ? loadSelectedThreadId(myPartyId) : parsePositiveInt(requestedThread));
   const [draftByThread, setDraftByThread] = useState({} as DraftByThread);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatInput, setNewChatInput] = useState('');
   const [newChatSelection, setNewChatSelection] = useState(null as FriendOption | null);
   const [newChatError, setNewChatError] = useState(null as string | null);
   const [bannerError, setBannerError] = useState(null as string | null);
+  const [unavailableNotification, setUnavailableNotification] = useState(false);
   const [sendError, setSendError] = useState(null as string | null);
   const messagesEndRef = useRef(null as HTMLDivElement | null);
-  const requestParamConsumed = useRef(false);
+  const requestParamConsumed = useRef<string | null>(null);
   const [readVersion, setReadVersion] = useState(0);
 
   useEffect(() => subscribeToChatReadState(() => setReadVersion((v) => v + 1), myPartyId ?? 0), [myPartyId]);
@@ -229,14 +235,37 @@ function ChatWorkspace() {
     staleTime: 5 * 60_000,
   });
 
-  const threadsQuery = useQuery({
+  const ordinaryThreadsQuery = useQuery({
     queryKey: ['chat-threads', myPartyId],
     queryFn: ChatAPI.listThreads,
-    enabled: Boolean(myPartyId),
+    enabled: Boolean(myPartyId) && requestedThread === null,
+    // Consent can change during the session provider's 30-second cache window.
+    staleTime: 0,
+    refetchOnMount: 'always',
     refetchInterval: 10_000,
   });
 
-  const threads = useMemo(() => threadsQuery.isError ? [] : threadsQuery.data ?? [], [threadsQuery.data, threadsQuery.isError]);
+  const notificationThreadsQuery = useQuery({
+    // Every navigation gets its own response, even when ChatWorkspace stays
+    // mounted. Neither old cache writes nor a prior in-flight request authorize it.
+    queryKey: ['chat-notification-authorization', myPartyId, location.key, requestedThread],
+    queryFn: async () => {
+      await qc.cancelQueries({ queryKey: ['chat-threads', myPartyId], exact: true });
+      return ChatAPI.listThreads();
+    },
+    enabled: Boolean(myPartyId) && requestedThread !== null,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchInterval: 10_000,
+  });
+  const threadsQuery = requestedThread === null ? ordinaryThreadsQuery : notificationThreadsQuery;
+  const notificationAuthorizationPending = requestedThread !== null
+    && (!threadsQuery.isFetchedAfterMount || !threadsQuery.isSuccess || threadsQuery.isFetching);
+  const threads = useMemo(
+    () => threadsQuery.isError || notificationAuthorizationPending ? [] : threadsQuery.data ?? [],
+    [notificationAuthorizationPending, threadsQuery.data, threadsQuery.isError],
+  );
   const readMap = useMemo(() => {
     void readVersion;
     return loadChatReadMap(myPartyId ?? 0);
@@ -255,21 +284,25 @@ function ChatWorkspace() {
   }, [friendProfilesQuery.data, friendsQuery.data]);
 
   useEffect(() => {
+    // A notification must not briefly open/mark another conversation as seen.
+    if (requestedThread !== null || unavailableNotification) return;
     const first = threads[0];
     if (!first) return;
     if (selectedThreadId && threads.some((t) => t.ctThreadId === selectedThreadId)) return;
     setSelectedThreadId(first.ctThreadId);
-  }, [selectedThreadId, threads]);
+  }, [requestedThread, selectedThreadId, threads, unavailableNotification]);
 
   const selectedThread: ChatThreadDTO | null = useMemo(() => {
-    if (!selectedThreadId) return null;
+    if (!selectedThreadId || unavailableNotification) return null;
+    if (requestedThread !== null && parsePositiveInt(requestedThread) !== selectedThreadId) return null;
     return threads.find((t) => t.ctThreadId === selectedThreadId) ?? null;
-  }, [selectedThreadId, threads]);
+  }, [requestedThread, selectedThreadId, threads, unavailableNotification]);
 
   const messagesQuery = useQuery({
     queryKey: ['chat-messages', myPartyId, selectedThreadId],
     queryFn: () => ChatAPI.listMessages(selectedThreadId!, { limit: 80 }),
-    enabled: selectedThread !== null && Boolean(myPartyId),
+    enabled: selectedThread !== null && Boolean(myPartyId)
+      && (requestedThread === null || parsePositiveInt(requestedThread) === selectedThreadId),
     refetchInterval: 3_000,
   });
 
@@ -325,6 +358,7 @@ function ChatWorkspace() {
       setNewChatSelection(null);
       setNewChatError(null);
       setBannerError(null);
+      setUnavailableNotification(false);
       setSelectedThreadId(thread.ctThreadId);
       await qc.invalidateQueries({ queryKey: ['chat-threads', myPartyId] });
     },
@@ -332,12 +366,31 @@ function ChatWorkspace() {
   });
 
   useEffect(() => {
-    if (requestParamConsumed.current) return;
+    if (requestParamConsumed.current === location.key) return;
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(location.search);
+    const rawThread = params.get('threadId');
+    if (rawThread !== null) {
+      // Wait for a fresh authorized list; a link never opens or creates a thread.
+      if (notificationAuthorizationPending) return;
+      requestParamConsumed.current = location.key;
+      qc.setQueryData(['chat-threads', myPartyId], threads);
+      navigate('/chat', { replace: true });
+      const numeric = parsePositiveInt(rawThread);
+      if (numeric === null || !threads.some((thread) => thread.ctThreadId === numeric)) {
+        setUnavailableNotification(true);
+        setSelectedThreadId(null);
+        setBannerError('La conversación de esta notificación no está disponible.');
+        return;
+      }
+      setBannerError(null);
+      setUnavailableNotification(false);
+      setSelectedThreadId(numeric);
+      return;
+    }
     const rawParty = params.get('partyId');
     if (!rawParty) return;
-    requestParamConsumed.current = true;
+    requestParamConsumed.current = location.key;
     navigate('/chat', { replace: true });
     const numeric = parsePositiveInt(rawParty);
     if (numeric == null) {
@@ -347,7 +400,7 @@ function ChatWorkspace() {
     createThreadMutation.mutate(numeric, {
       onError: (err) => setBannerError(err.message),
     });
-  }, [createThreadMutation, location.search, navigate]);
+  }, [createThreadMutation, location.key, location.search, myPartyId, navigate, notificationAuthorizationPending, qc, threads]);
 
   const sendMutation = useMutation({
     mutationFn: ({ threadId, body }: { threadId: number; body: string }) => ChatAPI.sendMessage(threadId, body),
@@ -513,7 +566,7 @@ function ChatWorkspace() {
                       tabIndex={0}
                       onClick={(event) => {
                         event.currentTarget.focus();
-                        void qc.invalidateQueries({ queryKey: ['chat-threads', myPartyId] });
+                        void threadsQuery.refetch();
                       }}
                     >
                       Reintentar
@@ -547,6 +600,8 @@ function ChatWorkspace() {
                           selected={t.ctThreadId === selectedThreadId}
                           unread={unread}
                           onSelect={(threadId) => {
+                            setUnavailableNotification(false);
+                            setBannerError(null);
                             setSelectedThreadId(threadId);
                             setSendError(null);
                           }}
