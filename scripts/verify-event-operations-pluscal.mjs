@@ -33,7 +33,7 @@ export function verifyTranslation(sourcePath, { javaBin, jarPath }) {
     const name = path.basename(sourcePath);
     const copied = path.join(scratch, name);
     copyFileSync(sourcePath, copied);
-    const result = spawnSync(javaBin, ['-cp', jarPath, ...translatorArgs, name], {
+    const result = spawnSync(javaBin, [`-Djava.io.tmpdir=${scratch}`, '-cp', jarPath, ...translatorArgs, name], {
       cwd: scratch, encoding: 'utf8', input: '', timeout: 30_000, maxBuffer: 1024 * 1024,
     });
     if (result.error || result.status !== 0

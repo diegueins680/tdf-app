@@ -128,17 +128,26 @@
       "id": "SYS-VERIFY-002",
       "statement": "A failed, incomplete or source-stale formal execution must never be admitted as passing evidence; relevant changes must trigger fresh checks.",
       "authority": "approved",
-      "source": "User audit instruction 2026-09-18 section 8",
+      "source": "User audit instruction 2026-09-18 section 8; user consolidated audit 2026-10-13 sections 8, 9, 24",
       "property": "admit iff successful exit, no signal/error, completed suite, unchanged source digest",
-      "contract": "scripts/__tests__/verification-evidence.test.mjs",
+      "contract": "formal/system/alloy-negative-controls.md",
       "implementation": [
         "scripts/lib/verification-evidence.mjs",
         "scripts/verify-system-evidence.mjs",
         ".github/workflows/event-operations-formal.yml",
-        "scripts/lib/formal-result-summary.mjs"
+        "scripts/lib/formal-result-summary.mjs",
+        "scripts/verification-report.py",
+        "formal/system/receipt-admission.md",
+        "scripts/install-proof-checkers.py",
+        "scripts/verify-proof-certificates.py",
+        "formal/system/certificate-tools.json",
+        "formal/system/proof-certificates.md",
+        "scripts/lib/alloy-controls.mjs",
+        "scripts/verify-alloy-controls.mjs",
+        "scripts/quality-repo.sh"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof.",
-      "evidence": "formal CI source/result manifests and regression output",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs.",
+      "evidence": "formal CI source/result manifests and regression output; independent CPC result.json, exact SMT/proof/signature hashes, reference-binding and incompleteness controls",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -172,15 +181,21 @@
       "idempotency": "No additional runtime retry permission; repeat checks must bind to their actual inputs.",
       "failure": "Reject the invalid operation or verification result as defined by the mapped contract.",
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
-      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label.",
+      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label. The exact-candidate assurance report keeps PROVEN/REFUTED/UNPROVEN/NOT_APPLICABLE separate by evidence category; replayable arithmetic inputs cannot promote whole requirements or refinement. Release remains blocked with all critical gaps enumerated. Retain original/mutated Alloy source hashes, exact command scopes, named results, solver receipts and counterexample instances.",
       "tests": [
         "scripts/__tests__/verification-evidence.test.mjs",
-        "scripts/__tests__/formal-result-summary.test.mjs"
+        "scripts/__tests__/formal-result-summary.test.mjs",
+        "scripts/test-verification-report.py",
+        "formal/system/receipt-admission-counterexample.json",
+        "scripts/test-proof-certificates.py",
+        "scripts/__tests__/alloy-controls.test.mjs",
+        "scripts/__tests__/event-raci-editor-context-runner.test.mjs"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
       "ambiguity": [
-        "Full cross-system refinement and current deployed correspondence remain unverified."
+        "Full cross-system refinement and current deployed correspondence remain unverified.",
+        "Alloy mutation sensitivity is not a proof that the modeled facts correspond to every implementation guard. Other formal suites retain their separate verification obligations."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -928,7 +943,8 @@
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
         ".github/workflows/ci.yml",
-        "docs/catalog-persistence/catalog-list-decisions.json"
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "scripts/build-catalog-decisions.mjs"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
@@ -937,7 +953,7 @@
         "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [],
-      "verification": "Executable conformance and mutation tests; not a whole-program proof.",
+      "verification": "Executable conformance and mutation tests; not a whole-program proof. Catalog reconciliation retains historical retirement/provenance sections while recalculating current counters; an original-generator negative control demonstrates the regression.",
       "evidence": "Fresh candidate test receipts under formal/system/evidence or externally retained run directory.",
       "status": "specified and implemented",
       "critical": true,
@@ -954,7 +970,7 @@
     {
       "id": "SYS-STATE-001",
       "title": "Declared lifecycle machines correspond to the migrated schema",
-      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision. Where a backend validator's allowedTransitions list enforces a machine and is bound, its transitions (rendered to stored state names) must equal the declared transitions under the same exact-deviation rule.",
+      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision. Where a backend validator's allowedTransitions list, targets function or membership relation enforces a machine and is bound, its transitions (rendered to stored state names) must equal the declared transitions under the same exact-deviation rule.",
       "domain": "SYS",
       "actors": [
         "Reviewer",
@@ -990,7 +1006,9 @@
       "effects": [
         "Domo quote model corrected to ADR-0114 (AUTHORITY-047).",
         "Distribution and royalty statement divergences recorded as SPECIFICATION AMBIGUITY (AUTHORITY-048).",
-        "Marketplace rental model gains returned_pending_inspection -> disputed and deposit_refund_due -> disputed, matching the validator and the ADR-0110 database table (AUTHORITY-053)."
+        "Marketplace rental model gains returned_pending_inspection -> disputed and deposit_refund_due -> disputed, matching the validator and the ADR-0110 database table (AUTHORITY-053).",
+        "Operations work item bound through its targets function; twenty transitions equal the declared machine (AUTHORITY-080).",
+        "Directory profile, claim, classified, application and invitation bound through their membership relations; each equals the declared machine (AUTHORITY-081)."
       ],
       "authorization": "Not applicable; schema and declaration check only.",
       "privacy": "Uses schema catalog only; no row data.",
@@ -1007,7 +1025,11 @@
         "scripts/check-state-machines.py",
         "formal/system/state-machine-bindings.json",
         "docs/revenue-platform/formal-model.yaml",
-        "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs"
+        "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Types.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs"
       ],
       "tests": [
         "scripts/test-state-machines.py",
@@ -1015,18 +1037,18 @@
         ".github/workflows/event-operations-formal.yml"
       ],
       "formalModels": [],
-      "verification": "Catalog comparison, plus static comparison of four bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals); guards and effects are not covered",
-      "evidence": "Gate output on the migrated CI database, twelve database negative controls and seven database-free validator controls",
+      "verification": "Catalog comparison, plus static comparison of ten bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals, operations work items, directory profiles, claims, classifieds, applications and invitations); guards, actors and effects are not covered",
+      "evidence": "Gate output on the migrated CI database, twelve database negative controls and fifty-five database-free validator controls",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the four bound validators' transition lists; no claim about guards, effects or unbound application code.",
+      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the ten bound validators' transition relations; no claim about guards, actors, effects or unbound application code.",
       "ambiguity": [
         "Distribution and royalty statement vocabularies need a product decision before runtime is built.",
-        "Ten machines still enforce transitions only in unbound application code; distribution renders states with show and awaits the AUTHORITY-048 vocabulary decision."
+        "Two machines still enforce a transition relation only in unbound application code (marketplace sale fulfillment, whose validator is method-specific; distribution, which renders states with show and awaits the AUTHORITY-048 vocabulary decision); provider event has only a terminal-status guard, and no validator was found for refund, moderation case, review or royalty statement."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Gate and controls pass on local PG16 and CI PG17 migration-tests; application-level transition evidence remains."
+        "reason": "Gate and controls pass on local PG16 and CI PG17 migration-tests; ten validators compared; application-level evidence for the remaining machines remains."
       }
     },
     {
@@ -1157,11 +1179,15 @@
       "implementation": [
         "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
         "tdf-hq/assets/feature-registry.json",
-        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "scripts/verify-auth-predicates.py"
       ],
       "tests": [
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
-        "scripts/audit-feature-registry.mjs"
+        "scripts/audit-feature-registry.mjs",
+        "scripts/test-auth-predicates.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -1177,7 +1203,7 @@
       "authority": "Existing RecordsIngestion backend strict-administrator and ModuleAdmin boundary",
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
-      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation.",
+      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation. Conditional source-derived authorization predicate equivalences and supporting cardinality lemmas: formal/system/auth-predicates.md. Full endpoint and refinement obligations remain UNPROVEN.",
       "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
     },
     {
@@ -1519,7 +1545,7 @@
         "reason": "Candidate repair and executable checks exist; exact final candidate runtime, full gates, review and deployment remain pending."
       },
       "source": "formal/system/identity-lifecycle.md; OWASP Forgot Password Cheat Sheet; source-derived absence of baseline expiry",
-      "verification": "Int64 properties, actual HTTP/PostgreSQL post-lock clock checks and injection failures, bounded model with four controls",
+      "verification": "Int64 properties, actual HTTP/PostgreSQL post-lock clock checks and injection failures, bounded model with four controls; four conditional source-derived SMT time contracts with serialized replay (full transaction/refinement UNPROVEN), finite PostgreSQL boundary probes",
       "evidence": "Exact-candidate gate receipts, bounded checker logs and HTTP runner output",
       "domain": "ID",
       "privacy": "Fixtures are synthetic and local; never log production tokens, hashes or customer details.",
@@ -1532,7 +1558,10 @@
         "tdf-hq/test/TDF/ServerSpec.hs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/provider-rollback.test.mjs",
-        "scripts/test-auth-recovery-migration.sh"
+        "scripts/test-auth-recovery-migration.sh",
+        "scripts/test-recovery-expiry-verifier.py",
+        "scripts/recovery-time-boundaries.py",
+        "scripts/test-recovery-time-postgres.sh"
       ],
       "id": "ID-SESSION-003",
       "title": "Recovery challenges expire and bind the exact credential",
@@ -1577,7 +1606,9 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
         "scripts/production-release.mjs",
-        "scripts/production-migrations.json"
+        "scripts/production-migrations.json",
+        "scripts/verify-recovery-expiry.py",
+        "formal/system/recovery-expiry-arithmetic.json"
       ]
     },
     {

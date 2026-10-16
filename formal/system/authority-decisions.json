@@ -613,6 +613,18 @@
       "resolution": "Stored diagnostics are bounded to the column; a submitted document stays submitted through failed, refused or unreadable queries and internal errors; readiness also requires TAX_INVOICE_WORKER_ENABLED=true. No schema change. Recovery for uncertain and rejected documents remains an open product and tax decision."
     },
     {
+      "id": "AUTHORITY-ALLOY-CONTROLS-001",
+      "sources": [
+        "formal/event-operations/EventStructure.als",
+        "formal/event-operations/TaskReadStructure.als",
+        "scripts/verify-event-operations-formal.sh",
+        "formal/system/alloy-negative-controls.md"
+      ],
+      "conflict": "The existing formal runner admitted 13 UNSAT structural Alloy assertions without any guard-removal negative controls; several assertions repeat facts that constrain the search. Positive completion alone did not demonstrate sensitivity to a broken guard.",
+      "authority": "User consolidated audit sections 7 and 8 require finite-scope claims and known-invalid controls; SYS-VERIFY-002 governs evidence admission.",
+      "resolution": "Retain the intended models and original scopes. Require each assertion to have an independently executed fact/predicate mutation yielding a named SAT counterexample, plus consistent original scenarios and UNSAT original assertions. Preserve solver receipts. This strengthens verification, not product authority or implementation-refinement claims."
+    },
+    {
       "id": "AUTHORITY-057",
       "sources": [
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
@@ -691,7 +703,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/WhatsApp/History.hs"
       ],
-      "conflict": "Twenty-three model lines named Index… were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
+      "conflict": "Twenty-three model lines named Index\u2026 were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
       "authority": "The application's behaviour governs: conversations hold many messages and a reply is recorded beside its message. The names, the absence of any unique-key lookup or conflict clause on these keys and the plain indexes production holds on the campaign tables under the same naming show the uniqueness was never intended.",
       "resolution": "A new migration replaces the nine constraints with plain indexes of the same names and columns, and the twenty-three lines leave the models so that a development database no longer recreates them. A rollback file restores the constraints while no stored row violates them. The identity constraints (for example the WhatsApp provider message id) are unchanged."
     },
@@ -705,6 +717,36 @@
       "conflict": "EVT-TICKET-MANUAL-001 states that the review locks the checkout, attempt and evidence rows. The function took those locks and then committed before writing, which released them; a second concurrent reviewer read the same submitted evidence and had the write refused by the database as an error instead of being told the transfer was already decided.",
       "authority": "The requirement governs: the review is serialized by its row locks. The database's evidence transition guard remains the last line of defence, not the means of serialization.",
       "resolution": "The intermediate commit is removed so the locks last until the review commits. A second reviewer waits and is answered from the decided state; the buyer's concurrent writes are not covered by this. The requirement gains a direct PostgreSQL test of the review transaction, including races, and a bounded model."
+    },
+    {
+      "id": "AUTHORITY-080",
+      "sources": [
+        "formal/system/requirements.json#SYS-STATE-001",
+        "formal/system/state-machine-bindings.json",
+        "scripts/check-state-machines.py",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Types.hs",
+        "docs/operations-control-center/formal-model.yaml"
+      ],
+      "conflict": "SYS-STATE-001 compares bound validators with declared machines, but the checker read only a literal allowedTransitions pair list and a case-form renderer in the same file, so the operations work item, whose transitions are enforced by the clause-form targets function allowedTargets with the clause-form renderer workStatusText in another module, stayed unbound: the declared operations.control-center machine (7 states, 20 transitions) was never compared with the code that enforces it.",
+      "authority": "The requirement's own rule: a bound validator's transitions, rendered to stored names, equal the declared transitions under exact deviation. The checker now reads a targets function (one literal clause per constructor, every renderer-named constructor covered) and a clause-form renderer from a named file; the operations binding is required so it cannot be dropped silently. Compared on 2026-10-13: the twenty implemented transitions equal the declared twenty; no deviation recorded. The machine's edges also declare roles, guards and reason requirements; SYS-STATE-001 compares transition pairs only, so those, enforced by validateTransition, are declared but not compared.",
+      "decidedOn": "2026-10-13",
+      "status": "applied"
+    },
+    {
+      "id": "AUTHORITY-081",
+      "sources": [
+        "formal/system/requirements.json#SYS-STATE-001",
+        "formal/system/state-machine-bindings.json",
+        "scripts/check-state-machines.py",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "docs/music-directory/formal-model.yaml"
+      ],
+      "conflict": "The five directory machines (profile, claim, classified, application, invitation) are enforced by membership predicates over a Set.fromList of pairs in TDF.Directory.Policy, rendered by parse tables in TDF.Server.Directory (the claim relation uses string literals), a shape the checker could not read; their declared machines were never compared statically with the enforcing code (the claim relation had been exhausted through HTTP under ID-CLAIM-REVIEW-001).",
+      "authority": "The requirement's rule for bound validators. The checker reads the membership shape (predicate must decide membership in its transitions set; one literal list; parse-table or identity renderer) and the five bindings are required. Compared on 2026-10-13: every relation equals its declared machine (15, 11, 22, 17, 12 transitions); no deviation. Which party may request which transition is enforced separately in TDF.Server.Directory and is outside the compared relation. The claim relation's same-state states set and parse-table entries beyond the declared states are not compared.",
+      "decidedOn": "2026-10-13",
+      "status": "applied"
     }
   ]
 }

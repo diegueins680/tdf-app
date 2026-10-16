@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "reviewedSources": {
+    "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
+    "tdf-hq/src/TDF/Models.hs": "ea779e770eecdec1391b130137642a4839e0585db40dd0ffe2dfedbd0dabcf1f",
+    "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
+    "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+    "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
+    "tdf-hq/tdf-hq.cabal": "0d25b7e8444f8908f678f7bc7dbc0736bf4eeba887cca77eee5b9c612e01fe07"
+  },
+  "obligations": [
+    {
+      "id": "strict-admin",
+      "requirementId": "AUTH-ARTIST-INVITE-001",
+      "claim": "Strict admission iff positive party ID, unique roles, Admin present and all roles in Admin/Fan/Customer.",
+      "implementation": "hasStrictAdminAccess",
+      "category": "source-derived-authorization-SMT",
+      "risk": "P0",
+      "method": "Z3 QF_LIA UNSAT of inequality; SAT admission and denial witnesses; source mutation controls; serialized replay",
+      "mapping": "Role multiplicities, signed 64-bit party identity and module membership; reviewed restricted translation of exact pinned source",
+      "assumptions": [
+        "Total finite RoleEnum list with length <= 2^63-1; defined PartyId and Set inputs",
+        "64-bit Int and Int64 PartyId representation",
+        "Standard Prelude/Data.Set/Persistent semantics and correct source translator",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Conditional predicate proof only. No machine-checked translation, compiler, session, canonical database grant, revocation, endpoint dispatch/effects or full refinement proof.",
+      "specification": "formal/system/auth-predicates.md"
+    },
+    {
+      "id": "module-access",
+      "requirementId": "AUTH-REGISTRY-001",
+      "claim": "Module admission iff positive party ID, unique roles and requested module membership.",
+      "implementation": "hasModuleAccess",
+      "category": "source-derived-authorization-SMT",
+      "risk": "P0",
+      "method": "Z3 QF_LIA UNSAT of inequality; SAT admission and denial witnesses; source mutation controls; serialized replay",
+      "mapping": "Role multiplicities, signed 64-bit party identity and module membership; reviewed restricted translation of exact pinned source",
+      "assumptions": [
+        "Total finite RoleEnum list with length <= 2^63-1; defined PartyId and Set inputs",
+        "64-bit Int and Int64 PartyId representation",
+        "Standard Prelude/Data.Set/Persistent semantics and correct source translator",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Conditional predicate proof only. No machine-checked translation, compiler, session, canonical database grant, revocation, endpoint dispatch/effects or full refinement proof.",
+      "specification": "formal/system/auth-predicates.md"
+    },
+    {
+      "id": "ingestion-admission",
+      "requirementId": "AUTH-REGISTRY-001",
+      "claim": "The requireAdmin guard admits iff the strict policy and Admin module membership both hold.",
+      "implementation": "recordsIngestionServer.requireAdmin",
+      "category": "source-derived-authorization-SMT",
+      "risk": "P0",
+      "method": "Z3 QF_LIA UNSAT of inequality; SAT admission and denial witnesses; source mutation controls; serialized replay",
+      "mapping": "Role multiplicities, signed 64-bit party identity and module membership; reviewed restricted translation of exact pinned source",
+      "assumptions": [
+        "Total finite RoleEnum list with length <= 2^63-1; defined PartyId and Set inputs",
+        "64-bit Int and Int64 PartyId representation",
+        "Standard Prelude/Data.Set/Persistent semantics and correct source translator",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Conditional predicate proof only. No machine-checked translation, compiler, session, canonical database grant, revocation, endpoint dispatch/effects or full refinement proof.",
+      "specification": "formal/system/auth-predicates.md"
+    }
+  ]
+}
