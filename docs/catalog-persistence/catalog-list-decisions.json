@@ -17687,32 +17687,32 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Migration order, immutable ancestry and checksums govern persisted consent and payment state.",
-      "justification": "Ordered208 manifest preserves the exact previous207 entries and appends historical terms identity. Original migration bytes remain unchanged. All208 entries applied and replayed on a fresh synthetic production schema; course/event history controls passed. Retain this additive guard across application rollback. No production application is implied.",
+      "justification": "Ordered209 manifest preserves all208 predecessor entries byte-for-byte and appends the ledger entry physical-write fence, introduced by493d40252f48643a14ce47c5328a13844f3b837f. Fresh synthetic production-schema application and replay of all209 entries,33 snapshot/preflight/control records and existing ledger arithmetic/reversal regressions passed locally. This is finite adapted-PG16 integration evidence; hosted PG17, compiled writers, independent review and full refinement remain pending. Retain the guard through application rollback.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 207,
-        "consumerCount": 73,
+        "valueCount": 209,
+        "consumerCount": 74,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       },
-      "id": "627709d9858d72128d2f",
+      "id": "938f49b7973332ba7e4e",
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewBatch": "ledger-snapshot-refinement-20261016",
       "supersededReviews": [
         {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+          "sourceRevision": "9d7551353a7c278cd0937eb57d04a94241318d42",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+          "sourceFileSha256": "2c7ef4935c5cdc4399d38ab143423edcdcc4d8b64e6affc54604f0a1ccab3bef",
           "sourceEntry": {
-            "id": "b925d71997a7d98258c3"
+            "id": "627709d9858d72128d2f"
           },
-          "sourceEntryCanonicalSha256": "ac4a765b99a58d3822b254948aa19ff4266f0cc6fe23c1e67fc37000a41c1696",
+          "sourceEntryCanonicalSha256": "5ad0540b85150ab309aaff528bd28daff3390c32e6e69a5a3d0765624921a743",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Immutable predecessor decision and its earlier provenance retained; scoped additive successor review."
         }
       ]
     }

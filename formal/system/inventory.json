@@ -146,6 +146,7 @@
       "scripts/__tests__/identity-http-runtime.mjs",
       "scripts/__tests__/identity-reconciliation.test.mjs",
       "scripts/__tests__/instagram-token-workflows.test.mjs",
+      "scripts/__tests__/ledger-posting-snapshot.py",
       "scripts/__tests__/ledger-posting-upgrade.py",
       "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
       "scripts/__tests__/legacy-escrow-contract.test.mjs",
@@ -1790,6 +1791,7 @@
       "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql",
       "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql",
       "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql",
+      "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -3350,9 +3352,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-34836c82b296d0b6",
+      "path": "scripts/__tests__/ledger-posting-snapshot.py",
+      "sha256": "1747f740dce3ad5acd357fc5f63050ed99d72ea4ee6cdbde815dd39f654a42c3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f4cef1242676dea7",
       "path": "scripts/__tests__/ledger-posting-upgrade.py",
-      "sha256": "71a163593cb81f3cff64a93b524279e01f2c518d9ea584453c81cd0e9fcd3f63",
+      "sha256": "83b40503fcd2528b89e47a50c61d41d93a4f8364c7098030347c7d9d0de32df3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4384,7 +4392,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6d2707039c2acc4ca6a4f52aad0894277c2d0b41a10fae96c51977aa40a1b125",
+      "sha256": "ea4a2c3b8740fbc8e9a535b5bcbd640ee6cefd46121d9b4ef6cff3ad49032a13",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5236,7 +5244,7 @@
     {
       "id": "SURFACE-c3dd26e569b5cb41",
       "path": "scripts/test-ledger-posting.sh",
-      "sha256": "4e84c81490ba4c5dd61606df854014285cbdc525ffd0ecd51254b56c3816895f",
+      "sha256": "65414f9a7eed8955893bb899a27577e90d0262b93f541311dfcf18e37b23ede7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5470,7 +5478,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "8b788076c8f5e0056d5bf92312a34a9aba3d31f33bcd0ccdd9a615f597cf9d51",
+      "sha256": "41741027642758fddcf3f2dbee7e22469ffe44866e1b7baffdcb8a3ea27725bc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13175,6 +13183,12 @@
       "id": "SURFACE-92e5525ae99b0639",
       "path": "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql",
       "sha256": "00b7c64e01179838ab5fe5696ece38f0a6285f1c6db7ac08d64efd274424a05e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0b41598b11b45229",
+      "path": "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
+      "sha256": "af468bf34bbfe36bfc6e3321a02ff71875d1ac49d7351a23fb607568de1d643f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25057,9 +25071,16 @@
     },
     {
       "path": "formal/system/ledger-posting.md",
-      "sha256": "174f0a844e8c4e83d48ef2c1a6b472b9144379fb9fe023bb49f5979a5a99a1da",
+      "sha256": "66f5537277cbe5fccd7e7e552172dd7a92479206e9e8abd8c914701b10a3b672",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ledger-refinement-2026-10-16.md",
+      "sha256": "117348021e89c8c888a65b38311965efb7b89827385f4ee07f452ad3a9c71eca",
+      "authority": "inferred",
+      "authorityBasis": "Estado: **PARTIAL**. La implementación completa y su refinamiento siguen",
       "kind": "requirement-candidate"
     },
     {
@@ -25169,7 +25190,7 @@
     },
     {
       "path": "formal/system/payment-arithmetic.md",
-      "sha256": "c43590d32b2a99a4e4c0da0fb480e3ac7cf555a3a8ed99aed666ae1e1890f916",
+      "sha256": "12a4062aaf08facfbb3ecdb71ddc105b71a72009f1bdf607db4aac0bf48274c0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25239,7 +25260,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "31fe38bbf9ef903c1b90e98b498dbf4a430885d878dc4c3fb02e26d3fd4d4a8b",
+      "sha256": "1522db9c32f46e6d32ac33a30c6e0952ce08b0b278e3aca8f488d29e8fd053ac",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
