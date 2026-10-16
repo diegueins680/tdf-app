@@ -17687,21 +17687,21 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Migration order, immutable ancestry and checksums govern persisted consent and payment state.",
-      "justification": "Ordered208 manifest preserves the exact previous207 entries and appends historical terms identity. Original migration bytes remain unchanged. All208 entries applied and replayed on a fresh synthetic production schema; course/event history controls passed. Retain this additive guard across application rollback. No production application is implied.",
+      "justification": "Ordered209 manifest retains the exact previous208 entries and appends provider-domain payment binding. Prior SQL bytes and introduction commits are preserved. The full209 batch applied and replayed on disposable PostgreSQL16.15; the independent provider/domain matrix and witnessed concurrent retry controls passed. This technical registry classification does not authorize production application or provider activation.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 207,
-        "consumerCount": 73,
+        "valueCount": 209,
+        "consumerCount": 75,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       },
-      "id": "627709d9858d72128d2f",
+      "id": "a70a9a4dd05ce44e950b",
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewBatch": "provider-domain-binding-20261016",
       "supersededReviews": [
         {
           "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
@@ -17713,6 +17713,17 @@
           "sourceEntryCanonicalSha256": "ac4a765b99a58d3822b254948aa19ff4266f0cc6fe23c1e67fc37000a41c1696",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "9d7551353a7c278cd0937eb57d04a94241318d42",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "2c7ef4935c5cdc4399d38ab143423edcdcc4d8b64e6affc54604f0a1ccab3bef",
+          "sourceEntry": {
+            "id": "627709d9858d72128d2f"
+          },
+          "sourceEntryCanonicalSha256": "5ad0540b85150ab309aaff528bd28daff3390c32e6e69a5a3d0765624921a743",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Retain exact previous 208-entry technical classification as provenance; current manifest appends one additive guard."
         }
       ]
     }

@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "627709d9858d72128d2f",
+      "currentId": "a70a9a4dd05ce44e950b",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 208,
-      "change": "Ordered208 manifest preserves the exact previous207 entries and appends historical terms identity. Original migration bytes remain unchanged. All208 entries applied and replayed on a fresh synthetic production schema; course/event history controls passed. Retain this additive guard across application rollback. No production application is implied.",
+      "valueCount": 209,
+      "change": "Ordered209 manifest retains the exact previous208 entries and appends provider-domain payment binding. Prior SQL bytes and introduction commits are preserved. The full209 batch applied and replayed on disposable PostgreSQL16.15; the independent provider/domain matrix and witnessed concurrent retry controls passed. This technical registry classification does not authorize production application or provider activation.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "171b80c2def40a52e1613982b2d4ec6d6aac4707",
@@ -383,7 +383,13 @@
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
         }
-      ]
+      ],
+      "previousResolution": {
+        "currentId": "627709d9858d72128d2f",
+        "valueCount": 208,
+        "sourceRevision": "9d7551353a7c278cd0937eb57d04a94241318d42",
+        "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json"
+      }
     }
   ]
 }

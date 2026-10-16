@@ -2,6 +2,7 @@
 -- line totals and runtime snapshots pass the production constraints unchanged.
 \set ON_ERROR_STOP on
 CREATE SCHEMA IF NOT EXISTS payment_test;
+CREATE SEQUENCE IF NOT EXISTS payment_test.domo_slot;
 WITH catalog AS (
   INSERT INTO service_catalog(name,kind,pricing_model,active) VALUES ('Synthetic provider service','Recording','Hourly',true) RETURNING id
 )
@@ -47,11 +48,12 @@ BEGIN
     12515-tax,0,0,round(fee*10000.0/(12515-tax)),fee,round(tax*10000.0/(12515-tax)),tax,12515,12515-fee-tax,fee,'synthetic-terms-v1',now(),now()+interval '30 minutes');
 END $$;
 
-CREATE OR REPLACE FUNCTION payment_test.checkout(kind text) RETURNS uuid LANGUAGE plpgsql AS $$
+CREATE OR REPLACE FUNCTION payment_test.checkout(kind text, fee bigint DEFAULT 0, tax bigint DEFAULT 0) RETURNS uuid LANGUAGE plpgsql AS $$
 DECLARE checkout_key uuid := gen_random_uuid(); subject_key bigint; course_key bigint;
   policy_key uuid; offering service_offering%ROWTYPE; service_key bigint;
   quote_key uuid := gen_random_uuid(); domo_key uuid := gen_random_uuid();
   due bigint := 12515; expires timestamptz := now()+interval '30 minutes';
+  domo_start timestamptz := now()+(30+nextval('payment_test.domo_slot'))*interval '1 day';
 BEGIN
   IF kind='event_ticket_order' THEN
     subject_key := payment_test.ticket_order();
@@ -68,11 +70,12 @@ BEGIN
   ELSIF kind='service_booking' THEN
     SELECT * INTO STRICT offering FROM service_offering WHERE active AND deprecated_at IS NULL
       AND legacy_service_catalog_id IS NOT NULL ORDER BY id LIMIT 1;
+    UPDATE service_booking_commerce_policy SET active=false WHERE service_offering_id=offering.id AND active;
     INSERT INTO service_booking_commerce_policy(service_offering_id,policy_version,currency,rate_minor,
       rate_unit_minutes,tax_bps,deposit_bps,min_duration_minutes,max_duration_minutes,duration_step_minutes,
-      terms_version,terms_summary,approval_status,approved_at,approved_by)
+      terms_version,terms_summary,approval_status,active,approved_at,approved_by)
       VALUES (offering.id,checkout_key::text,'USD',12515,60,0,10000,60,60,60,
-        'synthetic-terms','Synthetic accepted terms','approved',now(),'test') RETURNING id INTO policy_key;
+        'synthetic-terms','Synthetic accepted terms','approved',true,now(),'test') RETURNING id INTO policy_key;
     INSERT INTO service_order(customer_id,catalog_id,service_offering_id,service_kind,title,status,
       price_quoted_cents,scheduled_start,scheduled_end,created_at)
       VALUES (1,offering.legacy_service_catalog_id,offering.id,'Recording','Synthetic service','deposit_due',
@@ -95,16 +98,16 @@ BEGIN
   ELSE RAISE EXCEPTION 'Unknown fixture domain %',kind;
   END IF;
   INSERT INTO commerce_checkout_session(id,domain_type,domain_order_id,quote_id,status,environment,currency,
-    subtotal_minor,total_minor,customer_email,lookup_token_hash,idempotency_key,expires_at)
+    subtotal_minor,discount_minor,tax_minor,total_minor,customer_email,lookup_token_hash,idempotency_key,expires_at)
     VALUES (checkout_key,kind,CASE WHEN kind='domo_event_quote' THEN 'domo-quote:'||domo_key::text
       ELSE subject_key::text END,CASE WHEN kind='domo_event_quote' THEN quote_key ELSE NULL END,
-      CASE WHEN kind='domo_event_quote' THEN 'holding' ELSE 'awaiting_payment' END,'sandbox','USD',due,due,
+      CASE WHEN kind='domo_event_quote' THEN 'holding' ELSE 'awaiting_payment' END,'sandbox','USD',due,tax,tax,due,
       'synthetic@example.invalid',encode(digest(checkout_key::text,'sha256'),'hex'),checkout_key::text,expires);
   INSERT INTO commerce_checkout_line_item(checkout_id,line_number,product_type,product_id,product_version,
-    description,quantity,unit_amount_minor,subtotal_minor,total_minor,snapshot)
-    VALUES (checkout_key,1,kind,checkout_key::text,'synthetic-v1','Synthetic payment',1,due,due,due,'{}');
+    description,quantity,unit_amount_minor,subtotal_minor,discount_minor,tax_minor,total_minor,snapshot)
+    VALUES (checkout_key,1,kind,checkout_key::text,'synthetic-v1','Synthetic payment',1,due,due,tax,tax,due,'{}');
   IF kind='event_ticket_order' THEN
-    PERFORM payment_test.ticket_runtime(checkout_key,subject_key);
+    PERFORM payment_test.ticket_runtime(checkout_key,subject_key,fee,tax);
   ELSIF kind='course_registration' THEN
     INSERT INTO course_registration_checkout_runtime(registration_id,course_id,checkout_id,policy_id,policy_version,
       lookup_token_hash,create_idempotency_key,create_request_sha256,payment_schedule,currency,price_minor,tax_bps,
@@ -127,9 +130,9 @@ BEGIN
       setup_starts_at,duration_hours,setup_hours,catering,production,transport,quote_status,fulfillment_status,currency,
       subtotal_minor,tax_minor,total_minor,deposit_minor,balance_minor,tax_basis_points,deposit_basis_points,
       rate_card_version,rate_card_rules_sha256,timezone,terms_version,hold_expires_at)
-    SELECT domo_key,quote_key,checkout_key,id,checkout_key::text,encode(digest(checkout_key::text,'sha256'),'hex'),
+    SELECT domo_key,quote_key,checkout_key,id,'domo-del-pululahua',encode(digest(checkout_key::text,'sha256'),'hex'),
       checkout_key::text,repeat('a',64),'Synthetic customer','synthetic@example.invalid','wedding',80,
-      now()+interval '1 day',now()+interval '1 day 8 hours',now()+interval '22 hours',8,2,true,true,false,
+      domo_start,domo_start+interval '8 hours',domo_start-interval '2 hours',8,2,true,true,false,
       'sent','date_held','USD',448000,53760,501760,due,301056,1200,4000,'legacy_public_formula-v1',
       encode(digest(convert_to(pricing_rules::text,'UTF8'),'sha256'),'hex'),'America/Guayaquil',
       'domo-terms-legacy-draft-v1',expires FROM commerce_product_version

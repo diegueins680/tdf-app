@@ -10069,6 +10069,76 @@
       "tests": [],
       "formalModels": [],
       "ambiguity": []
+    },
+    {
+      "id": "PAY-DOMAIN-BINDING-001",
+      "title": "Domain checkout admits exact durable provider payment evidence",
+      "statement": "Service, event, course and Domo checkouts accept PlaceToPay session and PayPhone sale evidence only when the succeeded attempt, immutable binding, durable create operation and canonical intent agree on checkout, provider, account, environment, reference, resource, currency and amount; legacy payment and accepted-hold guards remain enforced.",
+      "domain": "PAY",
+      "authority": "Explicit user instruction 2026-10-16; docs/adr/0101-verified-payment-events.md",
+      "source": "Explicit user instruction 2026-10-16; docs/payments/consolidation-2026-10-15.md",
+      "property": "Paid transition implies exact bound evidence; internal order identity is distinct from immutable provider reference.",
+      "contract": "formal/system/provider-domain-binding.md",
+      "actors": [
+        "Provider callback/query worker",
+        "Authorized fulfillment operator"
+      ],
+      "preconditions": [
+        "Applicable provider, feature and environment gates remain independently enforced; this requirement does not authorize activation."
+      ],
+      "inputs": [
+        "Checkout and payment attempt",
+        "Immutable provider binding, create operation and canonical intent"
+      ],
+      "state": {
+        "boundary": "commerce_checkout_session.status",
+        "initial": "awaiting_payment",
+        "intermediate": [
+          "processing"
+        ],
+        "terminal": [
+          "paid"
+        ]
+      },
+      "allowedTransitions": [
+        "Exact verified bound payment admits paid state once."
+      ],
+      "forbiddenTransitions": [
+        "Wrong or missing provider identity, resource, reference, intent, amount or currency cannot admit paid state."
+      ],
+      "effects": [
+        "Existing domain synchronization executes in the same transaction after admission."
+      ],
+      "authorization": "Valid provider binding is necessary; callback verification and operator authorization remain additional backend requirements.",
+      "privacy": "The correspondence does not authorize public order lookup or place lookup capabilities in URLs.",
+      "concurrency": "Checkout row updates serialize; repeatable-read serialization failures retry in a fresh transaction. PostgreSQL blocking must be witnessed.",
+      "idempotency": "A repeated verified result preserves completed accounting and later fulfillment progress.",
+      "failure": "Binding mismatch rejects synchronization; outer transaction rollback also removes payment/order effects.",
+      "recovery": "Retry through durable query/reconciliation without inventing new payment evidence.",
+      "observability": "Retain exact candidate SHA, database/model bounds, command, result and named negative-control evidence; never log credentials or raw payment payloads.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql"
+      ],
+      "tests": [
+        "scripts/test-provider-domain-binding.py",
+        "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
+        "scripts/load-payment-test-schema.sh",
+        "scripts/test-provider-retry-runtime.sh",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required.",
+      "evidence": "PR #596; scripts/test-provider-domain-binding.py; formal/system/provider-domain-binding.md",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped source correspondence; combined-candidate execution and deployment pending",
+      "ambiguity": [
+        "Finite tests do not prove provider authenticity or full implementation refinement. Production activation remains unapproved."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped implementation and full-schema tests exist; current-head hosted evidence, independent review and production correspondence remain separate."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -10076,7 +10146,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "4e53056d6a52d2bad25efc0e2f210119838582de868b75e3f6237859d47e25e8",
+    ".github/workflows/ci.yml": "3699ae423746b1e638f5b86e1fefdd0db6d36b7ebcd3e5d03f7fb7a42142e8bc",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -10084,7 +10154,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "2c7ef4935c5cdc4399d38ab143423edcdcc4d8b64e6affc54604f0a1ccab3bef",
+    "docs/catalog-persistence/catalog-list-decisions.json": "be3b04226bda54e2dd6abdaddd434039ef7b457defe59942ec49dbed98013a73",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -10326,6 +10396,7 @@
     "scripts/__tests__/disposable-postgres-url.test.mjs": "76cf3c7aaeed689164a94da6d79b6297b5bf84b95ef05782436c46c84e93e636",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
+    "scripts/__tests__/fixtures/provider-domain-fixtures.sql": "17d645e924bd5d6533523dcfb1e3a4522a403ac420de7dde45f94a44eca9e14d",
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": "186495b321cdc2ac067af786a72dffa740b289eb1ac22429c1d6e5c14ce85a9c",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
@@ -10408,6 +10479,7 @@
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/test-process-session.mjs": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
+    "scripts/load-payment-test-schema.sh": "8f8e8385a59b6b118c049ab7ac5f48e5525152c45fc8a15d882c37f78b0330d7",
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
     "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
     "scripts/mobile-publishing-admin-audit.sh": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
@@ -10417,7 +10489,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "6d2707039c2acc4ca6a4f52aad0894277c2d0b41a10fae96c51977aa40a1b125",
+    "scripts/production-migrations.json": "e69f939afa0f3de1e2e2b16ea97ca81a413cf76e5d2151dd20416920f19a18ae",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -10481,7 +10553,8 @@
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
-    "scripts/test-provider-retry-runtime.sh": "8b788076c8f5e0056d5bf92312a34a9aba3d31f33bcd0ccdd9a615f597cf9d51",
+    "scripts/test-provider-domain-binding.py": "91b3bc7b7863b202bda8e2b7ebecec8d5e329cce553002dc93853bf036b5b4a7",
+    "scripts/test-provider-retry-runtime.sh": "91b88aa6ab6f3f6ff26649b5d3ce8a10af6badee2474960e85d3a63476242ef8",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
@@ -10846,6 +10919,7 @@
     "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql": "517423a780f237199ae96c02e9b2416d0326ccaab03c1e0905f0822fdd2602af",
     "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql": "5d3e3eb01ef0fda54f7c3496705f691b6385c592e80369ae90dd7714ff40ebc8",
     "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql": "00b7c64e01179838ab5fe5696ece38f0a6285f1c6db7ac08d64efd274424a05e",
+    "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql": "b6e7cb3bfdb7228af49ef7b6ec5a124c1eae0810ea11cf3ccb9fec24f8b4b764",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -10964,7 +11038,7 @@
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "c874ed26524da3896abc173d2ceff6624b86b3fec67414e85d8e9154092de334",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "7ee28ffe96c68c90bbc8509734a0b0cdd922cbf13b79d53f0be61ca0bd7bb715",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -12661,6 +12735,10 @@
       {
         "requirement": "EVT-TICKET-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-provider-retry-runtime.sh": [
@@ -12682,6 +12760,10 @@
       },
       {
         "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
         "relationship": "tests"
       }
     ],
@@ -19092,6 +19174,30 @@
         "requirement": "SYS-UI-FIXTURE-001",
         "relationship": "implementation"
       }
+    ],
+    "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql": [
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-provider-domain-binding.py": [
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/fixtures/provider-domain-fixtures.sql": [
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/load-payment-test-schema.sh": [
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -19160,7 +19266,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4e53056d6a52d2bad25efc0e2f210119838582de868b75e3f6237859d47e25e8",
+      "sha256": "3699ae423746b1e638f5b86e1fefdd0db6d36b7ebcd3e5d03f7fb7a42142e8bc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20355,6 +20461,18 @@
       "sha256": "1730a172439c1ccfb2fb8561d9ced27e57fe4caf136fcb83d9850770bbbf095e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-c4bc5dde97871a0c",
+      "path": "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
+      "sha256": "17d645e924bd5d6533523dcfb1e3a4522a403ac420de7dde45f94a44eca9e14d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-e4c6bf3c31cac943",
@@ -22063,6 +22181,18 @@
       ]
     },
     {
+      "id": "SURFACE-025be65dc2f000fe",
+      "path": "scripts/load-payment-test-schema.sh",
+      "sha256": "8f8e8385a59b6b118c049ab7ac5f48e5525152c45fc8a15d882c37f78b0330d7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-a0fd8416fa83358e",
       "path": "scripts/mail-deliverability-monitor.py",
       "sha256": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
@@ -22243,7 +22373,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6d2707039c2acc4ca6a4f52aad0894277c2d0b41a10fae96c51977aa40a1b125",
+      "sha256": "e69f939afa0f3de1e2e2b16ea97ca81a413cf76e5d2151dd20416920f19a18ae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24031,6 +24161,18 @@
       ]
     },
     {
+      "id": "SURFACE-a519de3cb1b5ff7f",
+      "path": "scripts/test-provider-domain-binding.py",
+      "sha256": "91b3bc7b7863b202bda8e2b7ebecec8d5e329cce553002dc93853bf036b5b4a7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-3c9e2b2fae1ee373",
       "path": "scripts/test-provider-event-operations-migration.sh",
       "sha256": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
@@ -24054,7 +24196,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "8b788076c8f5e0056d5bf92312a34a9aba3d31f33bcd0ccdd9a615f597cf9d51",
+      "sha256": "91b88aa6ab6f3f6ff26649b5d3ce8a10af6badee2474960e85d3a63476242ef8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24075,6 +24217,10 @@
         },
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
           "relationship": "tests"
         }
       ]
@@ -35347,6 +35493,18 @@
       ]
     },
     {
+      "id": "SURFACE-b0d798f9db374724",
+      "path": "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql",
+      "sha256": "b6e7cb3bfdb7228af49ef7b6ec5a124c1eae0810ea11cf3ccb9fec24f8b4b764",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -38296,7 +38454,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "c874ed26524da3896abc173d2ceff6624b86b3fec67414e85d8e9154092de334",
+      "sha256": "7ee28ffe96c68c90bbc8509734a0b0cdd922cbf13b79d53f0be61ca0bd7bb715",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38313,6 +38471,10 @@
         },
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
           "relationship": "tests"
         }
       ]
@@ -44644,7 +44806,8 @@
     "MEDIA-MUSIC-DDEX-001",
     "MEDIA-MUSIC-PLAYER-001",
     "SYS-WEB-SHELL-001",
-    "AUTH-ENTRY-002"
+    "AUTH-ENTRY-002",
+    "PAY-DOMAIN-BINDING-001"
   ],
   "stateMachines": [
     {
@@ -45763,7 +45926,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "31fe38bbf9ef903c1b90e98b498dbf4a430885d878dc4c3fb02e26d3fd4d4a8b",
+      "sourceSha256": "2a657f7224659d029b96420e1113e1660233d368e85ce89ccf52d5bf5d7ef057",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -45791,7 +45954,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "31fe38bbf9ef903c1b90e98b498dbf4a430885d878dc4c3fb02e26d3fd4d4a8b",
+      "sourceSha256": "2a657f7224659d029b96420e1113e1660233d368e85ce89ccf52d5bf5d7ef057",
       "definition": {
         "states": [
           "absent",
@@ -67988,7 +68151,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 123,
+    "PARTIAL": 124,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -28,7 +28,7 @@ PROVIDERS = ('placetopay', 'payphone')
 NEGATIVES = ('binding_account', 'binding_environment', 'binding_currency', 'binding_amount',
              'resource_type', 'resource_id', 'reference', 'internal_reference',
              'operation_account', 'operation_environment', 'operation_provider',
-             'operation_kind', 'missing_operation', 'intent_checkout', 'intent_provider',
+             'operation_kind', 'missing_operation', 'missing_binding', 'intent_checkout', 'intent_provider',
              'intent_currency', 'intent_amount', 'missing_intent', 'attempt_status',
              'attempt_amount', 'attempt_currency', 'attempt_environment')
 
@@ -62,16 +62,18 @@ def evidence(db, domain, provider, variant=None):
         payment_method,amount_minor,captured_minor,currency,idempotency_key)
         VALUES (%s::uuid,%s::uuid,'processing','automatic',%s,%s,%s,0,%s,%s)''',
         (intent, intent_checkout, 'paypal' if variant == 'intent_provider' else provider,
-         'card' if provider == 'placetopay' else 'payphone_wallet',
+         'manual_bank_transfer' if provider == 'bank_transfer' else
+         'payphone_wallet' if provider == 'payphone' else 'paypal_wallet' if provider == 'paypal' else 'card',
          due + (variant == 'intent_amount'), 'EUR' if variant == 'intent_currency' else 'USD', intent))
     execute(db, '''INSERT INTO commerce_payment_attempt(id,checkout_id,payment_intent_id,provider,
         environment,operation,status,amount_minor,currency,merchant_account_ref,idempotency_key)
-        VALUES (%s::uuid,%s::uuid,%s::uuid,%s,%s,'create',%s,%s,%s,'synthetic-merchant',%s)''',
+        VALUES (%s::uuid,%s::uuid,%s::uuid,%s,%s,%s,%s,%s,%s,'synthetic-merchant',%s)''',
         (attempt, checkout, None if variant == 'missing_intent' else intent, provider,
          'production' if variant == 'attempt_environment' else 'sandbox',
+         'manual_verify' if provider == 'bank_transfer' else 'create',
          'processing' if variant == 'attempt_status' else 'succeeded',
          due + (variant == 'attempt_amount'), 'EUR' if variant == 'attempt_currency' else 'USD', attempt))
-    if variant != 'missing_operation':
+    if provider in PROVIDERS and variant != 'missing_operation':
         execute(db, '''INSERT INTO commerce_provider_operation(payment_attempt_id,provider,environment,
             merchant_account_ref,provider_reference,provider_resource_id,operation,idempotency_key,
             request_sha256,status,outcome_certainty,started_at)
@@ -81,7 +83,21 @@ def evidence(db, domain, provider, variant=None):
              'production' if variant == 'operation_environment' else 'sandbox',
              'other-merchant' if variant == 'operation_account' else 'synthetic-merchant', reference, resource,
              'query' if variant == 'operation_kind' else 'create', attempt))
-    kind = 'session' if provider == 'placetopay' else 'sale'
+    kind = {'placetopay': 'session', 'payphone': 'sale', 'datafast': 'checkout',
+            'paypal': 'capture', 'stripe': 'payment', 'bank_transfer': 'manual_evidence'}[provider]
+    if provider not in PROVIDERS:
+        reference = order
+    if variant == 'missing_binding':
+        return checkout, due
+    if provider == 'bank_transfer':
+        resource = str(uuid.uuid4())
+        execute(db, '''INSERT INTO commerce_manual_payment_evidence(id,checkout_id,payment_attempt_id,status)
+          VALUES (%s::uuid,%s::uuid,%s::uuid,'awaiting_evidence')''', (resource, checkout, attempt))
+        execute(db, '''UPDATE commerce_manual_payment_evidence SET status='submitted',
+          customer_reference='synthetic-transfer',submitted_amount_minor=%s,currency='USD',
+          submitted_at=now(),submitted_by=1 WHERE id=%s::uuid''', (due, resource))
+        execute(db, "UPDATE commerce_manual_payment_evidence SET status='under_review',reviewed_by=2 WHERE id=%s::uuid", (resource,))
+        execute(db, "UPDATE commerce_manual_payment_evidence SET status='approved',reviewed_at=now(),review_notes='Synthetic independent review' WHERE id=%s::uuid", (resource,))
     execute(db, '''INSERT INTO commerce_provider_binding(payment_attempt_id,provider,environment,
         merchant_account_ref,resource_type,provider_resource_id,merchant_reference,amount_minor,currency)
         VALUES (%s::uuid,%s,%s,%s,%s,%s,%s,%s,%s)''',
@@ -153,6 +169,17 @@ def matrix():
                             expected_error = 'Payment attempt does not match checkout environment, amount, or currency'
                         assert error.pgcode == 'P0001' and error.diag.message_primary == expected_error, (variant, error)
                         execute(db, 'ROLLBACK TO SAVEPOINT fixture')
+                    else:
+                        denied(db, domain, checkout, due)
+                    db.rollback()
+                    count += 1
+    for domain in DOMAINS:
+        for provider in ('datafast', 'paypal', 'stripe', 'bank_transfer'):
+            for variant in (None, 'reference'):
+                with connect() as db:
+                    checkout, due = evidence(db, domain, provider, variant)
+                    if variant is None:
+                        assert settle(db, checkout, due) == 1
                     else:
                         denied(db, domain, checkout, due)
                     db.rollback()
@@ -268,6 +295,8 @@ if __name__ == '__main__':
         assert one(db, 'SELECT current_database()') == 'tdf_provider_retry_test'
         expected = __import__('json').loads((ROOT / 'scripts/production-migrations.json').read_text())['migrations']
         assert one(db, 'SELECT count(*) FROM tdf_schema_migration') == len(expected)
+        revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+        assert one(db, 'SELECT bool_and(source_commit=%s) FROM tdf_schema_migration', (revision,))
     matrix()
     races()
     controls()

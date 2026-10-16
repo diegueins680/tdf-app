@@ -135,6 +135,7 @@
       "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
       "scripts/__tests__/fixtures/production-schema-20260814.sql",
       "scripts/__tests__/fixtures/production-ticketing-base.sql",
+      "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
       "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
       "scripts/__tests__/formal-methods-audit.test.mjs",
       "scripts/__tests__/formal-result-summary.test.mjs",
@@ -299,6 +300,7 @@
       "scripts/lib/ui-static-audit.mjs",
       "scripts/lib/ux-quality-audit.mjs",
       "scripts/lib/verification-evidence.mjs",
+      "scripts/load-payment-test-schema.sh",
       "scripts/mail-deliverability-monitor.py",
       "scripts/merge-admission.py",
       "scripts/meta-app-review-packet.mjs",
@@ -496,6 +498,7 @@
       "scripts/test-physical-postgres-docker.py",
       "scripts/test-physical-postgres-recovery.py",
       "scripts/test-privacy-request-ledger.py",
+      "scripts/test-provider-domain-binding.py",
       "scripts/test-provider-event-operations-migration.sh",
       "scripts/test-provider-execution-runtime-migration.sh",
       "scripts/test-provider-identity.sh",
@@ -1790,6 +1793,7 @@
       "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql",
       "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql",
       "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql",
+      "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2632,7 +2636,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4e53056d6a52d2bad25efc0e2f210119838582de868b75e3f6237859d47e25e8",
+      "sha256": "3699ae423746b1e638f5b86e1fefdd0db6d36b7ebcd3e5d03f7fb7a42142e8bc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3281,6 +3285,12 @@
       "id": "SURFACE-713c65ca95c0680d",
       "path": "scripts/__tests__/fixtures/production-ticketing-base.sql",
       "sha256": "1730a172439c1ccfb2fb8561d9ced27e57fe4caf136fcb83d9850770bbbf095e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c4bc5dde97871a0c",
+      "path": "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
+      "sha256": "17d645e924bd5d6533523dcfb1e3a4522a403ac420de7dde45f94a44eca9e14d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4268,6 +4278,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-025be65dc2f000fe",
+      "path": "scripts/load-payment-test-schema.sh",
+      "sha256": "8f8e8385a59b6b118c049ab7ac5f48e5525152c45fc8a15d882c37f78b0330d7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-a0fd8416fa83358e",
       "path": "scripts/mail-deliverability-monitor.py",
       "sha256": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
@@ -4384,7 +4400,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6d2707039c2acc4ca6a4f52aad0894277c2d0b41a10fae96c51977aa40a1b125",
+      "sha256": "e69f939afa0f3de1e2e2b16ea97ca81a413cf76e5d2151dd20416920f19a18ae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5450,6 +5466,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a519de3cb1b5ff7f",
+      "path": "scripts/test-provider-domain-binding.py",
+      "sha256": "91b3bc7b7863b202bda8e2b7ebecec8d5e329cce553002dc93853bf036b5b4a7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3c9e2b2fae1ee373",
       "path": "scripts/test-provider-event-operations-migration.sh",
       "sha256": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
@@ -5470,7 +5492,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "8b788076c8f5e0056d5bf92312a34a9aba3d31f33bcd0ccdd9a615f597cf9d51",
+      "sha256": "91b88aa6ab6f3f6ff26649b5d3ce8a10af6badee2474960e85d3a63476242ef8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13178,6 +13200,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-b0d798f9db374724",
+      "path": "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql",
+      "sha256": "b6e7cb3bfdb7228af49ef7b6ec5a124c1eae0810ea11cf3ccb9fec24f8b4b764",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -14806,7 +14834,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "c874ed26524da3896abc173d2ceff6624b86b3fec67414e85d8e9154092de334",
+      "sha256": "7ee28ffe96c68c90bbc8509734a0b0cdd922cbf13b79d53f0be61ca0bd7bb715",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20332,7 +20360,7 @@
     },
     {
       "path": "docs/payments/consolidation-2026-10-15.md",
-      "sha256": "79c06e183ab3dd6aa981716fae641bd7def46d25b46226682db1cf6ff3b409c6",
+      "sha256": "916e3353e262c64f53b869ccb3a3c6ca3dcaa628fe0c7dae3013723ccf859896",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20396,6 +20424,13 @@
     {
       "path": "docs/payments/operator-runbooks.md",
       "sha256": "6463e16da525ad0fe3902be8f8dc02e5e6b6b519f7f07c83baa9f753a0348b5d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/provider-domain-validation-2026-10-16.md",
+      "sha256": "7bf9826ff17ea6cf09cdd08368a7d0af976327c002103735e09d7120408061a5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24882,7 +24917,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "8ccde89e07a2966b90b7e78a4b1a54d01e3b73b6aa33bf64477c963c25f6e2c6",
+      "sha256": "77ddcf3b891bd93a294d72fdfd46b596338c5092ca993cc294e1060993945d53",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -25196,6 +25231,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/provider-domain-binding.md",
+      "sha256": "4510eff1b26f13b1852c93b9f7c34520e194f2fd2c33a8b659f0ea591f4289e8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/public-route-admission.md",
       "sha256": "5624b8411891a9345215f51bd08342fcc08b9f5261f1d33ba27e6884e808cef6",
       "authority": "inferred",
@@ -25239,7 +25281,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "31fe38bbf9ef903c1b90e98b498dbf4a430885d878dc4c3fb02e26d3fd4d4a8b",
+      "sha256": "2a657f7224659d029b96420e1113e1660233d368e85ce89ccf52d5bf5d7ef057",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

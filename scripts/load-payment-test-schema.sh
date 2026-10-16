@@ -16,7 +16,8 @@ psql "$url" -X -q -v ON_ERROR_STOP=1 -f "$root/scripts/__tests__/fixtures/produc
 psql "$url" -X -q -v ON_ERROR_STOP=1 -f "$root/scripts/__tests__/fixtures/catalog-production-source-fixture.sql" >/dev/null
 batch=$(mktemp)
 trap 'rm -f "$batch"' EXIT INT TERM
-node "$root/scripts/render-production-migration-batch.mjs" > "$batch"
+candidate=$(git -C "$root" rev-parse --verify HEAD)
+SOURCE_COMMIT="$candidate" node "$root/scripts/render-production-migration-batch.mjs" > "$batch"
 psql "$url" -X -q -v ON_ERROR_STOP=1 -f "$batch" >/dev/null
 psql "$url" -X -q -v ON_ERROR_STOP=1 -f "$batch" >/dev/null
 expected=$(node -p "require('$root/scripts/production-migrations.json').migrations.length")

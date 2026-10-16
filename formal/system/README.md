@@ -95,6 +95,8 @@ These checks make drift fail CI; run them before changing a mapped surface.
   boundaries. `formal/event-operations` and `formal/social` retain scoped
   TLA+/PlusCal/Alloy models and negative controls.
 
+- [provider-domain-binding.md](provider-domain-binding.md): exact durable PlaceToPay/PayPhone admission across the four checkout domains, full-schema fixtures and PostgreSQL controls.
+
 ## Authority and conflict resolution
 
 1. Explicit approved product decisions, with their activation scope and recorded
