@@ -2105,6 +2105,7 @@
       "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "tdf-hq/test/TDF/StartupResponseSpec.hs",
+      "tdf-hq/test/TDF/Test/DisposablePostgres.hs",
       "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
       "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
       "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
@@ -3159,7 +3160,7 @@
     {
       "id": "SURFACE-df96f3139c1e5e5b",
       "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
-      "sha256": "8e577a4e15ef1dcb01333a2def3d342e5b07164b3139e15c72dbe41e235348c1",
+      "sha256": "bc05c24381154b962eef119fd96d55728543f0dcc25cba55aa4f441eafc3ab3e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4047,7 +4048,7 @@
     {
       "id": "SURFACE-7e5d877bbcc438aa",
       "path": "scripts/lib/disposable-postgres-url.mjs",
-      "sha256": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
+      "sha256": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14613,7 +14614,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "e5275bad4402371f74bd2598fa0dcbbfbca21d804b5400d78b7982c55eeab838",
+      "sha256": "0d25b7e8444f8908f678f7bc7dbc0736bf4eeba887cca77eee5b9c612e01fe07",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15055,6 +15056,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-408e61b645f667f0",
+      "path": "tdf-hq/test/TDF/Test/DisposablePostgres.hs",
+      "sha256": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-ae8c576d860734fa",
       "path": "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
       "sha256": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
@@ -15063,7 +15070,7 @@
     {
       "id": "SURFACE-89f49f12c8c895f1",
       "path": "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
-      "sha256": "2cf526501ba7c9b310916ba6ea78dfa7e2176f6421fa857ee1626e161c4cd92b",
+      "sha256": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25120,7 +25127,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "bf3d2fade067bc474e68232fc36945c2e2458c997945e3bddf03c892d3a198d5",
+      "sha256": "d72312f5e4d44a8f661420b25e68d13eecec6f4cb93663ddf66e7ed885abb6ce",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
