@@ -5552,7 +5552,7 @@
       "id": "PRIV-ANALYTICS-001",
       "title": "Private navigation and credentials are excluded at analytics serialization",
       "domain": "PRIV",
-      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client. Ordinary scalar campaign labels remain intact; recognized URL properties and HTTP(S)/tdf URLs retain URL sanitization.",
+      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client. Ordinary scalar campaign labels remain intact; recognized URL properties and HTTP(S)/tdf URLs retain URL sanitization. Application failure diagnostics redact error names/messages and selected context fields before console or analytics delivery; raw Error objects and complete location URLs are not passed to native exception capture, and caller context cannot override the core diagnostic envelope.",
       "authority": "AUTHORITY-042; accepted main PR487 privacy consolidation and docs/analytics.md; preserved #468/#485 correspondence",
       "source": "docs/analytics.md; #485 reviewed privacy corrections",
       "contract": "formal/system/web-cutover-correspondence.md",
@@ -5609,10 +5609,13 @@
       "recovery": "Do not replay customer payloads through logs. Change configuration only through the supported release/consent workflow.",
       "observability": "Tests inspect synthetic serialized payloads and fixed warnings; production receipt requires separately verified provider evidence.",
       "implementation": [
-        "tdf-hq-ui/src/analytics/posthog.ts"
+        "tdf-hq-ui/src/analytics/posthog.ts",
+        "tdf-hq-ui/src/analytics/errorReporting.ts",
+        "tdf-hq-ui/src/components/RouteErrorBoundary.tsx"
       ],
       "tests": [
-        "tdf-hq-ui/src/__tests__/analytics.test.ts"
+        "tdf-hq-ui/src/__tests__/analytics.test.ts",
+        "tdf-hq-ui/src/analytics/errorReporting.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -5626,7 +5629,7 @@
         "reason": "Incoming reviewed main implementation has mapped deterministic examples; fresh combined-candidate execution and deployed analytics configuration/consent correspondence remain required."
       },
       "property": "Named sensitive payloads do not survive recognized serializer boundaries; public attribution and configured project token remain usable.",
-      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof.",
+      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof. Synthetic client-error and actual route-boundary tests cover raw-error exclusion, embedded URL sentinels, selected context, throwing getters and console failure; scope and exclusions are in formal/system/client-error-privacy.md.",
       "evidence": "Exact-candidate UI gate; original main PR487 validation is historical for subsequent merged trees."
     },
     {
@@ -8595,7 +8598,8 @@
         "tdf-hq-ui/src/routes/AppErrorBoundary.tsx",
         "tdf-hq-ui/src/utils/lazyWithReload.ts",
         "tdf-hq-ui/src/api/session.ts",
-        "tdf-hq-ui/src/session/SessionContext.tsx"
+        "tdf-hq-ui/src/session/SessionContext.tsx",
+        "tdf-hq-ui/src/components/RouteErrorBoundary.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
@@ -10421,8 +10425,8 @@
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "e3ec6f05fb498eaf16d186eb895f9df556e2eb955ff9abcd59a6c788f0cd3147",
-    "tdf-hq-ui/src/analytics/errorReporting.test.ts": "b0a09f258dbaf3070c2daa75cf5ef5c51fe884a56c7d0bed1ecf1a6961add5c8",
-    "tdf-hq-ui/src/analytics/errorReporting.ts": "9b0ab8f89cb0ab815cdaf58c41a5ca0c95788534dc913b5d8623d2d8e51d918d",
+    "tdf-hq-ui/src/analytics/errorReporting.test.ts": "959c2eb44f23663989e2c234ba59764014cae1d9ed9c8942ef29ca891dc36a8e",
+    "tdf-hq-ui/src/analytics/errorReporting.ts": "df05301ebac50b51aa1f675cbb1105a463f7ae84a4044d621b26b99e74db987e",
     "tdf-hq-ui/src/analytics/growthAttribution.test.ts": "fefe42899bf23e119afc88b328c9b2732fa35af6bf28af6caf744ae9d926c6fa",
     "tdf-hq-ui/src/analytics/growthAttribution.ts": "3eae34e72a50e70261d8ff2880f1ec43dfcaeef5f963013f480f1a72a7c09789",
     "tdf-hq-ui/src/analytics/posthog.ts": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
@@ -10474,6 +10478,7 @@
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts": "f2f2e641146ac3a31efdd826db24fcbb6dc490796ea6c975afdf2be56775c5b0",
     "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
     "tdf-hq-ui/src/components/RefundManagementPanel.tsx": "ae4f42e9e999d918a31d70ebcdeace988f375846c1017ada73bcd54f8faac0f3",
+    "tdf-hq-ui/src/components/RouteErrorBoundary.tsx": "190fd8757648802bc797eea2c0ff22f42bd2a29509c4232b3a02ab5bf6c3ef05",
     "tdf-hq-ui/src/components/RoutedRadioWidget.tsx": "b1960bdb5e3aa9063bbb8cc84805617760da09e96a5bce7d4182f9ecb5c34ef5",
     "tdf-hq-ui/src/components/SessionMenu.tsx": "5b66793d4ed576109a557d643634c47a62920d08e4c7bafe2d93424129e43af5",
     "tdf-hq-ui/src/components/SidebarNav.tsx": "268ba22376715b857adf4fc69ed1cd31297d1a0363bd9ee89d68141f68adb3af",
@@ -14810,9 +14815,39 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/analytics/errorReporting.ts": [
+      {
+        "requirement": "PRIV-ANALYTICS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-WEB-SHELL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/RouteErrorBoundary.tsx": [
+      {
+        "requirement": "PRIV-ANALYTICS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-WEB-SHELL-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/__tests__/analytics.test.ts": [
       {
         "requirement": "PRIV-ANALYTICS-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/analytics/errorReporting.test.ts": [
+      {
+        "requirement": "PRIV-ANALYTICS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-WEB-SHELL-001",
         "relationship": "tests"
       }
     ],
@@ -17712,12 +17747,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq-ui/src/analytics/errorReporting.ts": [
-      {
-        "requirement": "SYS-WEB-SHELL-001",
-        "relationship": "implementation"
-      }
-    ],
     "tdf-hq-ui/src/routes/AppErrorBoundary.tsx": [
       {
         "requirement": "SYS-WEB-SHELL-001",
@@ -17731,12 +17760,6 @@
       }
     ],
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": [
-      {
-        "requirement": "SYS-WEB-SHELL-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq-ui/src/analytics/errorReporting.test.ts": [
       {
         "requirement": "SYS-WEB-SHELL-001",
         "relationship": "tests"
@@ -24650,9 +24673,13 @@
     {
       "id": "SURFACE-b44fc1d5abce9ec3",
       "path": "tdf-hq-ui/src/analytics/errorReporting.test.ts",
-      "sha256": "b0a09f258dbaf3070c2daa75cf5ef5c51fe884a56c7d0bed1ecf1a6961add5c8",
+      "sha256": "959c2eb44f23663989e2c234ba59764014cae1d9ed9c8942ef29ca891dc36a8e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "PRIV-ANALYTICS-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "SYS-WEB-SHELL-001",
           "relationship": "tests"
@@ -24662,9 +24689,13 @@
     {
       "id": "SURFACE-bb290758952f3fdd",
       "path": "tdf-hq-ui/src/analytics/errorReporting.ts",
-      "sha256": "9b0ab8f89cb0ab815cdaf58c41a5ca0c95788534dc913b5d8623d2d8e51d918d",
+      "sha256": "df05301ebac50b51aa1f675cbb1105a463f7ae84a4044d621b26b99e74db987e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "PRIV-ANALYTICS-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "SYS-WEB-SHELL-001",
           "relationship": "implementation"
@@ -26343,9 +26374,18 @@
     {
       "id": "SURFACE-a3ba5100eb601c90",
       "path": "tdf-hq-ui/src/components/RouteErrorBoundary.tsx",
-      "sha256": "acfa68139f15a453d13485001624f0dface575809f662eab1b870915b03e723b",
+      "sha256": "190fd8757648802bc797eea2c0ff22f42bd2a29509c4232b3a02ab5bf6c3ef05",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-ANALYTICS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-WEB-SHELL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d9960955f95c03fb",
@@ -42685,7 +42725,6 @@
     "SURFACE-6c3af6d67bd751d6",
     "SURFACE-517c2af5fa3973c0",
     "SURFACE-86fcc61cfe3835da",
-    "SURFACE-a3ba5100eb601c90",
     "SURFACE-e24458b8f868963c",
     "SURFACE-dbd54bd3d14b1e80",
     "SURFACE-52ded61d23ac18e9",
@@ -45118,7 +45157,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fc3f9c2acc4e63195e511c544db4898a628ec2f6b94897dbf7e827e5e62b9127",
+      "sourceSha256": "1c8561ec9f2d39c3741b928b1cd0fdcf3fda2e865906b29942f136c080234931",
       "definition": {
         "states": [
           "absent",
