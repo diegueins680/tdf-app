@@ -8753,7 +8753,7 @@
       "privacy": "Only cart id, count and preview are stored locally.",
       "concurrency": "Repeat taps are ignored while an add is pending; server upsert sets quantity.",
       "idempotency": "Server sets, not increments, quantities.",
-      "failure": "Failed cart reads keep the last known count and cart id, show an explicit retry state, and never claim the cart is empty. Offline-paused initial reads show a waiting-for-connection state. Checkout waits for a confirmed idle successful read.",
+      "failure": "Failed cart reads keep the last known count and cart id, show an explicit retry state, and never claim the cart is empty. Offline-paused initial reads and cached refreshes show a waiting-for-connection state. Checkout waits for a confirmed idle successful read.",
       "recovery": "Retry the same saved cart without creating a replacement; successful authoritative reads restore its contents and count.",
       "observability": "Existing marketplace analytics; jest and browser evidence.",
       "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
