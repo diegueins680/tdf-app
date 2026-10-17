@@ -18,7 +18,7 @@ import Data.Aeson (encode, object, (.=))
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Int (Int64)
 import Data.Text (Text)
-import Database.Persist.Sql (Single(..), SqlPersistT, rawSql, runSqlPool)
+import Database.Persist.Sql (Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool)
 import System.IO (hPutStrLn, stderr)
 import System.Environment (lookupEnv)
 
@@ -82,6 +82,14 @@ operationsMaintenanceTick Env{envPool} = runSqlPool tick envPool
           -- SKIP LOCKED and the per-aggregate predecessor predicate are the
           -- concurrency boundary. Avoid a global advisory lock so multiple
           -- application replicas can drain independent aggregates safely.
+          --
+          -- Deferred constraint triggers (operations_work_item_entity_reference)
+          -- would otherwise fire at commit, outside the batch's per-row
+          -- exception handling: one event for a deleted entity then rolled back
+          -- the whole tick, recorded no attempt and repeated every second.
+          -- Checking constraints at each statement lets that row fail alone,
+          -- with its attempt, backoff and dead letter.
+          rawExecute "SET CONSTRAINTS ALL IMMEDIATE" []
           outboxRows <- rawSql
             "SELECT processed, failed, dead_lettered FROM operations_process_outbox_batch(250, 'tdf-hq-operations-worker')"
             [] :: SqlPersistT IO [(Single Int, Single Int, Single Int)]
