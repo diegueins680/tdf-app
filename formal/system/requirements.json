@@ -8742,7 +8742,9 @@
       "forbiddenTransitions": [
         "cart reachable only by scrolling past listings",
         "badge stale after a cart change",
-        "login/logout clearing the cart"
+        "login/logout clearing the cart",
+        "failed or offline-paused cart read -> empty-cart claim",
+        "unconfirmed cart read -> checkout"
       ],
       "effects": [
         "Shared summary store drives header badge, drawer and sticky mobile bar."
@@ -8751,8 +8753,8 @@
       "privacy": "Only cart id, count and preview are stored locally.",
       "concurrency": "Repeat taps are ignored while an add is pending; server upsert sets quantity.",
       "idempotency": "Server sets, not increments, quantities.",
-      "failure": "Failed cart reads keep the last known count until a successful fetch.",
-      "recovery": "Restore saved cart or browse catalog from the empty state.",
+      "failure": "Failed cart reads keep the last known count and cart id, show an explicit retry state, and never claim the cart is empty. Offline-paused initial reads and cached refreshes show a waiting-for-connection state. Checkout waits for a confirmed idle successful read.",
+      "recovery": "Retry the same saved cart without creating a replacement; successful authoritative reads restore its contents and count.",
       "observability": "Existing marketplace analytics; jest and browser evidence.",
       "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
       "implementation": [
@@ -8781,7 +8783,7 @@
       "critical": false,
       "property": "CartAlwaysReachable and BadgeMatchesCart",
       "contract": "formal/system/mobile-entry-ux.md",
-      "verification": "Cart summary store tests, header button tests at 360px, MarketplacePage add/remove tests and a browser cart journey with reload.",
+      "verification": "Cart summary/header/component regressions, failed-read recovery, cached-error checkout blocking, offline-paused read and synthetic browser recovery journey.",
       "evidence": "cartSummary, MarketplaceCartButton and MarketplacePage tests; e2e marketplace-cart.",
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
