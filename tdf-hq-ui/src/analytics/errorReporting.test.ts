@@ -49,4 +49,87 @@ describe('client error reporting', () => {
     await flush();
     expect(captureMock).toHaveBeenCalledTimes(25);
   });
+
+  it('never logs the original error, stack, cause or attached account data', async () => {
+    const error = new Error('Failure for ana@example.com at https://tdf.test/reset?code=short-code#private-fragment');
+    error.name = 'Failure for ana@example.com';
+    error.stack = 'private-stack-sentinel';
+    Object.assign(error, { cause: { password: 'private-cause-sentinel' }, account: 'private-account-sentinel' });
+    reportClientError('auth_flow', error);
+    await flush();
+    expect(consoleError.mock.calls.some((call) => call.includes(error))).toBe(false);
+    const output = JSON.stringify([consoleError.mock.calls, captureMock.mock.calls]);
+    for (const sentinel of ['ana@example.com', 'short-code', 'private-fragment', 'private-stack-sentinel', 'private-cause-sentinel', 'private-account-sentinel']) {
+      expect(output).not.toContain(sentinel);
+    }
+    expect(captureMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows diagnostic context fields without permitting reserved fields or arbitrary data', async () => {
+    window.history.replaceState({}, '', '/fans?token=private-query');
+    const context = {
+      method: 'google', timed_out: true,
+      kind: 'injected', route: '/reset?code=private-code',
+      error_message: 'raw-private-message', error_name: 'raw-private-name',
+      commit: 'raw-private-commit', token: 'private-token', account: 'private-account',
+      component_stack: 'at https://tdf.test/component?code=private-stack-code for ana@example.com',
+    };
+    reportClientError('auth_flow', new Error('benign'), context);
+    await flush();
+    const properties = captureMock.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(properties).toMatchObject({ kind: 'auth_flow', route: '/fans', error_name: 'Error', error_message: 'benign', method: 'google', timed_out: true });
+    for (const sentinel of ['private-', 'raw-private-', 'ana@example.com']) {
+      expect(JSON.stringify(properties)).not.toContain(sentinel);
+    }
+    expect(properties).not.toHaveProperty('token');
+    expect(properties).not.toHaveProperty('account');
+  });
+
+  it.each([
+    'Failed https://tdf.test/reset?code=short-secret#private-fragment',
+    'Failed /orders/short-secret?lookup=private-fragment',
+    'Failed tdf://tickets/short-secret#private-fragment',
+  ])('removes embedded diagnostic URLs: %s', (message) => {
+    const redacted = redactErrorText(message);
+    expect(redacted).not.toContain('short-secret');
+    expect(redacted).not.toContain('private-fragment');
+    expect(redacted).toContain('[url]');
+  });
+
+  it('still reports when console logging fails', async () => {
+    consoleError.mockImplementation(() => { throw new Error('Console unavailable'); });
+    expect(() => reportClientError('app_render', new Error('benign'))).not.toThrow();
+    await flush();
+    expect(captureMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not throw while describing an error with a failing message getter', async () => {
+    const error = Object.defineProperty({}, 'message', { get: () => { throw new Error('Getter unavailable'); } });
+    expect(() => reportClientError('window_error', error)).not.toThrow();
+    await flush();
+    expect(captureMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('routes section crashes through the filtered reporter instead of native exception capture', async () => {
+    const { default: RouteErrorBoundary } = await import('../components/RouteErrorBoundary');
+    const captureException = jest.fn();
+    const previous = Object.getOwnPropertyDescriptor(window, 'posthog');
+    Object.defineProperty(window, 'posthog', { configurable: true, value: { captureException } });
+    window.history.replaceState({}, '', '/fans?code=short-private-code#private-fragment');
+    const error = new Error('Failure for ana@example.com');
+    error.stack = 'private-stack-sentinel';
+    try {
+      const boundary = new RouteErrorBoundary({ children: null });
+      boundary.componentDidCatch(error, { componentStack: 'private-component-stack' });
+      await flush();
+      expect(captureException).not.toHaveBeenCalled();
+      expect(captureMock).toHaveBeenCalledWith('client_error', expect.objectContaining({ kind: 'app_render', route: '/fans', boundary: 'route' }));
+      const output = JSON.stringify([consoleError.mock.calls, captureMock.mock.calls]);
+      for (const sentinel of ['ana@example.com', 'short-private-code', 'private-fragment', 'private-stack-sentinel', 'private-component-stack']) expect(output).not.toContain(sentinel);
+    } finally {
+      if (previous) Object.defineProperty(window, 'posthog', previous);
+      else Reflect.deleteProperty(window, 'posthog');
+    }
+  });
+
 });
