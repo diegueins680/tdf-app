@@ -576,6 +576,7 @@ export default function MarketplacePage() {
   });
   const cart = cartQuery.data;
   const cartReadPending = Boolean(cartId) && cartQuery.isPending;
+  const cartReadPaused = Boolean(cartId) && cartQuery.fetchStatus === 'paused';
   const cartNeedsConfirmation = Boolean(cartId)
     && (cartQuery.isPending || cartQuery.isError || cartQuery.fetchStatus !== 'idle');
   const cartItems = useMemo<MarketplaceCartItemDTO[]>(() => cart?.mcItems ?? [], [cart]);
@@ -1755,13 +1756,15 @@ export default function MarketplacePage() {
           ...(variant === 'drawer' ? { id: 'marketplace-cart-drawer-title' } : {}),
         }}
         subheader={
-          cartQuery.isError
-            ? 'Carrito pendiente de confirmar'
-            : cartReadPending
-              ? 'Cargando carrito…'
-              : hasCartItems
-                ? `${cartItems.length} productos · ${cartItemCount} en total`
-                : 'Sin productos aún'
+          cartReadPaused
+            ? 'Esperando conexión'
+            : cartQuery.isError
+              ? 'Carrito pendiente de confirmar'
+              : cartReadPending
+                ? 'Cargando carrito…'
+                : hasCartItems
+                  ? `${cartItems.length} productos · ${cartItemCount} en total`
+                  : 'Sin productos aún'
         }
         action={
           variant === 'drawer' ? (
@@ -1774,10 +1777,10 @@ export default function MarketplacePage() {
         }
       />
       <CardContent>
-        {cartReadPending && (
+        {(cartReadPending || cartReadPaused) && (
           <Stack spacing={1} alignItems="center" role="status">
             <CircularProgress size={20} aria-label="Cargando carrito" />
-            {cartQuery.fetchStatus === 'paused' && (
+            {cartReadPaused && (
               <Typography variant="body2">Esperando conexión para recuperar tu carrito.</Typography>
             )}
           </Stack>
@@ -1800,7 +1803,7 @@ export default function MarketplacePage() {
             No pudimos cargar tu carrito. Reintenta para confirmar los productos y el total.
           </Alert>
         )}
-        {!hasCartItems && !cartReadPending && !cartQuery.isError && (
+        {!hasCartItems && !cartReadPending && !cartReadPaused && !cartQuery.isError && (
           <Stack spacing={1}>
             <Typography variant="body2" color="text.secondary">
               {variant === 'drawer' ? 'Tu carrito está vacío.' : 'Agrega artículos para continuar al checkout.'}

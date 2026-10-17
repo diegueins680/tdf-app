@@ -191,7 +191,14 @@ test('Saved cart failure stays recoverable without creating a replacement @mobil
   await expect(drawer).toBeVisible();
   await expect(drawer.getByText(/No pudimos cargar tu carrito/)).toBeVisible({ timeout: 15_000 });
   await expect(drawer.getByText('Tu carrito está vacío.', { exact: true })).toHaveCount(0);
-  await expect(page.locator('header').getByTestId('marketplace-cart-button')).toHaveAccessibleName('Carrito, 1 producto');
+  // The modal correctly removes the background header from the accessibility
+  // tree. Verify the preserved count once the header is available to users.
+  await drawer.getByRole('button', { name: 'Cerrar carrito' }).click();
+  await expect(drawer).not.toBeVisible();
+  const cartButton = page.locator('header').getByTestId('marketplace-cart-button');
+  await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');
+  await cartButton.click();
+  await expect(drawer.getByText(/No pudimos cargar tu carrito/)).toBeVisible();
   expect(state.creates).toBe(0);
 
   state.cartReadFailure = false;

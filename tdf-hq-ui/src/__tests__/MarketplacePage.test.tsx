@@ -810,6 +810,45 @@ describe('MarketplacePage', () => {
       } finally { await cleanup(); }
     });
 
+    it('explains an offline-paused cached refresh and resumes checkout after reconnecting', async () => {
+      window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const cleanup = await renderWithHeaderCart(container);
+      const checkoutButton = () => Array.from(drawer()?.querySelectorAll('button') ?? [])
+        .find((button) => button.textContent?.trim() === 'Ir al checkout');
+      try {
+        await act(async () => { headerButton()?.click(); await flushPromises(); });
+        await waitForExpectation(() => expect(drawer()?.textContent).toContain('Vintage Mic'));
+        expect(checkoutButton()?.disabled).toBe(false);
+        const readsBeforePause = getCartMock.mock.calls.length;
+        await act(async () => {
+          onlineManager.setOnline(false);
+          window.dispatchEvent(new StorageEvent('storage', { key: 'tdf-marketplace-cart-id' }));
+          await flushPromises();
+        });
+        await waitForExpectation(() => expect(drawer()?.textContent).toContain('Esperando conexión para recuperar tu carrito.'));
+        expect(drawer()?.textContent).toContain('Vintage Mic');
+        expect(drawer()?.textContent).not.toContain('Tu carrito está vacío.');
+        expect(checkoutButton()?.disabled).toBe(true);
+        expect(headerBadge()).toBe('1');
+        expect(getCartMock).toHaveBeenCalledTimes(readsBeforePause);
+
+        await act(async () => { onlineManager.setOnline(true); await flushPromises(); });
+        await waitForExpectation(() => {
+          expect(getCartMock.mock.calls.length).toBeGreaterThan(readsBeforePause);
+          expect(checkoutButton()?.disabled).toBe(false);
+          expect(drawer()?.textContent).not.toContain('Esperando conexión');
+        });
+        expect(headerBadge()).toBe('1');
+        expect(createCartMock).not.toHaveBeenCalled();
+        expect(checkoutMock).not.toHaveBeenCalled();
+      } finally {
+        await cleanup();
+        onlineManager.setOnline(true);
+      }
+    });
+
     it('does not claim that an offline-paused saved cart is empty', async () => {
       onlineManager.setOnline(false);
       window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
