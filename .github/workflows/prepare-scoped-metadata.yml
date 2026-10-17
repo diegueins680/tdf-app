@@ -1,0 +1,66 @@
+name: Prepare scoped verification metadata
+on:
+  push:
+    branches:
+      - fix/marketplace-cart-read-recovery-20261016
+      - fix/client-error-privacy-20261016
+    paths:
+      - .github/workflows/prepare-scoped-metadata.yml
+permissions:
+  contents: write
+jobs:
+  prepare:
+    if: github.repository == 'diegueins680/tdf-app'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install metadata parser
+        run: python -m pip install PyYAML==6.0.2
+      - name: Initialize the pinned public Mobile source
+        run: git -c submodule.tdf-mobile.update=checkout submodule update --init --checkout --depth=1 tdf-mobile
+      - name: Regenerate only the reviewed metadata on this work branch
+        env:
+          WORK_BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path('formal/system/requirements.json')
+          d=json.loads(p.read_text())
+          if os.environ['WORK_BRANCH_NAME']=='fix/marketplace-cart-read-recovery-20261016':
+              r=next(r for r in d['requirements'] if r['id']=='MKT-CART-001')
+              r['failure']=r['failure'].replace('Offline-paused initial reads show a waiting-for-connection state.','Offline-paused initial reads and cached refreshes show a waiting-for-connection state.')
+          elif os.environ['WORK_BRANCH_NAME']=='fix/client-error-privacy-20261016':
+              for r in d['requirements']:
+                  if r['id']=='PRIV-ANALYTICS-001':
+                      for f in ['tdf-hq-ui/src/analytics/errorReporting.ts','tdf-hq-ui/src/components/RouteErrorBoundary.tsx']:
+                          if f not in r['implementation']: r['implementation'].append(f)
+                      f='tdf-hq-ui/src/analytics/errorReporting.test.ts'
+                      if f not in r['tests']: r['tests'].append(f)
+                      r['statement']+=' Application failure diagnostics redact error names/messages and selected context fields before console or analytics delivery; raw Error objects and complete location URLs are not passed to native exception capture, and caller context cannot override the core diagnostic envelope.'
+                      r['verification']+=' Synthetic client-error and actual route-boundary tests cover raw-error exclusion, embedded URL sentinels, selected context, throwing getters and console failure; scope and exclusions are in formal/system/client-error-privacy.md.'
+                  if r['id']=='SYS-WEB-SHELL-001':
+                      f='tdf-hq-ui/src/components/RouteErrorBoundary.tsx'
+                      if f not in r['implementation']: r['implementation'].append(f)
+          else:
+              raise SystemExit('Unapproved work branch')
+          p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+          PY
+          mv .github/workflows/prepare-scoped-metadata.yml "$RUNNER_TEMP/prepare-scoped-metadata.yml"
+          git rm --cached -- .github/workflows/prepare-scoped-metadata.yml
+          python3 scripts/specification-inventory.py
+          python3 scripts/specification-conformance.py
+          git restore --staged --source=HEAD -- .github/workflows/prepare-scoped-metadata.yml
+          git add formal/system/requirements.json formal/system/inventory.json formal/system/traceability.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(spec): regenerate reviewed verification metadata'
+          git push origin "HEAD:$WORK_BRANCH_NAME"
