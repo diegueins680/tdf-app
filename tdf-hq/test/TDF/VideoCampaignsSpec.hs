@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.VideoCampaignsSpec (spec) where
 
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Reader (ask, runReaderT)
 import Data.Aeson (Value, object, (.=))
 import Data.Either (isLeft)
 import qualified Data.Set as Set
@@ -60,13 +62,15 @@ spec = do
           , "revision INTEGER NOT NULL, document TEXT NOT NULL,"
           , "created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL,"
           , "UNIQUE(artist_party_id,campaign_key))" ]) []
-        a <- C.saveCampaign (toSqlKey 42) "key" (C.CampaignWrite 0 draft) now
-        b <- C.saveCampaign (toSqlKey 42) "key" (C.CampaignWrite 0 draft) now
-        other <- C.listCampaigns (toSqlKey 51)
-        own <- C.listCampaigns (toSqlKey 42)
-        _ <- C.saveCampaign (toSqlKey 42) "key" (C.CampaignWrite 1 draft) now
-        old <- C.saveCampaign (toSqlKey 42) "key" (C.CampaignWrite 0 draft) now
-        pure (a, b, other, own, old)
+        backend <- ask
+        liftIO $ flip runReaderT backend $ do
+          a <- C.saveCampaign (toSqlKey 42) "key" (C.CampaignWrite 0 draft) now
+          b <- C.saveCampaign (toSqlKey 42) "key" (C.CampaignWrite 0 draft) now
+          other <- C.listCampaigns (toSqlKey 51)
+          own <- C.listCampaigns (toSqlKey 42)
+          _ <- C.saveCampaign (toSqlKey 42) "key" (C.CampaignWrite 1 draft) now
+          old <- C.saveCampaign (toSqlKey 42) "key" (C.CampaignWrite 0 draft) now
+          pure (a, b, other, own, old)
       fmap C.revision first `shouldBe` Right 1
       fmap C.revision replay `shouldBe` Right 1
       fmap length foreignRows `shouldBe` Right 0

@@ -9561,7 +9561,7 @@
     {
       "id": "SURFACE-d3678204a317aed3",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
-      "sha256": "1a6842fea3d1468d5cd9e4c1b7d5862bb224c6a7d6db51889c8274e5ba60c945",
+      "sha256": "3f90f487ca0453dcdb3bda77ab0a8439a59ea9064104e3570b42e43d7c70580e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15165,7 +15165,7 @@
     {
       "id": "SURFACE-7881cee644a10784",
       "path": "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
-      "sha256": "5329e553f01e13c42bd6c1eb99d35e3e89d66fb6b50b32e89b7163b05fc05f29",
+      "sha256": "c0a84b7f21d174681d61434d3103951f21c0ed196223a3b10c8bdf9942ac58d8",
       "semanticConformance": "not-established-by-discovery"
     },
     {

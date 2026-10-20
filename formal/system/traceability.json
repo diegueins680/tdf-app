@@ -10847,7 +10847,7 @@
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "839aadb02473f36fa6650e13c588852d5bf41fae3524f6675b8a3fe509e39cb5",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
-    "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "1a6842fea3d1468d5cd9e4c1b7d5862bb224c6a7d6db51889c8274e5ba60c945",
+    "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "3f90f487ca0453dcdb3bda77ab0a8439a59ea9064104e3570b42e43d7c70580e",
     "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "33b67b5c6b18def04ac8c92a7cad00c9bee1635402bbbeaf3bb12eaf9fdc383d",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "92717c83b108441fcb17e04eb052b21d19a98ee85ce3cb2a1bd8794f8a8e97c1",
     "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "690bdc8b04c356eb1a7024980834a0a9d50a28e3db2b23c59bf99b3c69bd6fe5",
@@ -11150,7 +11150,7 @@
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
     "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "f2a0749e7ab144f7007a401f706d54f4e99e6dc86b0b0d75633c2e3a40c2f56e",
-    "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "5329e553f01e13c42bd6c1eb99d35e3e89d66fb6b50b32e89b7163b05fc05f29",
+    "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "c0a84b7f21d174681d61434d3103951f21c0ed196223a3b10c8bdf9942ac58d8",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -30489,7 +30489,7 @@
     {
       "id": "SURFACE-d3678204a317aed3",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
-      "sha256": "1a6842fea3d1468d5cd9e4c1b7d5862bb224c6a7d6db51889c8274e5ba60c945",
+      "sha256": "3f90f487ca0453dcdb3bda77ab0a8439a59ea9064104e3570b42e43d7c70580e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39172,7 +39172,7 @@
     {
       "id": "SURFACE-7881cee644a10784",
       "path": "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
-      "sha256": "5329e553f01e13c42bd6c1eb99d35e3e89d66fb6b50b32e89b7163b05fc05f29",
+      "sha256": "c0a84b7f21d174681d61434d3103951f21c0ed196223a3b10c8bdf9942ac58d8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
