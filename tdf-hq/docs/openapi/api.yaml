@@ -56,6 +56,31 @@ paths:
         '403': {description: Artist ownership or administrator access required}
         '404': {description: Artist profile not found}
         '409': {description: Stale revision; reload before saving}
+  /artists/video-campaigns/{campaignKey}/feature:
+    post:
+      operationId: featureVideoCampaign
+      summary: Explicitly publish the reviewed video URL on the artist public TDF profile; no social provider action
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VideoCampaignArtistId'
+        - $ref: '#/components/parameters/VideoCampaignKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [expectedRevision]
+              properties:
+                expectedRevision: {type: integer, format: int64, minimum: 1}
+      responses:
+        '200': {description: Only the selected artist featured-video field was updated}
+        '400': {description: Campaign is not review-ready or has no video URL}
+        '401': {description: Invalid session}
+        '403': {description: Artist ownership or strict administrator access required}
+        '404': {description: Campaign not found}
+        '409': {description: Reviewed revision changed}
   /artists/video-campaigns/{campaignKey}/metrics:
     get:
       operationId: getVideoCampaignMetrics

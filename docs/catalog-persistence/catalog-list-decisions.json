@@ -1013,19 +1013,19 @@
       "reviewed": true
     },
     {
-      "id": "f95bc53ef5e33e741588",
+      "id": "75b0ab5288ddfec6263a",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
-      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 206-entry manifest preserves main2781ddc2 complete204-entry prefix and appends Operations failure replay followed by enabled-only inbound capture. Both original introduction commits are ancestors; the replay source includes the reviewed lock-order repair. Four replay lifecycle triggers are required. Capture remains disabled unless Operations is enabled, and production activation still requires an approved retention policy. Migration checksum, apply/replay and rollback checks remain mandatory; no pending migration is represented as applied.",
+      "risk": "Incorrect migration order, identity or checksums can prevent startup or invalidate database recovery.",
+      "justification": "Reviewed ordered 207-entry manifest retains the entire existing 206-entry prefix and appends only the additive video campaign draft/conversion migration, introduced in 4b84238abb4ca17c6aaa9902e3bec16a1cc3daa5. It creates private draft and unique conversion tables; no provider worker, publication, paid spending or role activation is added. Ancestry, checksum, rehearsal and guarded deployment checks still apply; registration is not evidence of production application.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "operations-consolidation-2026-10-14",
+      "reviewBatch": "video-campaigns-2026-10-20",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -42645,7 +42645,15 @@
           "sourceRevision": "846fc6d944f28feb9c15a76741fa4192c9103ccd",
           "justification": "Ordered 205-entry production manifest preserves every reviewed main entry and appends the enabled-only Operations inbound capture guard from introduction 6ac5f68cc76479ba5d19dd9243d872b341291549. Capture takes organization and branch row locks; activation remains blocked until retention is defined. Migration ancestry, checksums and rehearsals remain mandatory; this is immutable release authority, not editable business data."
         }
-      ]
+      ],
+      "reviewedPriorFingerprint": "f95bc53ef5e33e741588",
+      "priorReview": {
+        "id": "f95bc53ef5e33e741588",
+        "classification": "genuine-technical-constant",
+        "disposition": "explicit-allowlist",
+        "reviewed": true,
+        "justification": "Ordered 206-entry manifest preserves main2781ddc2 complete204-entry prefix and appends Operations failure replay followed by enabled-only inbound capture. Both original introduction commits are ancestors; the replay source includes the reviewed lock-order repair. Four replay lifecycle triggers are required. Capture remains disabled unless Operations is enabled, and production activation still requires an approved retention policy. Migration checksum, apply/replay and rollback checks remain mandatory; no pending migration is represented as applied."
+      }
     },
     {
       "id": "3391a96825357d78f794",
@@ -59060,6 +59068,134 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "f7bf7d7a483d435dc242",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
+      "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+        "line": 2
+      },
+      "reviewBatch": "video-campaigns-2026-10-20",
+      "reviewMethod": "manual-boundary-review"
+    },
+    {
+      "id": "4938b423200035b5e47c",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
+      "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+        "line": 34
+      },
+      "reviewBatch": "video-campaigns-2026-10-20",
+      "reviewMethod": "manual-boundary-review"
+    },
+    {
+      "id": "fc40151314908ce375cf",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
+      "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
+        "line": 9
+      },
+      "reviewBatch": "video-campaigns-2026-10-20",
+      "reviewMethod": "manual-boundary-review"
+    },
+    {
+      "id": "8a64c5c35ec4889136eb",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
+      "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
+        "line": 141
+      },
+      "reviewBatch": "video-campaigns-2026-10-20",
+      "reviewMethod": "manual-boundary-review"
+    },
+    {
+      "id": "cdf7a7e9866d9702d1ae",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
+      "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
+        "line": 187
+      },
+      "reviewBatch": "video-campaigns-2026-10-20",
+      "reviewMethod": "manual-boundary-review"
+    },
+    {
+      "id": "cc9d507aa6bedfe0bbe0",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
+      "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+        "line": 11
+      },
+      "reviewBatch": "video-campaigns-2026-10-20",
+      "reviewMethod": "manual-boundary-review"
+    },
+    {
+      "id": "f6b03c283705dad2e282",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
+      "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+        "line": 20
+      },
+      "reviewBatch": "video-campaigns-2026-10-20",
+      "reviewMethod": "manual-boundary-review"
+    },
+    {
+      "id": "0596df32a146b2d78942",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
+      "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+        "line": 21
+      },
+      "reviewBatch": "video-campaigns-2026-10-20",
+      "reviewMethod": "manual-boundary-review"
     }
   ]
 }

@@ -5,7 +5,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeOperators #-}
 
--- Draft planning only: this module has no provider client, publishing worker or budget.
+-- Artist campaign planning; this module has no provider client, worker or ad budget.
 module TDF.VideoCampaigns
   ( VideoCampaignAPI, CampaignWrite(..), CampaignDTO(..), campaignServer
   , campaignScope, validateDocument, saveCampaign, listCampaigns
@@ -27,13 +27,14 @@ import qualified Data.Text.Encoding as TE
 import Data.Time (UTCTime, diffUTCTime, getCurrentTime)
 import qualified Data.UUID as UUID
 import Database.Persist
-import Database.Persist.Sql (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey, updateWhereCount)
+import Database.Persist.Sql
+  (SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey, updateWhereCount)
 import GHC.Generics (Generic)
 import Network.URI (URI(..), URIAuth(..), parseURI)
 import Servant
 import TDF.Auth
 import TDF.DB (Env(..))
-import TDF.Models (PartyId, RoleEnum(..), Unique(..), partyCreatedAt, fanFollowCreatedAt)
+import TDF.Models
 import qualified TDF.ModelsExtra as M
 
 type VideoCampaignAPI = "video-campaigns" :> QueryParam "artistId" Int64 :>
@@ -42,6 +43,7 @@ type VideoCampaignAPI = "video-campaigns" :> QueryParam "artistId" Int64 :>
     ( ReqBody '[JSON] CampaignWrite :> Put '[JSON] CampaignDTO
     :<|> "metrics" :> Get '[JSON] CampaignMetrics
     :<|> "conversion" :> ReqBody '[JSON] CampaignConversion :> Post '[JSON] NoContent
+    :<|> "feature" :> ReqBody '[JSON] CampaignFeature :> Post '[JSON] NoContent
     )
   )
 
@@ -64,6 +66,10 @@ data CampaignConversion = CampaignConversion
   { kind :: Text, source :: Text, piece :: Text } deriving (Show, Generic)
 instance FromJSON CampaignConversion where
   parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
+
+newtype CampaignFeature = CampaignFeature { featureRevision :: Int64 }
+instance FromJSON CampaignFeature where
+  parseJSON = withObject "CampaignFeature" $ \o -> CampaignFeature <$> o .: "expectedRevision"
 
 campaignScope :: AuthedUser -> Maybe Int64 -> Either ServerError PartyId
 campaignScope user target
@@ -190,8 +196,10 @@ campaignServer :: AuthedUser -> Maybe Int64 -> ServerT
     ( ReqBody '[JSON] CampaignWrite :> Put '[JSON] CampaignDTO
     :<|> "metrics" :> Get '[JSON] CampaignMetrics
     :<|> "conversion" :> ReqBody '[JSON] CampaignConversion :> Post '[JSON] NoContent
+    :<|> "feature" :> ReqBody '[JSON] CampaignFeature :> Post '[JSON] NoContent
     )) (ReaderT Env Handler)
-campaignServer user target = list :<|> (\key -> save key :<|> metrics key :<|> convert key)
+campaignServer user target = list :<|> (\key ->
+  save key :<|> metrics key :<|> convert key :<|> feature key)
   where
     query :: (PartyId -> SqlPersistT IO (Either ServerError a)) -> ReaderT Env Handler a
     query action = do
@@ -255,3 +263,26 @@ campaignServer user target = list :<|> (\key -> save key :<|> metrics key :<|> c
             else pure (Left err400)
           _ -> pure (Left err404)
       maybe (throwError err401) (either throwError pure) result
+    feature key CampaignFeature{..} = do
+      unless (isJust (UUID.fromText key) && featureRevision > 0) $ throwError err400
+      now <- liftIO getCurrentTime
+      query $ \artist -> do
+        -- Pin the reviewed document until the public profile field update commits.
+        rows <- rawSql
+          "SELECT ?? FROM video_campaign WHERE artist_party_id=? AND campaign_key=? FOR SHARE"
+          [toPersistValue artist, PersistText key] :: SqlPersistT IO [Entity M.VideoCampaign]
+        case rows of
+          [Entity _ row] | M.videoCampaignRevision row == featureRevision ->
+            case eitherDecodeStrict' (TE.encodeUtf8 (M.videoCampaignDocument row)) of
+              Right value -> case parseEither (withObject "Campaign" $ \o ->
+                (,) <$> o .: "status" <*> o .: "videoUrl") value of
+                Right (state, video) | state == ("ready" :: Text)
+                  , not (T.null video), safeMediaUrl video -> do
+                    updateWhere [ArtistProfileArtistPartyId ==. artist]
+                      [ ArtistProfileFeaturedVideoUrl =. Just video
+                      , ArtistProfileUpdatedAt =. Just now ]
+                    pure (Right NoContent)
+                _ -> pure (Left err400)
+              Left _ -> pure (Left err500)
+          [] -> pure (Left err404)
+          _ -> pure (Left err409)

@@ -10,4 +10,6 @@ export const VideoCampaigns = {
     `/artists/video-campaigns/${encodeURIComponent(id)}/metrics?artistId=${artistId}`),
   conversion: (artistId: number, id: string, kind: 'registration' | 'follow', source: string, piece: string) =>
     post(`/artists/video-campaigns/${encodeURIComponent(id)}/conversion?artistId=${artistId}`, { kind, source, piece }),
+  feature: (artistId: number, id: string, expectedRevision: number) =>
+    post(`/artists/video-campaigns/${encodeURIComponent(id)}/feature?artistId=${artistId}`, { expectedRevision }),
 };

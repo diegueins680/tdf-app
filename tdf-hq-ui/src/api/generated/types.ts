@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/artists/video-campaigns/{campaignKey}/feature": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Explicitly publish the reviewed video URL on the artist public TDF profile; no social provider action */
+        post: operations["featureVideoCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/artists/video-campaigns/{campaignKey}/metrics": {
         parameters: {
             query?: never;
@@ -16420,6 +16437,71 @@ export interface operations {
                 content?: never;
             };
             /** @description Stale revision; reload before saving */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    featureVideoCampaign: {
+        parameters: {
+            query?: {
+                /** @description Defaults to authenticated party; another party requires strict administrator access */
+                artistId?: components["parameters"]["VideoCampaignArtistId"];
+            };
+            header?: never;
+            path: {
+                campaignKey: components["parameters"]["VideoCampaignKey"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: int64 */
+                    expectedRevision: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Only the selected artist featured-video field was updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Campaign is not review-ready or has no video URL */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist ownership or strict administrator access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reviewed revision changed */
             409: {
                 headers: {
                     [name: string]: unknown;

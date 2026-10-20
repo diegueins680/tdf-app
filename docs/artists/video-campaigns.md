@@ -34,8 +34,10 @@ while retaining draft data if the release must be reversed.
 activation. This workspace has no external publishing worker, provider token
 form, ad-spend control or background sender. Video editing/encoding is not a
 server job in this release. Attach rendered clips or prepare them outside the
-editor; their cut metadata is preserved in the plan. Updating the artist's
-public featured-video field remains a separate existing profile action.
+editor; their cut metadata is preserved in the plan. After review, a separate explicit **Publicar video en el perfil de TDF** action
+updates only that artist's featured-video field, while locking the reviewed
+campaign revision. It does not publish to external networks. This action was
+not executed for the Liquid Paper Girl campaign.
 
 The first launch plan is under `docs/campaigns/liquid-paper-girl-2026-10-20/`.
 Its original and derived media URLs are deliberately empty until an authorized
@@ -50,6 +52,8 @@ creating a duplicate profile or a fictitious user account.
   requires reconciliation with the saved version.
 - `GET /artists/video-campaigns/{uuid}/metrics?artistId=51`: unique registrations
   and follow creations attributed to this campaign.
+- `POST /artists/video-campaigns/{uuid}/feature?artistId=51`: explicit public TDF
+  featured-video update with `{expectedRevision}` and a locked review-ready draft.
 - `POST /artists/video-campaigns/{uuid}/conversion?artistId=51`: authenticated
   viewer attribution `{kind,source,piece}`, independent of artist edit access.
 

@@ -146,6 +146,15 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     setNotice('Plan descargado. El estado de las piezas se conserva; exportar no significa publicar.');
   };
+  const featureVideo = async () => {
+    if (flight.current || !current() || doc.status !== 'ready' || revision < 1) return;
+    flight.current = true; setBusy(true); setError(''); setNotice('');
+    try {
+      await VideoCampaigns.feature(artistId, id, revision);
+      if (current()) setNotice('Video publicado en el perfil de TDF. No se ha publicado en Instagram ni TikTok.');
+    } catch (e) { if (current()) setError(e instanceof Error ? e.message : 'No pudimos actualizar el video del perfil.'); }
+    finally { flight.current = false; if (current()) setBusy(false); }
+  };
   return <Stack spacing={2}>
     <Stepper activeStep={step} alternativeLabel>{steps.map((s) => <Step key={s}><StepLabel>{s}</StepLabel></Step>)}</Stepper>
     {error && <Alert severity="error">{error}</Alert>}{notice && <Alert severity="success">{notice}</Alert>}
@@ -204,6 +213,10 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
       <Typography>Los enlaces incluyen atribución por pieza. Las conversiones verificadas se muestran al abrir una campaña guardada. Las métricas externas requieren una conexión autorizada.</Typography>
       <Button onClick={exportPlan}>Descargar plan y textos</Button>
       <Button variant="contained" onClick={() => void save(true)}>Guardar para revisión</Button>
+      {doc.status === 'ready' && revision > 0 && <>
+        <Typography>La siguiente acción hace visible el video en el perfil público del artista en TDF.</Typography>
+        <Button color="secondary" variant="outlined" onClick={() => void featureVideo()}>Publicar video en el perfil de TDF</Button>
+      </>}
     </>}
     </Stack></Box>
     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
