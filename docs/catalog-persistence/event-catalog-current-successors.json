@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "f95bc53ef5e33e741588",
+      "currentId": "75b0ab5288ddfec6263a",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 206,
-      "change": "Ordered 206-entry manifest preserves main2781ddc2 complete204-entry prefix and appends Operations failure replay followed by enabled-only inbound capture. Both original introduction commits are ancestors; the replay source includes the reviewed lock-order repair. Four replay lifecycle triggers are required. Capture remains disabled unless Operations is enabled, and production activation still requires an approved retention policy. Migration checksum, apply/replay and rollback checks remain mandatory; no pending migration is represented as applied.",
+      "valueCount": 207,
+      "change": "Append only 2026-10-20_video_campaigns after the existing 206-entry prefix. Reviewed private draft and conversion schema; no publication or provider activation. Production application remains independently gated.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "394e8ba1db3ead9328f2",
@@ -50534,7 +50534,8 @@
           "currentId": "4610aff4763a46a3444e",
           "sourceRevision": "846fc6d944f28feb9c15a76741fa4192c9103ccd"
         }
-      ]
+      ],
+      "reviewedPriorFingerprint": "f95bc53ef5e33e741588"
     }
   ]
 }

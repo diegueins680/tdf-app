@@ -1050,6 +1050,11 @@
       "id": "2026-10-13_operations_inbound_capture_policy",
       "path": "tdf-hq/sql/2026-10-13_operations_inbound_capture_policy.sql",
       "introducedBy": "6ac5f68cc76479ba5d19dd9243d872b341291549"
+    },
+    {
+      "id": "2026-10-20_video_campaigns",
+      "path": "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+      "introducedBy": "4b84238abb4ca17c6aaa9902e3bec16a1cc3daa5"
     }
   ]
 }

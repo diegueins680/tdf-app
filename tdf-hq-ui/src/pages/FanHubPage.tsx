@@ -1347,6 +1347,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       }
                     }}
                   />
+                  <Button component={RouterLink} to="/mi-artista/campanas" variant="contained">Lanzar video</Button>
                   {artistPublicPath && (
                     <Chip label="Ver perfil público" component={RouterLink} to={artistPublicPath} clickable variant="outlined" />
                   )}

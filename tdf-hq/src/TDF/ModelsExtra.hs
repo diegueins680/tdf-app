@@ -75,6 +75,26 @@ derivePersistField "DeliverableKind"
 
 share [mkPersist sqlSettings, mkMigrate "migrateExtra"] [persistLowerCase|
 
+VideoCampaign
+    artistPartyId PartyId
+    campaignKey Text
+    revision Int64
+    document Text
+    createdAt UTCTime
+    updatedAt UTCTime
+    UniqueVideoCampaign artistPartyId campaignKey
+    deriving Show Generic
+
+VideoCampaignConversion
+    campaignId VideoCampaignId
+    viewerPartyId PartyId
+    kind Text
+    source Text
+    piece Text
+    createdAt UTCTime
+    UniqueVideoCampaignConversion campaignId viewerPartyId kind
+    deriving Show Generic
+
 Campaign
     name        Text
     objective   Text Maybe

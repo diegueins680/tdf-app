@@ -11,6 +11,7 @@
 
 module TDF.Server where
 
+import qualified TDF.VideoCampaigns as VideoCampaigns
 import qualified TDF.Social.Chat as SocialChat
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
@@ -3114,6 +3115,7 @@ artistSecureServer user =
     :<|> artistUpdateOwnProfile user
     :<|> artistUpdateOwnProfile user
        )
+  :<|> VideoCampaigns.campaignServer user
   :<|> artistUpdateOwnPhoto user
 
 socialServer :: AuthedUser -> ServerT SocialAPI AppM

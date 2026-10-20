@@ -10119,6 +10119,109 @@
       "tests": [],
       "formalModels": [],
       "ambiguity": []
+    },
+    {
+      "id": "MEDIA-VIDEO-CAMPAIGN-001",
+      "title": "Artists prepare durable organic video launch campaigns",
+      "statement": "An authenticated artist can save, resume, duplicate and export private video campaign drafts for their own artist identity. Strict administrators with the Admin module may select another existing artist. Saving, preparing for review and exporting never publish, schedule provider actions or spend money.",
+      "domain": "MEDIA",
+      "actors": [
+        "Artist",
+        "Strict administrator",
+        "Prospective follower"
+      ],
+      "preconditions": [
+        "Artist profile exists. Current session and authoritative role/module grants remain valid. Additive campaign migration is applied."
+      ],
+      "inputs": [
+        "Video and media HTTPS links",
+        "Campaign UUID and expected revision",
+        "Instagram/TikTok copy and relative calendar",
+        "Explicit follow command",
+        "Allowlisted campaign attribution"
+      ],
+      "state": {
+        "initial": "draft",
+        "states": [
+          "draft",
+          "ready",
+          "piece-draft",
+          "piece-prepared",
+          "piece-exported",
+          "piece-published-manually"
+        ]
+      },
+      "allowedTransitions": [
+        "Valid revisions save drafts atomically.",
+        "A lost-save exact replay returns the preceding result.",
+        "Complete media and copy permit review-ready status.",
+        "Manual publication records require a URL on the selected platform.",
+        "An explicit command on a locked review-ready revision updates only the public TDF featured-video field; no external platform publication occurs."
+      ],
+      "forbiddenTransitions": [
+        "An artist edits another artist campaign.",
+        "Stale revisions overwrite newer edits.",
+        "Saving or exporting starts a provider publication or paid advertisement.",
+        "Unauthenticated or unverified conversions inflate account/follow counters."
+      ],
+      "effects": [
+        "PostgreSQL stores campaign documents and unique verified conversion events.",
+        "An exported plan contains per-piece attribution links.",
+        "An explicitly approved command can expose the selected video on the artist public TDF profile."
+      ],
+      "authorization": "Current-session and current-authority locks cover campaign reads/writes; self artist or strict administrator only. Conversion writes use the real current viewer session and validate real account/follow creation.",
+      "privacy": "Campaign lists and metrics are private to their artist/admin scope; no provider credentials enter the document or public client configuration.",
+      "concurrency": "Compare-and-swap revision guards prevent lost updates; unique campaign/artist and campaign/viewer/kind constraints prevent duplicates.",
+      "idempotency": "Creation and update retries recover only the immediately preceding identical save. Conversion retries preserve a unique event.",
+      "failure": "Invalid documents, ambiguous scope, stale revisions and unverifiable conversions reject. The editor preserves an unsaved draft after a failed save.",
+      "recovery": "Retry an uncertain save with the same UUID, body and expected revision. Reconcile a changed saved version rather than overwrite it.",
+      "observability": "Owner metrics show historical verified registration/follow creations; existing configured analytics can record profile views. External reach and causal attribution are not claimed.",
+      "source": "Diego approved organic registrations/follows campaign prompt on 2026-10-17 and requested execution on 2026-10-20.",
+      "implementation": [
+        "tdf-hq/src/TDF/VideoCampaigns.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+        "tdf-hq-ui/src/api/videoCampaigns.ts",
+        "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+        "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
+        "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/utils/artistFollowIntent.ts",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/docs/openapi/api.yaml"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
+        "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
+        "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "critical": false,
+      "ambiguity": [
+        "Production deployment and an authenticated campaign save are not verified.",
+        "Mobile generated contracts require repository write access.",
+        "Video encoding and provider publishing are not background services in this implementation.",
+        "One-hour authenticated attribution is first accepted piece and does not prove causality or cross-device returns."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused web tests pass; backend and hosted verification remain required. No formal proof or production rollout is claimed."
+      },
+      "authority": "Approved Liquid Paper Girl launch prompt and repository authorization/storage boundaries.",
+      "property": "Artist-scoped drafts are durable and publishing remains explicitly separate from preparation.",
+      "contract": "docs/artists/video-campaigns.md",
+      "verification": "Scope and validation tests, real SQLite helper persistence, web save/resume and attribution tests; current PostgreSQL authorization guard reused.",
+      "evidence": "PR #599 and exact-revision CI; rendered review package is delivered separately."
     }
   ],
   "sourceFingerprints": {
@@ -10134,7 +10237,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "059040e077ba3ea12323d8bdb81275a72abace64c5ba22b13ae6456c4b5e2e7d",
+    "docs/catalog-persistence/catalog-list-decisions.json": "d4213fdb0bf421b1e1de694651cb749542efd9f2e4d0b42896fcb51b0b7a5a60",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -10457,7 +10560,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "6a21c7ca8cafac4e3db4e9d33da3237cee0879065e0336a766772432ed25eb7f",
+    "scripts/production-migrations.json": "4f9e0d717c396d73e6b805d10b178f55314f68237d36108dd9d0bf07c8f35832",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -10594,7 +10697,7 @@
     "tdf-hq-ui/src/api/eventTickets.ts": "9fa9ad85d2c14ebedd4186f7777c34c8a411a7a2adcadcfdaa7c41a7bfcc5f32",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+    "tdf-hq-ui/src/api/generated/types.ts": "3c33caa03d99109036b9bca65e3c7871889983c4a16ac3c544e336e89dfd2849",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
@@ -10609,6 +10712,7 @@
     "tdf-hq-ui/src/api/session.ts": "f9c1e71ee476a7551fb6a5dd093c8c9776e525d113af0451bde93aebaf910e90",
     "tdf-hq-ui/src/api/socialEvents.ts": "f93e1bc80e68a3be0534c12141d2745a2e0f1bb2613f7a0b7a3114052d3e068f",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
+    "tdf-hq-ui/src/api/videoCampaigns.ts": "df4c8b3efc491a466c362eef26cc91e8f81e5d6515b68f0c0803470a63144789",
     "tdf-hq-ui/src/api/whatsappConsentPublic.ts": "5c41328394ff76400c1fbcd32b95555bec11455ad923acd96e922b5aadbccfda",
     "tdf-hq-ui/src/bootSafety.tsx": "d86542845ea039c65a5135d5d94e1c2331cadb6f4866ba309a4973c9cc10cbdc",
     "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
@@ -10630,6 +10734,7 @@
     "tdf-hq-ui/src/components/RefundManagementPanel.tsx": "ae4f42e9e999d918a31d70ebcdeace988f375846c1017ada73bcd54f8faac0f3",
     "tdf-hq-ui/src/components/RoutedRadioWidget.tsx": "b1960bdb5e3aa9063bbb8cc84805617760da09e96a5bce7d4182f9ecb5c34ef5",
     "tdf-hq-ui/src/components/SessionMenu.tsx": "5b66793d4ed576109a557d643634c47a62920d08e4c7bafe2d93424129e43af5",
+    "tdf-hq-ui/src/components/SessionVideoPreview.tsx": "4a2056652126e711e4f33cbfb8e70ad804dddb1481f1066f11d26865301802ed",
     "tdf-hq-ui/src/components/SidebarNav.tsx": "268ba22376715b857adf4fc69ed1cd31297d1a0363bd9ee89d68141f68adb3af",
     "tdf-hq-ui/src/components/StreamingPlayer.tsx": "3b4577b82858d1cfd74b7e38107084a35ff6b56952c6b1050e38e0ababaca8cb",
     "tdf-hq-ui/src/components/StripeCheckoutModal.tsx": "52245be2a87128343f4ad81495f8c0b14fab63f1189ddea09ffd8759156bf8ed",
@@ -10657,6 +10762,10 @@
     "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": "a32b108366282c451878b0a95dd4c9efb1cdfba44ea779d0069cd03f3b5c913f",
     "tdf-hq-ui/src/config/accountDeletionRollout.ts": "c55e82bd8e87288e48b3ac05b86a9fe1335e4400be3e105d2f4fee71534af911",
     "tdf-hq-ui/src/config/appConfig.ts": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
+    "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts": "bddb9827e9e144876f863e76805139c5ce2f14bc2d5dc65e9ab5ec92d59051a4",
+    "tdf-hq-ui/src/features/campaigns/videoAttribution.ts": "243066134ab5d8bd0d98f908dc0706d1a0cb999126e7d106337f34ce555adec5",
+    "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts": "d26c6ed803d98f8c2da47503e4a22fb91825597a2724e0bf815b2b41c49094c7",
+    "tdf-hq-ui/src/features/campaigns/videoCampaign.ts": "b8af62650e4af1237f2c4ec77a0d9173a4160848645e6612d28122c7a8d4251b",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "4e3a97254efaf4f01fc0a7e596666f435c95fe4335a363ddeb0fb4900bb0632f",
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
@@ -10688,7 +10797,8 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": "e8128e5d24e1540cfd8e2accbb17d74941f2867957feb3cc8edb6723dab2b541",
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
-    "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts": "7e537b013a74c5b1ce6f3b1908618ab1b4c6eb46512422126f0ffbcbb08f5ad5",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "9d6fc87e1da58c229d0bff9877bfe3b68b88d4d6370f40d34bcc0b37ff8f8ad5",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "d76dc8fb08d5a21235267a9a64c199272d2b4351e24811534580ab9c85aa90f4",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
@@ -10703,7 +10813,7 @@
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "48c13eb38ff9b9f373d8eac478ae3da0c837f42df02ead11a3000bc8ea371c53",
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "35f4745492b8e77bc992165523b95452668b1fd206ed1422769db7b3ae3b600a",
-    "tdf-hq-ui/src/pages/FanHubPage.tsx": "2c028fdc64f8638118d0825876568b3d5cbaa06631f1fd13a4bd814117f9fb1a",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "fd0ce91c305011003462b97e3bdc25a81dc7ee55e2d90ae50baceedaab2106af",
     "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
     "tdf-hq-ui/src/pages/InventoryPage.tsx": "524cdce972c0eeaa93a803ed7b2d2fc38e2c1d9128a170a08fa0705acc2e6d1b",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
@@ -10737,6 +10847,8 @@
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "839aadb02473f36fa6650e13c588852d5bf41fae3524f6675b8a3fe509e39cb5",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
+    "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "3f90f487ca0453dcdb3bda77ab0a8439a59ea9064104e3570b42e43d7c70580e",
+    "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "33b67b5c6b18def04ac8c92a7cad00c9bee1635402bbbeaf3bb12eaf9fdc383d",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "92717c83b108441fcb17e04eb052b21d19a98ee85ce3cb2a1bd8794f8a8e97c1",
     "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "690bdc8b04c356eb1a7024980834a0a9d50a28e3db2b23c59bf99b3c69bd6fe5",
     "tdf-hq-ui/src/player/PlayerProvider.tsx": "a1a36f6ab3a24a6ba935d358b9904f8fcf83ea193fe5172c9829c2f688fcf9dc",
@@ -10754,7 +10866,7 @@
     "tdf-hq-ui/src/routes/AppShell.tsx": "1e29ad2f3dd421cfece747856c1c212658e5a9bb61dbaa10c7a44355f7f5e35f",
     "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx": "8175b54ef1214499422d141a254f74eefaeda8ec121c3a5bec380400f9e0f87a",
     "tdf-hq-ui/src/routes/protectedRoutes.tsx": "7b30fe9684172ea1ce741dfa17b650a75e30d7f04bfbfa1a6e6b8134db4f1761",
-    "tdf-hq-ui/src/routes/publicRoutes.tsx": "47b1ac30ba2505c4ce36dfc98d5402c0486dc829586ee90b7534c7c66e97f636",
+    "tdf-hq-ui/src/routes/publicRoutes.tsx": "37804e655195ed1a3637c71f62c4c9d1fa01739c731a85c243cfad170bc07fa8",
     "tdf-hq-ui/src/session/SessionContext.tsx": "8cb425bcd28933e0482bee404607a6ed275d75b3810a42b207e8edd930037037",
     "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx": "d73f62bb5fd41d238f3b9b894dc9e935a525e51885dfd75b6c0efe1b7fd2a2f4",
     "tdf-hq-ui/src/session/SessionProviders.test.tsx": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
@@ -10766,6 +10878,7 @@
     "tdf-hq-ui/src/theme/appTheme.ts": "8a154a8624caf86c6fc881a2571f808b3207d406719d564155ed7b2b0374a00e",
     "tdf-hq-ui/src/utils/__tests__/roles.test.ts": "f5aa3c92f8f8f71fc7690ef46a1be60b768c4d0ea40a714da39b04c817d272fd",
     "tdf-hq-ui/src/utils/accessControl.test.ts": "0b20df0cf04f4e24848269a97376d016e22ee014924dbed2379ab0abf60afb16",
+    "tdf-hq-ui/src/utils/artistFollowIntent.ts": "21f82a521bc317ad65cf1f750d758420c3382c4bcf1891140c3a45fd6ba943ef",
     "tdf-hq-ui/src/utils/bottomDock.test.tsx": "cd6a5f4017090e3d6073f7cb0b097a7d0ee8c03c393446eb3b50d973076b1a44",
     "tdf-hq-ui/src/utils/bottomDock.ts": "9191d50ba61638b5025ee27bdff3bed3b02a049cd348a0535a401cf691102f0c",
     "tdf-hq-ui/src/utils/checkoutStripe.ts": "1c074e0363401634344800112291a32552aba9a1244dd7986c54257f05af24b2",
@@ -10796,9 +10909,9 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
-    "tdf-hq/assets/feature-registry.json": "f7cedcbd74d618503c961c98f8476d2ec4230ea62cf727ebc7bac529ab3dd250",
+    "tdf-hq/assets/feature-registry.json": "332e5320ca3ca416fedf5a3ee17916f279736617f490b439c554cc57bfe4824b",
     "tdf-hq/config/default.env.example": "4f93f69efb3fd725dba533197e275cf70fb0d25ec2666ba9df77a428758125e9",
-    "tdf-hq/docs/openapi/api.yaml": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
+    "tdf-hq/docs/openapi/api.yaml": "97a6ec84e15b8da8186a9d140d6edb1061775c9aaf13b85c171e85cb25feacc7",
     "tdf-hq/docs/openapi/directory.yaml": "03a54c333f2212d5d2d26423a0bb8e9c931c9b956cce281e01080dc06ddf950e",
     "tdf-hq/music-worker/stack.yaml": "cd8794225ff4aa9550560653e371d570074d9f6dc261c1dfd138a4aa4fc37df8",
     "tdf-hq/music-worker/tdf-music-worker.cabal": "41abf425586e0213ce6607a8208bc6b99ba46a65bc92d7adacb8b23b116d87d2",
@@ -10879,7 +10992,8 @@
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
     "tdf-hq/sql/2026-10-13_operations_inbound_capture_policy.sql": "7bfc6c12d5f3d43f4639532a0931a0131840ed52b9c778a7290304971100072c",
-    "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
+    "tdf-hq/sql/2026-10-20_video_campaigns.sql": "6d79f7b97f10d7ea72f057b3bff3c0a4a89cebc5ec531346d3780078f35c27a6",
+    "tdf-hq/src/TDF/API.hs": "4cce046049b9d4bb2ebd76ba4b8aee712e6d3df7e5ec5d9254e219d2b8e0fa25",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
     "tdf-hq/src/TDF/API/Drive.hs": "167f920abec8f6e362c6a20c62982e0a62aa9db41215f83161e4b6175de17d75",
@@ -10931,7 +11045,7 @@
     "tdf-hq/src/TDF/Invoice/Receipt.hs": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Models.hs": "ea779e770eecdec1391b130137642a4839e0585db40dd0ffe2dfedbd0dabcf1f",
-    "tdf-hq/src/TDF/ModelsExtra.hs": "c6ce1dcd223e1ab57d26d980f41359abb5c020f765d1d8cf1726e2a564298da2",
+    "tdf-hq/src/TDF/ModelsExtra.hs": "9a3c59f73cd4106fb9e7e4a32b1de50ca64a7fdd60f1fbc8d42b00c94d03b086",
     "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs": "1c3b5fae0cc4e5f4605aea8a1a0118badcafb8d83dbef671fce27f6cbf3d65d2",
     "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs": "4dec7b8d3065fb925231203efe76181a645eb3701b3560b635eb364ece867677",
     "tdf-hq/src/TDF/MusicRelease/Domain.hs": "0f22bc111131e3a52d3d68bd6d9614c4b1005dd51dae59ac9fea1b92f0b7a193",
@@ -10946,7 +11060,7 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "8b1f402fc6b630beb54b713571771bdeb4db872519f01e6ca3257a68a046e89e",
+    "tdf-hq/src/TDF/Server.hs": "7cfd170ee6a61e88d9e38e16ff13ca03e36cbfec0012a0c6d984f42ba17c5245",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
@@ -10985,14 +11099,15 @@
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
+    "tdf-hq/src/TDF/VideoCampaigns.hs": "06a80e8c03e1fd1f42092dbc38a1b8993606f6f9e109342f60ce8657eade6ea5",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "0d25b7e8444f8908f678f7bc7dbc0736bf4eeba887cca77eee5b9c612e01fe07",
+    "tdf-hq/tdf-hq.cabal": "471a28f94622e63750a5d0f806d6f79b584637298ba42dfd9e4a0df807c29e3d",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "6b987d571d9df10749ba937e43aff3a10e3d2de478474bcaf898e5b6e02a1126",
+    "tdf-hq/test/Spec.hs": "715709f1e74e109b8460261f2261b15423db8c0a5f76ccd86d845c9676c9305c",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -11035,6 +11150,7 @@
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
     "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "f2a0749e7ab144f7007a401f706d54f4e99e6dc86b0b0d75633c2e3a40c2f56e",
+    "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "c0a84b7f21d174681d61434d3103951f21c0ed196223a3b10c8bdf9942ac58d8",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -11582,6 +11698,10 @@
       {
         "requirement": "MSG-META-REDELIVERY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API.hs": [
@@ -11615,6 +11735,10 @@
       },
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "implementation"
       }
     ],
@@ -11980,6 +12104,10 @@
       {
         "requirement": "WEB-CANONICAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": [
@@ -12089,6 +12217,10 @@
       },
       {
         "requirement": "LEGAL-CONSENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "implementation"
       }
     ],
@@ -13399,6 +13531,10 @@
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": [
       {
         "requirement": "SYS-UX-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "tests"
       }
     ],
@@ -16174,6 +16310,10 @@
       {
         "requirement": "AUTH-ENTRY-002",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/config/accountDeletionRollout.ts": [
@@ -16759,6 +16899,10 @@
       },
       {
         "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "implementation"
       }
     ],
@@ -17638,6 +17782,10 @@
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/FanHubPage.tsx": [
@@ -17647,6 +17795,10 @@
       },
       {
         "requirement": "AUTH-ENTRY-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "implementation"
       }
     ],
@@ -19004,6 +19156,84 @@
       {
         "requirement": "SYS-UI-FIXTURE-001",
         "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/VideoCampaigns.hs": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-20_video_campaigns.sql": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/videoCampaigns.ts": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/SessionVideoPreview.tsx": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/campaigns/videoCampaign.ts": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/campaigns/videoAttribution.ts": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/artistFollowIntent.ts": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/VideoCampaignsSpec.hs": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts": [
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "tests"
       }
     ]
   },
@@ -22144,7 +22374,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6a21c7ca8cafac4e3db4e9d33da3237cee0879065e0336a766772432ed25eb7f",
+      "sha256": "4f9e0d717c396d73e6b805d10b178f55314f68237d36108dd9d0bf07c8f35832",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25605,7 +25835,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+      "sha256": "3c33caa03d99109036b9bca65e3c7871889983c4a16ac3c544e336e89dfd2849",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26177,6 +26407,18 @@
       "requirements": [
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-354e08be89f91765",
+      "path": "tdf-hq-ui/src/api/videoCampaigns.ts",
+      "sha256": "df4c8b3efc491a466c362eef26cc91e8f81e5d6515b68f0c0803470a63144789",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "implementation"
         }
       ]
@@ -26754,6 +26996,18 @@
       "requirements": [
         {
           "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-a64f86cb6be0afe2",
+      "path": "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
+      "sha256": "4a2056652126e711e4f33cbfb8e70ad804dddb1481f1066f11d26865301802ed",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "implementation"
         }
       ]
@@ -27433,6 +27687,54 @@
       "sha256": "d453d8b2b52b28ce1be2f9b74bebc3d9acbb218a8c698d6f8b72e4a720aa72df",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-642ed18b72816afb",
+      "path": "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
+      "sha256": "bddb9827e9e144876f863e76805139c5ce2f14bc2d5dc65e9ab5ec92d59051a4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-68c571b55ae56bd8",
+      "path": "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
+      "sha256": "243066134ab5d8bd0d98f908dc0706d1a0cb999126e7d106337f34ce555adec5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ef8d7dd772a97cb8",
+      "path": "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
+      "sha256": "d26c6ed803d98f8c2da47503e4a22fb91825597a2724e0bf815b2b41c49094c7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6552f4e924597742",
+      "path": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+      "sha256": "b8af62650e4af1237f2c4ec77a0d9173a4160848645e6612d28122c7a8d4251b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-82b624b8fce7891b",
@@ -28409,6 +28711,10 @@
         {
           "requirement": "SYS-UX-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -28417,16 +28723,25 @@
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
       "sha256": "7e537b013a74c5b1ce6f3b1908618ab1b4c6eb46512422126f0ffbcbb08f5ad5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f23ba2e5ecf07fe3",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
-      "sha256": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
+      "sha256": "9d6fc87e1da58c229d0bff9877bfe3b68b88d4d6370f40d34bcc0b37ff8f8ad5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "implementation"
         }
       ]
@@ -28942,7 +29257,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "2c028fdc64f8638118d0825876568b3d5cbaa06631f1fd13a4bd814117f9fb1a",
+      "sha256": "fd0ce91c305011003462b97e3bdc25a81dc7ee55e2d90ae50baceedaab2106af",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28951,6 +29266,10 @@
         },
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "implementation"
         }
       ]
@@ -30168,6 +30487,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-d3678204a317aed3",
+      "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
+      "sha256": "3f90f487ca0453dcdb3bda77ab0a8439a59ea9064104e3570b42e43d7c70580e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1e42b51a3ed57a58",
+      "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
+      "sha256": "33b67b5c6b18def04ac8c92a7cad00c9bee1635402bbbeaf3bb12eaf9fdc383d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-757870367be1e0b7",
       "path": "tdf-hq-ui/src/pages/WhatsAppConsentPage.tsx",
       "sha256": "8ea97fe260d32e3182cb58da0c45b6f77ee15bd9d3fa8439a46e63863e89bd05",
@@ -30560,7 +30903,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "47b1ac30ba2505c4ce36dfc98d5402c0486dc829586ee90b7534c7c66e97f636",
+      "sha256": "37804e655195ed1a3637c71f62c4c9d1fa01739c731a85c243cfad170bc07fa8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30569,6 +30912,10 @@
         },
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "implementation"
         }
       ]
@@ -30817,9 +31164,14 @@
     {
       "id": "SURFACE-82c93d101af35fb3",
       "path": "tdf-hq-ui/src/utils/artistFollowIntent.ts",
-      "sha256": "8077586ebdf5e74094bff753c78297378baa3147a42414b6bb985bf3410a89d2",
+      "sha256": "21f82a521bc317ad65cf1f750d758420c3382c4bcf1891140c3a45fd6ba943ef",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9df8be78b3bfc57b",
@@ -31717,7 +32069,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "f7cedcbd74d618503c961c98f8476d2ec4230ea62cf727ebc7bac529ab3dd250",
+      "sha256": "332e5320ca3ca416fedf5a3ee17916f279736617f490b439c554cc57bfe4824b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31734,6 +32086,10 @@
         },
         {
           "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "implementation"
         }
       ]
@@ -31804,7 +32160,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
+      "sha256": "97a6ec84e15b8da8186a9d140d6edb1061775c9aaf13b85c171e85cb25feacc7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31841,6 +32197,10 @@
         },
         {
           "requirement": "LEGAL-CONSENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "implementation"
         }
       ]
@@ -35157,6 +35517,18 @@
       ]
     },
     {
+      "id": "SURFACE-36cd1387d7bbca80",
+      "path": "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+      "sha256": "6d79f7b97f10d7ea72f057b3bff3c0a4a89cebc5ec531346d3780078f35c27a6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -35187,7 +35559,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
+      "sha256": "4cce046049b9d4bb2ebd76ba4b8aee712e6d3df7e5ec5d9254e219d2b8e0fa25",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35220,6 +35592,10 @@
         },
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "implementation"
         }
       ]
@@ -36622,7 +36998,7 @@
     {
       "id": "SURFACE-de59a337fc1e94a1",
       "path": "tdf-hq/src/TDF/ModelsExtra.hs",
-      "sha256": "c6ce1dcd223e1ab57d26d980f41359abb5c020f765d1d8cf1726e2a564298da2",
+      "sha256": "9a3c59f73cd4106fb9e7e4a32b1de50ca64a7fdd60f1fbc8d42b00c94d03b086",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36631,6 +37007,10 @@
         },
         {
           "requirement": "DATA-INDEX-DECLARATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "implementation"
         }
       ]
@@ -36898,7 +37278,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "8b1f402fc6b630beb54b713571771bdeb4db872519f01e6ca3257a68a046e89e",
+      "sha256": "7cfd170ee6a61e88d9e38e16ff13ca03e36cbfec0012a0c6d984f42ba17c5245",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36971,6 +37351,10 @@
         },
         {
           "requirement": "MSG-META-REDELIVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "implementation"
         }
       ]
@@ -37782,6 +38166,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-53869c6b64312cae",
+      "path": "tdf-hq/src/TDF/VideoCampaigns.hs",
+      "sha256": "06a80e8c03e1fd1f42092dbc38a1b8993606f6f9e109342f60ce8657eade6ea5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5460b30af99d955f",
       "path": "tdf-hq/src/TDF/WhatsApp/Client.hs",
       "sha256": "3d4f77df3147460fc741b21537b7cd74762fd672d15513089649e85075f55aff",
@@ -37836,7 +38232,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "0d25b7e8444f8908f678f7bc7dbc0736bf4eeba887cca77eee5b9c612e01fe07",
+      "sha256": "471a28f94622e63750a5d0f806d6f79b584637298ba42dfd9e4a0df807c29e3d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37950,7 +38346,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "6b987d571d9df10749ba937e43aff3a10e3d2de478474bcaf898e5b6e02a1126",
+      "sha256": "715709f1e74e109b8460261f2261b15423db8c0a5f76ccd86d845c9676c9305c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38772,6 +39168,18 @@
       "sha256": "96643f6c83ea008beda385fa3b4c2312292423414f8d2da6af9de360b3375fd2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-7881cee644a10784",
+      "path": "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
+      "sha256": "c0a84b7f21d174681d61434d3103951f21c0ed196223a3b10c8bdf9942ac58d8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-60c6485e90430e4b",
@@ -43231,7 +43639,6 @@
     "SURFACE-7d1cdc171a244d93",
     "SURFACE-211c2d4c89fbcb63",
     "SURFACE-a22dcf6e94d1d682",
-    "SURFACE-67734f5e4107b4c6",
     "SURFACE-fffcbad1b08fd3bd",
     "SURFACE-e7e38d2c86b603f3",
     "SURFACE-72f13dfa9baf1026",
@@ -43425,7 +43832,6 @@
     "SURFACE-74c667377a8a66f7",
     "SURFACE-a4ae75705e817d87",
     "SURFACE-46e2a7583543c04e",
-    "SURFACE-82c93d101af35fb3",
     "SURFACE-9df8be78b3bfc57b",
     "SURFACE-2eb9f4f361f30887",
     "SURFACE-4f9e14e98fa44f31",
@@ -45531,7 +45937,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d72312f5e4d44a8f661420b25e68d13eecec6f4cb93663ddf66e7ed885abb6ce",
+      "sourceSha256": "a8d4382c1ae6ab771f3116e781a62c472c54489fff47c068d628c517b6b4c194",
       "definition": {
         "states": [
           "absent",
@@ -45560,6 +45966,95 @@
     }
   ],
   "apiOperations": [
+    {
+      "id": "GET /artists/video-campaigns",
+      "operationId": "listVideoCampaigns",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "401",
+        "403",
+        "404"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "PUT /artists/video-campaigns/{campaignKey}",
+      "operationId": "saveVideoCampaign",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /artists/video-campaigns/{campaignKey}/feature",
+      "operationId": "featureVideoCampaign",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /artists/video-campaigns/{campaignKey}/metrics",
+      "operationId": "getVideoCampaignMetrics",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "401",
+        "403",
+        "404"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /artists/video-campaigns/{campaignKey}/conversion",
+      "operationId": "recordVideoCampaignConversion",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "404"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
     {
       "id": "GET /invoices",
       "operationId": "listInvoices",
@@ -67721,6 +68216,136 @@
         "documentedException": "No native equivalent yet."
       },
       "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "artist.video-campaigns",
+      "resource": "/mi-artista/campanas",
+      "action": "discover",
+      "authentication": "authenticated",
+      "rolesAny": [
+        "Artist",
+        "Artista",
+        "Admin"
+      ],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "own artist; strict administrator may select artist",
+      "condition": {
+        "flag": null,
+        "maturity": "beta"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Responsive web campaign editor; native publishing adapters are not enabled."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "artist.video-campaigns",
+      "resource": "/mi-artista/campanas",
+      "action": "view",
+      "authentication": "authenticated",
+      "rolesAny": [
+        "Artist",
+        "Artista",
+        "Admin"
+      ],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "own artist; strict administrator may select artist",
+      "condition": {
+        "flag": null,
+        "maturity": "beta"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Responsive web campaign editor; native publishing adapters are not enabled."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "artist.video-campaigns",
+      "resource": "/mi-artista/campanas",
+      "action": "create",
+      "authentication": "authenticated",
+      "rolesAny": [
+        "Artist",
+        "Artista",
+        "Admin"
+      ],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "own artist; strict administrator may select artist",
+      "condition": {
+        "flag": null,
+        "maturity": "beta"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Responsive web campaign editor; native publishing adapters are not enabled."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "artist.video-campaigns",
+      "resource": "/mi-artista/campanas",
+      "action": "edit",
+      "authentication": "authenticated",
+      "rolesAny": [
+        "Artist",
+        "Artista",
+        "Admin"
+      ],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "own artist; strict administrator may select artist",
+      "condition": {
+        "flag": null,
+        "maturity": "beta"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Responsive web campaign editor; native publishing adapters are not enabled."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "artist.video-campaigns",
+      "resource": "/mi-artista/campanas",
+      "action": "export",
+      "authentication": "authenticated",
+      "rolesAny": [
+        "Artist",
+        "Artista",
+        "Admin"
+      ],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "own artist; strict administrator may select artist",
+      "condition": {
+        "flag": null,
+        "maturity": "beta"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Responsive web campaign editor; native publishing adapters are not enabled."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
     }
   ],
   "conformanceCounts": {
@@ -67728,7 +68353,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 124,
+    "PARTIAL": 125,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

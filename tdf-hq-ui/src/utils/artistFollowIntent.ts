@@ -8,7 +8,7 @@ export function isArtistFollowResume(search: string, artistId: number | null): b
     && params.getAll('artistId').length === 1 && params.get('artistId') === String(artistId);
 }
 
-export function buildArtistFollowAuthPath(profileLink: string | null, artistId: number | null): string {
+export function buildArtistFollowAuthPath(profileLink: string | null, artistId: number | null, attributionSearch = ''): string {
   let redirect = '/fans';
   if (profileLink && safeArtistId(artistId) && /^\/a\/[^/?#\\]+$/.test(profileLink)) {
     try {
@@ -16,7 +16,13 @@ export function buildArtistFollowAuthPath(profileLink: string | null, artistId: 
       const safeSegment = segment !== '.' && segment !== '..' && segment.length > 0
         && !Array.from(segment).some((char) => '/\\?#%'.includes(char) || char.charCodeAt(0) <= 32 || char.charCodeAt(0) === 127);
       if (safeSegment && profileLink.length <= 400) {
-        redirect = `${profileLink}?${new URLSearchParams({ resume: 'follow', artistId: String(artistId) }).toString()}`;
+        const query = new URLSearchParams({ resume: 'follow', artistId: String(artistId) });
+        const source = new URLSearchParams(attributionSearch);
+        for (const key of ['utm_campaign', 'utm_source', 'utm_medium', 'utm_content']) {
+          const value = source.get(key);
+          if (source.getAll(key).length === 1 && value && /^[a-zA-Z0-9_-]{1,100}$/.test(value)) query.set(key, value);
+        }
+        redirect = `${profileLink}?${query.toString()}`;
       }
     } catch {
       // Malformed route metadata must not become a login return target.

@@ -3502,6 +3502,115 @@
       "icon": "album",
       "breadcrumb": [],
       "accessRequestEligible": false
+    },
+    {
+      "id": "artist.video-campaigns",
+      "parentId": "artist.public",
+      "webRoute": "/mi-artista/campanas",
+      "routeType": "important-submodule",
+      "classification": "important-submodule",
+      "label": {
+        "es": "Lanzar video",
+        "en": "Launch video"
+      },
+      "synonyms": {
+        "es": [
+          "campaña",
+          "sesión en vivo"
+        ],
+        "en": [
+          "campaign",
+          "live session"
+        ]
+      },
+      "keywords": [
+        "artist",
+        "video",
+        "campaign",
+        "instagram",
+        "tiktok"
+      ],
+      "navigationGroup": "people",
+      "icon": "campaign",
+      "breadcrumb": [
+        "community",
+        "artist.public"
+      ],
+      "requiredAuth": "authenticated",
+      "requiredRoles": [
+        "Artist",
+        "Artista",
+        "Admin"
+      ],
+      "requiredModules": [],
+      "permissions": {
+        "discover": {
+          "rolesAny": [
+            "Artist",
+            "Artista",
+            "Admin"
+          ],
+          "recordScope": "own artist; strict administrator may select artist"
+        },
+        "view": {
+          "rolesAny": [
+            "Artist",
+            "Artista",
+            "Admin"
+          ],
+          "recordScope": "own artist; strict administrator may select artist"
+        },
+        "create": {
+          "rolesAny": [
+            "Artist",
+            "Artista",
+            "Admin"
+          ],
+          "recordScope": "own artist; strict administrator may select artist"
+        },
+        "edit": {
+          "rolesAny": [
+            "Artist",
+            "Artista",
+            "Admin"
+          ],
+          "recordScope": "own artist; strict administrator may select artist"
+        },
+        "export": {
+          "rolesAny": [
+            "Artist",
+            "Artista",
+            "Admin"
+          ],
+          "recordScope": "own artist; strict administrator may select artist"
+        }
+      },
+      "mobilePresentation": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Responsive web campaign editor; native publishing adapters are not enabled."
+      },
+      "accessRequestEligible": false,
+      "globalMenu": false,
+      "favoriteEligible": true,
+      "pinEligible": false,
+      "recentBehavior": "record",
+      "maturity": "beta",
+      "apiScopes": [
+        {
+          "pathPrefix": "/artists/video-campaigns",
+          "methods": {
+            "GET": "view",
+            "PUT": "edit"
+          }
+        }
+      ],
+      "telemetryId": "artist.video-campaigns",
+      "description": {
+        "es": "Prepara videos y campañas orgánicas para Instagram y TikTok.",
+        "en": "Prepare videos and organic campaigns for Instagram and TikTok."
+      },
+      "routeAction": "view"
     }
   ]
 }
