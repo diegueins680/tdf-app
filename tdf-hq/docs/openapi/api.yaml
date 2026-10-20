@@ -9,6 +9,105 @@ servers:
     description: Development server
 
 paths:
+  /artists/video-campaigns:
+    get:
+      operationId: listVideoCampaigns
+      summary: List private video campaign drafts for the current artist or a strict administrator's selected artist
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VideoCampaignArtistId'
+      responses:
+        '200':
+          description: Persisted drafts, newest first; maximum 100
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VideoCampaignDTO'
+        '401': {description: Invalid session}
+        '403': {description: Artist ownership or administrator access required}
+        '404': {description: Artist profile not found}
+  /artists/video-campaigns/{campaignKey}:
+    put:
+      operationId: saveVideoCampaign
+      summary: Save a draft with revision checking; never publishes or schedules provider actions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VideoCampaignArtistId'
+        - $ref: '#/components/parameters/VideoCampaignKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoCampaignWrite'
+      responses:
+        '200':
+          description: Saved draft or exact replay of the preceding save
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoCampaignDTO'
+        '400': {description: Invalid campaign document or revision}
+        '401': {description: Invalid session}
+        '403': {description: Artist ownership or administrator access required}
+        '404': {description: Artist profile not found}
+        '409': {description: Stale revision; reload before saving}
+  /artists/video-campaigns/{campaignKey}/metrics:
+    get:
+      operationId: getVideoCampaignMetrics
+      summary: Unique authenticated conversions verified against real account or follow creation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VideoCampaignArtistId'
+        - $ref: '#/components/parameters/VideoCampaignKey'
+      responses:
+        '200':
+          description: First attributed conversion per campaign, account and event kind
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [registrations, follows]
+                properties:
+                  registrations: {type: integer, minimum: 0}
+                  follows: {type: integer, minimum: 0}
+        '401': {description: Invalid session}
+        '403': {description: Campaign owner access required}
+        '404': {description: Campaign not found}
+  /artists/video-campaigns/{campaignKey}/conversion:
+    post:
+      operationId: recordVideoCampaignConversion
+      summary: Record a viewer conversion only after a real account or follow was created within the last hour and after the campaign
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: artistId
+          in: query
+          required: true
+          schema: {type: integer, format: int64, minimum: 1}
+        - $ref: '#/components/parameters/VideoCampaignKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [kind, source, piece]
+              properties:
+                kind: {type: string, enum: [registration, follow]}
+                source: {type: string, enum: [instagram, tiktok]}
+                piece: {type: string, maxLength: 100}
+      responses:
+        '200': {description: Conversion recorded or already recorded; request attribution is not proof of causality}
+        '400': {description: Campaign not ready, unknown piece, or account/follow is not newly created}
+        '401': {description: Invalid session}
+        '404': {description: Campaign not found}
   /invoices:
     get:
       operationId: listInvoices
@@ -9857,6 +9956,17 @@ components:
       in: cookie
       name: tdf_session
   parameters:
+    VideoCampaignArtistId:
+      name: artistId
+      in: query
+      required: false
+      description: Defaults to authenticated party; another party requires strict administrator access
+      schema: {type: integer, format: int64, minimum: 1}
+    VideoCampaignKey:
+      name: campaignKey
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
     MerchCartId:
       name: cartId
       in: path
@@ -10023,6 +10133,56 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    VideoCampaignWrite:
+      type: object
+      additionalProperties: false
+      required: [expectedRevision, document]
+      properties:
+        expectedRevision: {type: integer, format: int64, minimum: 0}
+        document: {$ref: '#/components/schemas/VideoCampaignDocument'}
+    VideoCampaignDTO:
+      type: object
+      required: [id, artistId, revision, content, createdAt, updatedAt]
+      properties:
+        id: {type: string, format: uuid}
+        artistId: {type: integer, format: int64}
+        revision: {type: integer, format: int64, minimum: 1}
+        content: {$ref: '#/components/schemas/VideoCampaignDocument'}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    VideoCampaignDocument:
+      type: object
+      required: [title, videoUrl, coverUrl, durationSeconds, status, channels, pieces]
+      properties:
+        title: {type: string, minLength: 1, maxLength: 200}
+        videoUrl: {type: string, description: 'Empty draft or HTTPS media URL; server never fetches this URL'}
+        coverUrl: {type: string}
+        durationSeconds: {type: number, minimum: 0, maximum: 43200}
+        status: {type: string, enum: [draft, ready]}
+        channels:
+          type: array
+          minItems: 1
+          maxItems: 2
+          uniqueItems: true
+          items: {type: string, enum: [instagram, tiktok]}
+        pieces:
+          type: array
+          maxItems: 30
+          items: {$ref: '#/components/schemas/VideoCampaignPiece'}
+    VideoCampaignPiece:
+      type: object
+      required: [id, channel, day, format, caption, assetUrl, sourceStart, sourceEnd, status, publishedUrl]
+      properties:
+        id: {type: string, minLength: 1, maxLength: 100}
+        channel: {type: string, enum: [instagram, tiktok]}
+        day: {type: integer, minimum: -3, maximum: 13}
+        format: {type: string}
+        caption: {type: string, maxLength: 2200}
+        assetUrl: {type: string}
+        sourceStart: {type: number, minimum: 0}
+        sourceEnd: {type: number, minimum: 0}
+        status: {type: string, enum: [draft, prepared, exported, published_manual]}
+        publishedUrl: {type: string, description: 'Manual publication URL on the selected platform; export alone is not publication'}
     InvoiceLineDTO:
       type: object
       required:

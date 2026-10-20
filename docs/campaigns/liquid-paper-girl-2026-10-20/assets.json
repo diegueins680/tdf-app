@@ -1,0 +1,42 @@
+{
+  "status": "review_required",
+  "artist": {
+    "id": 51,
+    "name": "Liquid Paper Girl",
+    "url": "https://www.tdfrecords.net/a/liquid-paper-girl",
+    "identityEvidence": "Existing production artist profile, exact display name; no new account/profile created"
+  },
+  "budgetCents": 0,
+  "timezone": "America/Guayaquil",
+  "launchDate": null,
+  "original": {
+    "file": "VID-20261017-WA0001(1).mp4",
+    "sha256": "93ecdbda4b9f0e66a4eba28cd27593c380b1198740963bc7f3fb2e628e257626",
+    "durationSeconds": 610.08,
+    "bytes": 174844627,
+    "width": 1920,
+    "height": 1080,
+    "fps": 25,
+    "audio": "AAC stereo, 48000 Hz",
+    "integratedLUFS": -15.39,
+    "truePeakDBTP": -0.03,
+    "loudnessRangeLU": 3.7
+  },
+  "derivatives": {
+    "clips": 6,
+    "durationPerClip": 30,
+    "size": "720x1280",
+    "audioGainDB": -1.2,
+    "encoding": "H.264/AAC, faststart",
+    "selection": "Candidates around nonuniform spectral-flux transitions, at least 60 seconds apart. Human musical review required; no claim of beat/bar alignment.",
+    "visualTreatment": "Full landscape composition preserved within a vertical layout; blurred duplicate background. Original artist footage and repository TDF wordmark."
+  },
+  "blockers": [
+    "Backend deployment requires the dedicated production SSH identity and guarded migration release.",
+    "Saving a production campaign requires an authorized TDF session and the deployed API.",
+    "Original source and derived assets need artist-controlled playable URLs; current ordinary upload limit is 50 MiB.",
+    "No verified Instagram/TikTok artist handle, final session title, recording date or credits supplied.",
+    "No connected provider publishing credentials/audit observed; manual export is supported.",
+    "Publication requires Diego reviewing musical cuts, credits and file permissions."
+  ]
+}

@@ -4,6 +4,74 @@
  */
 
 export interface paths {
+    "/artists/video-campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List private video campaign drafts for the current artist or a strict administrator's selected artist */
+        get: operations["listVideoCampaigns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/video-campaigns/{campaignKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save a draft with revision checking; never publishes or schedules provider actions */
+        put: operations["saveVideoCampaign"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/video-campaigns/{campaignKey}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Unique authenticated conversions verified against real account or follow creation */
+        get: operations["getVideoCampaignMetrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/video-campaigns/{campaignKey}/conversion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a viewer conversion only after a real account or follow was created within the last hour and after the campaign */
+        post: operations["recordVideoCampaignConversion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/invoices": {
         parameters: {
             query?: never;
@@ -8843,6 +8911,50 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        VideoCampaignWrite: {
+            /** Format: int64 */
+            expectedRevision: number;
+            document: components["schemas"]["VideoCampaignDocument"];
+        };
+        VideoCampaignDTO: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            artistId: number;
+            /** Format: int64 */
+            revision: number;
+            content: components["schemas"]["VideoCampaignDocument"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        VideoCampaignDocument: {
+            title: string;
+            /** @description Empty draft or HTTPS media URL; server never fetches this URL */
+            videoUrl: string;
+            coverUrl: string;
+            durationSeconds: number;
+            /** @enum {string} */
+            status: "draft" | "ready";
+            channels: ("instagram" | "tiktok")[];
+            pieces: components["schemas"]["VideoCampaignPiece"][];
+        };
+        VideoCampaignPiece: {
+            id: string;
+            /** @enum {string} */
+            channel: "instagram" | "tiktok";
+            day: number;
+            format: string;
+            caption: string;
+            assetUrl: string;
+            sourceStart: number;
+            sourceEnd: number;
+            /** @enum {string} */
+            status: "draft" | "prepared" | "exported" | "published_manual";
+            /** @description Manual publication URL on the selected platform; export alone is not publication */
+            publishedUrl: string;
+        };
         InvoiceLineDTO: {
             /** Format: int64 */
             lineId: number;
@@ -16145,6 +16257,9 @@ export interface components {
         };
     };
     parameters: {
+        /** @description Defaults to authenticated party; another party requires strict administrator access */
+        VideoCampaignArtistId: number;
+        VideoCampaignKey: string;
         MerchCartId: string;
         /** @description Unguessable token returned once when a guest cart is created. */
         MerchCartLookupToken: string;
@@ -16205,6 +16320,216 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listVideoCampaigns: {
+        parameters: {
+            query?: {
+                /** @description Defaults to authenticated party; another party requires strict administrator access */
+                artistId?: components["parameters"]["VideoCampaignArtistId"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persisted drafts, newest first; maximum 100 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoCampaignDTO"][];
+                };
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist ownership or administrator access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    saveVideoCampaign: {
+        parameters: {
+            query?: {
+                /** @description Defaults to authenticated party; another party requires strict administrator access */
+                artistId?: components["parameters"]["VideoCampaignArtistId"];
+            };
+            header?: never;
+            path: {
+                campaignKey: components["parameters"]["VideoCampaignKey"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VideoCampaignWrite"];
+            };
+        };
+        responses: {
+            /** @description Saved draft or exact replay of the preceding save */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoCampaignDTO"];
+                };
+            };
+            /** @description Invalid campaign document or revision */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist ownership or administrator access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stale revision; reload before saving */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getVideoCampaignMetrics: {
+        parameters: {
+            query?: {
+                /** @description Defaults to authenticated party; another party requires strict administrator access */
+                artistId?: components["parameters"]["VideoCampaignArtistId"];
+            };
+            header?: never;
+            path: {
+                campaignKey: components["parameters"]["VideoCampaignKey"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description First attributed conversion per campaign, account and event kind */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        registrations: number;
+                        follows: number;
+                    };
+                };
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Campaign owner access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordVideoCampaignConversion: {
+        parameters: {
+            query: {
+                artistId: number;
+            };
+            header?: never;
+            path: {
+                campaignKey: components["parameters"]["VideoCampaignKey"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    kind: "registration" | "follow";
+                    /** @enum {string} */
+                    source: "instagram" | "tiktok";
+                    piece: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Conversion recorded or already recorded; request attribution is not proof of causality */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Campaign not ready */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listInvoices: {
         parameters: {
             query?: never;

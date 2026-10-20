@@ -47,6 +47,7 @@ import System.FilePath ((</>))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified TDF.VideoCampaignsSpec as VideoCampaignsSpec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
@@ -17889,6 +17890,7 @@ main = hspec $ do
     EventOperationsTypesSpec.spec
     EventOperationsDatabaseBoundarySpec.spec
     EventResearchSpec.spec
+    VideoCampaignsSpec.spec
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec

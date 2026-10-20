@@ -1,0 +1,183 @@
+{
+  "artistId": 51,
+  "campaignId": "126f208c-2b38-47c1-952b-6ba633122c87",
+  "title": "Liquid Paper Girl · Live session",
+  "videoUrl": "",
+  "coverUrl": "",
+  "durationSeconds": 610.08,
+  "status": "draft",
+  "channels": [
+    "instagram",
+    "tiktok"
+  ],
+  "pieces": [
+    {
+      "id": "instagram-1",
+      "channel": "instagram",
+      "day": -2,
+      "format": "story",
+      "caption": "Muy pronto: Liquid Paper Girl en vivo. Una sesión para descubrir de cerca. Crea tu cuenta en TDF y sigue al artista. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 94.55,
+      "sourceEnd": 124.55,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "instagram-2",
+      "channel": "instagram",
+      "day": 0,
+      "format": "vertical-video",
+      "caption": "Liquid Paper Girl · Live session. Mira la sesión completa desde su perfil de TDF. Crea tu cuenta y sigue al artista. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 94.55,
+      "sourceEnd": 124.55,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "instagram-3",
+      "channel": "instagram",
+      "day": 2,
+      "format": "vertical-video",
+      "caption": "Máquinas, manos y decisiones en tiempo real. Descubre la live session de Liquid Paper Girl en TDF y sigue su perfil. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 171.75,
+      "sourceEnd": 201.75,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "instagram-4",
+      "channel": "instagram",
+      "day": 5,
+      "format": "vertical-video",
+      "caption": "Un momento de la sesión de Liquid Paper Girl. ¿Qué sonido te llamó la atención? Mira la interpretación completa en TDF. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 241.2,
+      "sourceEnd": 271.2,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "instagram-5",
+      "channel": "instagram",
+      "day": 8,
+      "format": "vertical-video",
+      "caption": "De cerca: Liquid Paper Girl construyendo la sesión en vivo. Encuentra el video completo en su perfil de TDF. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 344.15,
+      "sourceEnd": 374.15,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "instagram-6",
+      "channel": "instagram",
+      "day": 11,
+      "format": "vertical-video",
+      "caption": "Otra entrada a la sesión de Liquid Paper Girl. Regístrate en TDF y sigue al artista para mantenerte cerca de su música. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 461.4,
+      "sourceEnd": 491.4,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "instagram-7",
+      "channel": "instagram",
+      "day": 13,
+      "format": "story",
+      "caption": "Si todavía no viste la sesión de Liquid Paper Girl, este es un buen momento. Descúbrela en TDF y sigue su perfil. Enlace en la bio; en Stories, usa el sticker de enlace. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 537.75,
+      "sourceEnd": 567.75,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "tiktok-1",
+      "channel": "tiktok",
+      "day": -2,
+      "format": "vertical-video",
+      "caption": "Muy pronto: Liquid Paper Girl en vivo. Una sesión para descubrir de cerca. Crea tu cuenta en TDF y sigue al artista. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 94.55,
+      "sourceEnd": 124.55,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "tiktok-2",
+      "channel": "tiktok",
+      "day": 0,
+      "format": "vertical-video",
+      "caption": "Liquid Paper Girl · Live session. Mira la sesión completa desde su perfil de TDF. Crea tu cuenta y sigue al artista. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 94.55,
+      "sourceEnd": 124.55,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "tiktok-3",
+      "channel": "tiktok",
+      "day": 2,
+      "format": "vertical-video",
+      "caption": "Máquinas, manos y decisiones en tiempo real. Descubre la live session de Liquid Paper Girl en TDF y sigue su perfil. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 171.75,
+      "sourceEnd": 201.75,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "tiktok-4",
+      "channel": "tiktok",
+      "day": 5,
+      "format": "vertical-video",
+      "caption": "Un momento de la sesión de Liquid Paper Girl. ¿Qué sonido te llamó la atención? Mira la interpretación completa en TDF. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 241.2,
+      "sourceEnd": 271.2,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "tiktok-5",
+      "channel": "tiktok",
+      "day": 8,
+      "format": "vertical-video",
+      "caption": "De cerca: Liquid Paper Girl construyendo la sesión en vivo. Encuentra el video completo en su perfil de TDF. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 344.15,
+      "sourceEnd": 374.15,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "tiktok-6",
+      "channel": "tiktok",
+      "day": 11,
+      "format": "vertical-video",
+      "caption": "Otra entrada a la sesión de Liquid Paper Girl. Regístrate en TDF y sigue al artista para mantenerte cerca de su música. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 461.4,
+      "sourceEnd": 491.4,
+      "status": "draft",
+      "publishedUrl": ""
+    },
+    {
+      "id": "tiktok-7",
+      "channel": "tiktok",
+      "day": 13,
+      "format": "vertical-video",
+      "caption": "Si todavía no viste la sesión de Liquid Paper Girl, este es un buen momento. Descúbrela en TDF y sigue su perfil. Enlace en el perfil, si la cuenta lo permite. #LiquidPaperGirl #LiveSession #TDFRecords",
+      "assetUrl": "",
+      "sourceStart": 537.75,
+      "sourceEnd": 567.75,
+      "status": "draft",
+      "publishedUrl": ""
+    }
+  ]
+}

@@ -78,6 +78,7 @@ executable tdf-hq-exe
     TDF.Artists.Promotion
     TDF.Artists.Enrichment
     TDF.Auth
+    TDF.VideoCampaigns
     TDF.CampaignAutomation
     TDF.Commerce.Money
     TDF.Commerce.CheckoutStore
@@ -440,6 +441,7 @@ test-suite tdf-hq-test
     TDF.Artists.Enrichment
     TDF.Artists.EnrichmentSpec
     TDF.Auth
+    TDF.VideoCampaigns
     TDF.CampaignAutomation
     TDF.Commerce.Money
     TDF.Commerce.CheckoutStore
@@ -540,6 +542,7 @@ test-suite tdf-hq-test
     TDF.Directory.Policy
     TDF.Directory.PolicySpec
     TDF.Profiles.Artist
+    TDF.VideoCampaignsSpec
     TDF.Profiles.ArtistSpec
     TDF.Profiles.ArtistActivationSpec
     TDF.RagStore

@@ -31,12 +31,14 @@ import type { ArtistReleaseDTO } from '../api/types';
 import { getActiveSession, useSession } from '../session/SessionContext';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
 import { parseArtistJson, parseArtistTextItems } from '../utils/artistProfileContent';
+import SessionVideoPreview from '../components/SessionVideoPreview';
 import ArtistFansList from '../components/ArtistFansList';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { formatDateForUser } from '../utils/formatters';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { ArtistMerchStores } from '../components/merch/MerchReputationSummary';
+import { recordVideoConversion, videoAttribution } from '../features/campaigns/videoAttribution';
 import { safeArtistId, buildArtistFollowAuthPath, isArtistFollowResume } from '../utils/artistFollowIntent';
 export { buildArtistFollowAuthPath, isArtistFollowResume } from '../utils/artistFollowIntent';
 import { useTranslation } from 'react-i18next';
@@ -247,6 +249,12 @@ export default function ArtistPublicPage() {
     return followsQuery.data?.some((follow) => follow.ffArtistId === artistId) ?? false;
   }, [artistId, followsQuery.data]);
 
+  useEffect(() => {
+    if (!artistId || !videoAttribution(location.search)) return;
+    getAnalyticsClient().capture('video_campaign_profile_view', { ...videoAttribution(location.search), artistId });
+    if (session?.partyId) void recordVideoConversion(location.search, artistId, 'registration').catch(() => undefined);
+  }, [artistId, location.search, session?.partyId]);
+
   const followMutation = useMutation({
     mutationFn: async (command: FollowCommand) => {
       if (!command.isCurrent()) throw new Error('Follow context changed');
@@ -263,6 +271,7 @@ export default function ArtistPublicPage() {
       void qc.invalidateQueries({ queryKey: ['public-artist', command.segment] });
       if (!command.isCurrent()) return;
       if (!command.wasFollowing) {
+        void recordVideoConversion(location.search, command.artistId, 'follow').catch(() => undefined);
         void captureFirstValueOnce(getAnalyticsClient(), command.viewerId, 'artist_followed', undefined, command.ownsProfile)
           .catch(() => undefined);
       }
@@ -447,7 +456,7 @@ export default function ArtistPublicPage() {
                     variant="contained"
                     color="secondary"
                     component={RouterLink}
-                    to={buildArtistFollowAuthPath(profileLink, artistId)}
+                    to={buildArtistFollowAuthPath(profileLink, artistId, location.search)}
                     startIcon={<FavoriteBorderIcon />}
                     sx={{ textTransform: 'none' }}
                   >
@@ -490,7 +499,12 @@ export default function ArtistPublicPage() {
           </Stack>
         </Box>
         </section>
+
         <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
+          {artist.apFeaturedVideoUrl && <Box sx={{ mb: 3 }}>
+            <Typography variant="h5" component="h2">Sesión destacada</Typography>
+            <SessionVideoPreview url={artist.apFeaturedVideoUrl} title={`${artist.apDisplayName} · Sesión en vivo`} />
+          </Box>}
           <Stack spacing={2.5}>
             {resumeFollow && !isFollowing && (
               <Alert severity="info">{t('artistFollow.resumeMessage', { artist: artist.apDisplayName })}</Alert>

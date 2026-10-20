@@ -9,6 +9,7 @@ import RouteLoadingFallback from './RouteLoadingFallback';
 
 const MobileAppPage = lazy(() => import('../pages/MobileAppPage'));
 const AccountDeletionPage = lazy(() => import('../pages/AccountDeletionPage'));
+const VideoCampaignsPage = lazy(() => import('../pages/VideoCampaignsPage'));
 const ArtistOnboardingPage = lazy(() => import('../pages/ArtistOnboardingPage'));
 const ArtistPublicPage = lazy(() => import('../pages/ArtistPublicPage'));
 const CourseProductionLandingPage = lazy(() => import('../pages/CourseProductionLandingPage'));
@@ -101,6 +102,7 @@ export function renderPublicRoutes() {
       <Route path="/conversacion/:destinationKind/:destinationId" element={<PublicBranding><InteractionPage /></PublicBranding>} />
       <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
       <Route path="/fans/clubs/:artistId" element={<PublicBranding><FanClubPage /></PublicBranding>} />
+      <Route path="/mi-artista/campanas" element={<PublicBranding><VideoCampaignsPage /></PublicBranding>} />
       <Route path="/mi-artista" element={<PublicBranding><FanHubPage focusArtist /></PublicBranding>} />
       <Route path="/artista/crear" element={<PublicBranding><ArtistOnboardingPage /></PublicBranding>} />
       <Route path="/artista/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />
