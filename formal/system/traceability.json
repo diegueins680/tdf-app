@@ -7960,7 +7960,8 @@
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
         "tdf-hq/test/TDF/MusicPublicationSpec.hs",
-        "scripts/test-music-publication.sh"
+        "scripts/test-music-publication.sh",
+        "scripts/test-music-integration-rehearsal.mjs"
       ],
       "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script; PostgreSQL spec of the schedulers (scripts/test-music-publication.sh); bounded TLC model of scheduled publication with four negative controls (formal/system/music-publication.md); bounded one-row withdrawal fairness model with a permanent failure and a starvation mutation control",
       "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); scheduler reproduction, spec and model results in formal/system/music-publication.md (2026-10-11); no production evidence (migrations not applied in production)",
@@ -8094,7 +8095,8 @@
         "test/fixtures/music-worker/upload-curl.mjs",
         "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
-        "tdf-hq-ui/src/utils/incrementalSha256.test.ts"
+        "tdf-hq-ui/src/utils/incrementalSha256.test.ts",
+        "scripts/test-music-integration-rehearsal.mjs"
       ],
       "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md)",
       "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12); re-upload runtime scenario and migration apply/rollback in formal/system/music-upload-rebind.md (2026-10-12, historical local evidence)",
@@ -10246,7 +10248,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "a3f8f0a815370dcfb1d3635e6c55394585c4119cf97243a4a4921846feece81d",
+    ".github/workflows/ci.yml": "450f7f26abfa9ab634617d32f2d1568fe88df0b41bf21a28a13b26717d1769b2",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -10254,7 +10256,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "6f0ab7941d4f777ede66001631ac0bbdcd5a55f83c8c19621f115b58a5831e82",
+    "docs/catalog-persistence/catalog-list-decisions.json": "455c7a3aceae82cc4554a5f8c2dbcc68b352def6602281e194890c909a50d318",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -10498,7 +10500,7 @@
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "fdafac19c3c0e9cdd5f42ca5801b4f1706ae41442127ef86dd4340646cc65bb7",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "6cd63f79447c69cd5c5a126169d3291b6c13a80d466f008b406d113738504948",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
@@ -10642,6 +10644,7 @@
     "scripts/test-music-ddex-package.mjs": "b27e141ea3cb945aa4c1e4ec425f75b6da6c02bf0d662b735a7040795ead5b74",
     "scripts/test-music-directory-migration.sh": "edf8f6eeeae45dc8d3423a90d446004122d45053e93325ae28f08edb81d0a6e2",
     "scripts/test-music-download-predicate.mjs": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
+    "scripts/test-music-integration-rehearsal.mjs": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
     "scripts/test-music-playback-identity.mjs": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
     "scripts/test-music-publication.sh": "51f8af48e80f50d7043f8f301f95c994ef2dd110358013c12ef0cae8cc623417",
     "scripts/test-music-purchase.sh": "881cf0f42840cc2e2fff2fdba60ddc661d791e40d2f8749a2bf9da326beb309c",
@@ -17290,6 +17293,16 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-music-integration-rehearsal.mjs": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-ASSET-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/MusicPublication.tla": [
       {
         "requirement": "MEDIA-MUSIC-RELEASE-001",
@@ -19401,7 +19414,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "a3f8f0a815370dcfb1d3635e6c55394585c4119cf97243a4a4921846feece81d",
+      "sha256": "450f7f26abfa9ab634617d32f2d1568fe88df0b41bf21a28a13b26717d1769b2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20305,7 +20318,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "fdafac19c3c0e9cdd5f42ca5801b4f1706ae41442127ef86dd4340646cc65bb7",
+      "sha256": "6cd63f79447c69cd5c5a126169d3291b6c13a80d466f008b406d113738504948",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23971,6 +23984,22 @@
       "requirements": [
         {
           "requirement": "PAY-MUSIC-DOWNLOAD-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-9ea3042b1af18cf9",
+      "path": "scripts/test-music-integration-rehearsal.mjs",
+      "sha256": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-RELEASE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-ASSET-001",
           "relationship": "tests"
         }
       ]
@@ -45940,7 +45969,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1cafec556dfdd00e1338047c44510e11af5411eb7d3d05a028d0afc84d24e5bd",
+      "sourceSha256": "a8843af13d0610b2d1e62b020947e1de7e4c9fce71089e3a2c623f24f2d32118",
       "definition": {
         "states": [
           "absent",
@@ -45970,7 +45999,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1cafec556dfdd00e1338047c44510e11af5411eb7d3d05a028d0afc84d24e5bd",
+      "sourceSha256": "a8843af13d0610b2d1e62b020947e1de7e4c9fce71089e3a2c623f24f2d32118",
       "definition": {
         "export": [
           "queued",

@@ -46,7 +46,30 @@ prefix hash are pinned in the reconciliation ledger. Neither SQL nor rollback SQ
 is modified. The Mobile gitlink remains
 `4c84c60a5836f7d39f18e10d34d136996bb0f63f`.
 
+Historical boundary: publication SQL in the reviewed music parent already differs
+from its first introduction. Initial SHA-256:
+`a20123c0abda4f66e63f8536df05a17d04b33c1f264e2887ce053bf254d992df`;
+preserved reviewed-parent SHA-256:
+`bc9bccd7fe0fe6bcbf290e153e5bb734bb002ef81acd923dd88d120a97bc9e72`.
+Those prior repairs include withdrawal fairness and transient failure handling.
+This integration changes neither version of history and preserves the reviewed
+parent's SQL, original migration ID and introduction ancestry. The upload-rebind
+SQL matches its introduction. Both initial and reviewed-parent hashes are retained
+in the ledger. No applied production ledger has been inspected, and no
+`compatibleAppliedChecksums` exception is added. Release qualification must compare
+actual applied checksums; an environment running the initial publication bytes
+cannot be assumed compatible or silently accepted.
+
 ## Qualification
+
+`scripts/test-music-integration-rehearsal.mjs` adds a CI gate using a new empty
+database in the isolated PostgreSQL service. It applies and replays the complete
+manifest, checks the unchanged applied ledger, and rolls back and reapplies both
+music migrations twice. Each rollback must remove both triggers and change the
+music schema snapshot; each reapply must restore the exact function and trigger
+definitions. Publication behavior remains covered by the separate compiled
+PostgreSQL tests, and upload/DDEX behavior by the worker runtime suite. This
+schema rehearsal alone is not runtime behavior proof.
 
 The PR conversation carries current candidate test results and failed attempts.
 Historical successful workflow runs on either parent are not evidence for this

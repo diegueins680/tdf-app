@@ -1559,14 +1559,21 @@
       "id": "2026-10-11_music_publication_isolation",
       "path": "tdf-hq/sql/2026-10-11_music_publication_isolation.sql",
       "introducedBy": "598de30e3e1bf47b9f37cea86bd73f5b65eb5fac",
-      "sqlSha256": "bc9bccd7fe0fe6bcbf290e153e5bb734bb002ef81acd923dd88d120a97bc9e72"
+      "sqlSha256": "bc9bccd7fe0fe6bcbf290e153e5bb734bb002ef81acd923dd88d120a97bc9e72",
+      "introducedSqlSha256": "a20123c0abda4f66e63f8536df05a17d04b33c1f264e2887ce053bf254d992df",
+      "preservedFromRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
+      "historicalContentChangedBeforeIntegration": true
     },
     {
       "id": "2026-10-12_music_upload_rebind",
       "path": "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
       "introducedBy": "3f71add5783d9aefe818686abf4ee1c37ef6092b",
-      "sqlSha256": "4ed44e0fbd4915ef413c372099a0d24d0edf5f3c5ef936f0946cd1807f893510"
+      "sqlSha256": "4ed44e0fbd4915ef413c372099a0d24d0edf5f3c5ef936f0946cd1807f893510",
+      "introducedSqlSha256": "4ed44e0fbd4915ef413c372099a0d24d0edf5f3c5ef936f0946cd1807f893510",
+      "preservedFromRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
+      "historicalContentChangedBeforeIntegration": false
     }
   ],
-  "currentManifestDecisionId": "254cc8e9014b4fe1347c"
+  "currentManifestDecisionId": "254cc8e9014b4fe1347c",
+  "migrationHistoryBoundary": "sqlSha256 pins the reviewed music parent bytes preserved by this integration. Publication SQL was repaired after its original introduction before this task; introducedSqlSha256 records those initial bytes separately. No compatible-applied-checksum waiver is added and no deployed ledger is inferred. Actual applied checksums and rollback compatibility remain release prerequisites."
 }

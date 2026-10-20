@@ -853,6 +853,14 @@ jobs:
       - name: Rehearse access-request notification compatibility migration
         run: npm run test:access-request-notification-migration
 
+      - name: Rehearse complete music integration and immutable rollback recovery
+        env:
+          PGPASSWORD: postgres
+          TDF_MUSIC_REHEARSAL_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/tdf_music_rehearsal_test
+        run: |
+          createdb -h 127.0.0.1 -U postgres tdf_music_rehearsal_test
+          node scripts/test-music-integration-rehearsal.mjs
+
       - name: Rehearse notification navigation and history-preserving rollback
         env:
           PGHOST: 127.0.0.1

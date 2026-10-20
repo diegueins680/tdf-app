@@ -61,8 +61,12 @@ test('music/main reconciliation retains both reviews and the protected migration
   assert.equal(canonicalHash(manifest.slice(0, 206)), ledger.protectedMainManifestCanonicalSha256);
   assert.equal(new Set(manifest.map(entry => entry.id)).size, 208);
   for (const [index, migration] of ledger.musicMigrations.entries()) {
-    const { sqlSha256, ...entry } = migration;
+    const { sqlSha256, introducedSqlSha256, preservedFromRevision,
+      historicalContentChangedBeforeIntegration, ...entry } = migration;
     assert.deepEqual(manifest[206 + index], entry);
+    assert.equal(preservedFromRevision, ledger.musicParent);
+    assert.match(introducedSqlSha256, /^[a-f0-9]{64}$/);
+    assert.equal(historicalContentChangedBeforeIntegration, introducedSqlSha256 !== sqlSha256);
     assert.equal(createHash('sha256').update(await fs.readFile(path.join(workspaceRoot,
       entry.path))).digest('hex'), sqlSha256);
   }

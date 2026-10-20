@@ -469,6 +469,7 @@
       "scripts/test-music-directory-contract.mjs",
       "scripts/test-music-directory-migration.sh",
       "scripts/test-music-download-predicate.mjs",
+      "scripts/test-music-integration-rehearsal.mjs",
       "scripts/test-music-playback-identity.mjs",
       "scripts/test-music-publication.sh",
       "scripts/test-music-purchase.sh",
@@ -2626,7 +2627,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "a3f8f0a815370dcfb1d3635e6c55394585c4119cf97243a4a4921846feece81d",
+      "sha256": "450f7f26abfa9ab634617d32f2d1568fe88df0b41bf21a28a13b26717d1769b2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3106,7 +3107,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "fdafac19c3c0e9cdd5f42ca5801b4f1706ae41442127ef86dd4340646cc65bb7",
+      "sha256": "6cd63f79447c69cd5c5a126169d3291b6c13a80d466f008b406d113738504948",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5279,6 +5280,12 @@
       "id": "SURFACE-4602e813a21d4054",
       "path": "scripts/test-music-download-predicate.mjs",
       "sha256": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9ea3042b1af18cf9",
+      "path": "scripts/test-music-integration-rehearsal.mjs",
+      "sha256": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25351,7 +25358,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "1cafec556dfdd00e1338047c44510e11af5411eb7d3d05a028d0afc84d24e5bd",
+      "sha256": "a8843af13d0610b2d1e62b020947e1de7e4c9fce71089e3a2c623f24f2d32118",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

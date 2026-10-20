@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-20T13:18:53.586Z",
+  "generatedAt": "2026-10-20T13:34:17.093Z",
   "repositoryRoot": ".",
-  "filesScanned": 2291,
+  "filesScanned": 2292,
   "candidateCount": 1323,
   "byClassification": {
     "dynamic-business-catalog": 851,
@@ -13059,7 +13059,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 72,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/sql/001_multi_role_migration.sql",
         "tdf-hq/sql/2026-07-15_social_sync_runtime_schema.sql",
@@ -13133,11 +13133,11 @@
         "scripts/test-hetzner-inspection.py",
         "scripts/test-hetzner-restore.py",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-music-integration-rehearsal.mjs",
         "scripts/test-music-release-api-e2e.sh",
         "scripts/test-music-release-worker-runtime.mjs",
         "scripts/test-public-booking-http-concurrency.sh",
-        "scripts/test-specification-inventory.py",
-        "scripts/test-ticket-manual-review.sh"
+        "scripts/test-specification-inventory.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/deploy-stripe-ticketing.sh"
@@ -13604,7 +13604,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 802,
+      "consumerCount": 803,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14359,7 +14359,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 803,
+      "consumerCount": 804,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14649,7 +14649,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 803,
+      "consumerCount": 804,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -22052,7 +22052,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 861,
+      "consumerCount": 862,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -36855,7 +36855,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 345,
+      "consumerCount": 346,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -37136,7 +37136,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 351,
+      "consumerCount": 352,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -43067,7 +43067,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 893,
+      "consumerCount": 894,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -52304,7 +52304,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 893,
+      "consumerCount": 894,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -58983,7 +58983,7 @@
         102,
         111
       ],
-      "consumerCount": 480,
+      "consumerCount": 481,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -59693,7 +59693,7 @@
       "lines": [
         164
       ],
-      "consumerCount": 154,
+      "consumerCount": 155,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -59808,6 +59808,7 @@
         "scripts/test-isolated-application-canary.py",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-music-integration-rehearsal.mjs",
         "scripts/test-music-release-api-e2e.mjs",
         "scripts/test-music-release-platform-migration.sh",
         "scripts/test-notification-alert-context.mjs",
@@ -61802,7 +61803,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 893,
+      "consumerCount": 894,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -62102,7 +62103,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 893,
+      "consumerCount": 894,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -63499,7 +63500,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 893,
+      "consumerCount": 894,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -74246,7 +74247,7 @@
         2954,
         3056
       ],
-      "consumerCount": 314,
+      "consumerCount": 315,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -74757,7 +74758,7 @@
       "lines": [
         7723
       ],
-      "consumerCount": 403,
+      "consumerCount": 404,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -80291,7 +80292,7 @@
       "lines": [
         15136
       ],
-      "consumerCount": 519,
+      "consumerCount": 520,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -80568,7 +80569,7 @@
       "lines": [
         15151
       ],
-      "consumerCount": 484,
+      "consumerCount": 485,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -81048,7 +81049,7 @@
       "lines": [
         15197
       ],
-      "consumerCount": 505,
+      "consumerCount": 506,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -99440,7 +99441,7 @@
       "lines": [
         277
       ],
-      "consumerCount": 155,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -99557,6 +99558,7 @@
         "scripts/test-isolated-application-canary.py",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-music-integration-rehearsal.mjs",
         "scripts/test-music-release-api-e2e.mjs",
         "scripts/test-music-release-platform-migration.sh",
         "scripts/test-notification-alert-context.mjs",
@@ -115318,7 +115320,7 @@
       "lines": [
         206
       ],
-      "consumerCount": 223,
+      "consumerCount": 224,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -115477,6 +115479,7 @@
         "scripts/test-identity-reconciliation.sh",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-music-integration-rehearsal.mjs",
         "scripts/test-music-release-platform-migration.sh",
         "scripts/test-notification-alert-context.mjs",
         "scripts/test-notification-navigation-migration.sh",
@@ -131411,7 +131414,7 @@
       "lines": [
         562
       ],
-      "consumerCount": 155,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -131528,6 +131531,7 @@
         "scripts/test-isolated-application-canary.py",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-music-integration-rehearsal.mjs",
         "scripts/test-music-release-api-e2e.mjs",
         "scripts/test-music-release-platform-migration.sh",
         "scripts/test-notification-alert-context.mjs",
@@ -133479,7 +133483,7 @@
       "lines": [
         335
       ],
-      "consumerCount": 163,
+      "consumerCount": 164,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -133599,6 +133603,7 @@
         "scripts/test-isolated-application-canary.py",
         "scripts/test-merch-reputation-migration.sh",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-music-integration-rehearsal.mjs",
         "scripts/test-music-release-api-e2e.mjs",
         "scripts/test-music-release-platform-migration.sh",
         "scripts/test-notification-alert-context.mjs",
@@ -133611,8 +133616,7 @@
         "scripts/test-specification-conformance.py",
         "scripts/test-ticket-manual-review.sh",
         "scripts/test-unified-checkout-migration.sh",
-        "scripts/test-user-experiment-assignment-migration.sh",
-        "scripts/test-user-onboarding-progress-migration.sh"
+        "scripts/test-user-experiment-assignment-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/eventOperations.test.ts",
@@ -146602,7 +146606,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 893,
+      "consumerCount": 894,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",

@@ -10881,7 +10881,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 223,
+        "consumerCount": 224,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "466bc208eb4fdfa1d8c2",
