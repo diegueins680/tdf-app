@@ -114,6 +114,12 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `MusicDdexExportUnfenced/Reopen/NoCommitGate/ReplayFailed/SplitDeadLetter.cfg` | Negative controls: no attempt token, valid regenerated, no rule check at commit, replay re-enqueues a failed export, dead letter split from the export's failed status | Expected exit 12 with `CurrentWriter`, `ValidForever`, `ValidOnlyUnderRules`, `FailedIsFinal`, `PendingHasLiveJob` |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `OperationsAuxiliaryWrite.cfg` (2026-10-12) | Two auxiliary Operations commands (note, retry, view or push) of one actor; session, grant, membership, assignment-dependent visibility, failure state and push key as the environment; lock, commit with audit, reject | PASS; 34,172 generated, 13,744 distinct states, depth 10; `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
+| `OperationsAuxiliaryWriteUnlocked.cfg`, `OperationsAuxiliaryWritePartialAudit.cfg`, `OperationsAuxiliaryWriteRetryTwice.cfg`, `OperationsAuxiliaryWriteUnencrypted.cfg` | Negative controls: environment moves while a command holds its locks, a result without its audit, a second retry admitted, a push token stored without the key | Expected exit 12 with `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
+| `OperationsReadPolicy.cfg` (2026-10-12) | One state; the grant table of `Model.hs` and the SQL scope filter evaluated over every subset of ten roles, both assignment flags and fifteen entity types (up to 30,720 cases per invariant) | PASS; `ReadersAgree`, `NoSecurityDisclosure`, `ReadOnlyNoWriteGain`, `SpecialistsAssigned`, `UnknownNothing` |
+| `OperationsReadPolicyWildcardSecurity.cfg`, `OperationsReadPolicySqlDrift.cfg`, `OperationsReadPolicyUnassigned.cfg`, `OperationsReadPolicyReadOnlyWrites.cfg`, `OperationsReadPolicyUnknownGrant.cfg` | Negative controls: the Haskell wildcard includes security, the SQL wildcard includes security, specialists see unassigned items, ReadOnly kept for write visibility, an unlisted role granted the wildcard | Expected non-zero exit with "The invariant of ... is equal to FALSE" for `NoSecurityDisclosure`, `ReadersAgree`, `SpecialistsAssigned`, `ReadOnlyNoWriteGain`, `UnknownNothing` |
+| `OperationsWorkerTick.cfg` (2026-10-12) | 3 outbox rows (1 poisoned), 3 attempts to dead letter, 6 ticks; backoff elapses between ticks | PASS; 61 generated, 27 distinct states, depth 9; `PoisonIsolated`, `NoAbortedTick`, `AttemptsRecorded`, `DeadLetterAtBound` |
+| `OperationsWorkerTickDeferredCheck.cfg`, `OperationsWorkerTickNoAttempt.cfg`, `OperationsWorkerTickUnboundedRetry.cfg` | Negative controls: constraints deferred to commit (the previous tick), failed projection records no attempt, no dead-letter bound | Expected non-zero exit with `PoisonIsolated`, `AttemptsRecorded`, `DeadLetterAtBound` violated |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
@@ -696,6 +702,15 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+## Operations failure retry
+
+`OperationsFailureReplay.tla` and four configurations check the rule in
+[operations-failure-replay.md](../system/operations-failure-replay.md): an admitted
+retry puts the dead-lettered projection back in the queue, a projection that runs
+closes its failure, and a second dead letter returns to the same failure. The
+positive configuration also checks, under weak fairness of the worker, that a
+retry ends resolved or dead-lettered. Each negative control removes one rule.
+
 ## Index declarations
 
 `IndexDeclaration.tla` and four configurations check the rule in
@@ -724,3 +739,40 @@ as fencing token, the two rule gates, valid and failed finality, queued-only rep
 repair and the atomic dead letter. The positive model and five negative controls are
 mandatory in the formal runner. Bounds, abstractions and the recovery gap found are
 stated there.
+
+
+## Operations auxiliary writes (2026-10-12)
+
+`OperationsAuxiliaryWrite.tla` models the four auxiliary Operations
+mutations (OPS-AUX-WRITE-001): a command takes its locks, reads session,
+grant, membership, assignment, failure state and push key under them, then
+commits its result together with its audit row or is rejected with no
+effect. Five negative controls, including a failure-resolution-only stale retry. The model states the guards the
+handlers are read to apply; the PostgreSQL/HTTP conformance harness is the
+execution evidence. See
+[operations-aux-write.md](../system/operations-aux-write.md).
+## Operations read policy (2026-10-12)
+
+`OperationsReadPolicy.tla` is not a state machine: it copies the read grant
+table of `tdf-hq/src/TDF/Operations/Model.hs` and the SQL scope filter of
+`tdf-hq/src/TDF/Operations/Server.hs` and evaluates five invariants over
+every role set, assignment flag and entity type (AUTH-OPS-READ-001): detail
+(Haskell predicate) and list, metrics and stream (SQL filter) agree; only an
+Admin sees security incidents; ReadOnly adds no write visibility (by
+construction of the stripping rule each write site applies; the slice fixed
+the one site that did not); Teacher, Engineer and unlisted roles see
+nothing unassigned. Five controls each break one guard. The table is copied by hand; a change to `Model.hs` or
+`scopeFilterSql` must be mirrored here. See
+[operations-read-policy.md](../system/operations-read-policy.md).
+
+`OperationsWorkerTick.tla` checks the Operations worker's maintenance tick of
+OPS-WORKER-001: every due outbox row is projected or fails alone with a
+recorded attempt and a backoff, and a row whose entity no longer exists is
+dead-lettered after the attempt bound, so one poisoned row never holds the
+rows of other aggregates hostage (its own aggregate's successors wait, by
+design). The `DeferredCheck` control is the previous tick, in which the
+deferred reference trigger fired at commit and rolled the whole tick back;
+`NoAttempt` and `UnboundedRetry` remove the two retry guards.
+`scripts/__tests__/operations-worker-tick-postgres.mjs` runs the tick's
+statements against the migrated fixture. Bounds and exclusions are in
+`formal/system/operations-worker-tick.md`.

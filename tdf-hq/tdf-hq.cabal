@@ -367,6 +367,7 @@ test-suite tdf-hq-test
     TDF.EventOrganizerSpec
     TDF.InvoiceDatilSpec
     TDF.TicketManualReviewSpec
+    TDF.Test.DisposablePostgres
     TDF.IndexDeclarationSpec
     TDF.InvoiceWorkerSpec
     Paths_tdf_hq
@@ -690,6 +691,7 @@ test-suite tdf-hq-test
     , transformers
     , mtl
     , network
+    , network-uri
     , mime-mail
     , tagged
     , unordered-containers

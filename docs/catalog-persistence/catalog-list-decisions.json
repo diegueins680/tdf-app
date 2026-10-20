@@ -3,9 +3,9 @@
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "reconciliation": {
-    "preservedDecisions": 1165,
-    "reviewedByPolicy": 158,
-    "removedStaleDecisions": 2,
+    "preservedDecisions": 1176,
+    "reviewedByPolicy": 147,
+    "removedStaleDecisions": 0,
     "reviewBatch": "deterministic-policy-v3",
     "consolidatedMainRetirements": {
       "sourceMain": "fdac8e76523befee1603f49f6c7cf7d00762931b",
@@ -1013,48 +1013,46 @@
       "reviewed": true
     },
     {
-      "id": "4ce5568ab136c5201a90",
+      "id": "254cc8e9014b4fe1347c",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
-      "risk": "Migration ordering and checksums govern persisted state and release compatibility.",
-      "justification": "Ordered 206-entry manifest preserves the exact current main 204-entry prefix and appends publication isolation and upload rebinding. Original SQL bytes and introduction commits are retained. Application and replay passed on the synthetic production schema; production application remains separately gated.",
+      "risk": "Changing migration order, SQL bytes or introduction ancestry can corrupt immutable deployment history.",
+      "justification": "Ordered 208-entry manifest retains protected main 6ceca759cdb19a100afbce7063eef6a7fe09a117 as its exact 206-entry prefix, including Operations failure replay and enabled-only inbound capture; publication isolation and upload rebinding follow in original music order. All introduction commits and SQL bytes are unchanged. Both parent reviews remain immutable historical evidence. Checksum, introduction ancestry, isolated PostgreSQL apply/replay and rollback/reapply gates remain mandatory. This review authorizes no production migration, deployment or music/payment activation.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "media-consolidation-20261015",
+      "reviewBatch": "music-main-integration-20261020",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 206,
+        "valueCount": 208,
         "consumerCount": 71,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       },
       "supersededReviews": [
         {
-          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
+          "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
+          "sourceFileSha256": "57cc1dc5ad5cf2e72c71e24c39339bc7c87c88cf41508577b573baebc695577e",
           "sourceEntry": {
-            "id": "b764d2822469d25211b5"
+            "id": "4ce5568ab136c5201a90"
           },
-          "sourceEntryCanonicalSha256": "05647f2f408300fdcc992ee36dc4bcf80a9584122eafa3821086a1bfa2ddd08e",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
+          "sourceEntryCanonicalSha256": "aa38dcf69c2f350375440989888ec69ca9f1188a7d0ed1b60a3e89318ef552ec",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         },
         {
-          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
+          "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
+          "sourceFileSha256": "059040e077ba3ea12323d8bdb81275a72abace64c5ba22b13ae6456c4b5e2e7d",
           "sourceEntry": {
-            "id": "1a158871b0f3e76f5ee3"
+            "id": "f95bc53ef5e33e741588"
           },
-          "sourceEntryCanonicalSha256": "e3494776c3e96eba1668bfdd6ecb4c0f3fe4a05189480a037b94894c156ceaaa",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
+          "sourceEntryCanonicalSha256": "c7cbf12b7e812a87c9199e0d13f2b853d21ca6791b5e0bca1a79dd3875fc46b6",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]
     },
@@ -4895,7 +4893,7 @@
         "kind": "object-registry",
         "name": "sessionMock",
         "valueCount": 5,
-        "consumerCount": 128,
+        "consumerCount": 129,
         "exactDuplicateIds": [
           "a86872972efe04fbd789",
           "032010c2e0452a17c57c",
@@ -5875,7 +5873,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Offering an identification type the SRI does not accept would produce rejected invoices.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
@@ -7314,7 +7312,7 @@
         "kind": "openapi-enum",
         "name": "MerchProductStatus",
         "valueCount": 7,
-        "consumerCount": 158,
+        "consumerCount": 159,
         "exactDuplicateIds": [
           "ab22a28a6c1f13d36e93"
         ],
@@ -7367,7 +7365,7 @@
         "kind": "openapi-enum",
         "name": "MerchIssueStatus",
         "valueCount": 7,
-        "consumerCount": 136,
+        "consumerCount": 138,
         "exactDuplicateIds": [
           "be1f72b6a12dba445b47",
           "282b46a9f2d482e2e13a"
@@ -7471,7 +7469,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Contract drift could let clients send identification types the SRI rejects.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
@@ -10856,7 +10854,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 158,
+        "consumerCount": 159,
         "exactDuplicateIds": [
           "df4db7e4f0142896d690"
         ],
@@ -11285,7 +11283,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 52,
+        "consumerCount": 53,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11307,7 +11305,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 11,
-        "consumerCount": 73,
+        "consumerCount": 74,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11329,7 +11327,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 136,
+        "consumerCount": 138,
         "exactDuplicateIds": [
           "cb78a7beeb769986f90c",
           "282b46a9f2d482e2e13a"
@@ -11357,7 +11355,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 134,
+        "consumerCount": 136,
         "exactDuplicateIds": [
           "b353ecdfc08e2a005034"
         ],
@@ -11614,7 +11612,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 75,
+        "consumerCount": 79,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11840,7 +11838,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 138,
+        "consumerCount": 139,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "6cf3c47175b7c9af19d0",
@@ -12561,7 +12559,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 84,
+        "consumerCount": 86,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12778,7 +12776,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 148,
+        "consumerCount": 149,
         "exactDuplicateIds": [
           "7c7e2e150ed59b1e3fc2",
           "d14b4c467d704c72df48",
@@ -12804,7 +12802,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 188,
+        "consumerCount": 189,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12944,7 +12942,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 73,
+        "consumerCount": 74,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13133,7 +13131,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 93,
+        "consumerCount": 97,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -14759,7 +14757,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Adding document kinds without SRI document semantics could emit unsupported tax documents.",
-      "justification": "SRI document kinds handled by the invoice worker (factura and nota de cr\u00e9dito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
+      "justification": "SRI document kinds handled by the invoice worker (factura and nota de crédito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
@@ -14774,7 +14772,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Accepting unsupported identification types would store invoices that cannot be issued.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -14789,7 +14787,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Mixing environments would send test invoices to production or the reverse.",
-      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producci\u00f3n; a closed technical domain.",
+      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producción; a closed technical domain.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -15050,7 +15048,7 @@
         "kind": "haskell-list",
         "name": "terminalIssueStatuses",
         "valueCount": 3,
-        "consumerCount": 133,
+        "consumerCount": 135,
         "exactDuplicateIds": [
           "04a2bfe3f922f36836d2"
         ],
@@ -15834,7 +15832,7 @@
         "kind": "haskell-list",
         "name": "issueStatuses",
         "valueCount": 7,
-        "consumerCount": 135,
+        "consumerCount": 137,
         "exactDuplicateIds": [
           "cb78a7beeb769986f90c",
           "be1f72b6a12dba445b47"

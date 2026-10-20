@@ -656,13 +656,13 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "4ce5568ab136c5201a90",
-      "reason": "Ordered 184-entry manifest preserves both parent migration sequences, every introduction commit and SQL byte: canonical 181 entries, invoice receipt snapshot, per-ticket refund allocation, then immutable refund request binding. Current combined rehearsal and production deployment remain independently gated; no migration is represented as applied.",
+      "replacementId": "254cc8e9014b4fe1347c",
+      "reason": "Ordered 208-entry manifest retains protected main 6ceca759cdb19a100afbce7063eef6a7fe09a117 as its exact 206-entry prefix, including Operations failure replay and enabled-only inbound capture; publication isolation and upload rebinding follow in original music order. All introduction commits and SQL bytes are unchanged. Both parent reviews remain immutable historical evidence. Checksum, introduction ancestry, isolated PostgreSQL apply/replay and rollback/reapply gates remain mandatory. This review authorizes no production migration, deployment or music/payment activation.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
-        "mainRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
-        "valueCount": 206,
-        "reason": "Ordered 206-entry manifest preserves the exact current main 204-entry prefix and appends publication isolation and upload rebinding. Original SQL bytes and introduction commits are retained. Application and replay passed on the synthetic production schema; production application remains separately gated."
+        "mainRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
+        "valueCount": 208,
+        "reason": "Ordered 208-entry manifest retains protected main 6ceca759cdb19a100afbce7063eef6a7fe09a117 as its exact 206-entry prefix, including Operations failure replay and enabled-only inbound capture; publication isolation and upload rebinding follow in original music order. All introduction commits and SQL bytes are unchanged. Both parent reviews remain immutable historical evidence. Checksum, introduction ancestry, isolated PostgreSQL apply/replay and rollback/reapply gates remain mandatory. This review authorizes no production migration, deployment or music/payment activation."
       },
       "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
       "sourceReviewReferences": [
@@ -687,6 +687,26 @@
           "sourceEntryCanonicalSha256": "ff6671bb21fa18c4bab80cd4f702954801b71cdc1b0fab379df484010423aa45",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "93c2cf382f4e98f210d41bd19e62f33f5a0a1db916d90c2ebbe570c3b579efaf",
+          "sourceEntry": {
+            "originalDecision.id": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "6767e66311b3e51b19f739e123ec03d26cc3523059342634c745f4ca60f6e420",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "b9ba962c9010813249937786ddc0bfba81f5cd0d197b1db800c1a43f3cc12ba6",
+          "sourceEntry": {
+            "originalDecision.id": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "e0c1a01f381b8fe30ecfff75f25483db7f9d017342fc9b78ffdfc5a212bd6ed8",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]
     }

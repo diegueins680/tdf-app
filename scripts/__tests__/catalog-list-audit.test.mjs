@@ -26,6 +26,57 @@ async function readReconciliation() {
   return { ledger, active, successors, integration };
 }
 
+test('music/main reconciliation retains both reviews and the protected migration prefix', async () => {
+  const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/music-main-reconciliation.json'), 'utf8'));
+  const { active, successors, integration } = await readReconciliation();
+  const canonicalHash = value => createHash('sha256').update(JSON.stringify(value,
+    (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
+      ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)).digest('hex');
+  assert.equal(ledger.sharedDecisionConflicts.length, 51);
+  assert.equal(new Set(ledger.sharedDecisionConflicts.map(entry => entry.id)).size, 51);
+  let preservedReviews = 0;
+  for (const entry of ledger.sharedDecisionConflicts) {
+    assert.deepEqual(entry.sources.map(source => source.sourceRevision),
+      [ledger.musicParent, ledger.mainParent]);
+    for (const source of entry.sources) {
+      assert.equal(source.sourceEntry.id, entry.id);
+      assert.match(source.sourceFileSha256, /^[a-f0-9]{64}$/);
+      assert.match(source.sourceEntryCanonicalSha256, /^[a-f0-9]{64}$/);
+    }
+    const decision = active.find(item => item.id === entry.id);
+    assert.equal(decision?.reviewed, true);
+    if (entry.preservedReviewCanonicalSha256) {
+      assert.equal(canonicalHash(decision), entry.preservedReviewCanonicalSha256);
+      assert.equal(decision.reviewMethod, 'successor-of-reviewed-decisions');
+      preservedReviews += 1;
+    } else {
+      assert.deepEqual(entry.differingFields, ['evidence']);
+    }
+  }
+  assert.equal(preservedReviews, 10);
+  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'scripts/production-migrations.json'), 'utf8')).migrations;
+  assert.equal(manifest.length, 208);
+  assert.equal(canonicalHash(manifest.slice(0, 206)), ledger.protectedMainManifestCanonicalSha256);
+  assert.equal(new Set(manifest.map(entry => entry.id)).size, 208);
+  for (const [index, migration] of ledger.musicMigrations.entries()) {
+    const { sqlSha256, ...entry } = migration;
+    assert.deepEqual(manifest[206 + index], entry);
+    assert.equal(createHash('sha256').update(await fs.readFile(path.join(workspaceRoot,
+      entry.path))).digest('hex'), sqlSha256);
+  }
+  const current = active.find(entry => entry.id === ledger.currentManifestDecisionId);
+  assert.equal(current?.reviewed, true);
+  assert.equal(successors.find(entry => entry.name === 'migrations').currentId, current.id);
+  assert.equal(integration.retirements.find(entry => entry.source.name === 'migrations').replacementId,
+    current.id);
+  for (const entry of ledger.retiredManifestDecisions) {
+    assert.ok(!active.some(item => item.id === entry.id));
+    assert.match(entry.source.sourceEntryCanonicalSha256, /^[a-f0-9]{64}$/);
+  }
+});
+
 test('event catalog retirement ledger preserves evidence and distinct reviewed successors', async () => {
   const { ledger, active, successors } = await readReconciliation();
   assert.equal(ledger.schemaVersion, 1);
@@ -177,6 +228,7 @@ test('decision reconciliation preserves reviewed entries, removes stale IDs, and
     justification: 'Existing reviewed justification remains unchanged.',
     reviewed: true,
   };
+  const historicalRetirements = { sourceMain: 'immutable-source', decisions: [preserved] };
   const candidate = (overrides) => ({
     id: 'new-id',
     file: 'scripts/artist-enrichment.mjs',
@@ -217,11 +269,8 @@ test('decision reconciliation preserves reviewed entries, removes stale IDs, and
     await fs.writeFile(existingPath, JSON.stringify({
       schemaVersion: 1,
       reconciliation: {
-        preservedDecisions: 999,
-        ticketMainMergeRetirements: {
-          sourceMain: 'previous-reviewed-revision',
-          decisions: [{ originalDecision: preserved, replacementId: preserved.id }],
-        },
+        preservedDecisions: 99,
+        ticketMainMergeRetirements: historicalRetirements,
       },
       decisions: [
         preserved,
@@ -245,6 +294,7 @@ test('decision reconciliation preserves reviewed entries, removes stale IDs, and
     ]);
 
     const report = JSON.parse(await fs.readFile(outputPath, 'utf8'));
+    assert.ok(!report.decisions.some(entry => entry.id === 'stale-id'));
     assert.deepEqual(report.decisions[0], preserved);
     assert.equal(report.decisions[1].classification, 'genuine-technical-constant');
     assert.equal(report.decisions[1].reviewBatch, 'unit-test-review');
@@ -256,10 +306,7 @@ test('decision reconciliation preserves reviewed entries, removes stale IDs, and
     assert.equal(report.decisions[3].classification, 'dynamic-business-catalog');
     assert.equal(report.decisions[3].specializedModel, 'onboarding_intent, onboarding_first_value, user_onboarding_progress');
     assert.deepEqual(report.reconciliation, {
-      ticketMainMergeRetirements: {
-        sourceMain: 'previous-reviewed-revision',
-        decisions: [{ originalDecision: preserved, replacementId: preserved.id }],
-      },
+      ticketMainMergeRetirements: historicalRetirements,
       preservedDecisions: 1,
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,

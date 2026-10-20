@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "4ce5568ab136c5201a90",
+      "currentId": "254cc8e9014b4fe1347c",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 206,
-      "change": "Ordered 206-entry manifest preserves the exact current main 204-entry prefix and appends publication isolation and upload rebinding. Original SQL bytes and introduction commits are retained. Application and replay passed on the synthetic production schema; production application remains separately gated.",
+      "valueCount": 208,
+      "change": "Ordered 208-entry manifest retains protected main 6ceca759cdb19a100afbce7063eef6a7fe09a117 as its exact 206-entry prefix, including Operations failure replay and enabled-only inbound capture; publication isolation and upload rebinding follow in original music order. All introduction commits and SQL bytes are unchanged. Both parent reviews remain immutable historical evidence. Checksum, introduction ancestry, isolated PostgreSQL apply/replay and rollback/reapply gates remain mandatory. This review authorizes no production migration, deployment or music/payment activation.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -371,6 +371,26 @@
           "sourceEntryCanonicalSha256": "ee9d3df97d76ec5414f6e06b5ab897c65ae2fcba7fa58c8736280a2d268bd41d",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "2d187abb91c2ff39cb5506d0ddb6b62613e26cfb0049a38c5c9393f17b556f3b",
+          "sourceEntry": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "b0807f471978a4d450e1146ede3625705f79860bac46c1b70861578e68303220",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "2f1b6f5b481990e147f6eadfba927520f49663b40452d24b8f9b775308f106ba",
+          "sourceEntry": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "743e5631efbf40cbdc4d09db4b9c06443c6d8243778cdf21d2bd212e49408bf4",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]
     }
