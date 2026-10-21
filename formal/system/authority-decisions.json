@@ -826,7 +826,10 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/ModelsExtra.hs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
-        "formal/system/whatsapp-consent.md"
+        "formal/system/whatsapp-consent.md",
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
+        "formal/system/requirements.json#DATA-INDEX-DECLARATION-001",
+        "formal/system/requirements.json#MSG-WHATSAPP-REDELIVERY-001"
       ],
       "conflict": "PRIV-WHATSAPP-001 requires the confirmation notice to be recorded as an outgoing message and the webhook to accept a valid confirmation. A confirming reply activated consent but the webhook then answered HTTP 500 and recorded no notice: the notice row was inserted with the handler timestamp, which the inbound reply row already holds for that number, and whats_app_message is unique on (phone_e164, created_at) because the model line IndexWhatsAppMessagePhone is a Persistent unique declaration (production constraint index_whats_app_message_phone). Reproduced against the real backend on 2026-10-12.",
       "authority": "The requirement's effects and the 2026-10-06 double opt-in decision (AUTHORITY-052); the unique constraint is an accident of the model declaration syntax, not a rule.",

@@ -10068,7 +10068,8 @@
       "tests": [
         "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
         "scripts/test-index-declarations.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/lib/whatsapp_consent_conformance.py"
       ],
       "formalModels": [
         "formal/event-operations/IndexDeclaration.tla",

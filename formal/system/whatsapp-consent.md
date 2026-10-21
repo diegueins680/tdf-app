@@ -119,7 +119,7 @@ was only a best-effort repair while those constraints remained.
 
 Current main retains the additive
 `tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql` migration and the matching
-model declaration removal (`DB-INDEX-DECLARATIONS-001`). Both history indexes are
+model declaration removal (`DATA-INDEX-DECLARATION-001`). Both history indexes are
 plain indexes; distinct messages may share a phone, party and instant. This
 integration preserves that schema and `receiveWhatsAppInbound`'s atomic receipt,
 consent confirmation and duplicate-delivery handling. It does not reinstate the
