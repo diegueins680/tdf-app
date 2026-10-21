@@ -3,8 +3,8 @@
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "reconciliation": {
-    "preservedDecisions": 1167,
-    "reviewedByPolicy": 157,
+    "preservedDecisions": 1177,
+    "reviewedByPolicy": 147,
     "removedStaleDecisions": 0,
     "reviewBatch": "deterministic-policy-v3",
     "consolidatedMainRetirements": {
@@ -323,7 +323,9 @@
           "successorReason": "Reviewed current generated mirror retains strict-admin concealment and adds authenticated account-deletion discovery; full main predecessor decision remains in its concurrentReviewHistory."
         }
       ]
-    }
+    },
+    "ledgerMainIntegration": "docs/catalog-persistence/ledger-main-reconciliation.json",
+    "ledgerSnapshotIntegration": "docs/catalog-persistence/ledger-snapshot-reconciliation-20261020.json"
   },
   "decisions": [
     {
@@ -1026,6 +1028,23 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "8d25e57f854135dc456e",
+      "classification": "security-system-registry",
+      "disposition": "retain-reviewed-deployment-manifest",
+      "specializedModel": "production migration manifest and applied migration ledger",
+      "risk": "Reordered prerequisites, changed applied SQL or omitted review history can undermine financial correctness and recovery.",
+      "justification": "Ordered 213-entry manifest retains dependency f58f6ac1859d3cc294a3ed3cee23cb3da6fac487 as its exact 212-entry prefix and appends the original stale-snapshot ledger repair. The complete main/music/Operations/ledger history, SQL bytes and introduction SHAs remain unchanged. Both predecessor manifest reviews and all prior reconciliation ledgers remain immutable historical evidence. Full-source ancestry, expanded checksums, PostgreSQL apply/replay and concurrency/negative controls remain mandatory; this classification grants no production execution, provider action or feature activation.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 213
+      }
     },
     {
       "id": "3391a96825357d78f794",
@@ -2177,8 +2196,8 @@
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "React Query key segments are client cache mechanics and do not enumerate business values. Same three keys as reviewed decision 79e7466c1f722b842262, moved unchanged from EventRsvpControls.tsx to a module the shell carousel can share.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
         "line": 2,
@@ -2191,26 +2210,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "1c608b378ca85918019d"
           },
           "sourceEntryCanonicalSha256": "653b016fff9a84868f3e27a92948ba059a67c1636dab20ad95430ab1c5890e68",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "1c608b378ca85918019d"
-          },
-          "sourceEntryCanonicalSha256": "495b5f5a252fcb489989d231599009d9f61448286a68b3571a1baffdcca08e07",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -4875,7 +4883,7 @@
         "kind": "object-registry",
         "name": "sessionMock",
         "valueCount": 5,
-        "consumerCount": 127,
+        "consumerCount": 129,
         "exactDuplicateIds": [
           "a86872972efe04fbd789",
           "032010c2e0452a17c57c",
@@ -5459,7 +5467,7 @@
         "kind": "jsx-option-values",
         "name": "JSX value attributes",
         "valueCount": 14,
-        "consumerCount": 241,
+        "consumerCount": 243,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -7294,7 +7302,7 @@
         "kind": "openapi-enum",
         "name": "MerchProductStatus",
         "valueCount": 7,
-        "consumerCount": 158,
+        "consumerCount": 159,
         "exactDuplicateIds": [
           "ab22a28a6c1f13d36e93"
         ],
@@ -7347,7 +7355,7 @@
         "kind": "openapi-enum",
         "name": "MerchIssueStatus",
         "valueCount": 7,
-        "consumerCount": 136,
+        "consumerCount": 138,
         "exactDuplicateIds": [
           "be1f72b6a12dba445b47",
           "282b46a9f2d482e2e13a"
@@ -7375,7 +7383,7 @@
         "kind": "openapi-enum",
         "name": "MerchRefundStatus",
         "valueCount": 6,
-        "consumerCount": 249,
+        "consumerCount": 250,
         "exactDuplicateIds": [
           "53eb977c438f2629bf40",
           "015ddf4475d1e02f496a"
@@ -7402,7 +7410,7 @@
         "kind": "openapi-enum",
         "name": "MerchSettlementStatus",
         "valueCount": 6,
-        "consumerCount": 197,
+        "consumerCount": 199,
         "exactDuplicateIds": [
           "4f748f0a512f9deb694a",
           "7d45ba63a043428fa3f0"
@@ -10651,7 +10659,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 236,
+        "consumerCount": 239,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "b5cf352ce0b028fa7f58"
@@ -10675,7 +10683,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 79,
+        "consumerCount": 81,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "daa37fcffc0e8bd8a2ed"
@@ -10691,8 +10699,8 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 85,
@@ -10705,26 +10713,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "6f23d79c58cb6df8789b"
           },
           "sourceEntryCanonicalSha256": "b52255140128fa2ec5471117a439a07aade7fe065fc67e6505009936b31913f2",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "6f23d79c58cb6df8789b"
-          },
-          "sourceEntryCanonicalSha256": "c95fa0fc58b6a73a7e8510191ec9dc72ea85a9f72c583ab30f4faac53f4d6654",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -10847,7 +10844,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 158,
+        "consumerCount": 159,
         "exactDuplicateIds": [
           "df4db7e4f0142896d690"
         ],
@@ -10874,7 +10871,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 223,
+        "consumerCount": 224,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "466bc208eb4fdfa1d8c2",
@@ -10943,7 +10940,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 46,
+        "consumerCount": 47,
         "exactDuplicateIds": [
           "84b896cbe258f816048c"
         ],
@@ -11117,7 +11114,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 9,
-        "consumerCount": 276,
+        "consumerCount": 277,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11161,7 +11158,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 8,
-        "consumerCount": 229,
+        "consumerCount": 231,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "29477a732e910fa947a8",
@@ -11254,7 +11251,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 93,
+        "consumerCount": 94,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11276,7 +11273,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 52,
+        "consumerCount": 53,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11298,7 +11295,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 11,
-        "consumerCount": 74,
+        "consumerCount": 75,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11320,7 +11317,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 136,
+        "consumerCount": 138,
         "exactDuplicateIds": [
           "cb78a7beeb769986f90c",
           "282b46a9f2d482e2e13a"
@@ -11348,7 +11345,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 134,
+        "consumerCount": 136,
         "exactDuplicateIds": [
           "b353ecdfc08e2a005034"
         ],
@@ -11374,7 +11371,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 197,
+        "consumerCount": 199,
         "exactDuplicateIds": [
           "29477a732e910fa947a8",
           "7d45ba63a043428fa3f0"
@@ -11402,7 +11399,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 180,
+        "consumerCount": 181,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "30a381d06cc0d1594f1c"
@@ -11605,7 +11602,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 75,
+        "consumerCount": 79,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11649,8 +11646,8 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql",
         "line": 26,
@@ -11663,26 +11660,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "1fc12a91554dc9bed3fa"
           },
           "sourceEntryCanonicalSha256": "ce738b4b558615760c2e498c6388e46b048e618d326a16f6bcda1a935f8c7f86",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "1fc12a91554dc9bed3fa"
-          },
-          "sourceEntryCanonicalSha256": "8d937aa270faa6fdc8f5989e0a8e751f4da15b790194076d4b7ceec25ae87608",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -11842,7 +11828,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 138,
+        "consumerCount": 139,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "6cf3c47175b7c9af19d0",
@@ -11947,7 +11933,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 236,
+        "consumerCount": 237,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "76645902bce3902042f9",
@@ -11972,7 +11958,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 46,
+        "consumerCount": 47,
         "exactDuplicateIds": [
           "0c575e3bf3fa4309062a"
         ],
@@ -12088,8 +12074,8 @@
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 795,
@@ -12102,26 +12088,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "7a90f90edc7d99b665c5"
           },
           "sourceEntryCanonicalSha256": "ee63211d0b714f10a636b6731e38ca30dde6e808106713c6f84ed42113db6c09",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "7a90f90edc7d99b665c5"
-          },
-          "sourceEntryCanonicalSha256": "9d8a422e39d2d470f1c5d0ab73d798edf10ed4af1f38b05f87f4aec942bd6c6e",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -12178,8 +12153,8 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 831,
@@ -12192,26 +12167,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "3a40512bc891a8863306"
           },
           "sourceEntryCanonicalSha256": "9108605f74f60cdcf7502309f1f0c5d4e54af658f83e987c8ca8294607d5bf2f",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "3a40512bc891a8863306"
-          },
-          "sourceEntryCanonicalSha256": "e8b883146acd346d9114b3e82b37d5814dfbfaafb17dbd6207caafa211e34e33",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -12448,7 +12412,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 82,
+        "consumerCount": 85,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12470,7 +12434,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 85,
+        "consumerCount": 86,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12541,7 +12505,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 84,
+        "consumerCount": 85,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12585,7 +12549,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 84,
+        "consumerCount": 86,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12802,7 +12766,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 148,
+        "consumerCount": 149,
         "exactDuplicateIds": [
           "7c7e2e150ed59b1e3fc2",
           "d14b4c467d704c72df48",
@@ -12828,7 +12792,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 186,
+        "consumerCount": 189,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12850,7 +12814,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 228,
+        "consumerCount": 229,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12872,7 +12836,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 97,
+        "consumerCount": 98,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12886,8 +12850,8 @@
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 60,
@@ -12902,26 +12866,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "aaa716ca68fa3cb0b09b"
           },
           "sourceEntryCanonicalSha256": "e52d544f1a23c10805e0ec4697fc46e7bcec932ed2ec3d8a510077e40332d2ff",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "aaa716ca68fa3cb0b09b"
-          },
-          "sourceEntryCanonicalSha256": "489471b12184cc23f28eb542b7cee7240e60430156954d62d6bab14fc7d60246",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -12934,8 +12887,8 @@
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 64,
@@ -12950,26 +12903,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "65992320958643fcd97a"
           },
           "sourceEntryCanonicalSha256": "fe06b9339f31c93a8ef7b241db87ea8954184c2abee5d404142ce5c772a6195b",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "65992320958643fcd97a"
-          },
-          "sourceEntryCanonicalSha256": "06d284917958fe2342325bcfe49a9297b2da7c4fe5bfb07f23f52380c72f121c",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -12990,7 +12932,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 73,
+        "consumerCount": 74,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13004,8 +12946,8 @@
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 78,
@@ -13018,26 +12960,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "6c4dac47f8f0aa7ae2f7"
           },
           "sourceEntryCanonicalSha256": "1e6149d6f234c7b6e0b501aa977b24ae2de78b5da54d4cfa0580968de44caff8",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "6c4dac47f8f0aa7ae2f7"
-          },
-          "sourceEntryCanonicalSha256": "f494b62870c712d04db5dfd4115775eb6a7f6704394f4222eb84cab7a8715e74",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -13146,7 +13077,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 81,
+        "consumerCount": 83,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13168,7 +13099,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 69,
+        "consumerCount": 70,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13190,7 +13121,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 93,
+        "consumerCount": 97,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13226,8 +13157,8 @@
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 197,
@@ -13240,26 +13171,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "c7c992c00a1accaa7929"
           },
           "sourceEntryCanonicalSha256": "8d22497154c04040ca1e12e3f617f6f6ec708734558776c0ce2e95fac52313bb",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "c7c992c00a1accaa7929"
-          },
-          "sourceEntryCanonicalSha256": "584e323c296d441ca122d17917a722e06d3a2b1e26edd0247a5d152269648b54",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -13302,7 +13222,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 138,
+        "consumerCount": 140,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13324,7 +13244,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 51,
+        "consumerCount": 52,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13368,7 +13288,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 8,
-        "consumerCount": 208,
+        "consumerCount": 210,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13390,7 +13310,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 200,
+        "consumerCount": 201,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13456,7 +13376,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 88,
+        "consumerCount": 90,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13470,8 +13390,8 @@
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 355,
@@ -13484,26 +13404,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "94ef7a0afcd84f143948"
           },
           "sourceEntryCanonicalSha256": "5d1d1c15d3b85e91e6b72af71ea8477c742b123feb65d65fe054a1de81cd5433",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "94ef7a0afcd84f143948"
-          },
-          "sourceEntryCanonicalSha256": "9f6600b75b670153ff54e578192c17354c08955588d413910465c9d57c708d8e",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -13572,7 +13481,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 36,
+        "consumerCount": 39,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -15129,7 +15038,7 @@
         "kind": "haskell-list",
         "name": "terminalIssueStatuses",
         "valueCount": 3,
-        "consumerCount": 133,
+        "consumerCount": 135,
         "exactDuplicateIds": [
           "04a2bfe3f922f36836d2"
         ],
@@ -15913,7 +15822,7 @@
         "kind": "haskell-list",
         "name": "issueStatuses",
         "valueCount": 7,
-        "consumerCount": 135,
+        "consumerCount": 137,
         "exactDuplicateIds": [
           "cb78a7beeb769986f90c",
           "be1f72b6a12dba445b47"
@@ -15941,7 +15850,7 @@
         "kind": "haskell-list",
         "name": "refundStatuses",
         "valueCount": 6,
-        "consumerCount": 248,
+        "consumerCount": 249,
         "exactDuplicateIds": [
           "6e49e1dd9002b9a384f9",
           "53eb977c438f2629bf40"
@@ -15968,7 +15877,7 @@
         "kind": "haskell-list",
         "name": "settlementStatuses",
         "valueCount": 6,
-        "consumerCount": 196,
+        "consumerCount": 198,
         "exactDuplicateIds": [
           "29477a732e910fa947a8",
           "4f748f0a512f9deb694a"
@@ -16627,7 +16536,7 @@
         "kind": "object-registry",
         "name": "Events",
         "valueCount": 30,
-        "consumerCount": 211,
+        "consumerCount": 212,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -17680,41 +17589,6 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
-    },
-    {
-      "classification": "genuine-technical-constant",
-      "disposition": "explicit-allowlist",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Migration order, immutable ancestry and checksums govern persisted consent and payment state.",
-      "justification": "Ordered209 manifest preserves all208 predecessor entries byte-for-byte and appends the ledger entry physical-write fence, introduced by493d40252f48643a14ce47c5328a13844f3b837f. Fresh synthetic production-schema application and replay of all209 entries,33 snapshot/preflight/control records and existing ledger arithmetic/reversal regressions passed locally. This is finite adapted-PG16 integration evidence; hosted PG17, compiled writers, independent review and full refinement remain pending. Retain the guard through application rollback.",
-      "reviewed": true,
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 209,
-        "consumerCount": 74,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
-      },
-      "id": "938f49b7973332ba7e4e",
-      "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "ledger-snapshot-refinement-20261016",
-      "supersededReviews": [
-        {
-          "sourceRevision": "9d7551353a7c278cd0937eb57d04a94241318d42",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "2c7ef4935c5cdc4399d38ab143423edcdcc4d8b64e6affc54604f0a1ccab3bef",
-          "sourceEntry": {
-            "id": "627709d9858d72128d2f"
-          },
-          "sourceEntryCanonicalSha256": "5ad0540b85150ab309aaff528bd28daff3390c32e6e69a5a3d0765624921a743",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Immutable predecessor decision and its earlier provenance retained; scoped additive successor review."
-        }
-      ]
     }
   ]
 }
