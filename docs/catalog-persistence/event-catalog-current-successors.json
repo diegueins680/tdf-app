@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "mainRevision": "a3d3541be976b565c1dafc6ddfd338444991c11e",
   "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
+  "mainRevision": "a3d3541be976b565c1dafc6ddfd338444991c11e",
   "successors": [
     {
       "historicalReplacementId": "91952765f2d528c2a6c6",
@@ -343,45 +343,74 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "627709d9858d72128d2f",
+      "currentId": "65a6948aaeae13164e3e",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 208,
-      "change": "Ordered208 manifest preserves the exact previous207 entries and appends historical terms identity. Original migration bytes remain unchanged. All208 entries applied and replayed on a fresh synthetic production schema; course/event history controls passed. Retain this additive guard across application rollback. No production application is implied.",
+      "valueCount": 212,
+      "change": "Ordered 212-entry manifest preserves protected main 0a37123ea1d9d6b7c6b44d73c9342e18515c06c9 as its exact 208-entry prefix, followed by the four original ledger, checkout snapshot and terms-identity migrations in original relative order. Common entries agree and no SQL, rollback SQL or introduction SHA changes. Both complete parent reviews remain immutable through file and canonical-entry locators. Exact-source ancestry, expanded checksums, full-schema apply/replay and independent current-head qualification remain mandatory. Classification grants no production execution or financial/provider activation.",
       "sourceReviewReferences": [
         {
-          "sourceRevision": "171b80c2def40a52e1613982b2d4ec6d6aac4707",
+          "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
           "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
-          "sourceFileSha256": "20c134045570cf3c02a76a1eca90a0cd44bbe3a6dea8dc66a663aa4a2e8de825",
+          "sourceFileSha256": "77666d36946b95794d2448265a41175555ee4e9d80daf31b9cb0411c8df9eb14",
           "sourceEntry": {
             "index": 8
           },
-          "sourceEntryCanonicalSha256": "3617fc343d8d3613dd7b2b67f8438186610d9c43ee0dc9acfd1fbd6a78522fbe",
+          "sourceEntryCanonicalSha256": "b996540ed5405833a0804d5e08f090d38e6d4f27abfe90ce3913f22083d151b0",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
+          "reason": "Complete source review retained in immutable ancestor; no recursive copying."
         },
         {
-          "sourceRevision": "a35d7783fb2f4f3d6e01f9ff5577ae5ad8d04f1a",
+          "sourceRevision": "17a864579e43cafe9f56caceb08dddef6a70cfee",
           "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
-          "sourceFileSha256": "a4623ad0ebd069bc6d621fb13f3454e1e9d3d08cfc65b87c4b09440c03b2d5c5",
+          "sourceFileSha256": "6661657850e55919718e7b219cefc05f5731b869d92f1d767b94649e2771f4df",
           "sourceEntry": {
             "index": 8
           },
-          "sourceEntryCanonicalSha256": "f1087726894f23ad090865e2c84df464c58922e9e0c92193115553281471283c",
+          "sourceEntryCanonicalSha256": "ee9d3df97d76ec5414f6e06b5ab897c65ae2fcba7fa58c8736280a2d268bd41d",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
+          "reason": "Complete source review retained in immutable ancestor; no recursive copying."
         },
         {
-          "sourceRevision": "d5ce51ef1c884ce21bc7fd4799d9c1b8feec5cce",
+          "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
           "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
-          "sourceFileSha256": "7fda3bd976b24615b6e9bb29583377b445b690f882461ec8ee89324079ffc3be",
+          "sourceFileSha256": "2d187abb91c2ff39cb5506d0ddb6b62613e26cfb0049a38c5c9393f17b556f3b",
+          "sourceEntry": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "b0807f471978a4d450e1146ede3625705f79860bac46c1b70861578e68303220",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "2f1b6f5b481990e147f6eadfba927520f49663b40452d24b8f9b775308f106ba",
+          "sourceEntry": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "743e5631efbf40cbdc4d09db4b9c06443c6d8243778cdf21d2bd212e49408bf4",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "9d7551353a7c278cd0937eb57d04a94241318d42",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "bbfc50b4ac49fc04370ae9ac2379f1f9cc6980641f6205f9936576701b69f078",
           "sourceEntry": {
             "index": 8
           },
-          "sourceEntryCanonicalSha256": "67c5c29ddb63e922e8cd1af271709ba42bb63bc52e6238e069ea3c6157c3904e",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
+          "sourceEntryCanonicalSha256": "b0ff0915ecda963e149e72e56e11cad50a421b7a080b834a461eac2debd1ba3c",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "0fa5bd8b05943ea7a2d32580d5a95439444b37618e1e838f5f93b754162afd0f",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "2c38a806a6b1b6150d94ab831bd323c9bb5944e9c65924dcdfdb5dc3c0fdb576",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]
     }

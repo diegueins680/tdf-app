@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
   "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+  "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
   "retirements": [
     {
       "originalDecision": {
@@ -656,48 +656,77 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "627709d9858d72128d2f",
-      "reason": "The ordered 207-entry manifest preserves the exact main204 prefix, followed by ledger integrity, immutable checkout lines and terms identity. Original introduction commits remain ancestors. The unmerged terms migration is repaired to fence writers through atomic preflight/trigger installation; its revised checksum requires current-candidate review. No production application is implied.",
+      "replacementId": "65a6948aaeae13164e3e",
+      "reason": "Ordered 212-entry manifest preserves protected main 0a37123ea1d9d6b7c6b44d73c9342e18515c06c9 as its exact 208-entry prefix, followed by the four original ledger, checkout snapshot and terms-identity migrations in original relative order. Common entries agree and no SQL, rollback SQL or introduction SHA changes. Both complete parent reviews remain immutable through file and canonical-entry locators. Exact-source ancestry, expanded checksums, full-schema apply/replay and independent current-head qualification remain mandatory. Classification grants no production execution or financial/provider activation.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
-        "mainRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
-        "valueCount": 208,
-        "reason": "Ordered208 manifest preserves the exact previous207 entries and appends historical terms identity. Original migration bytes remain unchanged. All208 entries applied and replayed on a fresh synthetic production schema; course/event history controls passed. Retain this additive guard across application rollback. No production application is implied."
+        "mainRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+        "valueCount": 212,
+        "reason": "Ordered 212-entry manifest preserves protected main 0a37123ea1d9d6b7c6b44d73c9342e18515c06c9 as its exact 208-entry prefix, followed by the four original ledger, checkout snapshot and terms-identity migrations in original relative order. Common entries agree and no SQL, rollback SQL or introduction SHA changes. Both complete parent reviews remain immutable through file and canonical-entry locators. Exact-source ancestry, expanded checksums, full-schema apply/replay and independent current-head qualification remain mandatory. Classification grants no production execution or financial/provider activation."
       },
-      "change": "The ordered 207-entry manifest preserves the exact main204 prefix, followed by ledger integrity, immutable checkout lines and terms identity. Original introduction commits remain ancestors. The unmerged terms migration is repaired to fence writers through atomic preflight/trigger installation; its revised checksum requires current-candidate review. No production application is implied.",
+      "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
       "sourceReviewReferences": [
         {
-          "sourceRevision": "171b80c2def40a52e1613982b2d4ec6d6aac4707",
+          "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
           "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
-          "sourceFileSha256": "a8cf3b60817ee4daedda3b81071240ceb8c8cf3920e853172f8701f68c872364",
+          "sourceFileSha256": "82549c1da896df68aecb5989f255b6b5858d4124c8fd96524ce1b2a3195502c6",
           "sourceEntry": {
             "index": 10
           },
-          "sourceEntryCanonicalSha256": "56a8194b918cb436ba63097a0915c9487b80242845680537eda5420fbbc72dc3",
+          "sourceEntryCanonicalSha256": "bfbc8db94cd6559fb86856065cdd841626fab2d6e0b0542e5fbb58febbfaca8c",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
+          "reason": "Complete source review retained in immutable ancestor; no recursive copying."
         },
         {
-          "sourceRevision": "a35d7783fb2f4f3d6e01f9ff5577ae5ad8d04f1a",
+          "sourceRevision": "17a864579e43cafe9f56caceb08dddef6a70cfee",
           "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
-          "sourceFileSha256": "15753dcd92544a9445d6783791c8563f156f3e066faac36615344a83be62b3a9",
+          "sourceFileSha256": "e00cc7a0b7a066c77436d2606601d78c387f9d447b9b5b45ac9789237810e8ef",
           "sourceEntry": {
             "index": 10
           },
-          "sourceEntryCanonicalSha256": "2e8440dc6288021f5eb830bc15aa58d6e2ec4816fb801ac9f5e7c197e4bcdbb0",
+          "sourceEntryCanonicalSha256": "ff6671bb21fa18c4bab80cd4f702954801b71cdc1b0fab379df484010423aa45",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
+          "reason": "Complete source review retained in immutable ancestor; no recursive copying."
         },
         {
-          "sourceRevision": "d5ce51ef1c884ce21bc7fd4799d9c1b8feec5cce",
+          "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
           "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
-          "sourceFileSha256": "a8848a767b7035d8fdcbd2c6f2babd02c5c26e4c68cea7ce48f6b2875d61878d",
+          "sourceFileSha256": "93c2cf382f4e98f210d41bd19e62f33f5a0a1db916d90c2ebbe570c3b579efaf",
+          "sourceEntry": {
+            "originalDecision.id": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "6767e66311b3e51b19f739e123ec03d26cc3523059342634c745f4ca60f6e420",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "b9ba962c9010813249937786ddc0bfba81f5cd0d197b1db800c1a43f3cc12ba6",
+          "sourceEntry": {
+            "originalDecision.id": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "e0c1a01f381b8fe30ecfff75f25483db7f9d017342fc9b78ffdfc5a212bd6ed8",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "9d7551353a7c278cd0937eb57d04a94241318d42",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "017bb795ca75a0cef6753829a4c9f9538f316a074bb609192fad82f8c3116d6d",
           "sourceEntry": {
             "index": 10
           },
-          "sourceEntryCanonicalSha256": "419a37d8d28aad1a00e44bcd2a48def96df2b9cc6916f6e3e4f047cdf8cd0fb0",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
+          "sourceEntryCanonicalSha256": "df7f04c8f6b2c76fb484bb53edc78648b209dbf70a810cbb03d296c30e026bb0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "57141d9d44fdcd98d7a8b7a98242ba940022cc5a66e93dabe304f6095a832567",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "07d43c0d24691bc37cc34dcdd5206a25551b44e82ad83b1838877455ba6c2142",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]
     }
