@@ -818,6 +818,18 @@
       "conflict": "MEDIA-MUSIC-DDEX-001 listed export states queued, rendering, validated, failed, retired and a transition 'suspended -> retired'; music_ddex_export.status allows queued, generating, validation_failed, valid, failed and nothing is ever retired. ddex-queued-validation.md promises that export failure messages contain no object keys, SQL or secrets, but mark_failed copied the last twenty lines of the worker's stderr (truncated to 1,000 characters) into the export's validation_report for every failure that was not a gate refusal, and that report is served to every release downloader.",
       "authority": "The column CHECK constraint and the worker script for the state set; the queued-validation ADR's privacy rule and PRIV-ERROR-001 for the report.",
       "resolution": "Decided 2026-10-13: the requirement lists the column's export states and the job statuses with the worker's transition relation; the lease guard, the two gates, valid finality, failed finality and the queued-only replay repair are the stated rules and are modelled in MusicDdexExport.tla with five single-guard controls. The worker now stores a fixed message with the error code for non-gate failures, keeps the stderr summary on the job row, and never moves a failed export back to validation_failed when a dead-lettered job is re-queued by hand; the runtime test covers both. The absence of any recovery for a dead-lettered export is recorded as an open product decision, not changed."
+    },
+    {
+      "id": "AUTHORITY-071",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/drive-replay.md",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/test/TDF/DriveReplaySpec.hs"
+      ],
+      "conflict": "MEDIA-DRIVE-001 had no formal model. Its concurrency text accepts that the provider lookup and the multipart create are separate requests, so two requests that both miss can both create; a model stating exactly-once reuse would contradict the implementation, and a model omitting the race would overstate it.",
+      "authority": "The requirement's own concurrency and ambiguity fields (no exactly-once guarantee; concurrent creation not covered) and the drive-replay note, which classify the race as outside the repair, not as a defect.",
+      "resolution": "DriveReplay.tla states what the implementation is read to guarantee, within the model's bounds (a reuse is bound to the requester's actor and request shape, legacy entries are never adopted, a conflict performs its lookup GET but makes no subsequent provider mutation and a reuse creates no object; correspondence to the Haskell is by reading, not refinement) with three single-guard controls, and carries SingleObject as a documented non-invariant: the Race configuration is registered as an expected counterexample. No code change; the race remains an open obligation of MEDIA-DRIVE-001, closable only by a local claim before the provider create. Provider entries are partitioned by explicit folder. A sequential cross-folder configuration and reachable two-object witness capture separate creations for the same key; the concurrent race configuration is restricted to one folder. Missing-folder lookup is outside these bounds."
     }
   ]
 }

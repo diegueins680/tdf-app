@@ -4060,7 +4060,7 @@
       "id": "MEDIA-DRIVE-001",
       "title": "Bind Drive upload retries to actor and exact request",
       "statement": "An existing Drive idempotency entry may be reused only when its stored versioned fingerprint matches the authenticated Party and effective filename, MIME, destination and file bytes; missing or conflicting binding rejects before provider mutation.",
-      "authority": "implementation safety repair under authorized conformance audit",
+      "authority": "implementation safety repair under authorized conformance audit; AUTHORITY-071",
       "domain": "MEDIA",
       "actors": [
         "Authorized operations actor",
@@ -4103,7 +4103,7 @@
       "failure": "Conflicts409 before create/permission; provider failures502; missing configuration503. Successful file create can precede a failed permission operation.",
       "recovery": "Preserve legacy and conflicting objects. Reconcile their provenance explicitly or choose a new intentional upload; never silently attach actor ownership. No production provider mutation during verification.",
       "observability": "Retain exact test revision, synthetic wire trace, command and result; never log credentials or uploaded user content.",
-      "source": "Server.uploadToDrive and findDriveUploadByIdempotencyKey; scripts/artist-enrichment.mjs caller; AUTHORITY-031",
+      "source": "Server.uploadToDrive and findDriveUploadByIdempotencyKey; scripts/artist-enrichment.mjs caller; AUTHORITY-031; formal/system/drive-replay.md",
       "property": "reuse implies stored fingerprint equals current actor-and-request fingerprint; conflict implies no subsequent provider mutation",
       "contract": "formal/system/drive-replay.md",
       "implementation": [
@@ -4111,15 +4111,25 @@
         "tdf-hq/src/TDF/API/Drive.hs",
         "tdf-hq/tdf-hq.cabal"
       ],
-      "verification": "In-memory HTTP transport tests inspect real multipart metadata and provider-effect order without sockets, DNS or credential refresh.",
-      "evidence": "tdf-hq/test/TDF/DriveReplaySpec.hs; current execution evidence pending",
+      "verification": "In-memory HTTP transport tests inspect real multipart metadata and provider-effect order without sockets, DNS or credential refresh. 2026-10-12: DriveReplay.tla states the reuse rule (ReuseBinds, NoForeignReuse, NoLegacyAdoption, ConflictNoMutation) with three single-guard controls; the Race configuration checks SingleObject and is an expected counterexample, recording that lookup-then-create gives no exactly-once guarantee. DriveReplaySpec: 9 examples pass on a local test binary built on 2026-10-12 from 86b6611fc, whose uploadToDrive, Drive API module and spec are byte-identical to main 7d4375550; a CI receipt on the merged SHA is still the required current evidence. The updated finite model partitions provider entries across two explicit folders, retains a same-folder race counterexample, and checks sequential cross-folder creation with a reachable two-object witness. A global-lookup mutation fails that cross-folder property; missing-folder lookup and mutable credential visibility are excluded.",
+      "evidence": "formal/system/drive-replay.md; DriveReplaySpec 9/9 on the 2026-10-12 local test binary (helper and spec byte-identical to main); a CI receipt on the merged SHA remains pending.",
       "status": "specified and implemented",
       "historicalStatus": "implementation-repair-awaiting-current-execution",
       "tests": [
         "tdf-hq/test/TDF/DriveReplaySpec.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/DriveReplay.tla",
+        "formal/event-operations/DriveReplay.cfg",
+        "formal/event-operations/DriveReplayUnchecked.cfg",
+        "formal/event-operations/DriveReplayActorIgnored.cfg",
+        "formal/event-operations/DriveReplayLegacyAdopted.cfg",
+        "formal/event-operations/DriveReplayRace.cfg",
+        "formal/event-operations/DriveReplayCrossFolder.cfg",
+        "formal/event-operations/DriveReplayCrossFolderObjects.cfg"
+      ],
       "confidence": "source-reviewed request binding; execution and deployment still pending",
       "ambiguity": [
         "Current production usage/legacy entry count unobserved.",
