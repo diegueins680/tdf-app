@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "627709d9858d72128d2f",
+      "currentId": "938f49b7973332ba7e4e",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 208,
-      "change": "Ordered208 manifest preserves the exact previous207 entries and appends historical terms identity. Original migration bytes remain unchanged. All208 entries applied and replayed on a fresh synthetic production schema; course/event history controls passed. Retain this additive guard across application rollback. No production application is implied.",
+      "valueCount": 209,
+      "change": "The 209-entry manifest retains all 208 predecessor entries and appends only the immutable ledger entry write-fence migration. The active reviewed manifest fingerprint is 938f49b7973332ba7e4e; this mapping preserves historical review evidence and does not authorize production application.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "171b80c2def40a52e1613982b2d4ec6d6aac4707",
@@ -382,6 +382,17 @@
           "sourceEntryCanonicalSha256": "67c5c29ddb63e922e8cd1af271709ba42bb63bc52e6238e069ea3c6157c3904e",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
+        },
+        {
+          "sourceRevision": "d5a62f9ff97b0ebc2cd84134a528fb50331119c1",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "bbfc50b4ac49fc04370ae9ac2379f1f9cc6980641f6205f9936576701b69f078",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "b0ff0915ecda963e149e72e56e11cad50a421b7a080b834a461eac2debd1ba3c",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Preserve the complete predecessor mapping and its nested review provenance in the immutable source; update only its active successor."
         }
       ]
     }

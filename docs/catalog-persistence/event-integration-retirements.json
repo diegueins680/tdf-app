@@ -656,15 +656,15 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "627709d9858d72128d2f",
-      "reason": "The ordered 207-entry manifest preserves the exact main204 prefix, followed by ledger integrity, immutable checkout lines and terms identity. Original introduction commits remain ancestors. The unmerged terms migration is repaired to fence writers through atomic preflight/trigger installation; its revised checksum requires current-candidate review. No production application is implied.",
-      "previousReplacementId": "c6a62c7c7469e8974ff1",
+      "replacementId": "938f49b7973332ba7e4e",
+      "reason": "The 209-entry manifest retains all 208 predecessor entries and appends only the immutable ledger entry write-fence migration. The active reviewed manifest fingerprint is 938f49b7973332ba7e4e; this mapping preserves historical review evidence and does not authorize production application.",
+      "previousReplacementId": "627709d9858d72128d2f",
       "currentResolution": {
-        "mainRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
-        "valueCount": 208,
-        "reason": "Ordered208 manifest preserves the exact previous207 entries and appends historical terms identity. Original migration bytes remain unchanged. All208 entries applied and replayed on a fresh synthetic production schema; course/event history controls passed. Retain this additive guard across application rollback. No production application is implied."
+        "sourceRevision": "d5a62f9ff97b0ebc2cd84134a528fb50331119c1",
+        "valueCount": 209,
+        "reason": "The 209-entry manifest retains all 208 predecessor entries and appends only the immutable ledger entry write-fence migration. The active reviewed manifest fingerprint is 938f49b7973332ba7e4e; this mapping preserves historical review evidence and does not authorize production application."
       },
-      "change": "The ordered 207-entry manifest preserves the exact main204 prefix, followed by ledger integrity, immutable checkout lines and terms identity. Original introduction commits remain ancestors. The unmerged terms migration is repaired to fence writers through atomic preflight/trigger installation; its revised checksum requires current-candidate review. No production application is implied.",
+      "change": "The 209-entry manifest retains all 208 predecessor entries and appends only the immutable ledger entry write-fence migration. The active reviewed manifest fingerprint is 938f49b7973332ba7e4e; this mapping preserves historical review evidence and does not authorize production application.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "171b80c2def40a52e1613982b2d4ec6d6aac4707",
@@ -698,6 +698,17 @@
           "sourceEntryCanonicalSha256": "419a37d8d28aad1a00e44bcd2a48def96df2b9cc6916f6e3e4f047cdf8cd0fb0",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
+        },
+        {
+          "sourceRevision": "d5a62f9ff97b0ebc2cd84134a528fb50331119c1",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "017bb795ca75a0cef6753829a4c9f9538f316a074bb609192fad82f8c3116d6d",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "df7f04c8f6b2c76fb484bb53edc78648b209dbf70a810cbb03d296c30e026bb0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Preserve the complete predecessor mapping and its nested review provenance in the immutable source; update only its active successor."
         }
       ]
     }
