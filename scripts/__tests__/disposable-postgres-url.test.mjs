@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 import { disposablePostgresUrl } from '../lib/disposable-postgres-url.mjs';
 
 test('admits named local and explicitly opted-in CI fixtures', () => {
-  for (const value of ['postgresql://127.0.0.1/local_test', 'postgres://localhost:5432/local_test']) {
+  for (const value of [
+    'postgresql://127.0.0.1/local_test',
+    'postgres://localhost:5432/local_test',
+    'postgresql://user:pass@localhost:5432/orders_test',
+    'postgres://user:pa%40ss@127.0.0.1:5432/orders-local_test',
+  ]) {
     assert.ok(disposablePostgresUrl(value));
   }
   assert.ok(disposablePostgresUrl('postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test', { ci: true }));
@@ -14,6 +19,11 @@ for (const value of [
   'postgresql://127.0.0.1/local_test?service=production',
   'postgresql://localhost/local_test#ignored',
   'postgresql://remote.example/local_test',
+  'postgresql://localhost:secret@db.example/orders_test',
+  'postgresql://127.0.0.1:5432@db.example/orders_test',
+  'postgresql://localhost:0/orders_test',
+  'postgresql://localhost:65536/orders_test',
+  ' postgresql://localhost/orders_test',
   'postgresql://localhost/production',
   'postgresql://localhost/path/local_test',
   'postgresql://localhost/%70roduction_test',
