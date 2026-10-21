@@ -7,6 +7,21 @@ persistence cutover.
 The production schema gap, authoritative migration order, CI rehearsal, deployment gates, and
 rollback boundary are documented in `production-schema-cutover.md`.
 
+## Retained review provenance
+
+Consolidated migration decisions may reference complete prior reviews through
+`supersededReviews` or `sourceReviewReferences`. Each reference records an immutable
+ancestor commit, repository path, whole-file SHA-256 and the selected entry's
+canonical JSON SHA-256. Retrieve the original with `git show COMMIT:PATH`; entry
+hashes use UTF-8 JSON with sorted keys, compact separators and unescaped Unicode.
+These references preserve the full earlier decision and its nested history without
+recursively copying it into every successor. Keep the source commits reachable through
+the consolidation merge before retiring source branches.
+
+Historical baseline and review revisions describe evidence provenance. The ordered
+`scripts/production-migrations.json` contract remains migration authority; a retained
+review or a generated catalog report does not establish production application.
+
 ## Baselines
 
 - Root repository: `ce0c3bc19e2d9030e871480e9e93790940c9eb12`

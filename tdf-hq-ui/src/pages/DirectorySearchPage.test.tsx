@@ -111,7 +111,7 @@ describe('DirectorySearchPage', () => {
       await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
       expect(container.querySelector('input')?.value).toBe('music');
       expect(container.textContent).not.toContain('Arrival failed');
-      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ q: 'music' }));
+      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ q: 'music' }), expect.any(AbortSignal));
     } finally {
       await act(async () => root.unmount());
       container.remove();
@@ -474,15 +474,15 @@ describe('DirectorySearchPage', () => {
     try {
       await act(async () => {
         root.render(<QueryClientProvider client={queryClient}>
-          <MemoryRouter initialEntries={[`/buscar?entityType=event&cityId=${quito}`]}><DirectorySearchPage /></MemoryRouter>
+          <MemoryRouter initialEntries={[`/buscar?entityType=event&cityId=${quito}&profileKind=band`]}><DirectorySearchPage /></MemoryRouter>
         </QueryClientProvider>);
       });
       await waitFor(() => expect(container.textContent).toContain('Synthetic Event'));
-      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ entityType: 'event', cityId: quito }));
+      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ entityType: 'event', cityId: quito, profileKind: undefined }), expect.any(AbortSignal));
       const selectedTab = container.querySelector('[role="tab"][aria-selected="true"]');
       expect(selectedTab?.textContent).toBe('Eventos (1)');
       const tabLabels = Array.from(container.querySelectorAll('[role="tab"]')).map((tab) => tab.textContent);
-      expect(tabLabels).toEqual(['Todo (6)', 'Perfiles (3)', 'Clasificados (2)', 'Eventos (1)', 'Venues']);
+      expect(tabLabels).toEqual(['Todo (6)', 'Artistas y proyectos', 'Perfiles (3)', 'Clasificados (2)', 'Eventos (1)', 'Venues']);
       expect(container.textContent).toContain('Resultados orgánicos · 1');
       expect(container.textContent).not.toContain('Todavía no hay coincidencias');
       expect(container.textContent).toContain('Andes Brewing — La Pradera');
@@ -550,7 +550,7 @@ describe('DirectorySearchPage', () => {
       const eventsTab = Array.from(container.querySelectorAll<HTMLElement>('[role="tab"]')).find((tab) => tab.textContent?.startsWith('Eventos'))!;
       await act(async () => { fireEvent.click(eventsTab); });
       await waitFor(() => expect(currentSearch()).toBe(`?entityType=event&cityId=${quito}`));
-      await waitFor(() => expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ entityType: 'event', cityId: quito })));
+      await waitFor(() => expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ entityType: 'event', cityId: quito }), expect.any(AbortSignal)));
       expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Eventos');
       const back = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'history back')!;
       await act(async () => { fireEvent.click(back); });
@@ -601,7 +601,7 @@ describe('DirectorySearchPage', () => {
       // Entering nearby mode on a city URL keeps the coordinates and replaces the entry.
       await act(async () => { fireEvent.click(button(esDirectory.useLocation)); });
       await waitFor(() => expect(currentSearch()).toBe('?entityType=event&radiusKm=25'));
-      await waitFor(() => expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ latitude: -0.18, longitude: -78.48, radiusKm: 25 })));
+      await waitFor(() => expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ latitude: -0.18, longitude: -78.48, radiusKm: 25 }), expect.any(AbortSignal)));
       expect(container.querySelector('input[type="number"]')).not.toBeNull();
 
       // Back restores the earlier city search instead of rewriting it as nearby.
