@@ -105,6 +105,13 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `CommandPrivacyExistenceLeak.cfg`, `CommandPrivacyReceiptLeak.cfg` | Negative controls: distinct hidden-event error / receipt response before visibility | Expected exit 12 with `OpaqueTarget`; both detected |
 | `SessionFence.cfg` | 1 authentication/transaction; 32 token records; 2 actors; witness present/absent; read/new/replay | PASS; 12,685 generated, 1,153 distinct states, depth 5 |
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
+| `MusicPublication.cfg` (2026-10-11) | One release, three versions (v2 and v3 correct v1); staff schedule, suspend, re-approve, take down and withdraw without fairness; a scheduled version may turn invalid; the two schedulers are weakly fair | PASS; 32,257 generated, 7,168 distinct states, depth 18; six invariants and the `Progress`/`ValidProgress` properties |
+| `MusicPublicationBatch.cfg`, `MusicPublicationStayWithdrawn.cfg` | Negative controls: whole-batch publication, a withdrawn release never republishes | Expected exit 13: `ValidProgress` (a valid due version stays scheduled because a sibling fails) and `Progress` (a due correction of a withdrawn release stays scheduled) violated |
+| `MusicPublicationReplacedOnly.cfg`, `MusicPublicationPointerStale.cfg` | Negative controls: retire only the replaced version, pointer kept on a version that left the live states | Expected exit 12 with `OnlyInvalidFails`, `PointerLive` |
+| `MusicAssetProcessing.cfg` (2026-10-12) | One processing job, two worker processes sharing a name, bytes matching or not, 3 attempts plus one reclaim past the bound; claim, lease expiry, fenced stop, promote, fail for any reason | PASS; 934 generated, 554 distinct states; `PromotedOnlyVerified`, `CompletionIsCurrent`, `LiveLeaseIsCurrent`, `OneLiveLease` |
+| `MusicAssetProcessingUnfenced/Preempt/Unverified.cfg` | Negative controls: no attempt token, reclaim before lease expiry, promotion without checksum | Expected exit 12 with `CompletionIsCurrent`, `LiveLeaseIsCurrent`, `PromotedOnlyVerified` |
+| `MusicDdexExport.cfg` (2026-10-13) | One export, one job or none (legacy), two worker processes sharing a name, rules flipping at any time, 2 attempts plus one reclaim past the bound; replay, claim, expiry, crash, fenced stop, recover, two gates, succeed, fail | PASS; 5,284 generated, 1,272 distinct states; `ValidForever`, `CurrentWriter`, `ValidOnlyUnderRules`, `FailedIsFinal`, `PendingHasLiveJob` |
+| `MusicDdexExportUnfenced/Reopen/NoCommitGate/ReplayFailed/SplitDeadLetter.cfg` | Negative controls: no attempt token, valid regenerated, no rule check at commit, replay re-enqueues a failed export, dead letter split from the export's failed status | Expected exit 12 with `CurrentWriter`, `ValidForever`, `ValidOnlyUnderRules`, `FailedIsFinal`, `PendingHasLiveJob` |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `MigrationLedger.cfg` (2026-10-12) | 3 manifest entries, 2 source versions, 3 batch runs; source changes with or without a declared compatible checksum, image rollback, preparation | PASS; 1,282,056 generated, 334,720 distinct states, depth 26; `EffectsRecorded`, `SingleApplication`, `NoRunPastDrift`, `PreparationSound` (`LedgerImpliesEffects` as a sanity invariant) |
@@ -241,6 +248,25 @@ The runner requires the exact named failures from all three negative controls.
 - `CommandPrivacy.tla`: paired absent/unreadable status/body equality for fresh commands and all
   receipt classes, while retaining read-only mutation denial. The atomic observation assumes the
   existing current-authorization fence; it does not prove session revocation or constant-time access.
+- `MusicPublication.tla` (2026-10-11): scheduled publication of music release
+  versions. Each due candidate publishes or fails in its own subtransaction; a
+  publication retires every other live version; publication reopens a withdrawn
+  release; the release pointer follows any exit from the live states. See
+  [music publication](../system/music-publication.md). The retirement chain is
+  one step and the submission rules are a boolean; SQL refinement is the
+  PostgreSQL spec, not this model.
+- `MusicAssetProcessing.tla` (2026-10-12): leased processing of one uploaded
+  music asset by worker runs that may share a name; the attempt is the fencing
+  token, a running job is reclaimed only after its lease expired, promotion
+  needs the recomputed checksum. See
+  [music asset processing](../system/music-asset-processing.md). Rendering,
+  object storage and the heartbeat are outside the model.
+- `MusicDdexExport.tla` (2026-10-13): DDEX export and job lifecycle under
+  leased worker runs that may share a name; the attempt is the fencing token,
+  a valid export is final, gate 2 re-checks the rules, the replay repairs only
+  a queued export, the dead letter and the export's failed status are one
+  write. See [music DDEX export](../system/music-ddex-export.md). Rendering,
+  object storage, the API locks and the heartbeat are outside the model.
 - `SessionFence.tla`: request-local token/party/credential binding, recheck after token locking and
   lock retention through the event decision. It models current validity, not permanent revocation
   epochs: explicit reactivation of the same credential reauthorizes it. Global role/catalog changes
@@ -710,6 +736,15 @@ controls are mandatory in the formal runner.
 persisted submission mark, lease-fenced results and administrator resend. The positive
 model and four negative controls are mandatory in the formal runner. Bounds, provider
 assumptions and the recovery gaps found are stated there.
+## Music DDEX export
+
+`MusicDdexExport.tla` and six configurations check the export lifecycle rules in
+[music-ddex-export.md](../system/music-ddex-export.md): leased claims with the attempt
+as fencing token, the two rule gates, valid and failed finality, queued-only replay
+repair and the atomic dead letter. The positive model and five negative controls are
+mandatory in the formal runner. Bounds, abstractions and the recovery gap found are
+stated there.
+
 
 
 `MigrationLedger.tla` checks the production migration correspondence of

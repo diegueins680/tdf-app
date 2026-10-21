@@ -629,6 +629,7 @@ import qualified TDF.MetaRedeliverySpec as MetaRedeliverySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
 import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
+import qualified TDF.MusicPublicationSpec as MusicPublicationSpec
 import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
 import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
@@ -17896,6 +17897,7 @@ main = hspec $ do
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
     WhatsAppConsentSpec.spec
+    MusicPublicationSpec.spec
     InteractionWriteBudgetSpec.spec
     MusicPurchaseSpec.spec
     DriveReplaySpec.spec
