@@ -4,13 +4,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
-module TDF.Interactions.Server (interactionsServer, publicInteractionsServer, searchMentions, legacyCommand) where
+module TDF.Interactions.Server
+  ( interactionsServer, publicInteractionsServer, searchMentions, legacyCommand
+  , ChargedWrite(..), chargedInteractionWrite
+  ) where
 
 import Control.Exception (try)
 import Control.Monad (unless, when)
 import Control.Monad.Except (MonadError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Reader (MonadReader, asks)
+import Control.Monad.Reader (MonadReader, ask, asks, runReaderT)
 import Data.Aeson (FromJSON, Value(..), Result(..), fromJSON, encode, eitherDecodeStrict')
 import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString.Lazy as BL
@@ -21,7 +24,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.UUID as UUID
 import Database.Persist (PersistValue(..))
-import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, toSqlKey, rawSql, runSqlPool)
+import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, toSqlKey, rawExecute, rawSql, runSqlPool)
 import Database.PostgreSQL.Simple (SqlError(..))
 import Servant
 import TDF.Auth (AuthedUser(..))
@@ -177,21 +180,20 @@ queryWith user access sql args = do
           { errBody = if readAccess then "interaction_not_activated" else ""
           , errHeaders = [("Cache-Control","no-store")]
           }) else do
-          budget <- case (user,access) of
-            (Just principal,WriteSession _) -> rawSql "SELECT interaction_consume_write_budget(?)"
-              [PersistInt64 (fromSqlKey (auPartyId principal))]
-            _ -> pure [Single True]
-          if budget /= [Single True] then pure (Left err429) else do
-            rows <- rawSql sql args :: SqlPersistT IO [Single Text]
-            pure (Right rows)
+          case (user,access) of
+            (Just principal,WriteSession _) -> do
+              charged <- chargedInteractionWrite (fromSqlKey (auPartyId principal)) sql args
+              pure $ case charged of
+                WriteLimited -> Left err429
+                WriteFailed err -> Left (writeFailure err)
+                WriteAnswered rows -> Right rows
+            _ -> Right <$> (rawSql sql args :: SqlPersistT IO [Single Text])
       transaction = case user of
         Nothing -> action
         Just principal -> fmap (>>= id) (withCurrentSession access principal action)
   outcome <- liftIO $ try (runSqlPool transaction pool)
   rows <- case outcome of
-    Left (err :: SqlError)
-      | sqlState err `elem` ["40001","40P01","55P03"] -> throwError err503 {errHeaders=[("Retry-After","1"),("Cache-Control","no-store")]}
-      | otherwise -> throwError err500 {errBody="Interaction could not be completed",errHeaders=[("Cache-Control","no-store")]}
+    Left (err :: SqlError) -> throwError (writeFailure err)
     Right value -> either throwError pure value
   case rows of
     [Single body] -> case eitherDecodeStrict' (TE.encodeUtf8 body) of
@@ -202,6 +204,12 @@ queryWith user access sql args = do
       _ -> throwError err500
     _ -> throwError err404
   where
+    writeFailure err
+      | sqlState err `elem` ["40001","40P01","55P03"] = err503 {errHeaders=[("Retry-After","1"),("Cache-Control","no-store")]}
+      -- A NUL escape in a JSON payload, which jsonb refuses, is the caller's
+      -- fault and is answered as such.
+      | sqlState err == "22P05" = err400 {errBody="invalid",errHeaders=[("Cache-Control","no-store")]}
+      | otherwise = err500 {errBody="Interaction could not be completed",errHeaders=[("Cache-Control","no-store")]}
     responseError code = (case code of
       "disabled" -> err404
       "unavailable" -> err404
@@ -212,6 +220,31 @@ queryWith user access sql args = do
       "invalid_reaction" -> err422
       "invalid_cursor" -> err400
       _ -> err409) {errBody=BL.fromStrict (TE.encodeUtf8 code),errHeaders=[("Cache-Control","no-store")]}
+
+data ChargedWrite
+  = WriteLimited
+  | WriteFailed SqlError
+  | WriteAnswered [Single Text]
+
+-- Charges one write attempt to the account and then runs the write. The charge
+-- is kept whatever the write does: a statement that raises is undone back to a
+-- savepoint taken after the charge, so the surrounding transaction can still
+-- commit the counter.
+chargedInteractionWrite :: Int64 -> Text -> [PersistValue] -> SqlPersistT IO ChargedWrite
+chargedInteractionWrite actor sql args = do
+  budget <- rawSql "SELECT interaction_consume_write_budget(?)" [PersistInt64 actor]
+  if budget /= [Single True] then pure WriteLimited else do
+    backend <- ask
+    rawExecute "SAVEPOINT tdf_interaction_write" []
+    outcome <- liftIO $ try (runReaderT (rawSql sql args) backend)
+    case outcome of
+      Left (err :: SqlError) -> do
+        rawExecute "ROLLBACK TO SAVEPOINT tdf_interaction_write" []
+        rawExecute "RELEASE SAVEPOINT tdf_interaction_write" []
+        pure (WriteFailed err)
+      Right rows -> do
+        rawExecute "RELEASE SAVEPOINT tdf_interaction_write" []
+        pure (WriteAnswered rows)
 
 -- The adapter only accepts caller-validated legacy DTOs; actor identity still
 -- comes from a currently locked session, never a request body.

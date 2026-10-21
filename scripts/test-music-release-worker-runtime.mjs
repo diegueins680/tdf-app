@@ -9,16 +9,12 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSy
 import { dirname, join } from 'node:path';
 import { tmpdir, userInfo } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { disposableMusicDatabase } from './lib/music-test-database.mjs';
+import { disposableMusicDatabase, musicTestEnvironment, musicTestDatabaseUrl } from './lib/music-test-database.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const runtime = mkdtempSync(join(tmpdir(), 'tdf-music-worker-test-'));
 const database = `tdf_music_worker_${process.pid}_${randomUUID().replaceAll('-', '')}`;
-const env = {
-  PATH: process.env.PATH,
-  LANG: 'C', LC_ALL: 'C', TMPDIR: runtime,
-  PGHOST: '127.0.0.1', PGPORT: '5432', PGUSER: userInfo().username,
-};
+const env = musicTestEnvironment({ source: process.env, username: userInfo().username, runtime });
 let passed = 0;
 const concurrencyOnly = process.argv.includes('--concurrency-only');
 const only = process.argv.find((argument) => argument.startsWith('--only='))?.slice(7);
@@ -93,7 +89,7 @@ copyFileSync(join(root, 'test/fixtures/music-worker/curl.mjs'), join(bin, 'curl'
 chmodSync(join(bin, 'curl'), 0o755);
 const workerEnv = {
   ...env, PATH: `${bin}:${env.PATH}`,
-  DATABASE_URL: `postgresql://127.0.0.1:5432/${database}?user=${encodeURIComponent(env.PGUSER)}`,
+  DATABASE_URL: musicTestDatabaseUrl(database, env),
   MUSIC_S3_ENDPOINT: 'https://music-worker.test.invalid',
   MUSIC_S3_ACCESS_KEY_ID: 'synthetic-worker-access',
   MUSIC_S3_SECRET_ACCESS_KEY: 'synthetic-worker-secret',
@@ -176,7 +172,8 @@ try {
   for (const file of ['init_schema.sql', '2026-07-12_notification_table.sql',
     '2026-08-05_artist_enrichment.sql', '2026-08-13_unified_checkout_core.sql',
     '2026-09-04_access_request_notification_types.sql', '2026-09-11_music_release_platform.sql',
-    '2026-09-15_music_preview_ranges.sql', '2026-09-16_music_ddex_operations.sql']) {
+    '2026-09-15_music_preview_ranges.sql', '2026-09-16_music_ddex_operations.sql',
+    '2026-10-12_music_upload_rebind.sql']) {
     command('psql', ['-Xq', '-v', 'ON_ERROR_STOP=1', '-d', database, '-f', join(root, 'tdf-hq/sql', file)]);
   }
   artist = sql("INSERT INTO party(display_name) VALUES ('Synthetic worker artist') RETURNING id");
@@ -263,6 +260,42 @@ try {
     assert.match(assertFailure(f).stderr, /checksum/);
     assert.doesNotMatch(readFileSync(trace, 'utf8'), /PUT|DELETE/);
     cancel(f);
+  });
+  check('re-upload with the same declared hash is inspected after a checksum-mismatch dead letter', () => {
+    const master = readFileSync(join(runtime, 'master.wav'));
+    const f = fixture('inspect_audio', Buffer.from('corrupt synthetic bytes'), sha(master));
+    assert.match(assertFailure(f).stderr, /checksum/);
+    retryNow(f);
+    assert.match(worker().stderr, /checksum/);
+    assert.equal(jobState(f), 'dead_letter:2:true');
+    // The corrected bytes arrive through a new upload session; confirmMusicUpload
+    // binds it to the existing asset row and enqueues a job keyed by the session.
+    const session = randomUUID(), job = randomUUID(), key = `${session}/original`;
+    mkdirSync(join(objects, 'music-test-quarantine', session));
+    writeFileSync(join(objects, 'music-test-quarantine', key), master);
+    sql(`INSERT INTO music_upload_session(id,release_version_id,recording_id,asset_role,provider,bucket_name,quarantine_object_key,
+        original_filename,expected_media_type,expected_size,expected_sha256,status,idempotency_key,part_size_bytes,expires_at,
+        completed_asset_id,created_by,completed_at)
+      VALUES ('${session}','${f.version}','${f.recording}','master_audio','s3_compatible','music-test-quarantine','${key}',
+        'master.wav','audio/wav',${master.length},'${sha(master)}','completed','${session}',5242880,NOW()+INTERVAL '1 hour',
+        '${f.asset}',${artist},NOW());
+      INSERT INTO music_processing_job(id,release_version_id,source_asset_id,job_kind,job_key,max_attempts)
+      VALUES ('${job}','${f.version}','${f.asset}','inspect_audio','${session}',2);`);
+    assert.equal(sql(`SELECT object_key||':'||processing_state||':'||(provenance->>'rebound_from_object_key') FROM music_asset WHERE id='${f.asset}'`),
+      `${key}:uploaded:${f.key}`);
+    assert.equal(jobState(f), 'cancelled:2:true');
+    // A conflicting re-enqueue for the same session creates no job and must change nothing.
+    sql(`INSERT INTO music_processing_job(id,release_version_id,source_asset_id,job_kind,job_key,max_attempts)
+      VALUES ('${randomUUID()}','${f.version}','${f.asset}','inspect_audio','${session}',2) ON CONFLICT(job_kind,job_key) DO NOTHING;`);
+    assert.equal(sql(`SELECT object_key FROM music_asset WHERE id='${f.asset}'`), key);
+    assert.equal(sql(`SELECT status FROM music_processing_job WHERE id='${job}'`), 'queued');
+    assert.equal(sql(`SELECT status FROM music_upload_session WHERE id='${session}'`), 'completed');
+    const result = worker();
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(sql(`SELECT status FROM music_processing_job WHERE id='${job}'`), 'succeeded');
+    assert.equal(sql(`SELECT bucket_name||':'||processing_state||':'||immutable FROM music_asset WHERE id='${f.asset}'`), 'music-test-master:valid:true');
+    assert.equal(sha(readFileSync(join(objects, 'music-test-master', `masters/${f.version}/${f.asset}/original`))), sha(master));
+    assert.equal(sql(`SELECT count(*) FROM music_asset WHERE parent_asset_id='${f.asset}'`), '5');
   });
   check('failed audio decoding cannot produce success or delete quarantine', () => {
     const f = fixture('inspect_audio', Buffer.from('not an audio file'));
@@ -451,6 +484,45 @@ try {
       }
     }
     console.log('PASS DDEX commit gate: synthetic package succeeds; recipient revoked during rendering blocks final validation');
+    // A failure after gate 1 that is not a field-level report (renderer,
+    // transfer, crash handler) must not copy the worker's stderr into the
+    // export report that every release downloader can read. The job keeps
+    // the operator summary, and the export stays retryable to valid.
+    const leakyRenderer = join(bin, 'leaky-ddex-render');
+    writeFileSync(leakyRenderer, '#!/bin/sh\nprintf \'%s\\n\' \'tdf-ddex-render: connection to server at "db.internal.test" (10.0.0.5), port 5432 failed: FATAL: password authentication failed for user "tdf_worker"\' >&2\nexit 1\n');
+    chmodSync(leakyRenderer, 0o755);
+    {
+      const exportId = randomUUID(), sender = randomUUID(), recipient = randomUUID(), job = randomUUID();
+      sql(`INSERT INTO music_ddex_party_registry(id,party_name,dpid,party_role,verification_authority,verification_evidence,verified_by,verified_at)
+        VALUES ('${sender}','Synthetic sender','${sender.replaceAll('-', '').slice(0, 16)}','sender','Synthetic only','{"fixture":true}',${artist},NOW()),
+          ('${recipient}','Synthetic recipient','${recipient.replaceAll('-', '').slice(0, 16)}','recipient','Synthetic only','{"fixture":true}',${artist},NOW());
+        INSERT INTO music_ddex_export(id,release_version_id,operation,standard,ern_version,release_profile,release_profile_version,
+          avs_version,structural_dictionary_version,choreography,choreography_version,sender_registry_id,recipient_registry_id,
+          sender_dpid,recipient_dpid,message_id,canonical_snapshot_sha256,idempotency_key,generated_by)
+        SELECT '${exportId}','${audio.version}','new_release','ERN','4.3.2','Audio','2.3.1','011','DD-ERN-432','Cloud Storage','1.8.1',
+          sender.id,recipient.id,sender.dpid,recipient.dpid,'${exportId}','${'b'.repeat(64)}','${exportId}',${artist}
+        FROM music_ddex_party_registry sender,music_ddex_party_registry recipient
+        WHERE sender.id='${sender}' AND recipient.id='${recipient}';
+        INSERT INTO music_processing_job(id,release_version_id,job_kind,job_key,output)
+          VALUES ('${job}','${audio.version}','generate_ddex','${job}',jsonb_build_object('export_id','${exportId}'));`);
+      const leaked = worker({ MUSIC_DDEX_RENDER_BIN: leakyRenderer, MUSIC_DDEX_PACKAGE_BUILDER: packager, MUSIC_DDEX_SCHEMA_DIR: schema });
+      assert.notEqual(leaked.status, 0, leaked.stdout);
+      assert.match(leaked.stderr, /db\.internal\.test/);
+      assert.equal(jobState({ job }), 'retry:1:true');
+      const failed = JSON.parse(sql(`SELECT row_to_json(e) FROM music_ddex_export e WHERE id='${exportId}'`));
+      assert.equal(failed.status, 'validation_failed');
+      assert.equal(failed.validation_report.valid, false);
+      assert.equal(failed.validation_report.code, 'generate_ddex_failed');
+      assert.doesNotMatch(JSON.stringify(failed.validation_report), /db\.internal|10\.0\.0\.5|tdf_worker|FATAL|connection to server/);
+      const operatorSummary = sql(`SELECT error_code||' '||error_summary FROM music_processing_job WHERE id='${job}'`);
+      assert.match(operatorSummary, /^generate_ddex_failed .*db\.internal\.test/);
+      retryNow({ job });
+      const recovered = worker({ MUSIC_DDEX_RENDER_BIN: renderer, MUSIC_DDEX_PACKAGE_BUILDER: packager, MUSIC_DDEX_SCHEMA_DIR: schema });
+      assert.equal(recovered.status, 0, recovered.stderr);
+      assert.equal(jobState({ job }), 'succeeded:2:true');
+      assert.equal(sql(`SELECT status FROM music_ddex_export WHERE id='${exportId}'`), 'valid');
+    }
+    console.log('PASS DDEX processing failure: export report carries a fixed message, job keeps the operator summary, retry reaches valid');
   });
   check('valid DDEX retry preserves the existing package without rendering or uploading again', () => {
     // This seeds a validation STATE to test crash recovery, NOT a conformant
@@ -672,6 +744,13 @@ try {
       assert.equal(sql(`SELECT row_to_json(a)::text FROM music_asset a WHERE id='${f.asset}'`), original);
     }
     assert.equal(sql(`SELECT status FROM music_ddex_export WHERE id='${exportId}'`), 'failed');
+    // failed is terminal: a dead-lettered job re-queued by hand runs again, is
+    // refused at gate 1 and dead-letters, but never reopens the export.
+    const failedBefore = sql(`SELECT row_to_json(e)::text FROM music_ddex_export e WHERE id='${exportId}'`);
+    sql(`UPDATE music_processing_job SET status='retry',run_after=NOW()-INTERVAL '1 second' WHERE id='${f.job}'`);
+    assert.notEqual(worker({ MUSIC_DDEX_RENDER_BIN: '/not-a-renderer', MUSIC_DDEX_SCHEMA_DIR: '/not-a-schema' }).status, 0);
+    assert.equal(jobState(f), 'dead_letter:3:true');
+    assert.equal(sql(`SELECT row_to_json(e)::text FROM music_ddex_export e WHERE id='${exportId}'`), failedBefore);
   });
   console.log(`Music worker runtime: ${passed} scenarios passed (transport fault injector; no S3 compatibility claim).`);
 } finally {

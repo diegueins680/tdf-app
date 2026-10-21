@@ -1,4 +1,6 @@
 const directorySearch = {
+  entityArtist: 'Artists and projects',
+  allCities: 'All cities',
   "title": "Music directory and classifieds",
   "description": "Find musicians, professionals, bands, services, events, venues and opportunities by city in Ecuador and Latin America.",
   "structuredName": "TDF Music Directory and Classifieds",
@@ -82,7 +84,9 @@ const directorySearch = {
   "shareCopied": "Link copied.",
   "shareCompleted": "Sharing action completed.",
   "shareCancelled": "The content was not shared.",
-  "shareError": "The link could not be shared. Open the details and copy the address."
+  "shareError": "The link could not be shared. Open the details and copy the address.",
+  "eventDate": "Event date: {{date}}",
+  "placeFiltersHint": "Profession, service, instrument and availability filters do not apply to events or venues."
 } as const;
 
 export default directorySearch;

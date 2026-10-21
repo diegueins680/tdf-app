@@ -147,6 +147,12 @@
       "table": "operations_work_item",
       "column": "status",
       "decision": "docs/operations-control-center/formal-model.yaml"
+    },
+    "MEDIA-MUSIC-DDEX-001": {
+      "source": "formal/system/requirements.json",
+      "table": "music_ddex_export",
+      "column": "status",
+      "decision": "AUTHORITY-082"
     }
   },
   "unbound": {

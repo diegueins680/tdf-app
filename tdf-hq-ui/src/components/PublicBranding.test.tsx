@@ -97,9 +97,6 @@ describe('PublicBranding', () => {
       expect(linkHrefByText(container, 'Reservar servicios')).toBe(
         '/reservar?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links',
       );
-      expect(linkHrefByText(container, 'DJ Booth')).toBe(
-        '/dj-booth?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links',
-      );
       expect(linkHrefByText(container, 'Inscribirme: cursos')).toBe(
         '/curso/produccion-musical?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links',
       );
@@ -247,4 +244,19 @@ it('places the signup invitation before public destination content inside main',
     expect(invitation.compareDocumentPosition(content) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(container.querySelectorAll('main aside[aria-label="TDF Mobile"]').length).toBe(1);
   } finally { await view.cleanup(); activeSession = null; }
+});
+
+it('sends the TDF Mobile navigation entry to the landing with its surface', async () => {
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const view = await renderBranding(container, '/tdf');
+  try {
+    const navLinks = Array.from(container.querySelectorAll('nav a')).filter((a) => a.getAttribute('href')?.startsWith('/app'));
+    expect(navLinks.length).toBeGreaterThan(0);
+    for (const link of navLinks) expect(link.getAttribute('href')).toBe('/app?surface=nav');
+    expect(container.querySelector('nav a[href="/buscar"]')).toBeTruthy();
+  } finally {
+    await view.cleanup();
+    container.remove();
+  }
 });

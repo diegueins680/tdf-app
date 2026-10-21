@@ -255,6 +255,7 @@ export function Shell() {
         <Box
           component="main"
           id="main-content"
+          data-navigation-scroll-container="true"
           tabIndex={0}
           sx={{
             flexGrow: 1,

@@ -35,7 +35,7 @@ is outside this bound and unchanged.
 Actual Haskell tests cover success, false results, private synchronous errors,
 unavailable pool acquisition, stale-then-live retry, attempt exhaustion, final negative results,
 real pool exhaustion and recovery, deadline expiry and cancellation (also through a retry). The source-bound
-`scripts/verify-readiness.py` also requires five broken implementations to fail:
+`scripts/verify-readiness.py` also requires six broken implementations to fail:
 removed query, removed deadline, swallowed cancellation (in the deadline and in the retry),
 a single attempt and no retry, and checks that the attempt budget is the pool size plus one. Handler tests traverse
 the real HTTP application with a failed pool and a real SQLite query. PostgreSQL

@@ -51,10 +51,9 @@ def verify_whatsapp_consent(sql, request, check):
           and row() == 'false,pending_confirmation,true,false')
     check('non-affirmative reply does not confirm', reply('wamid.consent.other', 'si quiero', now) == 200
           and row() == 'false,pending_confirmation,true,false')
-    # The notice row shares the number with the inbound reply row, and
-    # whats_app_message is unique on (phone_e164, created_at); the handler
-    # stamps the notice separately so the webhook answers 200 and the notice
-    # is recorded.
+    # Confirmation and inbound replay admission remain atomic. The outgoing
+    # notice samples its own clock after that receipt; the migrated schema also
+    # permits distinct messages at one phone/party timestamp.
     check('affirmative reply activates consent, answers 200 and records the notice', reply('wamid.consent.ok', 'Sí', now) == 200
           and row() == 'true,confirmed_by_reply,true,false' and notices() == 1)
     check('redelivered confirmation changes nothing', reply('wamid.consent.ok', 'Sí', now) == 200
@@ -62,16 +61,19 @@ def verify_whatsapp_consent(sql, request, check):
     check('affirmative reply from an unknown number creates no consent', reply('wamid.consent.unknown', 'SI', now, '+593990007322') == 200
           and sql("SELECT count(*) FROM whats_app_consent WHERE phone_e164='+593990007322'") == '0')
 
-    # The collision itself, pinned as a schema fact: one message per number per
-    # timestamp. The harness sql helper fails on a non-zero psql exit, so the
-    # colliding insert runs inside a DO block that records the outcome.
+    # Main's index-declaration migration removed both historical uniqueness
+    # constraints. Preserve that repair: incoming/outgoing messages can share a
+    # phone, party and instant. Provider-message identity remains separate.
     pin = '+593990007399'
-    values = lambda second: ("('pin-in','" + pin + "','incoming','" + pin + "','2026-10-12T21:00:00.000001Z'),"
-                             "('pin-out','" + pin + "','outgoing','" + pin + "'," + second + ")")
-    collided = sql("DO $$ BEGIN INSERT INTO whats_app_message(external_id,sender_id,direction,phone_e164,created_at) VALUES "
-                   + values("'2026-10-12T21:00:00.000001Z'") + "; PERFORM set_config('tdf.pin','no collision',false);"
-                   " EXCEPTION WHEN unique_violation THEN PERFORM set_config('tdf.pin',SQLERRM,false); END $$; SELECT current_setting('tdf.pin',true)")
-    check('one WhatsApp message per number per timestamp', 'index_whats_app_message_phone' in collided
-          and sql("INSERT INTO whats_app_message(external_id,sender_id,direction,phone_e164,created_at) VALUES "
-                  + values("'2026-10-12T21:00:00.000002Z'") + " RETURNING 1") == '1\n1')
+    party = sql("INSERT INTO party(display_name,is_org,created_at) VALUES ('Consent timestamp fixture',false,now()) RETURNING id")
+    values = ("('consent-pin-in','" + pin + "','incoming','" + pin + "'," + party + ",'2026-10-12T21:00:00.000001Z'),"
+              "('consent-pin-out','" + pin + "','outgoing','" + pin + "'," + party + ",'2026-10-12T21:00:00.000001Z')")
+    check('WhatsApp history permits distinct messages at the same phone and party timestamp',
+          sql("INSERT INTO whats_app_message(external_id,sender_id,direction,phone_e164,party_id,created_at) VALUES "
+              + values + " RETURNING 1") == '1\n1')
+    check('WhatsApp phone and party history indexes remain non-unique',
+          sql("SELECT count(*) FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid"
+              " WHERE i.indrelid='whats_app_message'::regclass AND NOT i.indisunique"
+              " AND c.relname IN ('index_whats_app_message_phone','index_whats_app_message_party')") == '2')
     sql("DELETE FROM whats_app_message WHERE phone_e164='" + pin + "'")
+    sql("DELETE FROM party WHERE id=" + party)

@@ -108,28 +108,29 @@ configuration, so none of this has been exercised against the live provider.
 
 ## Confirmation notice (2026-10-12, AUTHORITY-074)
 
-A confirming reply activated consent and then failed. The webhook handler
-records the inbound message at its single `now`, and after the one-statement
-activation it recorded the "Gracias, confirmamos" notice with the same `now`
-for the same number. `whats_app_message` is unique on `(phone_e164,
-created_at)`: the model line `IndexWhatsAppMessagePhone phoneE164 createdAt` in
-`tdf-hq/src/TDF/ModelsExtra.hs` is a Persistent unique declaration (any
-capitalised line after the fields is one), not an index, and the production
-snapshot of 2026-08-14 carries it as the constraint
-`index_whats_app_message_phone`. The notice insert raised a duplicate key, the
-webhook answered 500 to Meta and no notice row exists; consent was already
-committed, so Meta's redelivery is a no-op. Reproduced against the real backend
-on 2026-10-12 (consent activated, 500, no notice row). The notice now takes its
-own `getCurrentTime`, read after the reply row was written; this removes the
-deterministic collision but relies on the clock not stepping back to the same
-microsecond, so it is best-effort until the constraint goes. The constraint is
-applied production schema and is left in place, as is its sibling
-`index_whats_app_message_party UNIQUE (party_id, created_at)` (same declaration
-style; it bites whenever the number resolves to a party). Two other paths share the
-hazard and are follow-ups with the plain-index migration and model change: a
-Meta delivery that batches two text messages from one number (both inbound rows
-take the handler's single `now`, so the whole batch answers 500), and the
-course-registration reply in the same handler. `scripts/lib/whatsapp_consent_conformance.py` (booking conformance
-harness, real backend and signed Meta webhook) checks simultaneous first
-requests, the stale and confirming replies, the 200 with the notice row, the
-redelivery and pins the collision as a schema fact.
+The historical production-shaped schema made WhatsApp history unique on both
+`(phone_e164, created_at)` and `(party_id, created_at)`. A confirming reply
+activated consent, then its notice collided with the inbound row at the handler's
+single timestamp: the webhook answered500, no notice was recorded, and redelivery
+could not produce the notice. That defect was reproduced on2026-10-12 against
+the real backend before the index-declaration migration. The notice samples its
+own `getCurrentTime` after the inbound receipt. A separate clock sample alone
+was only a best-effort repair while those constraints remained.
+
+Current main retains the additive
+`tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql` migration and the matching
+model declaration removal (`DB-INDEX-DECLARATIONS-001`). Both history indexes are
+plain indexes; distinct messages may share a phone, party and instant. This
+integration preserves that schema and `receiveWhatsAppInbound`'s atomic receipt,
+consent confirmation and duplicate-delivery handling. It does not reinstate the
+old non-atomic confirmation path or either uniqueness constraint. Historical
+batched-message/course-reply timestamp collisions are superseded by the index
+repair; provider delivery and durable notice retry remain separate obligations.
+
+`scripts/lib/whatsapp_consent_conformance.py`, called by the real-backend booking
+harness with a signed synthetic Meta webhook and no WhatsApp provider, checks
+simultaneous first requests, stale/non-affirmative replies, successful confirmation
+with one outgoing notice, unchanged redelivery and unknown-number refusal. It
+also inserts incoming/outgoing messages at the same phone/party timestamp and
+requires both existing history indexes to remain non-unique. These checks require
+fresh execution on the combined candidate; earlier branch receipts are historical.

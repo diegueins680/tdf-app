@@ -111,7 +111,7 @@ describe('DirectorySearchPage', () => {
       await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
       expect(container.querySelector('input')?.value).toBe('music');
       expect(container.textContent).not.toContain('Arrival failed');
-      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ q: 'music' }));
+      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ q: 'music' }), expect.any(AbortSignal));
     } finally {
       await act(async () => root.unmount());
       container.remove();
@@ -451,6 +451,174 @@ describe('DirectorySearchPage', () => {
       await act(async () => root.unmount());
       container.remove();
       queryClient.clear();
+    }
+  }, 15_000);
+
+  it('hydrates Eventos and Quito from a deep link with every tab counted and the event date shown', async () => {
+    const quito = '22222222-2222-4222-8222-222222222222';
+    const startsAt = '2026-10-24T19:00:00Z';
+    searchMock.mockResolvedValue({
+      items: [{
+        ...eventSearchResponse.items[0],
+        subtitle: 'Andes Brewing — La Pradera',
+        effectiveAt: startsAt,
+        location: { city: 'Quito', cityId: quito, countryCode: 'EC', precision: 'city' },
+      }],
+      sponsoredItems: [],
+      facets: { entityTypes: { event: 1, profile: 3, classified: 2, all: 6 }, cities: [], total: 1 },
+    });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => {
+        root.render(<QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[`/buscar?entityType=event&cityId=${quito}&profileKind=band`]}><DirectorySearchPage /></MemoryRouter>
+        </QueryClientProvider>);
+      });
+      await waitFor(() => expect(container.textContent).toContain('Synthetic Event'));
+      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ entityType: 'event', cityId: quito, profileKind: undefined }), expect.any(AbortSignal));
+      const selectedTab = container.querySelector('[role="tab"][aria-selected="true"]');
+      expect(selectedTab?.textContent).toBe('Eventos (1)');
+      const tabLabels = Array.from(container.querySelectorAll('[role="tab"]')).map((tab) => tab.textContent);
+      expect(tabLabels).toEqual(['Todo (6)', 'Artistas y proyectos', 'Perfiles (3)', 'Clasificados (2)', 'Eventos (1)', 'Venues']);
+      expect(container.textContent).toContain('Resultados orgánicos · 1');
+      expect(container.textContent).not.toContain('Todavía no hay coincidencias');
+      expect(container.textContent).toContain('Andes Brewing — La Pradera');
+      const expectedDate = new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(startsAt));
+      expect(container.querySelector(`[aria-label="Fecha del evento: ${expectedDate}"]`)).not.toBeNull();
+      expect(container.querySelector('a[href="/eventos/42"]')).not.toBeNull();
+      // The city select shows Quito once the taxonomy has loaded.
+      await waitFor(() => expect(container.querySelector('#directory-city-label + div')?.textContent).toContain('Quito'));
+      // People-only filters are not offered for events; the genre filter stays.
+      expect(container.querySelector('#directory-profession-label')).toBeNull();
+      expect(container.querySelector('#directory-genre-label')).not.toBeNull();
+      expect(container.textContent).toContain('no aplican a eventos ni venues');
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      queryClient.clear();
+    }
+  }, 15_000);
+
+  it.each(['constructor', 'toString', 'events'])('falls back to Todo for the unknown entityType %s', async (requested) => {
+    const quito = '22222222-2222-4222-8222-222222222222';
+    const { useLocation } = await import('react-router-dom');
+    function LocationProbe() { return <span data-testid="search">{useLocation().search}</span>; }
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => {
+        root.render(<QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[`/buscar?entityType=${requested}&cityId=${quito}`]}><DirectorySearchPage /><LocationProbe /></MemoryRouter>
+        </QueryClientProvider>);
+      });
+      await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
+      expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Todo');
+      expect(container.querySelector('[data-testid="search"]')?.textContent).toBe(`?cityId=${quito}`);
+      expect(searchMock.mock.calls.every(([query]) => (query as { entityType?: string }).entityType === undefined)).toBe(true);
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      queryClient.clear();
+    }
+  });
+
+  it('pushes tab changes into history so back restores the previous search', async () => {
+    const quito = '22222222-2222-4222-8222-222222222222';
+    const { useLocation, useNavigate } = await import('react-router-dom');
+    function HistoryProbe() {
+      const location = useLocation();
+      const navigate = useNavigate();
+      return <div><span data-testid="search">{location.search}</span><button type="button" onClick={() => navigate(-1)}>history back</button></div>;
+    }
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const currentSearch = () => container.querySelector('[data-testid="search"]')?.textContent ?? '';
+    try {
+      await act(async () => {
+        root.render(<QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[`/buscar?cityId=${quito}`]}><DirectorySearchPage /><HistoryProbe /></MemoryRouter>
+        </QueryClientProvider>);
+      });
+      await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
+      const eventsTab = Array.from(container.querySelectorAll<HTMLElement>('[role="tab"]')).find((tab) => tab.textContent?.startsWith('Eventos'))!;
+      await act(async () => { fireEvent.click(eventsTab); });
+      await waitFor(() => expect(currentSearch()).toBe(`?entityType=event&cityId=${quito}`));
+      await waitFor(() => expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ entityType: 'event', cityId: quito }), expect.any(AbortSignal)));
+      expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Eventos');
+      const back = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'history back')!;
+      await act(async () => { fireEvent.click(back); });
+      await waitFor(() => expect(currentSearch()).toBe(`?cityId=${quito}`));
+      // The previous (mixed) search is restored from the URL; its results come
+      // from the query cache, so no third request is needed.
+      await waitFor(() => expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Todo'));
+      expect(container.querySelector('#directory-profession-label')).not.toBeNull();
+      expect(searchMock.mock.calls.filter(([query]) => (query as { entityType?: string }).entityType === 'event')).toHaveLength(1);
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      queryClient.clear();
+    }
+  }, 15_000);
+
+  it('drops nearby coordinates when back restores an earlier city search', async () => {
+    const quito = '22222222-2222-4222-8222-222222222222';
+    const { useLocation, useNavigate } = await import('react-router-dom');
+    function HistoryProbe() {
+      const location = useLocation();
+      const navigate = useNavigate();
+      return <div><span data-testid="search">{location.search}</span><button type="button" onClick={() => navigate(-1)}>history back</button></div>;
+    }
+    const geolocation = Object.getOwnPropertyDescriptor(navigator, 'geolocation');
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition: (success: PositionCallback) => success({ coords: { latitude: -0.18, longitude: -78.48 } } as GeolocationPosition) },
+    });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const currentSearch = () => container.querySelector('[data-testid="search"]')?.textContent ?? '';
+    const button = (label: string) => Array.from(container.querySelectorAll('button')).find((candidate) => candidate.textContent?.includes(label))!;
+    try {
+      await act(async () => {
+        root.render(<QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[`/buscar?cityId=${quito}`]}><DirectorySearchPage /><HistoryProbe /></MemoryRouter>
+        </QueryClientProvider>);
+      });
+      await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
+      // An older city entry stays in history behind the one nearby mode rewrites.
+      const eventsTab = Array.from(container.querySelectorAll<HTMLElement>('[role="tab"]')).find((tab) => tab.textContent?.startsWith('Eventos'))!;
+      await act(async () => { fireEvent.click(eventsTab); });
+      await waitFor(() => expect(currentSearch()).toBe(`?entityType=event&cityId=${quito}`));
+
+      // Entering nearby mode on a city URL keeps the coordinates and replaces the entry.
+      await act(async () => { fireEvent.click(button(esDirectory.useLocation)); });
+      await waitFor(() => expect(currentSearch()).toBe('?entityType=event&radiusKm=25'));
+      await waitFor(() => expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ latitude: -0.18, longitude: -78.48, radiusKm: 25 }), expect.any(AbortSignal)));
+      expect(container.querySelector('input[type="number"]')).not.toBeNull();
+
+      // Back restores the earlier city search instead of rewriting it as nearby.
+      await act(async () => { fireEvent.click(button('history back')); });
+      await waitFor(() => expect(currentSearch()).toBe(`?cityId=${quito}`));
+      await waitFor(() => expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Todo'));
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(currentSearch()).toBe(`?cityId=${quito}`);
+      // The city results come from the query cache; the radius field, shown
+      // only while coordinates are held, is gone.
+      expect(container.querySelector('input[type="number"]')).toBeNull();
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      queryClient.clear();
+      if (geolocation) Object.defineProperty(navigator, 'geolocation', geolocation);
+      else delete (navigator as { geolocation?: unknown }).geolocation;
     }
   }, 15_000);
 });
