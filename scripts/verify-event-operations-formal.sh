@@ -109,6 +109,19 @@ run_negative_tlc AccessGrantRebind.cfg accessgrantrebind 'Invariant SingleRedeem
 run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant RedeemedNeverRevoked is violated' AccessGrant.tla
 run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
 run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
+# AUTH-OPS-READ-001: one state; every invariant quantifies over the whole finite policy, so TLC reports a constant-level failure.
+run_tlc OperationsReadPolicy.tla OperationsReadPolicy.cfg operations-read-policy
+run_negative_tlc OperationsReadPolicyWildcardSecurity.cfg operations-read-policy-wildcard-security 'The invariant of NoSecurityDisclosure is equal to FALSE' OperationsReadPolicy.tla
+run_negative_tlc OperationsReadPolicySqlDrift.cfg operations-read-policy-sql-drift 'The invariant of ReadersAgree is equal to FALSE' OperationsReadPolicy.tla
+run_negative_tlc OperationsReadPolicyUnassigned.cfg operations-read-policy-unassigned 'The invariant of SpecialistsAssigned is equal to FALSE' OperationsReadPolicy.tla
+run_negative_tlc OperationsReadPolicyReadOnlyWrites.cfg operations-read-policy-readonly-writes 'The invariant of ReadOnlyNoWriteGain is equal to FALSE' OperationsReadPolicy.tla
+run_negative_tlc OperationsReadPolicyUnknownGrant.cfg operations-read-policy-unknown-grant 'The invariant of UnknownNothing is equal to FALSE' OperationsReadPolicy.tla
+
+
+run_tlc OperationsWorkerTick.tla OperationsWorkerTick.cfg operations-worker-tick
+run_negative_tlc OperationsWorkerTickDeferredCheck.cfg operations-worker-tick-deferred-check 'Invariant PoisonIsolated is violated' OperationsWorkerTick.tla
+run_negative_tlc OperationsWorkerTickNoAttempt.cfg operations-worker-tick-no-attempt 'Invariant AttemptsRecorded is violated' OperationsWorkerTick.tla
+run_negative_tlc OperationsWorkerTickUnboundedRetry.cfg operations-worker-tick-unbounded-retry 'Invariant DeadLetterAtBound is violated' OperationsWorkerTick.tla
 run_tlc InvoiceReceipt.tla InvoiceReceipt.cfg invoicereceipt
 run_tlc ApplicationCanary.tla ApplicationCanary.cfg applicationcanary
 run_negative_tlc ApplicationCanaryNetwork.cfg applicationcanarynetwork 'Invariant NoProductionConnectivity is violated' ApplicationCanary.tla
@@ -362,6 +375,12 @@ run_negative_tlc CheckoutCancellationPaymentUnsafe.cfg checkout-payment-unsafe '
 run_negative_tlc CheckoutReadinessUnavailable.cfg checkout-unavailable 'Invariant ReadyBeforeReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessStale.cfg checkout-stale 'Invariant CurrentReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessDuplicate.cfg checkout-duplicate 'Invariant SingleCurrentFlight is violated' CheckoutReadiness.tla
+run_tlc OperationsAuxiliaryWrite.tla OperationsAuxiliaryWrite.cfg operations-auxiliary-write
+run_negative_tlc OperationsAuxiliaryWriteUnlocked.cfg operations-auxiliary-write-unlocked 'Invariant CurrentAuthority is violated' OperationsAuxiliaryWrite.tla
+run_negative_tlc OperationsAuxiliaryWriteResolvedRetry.cfg operations-auxiliary-write-resolved-retry 'Invariant CurrentAuthority is violated' OperationsAuxiliaryWrite.tla
+run_negative_tlc OperationsAuxiliaryWritePartialAudit.cfg operations-auxiliary-write-partial-audit 'Invariant AtomicEvidence is violated' OperationsAuxiliaryWrite.tla
+run_negative_tlc OperationsAuxiliaryWriteRetryTwice.cfg operations-auxiliary-write-retry-twice 'Invariant OneRetry is violated' OperationsAuxiliaryWrite.tla
+run_negative_tlc OperationsAuxiliaryWriteUnencrypted.cfg operations-auxiliary-write-unencrypted 'Invariant EncryptedPush is violated' OperationsAuxiliaryWrite.tla
 run_tlc NavigationVisit.tla NavigationVisit.cfg navigation-visit
 run_negative_tlc NavigationVisitUnsafe.cfg navigation-visit-unsafe 'Invariant NoFailedVisits is violated' NavigationVisit.tla
 run_tlc ProviderRollback.tla ProviderRollback.cfg provider-rollback
@@ -383,6 +402,7 @@ run_tlc AccessCodeValidation.tla AccessCodeValidation.cfg access-code-validation
 run_negative_tlc AccessCodeValidationStale.cfg access-code-stale 'Invariant CurrentCredential is violated' AccessCodeValidation.tla
 run_negative_tlc AccessCodeValidationSuperficial.cfg access-code-superficial 'Invariant VerifiedAccount is violated' AccessCodeValidation.tla
 run_tlc InboundCapture.tla InboundCapture.cfg inbound-capture
+run_negative_tlc InboundCaptureDisabled.cfg inbound-capture-disabled 'Invariant CaptureRespectsEnablement is violated' InboundCapture.tla
 run_negative_tlc InboundCaptureApplicationDirectionRefused.cfg inbound-capture-application-direction-refused 'Invariant RequestsCaptured is violated' InboundCapture.tla
 run_negative_tlc InboundCaptureEveryIncomingRow.cfg inbound-capture-every-incoming-row 'Invariant OnlyRequestsCaptured is violated' InboundCapture.tla
 run_negative_tlc InboundCaptureEveryDelivery.cfg inbound-capture-every-delivery 'Invariant CapturedOnce is violated' InboundCapture.tla
@@ -403,6 +423,10 @@ run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
 run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+run_tlc OperationsFailureReplay.tla OperationsFailureReplay.cfg operations-failure-replay
+run_negative_tlc OperationsFailureReplayRelabelOnly.cfg operations-failure-replay-relabel-only 'Invariant RetryingIsQueued is violated' OperationsFailureReplay.tla
+run_negative_tlc OperationsFailureReplayUnsettled.cfg operations-failure-replay-unsettled 'Invariant RunIsSettled is violated' OperationsFailureReplay.tla
+run_negative_tlc OperationsFailureReplayUnmerged.cfg operations-failure-replay-unmerged 'Invariant OneOpenFailure is violated' OperationsFailureReplay.tla
 run_tlc TicketManualReview.tla TicketManualReview.cfg ticket-manual-review
 run_tlc TicketManualReview.tla TicketManualReviewLockReleasedGuarded.cfg ticket-manual-review-lock-released-guarded
 run_negative_tlc TicketManualReviewLockReleased.cfg ticket-manual-review-lock-released 'Invariant EveryoneAnswered is violated' TicketManualReview.tla
