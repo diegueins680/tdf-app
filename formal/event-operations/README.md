@@ -704,6 +704,7 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+
 ## Drive upload replay (2026-10-12)
 
 `DriveReplay.tla` models the reuse of a Google Drive upload by idempotency
@@ -718,6 +719,7 @@ confirming both terminal creations are reachable. The
 separate provider calls, so two concurrent misses in the same folder both create. The model
 records that limitation; it does not remove it. See
 [drive-replay.md](../system/drive-replay.md).
+
 ## Operations failure retry
 
 `OperationsFailureReplay.tla` and four configurations check the rule in
