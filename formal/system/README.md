@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [coordinated-restoration-inputs.md](coordinated-restoration-inputs.md): journal-bound retrieved ciphertext admission and verified plaintext for pending isolated replay; no restore-stage completion or deployment authority.
+
 - [contract-storage.md](contract-storage.md): private persistent contracts, legacy preservation and unavailable delivery.
 
 - [atomic-rider-publication.md](atomic-rider-publication.md): exclusive complete file publication, crash evidence, replay durability and explicit transaction boundaries.
