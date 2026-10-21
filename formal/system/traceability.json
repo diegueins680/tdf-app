@@ -4061,7 +4061,7 @@
       "id": "MEDIA-DRIVE-001",
       "title": "Bind Drive upload retries to actor and exact request",
       "statement": "An existing Drive idempotency entry may be reused only when its stored versioned fingerprint matches the authenticated Party and effective filename, MIME, destination and file bytes; missing or conflicting binding rejects before provider mutation.",
-      "authority": "implementation safety repair under authorized conformance audit",
+      "authority": "implementation safety repair under authorized conformance audit; AUTHORITY-071",
       "domain": "MEDIA",
       "actors": [
         "Authorized operations actor",
@@ -4104,7 +4104,7 @@
       "failure": "Conflicts409 before create/permission; provider failures502; missing configuration503. Successful file create can precede a failed permission operation.",
       "recovery": "Preserve legacy and conflicting objects. Reconcile their provenance explicitly or choose a new intentional upload; never silently attach actor ownership. No production provider mutation during verification.",
       "observability": "Retain exact test revision, synthetic wire trace, command and result; never log credentials or uploaded user content.",
-      "source": "Server.uploadToDrive and findDriveUploadByIdempotencyKey; scripts/artist-enrichment.mjs caller; AUTHORITY-031",
+      "source": "Server.uploadToDrive and findDriveUploadByIdempotencyKey; scripts/artist-enrichment.mjs caller; AUTHORITY-031; formal/system/drive-replay.md",
       "property": "reuse implies stored fingerprint equals current actor-and-request fingerprint; conflict implies no subsequent provider mutation",
       "contract": "formal/system/drive-replay.md",
       "implementation": [
@@ -4112,15 +4112,25 @@
         "tdf-hq/src/TDF/API/Drive.hs",
         "tdf-hq/tdf-hq.cabal"
       ],
-      "verification": "In-memory HTTP transport tests inspect real multipart metadata and provider-effect order without sockets, DNS or credential refresh.",
-      "evidence": "tdf-hq/test/TDF/DriveReplaySpec.hs; current execution evidence pending",
+      "verification": "In-memory HTTP transport tests inspect real multipart metadata and provider-effect order without sockets, DNS or credential refresh. 2026-10-12: DriveReplay.tla states the reuse rule (ReuseBinds, NoForeignReuse, NoLegacyAdoption, ConflictNoMutation) with three single-guard controls; the Race configuration checks SingleObject and is an expected counterexample, recording that lookup-then-create gives no exactly-once guarantee. DriveReplaySpec: 9 examples pass on a local test binary built on 2026-10-12 from 86b6611fc, whose uploadToDrive, Drive API module and spec are byte-identical to main 7d4375550; a CI receipt on the merged SHA is still the required current evidence. The updated finite model partitions provider entries across two explicit folders, retains a same-folder race counterexample, and checks sequential cross-folder creation with a reachable two-object witness. A global-lookup mutation fails that cross-folder property; missing-folder lookup and mutable credential visibility are excluded.",
+      "evidence": "formal/system/drive-replay.md; DriveReplaySpec 9/9 on the 2026-10-12 local test binary (helper and spec byte-identical to main); a CI receipt on the merged SHA remains pending.",
       "status": "specified and implemented",
       "historicalStatus": "implementation-repair-awaiting-current-execution",
       "tests": [
         "tdf-hq/test/TDF/DriveReplaySpec.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/DriveReplay.tla",
+        "formal/event-operations/DriveReplay.cfg",
+        "formal/event-operations/DriveReplayUnchecked.cfg",
+        "formal/event-operations/DriveReplayActorIgnored.cfg",
+        "formal/event-operations/DriveReplayLegacyAdopted.cfg",
+        "formal/event-operations/DriveReplayRace.cfg",
+        "formal/event-operations/DriveReplayCrossFolder.cfg",
+        "formal/event-operations/DriveReplayCrossFolderObjects.cfg"
+      ],
       "confidence": "source-reviewed request binding; execution and deployment still pending",
       "ambiguity": [
         "Current production usage/legacy entry count unobserved.",
@@ -10604,6 +10614,14 @@
     "formal/event-operations/DiscoveryFallbackPrivacy.tla": "e05472793509eb2c2837e3acae82bfd3b49ab9264d0da989f6c7cefda4cb5f3c",
     "formal/event-operations/DiscoveryFallbackPrivacyIgnoredLink.cfg": "6d4fdf4a9319c4c8a430e03613cb98531d1b5ad096b0f21df2f5321f40b51c9d",
     "formal/event-operations/DiscoveryFallbackPrivacyPrivateSubject.cfg": "b156d18649ac9c035343a35296637a3f20592e91663dd018d80ba16cda188853",
+    "formal/event-operations/DriveReplay.cfg": "4269a173b57b22ee27491b3dcb2ac14d9eb2b06a4a4a7143cf2c2a062939fec6",
+    "formal/event-operations/DriveReplay.tla": "91ad66dc2f6b14a15daaaa5a7b727bda677c1c5e3f41ccbad726f05409153dfd",
+    "formal/event-operations/DriveReplayActorIgnored.cfg": "6238ffd18f9c31777937297fa32be1800361705a989f315e291f3b56d15e8096",
+    "formal/event-operations/DriveReplayCrossFolder.cfg": "33a890c47fd4bf18a41cc1f868ac3788b0e364bb42e5150b435e98ab9d4c01ad",
+    "formal/event-operations/DriveReplayCrossFolderObjects.cfg": "ef1af3c4f2c6214b876446b146e8719890987ff0593f6703ad1790fb6d4eab91",
+    "formal/event-operations/DriveReplayLegacyAdopted.cfg": "a3fe9971114d1f19c88d5aa45c6758d40b4a1c113873f9db1cee9cea52997462",
+    "formal/event-operations/DriveReplayRace.cfg": "20f5ac3591b3342afa3e432ce2e80c68c72259577688b2bc98d7f269b0c1050a",
+    "formal/event-operations/DriveReplayUnchecked.cfg": "2bf51aafda6d0337f8422f35052aaecfd47c55de5e63c307906cb1623a9ce491",
     "formal/event-operations/EventOrganizer.cfg": "ed84da709c486f2fb88625b426cec2aeddf8439f9317ade750c15a948756242d",
     "formal/event-operations/EventOrganizer.tla": "b1cd25333de4d8722147e39b72a8ff63e5b6fd7870bccf4ad033524ee9ba2b81",
     "formal/event-operations/EventOrganizerAnyoneClaims.cfg": "87c88ff91027aa555ac04eeda4c6d98bbc92f34458a5c070bc7f70844c6d0ea5",
@@ -10998,7 +11016,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "0ab53650dc2a6aaad4466bab6349163b2103c0f2460c1ec159d3d99da6e58f87",
+    "scripts/verify-event-operations-formal.sh": "ccefc18ab6793b9c015e1ebe945893c7f533ad976b88b44a0b07d0ae905e0817",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -11722,6 +11740,10 @@
       },
       {
         "requirement": "BOOK-CALENDAR-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-DRIVE-001",
         "relationship": "tests"
       },
       {
@@ -14441,6 +14463,54 @@
       {
         "requirement": "MEDIA-DRIVE-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/DriveReplay.tla": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DriveReplay.cfg": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DriveReplayUnchecked.cfg": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DriveReplayActorIgnored.cfg": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DriveReplayLegacyAdopted.cfg": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DriveReplayRace.cfg": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DriveReplayCrossFolder.cfg": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DriveReplayCrossFolderObjects.cfg": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq-ui/src/main.tsx": [
@@ -25653,7 +25723,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "0ab53650dc2a6aaad4466bab6349163b2103c0f2460c1ec159d3d99da6e58f87",
+      "sha256": "ccefc18ab6793b9c015e1ebe945893c7f533ad976b88b44a0b07d0ae905e0817",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25686,6 +25756,10 @@
         },
         {
           "requirement": "BOOK-CALENDAR-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-DRIVE-001",
           "relationship": "tests"
         },
         {
@@ -45973,7 +46047,6 @@
     "REC-DDEX-001",
     "PRIV-WEBHOOK-001",
     "AUTH-WEBHOOK-001",
-    "MEDIA-DRIVE-001",
     "MEDIA-STREAM-001",
     "OPS-METRICS-001",
     "AUTH-PUBLIC-001",
@@ -47108,7 +47181,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0d711e837ea24d6fa2dfef06279062ba8db97f1f2fee48d9287f3b7d5f911e9c",
+      "sourceSha256": "4cde60f7bb6b8ef19d7bd88d16bccf3ea29973419c8e9de4bd028deafbaf1734",
       "definition": {
         "states": [
           "absent",
@@ -47138,7 +47211,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0d711e837ea24d6fa2dfef06279062ba8db97f1f2fee48d9287f3b7d5f911e9c",
+      "sourceSha256": "4cde60f7bb6b8ef19d7bd88d16bccf3ea29973419c8e9de4bd028deafbaf1734",
       "definition": {
         "export": [
           "queued",

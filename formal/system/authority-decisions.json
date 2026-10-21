@@ -820,6 +820,18 @@
       "resolution": "Decided 2026-10-13: the requirement lists the column's export states and the job statuses with the worker's transition relation; the lease guard, the two gates, valid finality, failed finality and the queued-only replay repair are the stated rules and are modelled in MusicDdexExport.tla with five single-guard controls. The worker now stores a fixed message with the error code for non-gate failures, keeps the stderr summary on the job row, and never moves a failed export back to validation_failed when a dead-lettered job is re-queued by hand; the runtime test covers both. The absence of any recovery for a dead-lettered export is recorded as an open product decision, not changed."
     },
     {
+      "id": "AUTHORITY-071",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/drive-replay.md",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/test/TDF/DriveReplaySpec.hs"
+      ],
+      "conflict": "MEDIA-DRIVE-001 had no formal model. Its concurrency text accepts that the provider lookup and the multipart create are separate requests, so two requests that both miss can both create; a model stating exactly-once reuse would contradict the implementation, and a model omitting the race would overstate it.",
+      "authority": "The requirement's own concurrency and ambiguity fields (no exactly-once guarantee; concurrent creation not covered) and the drive-replay note, which classify the race as outside the repair, not as a defect.",
+      "resolution": "DriveReplay.tla states what the implementation is read to guarantee, within the model's bounds (a reuse is bound to the requester's actor and request shape, legacy entries are never adopted, a conflict performs its lookup GET but makes no subsequent provider mutation and a reuse creates no object; correspondence to the Haskell is by reading, not refinement) with three single-guard controls, and carries SingleObject as a documented non-invariant: the Race configuration is registered as an expected counterexample. No code change; the race remains an open obligation of MEDIA-DRIVE-001, closable only by a local claim before the provider create. Provider entries are partitioned by explicit folder. A sequential cross-folder configuration and reachable two-object witness capture separate creations for the same key; the concurrent race configuration is restricted to one folder. Missing-folder lookup is outside these bounds."
+    },
+    {
       "id": "AUTHORITY-074",
       "sources": [
         "formal/system/requirements.json#PRIV-WHATSAPP-001",
@@ -833,7 +845,7 @@
       ],
       "conflict": "PRIV-WHATSAPP-001 requires the confirmation notice to be recorded as an outgoing message and the webhook to accept a valid confirmation. A confirming reply activated consent but the webhook then answered HTTP 500 and recorded no notice: the notice row was inserted with the handler timestamp, which the inbound reply row already holds for that number, and whats_app_message is unique on (phone_e164, created_at) because the model line IndexWhatsAppMessagePhone is a Persistent unique declaration (production constraint index_whats_app_message_phone). Reproduced against the real backend on 2026-10-12.",
       "authority": "The requirement's effects and the 2026-10-06 double opt-in decision (AUTHORITY-052); the unique constraint is an accident of the model declaration syntax, not a rule.",
-      "resolution": "The confirmation notice takes its own timestamp, so a valid confirmation answers 200 and the notice is recorded; the real-backend harness section checks it and pins the collision. The separate timestamp is best-effort while the constraint exists. The unique declaration is applied production schema and is left for a follow-up migration (plain index) with its model change; a batched Meta delivery with two messages from one number and the course-registration reply share the hazard and go with that follow-up. Current-main reconciliation preserves receiveWhatsAppInbound atomic receipt/confirmation and the existing index-declaration migration/model repair. Phone/party history indexes are non-unique; the old collision is historical, and the current harness requires same-timestamp distinct messages instead of reinstating uniqueness. Notice delivery/retry remains a separate obligation."
+      "resolution": "The original narrow repair sampled the notice clock separately after storing the inbound reply; while the old phone/party timestamp uniqueness remained, that was best-effort and the index/model repair was a follow-up. Current main already includes that additive index-declaration repair: both history indexes are non-unique. This integration preserves receiveWhatsAppInbound atomic receipt/confirmation and duplicate-delivery admission, then samples the outgoing notice time. The real-backend harness checks consent and redelivery plus distinct messages sharing a phone/party timestamp and both non-unique history indexes; it must not reinstate the old uniqueness assumption. Provider notice delivery and durable retry remain separate obligations."
     },
     {
       "id": "AUTHORITY-078",

@@ -114,6 +114,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `MusicDdexExportUnfenced/Reopen/NoCommitGate/ReplayFailed/SplitDeadLetter.cfg` | Negative controls: no attempt token, valid regenerated, no rule check at commit, replay re-enqueues a failed export, dead letter split from the export's failed status | Expected exit 12 with `CurrentWriter`, `ValidForever`, `ValidOnlyUnderRules`, `FailedIsFinal`, `PendingHasLiveJob` |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `DriveReplay.cfg` (revised 2026-10-14) | One idempotency key, two explicit folder namespaces, two requests from two actors with two content/name/MIME shapes, entries initially absent, legacy or bound; lookup, create, reuse (no new object; sharing still runs), conflict (lookup GET only; no subsequent provider mutation) | PASS; 33,168 generated, 21,648 distinct states; `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `ConflictNoMutation` |
+| `DriveReplayUnchecked.cfg`, `DriveReplayActorIgnored.cfg`, `DriveReplayLegacyAdopted.cfg`, `DriveReplayRace.cfg` | Three negative controls (fingerprint not checked, actor not bound, legacy entry adopted) and one documented non-guarantee (`SingleObject`: two concurrent misses both create) | Expected exit 12 with `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `SingleObject` |
 | `OperationsAuxiliaryWrite.cfg` (2026-10-12) | Two auxiliary Operations commands (note, retry, view or push) of one actor; session, grant, membership, assignment-dependent visibility, failure state and push key as the environment; lock, commit with audit, reject | PASS; 34,172 generated, 13,744 distinct states, depth 10; `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
 | `OperationsAuxiliaryWriteUnlocked.cfg`, `OperationsAuxiliaryWritePartialAudit.cfg`, `OperationsAuxiliaryWriteRetryTwice.cfg`, `OperationsAuxiliaryWriteUnencrypted.cfg` | Negative controls: environment moves while a command holds its locks, a result without its audit, a second retry admitted, a push token stored without the key | Expected exit 12 with `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
 | `OperationsReadPolicy.cfg` (2026-10-12) | One state; the grant table of `Model.hs` and the SQL scope filter evaluated over every subset of ten roles, both assignment flags and fifteen entity types (up to 30,720 cases per invariant) | PASS; `ReadersAgree`, `NoSecurityDisclosure`, `ReadOnlyNoWriteGain`, `SpecialistsAssigned`, `UnknownNothing` |
@@ -714,6 +716,21 @@ previous code: one attempt) and `ReadinessProbePoolSizeAttempts.cfg` (a budget
 of exactly the pool size, which every connection being stale defeats) each fail
 `ProbeReportsDatabase`; the model found the second bound. Deadline expiry, the
 response fields and cancellation are covered by the Haskell boundary tests.
+
+## Drive upload replay (2026-10-12)
+
+`DriveReplay.tla` models the reuse of a Google Drive upload by idempotency
+key (MEDIA-DRIVE-001): a request reuses an existing entry only when the
+stored fingerprint binds its own actor and request shape, never adopts a
+legacy entry without a fingerprint, creates no object on a reuse, and
+performs the lookup GET but no subsequent provider mutation on a conflict.
+Provider entries are scoped by folder. The sequential cross-folder configuration
+creates one object in each folder, with a counterexample to global uniqueness
+confirming both terminal creations are reachable. The
+`Race` configuration is an expected counterexample: lookup and create are
+separate provider calls, so two concurrent misses in the same folder both create. The model
+records that limitation; it does not remove it. See
+[drive-replay.md](../system/drive-replay.md).
 
 ## Operations failure retry
 

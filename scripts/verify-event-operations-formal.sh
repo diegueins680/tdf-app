@@ -406,6 +406,14 @@ run_negative_tlc CheckoutCancellationPaymentUnsafe.cfg checkout-payment-unsafe '
 run_negative_tlc CheckoutReadinessUnavailable.cfg checkout-unavailable 'Invariant ReadyBeforeReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessStale.cfg checkout-stale 'Invariant CurrentReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessDuplicate.cfg checkout-duplicate 'Invariant SingleCurrentFlight is violated' CheckoutReadiness.tla
+run_tlc DriveReplay.tla DriveReplay.cfg drive-replay
+run_tlc DriveReplay.tla DriveReplayCrossFolder.cfg drive-replay-cross-folder
+run_negative_tlc DriveReplayCrossFolderObjects.cfg drive-replay-cross-folder-objects 'Invariant SingleObject is violated' DriveReplay.tla
+run_negative_tlc DriveReplayUnchecked.cfg drive-replay-unchecked 'Invariant ReuseBinds is violated' DriveReplay.tla
+run_negative_tlc DriveReplayActorIgnored.cfg drive-replay-actor-ignored 'Invariant NoForeignReuse is violated' DriveReplay.tla
+run_negative_tlc DriveReplayLegacyAdopted.cfg drive-replay-legacy-adopted 'Invariant NoLegacyAdoption is violated' DriveReplay.tla
+# Documented non-guarantee of lookup-then-create (MEDIA-DRIVE-001): expected counterexample, not a control.
+run_negative_tlc DriveReplayRace.cfg drive-replay-race 'Invariant SingleObject is violated' DriveReplay.tla
 run_tlc OperationsAuxiliaryWrite.tla OperationsAuxiliaryWrite.cfg operations-auxiliary-write
 run_negative_tlc OperationsAuxiliaryWriteUnlocked.cfg operations-auxiliary-write-unlocked 'Invariant CurrentAuthority is violated' OperationsAuxiliaryWrite.tla
 run_negative_tlc OperationsAuxiliaryWriteResolvedRetry.cfg operations-auxiliary-write-resolved-retry 'Invariant CurrentAuthority is violated' OperationsAuxiliaryWrite.tla
