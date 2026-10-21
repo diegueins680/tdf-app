@@ -550,6 +550,10 @@ jobs:
         env:
           TDF_STARTUP_GATES_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: node scripts/__tests__/startup-gates-postgres.mjs
+      - name: Verify the Operations worker tick isolates a poisoned outbox row
+        env:
+          TDF_OPERATIONS_WORKER_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: node scripts/__tests__/operations-worker-tick-postgres.mjs
 
       - name: Verify artist claim preparation concurrency and privacy
         env:

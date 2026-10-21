@@ -66,6 +66,10 @@ export function prepareHetznerRelease({ contract, receipt, provenance, now = Dat
       providerAccounts: database.providerAccounts ?? null, socialRuntime: database.socialRuntime ?? null },
     requiredCorsConfiguration: { ALLOW_ALL_ORIGINS: 'false', CORS_DISABLE_DEFAULTS: 'true',
       ALLOWED_ORIGINS: 'https://www.tdfrecords.net,https://tdfrecords.net' },
+    policyBlockers: [{ requirement: 'OPS-INBOUND-CAPTURE-001',
+      status: 'retention-policy-unresolved', scope: 'operations-inbound-capture-activation',
+      productionRolloutAllowed: false,
+      reason: 'Explicit product decision: capture only with Operations enabled; define retention before rollout. Permanent sender identifiers in event/audit records are not approved by merging the guard.' }],
     remainingGates: [
       'Current exact-head review, all quality gates, normal merge and post-merge CI',
       'Registry image digest and embedded version bound to merged source; compatible reviewed recovery image',
@@ -73,6 +77,7 @@ export function prepareHetznerRelease({ contract, receipt, provenance, now = Dat
       'Drain all old writers, including background workers; do not treat a stop request as proof of drainage',
       'Preserve and verify legacy /app/uploads under the writer fence; provision the private host bind with the image user ownership before replacing the API container',
       'Consistent database, public assets and private uploads backup; actual isolated restore and schema/content verification',
+      'Define and verify Operations inbound-capture retention, deletion and backup handling before activation; a disabled rollout must verify the flag stays false and the guard is installed',
       'Apply reviewed pending migrations and verify full schema; preserve operator provider/feature choices',
       'Restricted canary with external effects disabled, enforcing CORS configuration and exact source version',
       'Route traffic, verify backend/frontend/mobile compatibility, live flags, ledger and safe smoke tests',
