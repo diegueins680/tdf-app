@@ -102,6 +102,9 @@ test('preparation records current drift and required CORS repair without enablin
   assert.deepEqual(args, before, 'Observational input is immutable');
   assert.equal(plan.executionAllowed, false);
   assert.equal(plan.status, 'prepared-not-authorized');
+  assert.deepEqual(plan.policyBlockers.map(x => [x.requirement, x.status, x.productionRolloutAllowed]),
+    [['OPS-INBOUND-CAPTURE-001', 'retention-policy-unresolved', false]]);
+  assert.ok(plan.remainingGates.some(x => x.includes('retention, deletion and backup')));
   assert.deepEqual(plan.counts, { applied: 1, pending: 1 });
   assert.equal(plan.observedFlags.ALLOW_ALL_ORIGINS, 'true');
   assert.equal(plan.requiredCorsConfiguration.ALLOW_ALL_ORIGINS, 'false');

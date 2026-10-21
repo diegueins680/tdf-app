@@ -922,7 +922,7 @@
       "observability": "Exact source fingerprint, Mobile pin, command, result and negative-control log.",
       "authority": "approved",
       "source": "User specification-conformance instruction 2026-10-04, sections 3, 9, 10, 19 and 24",
-      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions.",
+      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions. Catalog refresh preserves historical review provenance while recomputing discovery counters.",
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/specification-conformance.py",
@@ -4809,12 +4809,12 @@
     {
       "id": "OPS-WORKER-001",
       "title": "Private and truthful Operations worker failure reporting",
-      "statement": "Operations worker failures must not expose arbitrary exception data, swallow cancellation, repeat work on logging failure or report malformed SQL results as successful zero work.",
+      "statement": "Operations worker failures must not expose arbitrary exception data, swallow cancellation, repeat work on logging failure or report malformed SQL results as successful zero work. One outbox row whose projection fails, including a row whose entity no longer exists, must fail alone with its attempt, backoff and dead letter; it must never roll back the tick or block rows of other aggregates (later events of the same aggregate wait behind it, and behind a dead letter until an operator acts).",
       "domain": "OPS",
       "authority": "reconciled",
       "source": "docs/operations-control-center/architecture.md; docs/operations-control-center/formal-model.yaml; actual synthetic concurrent HTTP reproduction",
       "property": "safe fixed error; cancellation propagation; single invocation",
-      "contract": "formal/system/operations-command-boundary.md",
+      "contract": "formal/system/operations-worker-tick.md",
       "critical": true,
       "actors": [
         "Operations background worker",
@@ -4858,32 +4858,44 @@
       ],
       "authorization": "Deployment configuration controls worker startup; synchronous manual commands retain independent actor admission.",
       "privacy": "Never log arbitrary exception/SQL payload or disclose conflicting receipt.",
-      "concurrency": "Existing per-aggregate order and SKIP LOCKED; logging does not retry business work.",
+      "concurrency": "Existing per-aggregate order and SKIP LOCKED; logging does not retry business work. The tick checks constraints at each statement (SET CONSTRAINTS ALL IMMEDIATE) so a deferred constraint trigger cannot escape the batch's per-row handling.",
       "idempotency": "No exactly-once external delivery claim; deterministic test fixtures explicitly pause the background loop.",
-      "failure": "Invalid configuration rejects startup; malformed result fails; async cancellation escapes; SQL projection diagnostics contain SQLSTATE and fixed text.",
+      "failure": "Invalid configuration rejects startup; malformed result fails; async cancellation escapes; SQL projection diagnostics contain SQLSTATE and fixed text. A projection that fails for one row (including a missing referenced entity) records the attempt, SQLSTATE and backoff on that row and dead-letters it on the eighth attempt; before 2026-10-12 a missing entity raised at commit, rolled back the whole tick, recorded nothing and repeated every second.",
       "recovery": "Operator may resume worker; preserve pending/dead-letter evidence and inspect unbound legacy manual events.",
       "observability": "Atomic audit/stream for accepted mutations; source-bound HTTP/model/property test receipts.",
       "implementation": [
         "tdf-hq/src/TDF/Operations/Worker.hs",
         "tdf-hq/.env.example",
-        "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql"
+        "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
-        "scripts/lib/operations_conformance.py"
+        "scripts/lib/operations_conformance.py",
+        "scripts/__tests__/operations-worker-tick-postgres.mjs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/OperationsWorkerTick.tla",
+        "formal/event-operations/OperationsWorkerTick.cfg",
+        "formal/event-operations/OperationsWorkerTickDeferredCheck.cfg",
+        "formal/event-operations/OperationsWorkerTickNoAttempt.cfg",
+        "formal/event-operations/OperationsWorkerTickUnboundedRetry.cfg"
+      ],
       "status": "specified and implemented",
-      "confidence": "Source reviewed; exact final runtime validation pending",
+      "confidence": "Source reviewed; tick semantics on the migrated fixture tested; production enablement and runtime validation pending.",
       "ambiguity": [
-        "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof."
+        "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof.",
+        "SET CONSTRAINTS ALL IMMEDIATE covers every deferrable constraint in the tick transaction, not only the entity-reference trigger; none of the tick's writes relies on deferred checking.",
+        "A dead-lettered row for a deleted entity needs an operator decision (OPS-FAILURE-REPLAY-001); the worker never resolves it.",
+        "A poisoned row blocks later events of its own aggregate while it backs off and, once dead-lettered, until an operator replays or resolves it (OPS-FAILURE-REPLAY-001); other aggregates are unaffected.",
+        "Re-projection of an existing work item (ON CONFLICT DO UPDATE sets entity_type, entity_id and uncorrelated) also fires the reference trigger; with immediate checking an existing item whose entity was since deleted fails per row instead of failing the tick."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Repair is under exact-candidate runtime validation; other Operations surfaces and deployed correspondence remain unverified."
+        "reason": "Tick semantics tested on the migrated fixture and modelled within bounds; exact-candidate runtime validation and production enablement pending."
       },
-      "verification": "Actual isolated HTTP/PostgreSQL races and rollback checks; actual worker iteration Hspec/QuickCheck; bounded safety models with required negative controls where mapped.",
-      "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
+      "verification": "Actual isolated HTTP/PostgreSQL races and rollback checks; actual worker iteration Hspec/QuickCheck; bounded TLC check of OperationsWorkerTick.tla (61 states, 27 distinct, depth 9) with three single-guard negative controls; the tick's statements run against the migrated fixture with a poisoned and a healthy row (operations-worker-tick-postgres.mjs), the deferred-check tick as a negative control.",
+      "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence. The poisoned-row tick failure reproduced on the migrated fixture on 2026-10-12 before the fix."
     },
     {
       "id": "OPS-METRICS-001",
@@ -5028,10 +5040,10 @@
       ]
     },
     {
-      "authority": "reconciled",
+      "authority": "reconciled; AUTHORITY-073",
       "contract": "formal/system/operations-projection-boundary.md",
       "critical": true,
-      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05; formal/system/operations-read-policy.md",
       "status": "specified and implemented",
       "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
       "conformance": {
@@ -5041,7 +5053,7 @@
       "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
       "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
       "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
-      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions. 2026-10-12: OperationsReadPolicy.tla evaluates the copied grant table and SQL scope filter over every role set, assignment flag and entity type (ReadersAgree, NoSecurityDisclosure, ReadOnlyNoWriteGain, SpecialistsAssigned, UnknownNothing) with five single-guard controls (formal/system/operations-read-policy.md); the table is copied by hand, so this checks the policy, not the Haskell or SQL text. The approval handler's linked-item check did not strip ReadOnly (Accounting plus ReadOnly could link an approval to a hidden item); fixed and covered by an Accounting-plus-ReadOnly harness case.",
       "id": "AUTH-OPS-READ-001",
       "title": "One action-specific Operations read capability policy",
       "domain": "AUTH",
@@ -5091,10 +5103,19 @@
         "scripts/lib/operations_conformance.py",
         "scripts/test-booking-conformance.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/OperationsReadPolicy.tla",
+        "formal/event-operations/OperationsReadPolicy.cfg",
+        "formal/event-operations/OperationsReadPolicyWildcardSecurity.cfg",
+        "formal/event-operations/OperationsReadPolicySqlDrift.cfg",
+        "formal/event-operations/OperationsReadPolicyUnassigned.cfg",
+        "formal/event-operations/OperationsReadPolicyReadOnlyWrites.cfg",
+        "formal/event-operations/OperationsReadPolicyUnknownGrant.cfg"
+      ],
       "ambiguity": [
         "Producer/A&R/live-producer domain policy remains undeclared and defaults to deny; new grants require explicit specification.",
-        "SQL/role conformance is empirical; not formally covered."
+        "SQL text and role conformance are empirical; the model checks the copied policy only.",
+        "The model's grant table is a hand copy of Model.hs and scopeFilterSql; a change to either must be mirrored (2026-10-12)."
       ]
     },
     {
@@ -5184,10 +5205,10 @@
       ]
     },
     {
-      "authority": "reconciled",
+      "authority": "reconciled; AUTHORITY-072",
       "contract": "formal/system/operations-projection-boundary.md",
       "critical": true,
-      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05; formal/system/operations-aux-write.md",
       "status": "specified and implemented",
       "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
       "conformance": {
@@ -5197,7 +5218,7 @@
       "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
       "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
       "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
-      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions. 2026-10-12: OperationsAuxiliaryWrite.tla (34,172 states, 13,744 distinct) states the four guards with four single-guard controls (formal/system/operations-aux-write.md); the handlers were read against the requirement with no discrepancy found; the conformance harness remains the execution evidence. Integration review extends CurrentAuthority to failure eligibility at commit; a fifth negative control isolates resolution between read and stale retry without revoking session, grant or membership.",
       "id": "OPS-AUX-WRITE-001",
       "title": "Current authority and atomic evidence for auxiliary Operations mutations",
       "domain": "OPS",
@@ -5231,10 +5252,10 @@
         "subscription": "owner/token-digest upsert"
       },
       "allowedTransitions": [
-        "open or dead_letter -> retrying once",
         "Append authorized note and mentions",
         "Replace owned view",
-        "Register/reactivate encrypted owned token"
+        "Register/reactivate encrypted owned token",
+        "Failure retry as specified by OPS-FAILURE-REPLAY-001"
       ],
       "forbiddenTransitions": [
         "Revoked or disabled-scope commit",
@@ -5251,7 +5272,7 @@
       "authorization": "Locked current grant and scope; notes require write-domain visibility and active mentioned memberships; failure retry requires manager grant; preference/subscription ownership is actor-bound.",
       "privacy": "No private exception data or plaintext device token in receipts/logs; shared layouts do not grant data permissions.",
       "concurrency": "Locks serialize failure retries and retain note assignment; same-owner upsert uniqueness serializes preferences; transaction decode precedes commit.",
-      "idempotency": "Failure retry repeats409 after admission; notes are append commands without receipt; preference/token replacements can produce an additional audit on repeat.",
+      "idempotency": "Failure retry repeats 409 while the retry is in the queue (OPS-FAILURE-REPLAY-001); notes are append commands without receipt; preference/token replacements can produce an additional audit on repeat.",
       "failure": "Reject invalid, denied or conflicting command with no effects; missing push key503; exception/decode/audit failure rolls back.",
       "property": "Current authority; atomic result/audit; one retry admission per eligible failure state",
       "implementation": [
@@ -5262,9 +5283,17 @@
         "scripts/test-booking-conformance.py",
         "scripts/__tests__/operations-api-schema.test.mjs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/OperationsAuxiliaryWrite.tla",
+        "formal/event-operations/OperationsAuxiliaryWrite.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteUnlocked.cfg",
+        "formal/event-operations/OperationsAuxiliaryWritePartialAudit.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteRetryTwice.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteUnencrypted.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteResolvedRetry.cfg"
+      ],
       "ambiguity": [
-        "Downstream failure replay execution and actual push delivery are not established.",
+        "Actual push delivery is not established.",
         "Note success replay, cross-owner token rotation and deletion remain separate obligations; not formally covered."
       ]
     },
@@ -7801,14 +7830,24 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicPublication.tla",
+        "formal/event-operations/MusicPublication.cfg",
+        "formal/event-operations/MusicPublicationBatch.cfg",
+        "formal/event-operations/MusicPublicationReplacedOnly.cfg",
+        "formal/event-operations/MusicPublicationStayWithdrawn.cfg",
+        "formal/event-operations/MusicPublicationPointerStale.cfg",
+        "formal/event-operations/MusicWithdrawalFairness.tla",
+        "formal/event-operations/MusicWithdrawalFairness.cfg",
+        "formal/event-operations/MusicWithdrawalStarvation.cfg"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-RELEASE-001",
       "title": "Canonical music releases with immutable approved versions",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "Music releases are authored as versions owned by a verified artist or authorized team. Each version moves only through music_valid_transition; approval freezes an immutable snapshot and SHA-256; correcting a published release creates a related version that references the same immutable asset bytes. Publication and withdrawal are applied by locked database functions and only a published, in-embargo-window, territory-allowed version is public.",
-      "authority": "Unreviewed recovered local implementation (2026-09-11..16); accepted ADR-001/ADR-003 in docs/music-releases/architecture-and-data-model.md; not yet independently reviewed or deployed",
+      "statement": "Music releases are authored as versions owned by a verified artist or authorized team. Each version moves only through music_valid_transition; approval freezes an immutable snapshot and SHA-256; correcting a published release creates a related version that references the same immutable asset bytes. Publication and withdrawal are applied by locked database functions that handle each due candidate on its own: a candidate that fails at publication is suspended with its error and the other candidates still publish; publishing a version retires every other formerly published version of its release that is still published, replacement_pending or takedown_scheduled, and reopens a withdrawn release; a failure that is transient (deadlock, serialization failure, lock timeout) leaves the candidate scheduled for the next run; the release points at the version it last published only while that version is published, suspended, replacement_pending or takedown_scheduled. Only a published, in-embargo-window, territory-allowed version is public.",
+      "authority": "Unreviewed recovered local implementation (2026-09-11..16); accepted ADR-001/ADR-003 in docs/music-releases/architecture-and-data-model.md; not yet independently reviewed or deployed; AUTHORITY-066 (scheduler isolation, retirement, reopening, pointer)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
       "contract": "docs/music-releases/architecture-and-data-model.md",
       "property": "No public projection exists for a version that is not published, approved by snapshot hash and allowed in the trusted territory.",
@@ -7831,24 +7870,40 @@
       "state": {
         "version": [
           "draft",
+          "uploading",
+          "processing",
+          "validation_failed",
           "ready_for_review",
+          "in_review",
+          "changes_requested",
           "approved",
           "scheduled",
           "published",
-          "withdrawn",
-          "superseded"
+          "suspended",
+          "cancelled",
+          "replacement_pending",
+          "takedown_scheduled",
+          "withdrawn"
         ],
-        "authority": "PostgreSQL triggers and music_valid_transition"
+        "release": "published_version_id points at the version last published while it stays published, suspended, replacement_pending or takedown_scheduled, otherwise null; withdrawn_at is set while the release points at nothing after it pointed at something",
+        "authority": "PostgreSQL triggers, music_valid_transition, music_publish_due, music_withdraw_due, trg_music_release_live_version"
       },
       "allowedTransitions": [
-        "draft -> ready_for_review -> approved -> published/scheduled",
+        "draft -> ready_for_review -> in_review -> approved -> scheduled -> published (scheduler only)",
         "published -> correction version (new draft linked by correction_of_version_id)",
-        "published -> withdrawn by locked withdraw function"
+        "published -> takedown_scheduled -> withdrawn (takedown scheduler)",
+        "published/scheduled -> suspended -> approved (re-approval re-validates)",
+        "scheduled -> suspended with publication_failed audit when publication fails",
+        "publication of a version retires every other formerly published version still published, replacement_pending or takedown_scheduled through replacement_pending -> takedown_scheduled -> withdrawn; never-published and suspended versions stay",
+        "scheduled stays scheduled after a transient publication failure (SQLSTATE class 40, 55P03)"
       ],
       "forbiddenTransitions": [
         "Editing an approved snapshot in place",
         "Two simultaneously public versions of one release",
-        "Public exposure before embargo or outside allowed territory"
+        "Public exposure before embargo or outside allowed territory",
+        "One failed candidate aborting the publication or withdrawal of other candidates",
+        "A release pointing at a version that is not live",
+        "A scheduled correction of a withdrawn release that never publishes"
       ],
       "effects": [
         "Single public version per release",
@@ -7856,10 +7911,10 @@
       ],
       "authorization": "music_can(actor, artist, permission) re-checked by backend for every mutation; public reads require the public flag and territory rule.",
       "privacy": "Masters and quarantined uploads are never public; collaborator identifiers are only shown to authorized editors.",
-      "concurrency": "Correction and transition requests serialize on version rows with optimistic revision checks (correction-concurrency.md).",
+      "concurrency": "Correction and transition requests serialize on version rows with optimistic revision checks (correction-concurrency.md). The schedulers lock candidate and release FOR UPDATE SKIP LOCKED and run each candidate in its own subtransaction. The API handler locks the version row before the release row and the scheduler the other way round, so a handler move of a pointed sibling during the same release's publication can deadlock: the victim's candidate stays scheduled and publishes on the next run.",
       "idempotency": "Correction creation and publication are idempotent per request key and locked rows.",
-      "failure": "Invalid transitions raise database errors surfaced as actionable API errors.",
-      "recovery": "Rollback SQL exists for each migration; corrections never rewrite history.",
+      "failure": "Invalid transitions raise database errors surfaced as actionable API errors. A publication that raises a transient error (class 40, 55P03) leaves the candidate scheduled with a warning; any other failure suspends only that version and records publication_failed (SQLSTATE, message); a withdrawal that raises stays takedown_scheduled, is recorded once as withdrawal_failed unless transient, and moves behind other eligible withdrawals by updating its last-attempt priority, including with a one-row batch.",
+      "recovery": "Rollback SQL exists for each migration; corrections never rewrite history. 2026-10-11_music_publication_isolation repairs release rows pointing at non-live versions and releases marked withdrawn while a version is published.",
       "observability": "Editorial notifications and audit rows per transition.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
@@ -7884,7 +7939,9 @@
         "tdf-hq/sql/2026-09-16_music_correction_concurrency.sql",
         "tdf-hq/sql/2026-09-16_music_correction_concurrency_rollback.sql",
         "tdf-hq/sql/2026-09-16_music_resource_graph_validation.sql",
-        "tdf-hq/sql/2026-09-16_music_resource_graph_validation_rollback.sql"
+        "tdf-hq/sql/2026-09-16_music_resource_graph_validation_rollback.sql",
+        "tdf-hq/sql/2026-10-11_music_publication_isolation.sql",
+        "tdf-hq/sql/2026-10-11_music_publication_isolation_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
@@ -7900,30 +7957,39 @@
         "scripts/__tests__/music-test-database.test.mjs",
         "scripts/lib/music-test-database.mjs",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts",
-        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx"
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
+        "tdf-hq/test/TDF/MusicPublicationSpec.hs",
+        "scripts/test-music-publication.sh",
+        "scripts/test-music-integration-rehearsal.mjs"
       ],
-      "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script",
-      "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); no CI or production evidence on current main",
-      "confidence": "Medium: extensive local evidence on a 2026-09-10 base; not re-verified against current main.",
+      "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script; PostgreSQL spec of the schedulers (scripts/test-music-publication.sh); bounded TLC model of scheduled publication with four negative controls (formal/system/music-publication.md); bounded one-row withdrawal fairness model with a permanent failure and a starvation mutation control",
+      "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); scheduler reproduction, spec and model results in formal/system/music-publication.md (2026-10-11); no production evidence (migrations not applied in production)",
+      "confidence": "Medium: scheduler isolation, retirement, reopening and pointer rules are exercised on the migrated schema and model-checked in a bounded scope; authoring and public reads keep the 2026-09-16 local evidence only.",
       "ambiguity": [
-        "Migrations are not registered in scripts/production-migrations.json; deployment order is only documented in prose.",
         "Feature flags are created disabled; production enablement has no approved decision."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Recovered implementation and tests exist; CI on current main and deployment are pending."
+        "reason": "Scheduler isolation, retirement, reopening and release pointer are verified on the migrated schema (2026-10-11); authoring and public reads keep local 2026-09-16 evidence; not deployed."
       }
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicAssetProcessing.tla",
+        "formal/event-operations/MusicAssetProcessing.cfg",
+        "formal/event-operations/MusicAssetProcessingUnfenced.cfg",
+        "formal/event-operations/MusicAssetProcessingPreempt.cfg",
+        "formal/event-operations/MusicAssetProcessingUnverified.cfg",
+        "formal/event-operations/MusicAssetProcessingOverLimit.cfg"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-ASSET-001",
       "title": "Quarantined uploads, reproducible processing and signed asset access",
       "domain": "MEDIA",
       "critical": true,
       "statement": "Audio and artwork uploads go by scoped SigV4 multipart to a quarantine bucket under a UUID key. The worker re-downloads, recomputes SHA-256, inspects the real type, produces reproducible derivatives (AAC/FLAC/preview/artwork) with a versioned manifest, and only then promotes the original bytes as immutable. Public asset URLs are signed for five minutes only after music_public_asset_accessible re-resolves version, embargo, territory and policy; masters are never publicly signed.",
-      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md",
+      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md; AUTHORITY-067 (state sets and lease guard recorded); AUTHORITY-068 (re-upload rebinding)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/worker-multipart.md",
       "contract": "docs/music-releases/api-and-configuration.md",
       "property": "Every served derivative is traceable to a checksum-verified, promoted original; no master is signable for public access.",
@@ -7944,20 +8010,38 @@
       "state": {
         "asset": [
           "quarantined",
+          "uploaded",
+          "inspecting",
+          "valid",
+          "invalid",
           "processing",
-          "promoted",
-          "failed"
+          "ready",
+          "failed",
+          "deleted"
         ],
-        "authority": "Database job rows and worker"
+        "job": [
+          "queued",
+          "running",
+          "retry",
+          "succeeded",
+          "failed",
+          "dead_letter",
+          "cancelled"
+        ],
+        "authority": "music_asset.processing_state and music_processing_job.status; the worker's lease guard (pg_temp.music_worker_guard) fences every write of a run on worker name, claimed attempt and lease age"
       },
       "allowedTransitions": [
-        "uploaded -> quarantined -> processing -> promoted",
-        "processing -> failed -> retried"
+        "upload session initiated -> uploading -> completed; confirmation creates the asset as uploaded and one job per session",
+        "asset uploaded -> inspecting -> valid (master, immutable, master bucket) with derivatives inserted ready and immutable",
+        "job queued/retry -> running (claim, attempt+1) -> succeeded | retry (run_after delayed) | dead_letter at or beyond max_attempts (an expired last attempt is reclaimed once more)",
+        "running -> reclaimed by another run only after the lease expired"
       ],
       "forbiddenTransitions": [
         "Promotion without matching recomputed SHA-256",
         "Public signature for a master asset",
-        "Mutation of promoted bytes"
+        "Mutation of promoted bytes",
+        "A completion written by a run whose job was reclaimed (attempt token mismatch)",
+        "Reclaiming a job whose lease is still live"
       ],
       "effects": [
         "Immutable original location and checksum",
@@ -7965,10 +8049,10 @@
       ],
       "authorization": "Upload sessions require authoring permission; signatures are scoped to one key and short-lived.",
       "privacy": "Quarantine and master buckets are private; territory comes from CF-IPCountry only behind Cloudflare, otherwise specific rules fail closed.",
-      "concurrency": "Worker claims jobs with row locks; multipart completion is idempotent per upload.",
-      "idempotency": "Re-running a job reproduces identical derivatives for identical input.",
-      "failure": "Type, size or checksum mismatch fails the job without promotion.",
-      "recovery": "Failed jobs are retried; orphan multipart uploads are aborted per worker-multipart.md.",
+      "concurrency": "Worker claims one due job FOR UPDATE SKIP LOCKED; every later statement of the run is prefixed by the lease guard (version row FOR NO KEY UPDATE, job row FOR UPDATE, status running, same worker name, same attempt, lease younger than the ttl); multipart completion is idempotent per upload; derivatives are unique per (version, role, sha256).",
+      "idempotency": "Re-running a job reproduces identical derivatives for identical input. A re-upload with the same declared SHA-256 binds to the existing non-promoted asset row and re-points it at the new object before inspection (trg_music_rebind_upload_asset); the asset's queued, retry, running and dead-lettered attempts are cancelled (a cancelled run is stopped by the lease guard).",
+      "failure": "Type, size or checksum mismatch fails the attempt without promotion; the job retries with a growing delay until max_attempts, then dead_letter, and the version becomes validation_failed. A lost or expired lease stops the run (lease-lost marker, USR1) and the job is reclaimed.",
+      "recovery": "Failed jobs are retried with a growing delay; an expired lease lets another run reclaim the job. Orphan multipart uploads created by the worker's own PUTs are aborted per worker-multipart.md; client upload sessions have no purge (ambiguity). After a checksum-mismatch dead letter, uploading the correct bytes under the same declared hash is inspected and the earlier attempts, running ones included, are cancelled (2026-10-12_music_upload_rebind).",
       "observability": "Worker logs and job status rows; worker-regression-diagnostics.md.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
@@ -7983,7 +8067,9 @@
         "scripts/run-music-release-worker.sh",
         "scripts/run-music-release-worker-once.sh",
         "tdf-hq-ui/src/api/musicStorageResponse.ts",
-        "tdf-hq-ui/src/utils/incrementalSha256.ts"
+        "tdf-hq-ui/src/utils/incrementalSha256.ts",
+        "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+        "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
@@ -8008,29 +8094,41 @@
         "test/fixtures/music-worker/upload-curl.mjs",
         "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
-        "tdf-hq-ui/src/utils/incrementalSha256.test.ts"
+        "tdf-hq-ui/src/utils/incrementalSha256.test.ts",
+        "scripts/test-music-integration-rehearsal.mjs"
       ],
-      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3",
-      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16)",
-      "confidence": "Medium: local-only evidence; no deployed worker or real buckets.",
+      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md)",
+      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12); re-upload runtime scenario and migration apply/rollback in formal/system/music-upload-rebind.md (2026-10-12, historical local evidence)",
+      "confidence": "Medium: lease guard, claim and promotion rules read from source and model-checked in a bounded scope; local-only runtime evidence; no deployed worker or real buckets.",
       "ambiguity": [
-        "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only)."
+        "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only).",
+        "Abandoned upload sessions are never marked expired and purge_abandoned_upload is never enqueued (formal/system/music-asset-processing.md).",
+        "A checksum mismatch is retried up to max_attempts before dead_letter although it cannot succeed.",
+        "A dead-lettered source asset keeps processing_state = 'inspecting'."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local integration evidence only; no deployment."
+        "reason": "Lease guard, claim and checksum-gated promotion read from source and bounded-model checked; re-upload recovery implemented by AUTHORITY-068. Remaining upload lifecycle gaps and local-only evidence; not deployed."
       }
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicDdexExport.tla",
+        "formal/event-operations/MusicDdexExport.cfg",
+        "formal/event-operations/MusicDdexExportUnfenced.cfg",
+        "formal/event-operations/MusicDdexExportReopen.cfg",
+        "formal/event-operations/MusicDdexExportNoCommitGate.cfg",
+        "formal/event-operations/MusicDdexExportReplayFailed.cfg",
+        "formal/event-operations/MusicDdexExportSplitDeadLetter.cfg"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-DDEX-001",
       "title": "Private reproducible DDEX ERN 4.3.2 export of approved versions",
       "domain": "MEDIA",
       "critical": true,
       "statement": "A DDEX ERN 4.3.2 message is a projection of one approved version snapshot hash. The API commits export and job atomically, serializes per actor/key and version, revalidates queued exports against the same rules used by API, renderer and worker, and produces a private, reproducible package with message-bound file names. No delivery to partners is performed.",
-      "authority": "Unreviewed recovered local implementation; docs/music-releases/ddex-*.md",
+      "authority": "Unreviewed recovered local implementation; docs/music-releases/ddex-*.md; AUTHORITY-082 (state sets, lifecycle guards and failure-report privacy recorded)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/ddex-operation-lifecycle.md",
       "contract": "docs/music-releases/ddex-offline-bundle.md",
       "property": "Every exported package is reproducible from, and bound to, exactly one approved snapshot hash.",
@@ -8051,33 +8149,80 @@
       "state": {
         "export": [
           "queued",
-          "rendering",
-          "validated",
-          "failed",
-          "retired"
+          "generating",
+          "validation_failed",
+          "valid",
+          "failed"
         ],
-        "authority": "ddex export/job rows"
+        "job": [
+          "queued",
+          "running",
+          "retry",
+          "succeeded",
+          "failed",
+          "dead_letter",
+          "cancelled"
+        ],
+        "states": [
+          "queued",
+          "generating",
+          "validation_failed",
+          "valid",
+          "failed"
+        ],
+        "initial": "queued",
+        "terminal": [
+          "valid",
+          "failed"
+        ],
+        "transitions": {
+          "queued": [
+            "generating",
+            "validation_failed",
+            "failed"
+          ],
+          "generating": [
+            "generating",
+            "valid",
+            "validation_failed",
+            "failed"
+          ],
+          "validation_failed": [
+            "generating",
+            "validation_failed",
+            "failed"
+          ],
+          "valid": [],
+          "failed": []
+        },
+        "authority": "music_ddex_export.status and music_processing_job.status; transitions are enforced by the worker's conditional UPDATEs under the lease guard, not by a trigger"
       },
       "allowedTransitions": [
-        "queued -> rendering -> validated",
-        "queued -> failed on revalidation",
-        "suspended -> retired"
+        "API: request -> export queued + generate_ddex job queued in one transaction (actor/key advisory lock, version row lock)",
+        "Worker gate 1 (rules re-checked under the lease guard): queued | validation_failed | generating -> generating",
+        "Worker gate 2 (rules re-checked, same snapshot hash): generating -> valid with xml/manifest/package assets, then job succeeded",
+        "Any failure of an attempt: not-valid export -> validation_failed and job retry; on the last attempt -> failed and job dead_letter, in one write",
+        "A valid export whose job did not close is recovered as is: job succeeded, nothing regenerated",
+        "Authorized replay of the original request: a queued export without a job gets its job; otherwise the existing export is returned unchanged"
       ],
       "forbiddenTransitions": [
         "Export of a non-approved version",
         "Export job committed without its export row",
+        "valid -> any other status; a valid package is never regenerated or re-pointed",
+        "failed -> any other status; no replay re-enqueues a failed export",
+        "A write by a process whose claimed attempt is no longer the job's attempt",
         "Partner delivery"
       ],
       "effects": [
         "Private package with credits, parties and identifiers of that version"
       ],
-      "authorization": "Export requires DDEX export permission re-checked by backend.",
+      "authorization": "Creating an export requires strict administrator access (and the music_releases.ddex_export flag); listing and downloading require release.downloads on the release or strict administrator access, re-checked by the backend.",
       "privacy": "Packages are private and contain collaborator identifiers; never public.",
-      "concurrency": "Per actor/key/version serialization; orphaned queued exports recovered by replay.",
-      "idempotency": "Replaying an export request returns the existing operation.",
-      "failure": "Validation errors fail the export with actionable messages.",
-      "recovery": "Queued revalidation and replay per ddex-queued-validation.md and ddex-atomic-enqueue.md.",
-      "observability": "Export and job status rows.",
+      "concurrency": "API: pg_advisory_xact_lock(music-ddex:<actor>:<key>) then the version row FOR UPDATE; export and job commit together. Worker: FOR UPDATE SKIP LOCKED claim; every later statement runs under pg_temp.music_worker_guard (version FOR NO KEY UPDATE, job FOR UPDATE, status running, same worker name, claimed attempt as fencing token, lease younger than the ttl); a running job is reclaimed only after its lease expired. Gate 1 and gate 2 lock both registry rows FOR SHARE in UUID order and share their transaction with the status write. Bounded model: MusicDdexExport.tla.",
+      "idempotency": "Replaying the request with the same actor, key, version, operation, sender and recipient returns the existing export; a different body under the same key is 409; the natural key (version, recipient, operation, snapshot) is unique, so a second request for the same package is 409 whatever its key. The replay recreates only a missing job of a queued export and never resets attempts.",
+      "failure": "A gate refusal stores the field-level report (valid=false, code ddex_preconditions_failed, errors[]). Any other failure of an attempt (renderer, transfer, checksum, crash handler) stores a fixed message with its error code; the worker's stderr summary is kept on the job row until the next claim clears it, and permanently once dead-lettered. The export becomes validation_failed while attempts remain and failed with the dead letter; a valid or failed export is never changed by a later attempt.",
+      "recovery": "Queued revalidation and replay per ddex-queued-validation.md and ddex-atomic-enqueue.md; a valid export is recovered without regeneration after a crash between gate 2 and job closure. A failed (dead-lettered) export has no recovery path: see ambiguity.",
+      "observability": "Export status and validation report (release downloaders); job status, attempts, error code and stderr summary (operators).",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
@@ -8085,7 +8230,8 @@
         "scripts/build-ddex-ern432-package.sh",
         "scripts/fetch-ddex-ern432-schema.sh",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
-        "tdf-hq/sql/2026-09-16_music_ddex_operations_rollback.sql"
+        "tdf-hq/sql/2026-09-16_music_ddex_operations_rollback.sql",
+        "scripts/run-music-release-worker-once.sh"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
@@ -8095,17 +8241,22 @@
         "scripts/test-music-ddex-credits.sh",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
         "test/fixtures/music-worker/ddex-package.mjs",
-        "test/fixtures/music-worker/ddex-render.mjs"
+        "test/fixtures/music-worker/ddex-render.mjs",
+        "scripts/test-music-release-worker-runtime.mjs",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "verification": "ERN spec against fixture and schema, package builder tests, enqueue fault-injection probe",
-      "evidence": "Local results in docs/music-releases/ddex-atomic-enqueue.md (2026-09-16)",
+      "verification": "ERN spec against fixture and schema, package builder tests, enqueue fault-injection probe. Bounded TLA+ model of the export/job lifecycle under two leased processes with five single-guard negative controls (formal/system/music-ddex-export.md). Worker runtime test (PostgreSQL, substitute renderer/packager/transport): commit gate, revocation during rendering, valid recovery, queued revalidation, and the processing-failure report that excludes worker stderr and recovers to valid on retry.",
+      "evidence": "Local results in docs/music-releases/ddex-atomic-enqueue.md (2026-09-16); TLC 1.7.2 and the worker runtime test on PostgreSQL 16, 2026-10-13 (formal/system/music-ddex-export.md).",
       "confidence": "Medium for schema conformance; partner acceptance unknown.",
       "ambiguity": [
-        "Partner-specific profiles and delivery are out of scope; compatibility matrix is a 2026-09-12 snapshot."
+        "Partner-specific profiles and delivery are out of scope; compatibility matrix is a 2026-09-12 snapshot.",
+        "A dead-lettered export (status failed) has no recovery path: the natural unique key (version, recipient, operation, snapshot) rejects a new request for the same package and the replay never re-enqueues a failed export, so a transient outage lasting the five attempts (about 15 minutes) blocks that operation for that version and recipient until an operator edits the rows. The same holds for any non-queued export whose job was cancelled by hand. ADR-018 chose no blind retry; an audited operator retry is an open product decision.",
+        "The job's stderr summary is served to the uploader through the upload status endpoint (MusicReleaseUpload.hs); that surface belongs to MEDIA-MUSIC-ASSET-001 and is not changed here.",
+        "The export's validation_failed status is also used for processing failures that are not validation refusals; the report's code distinguishes them."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local evidence only; not deployed."
+        "reason": "Lifecycle, fencing, finality and failure-report privacy are modelled within bounds and exercised by the worker runtime test locally; the export feature flag is off in production, and dead-letter recovery is undecided."
       }
     },
     {
@@ -9772,10 +9923,10 @@
     },
     {
       "id": "OPS-INBOUND-CAPTURE-001",
-      "title": "Inbound messages stored by the application reach Operations once",
+      "title": "Enabled-only inbound Operations capture",
       "domain": "OPS",
-      "statement": "A WhatsApp, Instagram or Facebook message that the application stores as a request from a customer produces one Operations domain event in the storing transaction, or is stored without one (with a logged warning) if the event cannot be recorded; outgoing messages, deletion records, rows more than a day old when inserted and repeated deliveries produce none.",
-      "authority": "AUTHORITY-062; Operations control center design of 2026-08-09 (inbound communication becomes a reception work item).",
+      "statement": "An eligible inbound message may create an Operations event only while the default Operations organization is enabled and its branch is active. Admission is serialized with disablement and retained through the message transaction. Disabled-period messages remain stored without Operations capture and are not captured retroactively on redelivery. Retention must be defined and verified before activating production inbound capture.",
+      "authority": "Explicit user decision 2026-10-13: Capture only when Operations is enabled; define retention before rollout. AUTHORITY-OPS-CAPTURE-POLICY-20261013 supersedes the unconditional capture assumption in AUTHORITY-062.",
       "source": "formal/system/operations-inbound-capture.md",
       "contract": "formal/system/operations-inbound-capture.md",
       "actors": [
@@ -9784,65 +9935,77 @@
         "Reception"
       ],
       "preconditions": [
-        "Message stored by the application in whats_app_message, instagram_message or facebook_message"
+        "Message stored by the application in whats_app_message, instagram_message or facebook_message",
+        "Capture requires enabled default organization and active default branch; inbound message storage itself does not."
       ],
       "inputs": [
-        "Message direction, sender, provider message id, deletion and creation times"
+        "Message direction, sender, provider message id, deletion and creation times",
+        "Default Operations enablement and branch active state"
       ],
       "state": {
         "boundary": "AFTER INSERT triggers on the message tables; operations_domain_event",
         "authority": "PostgreSQL triggers and the unique provider event index"
       },
       "allowedTransitions": [
-        "Inbound request stored -> one communication.<channel>.received event"
+        "Eligible message stored while enabled and active -> one event unless capture fails",
+        "Message stored while disabled or branch inactive -> no Operations event",
+        "Re-enable after a disabled-period message -> no retroactive capture"
       ],
       "forbiddenTransitions": [
-        "Inbound request stored with the application's direction -> no event",
-        "Outgoing message, deletion record or history import -> event",
-        "Message delivered again -> second event"
+        "Disabled or missing Operations context -> capture",
+        "Inactive default branch -> capture",
+        "Outgoing message or excluded Meta deletion/history record -> event",
+        "Redelivery -> another event",
+        "Production capture activation before retention policy is defined and verified"
       ],
       "effects": [
-        "One domain event and outbox entry per inbound request",
-        "A reception work item per sender and channel once projected"
+        "Normal provider message storage is preserved regardless of enablement",
+        "Admitted capture appends one event and outbox entry; existing projection behavior is unchanged"
       ],
       "authorization": "No request path; the trigger runs with the storing transaction. Reading the resulting work items follows the existing Operations read policy.",
-      "privacy": "The sender identifier (the telephone number on WhatsApp) is written to append-only event and audit rows that have no erasure path. This is the control center's existing design, exercised in production for the first time by this change.",
-      "concurrency": "The event is recorded in the storing transaction; operations_record_event resolves a duplicate provider event to the existing one.",
+      "privacy": "Permanent sender identifiers in event/audit rows are not approved for rollout. Capture activation remains blocked pending a defined retention, deletion and backup policy. Installing the guard must not enable Operations or rewrite historical messages.",
+      "concurrency": "The guard takes SHARE locks on the same default organization and branch that receive the event. Disabling first prevents a waiting insert from capturing; an admitted insert holds the locks through commit, so disabling waits. The model abstracts this transaction as one action.",
       "idempotency": "Keyed by channel and provider message id; a repeated delivery inserts no row and fires no trigger.",
       "failure": "If the event cannot be recorded the message is stored without one and a warning naming the message id is logged.",
-      "recovery": "Rollback file restores the previous functions; recorded events stay.",
+      "recovery": "Disable Operations to prevent new capture. Do not restore legacy unguarded trigger functions as a policy rollback. Existing immutable events are not erased by this migration; historical-data remediation depends on the retention decision.",
       "observability": "operations_domain_event, operations_outbox and the reception work item.",
-      "property": "At most one event per inbound request stored by the application, exactly one unless recording fails, and none for anything else.",
+      "property": "CaptureRespectsEnablement, RequestsCaptured under successful capture assumptions, OnlyRequestsCaptured, CapturedOnce and TypeOK.",
       "implementation": [
         "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
         "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
-        "scripts/production-migrations.json"
+        "scripts/production-migrations.json",
+        "tdf-hq/sql/2026-10-13_operations_inbound_capture_policy.sql",
+        "scripts/lib/hetzner-preparation.mjs"
       ],
       "tests": [
         "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs",
         "scripts/test-operations-inbound-capture.sh",
         "scripts/lib/operations_conformance.py",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/__tests__/hetzner-preparation.test.mjs"
       ],
       "formalModels": [
         "formal/event-operations/InboundCapture.tla",
         "formal/event-operations/InboundCapture.cfg",
         "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg",
         "formal/event-operations/InboundCaptureEveryIncomingRow.cfg",
-        "formal/event-operations/InboundCaptureEveryDelivery.cfg"
+        "formal/event-operations/InboundCaptureEveryDelivery.cfg",
+        "formal/event-operations/InboundCaptureDisabled.cfg"
       ],
-      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test through the application's storage functions against the migrated triggers, with a run against the rolled-back functions as control.",
+      "verification": "Bounded TLC model with four named negative controls; PostgreSQL application-storage tests; witnessed lock races through the real triggers; migration rehearsal and release-preparation policy blocker.",
       "evidence": "formal/system/operations-inbound-capture.md",
       "status": "specified and implemented",
       "historicalStatus": "new",
       "critical": true,
-      "confidence": "Trigger functions, application storage and the conformance fixture read; behaviour run locally against PostgreSQL 16 on 2026-10-11. Not applied to production.",
+      "confidence": "medium",
       "ambiguity": [
-        "Whether opt-out and consent-confirmation messages should open a reception item is undecided; they do."
+        "Whether opt-out and consent-confirmation messages should open a reception item is undecided; they do.",
+        "Retention period, erasure/anonymization, audit exceptions and backup expiry are unresolved; capture activation is blocked.",
+        "WhatsApp import history exclusion is not covered by the Meta-only backfill filter."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Repaired and tested at the database boundary; the migration is not applied in production, and the projection and reception handling were not examined."
+        "reason": "Enabled-only guard and executable checks implement the approved boundary. Retention and deployed activation remain unresolved; final candidate evidence is required."
       }
     },
     {
@@ -10007,6 +10170,95 @@
         "reason": "Implemented with unit evidence; not deployed."
       },
       "historicalStatus": null
+    },
+    {
+      "authority": "AUTHORITY-065",
+      "contract": "formal/system/operations-failure-replay.md",
+      "critical": true,
+      "source": "tdf-hq/src/TDF/Operations/Server.hs replayFailureHandler; operations_process_outbox_batch; tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
+      "status": "specified and implemented",
+      "confidence": "High for the tested and modelled transitions on one record. Not deployed; production failure rows not inspected.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented, tested over HTTP and PostgreSQL and model-checked within bounds; not deployed."
+      },
+      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure …', 'operations worker …', 'operations retried …', 'operations migration …'; formal/event-operations/OperationsFailureReplay.tla",
+      "observability": "Audit row with previous and resulting status; failure attempt count and timestamps; work item resolved on recovery.",
+      "recovery": "The migration returns to dead_letter every failure relabelled retrying while its projection stayed dead-lettered, keeps the oldest of several open failures for a record, and resolves failures whose projections have all run.",
+      "verification": "HTTP requests against the compiled server on a disposable PostgreSQL database built from the production manifest; the projection is dead-lettered and run by the real worker function; bounded TLA+ model with three single-rule controls.",
+      "id": "OPS-FAILURE-REPLAY-001",
+      "title": "A retried projection failure is run again and ends resolved or dead-lettered",
+      "domain": "OPS",
+      "statement": "A manager's retry of a dead-lettered projection failure must put that projection back in the worker's queue in the same transaction; when the projection runs the failure becomes resolved, when it dead-letters again the same failure returns to dead_letter, and a failure with nothing this server can run again is not admitted as retrying.",
+      "actors": [
+        "Scoped manager",
+        "Operations projection worker"
+      ],
+      "preconditions": [
+        "Current token and manager grant",
+        "Active scope membership in the failure's branch",
+        "Failure is retryable and open or dead_letter"
+      ],
+      "inputs": [
+        "Failure identifier",
+        "Reason, request and source identifiers"
+      ],
+      "state": {
+        "failure": [
+          "open",
+          "dead_letter",
+          "retrying",
+          "resolved"
+        ],
+        "projection": [
+          "pending",
+          "processing",
+          "processed",
+          "dead_letter"
+        ]
+      },
+      "allowedTransitions": [
+        "dead_letter -> retrying, with the dead-lettered projection returned to pending and its attempts reset",
+        "dead_letter -> resolved when no projection of the record is left unprocessed",
+        "retrying -> resolved when the projection is processed",
+        "retrying -> dead_letter when the projection dead-letters again"
+      ],
+      "forbiddenTransitions": [
+        "retrying while the projection is still dead-lettered",
+        "A second open failure for the same record",
+        "Retry of a failure that has no executor",
+        "Retry of a retrying or resolved failure"
+      ],
+      "effects": [
+        "Failure state, projection queue state and audit commit together",
+        "Resolving a failure records a terminal event that closes the work item announcing it",
+        "Later events of the record are projected once the head event is processed"
+      ],
+      "authorization": "Locked current grant and scope; manager, studio manager or administrator only.",
+      "privacy": "The failure keeps only the redacted summary and SQLSTATE; the retry adds nothing private.",
+      "concurrency": "The handler locks the failure row; the database trigger then re-queues the record's dead-lettered projection and re-reads the queue. One of several simultaneous retries is admitted (tested). The worker takes the projection row before the failure row; handler/worker interleavings are argued and were exercised by hand in review, not by the automated harness.",
+      "idempotency": "A repeated retry is refused with 409 while the failure is retrying or resolved. Applying the migration again changes nothing.",
+      "failure": "Refusals and an audit failure leave failure and queue unchanged. 503 when the retry trigger is not installed. A projection that keeps failing dead-letters again after eight attempts, is announced again and can be retried again.",
+      "property": "Enforced by triggers and a unique partial index while the migration is applied: retrying implies a projection of the record is queued; at most one open projection failure per record; a processed projection has no open failure. A retry ends resolved or dead-lettered only if the worker runs.",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
+        "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql"
+      ],
+      "tests": [
+        "scripts/lib/operations_conformance.py",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [
+        "formal/event-operations/OperationsFailureReplay.tla"
+      ],
+      "ambiguity": [
+        "Only dead-lettered projections have an executor; a future provider failure needs its own before it can be retried.",
+        "A projection that fails for a cause nobody repairs dead-letters again after each retry.",
+        "Whether Operations is enabled in production, and how many failures exist there, is unobserved.",
+        "The model's liveness property assumes the worker runs; with the worker disabled a retry stays retrying."
+      ],
+      "historicalStatus": "retry-relabelled-without-execution"
     },
     {
       "id": "SYS-UI-FIXTURE-001",
