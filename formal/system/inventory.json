@@ -148,6 +148,7 @@
       "scripts/__tests__/identity-http-runtime.mjs",
       "scripts/__tests__/identity-reconciliation.test.mjs",
       "scripts/__tests__/instagram-token-workflows.test.mjs",
+      "scripts/__tests__/ledger-posting-snapshot.py",
       "scripts/__tests__/ledger-posting-upgrade.py",
       "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
       "scripts/__tests__/legacy-escrow-contract.test.mjs",
@@ -1814,6 +1815,7 @@
       "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
       "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync_rollback.sql",
       "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql",
+      "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -3388,9 +3390,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-34836c82b296d0b6",
+      "path": "scripts/__tests__/ledger-posting-snapshot.py",
+      "sha256": "1747f740dce3ad5acd357fc5f63050ed99d72ea4ee6cdbde815dd39f654a42c3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f4cef1242676dea7",
       "path": "scripts/__tests__/ledger-posting-upgrade.py",
-      "sha256": "71a163593cb81f3cff64a93b524279e01f2c518d9ea584453c81cd0e9fcd3f63",
+      "sha256": "83b40503fcd2528b89e47a50c61d41d93a4f8364c7098030347c7d9d0de32df3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4434,7 +4442,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "5f3cfbdd43b79f2f8110c600dfda393c5ed490ac593fa8667bfca03220655812",
+      "sha256": "500d9b2d48729525bc0d1f7f75c405f2f97c97007b0e5f46f54f9c7e449e5951",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5304,7 +5312,7 @@
     {
       "id": "SURFACE-c3dd26e569b5cb41",
       "path": "scripts/test-ledger-posting.sh",
-      "sha256": "4e84c81490ba4c5dd61606df854014285cbdc525ffd0ecd51254b56c3816895f",
+      "sha256": "65414f9a7eed8955893bb899a27577e90d0262b93f541311dfcf18e37b23ede7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5550,7 +5558,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "8b788076c8f5e0056d5bf92312a34a9aba3d31f33bcd0ccdd9a615f597cf9d51",
+      "sha256": "41741027642758fddcf3f2dbee7e22469ffe44866e1b7baffdcb8a3ea27725bc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13348,6 +13356,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0b41598b11b45229",
+      "path": "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
+      "sha256": "af468bf34bbfe36bfc6e3321a02ff71875d1ac49d7351a23fb607568de1d643f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -20583,6 +20597,20 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/payments/ledger-snapshot-integration-2026-10-20.md",
+      "sha256": "c467fc0b383a7300e72a1d39351f17758d3e53c805dd4fc134d755b1c8bc79d9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/ledger-snapshot-readiness-integration-2026-10-21.md",
+      "sha256": "c99bdf56094f98e6ae3ab7786b6e869ccaf66697ca6c1ebbf30fb1874a291eff",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/payments/merchant-routing-review-2026-09-16.md",
       "sha256": "cb13fc6607ee000d985dc2e7d23accef138aaa43eb32d18fedb2d1daa3c5d5a3",
       "authority": "inferred",
@@ -25778,9 +25806,16 @@
     },
     {
       "path": "formal/system/ledger-posting.md",
-      "sha256": "174f0a844e8c4e83d48ef2c1a6b472b9144379fb9fe023bb49f5979a5a99a1da",
+      "sha256": "66f5537277cbe5fccd7e7e552172dd7a92479206e9e8abd8c914701b10a3b672",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ledger-refinement-2026-10-16.md",
+      "sha256": "117348021e89c8c888a65b38311965efb7b89827385f4ee07f452ad3a9c71eca",
+      "authority": "inferred",
+      "authorityBasis": "Estado: **PARTIAL**. La implementación completa y su refinamiento siguen",
       "kind": "requirement-candidate"
     },
     {
@@ -25946,7 +25981,7 @@
     },
     {
       "path": "formal/system/payment-arithmetic.md",
-      "sha256": "c43590d32b2a99a4e4c0da0fb480e3ac7cf555a3a8ed99aed666ae1e1890f916",
+      "sha256": "12a4062aaf08facfbb3ecdb71ddc105b71a72009f1bdf607db4aac0bf48274c0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26016,7 +26051,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "62ea6fc5dd9807afad95db7daf427255e27913f12602d3fd6267dbc0f5665870",
+      "sha256": "68ad3ca6b5759aae89f3e2f4ecba7c3eace6b8f2e0e15fff332b2291813b8e0b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
