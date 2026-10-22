@@ -22,3 +22,31 @@ reproduction, not execution of the full Docker migration job.
 Fresh exact-head Linux `postgres-api` qualification and independent review remain
 required. This bounded repair establishes neither complete database isolation nor
 readiness for other fixture runners. No production operation is involved.
+
+
+## Explicit client authentication
+
+The owned image now receives `POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256`.
+This makes omission of a client password observable in the complete Linux runner,
+including loopback connections. The readiness `docker exec` explicitly supplies
+`PGPASSWORD=event-operations-api-test`. The existing initialization variable
+`POSTGRES_PASSWORD` sets the server credential; it is not a libpq client password.
+All values are the existing synthetic fixture credentials. Socket-based fixture
+commands, SQL assertions, retry bound, diagnostics and cleanup are unchanged.
+
+The [PostgreSQL16 client-variable documentation](https://www.postgresql.org/docs/16/libpq-envars.html)
+defines `PGPASSWORD`; [initdb authentication options](https://www.postgresql.org/docs/16/app-initdb.html)
+define `--auth-host`. The official image passes `POSTGRES_INITDB_ARGS` to initdb.
+
+A fresh actual PostgreSQL16 rehearsal exercises 15 controls: socket-only bootstrap,
+stopped server, final SCRAM TCP listener, old TCP query with only
+`POSTGRES_PASSWORD`, wrong client password, correct explicit client password,
+first real API fixture and owned cleanup. Missing and wrong credentials fail for
+the expected authentication reasons; the correct credential returns the readiness
+result. Every owned database is removed and the cluster stopped. This uses an
+extracted-command environment-forwarding adapter; it is not the full Docker
+migration run. The earlier trust-host rehearsal retains its original identity.
+The canonical evidence field records protocol results only; previous hosted runs
+are historical, source-bound PR evidence rather than a current-head pass. A fresh
+current-head Docker job and independent review remain required. Conformance stays
+PARTIAL.
