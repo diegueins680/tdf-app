@@ -199,10 +199,16 @@ buildPublicCourseDocuments :: AppConfig -> Day -> SqlPersistT IO [PublicCourseDo
 buildPublicCourseDocuments cfg today = do
   -- Filter before the limit: unreachable legacy rows must neither be disclosed
   -- nor crowd eligible courses out of the newest public corpus.
+  ambiguous <- loadAmbiguousProductionSlugs
   courses <- rawSql
     ("SELECT ?? FROM course WHERE " <> publicCourseEligibilitySql
-      <> " ORDER BY updated_at DESC LIMIT 50") (publicCourseEligibilityParams cfg today)
+      <> " ORDER BY updated_at DESC LIMIT 50") (publicCourseEligibilityParams cfg today ambiguous)
   catMaybes <$> traverse (loadPublicCourseDocument cfg today) courses
+
+loadAmbiguousProductionSlugs :: SqlPersistT IO [Text]
+loadAmbiguousProductionSlugs = do
+  rows <- rawSql "SELECT slug FROM course" [] :: SqlPersistT IO [Single Text]
+  pure (CoursePublic.ambiguousProductionCourseSlugs [slug | Single slug <- rows])
 
 -- Mirror the shared HTTP identity/lead policy before either selection limit.
 -- Rendering rechecks the current earliest session after the ranking query.
@@ -214,17 +220,22 @@ publicCourseEligibilitySql =
   \ (SELECT min(session.date) FROM course_session_model session\
   \ WHERE session.course_id = course.id) >= ?) OR\
   \ (course.slug NOT LIKE 'produccion-musical-%'\
-  \ AND course.slug <> 'produccion-musical' AND course.slug <> ?))"
+  \ AND course.slug <> 'produccion-musical' AND course.slug <> ?))\
+  \ AND NOT (course.slug = ANY (?::text[]))"
 
-publicCourseEligibilityParams :: AppConfig -> Day -> [PersistValue]
-publicCourseEligibilityParams cfg today =
+publicCourseEligibilityParams :: AppConfig -> Day -> [Text] -> [PersistValue]
+publicCourseEligibilityParams cfg today ambiguous =
   [ PersistDay (ProductionCourse.minimumProductionStartDate today)
   , PersistText (courseSlugFallback cfg)
+  , PersistArray (map PersistText ambiguous)
   ]
 
 loadPublicCourseDocument
   :: AppConfig -> Day -> Entity Trials.Course -> SqlPersistT IO (Maybe PublicCourseDocument)
 loadPublicCourseDocument cfg today entity@(Entity courseId course) = do
+  ambiguous <- if "produccion-musical-" `T.isPrefixOf` Trials.courseSlug course
+    then loadAmbiguousProductionSlugs
+    else pure []
   firstSession <- if "produccion-musical-" `T.isPrefixOf` Trials.courseSlug course
     then do
       rows <- rawSql "SELECT min(date) FROM course_session_model WHERE course_id = ?"
@@ -233,7 +244,9 @@ loadPublicCourseDocument cfg today entity@(Entity courseId course) = do
         [Single date] -> date
         _ -> Nothing
     else pure Nothing
-  pure (courseToDoc cfg today firstSession entity)
+  pure $ if Trials.courseSlug course `elem` ambiguous
+    then Nothing
+    else courseToDoc cfg today firstSession entity
 
 courseToDoc :: AppConfig -> Day -> Maybe Day -> Entity Trials.Course -> Maybe PublicCourseDocument
 courseToDoc cfg today firstSession (Entity _ c)
@@ -472,6 +485,7 @@ selectRagChunks cfg embedding =
       then pure []
       else do
         today <- utctDay <$> liftIO getCurrentTime
+        ambiguous <- loadAmbiguousProductionSlugs
         rows <- rawSql
           -- Current callers produce customer-facing replies. Internal chunks
           -- have no object authority here. Use the index only to rank public
@@ -479,7 +493,8 @@ selectRagChunks cfg embedding =
           ("SELECT course.id FROM rag_chunk chunk JOIN course ON course.slug = chunk.source_id\
           \ WHERE chunk.source = 'course' AND " <> publicCourseEligibilitySql
           <> " ORDER BY embedding <=> ?::vector LIMIT ?")
-          (publicCourseEligibilityParams cfg today <> [PersistText vector, PersistInt64 limitVal])
+          (publicCourseEligibilityParams cfg today ambiguous
+            <> [PersistText vector, PersistInt64 limitVal])
           :: SqlPersistT IO [Single Int64]
         docs <- forM rows $ \(Single courseId) -> do
           course <- getEntity (toSqlKey courseId :: Key Trials.Course)

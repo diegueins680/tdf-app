@@ -27,6 +27,19 @@ spec = describe "public course metadata projection" $ do
       Public.sanitizeStoredCoursePublicUrl field (Just "  ") `shouldBe` Nothing
       Public.sanitizeStoredCoursePublicUrl field Nothing `shouldBe` Nothing
 
+  it "suppresses normalized production collisions without changing ordinary slug authority" $ do
+    Public.ambiguousProductionCourseSlugs
+      [ "produccion-musical-current", " Produccion-Musical-Current "
+      , "produccion-musical-other", "ordinary", " ORDINARY "
+      ] `shouldBe` ["produccion-musical-current"]
+    Public.ambiguousProductionCourseSlugs ["produccion-musical-current"] `shouldBe` []
+
+  prop "case and Unicode whitespace collisions cannot acquire a separate production identity" $
+    forAll (listOf (elements (['a'..'z'] <> ['0'..'9'] <> "-"))) $ \suffix ->
+      let slug = "produccion-musical-a" <> T.take 70 (T.pack suffix)
+          legacy = "\t\x2003" <> T.toUpper slug <> "\x2003\n"
+      in Public.ambiguousProductionCourseSlugs [slug, legacy] == [slug]
+
   it "shares the exact earliest-session lead boundary with public production resolution" $ do
     let today = fromGregorian 2026 10 22
     map (Public.hasRequiredProductionLead today)

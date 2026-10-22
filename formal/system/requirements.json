@@ -3089,7 +3089,8 @@
         "tdf-hq/tdf-hq.cabal"
       ],
       "formalModels": [
-        "formal/event-operations/PublicKnowledgeRead.tla"
+        "formal/event-operations/PublicKnowledgeRead.tla",
+        "formal/event-operations/PublicKnowledgeReadCollision.cfg"
       ],
       "status": "specified and implemented",
       "confidence": "medium",
@@ -9974,7 +9975,8 @@
         "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs"
       ],
       "formalModels": [
-        "formal/event-operations/PublicKnowledgeIndex.tla"
+        "formal/event-operations/PublicKnowledgeIndex.tla",
+        "formal/event-operations/PublicKnowledgeIndexCollision.cfg"
       ],
       "status": "specified and implemented",
       "confidence": "medium",

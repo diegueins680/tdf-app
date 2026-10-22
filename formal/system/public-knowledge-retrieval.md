@@ -230,3 +230,39 @@ admits the exact threshold day. All 18 database examples pass on a fresh complet
 14-case receipts retain their original source identities; they are not relabeled
 as executions of this new policy. Provider requests and production writes remain
 outside these rehearsals.
+
+### Normalized production identity collisions
+
+A legacy production row can share the public resolver's normalized identity
+with a canonical row. The resolver considers both in descending update order;
+discarding only the legacy row from RAG can therefore expose a canonical row
+whose metadata that route does not return. RAG conservatively excludes every
+ambiguous production identity, regardless of which row is newer or has valid
+sessions. It does not change the HTTP resolver or select the competing row.
+
+`ambiguousProductionCourseSlugs` uses the same `Text.toLower . Text.strip`
+operations as the resolver. It counts normalized production identities from
+stored slugs, including legacy whitespace and case variants. Reading the slug
+column avoids relying on PostgreSQL collation or its narrower default trimming
+semantics. Both selection statements bind the ambiguous identities as a text
+array and exclude them before their limits. Production document rendering
+rechecks the collision classification along with the current session boundary.
+Ordinary courses retain their case-sensitive identity authority. Collision
+removal allows an otherwise eligible production row to be indexed again.
+
+The additional reads have the existing statement-snapshot limits: the corpus is
+captured before provider execution, and collision changes after capture or after
+metadata read do not imply retraction or delivery-linearized freshness. The
+extra slug scan also has a cost proportional to the stored course count; each
+production rendering recheck repeats that scan. No schema mutation or provider
+request is part of classification.
+
+The index model now abstracts one collision Boolean for the captured corpus;
+`NoAmbiguousEmbedding` excludes that corpus from disclosure. The read model
+allows collision changes between ranking, metadata read and delivery;
+`NoAmbiguousRead` refers to the classification at metadata read, allowing later
+changes under the existing snapshot contract. The two new guard-removal
+configurations must violate those named invariants. These bounded abstractions
+assume the collision predicate, rather than proving Unicode normalization or
+arbitrary SQL/Haskell refinement. Actual Store regressions and pure generated
+normalization checks cover the separate implementation boundary.
