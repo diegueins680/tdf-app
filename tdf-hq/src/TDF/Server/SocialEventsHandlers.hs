@@ -9463,7 +9463,7 @@ loadEventWorkflowProjections eventRows = do
             [PersistText EventLifecycle.socialEventWorkflowCode]
     capabilityRows <-
         rawSql
-            "SELECT capability.state_id, capability.capability_code FROM workflow_state_capability capability JOIN workflow_state state ON state.id=capability.state_id JOIN workflow_definition workflow ON workflow.id=state.workflow_id WHERE workflow.code=? AND workflow.active=TRUE AND state.active=TRUE AND capability.enabled=TRUE AND capability.capability_code IN ('public-listable','ticket-purchase') ORDER BY capability.state_id, capability.capability_code"
+            "SELECT capability.state_id, capability.capability_code FROM workflow_state_capability capability JOIN workflow_state state ON state.id=capability.state_id JOIN workflow_definition workflow ON workflow.id=state.workflow_id WHERE workflow.code=? AND workflow.active=TRUE AND state.active=TRUE AND capability.enabled=TRUE AND capability.capability_code IN ('public-listable','rsvp','ticket-purchase') ORDER BY capability.state_id, capability.capability_code"
             [PersistText EventLifecycle.socialEventWorkflowCode]
     let typedStateRows =
             stateRows

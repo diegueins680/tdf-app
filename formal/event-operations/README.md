@@ -105,8 +105,23 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `CommandPrivacyExistenceLeak.cfg`, `CommandPrivacyReceiptLeak.cfg` | Negative controls: distinct hidden-event error / receipt response before visibility | Expected exit 12 with `OpaqueTarget`; both detected |
 | `SessionFence.cfg` | 1 authentication/transaction; 32 token records; 2 actors; witness present/absent; read/new/replay | PASS; 12,685 generated, 1,153 distinct states, depth 5 |
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
+| `MusicPublication.cfg` (2026-10-11) | One release, three versions (v2 and v3 correct v1); staff schedule, suspend, re-approve, take down and withdraw without fairness; a scheduled version may turn invalid; the two schedulers are weakly fair | PASS; 32,257 generated, 7,168 distinct states, depth 18; six invariants and the `Progress`/`ValidProgress` properties |
+| `MusicPublicationBatch.cfg`, `MusicPublicationStayWithdrawn.cfg` | Negative controls: whole-batch publication, a withdrawn release never republishes | Expected exit 13: `ValidProgress` (a valid due version stays scheduled because a sibling fails) and `Progress` (a due correction of a withdrawn release stays scheduled) violated |
+| `MusicPublicationReplacedOnly.cfg`, `MusicPublicationPointerStale.cfg` | Negative controls: retire only the replaced version, pointer kept on a version that left the live states | Expected exit 12 with `OnlyInvalidFails`, `PointerLive` |
+| `MusicAssetProcessing.cfg` (2026-10-12) | One processing job, two worker processes sharing a name, bytes matching or not, 3 attempts plus one reclaim past the bound; claim, lease expiry, fenced stop, promote, fail for any reason | PASS; 934 generated, 554 distinct states; `PromotedOnlyVerified`, `CompletionIsCurrent`, `LiveLeaseIsCurrent`, `OneLiveLease` |
+| `MusicAssetProcessingUnfenced/Preempt/Unverified.cfg` | Negative controls: no attempt token, reclaim before lease expiry, promotion without checksum | Expected exit 12 with `CompletionIsCurrent`, `LiveLeaseIsCurrent`, `PromotedOnlyVerified` |
+| `MusicDdexExport.cfg` (2026-10-13) | One export, one job or none (legacy), two worker processes sharing a name, rules flipping at any time, 2 attempts plus one reclaim past the bound; replay, claim, expiry, crash, fenced stop, recover, two gates, succeed, fail | PASS; 5,284 generated, 1,272 distinct states; `ValidForever`, `CurrentWriter`, `ValidOnlyUnderRules`, `FailedIsFinal`, `PendingHasLiveJob` |
+| `MusicDdexExportUnfenced/Reopen/NoCommitGate/ReplayFailed/SplitDeadLetter.cfg` | Negative controls: no attempt token, valid regenerated, no rule check at commit, replay re-enqueues a failed export, dead letter split from the export's failed status | Expected exit 12 with `CurrentWriter`, `ValidForever`, `ValidOnlyUnderRules`, `FailedIsFinal`, `PendingHasLiveJob` |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `DriveReplay.cfg` (revised 2026-10-14) | One idempotency key, two explicit folder namespaces, two requests from two actors with two content/name/MIME shapes, entries initially absent, legacy or bound; lookup, create, reuse (no new object; sharing still runs), conflict (lookup GET only; no subsequent provider mutation) | PASS; 33,168 generated, 21,648 distinct states; `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `ConflictNoMutation` |
+| `DriveReplayUnchecked.cfg`, `DriveReplayActorIgnored.cfg`, `DriveReplayLegacyAdopted.cfg`, `DriveReplayRace.cfg` | Three negative controls (fingerprint not checked, actor not bound, legacy entry adopted) and one documented non-guarantee (`SingleObject`: two concurrent misses both create) | Expected exit 12 with `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `SingleObject` |
+| `OperationsAuxiliaryWrite.cfg` (2026-10-12) | Two auxiliary Operations commands (note, retry, view or push) of one actor; session, grant, membership, assignment-dependent visibility, failure state and push key as the environment; lock, commit with audit, reject | PASS; 34,172 generated, 13,744 distinct states, depth 10; `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
+| `OperationsAuxiliaryWriteUnlocked.cfg`, `OperationsAuxiliaryWritePartialAudit.cfg`, `OperationsAuxiliaryWriteRetryTwice.cfg`, `OperationsAuxiliaryWriteUnencrypted.cfg` | Negative controls: environment moves while a command holds its locks, a result without its audit, a second retry admitted, a push token stored without the key | Expected exit 12 with `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
+| `OperationsReadPolicy.cfg` (2026-10-12) | One state; the grant table of `Model.hs` and the SQL scope filter evaluated over every subset of ten roles, both assignment flags and fifteen entity types (up to 30,720 cases per invariant) | PASS; `ReadersAgree`, `NoSecurityDisclosure`, `ReadOnlyNoWriteGain`, `SpecialistsAssigned`, `UnknownNothing` |
+| `OperationsReadPolicyWildcardSecurity.cfg`, `OperationsReadPolicySqlDrift.cfg`, `OperationsReadPolicyUnassigned.cfg`, `OperationsReadPolicyReadOnlyWrites.cfg`, `OperationsReadPolicyUnknownGrant.cfg` | Negative controls: the Haskell wildcard includes security, the SQL wildcard includes security, specialists see unassigned items, ReadOnly kept for write visibility, an unlisted role granted the wildcard | Expected non-zero exit with "The invariant of ... is equal to FALSE" for `NoSecurityDisclosure`, `ReadersAgree`, `SpecialistsAssigned`, `ReadOnlyNoWriteGain`, `UnknownNothing` |
+| `OperationsWorkerTick.cfg` (2026-10-12) | 3 outbox rows (1 poisoned), 3 attempts to dead letter, 6 ticks; backoff elapses between ticks | PASS; 61 generated, 27 distinct states, depth 9; `PoisonIsolated`, `NoAbortedTick`, `AttemptsRecorded`, `DeadLetterAtBound` |
+| `OperationsWorkerTickDeferredCheck.cfg`, `OperationsWorkerTickNoAttempt.cfg`, `OperationsWorkerTickUnboundedRetry.cfg` | Negative controls: constraints deferred to commit (the previous tick), failed projection records no attempt, no dead-letter bound | Expected non-zero exit with `PoisonIsolated`, `AttemptsRecorded`, `DeadLetterAtBound` violated |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
@@ -230,6 +245,25 @@ The runner requires the exact named failures from all three negative controls.
 - `CommandPrivacy.tla`: paired absent/unreadable status/body equality for fresh commands and all
   receipt classes, while retaining read-only mutation denial. The atomic observation assumes the
   existing current-authorization fence; it does not prove session revocation or constant-time access.
+- `MusicPublication.tla` (2026-10-11): scheduled publication of music release
+  versions. Each due candidate publishes or fails in its own subtransaction; a
+  publication retires every other live version; publication reopens a withdrawn
+  release; the release pointer follows any exit from the live states. See
+  [music publication](../system/music-publication.md). The retirement chain is
+  one step and the submission rules are a boolean; SQL refinement is the
+  PostgreSQL spec, not this model.
+- `MusicAssetProcessing.tla` (2026-10-12): leased processing of one uploaded
+  music asset by worker runs that may share a name; the attempt is the fencing
+  token, a running job is reclaimed only after its lease expired, promotion
+  needs the recomputed checksum. See
+  [music asset processing](../system/music-asset-processing.md). Rendering,
+  object storage and the heartbeat are outside the model.
+- `MusicDdexExport.tla` (2026-10-13): DDEX export and job lifecycle under
+  leased worker runs that may share a name; the attempt is the fencing token,
+  a valid export is final, gate 2 re-checks the rules, the replay repairs only
+  a queued export, the dead letter and the export's failed status are one
+  write. See [music DDEX export](../system/music-ddex-export.md). Rendering,
+  object storage, the API locks and the heartbeat are outside the model.
 - `SessionFence.tla`: request-local token/party/credential binding, recheck after token locking and
   lock retention through the event decision. It models current validity, not permanent revocation
   epochs: explicit reactivation of the same credential reauthorizes it. Global role/catalog changes
@@ -273,6 +307,14 @@ The runner requires the exact named failures from all three negative controls.
    examine the complete reachable graph and liveness has its own fair temporal specification.
 3. TLC rejected invitation transitions that did not explicitly preserve `now`. The missing
    `UNCHANGED now` clauses were added before the passing run.
+
+## Inbound capture
+
+`InboundCapture.tla` and four configurations check the rule in
+[operations-inbound-capture.md](../system/operations-inbound-capture.md): a stored
+request from a customer has an Operations event, nothing else has one, and a
+message has at most one. The positive model and three negative controls are
+mandatory in the formal runner.
 
 ## Public Live Session credential validation
 
@@ -522,6 +564,14 @@ render, A→B→A, cache races, and persisted timestamps. The model abstracts pr
 exchange/persistence, selected-calendar identities and query-library scheduling; those
 require HTTP and component/browser conformance tests. It does not prove Google OAuth
 consent, token revocation, server authorization or arbitrary calendar handlers.
+## Meta redelivery
+
+`MetaRedelivery.tla` and four configurations check the rule in
+[meta-redelivery.md](../system/meta-redelivery.md): the reply worker takes up a
+message once, a stored message keeps its text, a message deleted first never gains
+text, and a deletion keeps its first time. The positive model and three negative
+controls are mandatory in the formal runner.
+
 ## Directory favorite authority (2026-09-18)
 
 `DirectoryFavoriteAuthority` bounds one read/save request, three session occurrences,
@@ -530,6 +580,15 @@ current-session dispatch/receipt and authoritative persistence. Weak fairness as
 dispatch and eventual success/failure response; terminal quiescence is permitted.
 Unsafe dispatch/receipt variants must violate their named invariants (29/63states).
 [Implementation, counterexamples and limits](../../docs/ux-ui-audit/2026-09-17/directory-entry.md).
+
+## Music entitlement and downloads
+
+`MusicEntitlement.tla` and seven configurations check the rules in
+[music-purchase-entitlement.md](../system/music-purchase-entitlement.md): paid only on
+verified evidence, one entitlement per order, the download limit, replay of a request
+identifier only inside its URL lifetime, a replayed URL that ends with the original one,
+and no URL without an active entitlement. The positive model and six negative controls
+are mandatory in the formal runner.
 
 ## Marketplace optional storage boundary (2026-09-18)
 
@@ -598,6 +657,13 @@ existing payment models and HTTP contracts remain separate evidence.
     invariant counterexamples. A separate sandbox RMI denial required an approved unsandboxed
     rerun. The complete corrected suite passed; no safety assertion was weakened or omitted.
 
+## WhatsApp redelivery
+
+`WhatsAppRedelivery.tla` and five configurations check the rule in
+[whatsapp-redelivery.md](../system/whatsapp-redelivery.md): a message is stored
+once, what it asks for is applied at most once, an enrolment message is answered at
+most once, and a stored opt-out has been applied. The positive model and four
+negative controls are mandatory in the formal runner.
 ## Organizer assignment
 
 `EventOrganizer.tla` and four configurations check the rule in
@@ -614,6 +680,15 @@ model and five named negative controls are mandatory in the formal runner. Bound
 transaction/provider assumptions, no-fairness/no-liveness scope and runtime mapping
 are defined there; the model does not establish a complete checkout lifecycle.
 
+## Ticket bank transfer review
+
+`TicketManualReview.tla` and five configurations check the rule in
+[ticket-manual-review.md](../system/ticket-manual-review.md): concurrent reviewers
+of one transfer record at most one payment, keep payment and evidence consistent,
+and do not enter an error state when a review decision runs. `EveryoneAnswered`
+is a safety invariant despite its name: the model permits stuttering and has no
+fairness assumption or eventual-completion property. The two positive models
+and three negative controls are mandatory in the formal runner.
 ## Access grant boundary — AUTH-ACCESS-PROVISION-001 / AUTH-ARTIST-INVITE-001 (2026-10-09)
 
 `AccessGrant.tla` checks one reviewed access request and one personal invitation link.
@@ -629,6 +704,44 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+
+## Drive upload replay (2026-10-12)
+
+`DriveReplay.tla` models the reuse of a Google Drive upload by idempotency
+key (MEDIA-DRIVE-001): a request reuses an existing entry only when the
+stored fingerprint binds its own actor and request shape, never adopts a
+legacy entry without a fingerprint, creates no object on a reuse, and
+performs the lookup GET but no subsequent provider mutation on a conflict.
+Provider entries are scoped by folder. The sequential cross-folder configuration
+creates one object in each folder, with a counterexample to global uniqueness
+confirming both terminal creations are reachable. The
+`Race` configuration is an expected counterexample: lookup and create are
+separate provider calls, so two concurrent misses in the same folder both create. The model
+records that limitation; it does not remove it. See
+[drive-replay.md](../system/drive-replay.md).
+
+## Operations failure retry
+
+`OperationsFailureReplay.tla` and four configurations check the rule in
+[operations-failure-replay.md](../system/operations-failure-replay.md): an admitted
+retry puts the dead-lettered projection back in the queue, a projection that runs
+closes its failure, and a second dead letter returns to the same failure. The
+positive configuration also checks, under weak fairness of the worker, that a
+retry ends resolved or dead-lettered. Each negative control removes one rule.
+
+## Index declarations
+
+`IndexDeclaration.tla` and four configurations check the rule in
+[index-declarations.md](../system/index-declarations.md): a row with a new identity
+is stored whatever key and time it carries, and an identity is stored once. The
+positive model and three negative controls are mandatory in the formal runner.
+## Interaction write budget
+
+`InteractionWriteBudget.tla` and five configurations check the rule in
+[interaction-write-budget.md](../system/interaction-write-budget.md): every ended
+write attempt is counted, no minute runs more writes than the limit, and an attempt
+is refused only when its own minute was spent. The positive model and four negative
+controls are mandatory in the formal runner.
 ## Ticket invoice submission
 
 `InvoiceSubmission.tla` and five configurations check the worker rules in
@@ -636,3 +749,52 @@ staff capture, delivery and message content are outside the model.
 persisted submission mark, lease-fenced results and administrator resend. The positive
 model and four negative controls are mandatory in the formal runner. Bounds, provider
 assumptions and the recovery gaps found are stated there.
+
+`ChatNotificationAuthorization.tla` models one notification target with stale cached membership/messages. Fresh success is required before display/read effects; failure and retry remain fail-closed. `ChatNotificationCachedDisplay.cfg` and `ChatNotificationEarlyRead.cfg` remove that guard and require named counterexamples. This finite client-admission model does not prove ordinary polling or backend authorization (MSG-NOTIFY-001).
+
+`ChatNotificationNavigation.tla` extends the notification boundary to two same-route navigations and an earlier pending poll. Each target needs its own response; request-scope confusion cannot authorize display or read bookkeeping. Three controls admit cached authorization, early read bookkeeping, or an older response under the current navigation marker. This finite model complements the actual React Query regressions; it does not establish backend authorization, ordinary polling correctness or liveness (MSG-NOTIFY-001).
+## Music DDEX export
+
+`MusicDdexExport.tla` and six configurations check the export lifecycle rules in
+[music-ddex-export.md](../system/music-ddex-export.md): leased claims with the attempt
+as fencing token, the two rule gates, valid and failed finality, queued-only replay
+repair and the atomic dead letter. The positive model and five negative controls are
+mandatory in the formal runner. Bounds, abstractions and the recovery gap found are
+stated there.
+
+
+## Operations auxiliary writes (2026-10-12)
+
+`OperationsAuxiliaryWrite.tla` models the four auxiliary Operations
+mutations (OPS-AUX-WRITE-001): a command takes its locks, reads session,
+grant, membership, assignment, failure state and push key under them, then
+commits its result together with its audit row or is rejected with no
+effect. Five negative controls, including a failure-resolution-only stale retry. The model states the guards the
+handlers are read to apply; the PostgreSQL/HTTP conformance harness is the
+execution evidence. See
+[operations-aux-write.md](../system/operations-aux-write.md).
+## Operations read policy (2026-10-12)
+
+`OperationsReadPolicy.tla` is not a state machine: it copies the read grant
+table of `tdf-hq/src/TDF/Operations/Model.hs` and the SQL scope filter of
+`tdf-hq/src/TDF/Operations/Server.hs` and evaluates five invariants over
+every role set, assignment flag and entity type (AUTH-OPS-READ-001): detail
+(Haskell predicate) and list, metrics and stream (SQL filter) agree; only an
+Admin sees security incidents; ReadOnly adds no write visibility (by
+construction of the stripping rule each write site applies; the slice fixed
+the one site that did not); Teacher, Engineer and unlisted roles see
+nothing unassigned. Five controls each break one guard. The table is copied by hand; a change to `Model.hs` or
+`scopeFilterSql` must be mirrored here. See
+[operations-read-policy.md](../system/operations-read-policy.md).
+
+`OperationsWorkerTick.tla` checks the Operations worker's maintenance tick of
+OPS-WORKER-001: every due outbox row is projected or fails alone with a
+recorded attempt and a backoff, and a row whose entity no longer exists is
+dead-lettered after the attempt bound, so one poisoned row never holds the
+rows of other aggregates hostage (its own aggregate's successors wait, by
+design). The `DeferredCheck` control is the previous tick, in which the
+deferred reference trigger fired at commit and rolled the whole tick back;
+`NoAttempt` and `UnboundedRetry` remove the two retry guards.
+`scripts/__tests__/operations-worker-tick-postgres.mjs` runs the tick's
+statements against the migrated fixture. Bounds and exclusions are in
+`formal/system/operations-worker-tick.md`.

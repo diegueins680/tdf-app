@@ -1,3 +1,4 @@
+import CommunityDiscovery from '../features/discovery/CommunityDiscovery';
 import RecordThumbnail from '../features/records/RecordThumbnail';
 import { primaryRecordsResource } from '../features/records/resolveRecordThumbnail';
 import { buildArtistFollowAuthPath } from '../utils/artistFollowIntent';
@@ -389,11 +390,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     setArtistDraft((prev) => ({ ...prev, apuArtistId: partyId }));
   }, [session?.partyId]);
 
-  useEffect(() => {
-    if (focusArtist && artistSectionRef.current) {
-      artistSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [focusArtist]);
 
   const updateArtistProfileMutation = useMutation({
     mutationFn: Fans.updateMyArtistProfile,
@@ -912,9 +908,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       <Button component={RouterLink} to="/reservar" variant="contained" color="secondary" size="small">
                         Abrir reservas
                       </Button>
-                      <Button component={RouterLink} to="/dj-booth" variant="outlined" color="secondary" size="small">
-                        DJ Booth
-                      </Button>
                       <Button component={RouterLink} to={radioTargetPath} variant="text" size="small">
                         Radio y en vivo
                       </Button>
@@ -946,9 +939,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <Button component={RouterLink} to="/reservar" variant="contained" size="small">
                         Reservar ahora
-                      </Button>
-                      <Button component={RouterLink} to="/dj-booth" variant="outlined" size="small">
-                        DJ Booth
                       </Button>
                       <Button component={RouterLink} to="/live-sessions/registro" variant="text" size="small">
                         Sesión en vivo
@@ -1308,6 +1298,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Typography>
           )}
         </Stack>
+        {!focusArtist && <CommunityDiscovery />}
         {onboarding.loading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.loading')} />}
         {onboarding.loadError && (
           <Alert severity="warning" action={<Button color="inherit" onClick={onboarding.retryLoad}>{t('fanHubOnboarding.retry')}</Button>}>
@@ -1374,13 +1365,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     component={RouterLink}
                     to="/reservar"
                     clickable
-                  />
-                  <Chip
-                    label="DJ Booth"
-                    component={RouterLink}
-                    to="/dj-booth"
-                    clickable
-                    variant="outlined"
                   />
                   {canManageReleases && (
                     <Chip

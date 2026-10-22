@@ -1,11 +1,13 @@
 import SignupMobileInvitation from '../mobile/SignupMobileInvitation';
 import MobilePromo from '../mobile/MobilePromo';
+import { useMobileTelemetry } from '../mobile/telemetry';
 import { useTranslation } from 'react-i18next';
 import { Box, Button, Container, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
+import SearchIcon from '@mui/icons-material/Search';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -24,13 +26,12 @@ const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.search', to: '/buscar' },
   { label: 'authEntry.events', to: EVENTS_PATH },
   { label: 'TDF', to: '/tdf' },
-  { label: 'app.title', to: '/app' },
+  { label: 'app.title', to: '/app', surface: 'nav' },
   { label: 'authEntry.services', to: '/comercio' },
   { label: 'authEntry.community', to: '/fans' },
   { label: 'authEntry.shop', to: '/marketplace' },
   { label: 'Domo', to: '/domo-del-pululahua' },
   { label: 'authEntry.book', to: '/reservar' },
-  { label: 'DJ Booth', to: '/dj-booth' },
   { label: 'authEntry.releases', to: '/records' },
 ] as const;
 
@@ -69,10 +70,15 @@ export default function PublicBranding({
   );
   const isActiveNavItem = (path: string) =>
     location.pathname === path || location.pathname.startsWith(`${path}/`);
+  const trackMobileNav = useMobileTelemetry('nav');
+  // The TDF Mobile entry carries its surface so the landing can attribute the visit, and its click is measured
+  // as interest; the other items stay plain links.
+  const navItemProps = (item: { to: string; surface?: string }) => item.surface
+    ? { to: `${item.to}?surface=${item.surface}`, onClick: () => trackMobileNav('mobile_testing_interest_clicked') }
+    : { to: item.to };
   const footerPrimaryAction = useMemo<FooterAction>(() => {
     if (
       location.pathname.startsWith('/reservar') ||
-      location.pathname.startsWith('/dj-booth') ||
       location.pathname.startsWith('/domo-del-pululahua')
     ) {
       return { label: t('authEntry.whatsappBookings'), kind: 'external', value: STUDIO_WHATSAPP_URL };
@@ -91,9 +97,6 @@ export default function PublicBranding({
   const footerSecondaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
       return { label: t('authEntry.signInAutofill'), kind: 'route', value: contextualLoginPath };
-    }
-    if (location.pathname.startsWith('/dj-booth')) {
-      return { label: t('authEntry.generalBooking'), kind: 'route', value: '/reservar' };
     }
     if (location.pathname.startsWith('/domo-del-pululahua')) {
       return { label: t('authEntry.bookStudio'), kind: 'route', value: '/reservar' };
@@ -154,6 +157,7 @@ export default function PublicBranding({
       {showHeader && (
         <Box
           component="header"
+          data-navigation-sticky-header={stickyHeader ? 'true' : undefined}
           sx={{
             borderBottom: '1px solid',
             borderColor: 'divider',
@@ -194,7 +198,7 @@ export default function PublicBranding({
                     <Button
                       key={item.to}
                       component={RouterLink}
-                      to={item.to}
+                      {...navItemProps(item)}
                       aria-current={isActiveNavItem(item.to) ? 'page' : undefined}
                       sx={{
                         textTransform: 'none',
@@ -216,6 +220,7 @@ export default function PublicBranding({
               </Stack>
               <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5 }} sx={{ maxWidth: '100%', minWidth: 0 }}>
                 <MarketplaceCartButton />
+                <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44, display: { md: 'none' } }}><SearchIcon /></IconButton>
                 {session ? (
                   <SessionMenu />
                 ) : showLoginButton && (
@@ -249,8 +254,8 @@ export default function PublicBranding({
                     <MenuItem
                       key={item.to}
                       component={RouterLink}
-                      to={item.to}
-                      onClick={() => setMenuAnchor(null)}
+                      to={navItemProps(item).to}
+                      onClick={() => { navItemProps(item).onClick?.(); setMenuAnchor(null); }}
                       sx={{ display: { md: 'none' } }}
                     >
                       {t(item.label)}
@@ -366,7 +371,7 @@ export default function PublicBranding({
                     key={item.to}
                     size="small"
                     component={RouterLink}
-                    to={item.to}
+                    {...navItemProps(item)}
                     aria-current={isActiveNavItem(item.to) ? 'page' : undefined}
                     sx={{
                       textTransform: 'none',
