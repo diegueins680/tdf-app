@@ -10,12 +10,14 @@ import qualified Database.PostgreSQL.Simple as PG
 import Control.Monad.Logger (runNoLoggingT)
 import qualified Data.ByteString.Char8 as BS
 import Data.IORef (newIORef, readIORef, writeIORef)
+import Data.Int (Int64)
 import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Time (Day, addDays, getCurrentTime, utctDay)
 import Database.Persist.Postgresql (createPostgresqlPoolModified)
 import Database.Persist.Sql
-  (ConnectionPool, PersistValue(..), rawExecute, rawSql, runSqlPool, Single(..))
+  (ConnectionPool, PersistValue(..), rawExecute, rawSql, runSqlPool, Single(..), SqlPersistT)
 import Database.PostgreSQL.Simple (SqlError, sqlState)
 import System.Environment (lookupEnv)
 import Test.Hspec
@@ -158,6 +160,62 @@ spec = describe "rag-index-privacy-postgresql" $ do
           pure (Left "unexpected adapter call")) cfg pool `shouldReturn` Right 0
         indexRows pool `shouldReturn` []
 
+      it "filters retired production cohorts before the newest-50 provider limit" $ \pool -> do
+        publicCourse pool
+        today <- utctDay <$> getCurrentTime
+        let threshold = addDays 28 today
+        forM_ [1..51 :: Int] $ \n ->
+          cohortCourse pool ("produccion-musical-retired-" <> T.pack (show n))
+            "PRIVATE_RETIRED_COHORT" [addDays (-1) threshold, addDays 40 threshold]
+        cohortCourse pool "produccion-musical-missing" "PRIVATE_NO_SESSION" []
+        cohortCourse pool "produccion-musical-current" "PUBLIC_CURRENT_COHORT" [threshold]
+        cfg <- testConfig
+        sent <- newIORef []
+        result <- refreshRagIndexWith (\inputs -> do
+          writeIORef sent inputs
+          pure (Right (vectors inputs))) cfg pool
+        result `shouldBe` Right 2
+        inputs <- T.unwords <$> readIORef sent
+        inputs `shouldSatisfy` T.isInfixOf "PUBLIC_COURSE_SENTINEL"
+        inputs `shouldSatisfy` T.isInfixOf "PUBLIC_CURRENT_COHORT"
+        inputs `shouldSatisfy` (not . T.isInfixOf "PRIVATE_")
+
+      it "never embeds a retired, missing-session or production-alias-only corpus" $ \pool -> do
+        today <- utctDay <$> getCurrentTime
+        cohortCourse pool "produccion-musical-retired" "PRIVATE_RETIRED" [today]
+        cohortCourse pool "produccion-musical-missing" "PRIVATE_MISSING" []
+        cohortCourse pool "produccion-musical" "PRIVATE_ALIAS" [addDays 28 today]
+        cohortCourse pool "configured-production" "PRIVATE_CONFIGURED_ALIAS" [addDays 28 today]
+        cfg <- testConfig
+        refreshRagIndexWith (\_ -> do
+          expectationFailure "Retired or alias course rows must not reach the adapter"
+          pure (Left "unexpected adapter call"))
+          (cfg { courseSlugFallback = "configured-production" }) pool `shouldReturn` Right 0
+        indexRows pool `shouldReturn` []
+
+      it "stops returning a cohort after its first session loses the public lead time" $ \pool -> do
+        today <- utctDay <$> getCurrentTime
+        cohortCourse pool "produccion-musical-current" "PUBLIC_CURRENT_COHORT" [addDays 28 today]
+        cfg <- testConfig
+        _ <- refreshRagIndexWith (pure . Right . vectors) cfg pool
+        docs <- retrieveRagContext cfg pool "synthetic cohort query"
+        T.unwords docs `shouldSatisfy` T.isInfixOf "PUBLIC_CURRENT_COHORT"
+        runSqlPool (rawExecute "UPDATE course_session_model SET date=?"
+          [PersistDay (addDays 27 today)]) pool
+        retrieveRagContext cfg pool "synthetic cohort query" `shouldReturn` []
+
+      it "rejects cached production aliases even when their stored sessions are future" $ \pool -> do
+        today <- utctDay <$> getCurrentTime
+        forM_ ["produccion-musical", "configured-production"] $ \slug -> do
+          cohortCourse pool slug "PRIVATE_ALIAS_METADATA" [addDays 28 today]
+          runSqlPool (rawExecute
+            "INSERT INTO rag_chunk(source,source_id,chunk_index,content,metadata,embedding) \
+            \VALUES ('course',?,0,'PRIVATE_ALIAS_CACHED','{}', \
+            \('[' || repeat('0,',1535) || '1]')::vector)" [PersistText slug]) pool
+        cfg <- testConfig
+        retrieveRagContext (cfg { courseSlugFallback = "configured-production" }) pool
+          "synthetic cohort query" `shouldReturn` []
+
       it "purges legacy chunks even when the remaining public index is fresh" $ \pool -> do
         cfg <- testConfig
         ensureRagIndex cfg pool `shouldReturn` Right False
@@ -263,6 +321,9 @@ withFixture connection action = do
         destroyAllResources $ \pool -> do
           runSqlPool (do
             rawExecute "CREATE TABLE course (LIKE public.course INCLUDING DEFAULTS)" []
+            rawExecute
+              "CREATE TABLE course_session_model (LIKE public.course_session_model INCLUDING DEFAULTS)"
+              []
             rawExecute "CREATE TABLE rag_chunk (LIKE public.rag_chunk INCLUDING DEFAULTS)" []
             rawExecute
               "CREATE TABLE studio_brain_entry (LIKE public.studio_brain_entry INCLUDING DEFAULTS)" []
@@ -284,6 +345,18 @@ publicCourse :: ConnectionPool -> IO ()
 publicCourse = runSqlPool (rawExecute
   "INSERT INTO course(slug,title,price_cents,currency,capacity,updated_at) \
   \VALUES ('public-course','PUBLIC_COURSE_SENTINEL',15000,'USD',12,now())" [])
+
+cohortCourse :: ConnectionPool -> Text -> Text -> [Day] -> IO ()
+cohortCourse pool slug title dates = runSqlPool $ do
+  rows <- rawSql
+    "INSERT INTO course(slug,title,price_cents,currency,capacity,updated_at) \
+    \VALUES (?,?,15000,'USD',12,now()+interval '1 day') RETURNING id"
+    [PersistText slug, PersistText title] :: SqlPersistT IO [Single Int64]
+  case rows of
+    [Single courseId] -> forM_ dates $ \date -> rawExecute
+      "INSERT INTO course_session_model(course_id,label,date) VALUES (?,'synthetic session',?)"
+      [PersistInt64 courseId, PersistDay date]
+    _ -> error "Synthetic course insert must return one identity"
 
 storedUrls :: ConnectionPool -> [Text] -> IO ()
 storedUrls pool urls = runSqlPool (rawExecute
