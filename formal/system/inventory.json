@@ -15161,7 +15161,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "76f9a576c21078c24559998b492a605e53162f58c46762c2fd5da1e15da73063",
+      "sha256": "52081eaf4528c2149b352cc3e1f6d55dc0af2a89875112678217d9395aae91d0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25974,7 +25974,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "78dbc57989df5641f83cdf0058f5480f2d918f5890414e9bd09d342d63fec015",
+      "sha256": "343453170d559c8aef867c7090079a7a5c56057d7487e75dcc70523d004fe2af",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
