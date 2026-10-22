@@ -5,7 +5,7 @@
    Switches are negative controls, not application feature flags. Collision
    classification is an abstract predicate, not a proof of normalization. *)
 EXTENDS Naturals
-CONSTANTS FilterSource, RenderCurrent, DropMissing, ExcludeRaw, RejectAmbiguous
+CONSTANTS FilterSource, RenderCurrent, DropMissing, ExcludeRaw, RejectAmbiguous, AtomicMetadata
 VARIABLES phase, source, present, metadata, selectedMetadata,
           presentAtRead, metadataAtRead, pending, output, ambiguous, ambiguousAtRead
 vars == <<phase, source, present, metadata, selectedMetadata,
@@ -39,16 +39,23 @@ Rank ==
 
 ReadMetadata ==
   /\ phase = "read"
-  /\ phase' = "deliver"
+  /\ phase' = IF AtomicMetadata THEN "deliver" ELSE "validate"
   /\ presentAtRead' = present
   /\ ambiguousAtRead' = ambiguous
   /\ metadataAtRead' = IF present THEN metadata ELSE NoDocument
-  /\ pending' = IF ambiguous /\ RejectAmbiguous THEN NoDocument
+  /\ pending' = IF AtomicMetadata /\ ambiguous /\ RejectAmbiguous THEN NoDocument
                  ELSE IF ~present /\ DropMissing THEN NoDocument
                  ELSE IF ~ExcludeRaw THEN PrivateText
                  ELSE IF present /\ RenderCurrent THEN metadata
                  ELSE selectedMetadata
   /\ UNCHANGED <<source, present, metadata, selectedMetadata, output, ambiguous>>
+
+ValidateMetadata ==
+  /\ phase = "validate"
+  /\ phase' = "deliver"
+  /\ pending' = IF ambiguous /\ RejectAmbiguous THEN NoDocument ELSE pending
+  /\ UNCHANGED <<source, present, metadata, selectedMetadata, output,
+                 presentAtRead, metadataAtRead, ambiguous, ambiguousAtRead>>
 
 Deliver ==
   /\ phase = "deliver"
@@ -74,12 +81,12 @@ ChangeCollision ==
   /\ UNCHANGED <<phase, source, present, metadata, selectedMetadata,
                  presentAtRead, metadataAtRead, pending, output, ambiguousAtRead>>
 
-Next == Rank \/ ReadMetadata \/ Deliver \/ Delete \/ ChangeCollision
+Next == Rank \/ ReadMetadata \/ ValidateMetadata \/ Deliver \/ Delete \/ ChangeCollision
         \/ (\E value \in PublicValues : Edit(value))
 Spec == Init /\ [][Next]_vars
 
 TypeOK ==
-  /\ phase \in {"rank", "read", "deliver", "done"}
+  /\ phase \in {"rank", "read", "validate", "deliver", "done"}
   /\ source \in {"course", "private"}
   /\ present \in BOOLEAN
   /\ ambiguous \in BOOLEAN /\ ambiguousAtRead \in BOOLEAN

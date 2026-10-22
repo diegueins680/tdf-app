@@ -65,7 +65,7 @@ property the implementation does not provide.
 
 ## Negative controls and evidence
 
-The shared pinned TLC runner executes the intended configuration and five broken
+The shared pinned TLC runner executes the intended configuration and six broken
 configurations, requiring the named invariant failure rather than any nonzero
 exit. `Unfiltered` admits a non-course hit (`AllowedSource`); `RawText` returns
 index text (`NoPrivateText`); `CachedMetadata` uses the ranking snapshot after an
@@ -73,6 +73,9 @@ edit (`CurrentMetadata`); `MissingFallback` returns an earlier snapshot after
 deletion (`ExistingAtRead`). Guards change; the checked properties do not.
 `Collision` retains ranking-time rejection but disables the metadata recheck;
 an environment collision after ranking must violate `NoAmbiguousRead`.
+`MixedSnapshot` retains both collision guards but separates the course-field
+read from its identity check; a collision removed between them must also violate
+`NoAmbiguousRead`.
 
 Run `scripts/verify-event-operations-formal.sh` with the pinned Java/TLC/Alloy
 toolchain. Inventory and traceability bind model, implementation and fixture
@@ -250,10 +253,21 @@ operations as the resolver. It counts normalized production identities from
 stored slugs, including legacy whitespace and case variants. Reading the slug
 column avoids relying on PostgreSQL collation or its narrower default trimming
 semantics. Both selection statements bind the ambiguous identities as a text
-array and exclude them before their limits. Production document rendering
-rechecks the collision classification along with the current session boundary.
+array and exclude them before their limits. Production document rendering reads
+the course fields, earliest session and stored identity inputs in one SELECT.
+Classification therefore uses the same snapshot as the rendered fields. The
+slug array is serialized by PostgreSQL JSON and decoded as Text values; malformed
+classification inputs fail closed. Ordinary courses skip the extra identity
+aggregation in that statement.
 Ordinary courses retain their case-sensitive identity authority. Collision
 removal allows an otherwise eligible production row to be indexed again.
+
+The document lookup relies on the PostgreSQL
+[SELECT snapshot contract](https://www.postgresql.org/docs/17/transaction-iso.html#XACT-READ-COMMITTED).
+Separate field and collision queries could authorize fields read while ambiguous
+after a concurrent commit removed that collision. The combined lookup avoids
+that mixed observation without changing transaction isolation. Ranking and its
+earlier pre-limit identity scan remain separate statements.
 
 The additional reads have the existing statement-snapshot limits: the corpus is
 captured before provider execution, and collision changes after capture or after
@@ -266,7 +280,7 @@ The index model now abstracts one collision Boolean for the captured corpus;
 `NoAmbiguousEmbedding` excludes that corpus from disclosure. The read model
 allows collision changes between ranking, metadata read and delivery;
 `NoAmbiguousRead` refers to the classification at metadata read, allowing later
-changes under the existing snapshot contract. The two new guard-removal
+changes under the existing snapshot contract. The three new guard-removal
 configurations must violate those named invariants. These bounded abstractions
 assume the collision predicate, rather than proving Unicode normalization or
 arbitrary SQL/Haskell refinement. Actual Store regressions and pure generated
