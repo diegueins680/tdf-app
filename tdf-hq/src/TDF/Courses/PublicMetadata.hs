@@ -5,6 +5,9 @@
 module TDF.Courses.PublicMetadata
   ( isValidNormalizedCourseSlug
   , isCanonicalCourseSlug
+  , isProductionCoursePublicSlug
+  , hasRequiredProductionLead
+  , isCurrentPublicCourseIdentity
   , validateCoursePublicUrlField
   , sanitizeStoredCoursePublicUrl
   , isInternationalWhatsappCtaNumber
@@ -14,6 +17,8 @@ import Control.Applicative ((<|>))
 import Data.Char (digitToInt, isAsciiLower, isDigit, isHexDigit)
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Time.Calendar (Day)
+import qualified TDF.Courses.Production as Production
 import qualified TDF.PublicUrl as PublicUrl
 
 isValidNormalizedCourseSlug :: Text -> Bool
@@ -27,6 +32,24 @@ isValidNormalizedCourseSlug slug =
 isCanonicalCourseSlug :: Text -> Bool
 isCanonicalCourseSlug slug =
   slug == T.toLower (T.strip slug) && isValidNormalizedCourseSlug slug
+
+isProductionCoursePublicSlug :: Text -> Text -> Bool
+isProductionCoursePublicSlug configuredSlug rawSlug =
+  let slug = T.toLower (T.strip rawSlug)
+  in slug == "produccion-musical" || slug == configuredSlug
+      || "produccion-musical-" `T.isPrefixOf` slug
+
+hasRequiredProductionLead :: Day -> Maybe Day -> Bool
+hasRequiredProductionLead today = maybe False (>= Production.minimumProductionStartDate today)
+
+-- Aliases resolve to another cohort, never to their own stored metadata. A
+-- cohort is self-resolving only while its earliest session has the public lead.
+isCurrentPublicCourseIdentity :: Text -> Day -> Text -> Maybe Day -> Bool
+isCurrentPublicCourseIdentity configuredSlug today slug firstSession =
+  isCanonicalCourseSlug slug
+    && if "produccion-musical-" `T.isPrefixOf` slug
+         then hasRequiredProductionLead today firstSession
+         else not (isProductionCoursePublicSlug configuredSlug slug)
 
 isAsciiPhoneDigit :: Char -> Bool
 isAsciiPhoneDigit ch = ch >= '0' && ch <= '9'

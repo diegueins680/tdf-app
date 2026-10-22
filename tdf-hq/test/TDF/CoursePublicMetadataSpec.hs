@@ -5,6 +5,7 @@ module TDF.CoursePublicMetadataSpec (spec) where
 import Control.Monad (forM_)
 import Data.Either (isLeft)
 import qualified Data.Text as T
+import Data.Time.Calendar (addDays, fromGregorian)
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck (forAll, listOf, elements)
@@ -25,6 +26,26 @@ spec = describe "public course metadata projection" $ do
         `shouldBe` Right (Just "https://tdf.example.com/public")
       Public.sanitizeStoredCoursePublicUrl field (Just "  ") `shouldBe` Nothing
       Public.sanitizeStoredCoursePublicUrl field Nothing `shouldBe` Nothing
+
+  it "shares the exact earliest-session lead boundary with public production resolution" $ do
+    let today = fromGregorian 2026 10 22
+    map (Public.hasRequiredProductionLead today)
+      [Nothing, Just today, Just (addDays 27 today), Just (addDays 28 today),
+       Just (addDays 29 today)] `shouldBe` [False, False, False, True, True]
+
+  it "admits self-resolving cohorts and excludes stored production aliases" $ do
+    let today = fromGregorian 2026 10 22
+        future = Just (addDays 28 today)
+        admitted = Public.isCurrentPublicCourseIdentity "custom-alias" today
+    admitted "regular-course" Nothing `shouldBe` True
+    admitted "produccion-musical-current" future `shouldBe` True
+    admitted "produccion-musical-current" Nothing `shouldBe` False
+    admitted "produccion-musical-current" (Just (addDays 27 today)) `shouldBe` False
+    admitted "produccion-musical" future `shouldBe` False
+    admitted "custom-alias" future `shouldBe` False
+    admitted "PRODUCCION-MUSICAL-CURRENT" future `shouldBe` False
+    Public.isCurrentPublicCourseIdentity "produccion-musical-current" today
+      "produccion-musical-current" future `shouldBe` True
 
   it "rejects unsafe scheme, authority, path and control variants in every public URL field" $ do
     forM_ ["landingUrl", "locationMapUrl", "instructorAvatarUrl", "whatsappCtaUrl"] $ \field ->

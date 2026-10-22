@@ -17,6 +17,7 @@ module TDF.RagStore
   ) where
 
 import           Control.Monad          (forM, forM_, when)
+import           Control.Monad.IO.Class (liftIO)
 import           Control.Exception.Safe (catchAny)
 import           Data.Aeson             (Value, ToJSON(..), FromJSON(..), object, (.=), encode, eitherDecode, withObject, (.:))
 import           Data.ByteString.Lazy   (ByteString, toStrict)
@@ -32,13 +33,16 @@ import           Data.Int               (Int64)
 import           Data.List              (foldl')
 import qualified Data.IntMap.Strict     as IntMap
 import qualified Data.Map.Strict        as Map
-import           Data.Maybe             (catMaybes, mapMaybe)
+import           Data.Maybe             (catMaybes)
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
-import           Data.Time              (UTCTime, diffUTCTime, getCurrentTime)
+import           Data.Time              (Day, UTCTime, diffUTCTime, getCurrentTime, utctDay)
 import           Database.Persist       (Entity(..), Key, getEntity)
-import           Database.Persist.Sql   (PersistValue(..), Single(..), SqlPersistT, toSqlKey, rawExecute, rawSql, runSqlPool)
+import           Database.Persist.Sql
+  ( PersistValue(..), Single(..), SqlPersistT, toSqlKey, fromSqlKey
+  , rawExecute, rawSql, runSqlPool
+  )
 import           GHC.Generics           (Generic)
 import           Network.HTTP.Client    (Request(..), Response, httpLbs, parseRequest, responseBody, responseStatus, RequestBody(..))
 import           Network.HTTP.Types.Status (statusCode)
@@ -46,7 +50,9 @@ import           Numeric                (showFFloat)
 import           System.IO              (hPutStrLn, stderr)
 import           Text.Read              (readMaybe)
 
-import           TDF.Config             (AppConfig(..), openAiEmbedDimensions, ragEmbeddingDim)
+import           TDF.Config
+  (AppConfig(..), courseSlugFallback, openAiEmbedDimensions, ragEmbeddingDim)
+import qualified TDF.Courses.Production as ProductionCourse
 import           TDF.DB                 (ConnectionPool, sharedTlsManager)
 import qualified TDF.Courses.PublicMetadata as CoursePublic
 import qualified TDF.Trials.Models      as Trials
@@ -123,7 +129,8 @@ refreshRagIndexWith embed cfg pool = do
   case dimCheck of
     Left err -> pure (Left err)
     Right () -> do
-      docs <- runSqlPool buildPublicCourseDocuments pool
+      today <- utctDay <$> getCurrentTime
+      docs <- runSqlPool (buildPublicCourseDocuments cfg today) pool
       let chunks = concatMap (docToChunks cfg) docs
       if null chunks
         then do
@@ -188,18 +195,50 @@ getRagIndexStats pool = do
   RagIndexStats{..} <- runSqlPool loadRagIndexStats pool
   pure (risCount, risUpdatedAt)
 
-buildPublicCourseDocuments :: SqlPersistT IO [PublicCourseDocument]
-buildPublicCourseDocuments = do
+buildPublicCourseDocuments :: AppConfig -> Day -> SqlPersistT IO [PublicCourseDocument]
+buildPublicCourseDocuments cfg today = do
   -- Filter before the limit: unreachable legacy rows must neither be disclosed
   -- nor crowd eligible courses out of the newest public corpus.
   courses <- rawSql
-    "SELECT ?? FROM course WHERE slug COLLATE \"C\" ~ '^[a-z0-9-]{1,96}$'\
-    \ AND slug COLLATE \"C\" ~ '[a-z0-9]' ORDER BY updated_at DESC LIMIT 50" []
-  pure (mapMaybe courseToDoc courses)
+    ("SELECT ?? FROM course WHERE " <> publicCourseEligibilitySql
+      <> " ORDER BY updated_at DESC LIMIT 50") (publicCourseEligibilityParams cfg today)
+  catMaybes <$> traverse (loadPublicCourseDocument cfg today) courses
 
-courseToDoc :: Entity Trials.Course -> Maybe PublicCourseDocument
-courseToDoc (Entity _ c)
-  | not (CoursePublic.isCanonicalCourseSlug (Trials.courseSlug c)) = Nothing
+-- Mirror the shared HTTP identity/lead policy before either selection limit.
+-- Rendering rechecks the current earliest session after the ranking query.
+publicCourseEligibilitySql :: Text
+publicCourseEligibilitySql =
+  "course.slug COLLATE \"C\" ~ '^[a-z0-9-]{1,96}$'\
+  \ AND course.slug COLLATE \"C\" ~ '[a-z0-9]' AND (\
+  \ (course.slug LIKE 'produccion-musical-%' AND\
+  \ (SELECT min(session.date) FROM course_session_model session\
+  \ WHERE session.course_id = course.id) >= ?) OR\
+  \ (course.slug NOT LIKE 'produccion-musical-%'\
+  \ AND course.slug <> 'produccion-musical' AND course.slug <> ?))"
+
+publicCourseEligibilityParams :: AppConfig -> Day -> [PersistValue]
+publicCourseEligibilityParams cfg today =
+  [ PersistDay (ProductionCourse.minimumProductionStartDate today)
+  , PersistText (courseSlugFallback cfg)
+  ]
+
+loadPublicCourseDocument
+  :: AppConfig -> Day -> Entity Trials.Course -> SqlPersistT IO (Maybe PublicCourseDocument)
+loadPublicCourseDocument cfg today entity@(Entity courseId course) = do
+  firstSession <- if "produccion-musical-" `T.isPrefixOf` Trials.courseSlug course
+    then do
+      rows <- rawSql "SELECT min(date) FROM course_session_model WHERE course_id = ?"
+        [PersistInt64 (fromSqlKey courseId)] :: SqlPersistT IO [Single (Maybe Day)]
+      pure $ case rows of
+        [Single date] -> date
+        _ -> Nothing
+    else pure Nothing
+  pure (courseToDoc cfg today firstSession entity)
+
+courseToDoc :: AppConfig -> Day -> Maybe Day -> Entity Trials.Course -> Maybe PublicCourseDocument
+courseToDoc cfg today firstSession (Entity _ c)
+  | not (CoursePublic.isCurrentPublicCourseIdentity
+      (courseSlugFallback cfg) today (Trials.courseSlug c) firstSession) = Nothing
   | otherwise = Just PublicCourseDocument
     { courseDocumentSlug = Trials.courseSlug c
     , courseDocumentContent = T.intercalate " · " (catMaybes
@@ -432,19 +471,22 @@ selectRagChunks cfg embedding =
     if not exists
       then pure []
       else do
+        today <- utctDay <$> liftIO getCurrentTime
         rows <- rawSql
           -- Current callers produce customer-facing replies. Internal chunks
           -- have no object authority here. Use the index only to rank public
           -- course IDs; render current public fields, never cached raw content.
-          "SELECT c.id FROM rag_chunk chunk JOIN course c ON c.slug = chunk.source_id\
-          \ WHERE chunk.source = 'course'\
-          \ AND c.slug COLLATE \"C\" ~ '^[a-z0-9-]{1,96}$'\
-          \ AND c.slug COLLATE \"C\" ~ '[a-z0-9]'\
-          \ ORDER BY embedding <=> ?::vector LIMIT ?"
-          [PersistText vector, PersistInt64 limitVal] :: SqlPersistT IO [Single Int64]
+          ("SELECT course.id FROM rag_chunk chunk JOIN course ON course.slug = chunk.source_id\
+          \ WHERE chunk.source = 'course' AND " <> publicCourseEligibilitySql
+          <> " ORDER BY embedding <=> ?::vector LIMIT ?")
+          (publicCourseEligibilityParams cfg today <> [PersistText vector, PersistInt64 limitVal])
+          :: SqlPersistT IO [Single Int64]
         docs <- forM rows $ \(Single courseId) -> do
           course <- getEntity (toSqlKey courseId :: Key Trials.Course)
-          pure (courseDocumentContent <$> (course >>= courseToDoc))
+          doc <- case course of
+            Nothing -> pure Nothing
+            Just entity -> loadPublicCourseDocument cfg today entity
+          pure (courseDocumentContent <$> doc)
         pure (catMaybes docs)
 
 embedTexts :: AppConfig -> [Text] -> IO (Either Text [[Double]])

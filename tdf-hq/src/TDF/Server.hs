@@ -5535,9 +5535,8 @@ ensureCurrentProductionCourseMetadata cfg waEnv today requestedSlug
   | not (isProductionCoursePublicSlug cfg requestedSlug) = pure Nothing
   | otherwise = do
       productionMetas <- loadProductionCourseMetadatasFromDB cfg waEnv
-      let threshold = ProductionCourse.minimumProductionStartDate today
-          hasRequiredLead meta =
-            maybe False (>= threshold) (firstCourseSessionDate meta)
+      let hasRequiredLead meta =
+            CoursePublic.hasRequiredProductionLead today (firstCourseSessionDate meta)
           mRequestedValid =
             find
               (\meta -> normalizeSlug (courseMetaSlug meta) == requestedSlug && hasRequiredLead meta)
@@ -5558,11 +5557,8 @@ ensureCurrentProductionCourseMetadata cfg waEnv today requestedSlug
           pure (Just meta)
 
 isProductionCoursePublicSlug :: AppConfig -> Text -> Bool
-isProductionCoursePublicSlug cfg slugVal =
-  let normalized = normalizeSlug slugVal
-  in normalized == "produccion-musical"
-      || normalized == productionCourseSlug cfg
-      || "produccion-musical-" `T.isPrefixOf` normalized
+isProductionCoursePublicSlug cfg =
+  CoursePublic.isProductionCoursePublicSlug (productionCourseSlug cfg)
 
 firstCourseSessionDate :: CourseMetadata -> Maybe Day
 firstCourseSessionDate meta =
