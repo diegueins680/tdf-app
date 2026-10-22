@@ -204,7 +204,7 @@ spec = describe "rag-index-privacy-postgresql" $ do
           [PersistDay (addDays 27 today)]) pool
         retrieveRagContext cfg pool "synthetic cohort query" `shouldReturn` []
 
-      it "rejects cached production aliases even when their stored sessions are future" $ \pool -> do
+      it "rejects cached production aliases with future stored sessions" $ \pool -> do
         today <- utctDay <$> getCurrentTime
         forM_ ["produccion-musical", "configured-production"] $ \slug -> do
           cohortCourse pool slug "PRIVATE_ALIAS_METADATA" [addDays 28 today]
@@ -322,7 +322,8 @@ withFixture connection action = do
           runSqlPool (do
             rawExecute "CREATE TABLE course (LIKE public.course INCLUDING DEFAULTS)" []
             rawExecute
-              "CREATE TABLE course_session_model (LIKE public.course_session_model INCLUDING DEFAULTS)"
+              ("CREATE TABLE course_session_model "
+                <> "(LIKE public.course_session_model INCLUDING DEFAULTS)")
               []
             rawExecute "CREATE TABLE rag_chunk (LIKE public.rag_chunk INCLUDING DEFAULTS)" []
             rawExecute
