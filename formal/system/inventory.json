@@ -13887,7 +13887,7 @@
     {
       "id": "SURFACE-6585884b25e4a8d9",
       "path": "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
-      "sha256": "c90801d29af9f8ba6cca4d60ce61b1f89206d320b8c63155f6b9d6cbbd988a5c",
+      "sha256": "d0b5ec925ed1f84ab444b76de540cce3c7b8f331793ad8ac263b9f6bde66750b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15147,7 +15147,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "ee584943696de2fcb0f63d341d80bedd47ad973e3880696f7bd0d9aecd685666",
+      "sha256": "47952cc4bf61631da62c49ace50ee890c4705f717dda672d148ee52ed0b37100",
       "semanticConformance": "not-established-by-discovery"
     },
     {

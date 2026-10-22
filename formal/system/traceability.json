@@ -11524,7 +11524,7 @@
     "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
     "tdf-hq/src/TDF/CoursePhone.hs": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
-    "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "c90801d29af9f8ba6cca4d60ce61b1f89206d320b8c63155f6b9d6cbbd988a5c",
+    "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "d0b5ec925ed1f84ab444b76de540cce3c7b8f331793ad8ac263b9f6bde66750b",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
@@ -11637,7 +11637,7 @@
     "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": "3a3aeb59ce2c378361aa9a9ff9787deb3eb51ce164643b61ae37b2c575b3ea39",
     "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
-    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "ee584943696de2fcb0f63d341d80bedd47ad973e3880696f7bd0d9aecd685666",
+    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "47952cc4bf61631da62c49ace50ee890c4705f717dda672d148ee52ed0b37100",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
@@ -38083,7 +38083,7 @@
     {
       "id": "SURFACE-6585884b25e4a8d9",
       "path": "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
-      "sha256": "c90801d29af9f8ba6cca4d60ce61b1f89206d320b8c63155f6b9d6cbbd988a5c",
+      "sha256": "d0b5ec925ed1f84ab444b76de540cce3c7b8f331793ad8ac263b9f6bde66750b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40546,7 +40546,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "ee584943696de2fcb0f63d341d80bedd47ad973e3880696f7bd0d9aecd685666",
+      "sha256": "47952cc4bf61631da62c49ace50ee890c4705f717dda672d148ee52ed0b37100",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
