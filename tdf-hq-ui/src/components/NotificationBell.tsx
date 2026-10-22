@@ -166,6 +166,8 @@ export default function NotificationBell() {
       </IconButton>
 
       <Popover
+        // Route navigation must not leave a closing modal intercepting input.
+        transitionDuration={0}
         open={Boolean(anchorEl)}
         anchorEl={anchorEl}
         onClose={focus.afterClose}

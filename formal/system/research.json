@@ -647,6 +647,26 @@
       "verifiedAt": "2026-10-06"
     },
     {
+      "id": "RES-OPS-CAPTURE-LOCK-001",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html#LOCKING-ROWS",
+      "title": "PostgreSQL17 row-level lock modes",
+      "verifiedAt": "2026-10-15",
+      "recommendation": "FOR SHARE conflicts with non-key UPDATE; FOR KEY SHARE does not. Successful row locks last through transaction completion, while exception/savepoint rollback releases locks acquired within the failed scope.",
+      "applicability": "OPS-INBOUND-CAPTURE-001 admission versus operations_enabled/active updates",
+      "decision": "adopted",
+      "rationale": "Take SHARE locks on both authority rows inside the capture transaction. A non-key disablement must not race a previously checked boolean. Actual PostgreSQL17 tests witness both lock orders; capture errors remain contained and do not promise successful delivery."
+    },
+    {
+      "id": "RES-OPS-CAPTURE-RETENTION-001",
+      "source": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html#disposal-of-logs",
+      "title": "OWASP Logging Cheat Sheet: sensitive data and disposal",
+      "verifiedAt": "2026-10-15",
+      "recommendation": "Review personal data in logging and set retention/disposal periods for records, copies, backups and extracts according to their purpose and applicable obligations.",
+      "applicability": "Sender identifiers copied into permanent Operations events/audits",
+      "decision": "adopted as activation prerequisite",
+      "rationale": "The source does not supply a TDF retention duration or authorize identifier collection. Keep capture disabled until product-specific retention, deletion/anonymization, exceptions and backup expiry are defined and executable. No arbitrary duration or blanket financial-record exception is inferred."
+    },
+    {
       "id": "RES-RAG-SNAPSHOT-001",
       "source": "https://www.postgresql.org/docs/17/transaction-iso.html#XACT-READ-COMMITTED",
       "title": "PostgreSQL17 Read Committed statement snapshots",
