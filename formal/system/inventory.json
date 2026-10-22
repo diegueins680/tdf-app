@@ -3024,7 +3024,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "7d38af496b881d79d4d0a4731e85d3ff55b8357a6e03f5f890b54781fb777a5a",
+      "sha256": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5226,7 +5226,7 @@
     {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "12cae0007775a3520c9b9cf276e16ebe97ee00a0128ba733dcab4d37dd59779a",
+      "sha256": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18918,7 +18918,7 @@
     },
     {
       "path": "docs/engineering/release-prerequisites-2026-10-20.md",
-      "sha256": "7c908e1f3569cbec994c6345274f3c62b3b03abb040c3759514c1b2e269dbbda",
+      "sha256": "153480b4dc77f0d0e10ed0ffa270da69a5b6b399a98eb83fbbc8ced5f93edc05",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25827,7 +25827,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4f534e9eb3e28342bb8aeec96c6c3893da6bc674e3ae57ec3b34dd69e856fa79",
+      "sha256": "35a713e0e4d4d47aa12b69b50f35ce15134b6ff5119124c72796d8715cd6c1b4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -25953,7 +25953,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "e1efd6bf4d91e1580b12685f910396beca0a809185936133869f4946831d4f61",
+      "sha256": "663078e81c93e4ca085ba113ab7917cc10311d2e66644ec11855337de46eb2e7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -2223,7 +2223,7 @@
       "recovery": "Retry observation after authorized configuration correction; retain previous receipts. No database restoration or image rollback is performed.",
       "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata. Known backend boolean controls must be represented even when absent; record CORS boolean aliases and preserve absent/empty/false distinctions. Conservative source discovery must reject newly introduced literal controls missing from the collector register.",
       "formalModels": [],
-      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established. Boolean discovery includes literal parser-wrapped lookups without a naming suffix; preparation accepts collector-valid raw spellings while requiring explicitly false destructive flags. Synthetic regressions only; this does not evaluate per-handler defaults or whitespace semantics.",
+      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established. Boolean discovery includes literal parser-wrapped lookups and association-list lookups compared with all-boolean Just membership lists, without requiring a naming suffix; preparation accepts collector-valid raw spellings while requiring explicitly false destructive flags. Synthetic regressions only; this does not evaluate per-handler defaults or whitespace semantics.",
       "evidence": "Exact-revision inspection receipt and repository quality-gate logs.",
       "status": "specified and implemented",
       "confidence": "High within read-only target/disclosure guard scope; routine guarded release remains unimplemented.",
@@ -10851,7 +10851,7 @@
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
-    "ops/hetzner/inspect-runtime.py": "7d38af496b881d79d4d0a4731e85d3ff55b8357a6e03f5f890b54781fb777a5a",
+    "ops/hetzner/inspect-runtime.py": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
     "ops/hetzner/isolated-application-canary.py": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
@@ -11010,7 +11010,7 @@
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
-    "scripts/test-hetzner-inspection.py": "12cae0007775a3520c9b9cf276e16ebe97ee00a0128ba733dcab4d37dd59779a",
+    "scripts/test-hetzner-inspection.py": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
     "scripts/test-index-declarations.sh": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
@@ -21138,7 +21138,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "7d38af496b881d79d4d0a4731e85d3ff55b8357a6e03f5f890b54781fb777a5a",
+      "sha256": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24928,7 +24928,7 @@
     {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "12cae0007775a3520c9b9cf276e16ebe97ee00a0128ba733dcab4d37dd59779a",
+      "sha256": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47474,7 +47474,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4f534e9eb3e28342bb8aeec96c6c3893da6bc674e3ae57ec3b34dd69e856fa79",
+      "sourceSha256": "35a713e0e4d4d47aa12b69b50f35ce15134b6ff5119124c72796d8715cd6c1b4",
       "definition": {
         "states": [
           "absent",
@@ -47504,7 +47504,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4f534e9eb3e28342bb8aeec96c6c3893da6bc674e3ae57ec3b34dd69e856fa79",
+      "sourceSha256": "35a713e0e4d4d47aa12b69b50f35ce15134b6ff5119124c72796d8715cd6c1b4",
       "definition": {
         "export": [
           "queued",
