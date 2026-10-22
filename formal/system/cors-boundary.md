@@ -36,6 +36,16 @@ defaults in that configuration select Secure, SameSite=None cookies. This is
 evidence of a credentialed origin-policy defect; no authenticated data access
 or exploit was attempted.
 
+That configuration observation is historical. The
+[October13 receipt](evidence/2026-10-13-runtime-controls/runtime.json) observes
+backend `7ab344400d0878838b9b12742ca4cc5cd7f38f94`, explicit canonical origins,
+`ALLOW_ALL_ORIGINS=false` and `CORS_DISABLE_DEFAULTS=true`. At 18:18:33 UTC,
+[safe unauthenticated health checks](evidence/2026-10-13-runtime-controls/cors-smoke.json)
+returned 200 with the exact canonical origin and credentials header, and 400
+without CORS permission for `https://untrusted.invalid`. This empirically checks
+those two requests only; endpoint CSRF, preflights, alternate aliases and the full
+production middleware contract remain separate obligations.
+
 `test/TDF/CorsSpec.hs` executes the real middleware. The full backend suite imports
 it. `scripts/verify-cors-boundary.py` runs the same tests against current source
 and two isolated mutations: disabled production classification and restored
@@ -47,7 +57,7 @@ or deployment verification. Endpoint CSRF behavior remains a separate obligation
 ## Deployment and recovery
 
 Deploy reviewed configuration and image together. An image-only rollout against
-the observed `ALLOW_ALL_ORIGINS=true` must fail startup. The production Compose
+the historical `ALLOW_ALL_ORIGINS=true` must fail startup. The production Compose
 services explicitly set `ALLOW_ALL_ORIGINS=false`, `CORS_DISABLE_DEFAULTS=true`,
 and the highest-precedence `ALLOWED_ORIGINS` to the two canonical web origins.
 This overrides stale aliases in `api.env` without printing its contents.
