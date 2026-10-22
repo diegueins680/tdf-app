@@ -3044,10 +3044,18 @@
       "observability": "Synthetic staff-authenticated HTTP checks observe private-source exclusion including colliding course slugs, poisoned-cache rejection, metadata freshness and deleted-course exclusion. Anonymous and unprivileged assistant calls are denied.",
       "source": "Observed anonymous private-booking-content disclosure; formal/system/bookings.md customer-facing retrieval boundary.",
       "implementation": [
-        "tdf-hq/src/TDF/RagStore.hs"
+        "tdf-hq/src/TDF/RagStore.hs",
+        "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
+        "tdf-hq/src/TDF/PublicUrl.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs"
       ],
       "tests": [
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs",
+        "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/tdf-hq.cabal"
       ],
       "formalModels": [
         "formal/event-operations/PublicKnowledgeRead.tla"
@@ -3066,7 +3074,7 @@
       "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
       "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.",
       "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with four named negative controls. Neither is a whole-program refinement proof.",
+      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with four named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities.",
       "evidence": "Historical disclosure reproduction is retained separately; exact candidate model/HTTP/CI receipts are required. New coverage must not inherit a historical green result."
     },
     {
@@ -9879,7 +9887,7 @@
         "Course fields exposed by the public course contract are approved public material."
       ],
       "inputs": [
-        "Up to 50 course rows ordered by updated_at descending",
+        "Up to 50 route-eligible canonical course rows ordered by updated_at descending",
         "Chunk size and overlap",
         "Embedding adapter results"
       ],
@@ -9903,7 +9911,8 @@
         "Include bookings, availability, campaigns, ads, services, resources, rooms or studio notes in refresh embedding payloads.",
         "Report an empty refresh as successful while retaining old chunks.",
         "Commit public-index deletion if replacement insertion fails.",
-        "Skip legacy cleanup because the index is fresh or an embedding provider/configuration is unavailable."
+        "Skip legacy cleanup because the index is fresh or an embedding provider/configuration is unavailable.",
+        "Raw rejected stored URLs or route-unreachable course identities -> embedding payload."
       ],
       "effects": [
         "The next admitted worker check or administrator refresh removes legacy non-course chunks locally without a provider call; public replacement remains a separate transaction.",
@@ -9918,14 +9927,19 @@
       "observability": "PostgreSQL tests capture adapter payloads and persisted rows, check empty-corpus no-call behavior, provider/count refusal and SQL rollback. Existing administrator result and index statistics report refresh outcome. Aggregate source counts verify cleanup without disclosing content; tests cover a fresh index and invalid configuration before provider admission.",
       "source": "Explicit user product decision 2026-10-13: Public courses only; stop indexing private material (Recommended).",
       "implementation": [
-        "tdf-hq/src/TDF/RagStore.hs"
+        "tdf-hq/src/TDF/RagStore.hs",
+        "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
+        "tdf-hq/src/TDF/PublicUrl.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/tdf-hq.cabal",
         "scripts/test-rag-index-privacy.sh",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs"
       ],
       "formalModels": [
         "formal/event-operations/PublicKnowledgeIndex.tla"
@@ -9944,7 +9958,7 @@
       "authority": "Explicit user decision 2026-10-13; AUTHORITY-RAG-PUBLIC-INDEX-20261013",
       "property": "NoLegacyAfterCleanup, NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex (public subset), EmptySkipsProvider and TypeOK in PublicKnowledgeIndex.",
       "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Pinned TLC positive model and four named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls.",
+      "verification": "Pinned TLC positive model and four named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities.",
       "evidence": "Candidate-specific test and model receipts must be recorded; historical passes do not establish current conformance."
     },
     {

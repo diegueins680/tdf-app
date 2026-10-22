@@ -11,7 +11,8 @@ a separate open obligation; reindexing does not establish provider-side erasure.
 
 `tdf-hq/src/TDF/RagStore.hs:selectRagChunks` joins course identity, requires
 `chunk.source = 'course'`, then loads each selected course with `getEntity`.
-`courseToDoc` renders the public fields; `catMaybes` omits a missing row.
+`courseToDoc` admits only a canonical stored identity and renders fields through
+the shared public URL policy; missing or ineligible rows are omitted.
 `retrieveRagContext` runs those reads in one `runSqlPool` transaction. The staff
 assistant and Facebook, Instagram and WhatsApp workers call that boundary.
 The assistant additionally requires authenticated Social Inbox authority; the
@@ -82,7 +83,9 @@ provider-sharing and retention obligations have evidence.
 The user explicitly approved “Public courses only; stop indexing private material”
 on 2026-10-13 (AUTHORITY-RAG-PUBLIC-INDEX-20261013). That decision supersedes the
 old multi-source index builder. `buildPublicCourseDocuments` selects up to 50
-courses ordered by latest update. `courseToDoc` uses the existing public course
+route-eligible courses ordered by latest update. SQL filters ASCII canonical
+slugs before the 50-row limit; `courseToDoc` independently rechecks the stored
+identity and applies the public course URL projection. It uses the existing public course
 fields; its dedicated document type and chunk constructor cannot select arbitrary
 private source kinds. Private booking titles, availability, campaigns, ads,
 services, rooms, resources and studio notes are no longer collected for embedding.
@@ -156,3 +159,40 @@ private source collection (`NoPrivateEmbedding`),
 empty-corpus retention (`SuccessfulReplacement`) and destructive failure handling
 (`FailedRefreshPreservesIndex`). These are bounded model checks, supported by the
 separate PostgreSQL implementation tests, not a universal correctness proof.
+
+
+## Stored public projection — 22 October 2026
+
+Public route requests normalize their slug before a case-sensitive lookup. A
+stored course must therefore already have a canonical identity: lower-case ASCII
+letters/digits/hyphens, at least one letter or digit, and at most 96 characters.
+Normalizing a stored row during indexing could bind it to a different course.
+The refresh query applies the canonical predicate with C collation before the
+50-row limit; the document constructor checks it again. Ranked current-course
+reads enforce the same boundary, including legacy course-kind index rows.
+
+`TDF.Courses.PublicMetadata` shares slug eligibility and stored URL validation
+with the public HTTP metadata path. Landing, map, WhatsApp and instructor-avatar
+URLs use that sanitizer before embedding or retrieval output. Rejected stored
+values are omitted; accepted values retain the existing trimming, HTTPS, public
+host, path, fragment, encoded-control and WhatsApp-specific constraints.
+`TDF.PublicUrl` holds the existing HTTP URL/path parser; Trials and course HTTP
+wrappers delegate to it. Existing HTTP400 bodies and URL rules are preserved.
+
+Actual Stack-selected GHC 9.10.3 compilation of Store, models, configuration and
+shared policy runs against a fresh complete 211-migration synthetic PostgreSQL
+16 schema. With the old Store, the five added regressions fail: unsafe structured
+URLs in embedding and current reads, unreachable identities in embedding and
+current reads, and an unreachable-only corpus reaching the adapter. With the
+repair, all 14 database cases pass. The limit case puts 57 ineligible rows ahead
+of the valid course. Six pure-policy examples include 200 generated idempotence
+and canonical-identity checks. The embedding adapter is injected and retrieval
+uses local embeddings: no provider request is part of this evidence. Owned
+fixtures are removed and the database cluster stopped after each run.
+
+These implementation checks refine the models' abstract public-course predicate;
+the unchanged finite models still do not prove a URL parser or arbitrary SQL/
+Haskell refinement. Prior bounded-model receipts retain their original source
+identity. Complete hosted backend/HTTP qualification, independent review, provider
+retention and production rollout remain separate obligations. No provider-side
+historical erasure or live activation is established here.
