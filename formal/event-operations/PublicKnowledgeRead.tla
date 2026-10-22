@@ -31,7 +31,7 @@ Init ==
 Rank ==
   /\ phase = "rank"
   /\ LET eligible == present /\ (~FilterSource \/ source = "course")
-                        /\ (~RejectAmbiguous \/ ~ambiguous) IN
+                        /\ ~ambiguous IN
        /\ phase' = IF eligible THEN "read" ELSE "done"
        /\ selectedMetadata' = IF eligible THEN metadata ELSE NoDocument
   /\ UNCHANGED <<source, present, metadata, presentAtRead, metadataAtRead,

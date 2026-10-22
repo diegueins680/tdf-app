@@ -47,6 +47,7 @@ The safety invariants are:
 - `ExistingAtRead`: a returned course existed when its metadata was read.
 - `CurrentMetadata`: the returned fields equal that metadata-read snapshot.
 - `TypeOK`: every stage and payload stays within the declared abstraction.
+- `NoAmbiguousRead`: delivered metadata passed the collision check at its read.
 
 Each SQL statement is atomic in the abstraction. Successive reads may observe
 different committed states, matching PostgreSQL Read Committed; a transaction
@@ -64,12 +65,14 @@ property the implementation does not provide.
 
 ## Negative controls and evidence
 
-The shared pinned TLC runner executes the intended configuration and four broken
+The shared pinned TLC runner executes the intended configuration and five broken
 configurations, requiring the named invariant failure rather than any nonzero
 exit. `Unfiltered` admits a non-course hit (`AllowedSource`); `RawText` returns
 index text (`NoPrivateText`); `CachedMetadata` uses the ranking snapshot after an
 edit (`CurrentMetadata`); `MissingFallback` returns an earlier snapshot after
 deletion (`ExistingAtRead`). Guards change; the checked properties do not.
+`Collision` retains ranking-time rejection but disables the metadata recheck;
+an environment collision after ranking must violate `NoAmbiguousRead`.
 
 Run `scripts/verify-event-operations-formal.sh` with the pinned Java/TLC/Alloy
 toolchain. Inventory and traceability bind model, implementation and fixture
@@ -153,11 +156,13 @@ allowed. Concurrent refreshes may publish older captured public data; retrieval
 continues to render current metadata under PRIV-RAG-001.
 
 The pinned runner checks `TypeOK`, `NoLegacyAfterCleanup`, `NoPrivateEmbedding`, `SuccessfulReplacement`,
-`FailedRefreshPreservesIndex` and `EmptySkipsProvider`. Four controlled mutations
+`FailedRefreshPreservesIndex`, `EmptySkipsProvider` and `NoAmbiguousEmbedding`.
+Five controlled mutations
 must fail by named invariant: skipped legacy cleanup (`NoLegacyAfterCleanup`),
 private source collection (`NoPrivateEmbedding`),
 empty-corpus retention (`SuccessfulReplacement`) and destructive failure handling
-(`FailedRefreshPreservesIndex`). These are bounded model checks, supported by the
+(`FailedRefreshPreservesIndex`), and ambiguous production admission
+(`NoAmbiguousEmbedding`). These are bounded model checks, supported by the
 separate PostgreSQL implementation tests, not a universal correctness proof.
 
 

@@ -234,7 +234,7 @@ spec = describe "rag-index-privacy-postgresql" $ do
               pure (Left "unexpected adapter call")) cfg pool `shouldReturn` Right 0
             indexRows pool `shouldReturn` []
 
-      it "filters normalized production collisions before the newest-50 provider limit" $ \pool -> do
+      it "filters production collisions before the newest-50 provider limit" $ \pool -> do
         publicCourse pool
         today <- utctDay <$> getCurrentTime
         forM_ [1..51 :: Int] $ \n -> do
@@ -275,7 +275,8 @@ spec = describe "rag-index-privacy-postgresql" $ do
                 writeIORef sent inputs
                 pure (Right (vectors inputs))) cfg pool
           refresh `shouldReturn` Right 1
-          runSqlPool (rawExecute "DELETE FROM course WHERE slug=' Produccion-Musical-Current '" []) pool
+          runSqlPool (rawExecute
+            "DELETE FROM course WHERE slug=' Produccion-Musical-Current '" []) pool
           refresh `shouldReturn` Right 2
           inputs <- T.unwords <$> readIORef sent
           inputs `shouldSatisfy` T.isInfixOf "PUBLIC_CURRENT_COHORT"
