@@ -78,7 +78,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [whatsapp-redelivery.md](whatsapp-redelivery.md): a redelivered WhatsApp message changes nothing and is not answered again; opt-out stored and applied in one transaction; bounded model, four negative controls and PostgreSQL tests.
 - [ticket-invoice-worker.md](ticket-invoice-worker.md): tax document submission worker rules, bounded model, four negative controls, PostgreSQL worker tests and the uncertain/rejected recovery gaps.
 - [music-ddex-export.md](music-ddex-export.md): DDEX export/job lifecycle under worker leases, two gates, valid and failed finality, queued-only replay repair, bounded model with five controls and the fixed failure report.
-- [whatsapp-consent.md](whatsapp-consent.md): double opt-in request, reply, withdrawal and undelivered-request rules with a bounded model, eight negative controls and PostgreSQL concurrency checks.
+- [whatsapp-consent.md](whatsapp-consent.md): double opt-in request, reply, withdrawal and undelivered-request rules with a bounded model, eight negative controls and PostgreSQL concurrency checks; confirmation-notice timestamps and real-backend checks (AUTHORITY-074).
 - [operations-worker-tick.md](operations-worker-tick.md): Operations worker maintenance tick: poisoned outbox rows fail alone with attempts, backoff and dead letter (AUTHORITY-076), bounded negative controls.
 - [access-grant.md](access-grant.md): reviewed access-request decisions, self-service correction (AUTHORITY-054), invitation-link claims, expiry repair and bounded negative controls.
 - [messaging.md](messaging.md): current-session/consent authority, rejected mutation rollback, bounded model and delivery/idempotency exclusions.
