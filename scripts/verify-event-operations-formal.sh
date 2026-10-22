@@ -254,6 +254,9 @@ run_negative_tlc PublicRouteAdmissionUnregistered.cfg public-route-admission-unr
 run_negative_tlc PublicRouteAdmissionStale.cfg public-route-admission-stale 'The invariant of NoStaleEntries is equal to FALSE' PublicRouteAdmission.tla
 run_negative_tlc PublicRouteAdmissionUnreviewedMutation.cfg public-route-admission-unreviewed-mutation 'The invariant of MutationReviewed is equal to FALSE' PublicRouteAdmission.tla
 run_negative_tlc PublicRouteAdmissionDebtConformant.cfg public-route-admission-debt-conformant 'The invariant of DebtNeverConformant is equal to FALSE' PublicRouteAdmission.tla
+run_tlc ReadinessProbe.tla ReadinessProbe.cfg readiness-probe
+run_negative_tlc ReadinessProbeSingleAttempt.cfg readiness-probe-single-attempt 'Invariant ProbeReportsDatabase is violated' ReadinessProbe.tla
+run_negative_tlc ReadinessProbePoolSizeAttempts.cfg readiness-probe-pool-size-attempts 'Invariant ProbeReportsDatabase is violated' ReadinessProbe.tla
 run_tlc MarketplaceStorage.tla MarketplaceStorage.cfg marketplace-storage
 run_tlc InvoiceSubmission.tla InvoiceSubmission.cfg invoice-submission
 run_negative_tlc InvoiceSubmissionUnfencedStart.cfg invoice-submission-unfenced-start 'Invariant AtMostOneProviderDocument is violated' InvoiceSubmission.tla

@@ -1551,8 +1551,10 @@ whatsappWebhookServer =
               , iwrTransportPayload = Nothing
               , iwrSource = Just "whatsapp_webhook"
               }
-        when warConfirmed $
-          sendWhatsAppConsentNotice now waInboundSenderId waInboundSenderName "consent_confirmation"
+        when warConfirmed $ do
+          -- Sample the outgoing notice time after the atomic inbound receipt.
+          noticeAt <- liftIO getCurrentTime
+          sendWhatsAppConsentNotice noticeAt waInboundSenderId waInboundSenderName "consent_confirmation"
             "Gracias, confirmamos tu suscripción a los mensajes de TDF Records por WhatsApp. Responde STOP para dejar de recibirlos."
         let lowerBody = T.toLower (T.strip waInboundText)
         -- Every delivery reaches the registration, which is keyed by the stored

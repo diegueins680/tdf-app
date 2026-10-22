@@ -292,7 +292,6 @@
       "scripts/lib/operations_conformance.py",
       "scripts/lib/postgres-test-database.sh",
       "scripts/lib/production-release.mjs",
-      "scripts/lib/public_routes_conformance.py",
       "scripts/lib/readiness_conformance.py",
       "scripts/lib/requirement_declarations.py",
       "scripts/lib/sri-invoice.mjs",
@@ -300,6 +299,7 @@
       "scripts/lib/ui-static-audit.mjs",
       "scripts/lib/ux-quality-audit.mjs",
       "scripts/lib/verification-evidence.mjs",
+      "scripts/lib/whatsapp_consent_conformance.py",
       "scripts/mail-deliverability-monitor.py",
       "scripts/merge-admission.py",
       "scripts/meta-app-review-packet.mjs",
@@ -504,7 +504,6 @@
       "scripts/test-provider-retry-runtime.sh",
       "scripts/test-public-booking-http-concurrency.sh",
       "scripts/test-public-booking-tentative-idempotency-migration.sh",
-      "scripts/test-public-route-denial.py",
       "scripts/test-public-routes.py",
       "scripts/test-public-ticket-checkout-runtime-migration.sh",
       "scripts/test-records-ingestion-runtime.sh",
@@ -4237,15 +4236,9 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-a3554db132982020",
-      "path": "scripts/lib/public_routes_conformance.py",
-      "sha256": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-f9884c5ddfa3d37d",
       "path": "scripts/lib/readiness_conformance.py",
-      "sha256": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
+      "sha256": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4282,6 +4275,12 @@
       "id": "SURFACE-51ff2aecc0e6e208",
       "path": "scripts/lib/verification-evidence.mjs",
       "sha256": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c1661bacc266994d",
+      "path": "scripts/lib/whatsapp_consent_conformance.py",
+      "sha256": "e7e6f0221bb7bcf5ef631827e2dfa6c329d5b4c16733fa5bca6e61bdb748c4a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4437,7 +4436,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "3e65e7838c189c408c2e7a7d49412f25d6a7ebaace66ee63dfe7604ceff6173e",
+      "sha256": "a5041669e3881d019e35512e8b4e7febcc2ebd98ebea0d3eb05568ea9f0f83c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4989,7 +4988,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "139721e60622e0643666226e1ba1f75d3c06d5a218578d74add7929b28c084ae",
+      "sha256": "967d94758aaf4213b9b18711886f6e5996345ebd2c50482e97f812311f371be3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5509,12 +5508,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-46813d40317234ae",
-      "path": "scripts/test-public-route-denial.py",
-      "sha256": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-e6df847c7de6b4ac",
       "path": "scripts/test-public-routes.py",
       "sha256": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
@@ -5769,7 +5762,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "d77c013ab74bb98c1e69f85c7d4e4b436c4d6b474fc39dcd4082d9de8d40a281",
+      "sha256": "ccefc18ab6793b9c015e1ebe945893c7f533ad976b88b44a0b07d0ae905e0817",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5805,7 +5798,7 @@
     {
       "id": "SURFACE-d633e5d8beb4a8d8",
       "path": "scripts/verify-readiness.py",
-      "sha256": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
+      "sha256": "c1db0b9d64151547969116233c66a3160c2ab97327b51c679d0a86af8e7acaeb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13569,7 +13562,7 @@
     {
       "id": "SURFACE-9b25f2b06da83696",
       "path": "tdf-hq/src/TDF/App/Readiness.hs",
-      "sha256": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
+      "sha256": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13785,7 +13778,7 @@
     {
       "id": "SURFACE-1d441708a9c7e070",
       "path": "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-      "sha256": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
+      "sha256": "213b92a75365d6e85e441a0a3263d3cecfedca98a46d05f83165286158b00f52",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14289,7 +14282,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "8b1f402fc6b630beb54b713571771bdeb4db872519f01e6ca3257a68a046e89e",
+      "sha256": "b3337995fc887267dc46f942d1bda550efa53e24adaa361a4ad290e95964e0ff",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14403,7 +14396,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "7df3e2a96aee5c78e5951f5b29526c1a17690b772f17f54ff5cbb74007b3231e",
+      "sha256": "ca99eb94d7a285f976b592adf8ad14b2adaf39566f304cc84c677aed5e991330",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14439,7 +14432,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "e25bf47bb88ea0fe20df7e99df3f0a93d392ae9672a19d372ba926cc5be0c105",
+      "sha256": "cdf7d43255359dfd79674690fb518b8f906e275ba798ade14ffbc40bf0628df9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14883,7 +14876,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "3724057900552d950d478b41348a1c1a0415c5e49edd68af1f62b5c49c139e0d",
+      "sha256": "c874ed26524da3896abc173d2ceff6624b86b3fec67414e85d8e9154092de334",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15111,7 +15104,7 @@
     {
       "id": "SURFACE-e54fcc9334870c9b",
       "path": "tdf-hq/test/TDF/ReadinessSpec.hs",
-      "sha256": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
+      "sha256": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23670,50 +23663,8 @@
       "kind": "model-configuration"
     },
     {
-      "path": "formal/event-operations/PublicRouteAdmission.cfg",
-      "sha256": "1b3de23d072992eaeddcc7ff81085b8a3791fce58a00726a101088700710c97c",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/event-operations/PublicRouteAdmission.tla",
-      "sha256": "df68c2524239e05f17fb3c1d479cab887803a606cda6bc145a18d23bad0752c7",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "formal-model"
-    },
-    {
-      "path": "formal/event-operations/PublicRouteAdmissionDebtConformant.cfg",
-      "sha256": "13aa887c70b0d08f9bfe53dc63faecd009e9d6d8177994dcbcba8f2fca5307a8",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/event-operations/PublicRouteAdmissionStale.cfg",
-      "sha256": "8253b4ac345429d3cc7c822c2fcd2f9246224421fee430aef4218112ace48732",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/event-operations/PublicRouteAdmissionUnregistered.cfg",
-      "sha256": "95b497a6d8631f800cdc99dff0e8281cc846654f0c06d20275932e1c18fc4e51",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/event-operations/PublicRouteAdmissionUnreviewedMutation.cfg",
-      "sha256": "61f02cc2412dea3c880a237d58e7b94dd9daff473425bbf9c57688988c04b62d",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
       "path": "formal/event-operations/README.md",
-      "sha256": "8b73a2af14c81b79a86736bd9c07cacf4ce09749d3c3251bd5046a7552454310",
+      "sha256": "17670ac7c045ef97fbb8110fba7c0963a0228ec58c3995a2ad7d4d41344c7b49",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23854,6 +23805,34 @@
     {
       "path": "formal/event-operations/RaciWebEditorRetry.cfg",
       "sha256": "4931120eb43ea3951f6210b4569bdee4e299eaae28bf1e284d02c7eb9d067d69",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReadinessProbe.cfg",
+      "sha256": "50fdf327a71210086792e372d3e52923958d19b93560ee24316b4dbf7f42607f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReadinessProbe.tla",
+      "sha256": "5c084b53a4928a9e99594febc6998ab2bd403f8aab8cce3e1ad4272eb58237ec",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/ReadinessProbePoolSizeAttempts.cfg",
+      "sha256": "7d3bd4fc94504e3ff55d6bb101eeb2ef55841ebb0f16b0a5af4994bd67ff2d00",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReadinessProbeSingleAttempt.cfg",
+      "sha256": "344c666a1c21e44c31f82dee303358d020ee0411a3964182145eb79549d74910",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -25281,7 +25260,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "58aec31e166a1af3009c7a7adb80ccaec1d006bc0ca41c1a8c8679c511c8f47f",
+      "sha256": "66ee8698b9e3bdc493574a863ca25795e8a9d8d8f766c83a7a3f77fd2777dfe3",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -25295,7 +25274,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "64c94365f08af9b225ec540f331cce8de24e9afa5afdf3150b0d4c3ff8bccb38",
+      "sha256": "8ebe058fee558824ea46fc4e6ac5d87597e64ff75ca9befb1a77c45749ac9380",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25638,14 +25617,14 @@
     },
     {
       "path": "formal/system/public-route-admission.md",
-      "sha256": "f64ee2536182bd39cc80878ee92d5e7a5275e8051177127e47e398639ef8e438",
+      "sha256": "5624b8411891a9345215f51bd08342fcc08b9f5261f1d33ba27e6884e808cef6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/readiness.md",
-      "sha256": "fd34f26c5e93981f72f61d8ee8af479e612bf6ce79123c37e19187d4d0a7d4ed",
+      "sha256": "0ae73f31404b7036a0f69a9f025bfca6fad0d138a60332e94aad5383f1463fca",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25680,7 +25659,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "0b33f443af7db8cca458065155aa9af0120a9fffa6bdbca20aeee8fbc3fa0954",
+      "sha256": "4cde60f7bb6b8ef19d7bd88d16bccf3ea29973419c8e9de4bd028deafbaf1734",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -25764,7 +25743,7 @@
     },
     {
       "path": "formal/system/whatsapp-consent.md",
-      "sha256": "cec77a010eea533269e7f7befe366e211bce252d2dc6510e69c7bc15daee5a89",
+      "sha256": "fe3302369aa7e7c777f1cd58f1c8895df7a5db692a1a142249e7f1e70cc946d0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -37158,106 +37137,6 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
-      "configuration": "formal/event-operations/PublicRouteAdmission.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  N = 3",
-        "  CheckUnregistered = TRUE",
-        "  CheckStale = TRUE",
-        "  CheckMutating = TRUE",
-        "  DebtExcluded = TRUE",
-        "INVARIANTS",
-        "  ServedRoutesRegistered",
-        "  NoStaleEntries",
-        "  MutationReviewed",
-        "  DebtNeverConformant"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/PublicRouteAdmissionDebtConformant.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  N = 3",
-        "  CheckUnregistered = TRUE",
-        "  CheckStale = TRUE",
-        "  CheckMutating = TRUE",
-        "  DebtExcluded = FALSE",
-        "INVARIANTS",
-        "  ServedRoutesRegistered",
-        "  NoStaleEntries",
-        "  MutationReviewed",
-        "  DebtNeverConformant"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/PublicRouteAdmissionStale.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  N = 3",
-        "  CheckUnregistered = TRUE",
-        "  CheckStale = FALSE",
-        "  CheckMutating = TRUE",
-        "  DebtExcluded = TRUE",
-        "INVARIANTS",
-        "  ServedRoutesRegistered",
-        "  NoStaleEntries",
-        "  MutationReviewed",
-        "  DebtNeverConformant"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/PublicRouteAdmissionUnregistered.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  N = 3",
-        "  CheckUnregistered = FALSE",
-        "  CheckStale = TRUE",
-        "  CheckMutating = TRUE",
-        "  DebtExcluded = TRUE",
-        "INVARIANTS",
-        "  ServedRoutesRegistered",
-        "  NoStaleEntries",
-        "  MutationReviewed",
-        "  DebtNeverConformant"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/PublicRouteAdmissionUnreviewedMutation.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  N = 3",
-        "  CheckUnregistered = TRUE",
-        "  CheckStale = TRUE",
-        "  CheckMutating = FALSE",
-        "  DebtExcluded = TRUE",
-        "INVARIANTS",
-        "  ServedRoutesRegistered",
-        "  NoStaleEntries",
-        "  MutationReviewed",
-        "  DebtNeverConformant"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
       "configuration": "formal/event-operations/RaciEditorContext.cfg",
       "declarations": [
         "CONSTANTS FreshAuthority = TRUE FilterCandidates = TRUE FenceMetadata = TRUE",
@@ -37447,6 +37326,51 @@
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK ExplicitConfirmation CurrentEditor OneFlight SameRetry ValidatedSuccess",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReadinessProbe.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PoolSize = 4",
+        "  Attempts = 5",
+        "INVARIANTS",
+        "  AttemptsBounded",
+        "  ProbeReportsDatabase"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReadinessProbePoolSizeAttempts.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PoolSize = 4",
+        "  Attempts = 4",
+        "INVARIANTS",
+        "  AttemptsBounded",
+        "  ProbeReportsDatabase"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReadinessProbeSingleAttempt.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PoolSize = 4",
+        "  Attempts = 1",
+        "INVARIANTS",
+        "  AttemptsBounded",
+        "  ProbeReportsDatabase"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

@@ -716,6 +716,17 @@ boundary, and a known-debt entry is never conformant. Four single-guard
 controls (`Unregistered`, `Stale`, `UnreviewedMutation`, `DebtConformant`) each
 fail the named invariant at the constant level. Handler enforcement is not in
 the model; the booking conformance harness checks it against the real backend.
+## Database readiness probe
+
+`ReadinessProbe.tla` checks one `GET /health` probe over a pool of `PoolSize`
+connections, any number of which PostgreSQL has already closed, against
+[readiness.md](../system/readiness.md): with an attempt budget of the pool size
+plus one the probe answers "ready" exactly when the database is up, and never
+spends more attempts than its budget. `ReadinessProbeSingleAttempt.cfg` (the
+previous code: one attempt) and `ReadinessProbePoolSizeAttempts.cfg` (a budget
+of exactly the pool size, which every connection being stale defeats) each fail
+`ProbeReportsDatabase`; the model found the second bound. Deadline expiry, the
+response fields and cancellation are covered by the Haskell boundary tests.
 
 ## Drive upload replay (2026-10-12)
 
