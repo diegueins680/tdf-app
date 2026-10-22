@@ -3048,7 +3048,8 @@
         "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
         "tdf-hq/src/TDF/PublicUrl.hs",
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Trials/Server.hs"
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Courses/Production.hs"
       ],
       "tests": [
         "scripts/test-booking-conformance.py",
@@ -3074,7 +3075,7 @@
       "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
       "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.",
       "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with four named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities.",
+      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with four named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits.",
       "evidence": "Historical disclosure reproduction is retained separately; exact candidate model/HTTP/CI receipts are required. New coverage must not inherit a historical green result."
     },
     {
@@ -9931,7 +9932,8 @@
         "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
         "tdf-hq/src/TDF/PublicUrl.hs",
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Trials/Server.hs"
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Courses/Production.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
@@ -9958,7 +9960,7 @@
       "authority": "Explicit user decision 2026-10-13; AUTHORITY-RAG-PUBLIC-INDEX-20261013",
       "property": "NoLegacyAfterCleanup, NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex (public subset), EmptySkipsProvider and TypeOK in PublicKnowledgeIndex.",
       "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Pinned TLC positive model and four named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities.",
+      "verification": "Pinned TLC positive model and four named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits.",
       "evidence": "Candidate-specific test and model receipts must be recorded; historical passes do not establish current conformance."
     },
     {

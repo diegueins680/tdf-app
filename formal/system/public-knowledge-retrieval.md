@@ -196,3 +196,37 @@ Haskell refinement. Prior bounded-model receipts retain their original source
 identity. Complete hosted backend/HTTP qualification, independent review, provider
 retention and production rollout remain separate obligations. No provider-side
 historical erasure or live activation is established here.
+
+
+### Self-resolving production cohorts
+
+A canonical stored slug alone does not establish that the row is public. The
+production metadata route resolves aliases and retired cohorts to the earliest
+eligible cohort, creating one when necessary. RAG does not invoke that mutating
+resolver or attach another cohort's metadata to the old identity. It admits a
+production row only when the public route would return that same row: a canonical
+`produccion-musical-` identity with an earliest session at least the existing
+28-day lead threshold. Bare `produccion-musical` and configured non-cohort aliases
+are excluded even if their stored rows have future sessions.
+
+The public HTTP resolver and RAG share `isProductionCoursePublicSlug` and
+`hasRequiredProductionLead` in `TDF.Courses.PublicMetadata`, using the existing
+`minimumProductionStartDate`. Both RAG SQL queries mirror this predicate before
+their limits. Rendering reads the current minimum session date and checks the
+shared identity predicate again. This adds no course creation, registration or
+session mutation to index work. Read snapshots and provider-admission timing keep
+the concurrency limits above; no delivery-time or arbitrary SQL-refinement proof
+is claimed.
+
+Four new PostgreSQL cases fail against the previous Store and pass after repair:
+51 retired cohorts cannot crowd eligible ordinary/current courses out of the
+50-row corpus; retired/missing-session/alias-only rows make no adapter call; a
+cohort ceases to be returned after its first session falls below the threshold;
+and cached bare/configured aliases do not expose their stored fields. The first
+case includes a later future session that must not override the earlier one and
+admits the exact threshold day. All18 database examples pass on a fresh complete
+211-migration synthetic schema. Eight pure-policy examples include the existing
+200 generated checks and explicit cohort/alias/lead-boundary cases. Earlier
+14-case receipts retain their original source identities; they are not relabeled
+as executions of this new policy. Provider requests and production writes remain
+outside these rehearsals.
