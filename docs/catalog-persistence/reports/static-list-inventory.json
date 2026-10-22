@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-22T21:10:53.407Z",
+  "generatedAt": "2026-10-22T21:52:18.648Z",
   "repositoryRoot": ".",
-  "filesScanned": 2328,
+  "filesScanned": 2329,
   "candidateCount": 1325,
   "byClassification": {
     "dynamic-business-catalog": 853,
@@ -9408,7 +9408,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 340,
+      "consumerCount": 341,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -13325,7 +13325,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "3834687cda771cfcd52b",
+      "id": "2b073f20afd2f3798b1e",
       "file": "scripts/production-migrations.json",
       "sourceKind": "production",
       "surface": "automation",
@@ -13549,9 +13549,10 @@
         "{id=2026-10-12_checkout_line_snapshot_fixed}",
         "{id=2026-10-13_checkout_policy_terms_identity}",
         "{id=2026-10-15_checkout_terms_historical_identity}",
-        "{id=2026-10-16_ledger_entry_write_fence}"
+        "{id=2026-10-16_ledger_entry_write_fence}",
+        "{id=2026-10-22_checkout_terms_history_append_only}"
       ],
-      "valueCount": 216,
+      "valueCount": 217,
       "recommendedClassification": "security-system-registry",
       "lines": [
         3
@@ -13644,7 +13645,7 @@
       "specializedModel": "production migration manifest and applied migration ledger",
       "priority": "",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial deployment history.",
-      "justification": "The ordered 216-entry deployment manifest retains the exact 215-entry ledger dependency prefix and appends the unchanged physical parent-row-version fence. Its original SQL and introduction identity are preserved. It remains a reviewed deployment registry with separately gated production execution; draft source reconciliation does not authorize deployment or ledger transactions.",
+      "justification": "The ordered 217-entry deployment registry preserves all 216 prior financial-candidate entries and SQL bodies, including the exact protected 211-entry prefix, and appends the terms-history mutation guard using its committed SQL ancestor. It is a source-controlled deployment contract, not selectable product data. This review grants no production execution or retention authorization.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -48684,7 +48685,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 303,
+      "consumerCount": 304,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -48930,7 +48931,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 304,
+      "consumerCount": 305,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -49175,7 +49176,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 365,
+      "consumerCount": 366,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -49430,7 +49431,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 289,
+      "consumerCount": 290,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -49680,7 +49681,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 275,
+      "consumerCount": 276,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -49924,7 +49925,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 288,
+      "consumerCount": 289,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -50168,7 +50169,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 282,
+      "consumerCount": 283,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -50412,7 +50413,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 277,
+      "consumerCount": 278,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
