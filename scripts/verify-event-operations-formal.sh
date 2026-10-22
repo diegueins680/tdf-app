@@ -443,6 +443,9 @@ run_negative_tlc CheckoutSnapshotMutableTerms.cfg checkout-snapshot-mutable-term
 run_tlc TermsIdentityUpgrade.tla TermsIdentityUpgrade.cfg terms-identity-upgrade
 run_tlc TermsIdentityHistory.tla TermsIdentityHistory.cfg terms-identity-history
 expect_counterexample TermsIdentityHistoryLiveOnly.cfg HistoricalIdentityPreserved terms-identity-history-live-only TermsIdentityHistory.tla
+expect_counterexample TermsIdentityHistoryDelete.cfg AppendOnlyHistory terms-identity-history-delete TermsIdentityHistory.tla
+expect_counterexample TermsIdentityHistoryUpdate.cfg AppendOnlyHistory terms-identity-history-update TermsIdentityHistory.tla
+expect_counterexample TermsIdentityHistoryTruncate.cfg AppendOnlyHistory terms-identity-history-truncate TermsIdentityHistory.tla
 run_negative_tlc TermsIdentityUpgradeUnfenced.cfg terms-identity-upgrade-unfenced 'Invariant InstalledHistoryValid is violated' TermsIdentityUpgrade.tla
 run_negative_tlc TermsIdentityUpgradeEarlyUnlock.cfg terms-identity-upgrade-early-unlock 'Invariant InstalledHistoryValid is violated' TermsIdentityUpgrade.tla
 run_negative_tlc TermsIdentityUpgradeUnchecked.cfg terms-identity-upgrade-unchecked 'Invariant InstalledHistoryValid is violated' TermsIdentityUpgrade.tla
