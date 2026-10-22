@@ -10626,7 +10626,7 @@
       "recovery": "Repair fixture startup and rerun the complete Linux migration job; no SQL assertion or audit policy is waived.",
       "observability": "Actual PostgreSQL controls: the original socket probe accepts initialization; the authenticated TCP probe rejects initialization/stopped phases and missing/wrong client credentials, then accepts the final SCRAM listener and permits the first real fixture.",
       "authority": "inferred",
-      "source": "Failed hosted postgres-api run 39712279548; official postgres image initialization lifecycle; local PostgreSQL 16 socket/TCP reproduction on 2026-10-21. PostgreSQL16 libpq environment-variable and initdb authentication documentation; password-authenticated protocol controls on2026-10-22.",
+      "source": "Failed hosted postgres-api run 39712279548; official postgres image initialization lifecycle; local PostgreSQL 16 socket/TCP reproduction on 2026-10-21. PostgreSQL 16 libpq environment-variable and initdb authentication documentation; password-authenticated protocol controls on 2026-10-22.",
       "property": "Initialization-only PostgreSQL cannot admit the API fixture SQL.",
       "contract": "formal/system/test-database-readiness.md",
       "implementation": [
@@ -10636,8 +10636,8 @@
         ".github/workflows/event-operations-formal.yml"
       ],
       "formalModels": [],
-      "verification": "Actual PostgreSQL16 socket-only, stopped and SCRAM TCP phases exercise the extracted readiness command, including missing/wrong-password negative controls. The full current-head owned-container migration job and independent review remain required.",
-      "evidence": "Private2026-10-21 socket/TCP protocol receipt and2026-10-22 authenticated protocol receipt only. Current-head hosted Docker migration qualification remains pending; the original failed run is retained.",
+      "verification": "Actual PostgreSQL 16 socket-only, stopped and SCRAM TCP phases exercise the extracted readiness command, including missing/wrong-password negative controls. The full current-head owned-container migration job and independent review remain required.",
+      "evidence": "Private 2026-10-21 socket/TCP protocol receipt and 2026-10-22 authenticated protocol receipt only. Current-head hosted Docker migration qualification remains pending; the original failed run is retained.",
       "status": "specified and implemented",
       "critical": false,
       "confidence": "High for these finite readiness/authentication controls; no general fixture-readiness or full Docker execution claim.",
