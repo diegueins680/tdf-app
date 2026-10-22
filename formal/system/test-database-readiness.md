@@ -38,7 +38,8 @@ The [PostgreSQL 16 client-variable documentation](https://www.postgresql.org/doc
 defines `PGPASSWORD`; [initdb authentication options](https://www.postgresql.org/docs/16/app-initdb.html)
 define `--auth-host`. The official image passes `POSTGRES_INITDB_ARGS` to initdb.
 
-A fresh actual PostgreSQL 16 rehearsal exercises 15 controls: socket-only bootstrap,
+A source-bound [protocol receipt](test-database-readiness-protocol-2026-10-22.json)
+records 15 actual PostgreSQL 16 controls: socket-only bootstrap,
 stopped server, final SCRAM TCP listener, old TCP query with only
 `POSTGRES_PASSWORD`, wrong client password, correct explicit client password,
 first real API fixture and owned cleanup. Missing and wrong credentials fail for

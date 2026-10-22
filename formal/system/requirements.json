@@ -10637,7 +10637,7 @@
       ],
       "formalModels": [],
       "verification": "Actual PostgreSQL 16 socket-only, stopped and SCRAM TCP phases exercise the extracted readiness command, including missing/wrong-password negative controls. The full current-head owned-container migration job and independent review remain required.",
-      "evidence": "Private 2026-10-21 socket/TCP protocol receipt and 2026-10-22 authenticated protocol receipt only. Current-head hosted Docker migration qualification remains pending; the original failed run is retained.",
+      "evidence": "formal/system/test-database-readiness-protocol-2026-10-22.json; original 2026-10-21 socket/TCP protocol receipt. Current-head hosted Docker migration qualification remains pending; the original failed run is retained.",
       "status": "specified and implemented",
       "critical": false,
       "confidence": "High for these finite readiness/authentication controls; no general fixture-readiness or full Docker execution claim.",
