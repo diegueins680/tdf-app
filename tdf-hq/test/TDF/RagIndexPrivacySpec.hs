@@ -216,6 +216,72 @@ spec = describe "rag-index-privacy-postgresql" $ do
         retrieveRagContext (cfg { courseDefaultSlug = "configured-production" }) pool
           "synthetic cohort query" `shouldReturn` []
 
+      forM_ [("spaces", " Produccion-Musical-Current "),
+             ("tabs", "\tPRODUCCION-MUSICAL-CURRENT\n"),
+             ("Unicode spaces", "\x2003\&Produccion-Musical-Current\x2003")] $
+        \(variant, legacy) ->
+          it ("never embeds a production collision normalized with " <> variant) $ \pool -> do
+            today <- utctDay <$> getCurrentTime
+            cohortCourse pool "produccion-musical-current" "PRIVATE_SHADOWED_CANONICAL"
+              [addDays 28 today]
+            cohortCourse pool legacy "PUBLIC_LEGACY_WINNER" [addDays 28 today]
+            runSqlPool (rawExecute
+              "UPDATE course SET updated_at=now()+interval '2 days' WHERE slug=?"
+              [PersistText legacy]) pool
+            cfg <- testConfig
+            refreshRagIndexWith (\_ -> do
+              expectationFailure "An ambiguous production identity reached the embedding adapter"
+              pure (Left "unexpected adapter call")) cfg pool `shouldReturn` Right 0
+            indexRows pool `shouldReturn` []
+
+      it "filters normalized production collisions before the newest-50 provider limit" $ \pool -> do
+        publicCourse pool
+        today <- utctDay <$> getCurrentTime
+        forM_ [1..51 :: Int] $ \n -> do
+          let slug = "produccion-musical-collision-" <> T.pack (show n)
+          cohortCourse pool slug "PRIVATE_SHADOWED_CANONICAL" [addDays 28 today]
+          cohortCourse pool (" " <> T.toUpper slug <> " ") "PRIVATE_LEGACY_ROW"
+            [addDays 28 today]
+        cfg <- testConfig
+        sent <- newIORef []
+        result <- refreshRagIndexWith (\inputs -> do
+          writeIORef sent inputs
+          pure (Right (vectors inputs))) cfg pool
+        result `shouldBe` Right 1
+        inputs <- T.unwords <$> readIORef sent
+        inputs `shouldSatisfy` T.isInfixOf "PUBLIC_COURSE_SENTINEL"
+        inputs `shouldSatisfy` (not . T.isInfixOf "PRIVATE_")
+
+      it "rejects a cached production identity after a normalized collision appears" $ \pool -> do
+        today <- utctDay <$> getCurrentTime
+        cohortCourse pool "produccion-musical-current" "PUBLIC_CURRENT_COHORT" [addDays 28 today]
+        cfg <- testConfig
+        _ <- refreshRagIndexWith (pure . Right . vectors) cfg pool
+        docs <- retrieveRagContext cfg pool "synthetic cohort query"
+        T.unwords docs `shouldSatisfy` T.isInfixOf "PUBLIC_CURRENT_COHORT"
+        cohortCourse pool " Produccion-Musical-Current " "PRIVATE_LEGACY_ROW" [addDays 28 today]
+        retrieveRagContext cfg pool "synthetic cohort query" `shouldReturn` []
+
+      it "recovers an unambiguous production identity without blocking ordinary course aliases" $
+        \pool -> do
+          publicCourse pool
+          cohortCourse pool " PUBLIC-COURSE " "PRIVATE_ORDINARY_ALIAS" []
+          today <- utctDay <$> getCurrentTime
+          cohortCourse pool "produccion-musical-current" "PUBLIC_CURRENT_COHORT" [addDays 28 today]
+          cohortCourse pool " Produccion-Musical-Current " "PRIVATE_LEGACY_ROW" [addDays 28 today]
+          cfg <- testConfig
+          sent <- newIORef []
+          let refresh = refreshRagIndexWith (\inputs -> do
+                writeIORef sent inputs
+                pure (Right (vectors inputs))) cfg pool
+          refresh `shouldReturn` Right 1
+          runSqlPool (rawExecute "DELETE FROM course WHERE slug=' Produccion-Musical-Current '" []) pool
+          refresh `shouldReturn` Right 2
+          inputs <- T.unwords <$> readIORef sent
+          inputs `shouldSatisfy` T.isInfixOf "PUBLIC_CURRENT_COHORT"
+          inputs `shouldSatisfy` T.isInfixOf "PUBLIC_COURSE_SENTINEL"
+          inputs `shouldSatisfy` (not . T.isInfixOf "PRIVATE_")
+
       it "purges legacy chunks even when the remaining public index is fresh" $ \pool -> do
         cfg <- testConfig
         ensureRagIndex cfg pool `shouldReturn` Right False
