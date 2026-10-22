@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "8d25e57f854135dc456e",
+      "currentId": "3834687cda771cfcd52b",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 213,
-      "change": "Ordered 213-entry manifest retains dependency f58f6ac1859d3cc294a3ed3cee23cb3da6fac487 as its exact 212-entry prefix and appends the original stale-snapshot ledger repair. The complete main/music/Operations/ledger history, SQL bytes and introduction SHAs remain unchanged. Both predecessor manifest reviews and all prior reconciliation ledgers remain immutable historical evidence. Full-source ancestry, expanded checksums, PostgreSQL apply/replay and concurrency/negative controls remain mandatory; this classification grants no production execution, provider action or feature activation.",
+      "valueCount": 216,
+      "change": "Ordered 216-entry source manifest retains the exact 215-entry ledger dependency prefix and appends the original physical parent-row-version fence; both parent source reviews remain immutable history. Production execution is separately gated.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -393,13 +393,13 @@
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         },
         {
-          "sourceRevision": "9d7551353a7c278cd0937eb57d04a94241318d42",
+          "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
           "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
-          "sourceFileSha256": "bbfc50b4ac49fc04370ae9ac2379f1f9cc6980641f6205f9936576701b69f078",
+          "sourceFileSha256": "c39bca1016ca0701cd5120ef3dc8905ca5a67baee89ba4a31f407f92dd7fc76b",
           "sourceEntry": {
             "index": 8
           },
-          "sourceEntryCanonicalSha256": "b0ff0915ecda963e149e72e56e11cad50a421b7a080b834a461eac2debd1ba3c",
+          "sourceEntryCanonicalSha256": "972567b86a9a1c4256b14d90b265d8c63b5ee962d0fa18b477d02e637f6a0df9",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         },
         {
@@ -413,16 +413,6 @@
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         },
         {
-          "sourceRevision": "2167253e5e83918ddd357a39ea2119bf658f46a7",
-          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
-          "sourceFileSha256": "7cb7a14418935f04896493076dfdaa9562f58d8836ed433d1e476e1660f19daa",
-          "sourceEntry": {
-            "index": 8
-          },
-          "sourceEntryCanonicalSha256": "2f354d63a9949ca25fba8d4fca4ccf2b696167e2657118379f7737fb853eeeb6",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        },
-        {
           "sourceRevision": "f58f6ac1859d3cc294a3ed3cee23cb3da6fac487",
           "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
           "sourceFileSha256": "c2963899713fd5892d34fbef026ecdb1f1994496656f148292bb9cd2b0f267e7",
@@ -430,6 +420,36 @@
             "index": 8
           },
           "sourceEntryCanonicalSha256": "58155370c86a44f196a15035661b79a80c72f3690295e23146d936b6fa8744fd",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "8de1bae4c30961eaa11637e5b4307271250ee176",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "935beed5d053bfc75d1a0e1a6e4ae204c1c64423",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "3db0c4480bf0ffde30c41a564b836831134da16c39bb4c7df2b06f3f910221d1",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "455e25dae4f5762b166b55846ddad5482362f8ce15387e4a07ec0ca3f8c44d31",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "380da8855ade877f79593e80f93291cd314d311d",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "9afc8f12626eeb1b5a2b1c2183d9e2c514f9ff12fa34b5b24006076fada0feb9",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "79ba6acb6cabcb85d7d5c789bae340ce39e95921794ce093bcfdae689f5deeb9",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]

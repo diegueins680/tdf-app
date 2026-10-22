@@ -218,3 +218,9 @@ describe('redirect helpers', () => {
     expect(buildLoginRedirectPath('/login')).toBe('/login');
   });
 });
+
+ it('defaults authentication to Comunidad while preserving safe deep links', () => {
+   expect(resolvePostAuthPath(null, ['Admin'], ['admin'])).toBe('/fans');
+   expect(resolvePostAuthPath(null, ['Customer'], [], '/artista/42#music')).toBe('/artista/42#music');
+   expect(resolvePostAuthPath(null, ['Customer'], [], '//evil.example')).toBe('/fans');
+ });

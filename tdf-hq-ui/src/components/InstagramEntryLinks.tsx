@@ -70,7 +70,6 @@ const buildCourseLinks = (): InstagramLink[] => {
 
 const serviceLinks: InstagramLink[] = [
   { label: 'Reservar servicios', to: withInstagramParams('/reservar') },
-  { label: 'DJ Booth', to: withInstagramParams('/dj-booth') },
 ];
 
 const courseLinks = buildCourseLinks();

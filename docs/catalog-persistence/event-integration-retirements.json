@@ -84,8 +84,30 @@
         "kind": "array",
         "name": "PUBLIC_NAV_ITEMS"
       },
-      "replacementId": "8ea9381b405e317f5e7f",
-      "reason": "The reviewed public navigation successor now includes the canonical TDF Mobile entry. Its preceding fingerprint f9819fa4b81bdd8f3f21 and exact decision remain archived as previousDecision in catalog-list-decisions.json; this mapping follows the current reviewed successor while preserving the original retirement evidence."
+      "replacementId": "d6b3102f762f66266bf0",
+      "reason": "The reviewed public navigation successor now includes the canonical TDF Mobile entry. Its preceding fingerprint f9819fa4b81bdd8f3f21 and exact decision remain archived as previousDecision in catalog-list-decisions.json; this mapping follows the current reviewed successor while preserving the original retirement evidence.",
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "ec1af567303d347d8d4e2b977a6a615cd7538c07e5933e725f71d7768b7eb08c",
+          "sourceEntry": {
+            "index": 3
+          },
+          "sourceEntryCanonicalSha256": "c6797478cc43ec73dffd002def15a46980b25b4d5f8198ade8343e4abac93a92",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "57141d9d44fdcd98d7a8b7a98242ba940022cc5a66e93dabe304f6095a832567",
+          "sourceEntry": {
+            "index": 3
+          },
+          "sourceEntryCanonicalSha256": "c438cfcf1372c4a5b44cf021ac3d644f1516ad42f2d3e6e38430f7b6d7fe0134",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ]
     },
     {
       "originalDecision": {
@@ -656,14 +678,10 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "8d25e57f854135dc456e",
-      "reason": "Ordered 213-entry manifest retains dependency f58f6ac1859d3cc294a3ed3cee23cb3da6fac487 as its exact 212-entry prefix and appends the original stale-snapshot ledger repair. The complete main/music/Operations/ledger history, SQL bytes and introduction SHAs remain unchanged. Both predecessor manifest reviews and all prior reconciliation ledgers remain immutable historical evidence. Full-source ancestry, expanded checksums, PostgreSQL apply/replay and concurrency/negative controls remain mandatory; this classification grants no production execution, provider action or feature activation.",
+      "replacementId": "3834687cda771cfcd52b",
+      "reason": "Ordered 216-entry source manifest retains the exact 215-entry ledger dependency prefix and appends the original physical parent-row-version fence; both parent source reviews remain immutable history. Production execution is separately gated.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
-      "currentResolution": {
-        "baseRevision": "f58f6ac1859d3cc294a3ed3cee23cb3da6fac487",
-        "valueCount": 213,
-        "reason": "Ordered 213-entry manifest retains dependency f58f6ac1859d3cc294a3ed3cee23cb3da6fac487 as its exact 212-entry prefix and appends the original stale-snapshot ledger repair. The complete main/music/Operations/ledger history, SQL bytes and introduction SHAs remain unchanged. Both predecessor manifest reviews and all prior reconciliation ledgers remain immutable historical evidence. Full-source ancestry, expanded checksums, PostgreSQL apply/replay and concurrency/negative controls remain mandatory; this classification grants no production execution, provider action or feature activation."
-      },
+      "currentResolution": "Ordered 216-entry source manifest retains the exact 215-entry ledger dependency prefix and appends the original physical parent-row-version fence; both parent source reviews remain immutable history. Production execution is separately gated.",
       "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
       "sourceReviewReferences": [
         {
@@ -709,13 +727,13 @@
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         },
         {
-          "sourceRevision": "9d7551353a7c278cd0937eb57d04a94241318d42",
+          "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
           "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
-          "sourceFileSha256": "017bb795ca75a0cef6753829a4c9f9538f316a074bb609192fad82f8c3116d6d",
+          "sourceFileSha256": "ec1af567303d347d8d4e2b977a6a615cd7538c07e5933e725f71d7768b7eb08c",
           "sourceEntry": {
             "index": 10
           },
-          "sourceEntryCanonicalSha256": "df7f04c8f6b2c76fb484bb53edc78648b209dbf70a810cbb03d296c30e026bb0",
+          "sourceEntryCanonicalSha256": "6c82dc49548bd2d8146450ea9ddaa4e12bb09924d889f83a0bd90fe679ac667d",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         },
         {
@@ -729,16 +747,6 @@
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         },
         {
-          "sourceRevision": "2167253e5e83918ddd357a39ea2119bf658f46a7",
-          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
-          "sourceFileSha256": "8dfe2122ca9c0eb2a168ffbfd26b1275d36698640b47288c6e7368e2361b59d5",
-          "sourceEntry": {
-            "index": 10
-          },
-          "sourceEntryCanonicalSha256": "93a8355fc4122ab422b85b1c4d582a1e9b885a599f5dc3d3a56f3016a4bc8186",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        },
-        {
           "sourceRevision": "f58f6ac1859d3cc294a3ed3cee23cb3da6fac487",
           "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
           "sourceFileSha256": "8cd50101858e26b398b6ff7d21595e29499df94d7b5da5493708d25342ac624b",
@@ -746,6 +754,36 @@
             "index": 10
           },
           "sourceEntryCanonicalSha256": "e4f9ce010124d09124f9e50cbc2f5c66d310eb4c8b25030240a89ac21738288d",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "8de1bae4c30961eaa11637e5b4307271250ee176",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "28d940cae7e14d91afb8da50751b40ad577a52740fb97e0ded3f13da48ec8f59",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "936fc7eab64e14f0c6e54724e055f02e8d7b1ef1ec06436b735b473b48317fbf",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "935beed5d053bfc75d1a0e1a6e4ae204c1c64423",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "f2ec2f7381a9c28918945023ccaf89401481ebb586bb4a104ecb2cf04ecb7a1c",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "3e2811dcc760a3433fcf9da7bea86e6a000b53e638622b81f8bddc225fbabcd8",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "380da8855ade877f79593e80f93291cd314d311d",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "bc4dd11d498978a6e194b173be19910945ea0f28500fb8937e23e5012c482b53",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "44a33be281bac6e77b450604c95c9f6393b647b2501a3fc20b836d4f6d25401b",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]

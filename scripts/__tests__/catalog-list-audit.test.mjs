@@ -74,7 +74,7 @@ test('music/main reconciliation retains both reviews and the protected migration
   const current = active.find(entry => entry.id === currentId);
   if (currentId !== ledger.currentManifestDecisionId) {
     const extension = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-      'docs/catalog-persistence/ledger-main-reconciliation.json'), 'utf8'));
+      'docs/catalog-persistence/public-ux-main-reconciliation-20261021.json'), 'utf8'));
     assert.ok(extension.retiredManifestDecisions.some(entry =>
       entry.id === ledger.currentManifestDecisionId && entry.source.sourceRevision === extension.mainParent));
     assert.equal(canonicalHash(manifest.slice(0, 208)), extension.protectedMainManifestCanonicalSha256);

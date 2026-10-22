@@ -17,7 +17,6 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import GroupsIcon from '@mui/icons-material/Groups';
 import MicExternalOnIcon from '@mui/icons-material/MicExternalOn';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SchoolIcon from '@mui/icons-material/School';
@@ -290,15 +289,9 @@ const FALLBACK_ARTIST_IMAGE = {
 const serviceCards: readonly ServiceCardItem[] = [
   {
     title: 'Estudio y reservas',
-    description: 'Grabación, mezcla, mastering, ensayos, podcast y sesiones privadas desde el ecosistema TDF.',
+    description: 'Grabación, mezcla, mastering, ensayos, podcast, DJ booth y sesiones privadas desde el ecosistema TDF.',
     icon: <MicExternalOnIcon />,
     path: '/reservar',
-  },
-  {
-    title: 'DJ Booth',
-    description: 'Practica, prepara sets y conecta tu proceso creativo con una comunidad que escucha.',
-    icon: <MusicNoteIcon />,
-    path: '/dj-booth',
   },
   {
     title: 'Escuela y cursos',

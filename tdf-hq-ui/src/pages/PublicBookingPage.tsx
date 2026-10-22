@@ -76,7 +76,6 @@ interface FormState {
   resourceLabels: string[];
 }
 
-export type PublicBookingPreset = 'dj-booth';
 
 type BookingWithAliases = BookingDTO & {
   pbStartsAt?: string;
@@ -134,42 +133,6 @@ const formatMinorAmount = (currency: string, amountMinor: number): string =>
     maximumFractionDigits: 2,
   })}`;
 
-const PUBLIC_BOOKING_PRESETS: Record<
-  PublicBookingPreset,
-  {
-    path: string;
-    serviceCode: string;
-    eyebrow: string;
-    title: string;
-    description: string;
-    introChips: string[];
-    contactTitle: string;
-    contactDescription: string;
-    calendarNote: string;
-    durationNote: string;
-    notesPlaceholder: string;
-  }
-> = {
-  'dj-booth': {
-    path: '/dj-booth',
-    serviceCode: 'dj-booth-practice',
-    eyebrow: 'DJ Booth',
-    title: 'Reserva práctica en DJ Booth',
-    description:
-      'Agenda horas de práctica o alquiler del DJ Booth. Este enlace usa el servicio Práctica en DJ Booth para asignar el booth automáticamente.',
-    introChips: [
-      '1. Elige horario para DJ Booth',
-      '2. Reservamos por horas',
-      '3. Guarda tu ID para cualquier ajuste',
-    ],
-    contactTitle: 'Datos para reservar tu booth',
-    contactDescription: 'Usa un correo válido para identificar tu reserva de práctica en DJ Booth.',
-    calendarNote: 'Bloque tentativo para el DJ Booth.',
-    durationNote: 'Reserva por horas de práctica (30 min mínimo).',
-    notesPlaceholder: 'Cuéntanos si traes USB/controlador, estilo musical o cualquier requerimiento para practicar.',
-  },
-};
-
 const zoneLabel = (zone: string) => {
   try {
     return DateTime.now().setZone(zone).toFormat('ZZZZ');
@@ -205,11 +168,6 @@ const resolveServiceFromToken = (raw: string, list: ServiceType[]): ServiceType 
   });
   return partial ?? null;
 };
-
-const resolvePresetService = (
-  presetConfig: (typeof PUBLIC_BOOKING_PRESETS)[PublicBookingPreset],
-  list: ServiceType[],
-): ServiceType | null => list.find((service) => service.code === presetConfig.serviceCode) ?? null;
 
 const serviceResourceLabels = (service: ServiceType | null | undefined): string[] =>
   (service?.defaultResources ?? []).map((resource) => resource.sdrResourceName);
@@ -341,18 +299,13 @@ const toFriendlyBookingError = (error: unknown): string => {
   return message;
 };
 
-interface PublicBookingPageProps {
-  preset?: PublicBookingPreset;
-}
-
-export default function PublicBookingPage({ preset }: PublicBookingPageProps = {}) {
+export default function PublicBookingPage() {
   useMetaTags({
     title: 'Reservar',
     description: 'Reserva una sesión de estudio, clase o servicio en TDF Records.',
   });
 
   const location = useLocation();
-  const presetConfig = preset ? PUBLIC_BOOKING_PRESETS[preset] : null;
   const healthQuery = useQuery({
     queryKey: ['health'],
     queryFn: Meta.health,
@@ -367,10 +320,6 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   const baseServices = useMemo<ServiceType[]>(() => {
     return mergeServiceTypes(serviceCatalogQuery.data, { sort: false });
   }, [serviceCatalogQuery.data]);
-  const presetService = useMemo(
-    () => (presetConfig ? resolvePresetService(presetConfig, baseServices) : null),
-    [baseServices, presetConfig],
-  );
   const services = baseServices;
   const bookingReturnPath = `${location.pathname}${location.search}${location.hash}`;
   const loginPath = buildLoginRedirectPath(bookingReturnPath);
@@ -415,24 +364,20 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     }
     return 'Puedes dejar la solicitud ahora mismo. Guarda el ID de reserva y escríbenos por WhatsApp si necesitas confirmar disponibilidad o recursos.';
   }, [requiresManualConfirmation, serviceCatalogUnavailable]);
-  const pageEyebrow = presetConfig?.eyebrow ?? 'Agenda pública';
-  const pageTitle = presetConfig?.title ?? 'Reserva un servicio con TDF';
+  const pageEyebrow = 'Agenda pública';
+  const pageTitle = 'Reserva un servicio con TDF';
   const pageDescription =
-    presetConfig?.description ??
     'Completa tus datos y agenda el horario que prefieras. Puedes reservar como invitado; crear una cuenta es opcional.';
-  const introChips = presetConfig?.introChips ?? [
-    '1. Agenda sin crear cuenta',
+  const introChips = [
+    '1. Elige tu servicio y agenda sin crear cuenta',
     '2. Recibe un ID de reserva',
     '3. Coordina ajustes por WhatsApp',
   ];
-  const contactTitle = presetConfig?.contactTitle ?? 'Datos de contacto';
-  const contactDescription =
-    presetConfig?.contactDescription ??
-    'Usa un correo válido para identificar la reserva. Crear una cuenta es opcional.';
-  const calendarNote = presetConfig?.calendarNote ?? 'Bloque tentativo en el calendario.';
-  const durationNote = presetConfig?.durationNote ?? 'Duración estándar de 1h (ajústala si necesitas más tiempo).';
-  const notesPlaceholder =
-    presetConfig?.notesPlaceholder ?? 'Cuéntanos qué necesitas (ej: grabación de voz, mezcla, etc.)';
+  const contactTitle = 'Datos de contacto';
+  const contactDescription = 'Usa un correo válido para identificar la reserva. Crear una cuenta es opcional.';
+  const calendarNote = 'Bloque tentativo en el calendario.';
+  const durationNote = 'Duración estándar de 1h (ajústala si necesitas más tiempo).';
+  const notesPlaceholder = 'Cuéntanos qué necesitas (ej: grabación de voz, mezcla, ensayo, DJ booth, etc.)';
   const [form, setForm] = useState<FormState>(buildInitialForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -470,15 +415,6 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   useEffect(() => {
     if (!services.length) return;
     setForm((prev) => {
-      if (presetService) {
-        if (prev.serviceOfferingId === presetService.id) return prev;
-        return {
-          ...prev,
-          serviceOfferingId: presetService.id,
-          serviceType: presetService.name,
-          resourceLabels: serviceResourceLabels(presetService),
-        };
-      }
       const serviceStillValid = services.some((svc) => svc.id === prev.serviceOfferingId);
       if (serviceStillValid) return prev;
       const nextService = services[0];
@@ -490,7 +426,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
         resourceLabels: serviceResourceLabels(nextService),
       };
     });
-  }, [presetService, services]);
+  }, [services]);
 
   useEffect(() => {
     if (appliedStoredProfile.current) return;
@@ -500,10 +436,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       const raw = readSessionPersonalData(PROFILE_STORAGE_KEY);
       if (!raw) return;
       const stored = JSON.parse(raw) as Partial<FormState>;
-      const nextService =
-        presetService ??
-        services.find((service) => service.id === stored.serviceOfferingId) ??
-        services[0];
+      const nextService = services.find((service) => service.id === stored.serviceOfferingId) ?? services[0];
       setForm((prev) => ({
         ...prev,
         fullName: stored.fullName ?? prev.fullName,
@@ -517,11 +450,10 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     } catch {
       // ignore parsing issues
     }
-  }, [presetService, services]);
+  }, [services]);
 
   useEffect(() => {
     if (appliedServiceQuery.current) return;
-    if (presetService) return;
     if (!services.length) return;
     const params = new URLSearchParams(location.search);
     const rawToken = params.get('service') ?? params.get('servicio');
@@ -535,7 +467,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       serviceType: match.name,
       resourceLabels: serviceResourceLabels(match),
     }));
-  }, [location.search, presetService, services]);
+  }, [location.search, services]);
 
   useEffect(() => {
     if (!session?.displayName) return;
@@ -625,7 +557,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     setError(null);
     setSubmitting(false);
     setActiveStep(0);
-    const nextService = presetService ?? services[0];
+    const nextService = services[0];
     setForm({
       ...buildInitialForm(),
       serviceOfferingId: nextService?.id ?? '',
@@ -633,7 +565,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       resourceLabels: serviceResourceLabels(nextService),
     });
     setAssignEngineerLater(false);
-  }, [presetService, services]);
+  }, [services]);
 
   useEffect(() => {
     const parsed = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
@@ -660,6 +592,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     if (!startsAtUtc) return () => window.clearTimeout(timeoutId);
     setAvailabilityStatus('checking');
     setAvailabilityNote(null);
+    setAuthoritativeQuote(null);
     setTermsAccepted(false);
     bookingIdempotency.current = null;
     const url = `${API_BASE_URL}/bookings/public/availability?serviceOfferingId=${encodeURIComponent(form.serviceOfferingId)}&startsAt=${encodeURIComponent(startsAtUtc)}&durationMinutes=${duration}`;
@@ -672,6 +605,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
           reason?: string;
           quote?: PublicBookingQuoteDTO | null;
         } | null;
+        if (controller.signal.aborted) return;
         setAuthoritativeQuote(data?.quote ?? null);
         const isAvailable = data?.available ?? data?.isAvailable;
         if (isAvailable === false) {
@@ -686,9 +620,9 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
         }
       })
       .catch((err) => {
+        if (controller.signal.aborted && !didTimeout) return;
         setAuthoritativeQuote(null);
         if (controller.signal.aborted) {
-          if (!didTimeout) return;
           setAvailabilityStatus('unknown');
           setAvailabilityNote('La verificación tardó demasiado. Reintenta o coordinamos contigo por WhatsApp.');
           return;
@@ -983,7 +917,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
         (form.resourceLabels.length ? form.resourceLabels : suggestedRooms);
       const price = estimatePriceLabel ?? selectedPrice ?? 'Por confirmar';
       const lines = [
-        presetConfig ? `Reserva TDF - ${presetConfig.eyebrow}` : 'Reserva TDF',
+        'Reserva TDF',
         `Servicio: ${booking?.serviceType ?? form.serviceType}`,
         `Inicio: ${startLabel}`,
         `Duración: ${duration} min`,
@@ -997,7 +931,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       }
       return lines.join('\n');
     },
-    [estimatePriceLabel, form.durationMinutes, form.engineerName, form.resourceLabels, form.serviceType, form.startsAt, formattedStart, presetConfig, selectedPrice, suggestedRooms, userTimeZone],
+    [estimatePriceLabel, form.durationMinutes, form.engineerName, form.resourceLabels, form.serviceType, form.startsAt, formattedStart, selectedPrice, suggestedRooms, userTimeZone],
   );
 
   const copySummary = useCallback(
@@ -1765,6 +1699,48 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     );
   }
 
+  const serviceField = (
+    <Grid item xs={12}>
+      <TextField
+        label="Servicio"
+        select
+        value={form.serviceOfferingId}
+        onChange={(e) => {
+          const nextService = services.find((service) => service.id === e.target.value);
+          if (!nextService || nextService.id === form.serviceOfferingId) return;
+          setAuthoritativeQuote(null);
+          setTermsAccepted(false);
+          setForm((prev) => ({
+            ...prev,
+            serviceOfferingId: nextService.id,
+            serviceType: nextService.name,
+            resourceLabels: serviceResourceLabels(nextService),
+          }));
+        }}
+        fullWidth
+        required
+        disabled={formDisabled}
+        helperText={
+          estimatePriceLabel
+            ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
+            : `Moneda: ${studioCurrency}`
+        }
+      >
+        {services.map((svc) => (
+          <MenuItem key={svc.id} value={svc.id}>
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+              <Typography>{svc.name}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {servicePriceLookup.get(svc.id)}
+              </Typography>
+            </Stack>
+          </MenuItem>
+        ))}
+        {services.length === 0 && <MenuItem value="" disabled>Catálogo no disponible</MenuItem>}
+      </TextField>
+    </Grid>
+  );
+
   return (
     <Box data-testid="public-booking-layout" sx={BOOKING_LAYOUT_SX}>
       <Card
@@ -1932,6 +1908,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                     <Grid container spacing={2.5}>
                       {activeStep === 0 && (
                         <>
+                          {serviceField}
                           <Grid item xs={12} sm={6}>
                             <TextField
                               label="Nombre completo"
@@ -2007,49 +1984,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
 
                       {activeStep === 1 && (
                         <>
-                          <Grid item xs={12}>
-                            <TextField
-                              label={presetService ? 'Servicio DJ Booth' : 'Servicio'}
-                              select
-                              value={form.serviceOfferingId}
-                              onChange={(e) => {
-                                const nextService = services.find((service) => service.id === e.target.value);
-                                if (!nextService) return;
-                                setForm((prev) => ({
-                                  ...prev,
-                                  serviceOfferingId: nextService.id,
-                                  serviceType: nextService.name,
-                                  resourceLabels: serviceResourceLabels(nextService),
-                                }));
-                              }}
-                              fullWidth
-                              required
-                              disabled={formDisabled || Boolean(presetService)}
-                              helperText={
-                                presetService
-                                  ? `Servicio preseleccionado para este enlace. ${
-                                      estimatePriceLabel
-                                        ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
-                                        : `Moneda: ${studioCurrency}`
-                                    }`
-                                  : estimatePriceLabel
-                                  ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
-                                  : `Moneda: ${studioCurrency}`
-                              }
-                            >
-                              {services.map((svc) => (
-                                <MenuItem key={svc.id} value={svc.id}>
-                                  <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
-                                    <Typography>{svc.name}</Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                      {servicePriceLookup.get(svc.id)}
-                                    </Typography>
-                                  </Stack>
-                                </MenuItem>
-                              ))}
-                              {services.length === 0 && <MenuItem value="" disabled>Catálogo no disponible</MenuItem>}
-                            </TextField>
-                          </Grid>
+                          {serviceField}
                           <Grid item xs={12} sm={7}>
                             <TextField
                               label="Fecha y hora"
