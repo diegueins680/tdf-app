@@ -49,7 +49,8 @@ validateCoursePublicUrlField fieldName (Just rawUrl) =
       | PublicUrl.hasAmbiguousPublicUrlPath urlVal ->
           Left (fieldName <> " path must not contain empty, dot, or dot-dot segments")
       | fieldName == "whatsappCtaUrl" && not (isAllowedWhatsAppCtaUrl urlVal) ->
-          Left "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com on the default HTTPS port with a valid WhatsApp send path"
+          Left "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com \
+            \on the default HTTPS port with a valid WhatsApp send path"
       | otherwise -> Right (Just urlVal)
 
 maxCoursePublicUrlChars :: Int

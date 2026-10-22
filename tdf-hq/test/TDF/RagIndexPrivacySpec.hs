@@ -14,7 +14,8 @@ import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Database.Persist.Postgresql (createPostgresqlPoolModified)
-import Database.Persist.Sql (ConnectionPool, PersistValue(..), rawExecute, rawSql, runSqlPool, Single(..))
+import Database.Persist.Sql
+  (ConnectionPool, PersistValue(..), rawExecute, rawSql, runSqlPool, Single(..))
 import Database.PostgreSQL.Simple (SqlError, sqlState)
 import System.Environment (lookupEnv)
 import Test.Hspec
