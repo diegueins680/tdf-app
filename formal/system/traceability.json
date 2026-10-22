@@ -10575,11 +10575,80 @@
         "formal/event-operations/ChatNotificationAuthorization.tla",
         "formal/event-operations/ChatNotificationNavigation.tla"
       ],
-      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response. An offline-paused, cache-success regression requires an actual authorization response for the current navigation and preserves the link until reconnection. Same-route allowed/revoked tests and delayed ordinary-poll/previous-notification responses exercise a separate navigation-scoped query. The navigation model checks both display/read safety and three cache/response-scope counterexamples.",
+      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response. An offline-paused, cache-success regression requires an actual authorization response for the current navigation and preserves the link until reconnection. Same-route allowed/revoked tests and delayed ordinary-poll/previous-notification responses exercise a separate navigation-scoped query. The navigation model checks both display/read safety and three cache/response-scope counterexamples. Late-response fixtures hold the distinct subsequent ordinary poll, cover both old/current completion orders, and verify fresh sidebar recovery without selecting, fetching or marking the denied target read.",
       "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
       "ambiguity": [
         "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."
       ]
+    },
+    {
+      "id": "SYS-CI-DB-001",
+      "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
+      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
+      "domain": "SYS",
+      "actors": [
+        "CI fixture runner",
+        "Developer"
+      ],
+      "preconditions": [
+        "The runner has started its own disposable PostgreSQL 16 container with a fixed synthetic test database and SCRAM host authentication."
+      ],
+      "inputs": [
+        "Owned container identity",
+        "Fixed test database",
+        "Bounded final-listener readiness query",
+        "Explicit synthetic client password for the TCP probe"
+      ],
+      "state": {
+        "states": [
+          "container starting",
+          "initialization server only",
+          "final server ready",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Starting or initialization-only -> final server ready after the authenticated loopback TCP query succeeds.",
+        "Readiness deadline exceeded -> failed with container diagnostics."
+      ],
+      "forbiddenTransitions": [
+        "A socket-only initialization query succeeds -> apply fixtures.",
+        "Readiness deadline exceeded -> continue SQL tests.",
+        "A missing or incorrect client password -> ready on the SCRAM host listener."
+      ],
+      "effects": [
+        "Wait for the final database process before fixture and migration SQL."
+      ],
+      "authorization": "Only the existing owned disposable test container is addressed; this runner grants no production authority.",
+      "privacy": "The database and its password are fixed synthetic test values.",
+      "concurrency": "The temporary initialization process can stop after accepting socket connections; authenticated TCP readiness excludes that process and requires the synthetic client credential.",
+      "idempotency": "Readiness SELECT has no fixture or migration side effect.",
+      "failure": "Retain the existing 30-attempt bound, print container logs and fail when the final listener is unavailable.",
+      "recovery": "Repair fixture startup and rerun the complete Linux migration job; no SQL assertion or audit policy is waived.",
+      "observability": "Actual PostgreSQL controls: the original socket probe accepts initialization; the authenticated TCP probe rejects initialization/stopped phases and missing/wrong client credentials, then accepts the final SCRAM listener and permits the first real fixture.",
+      "authority": "inferred",
+      "source": "Failed hosted postgres-api run 39712279548; official postgres image initialization lifecycle; local PostgreSQL 16 socket/TCP reproduction on 2026-10-21. PostgreSQL 16 libpq environment-variable and initdb authentication documentation; password-authenticated protocol controls on 2026-10-22.",
+      "property": "Initialization-only PostgreSQL cannot admit the API fixture SQL.",
+      "contract": "formal/system/test-database-readiness.md",
+      "implementation": [
+        "scripts/test-event-operations-api-migration.sh"
+      ],
+      "tests": [
+        ".github/workflows/event-operations-formal.yml"
+      ],
+      "formalModels": [],
+      "verification": "Actual PostgreSQL 16 socket-only, stopped and SCRAM TCP phases exercise the extracted readiness command, including missing/wrong-password negative controls. The full current-head owned-container migration job and independent review remain required.",
+      "evidence": "formal/system/test-database-readiness-protocol-2026-10-22.json; original 2026-10-21 socket/TCP protocol receipt. Current-head hosted Docker migration qualification remains pending; the original failed run is retained.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "High for these finite readiness/authentication controls; no general fixture-readiness or full Docker execution claim.",
+      "ambiguity": [
+        "Other disposable PostgreSQL runners have separate readiness and ownership obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Actual native PostgreSQL lifecycle and missing/wrong-password controls pass; fresh current-head Linux Docker migration qualification remains pending."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -10862,7 +10931,7 @@
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
-    "package-lock.json": "7f284510c547ce6b68aebcf02bf5be42a1c5f3a4f14c3c60b31690a85b04dd68",
+    "package-lock.json": "b675c3564962de5d8fb5319c3bba57ababb2bba6efb36f40b867593f18947507",
     "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
     "playwright.config.mjs": "016429e964027bd196982efabee711e56df08b51664f51f8e5298e3cdd7b5f93",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
@@ -11008,6 +11077,7 @@
     "scripts/test-community-search.py": "c6be90dbc19bfd6fc6c06e72c300f77f75729e94e518d5132560e94cd1b58c24",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
+    "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
@@ -11224,7 +11294,7 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
-    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "cdee9c63a639afb203b48308e0a08783ca7581f3c6413cf0abacbb4f4cb5625d",
+    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "545402d0b86ef118c857130ef91a28c4e5a9fc90d4df25c914395aa81241c894",
     "tdf-hq-ui/src/pages/ChatPage.tsx": "22bc99dd0dcdd78f19a3425c395794e2591ce1305c7418d83f31df0c5e4a4ef0",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
@@ -11559,7 +11629,7 @@
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
-    "tdf-hq/test/TDF/EventOrganizerSpec.hs": "bf9d46cd50c4563639019e5a83a3750e5ffb27a636f236ff236d3a405b6891ec",
+    "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
@@ -11901,6 +11971,10 @@
       {
         "requirement": "OPS-CI-REGISTRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-CI-DB-001",
+        "relationship": "tests"
       }
     ],
     "scripts/lib/formal-result-summary.mjs": [
@@ -20352,6 +20426,12 @@
         "requirement": "MSG-NOTIFY-001",
         "relationship": "formalModels"
       }
+    ],
+    "scripts/test-event-operations-api-migration.sh": [
+      {
+        "requirement": "SYS-CI-DB-001",
+        "relationship": "implementation"
+      }
     ]
   },
   "surfaces": [
@@ -20490,6 +20570,10 @@
         {
           "requirement": "OPS-CI-REGISTRY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-CI-DB-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -21277,7 +21361,7 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "7f284510c547ce6b68aebcf02bf5be42a1c5f3a4f14c3c60b31690a85b04dd68",
+      "sha256": "b675c3564962de5d8fb5319c3bba57ababb2bba6efb36f40b867593f18947507",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24781,9 +24865,14 @@
     {
       "id": "SURFACE-a8aba62876599655",
       "path": "scripts/test-event-operations-api-migration.sh",
-      "sha256": "85cde47aa142e673e66915b22a021a2bed52a30bc0637caf185832964ce8cd42",
+      "sha256": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-CI-DB-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-efadb35e0fa07952",
@@ -30210,7 +30299,7 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "cdee9c63a639afb203b48308e0a08783ca7581f3c6413cf0abacbb4f4cb5625d",
+      "sha256": "545402d0b86ef118c857130ef91a28c4e5a9fc90d4df25c914395aa81241c894",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40217,7 +40306,7 @@
     {
       "id": "SURFACE-0b2762494d9e6ae1",
       "path": "tdf-hq/test/TDF/EventOrganizerSpec.hs",
-      "sha256": "bf9d46cd50c4563639019e5a83a3750e5ffb27a636f236ff236d3a405b6891ec",
+      "sha256": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44851,7 +44940,6 @@
     "SURFACE-c3644dae3f31864c",
     "SURFACE-ce3ab4115ddf1e35",
     "SURFACE-c83ef025ca87e555",
-    "SURFACE-a8aba62876599655",
     "SURFACE-efadb35e0fa07952",
     "SURFACE-8222f17ff103ec51",
     "SURFACE-536b0c7c569b3f6b",
@@ -47474,7 +47562,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "35a713e0e4d4d47aa12b69b50f35ce15134b6ff5119124c72796d8715cd6c1b4",
+      "sourceSha256": "1ebc967bf2b3dc200ac28edc08e817581197ccbf930cd4fe794de34eadbeec37",
       "definition": {
         "states": [
           "absent",
@@ -47504,7 +47592,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "35a713e0e4d4d47aa12b69b50f35ce15134b6ff5119124c72796d8715cd6c1b4",
+      "sourceSha256": "1ebc967bf2b3dc200ac28edc08e817581197ccbf930cd4fe794de34eadbeec37",
       "definition": {
         "export": [
           "queued",
@@ -69728,7 +69816,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 127,
+    "PARTIAL": 128,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
