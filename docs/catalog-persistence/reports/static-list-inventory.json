@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-22T02:00:33.259Z",
+  "generatedAt": "2026-10-21T18:16:43.422Z",
   "repositoryRoot": ".",
-  "filesScanned": 2307,
+  "filesScanned": 2306,
   "candidateCount": 1323,
   "byClassification": {
     "dynamic-business-catalog": 851,
@@ -4402,7 +4402,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 1018,
+      "consumerCount": 1019,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -4618,6 +4618,7 @@
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/refresh-instagram-token.mjs",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -4660,8 +4661,7 @@
         "tdf-hq-ui/src/api/feedback.ts",
         "tdf-hq-ui/src/api/generated/client.test.ts",
         "tdf-hq-ui/src/api/generated/client.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/inventory.ts"
+        "tdf-hq-ui/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "consumer-update",
@@ -4690,7 +4690,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 1018,
+      "consumerCount": 1019,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -4906,6 +4906,7 @@
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/refresh-instagram-token.mjs",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -4948,8 +4949,7 @@
         "tdf-hq-ui/src/api/feedback.ts",
         "tdf-hq-ui/src/api/generated/client.test.ts",
         "tdf-hq-ui/src/api/generated/client.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/inventory.ts"
+        "tdf-hq-ui/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "consumer-update",
@@ -6053,7 +6053,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1018,
+      "consumerCount": 1019,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -6269,6 +6269,7 @@
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/refresh-instagram-token.mjs",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -6311,8 +6312,7 @@
         "tdf-hq-ui/src/api/feedback.ts",
         "tdf-hq-ui/src/api/generated/client.test.ts",
         "tdf-hq-ui/src/api/generated/client.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/inventory.ts"
+        "tdf-hq-ui/src/api/generated/types.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -11968,7 +11968,7 @@
       "lines": [
         214
       ],
-      "consumerCount": 246,
+      "consumerCount": 247,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -12101,6 +12101,7 @@
         "scripts/lib/production-release.mjs",
         "scripts/lib/readiness_conformance.py",
         "scripts/lib/requirement_declarations.py",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/prepare-hetzner-release.mjs",
         "scripts/privacy-request-ledger.py",
         "scripts/production-release.mjs",
@@ -12128,6 +12129,7 @@
         "scripts/test-studio-internship-audit-api-e2e.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/artistEnrichment.ts",
         "tdf-hq-ui/src/api/calendar.ts",
         "tdf-hq-ui/src/api/client.test.ts",
@@ -12440,7 +12442,7 @@
       "lines": [
         175
       ],
-      "consumerCount": 42,
+      "consumerCount": 43,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -12485,6 +12487,7 @@
         ".github/workflows/ci.yml",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/interactions/test-api.py",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/run-music-release-worker-once.sh",
         "scripts/specification-inventory.py",
         "scripts/test-ddex-partner-legacy-compatibility.sh",
@@ -12492,6 +12495,7 @@
         "scripts/test-domo-quote-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/test-ddex-partner-legacy-compatibility.sh",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/src/TDF/DDEX/ERN/V432/BusinessRules.hs",
@@ -14947,7 +14951,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 115,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -14965,6 +14969,7 @@
         "tdf-hq/src/TDF/API/LiveSessions.hs",
         "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/API/Sessions.hs",
+        "tdf-hq/src/TDF/App/Readiness.hs",
         "tdf-hq/src/TDF/Auth.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/MerchReservationWorker.hs",
@@ -15388,10 +15393,11 @@
       "lines": [
         4
       ],
-      "consumerCount": 36,
+      "consumerCount": 37,
       "backendConsumers": [
         "tdf-hq/src/TDF/API/Future.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Seed.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -15819,7 +15825,7 @@
       "lines": [
         627
       ],
-      "consumerCount": 617,
+      "consumerCount": 620,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -15993,6 +15999,7 @@
         "scripts/lib/openclaw-cdp.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
+        "scripts/lib/readiness_conformance.py",
         "scripts/meta-app-review-packet.mjs",
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/order-catalog-foundation-seed.mjs",
@@ -16003,8 +16010,7 @@
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
         "scripts/social/FanEffectsModelCases.hs",
         "scripts/social/HttpSpec.hs",
-        "scripts/social/ProfileBenchmark.hs",
-        "scripts/social/SessionModelCases.hs"
+        "scripts/social/ProfileBenchmark.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -19577,7 +19583,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 38,
+      "consumerCount": 37,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
@@ -19599,7 +19605,6 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/Operations/ModelSpec.hs",
-        "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/TicketManualReviewSpec.hs"
       ],
@@ -20205,7 +20210,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 268,
+      "consumerCount": 270,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -20333,6 +20338,8 @@
         "scripts/fixtures/artist-merch-mobile.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
         "scripts/lib/operations_conformance.py",
+        "scripts/lib/readiness_conformance.py",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/mail-deliverability-monitor.py",
         "scripts/merge-admission.py",
         "scripts/operations-load-test.mjs",
@@ -20368,10 +20375,10 @@
         "scripts/test-state-machines.py",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-verified-experience-reviews-migration.sh",
-        "scripts/test-versioned-revenue-products-migration.sh",
-        "scripts/test_mail_deliverability_monitor.py"
+        "scripts/test-versioned-revenue-products-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
         "tdf-hq-ui/src/api/accessRequests.ts",
         "tdf-hq-ui/src/api/bookings.ts",
@@ -21707,7 +21714,7 @@
       "lines": [
         17
       ],
-      "consumerCount": 78,
+      "consumerCount": 79,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
         "tdf-hq/sql/2026-07-29_campaign_automation.sql",
@@ -21791,11 +21798,13 @@
         "scripts/diagnose-social.mjs",
         "scripts/interactions/test-api.py",
         "scripts/lib/identity-reconciliation.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/test-booking-conformance.py",
         "scripts/test-music-directory-contract.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/campaignAutomations.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/operations.test.ts",
@@ -21853,7 +21862,7 @@
       "lines": [
         129
       ],
-      "consumerCount": 135,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -21975,6 +21984,7 @@
         "scripts/lib/identity-inventory.sql",
         "scripts/lib/identity-reconciliation.mjs",
         "scripts/lib/operations_conformance.py",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/privacy-request-ledger.py",
         "scripts/process-music-release-audio.sh",
         "scripts/test-booking-conformance.py",
@@ -21984,6 +21994,7 @@
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/ads.ts",
         "tdf-hq-ui/src/api/campaignAutomations.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -22051,7 +22062,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 867,
+      "consumerCount": 868,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -22267,6 +22278,7 @@
         "scripts/instagram-lifecycle-artifact.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/refresh-instagram-token.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
         "tdf-hq-ui/src/api/bookings.ts",
@@ -22309,8 +22321,7 @@
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
-        "tdf-hq/docs/openapi/interactions.yaml",
-        "tdf-hq/docs/openapi/reviews.yaml"
+        "tdf-hq/docs/openapi/interactions.yaml"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -23428,7 +23439,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 648,
+      "consumerCount": 651,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -23605,6 +23616,7 @@
         "scripts/lib/openclaw-cdp.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
+        "scripts/lib/readiness_conformance.py",
         "scripts/meta-app-review-packet.mjs",
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/order-catalog-foundation-seed.mjs",
@@ -23615,8 +23627,7 @@
         "scripts/social/FanEffectsModelCases.hs",
         "scripts/social/HttpSpec.hs",
         "scripts/social/ProfileBenchmark.hs",
-        "scripts/social/SessionModelCases.hs",
-        "scripts/social/SessionSpec.hs"
+        "scripts/social/SessionModelCases.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -26774,7 +26785,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 264,
+      "consumerCount": 265,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -26913,6 +26924,7 @@
         "scripts/lib/production-release.mjs",
         "scripts/lib/readiness_conformance.py",
         "scripts/lib/requirement_declarations.py",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/merge-admission.py",
         "scripts/prepare-hetzner-release.mjs",
         "scripts/privacy-request-ledger.py",
@@ -26934,11 +26946,11 @@
         "scripts/test-music-release-api-e2e.sh",
         "scripts/test-new-specification-surfaces.py",
         "scripts/test-physical-postgres-docker.py",
-        "scripts/test-public-booking-http-concurrency.sh",
-        "scripts/test-recovery-envelope.py"
+        "scripts/test-public-booking-http-concurrency.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/generated-api-conformance.test.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/artistEnrichment.ts",
         "tdf-hq-ui/src/api/calendar.ts",
         "tdf-hq-ui/src/api/client.test.ts",
@@ -27040,7 +27052,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 622,
+      "consumerCount": 625,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -27219,6 +27231,7 @@
         "scripts/lib/openclaw-cdp.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
+        "scripts/lib/readiness_conformance.py",
         "scripts/meta-app-review-packet.mjs",
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/order-catalog-foundation-seed.mjs",
@@ -27226,8 +27239,7 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-event-raci-browser.mjs",
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
-        "scripts/social/FanEffectsModelCases.hs",
-        "scripts/social/HttpSpec.hs"
+        "scripts/social/FanEffectsModelCases.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -29526,7 +29538,7 @@
       "lines": [
         105
       ],
-      "consumerCount": 444,
+      "consumerCount": 443,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29725,6 +29737,7 @@
         "scripts/lib/music-test-database.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/mail-deliverability-monitor.py",
         "scripts/music-s3-upload.pl",
         "scripts/order-catalog-foundation-seed.mjs",
@@ -29732,14 +29745,14 @@
         "scripts/privacy-request-ledger.py",
         "scripts/process-music-release-audio.sh",
         "scripts/production-catalog-inventory.mjs",
-        "scripts/production-migrations.json",
-        "scripts/production-release.mjs"
+        "scripts/production-migrations.json"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/diagnose-instagram.mjs",
         "scripts/get-instagram-token.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/campaignAutomations.ts",
         "tdf-hq-ui/src/api/commerceOperations.test.ts",
         "tdf-hq-ui/src/api/commerceOperations.ts",
@@ -30273,7 +30286,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 622,
+      "consumerCount": 625,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -30452,6 +30465,7 @@
         "scripts/lib/openclaw-cdp.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
+        "scripts/lib/readiness_conformance.py",
         "scripts/meta-app-review-packet.mjs",
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/order-catalog-foundation-seed.mjs",
@@ -30459,8 +30473,7 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-event-raci-browser.mjs",
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
-        "scripts/social/FanEffectsModelCases.hs",
-        "scripts/social/HttpSpec.hs"
+        "scripts/social/FanEffectsModelCases.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -34231,7 +34244,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 601,
+      "consumerCount": 604,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -34407,6 +34420,7 @@
         "scripts/lib/openclaw-cdp.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
+        "scripts/lib/readiness_conformance.py",
         "scripts/meta-app-review-packet.mjs",
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/order-catalog-foundation-seed.mjs",
@@ -34416,8 +34430,7 @@
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
         "scripts/social/FanEffectsModelCases.hs",
         "scripts/social/HttpSpec.hs",
-        "scripts/social/ProfileBenchmark.hs",
-        "scripts/social/SessionModelCases.hs"
+        "scripts/social/ProfileBenchmark.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -36638,7 +36651,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 268,
+      "consumerCount": 269,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -38260,7 +38273,7 @@
       "lines": [
         16
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -38377,6 +38390,7 @@
         "scripts/interactions/test-concurrency.py",
         "scripts/lib/operations_conformance.py",
         "scripts/lib/readiness_conformance.py",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/mail-deliverability-monitor.py",
         "scripts/merge-admission.py",
         "scripts/run-music-release-worker-once.sh",
@@ -38395,6 +38409,7 @@
         "scripts/test_mail_deliverability_monitor.py"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
         "tdf-hq-ui/src/api/accountDeletion.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -38443,7 +38458,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 90,
+      "consumerCount": 91,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
@@ -38462,6 +38477,7 @@
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
         "tdf-hq/src/TDF/Artists/Promotion.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Routes/Courses.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
@@ -44886,7 +44902,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 207,
+      "consumerCount": 208,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -44921,6 +44937,7 @@
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
@@ -44936,8 +44953,7 @@
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
         "tdf-hq/src/TDF/Version.hs",
-        "tdf-hq/src/TDF/WhatsApp/History.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/src/TDF/WhatsApp/History.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -45111,7 +45127,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 207,
+      "consumerCount": 208,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -46284,6 +46300,7 @@
         "scripts/lib/production-release.mjs",
         "scripts/lib/readiness_conformance.py",
         "scripts/lib/requirement_declarations.py",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/prepare-hetzner-release.mjs",
         "scripts/privacy-request-ledger.py",
         "scripts/production-release.mjs",
@@ -46307,10 +46324,10 @@
         "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-recovery-envelope.py",
         "scripts/test-recovery-files.py",
-        "scripts/test-requirement-declarations.py",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-requirement-declarations.py"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/artistEnrichment.ts",
         "tdf-hq-ui/src/api/calendar.ts",
         "tdf-hq-ui/src/api/client.test.ts",
@@ -46665,7 +46682,7 @@
       "lines": [
         215
       ],
-      "consumerCount": 87,
+      "consumerCount": 88,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -46757,11 +46774,13 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/mail-deliverability-monitor.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-music-directory-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq/src/TDF/API/Admin.hs",
@@ -46942,7 +46961,7 @@
       "lines": [
         505
       ],
-      "consumerCount": 108,
+      "consumerCount": 109,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -47050,11 +47069,13 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/campaignAutomations.ts",
         "tdf-hq-ui/src/api/operations.test.ts",
         "tdf-hq-ui/src/api/socialInbox.test.ts",
@@ -47358,7 +47379,7 @@
       "lines": [
         891
       ],
-      "consumerCount": 49,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
         "tdf-hq/sql/2026-07-29_campaign_automation.sql",
@@ -47414,9 +47435,11 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/test-music-directory-contract.mjs"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/campaignAutomations.ts",
         "tdf-hq-ui/src/api/operations.test.ts",
         "tdf-hq-ui/src/api/socialInbox.test.ts",
@@ -47541,7 +47564,7 @@
       "lines": [
         1111
       ],
-      "consumerCount": 113,
+      "consumerCount": 114,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -47653,12 +47676,14 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/campaignAutomations.ts",
         "tdf-hq-ui/src/api/operations.test.ts",
         "tdf-hq-ui/src/api/socialInbox.test.ts",
@@ -47896,6 +47921,7 @@
         "scripts/lib/production-release.mjs",
         "scripts/lib/readiness_conformance.py",
         "scripts/lib/requirement_declarations.py",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/prepare-hetzner-release.mjs",
         "scripts/privacy-request-ledger.py",
         "scripts/production-release.mjs",
@@ -47919,10 +47945,10 @@
         "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-recovery-envelope.py",
         "scripts/test-recovery-files.py",
-        "scripts/test-requirement-declarations.py",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-requirement-declarations.py"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/artistEnrichment.ts",
         "tdf-hq-ui/src/api/calendar.ts",
         "tdf-hq-ui/src/api/client.test.ts",
@@ -50124,7 +50150,7 @@
       "lines": [
         147
       ],
-      "consumerCount": 1040,
+      "consumerCount": 1041,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -50340,6 +50366,7 @@
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/refresh-instagram-token.mjs",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -50382,8 +50409,7 @@
         "tdf-hq-ui/src/api/feedback.ts",
         "tdf-hq-ui/src/api/generated/client.test.ts",
         "tdf-hq-ui/src/api/generated/client.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/internalFeedback.ts"
+        "tdf-hq-ui/src/api/generated/types.ts"
       ],
       "decision": "security-system-registry",
       "disposition": "retain-in-code",
@@ -50842,7 +50868,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 207,
+      "consumerCount": 208,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -50877,6 +50903,7 @@
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
@@ -50892,8 +50919,7 @@
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
         "tdf-hq/src/TDF/Version.hs",
-        "tdf-hq/src/TDF/WhatsApp/History.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/src/TDF/WhatsApp/History.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -51632,7 +51658,7 @@
       "lines": [
         380
       ],
-      "consumerCount": 1020,
+      "consumerCount": 1021,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -51848,6 +51874,7 @@
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/refresh-instagram-token.mjs",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -51890,8 +51917,7 @@
         "tdf-hq-ui/src/api/feedback.ts",
         "tdf-hq-ui/src/api/generated/client.test.ts",
         "tdf-hq-ui/src/api/generated/client.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/inventory.ts"
+        "tdf-hq-ui/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -57570,7 +57596,7 @@
         198,
         213
       ],
-      "consumerCount": 281,
+      "consumerCount": 282,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -57737,13 +57763,14 @@
         "scripts/lib/openclaw-cdp.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
-        "scripts/mail-deliverability-monitor.py",
-        "scripts/merge-admission.py"
+        "scripts/lib/whatsapp_consent_conformance.py",
+        "scripts/mail-deliverability-monitor.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/auth.ts",
@@ -57821,7 +57848,7 @@
       "lines": [
         257
       ],
-      "consumerCount": 53,
+      "consumerCount": 54,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_apply.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -57838,6 +57865,7 @@
         "tdf-hq/src/TDF/API/Merch.hs",
         "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs",
         "tdf-hq/src/TDF/ModelsExtra.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
@@ -57923,7 +57951,7 @@
       "lines": [
         1052
       ],
-      "consumerCount": 310,
+      "consumerCount": 312,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/interactions.yaml",
@@ -58101,6 +58129,7 @@
         "scripts/lib/ui-static-audit.mjs",
         "scripts/lib/ux-quality-audit.mjs",
         "scripts/lib/verification-evidence.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/merge-admission.py",
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/operations-load-test.mjs",
@@ -58108,13 +58137,13 @@
         "scripts/privacy-request-ledger.py",
         "scripts/production-release.mjs",
         "scripts/social/FanEffectsBenchmark.hs",
-        "scripts/social/LegacyWriteBenchmark.hs",
-        "scripts/social/ProfileBenchmark.hs"
+        "scripts/social/LegacyWriteBenchmark.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/engineers.ts",
         "tdf-hq-ui/src/api/fans.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -59136,7 +59165,7 @@
         102,
         111
       ],
-      "consumerCount": 484,
+      "consumerCount": 485,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -60630,7 +60659,7 @@
         1401,
         1413
       ],
-      "consumerCount": 73,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -60655,6 +60684,7 @@
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -60766,7 +60796,7 @@
         1263,
         1310
       ],
-      "consumerCount": 73,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -60791,6 +60821,7 @@
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -60898,7 +60929,7 @@
       "lines": [
         825
       ],
-      "consumerCount": 73,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -60923,6 +60954,7 @@
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -61029,7 +61061,7 @@
         889,
         1355
       ],
-      "consumerCount": 73,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -61054,6 +61086,7 @@
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -61159,7 +61192,7 @@
       "lines": [
         1075
       ],
-      "consumerCount": 73,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -61184,6 +61217,7 @@
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -63024,7 +63058,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1025,
+      "consumerCount": 1026,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -63240,6 +63274,7 @@
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/refresh-instagram-token.mjs",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -63282,8 +63317,7 @@
         "tdf-hq-ui/src/api/feedback.ts",
         "tdf-hq-ui/src/api/generated/client.test.ts",
         "tdf-hq-ui/src/api/generated/client.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/inventory.ts"
+        "tdf-hq-ui/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -64655,7 +64689,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 481,
+      "consumerCount": 479,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -64946,7 +64980,7 @@
         238,
         479
       ],
-      "consumerCount": 135,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -65068,6 +65102,7 @@
         "scripts/lib/identity-inventory.sql",
         "scripts/lib/identity-reconciliation.mjs",
         "scripts/lib/operations_conformance.py",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/privacy-request-ledger.py",
         "scripts/process-music-release-audio.sh",
         "scripts/test-booking-conformance.py",
@@ -65077,6 +65112,7 @@
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/ads.ts",
         "tdf-hq-ui/src/api/campaignAutomations.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -65886,7 +65922,7 @@
       "lines": [
         47
       ],
-      "consumerCount": 23,
+      "consumerCount": 24,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-05_refactor_students_teachers_to_parties.sql",
         "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
@@ -65896,6 +65932,7 @@
         "tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/LiveSessions.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/EventResearch.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
@@ -66091,7 +66128,7 @@
       "lines": [
         1143
       ],
-      "consumerCount": 23,
+      "consumerCount": 24,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-05_refactor_students_teachers_to_parties.sql",
         "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
@@ -66101,6 +66138,7 @@
         "tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/LiveSessions.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/EventResearch.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
@@ -66396,7 +66434,7 @@
       "lines": [
         145
       ],
-      "consumerCount": 63,
+      "consumerCount": 65,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -66459,6 +66497,8 @@
         ".github/workflows/merge-admission.yml",
         "scripts/__tests__/mobile-distribution-expiry.test.mjs",
         "scripts/lib/operations_conformance.py",
+        "scripts/lib/readiness_conformance.py",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/mail-deliverability-monitor.py",
         "scripts/merge-admission.py",
         "scripts/run-music-release-worker-once.sh",
@@ -66469,6 +66509,7 @@
         "scripts/test_mail_deliverability_monitor.py"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/serviceStorefront.test.ts",
@@ -67719,7 +67760,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 622,
+      "consumerCount": 625,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -67898,6 +67939,7 @@
         "scripts/lib/openclaw-cdp.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
+        "scripts/lib/readiness_conformance.py",
         "scripts/meta-app-review-packet.mjs",
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/order-catalog-foundation-seed.mjs",
@@ -67905,8 +67947,7 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-event-raci-browser.mjs",
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
-        "scripts/social/FanEffectsModelCases.hs",
-        "scripts/social/HttpSpec.hs"
+        "scripts/social/FanEffectsModelCases.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -72238,7 +72279,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 86,
+      "consumerCount": 87,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -72330,10 +72371,12 @@
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-music-directory-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq/src/TDF/API/Admin.hs",
@@ -74595,6 +74638,7 @@
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
         "scripts/fetch-ddex-ern432-schema.sh",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/test-music-ddex-credits.sh",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/api/auth.ts",
@@ -74641,8 +74685,7 @@
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-18_ddex_partner_legacy_compatibility.sql",
-        "tdf-hq/src/TDF/API/Catalog.hs"
+        "tdf-hq/sql/2026-08-18_ddex_partner_legacy_compatibility.sql"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -75109,6 +75152,7 @@
         "scripts/build-ddex-ern432-package.sh",
         "scripts/fetch-ddex-ern432-schema.sh",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/test-music-ddex-credits.sh",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/api/auth.ts",
@@ -75154,8 +75198,7 @@
         "tdf-hq/sql/2026-05-28_party_stripe_customer.sql",
         "tdf-hq/sql/2026-07-07_marketplace_stripe_checkout.sql",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql"
+        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -79107,7 +79150,7 @@
       "lines": [
         13780
       ],
-      "consumerCount": 1019,
+      "consumerCount": 1020,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -79323,6 +79366,7 @@
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/refresh-instagram-token.mjs",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -79365,8 +79409,7 @@
         "tdf-hq-ui/src/api/feedback.ts",
         "tdf-hq-ui/src/api/generated/client.test.ts",
         "tdf-hq-ui/src/api/generated/client.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/inventory.ts"
+        "tdf-hq-ui/src/api/generated/types.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
@@ -80104,7 +80147,7 @@
       "lines": [
         14182
       ],
-      "consumerCount": 1019,
+      "consumerCount": 1020,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -80320,6 +80363,7 @@
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/refresh-instagram-token.mjs",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -80362,8 +80406,7 @@
         "tdf-hq-ui/src/api/feedback.ts",
         "tdf-hq-ui/src/api/generated/client.test.ts",
         "tdf-hq-ui/src/api/generated/client.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/inventory.ts"
+        "tdf-hq-ui/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -80457,7 +80500,7 @@
       "lines": [
         15136
       ],
-      "consumerCount": 524,
+      "consumerCount": 525,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -80734,7 +80777,7 @@
       "lines": [
         15151
       ],
-      "consumerCount": 488,
+      "consumerCount": 489,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -81214,7 +81257,7 @@
       "lines": [
         15197
       ],
-      "consumerCount": 509,
+      "consumerCount": 510,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -82138,7 +82181,7 @@
         16643,
         16695
       ],
-      "consumerCount": 1018,
+      "consumerCount": 1019,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -82354,6 +82397,7 @@
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/refresh-instagram-token.mjs",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -82396,8 +82440,7 @@
         "tdf-hq-ui/src/api/feedback.ts",
         "tdf-hq-ui/src/api/generated/client.test.ts",
         "tdf-hq-ui/src/api/generated/client.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/inventory.ts"
+        "tdf-hq-ui/src/api/generated/types.ts"
       ],
       "decision": "governed-reference-data",
       "disposition": "persisted-reference-with-parser-adapter-mirror",
@@ -84261,7 +84304,7 @@
       "lines": [
         18178
       ],
-      "consumerCount": 1025,
+      "consumerCount": 1026,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -84477,6 +84520,7 @@
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/refresh-instagram-token.mjs",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -84519,8 +84563,7 @@
         "tdf-hq-ui/src/api/feedback.ts",
         "tdf-hq-ui/src/api/generated/client.test.ts",
         "tdf-hq-ui/src/api/generated/client.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/inventory.ts"
+        "tdf-hq-ui/src/api/generated/types.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -90925,7 +90968,7 @@
       "lines": [
         300
       ],
-      "consumerCount": 109,
+      "consumerCount": 110,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -91033,11 +91076,13 @@
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/catalog-list-audit.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/campaignAutomations.ts",
         "tdf-hq-ui/src/api/operations.test.ts",
         "tdf-hq-ui/src/api/socialInbox.test.ts",
@@ -102517,7 +102562,7 @@
       "lines": [
         749
       ],
-      "consumerCount": 84,
+      "consumerCount": 85,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_backfill_rollback.sql",
         "tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql",
@@ -102601,6 +102646,7 @@
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/production-release.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/test-community-search.py",
         "scripts/test-directory-artist-listings.sh",
         "scripts/test-directory-event-visibility-migration.sh",
@@ -102611,6 +102657,7 @@
         "scripts/test_mail_deliverability_monitor.py"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/directory.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq/src/TDF/API/Internships.hs",
@@ -102652,7 +102699,7 @@
         797,
         1036
       ],
-      "consumerCount": 135,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -102761,6 +102808,7 @@
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/production-release.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-music-release-worker-once.sh",
         "scripts/sync-artist-shows-to-social-events.py",
@@ -102780,6 +102828,7 @@
         "scripts/test-verified-experience-reviews-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/interactions.test.ts",
         "tdf-hq-ui/src/api/reviews.test.ts",
@@ -102989,7 +103038,7 @@
       "lines": [
         816
       ],
-      "consumerCount": 99,
+      "consumerCount": 100,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -103087,6 +103136,7 @@
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/sri-invoice.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/production-catalog-inventory.mjs",
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
@@ -103098,6 +103148,7 @@
         "scripts/test-notification-navigation-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/partySelector.ts",
@@ -103666,7 +103717,7 @@
       "lines": [
         871
       ],
-      "consumerCount": 34,
+      "consumerCount": 35,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-07-07_marketplace_stripe_checkout.sql",
@@ -103681,6 +103732,7 @@
         "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
         "tdf-hq/src/TDF/Operations/Model.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Reviews.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
@@ -104131,7 +104183,7 @@
       "lines": [
         905
       ],
-      "consumerCount": 144,
+      "consumerCount": 145,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -104242,6 +104294,7 @@
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/production-release.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-music-release-worker-once.sh",
         "scripts/sync-artist-shows-to-social-events.py",
@@ -104263,6 +104316,7 @@
         "scripts/test_mail_deliverability_monitor.py"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/directory.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/interactions.test.ts",
@@ -106281,7 +106335,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 144,
+      "consumerCount": 145,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -106392,6 +106446,7 @@
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/production-release.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-music-release-worker-once.sh",
         "scripts/sync-artist-shows-to-social-events.py",
@@ -106413,6 +106468,7 @@
         "scripts/test_mail_deliverability_monitor.py"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/directory.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/interactions.test.ts",
@@ -133147,7 +133203,7 @@
       "lines": [
         208
       ],
-      "consumerCount": 133,
+      "consumerCount": 134,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -133193,12 +133249,12 @@
         "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs",
         "tdf-hq/src/TDF/Operations/Model.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Seed.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
-        "tdf-hq/src/TDF/Server/Reviews.hs",
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/Reviews.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -139436,7 +139492,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 24,
+      "consumerCount": 25,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -139445,6 +139501,7 @@
         "tdf-hq/src/TDF/API/Types.hs",
         "tdf-hq/src/TDF/Catalog/Models.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Seed.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -139506,7 +139563,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 33,
+      "consumerCount": 34,
       "backendConsumers": [
         "tdf-hq/src/TDF/Catalog/Types.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
@@ -139518,6 +139575,7 @@
         "tdf-hq/src/TDF/DDEX/ERN/V432/Parse.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/Render.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/Types.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
@@ -139591,7 +139649,7 @@
       "lines": [
         76
       ],
-      "consumerCount": 24,
+      "consumerCount": 25,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -139599,6 +139657,7 @@
         "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
         "tdf-hq/sql/init_schema.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Trials/Server.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
@@ -141494,7 +141553,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MetaChannel",
-      "line": 2528,
+      "line": 2530,
       "values": [
         "MetaInstagram",
         "MetaFacebook"
@@ -141502,7 +141561,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        2528
+        2530
       ],
       "consumerCount": 4,
       "backendConsumers": [
@@ -141536,7 +141595,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "calendarEventStatuses",
-      "line": 4777,
+      "line": 4779,
       "values": [
         "confirmed",
         "tentative",
@@ -141545,7 +141604,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        4777
+        4779
       ],
       "consumerCount": 56,
       "backendConsumers": [
@@ -141638,7 +141697,7 @@
       "domain": "academy-courses",
       "kind": "haskell-list",
       "name": "courseFollowUpTypeOptions",
-      "line": 6119,
+      "line": 6121,
       "values": [
         "note",
         "call",
@@ -141651,9 +141710,9 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        6119
+        6121
       ],
-      "consumerCount": 113,
+      "consumerCount": 114,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -141764,12 +141823,14 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/campaignAutomations.ts",
         "tdf-hq-ui/src/api/operations.test.ts",
         "tdf-hq-ui/src/api/socialInbox.test.ts",
@@ -141804,7 +141865,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MarketplaceCartKind",
-      "line": 16680,
+      "line": 16682,
       "values": [
         "MarketplaceCartSale",
         "MarketplaceCartRental"
@@ -141812,7 +141873,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        16680
+        16682
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -145707,7 +145768,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 740,
+      "line": 739,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -145719,7 +145780,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        740
+        739
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -146539,7 +146600,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 516,
+      "consumerCount": 515,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -147345,7 +147406,7 @@
       "lines": [
         37
       ],
-      "consumerCount": 126,
+      "consumerCount": 128,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -147453,6 +147514,8 @@
         "scripts/__tests__/operations-worker-tick-postgres.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/lib/operations_conformance.py",
+        "scripts/lib/readiness_conformance.py",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/mail-deliverability-monitor.py",
         "scripts/merge-admission.py",
         "scripts/operations-load-test.mjs",
@@ -147470,6 +147533,7 @@
         "scripts/test_mail_deliverability_monitor.py"
       ],
       "apiAndIntegrationConsumers": [
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
         "tdf-hq-ui/src/api/eventOperations.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -148315,7 +148379,7 @@
       "lines": [
         435
       ],
-      "consumerCount": 212,
+      "consumerCount": 213,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -148345,6 +148409,7 @@
         "tdf-hq/src/TDF/Models/SocialEventsModels.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
         "tdf-hq/src/TDF/Profiles/Artist.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Reputation/Worker.hs",
         "tdf-hq/src/TDF/Routes/Courses.hs",
         "tdf-hq/src/TDF/Routes/DomoQuotes.hs",
@@ -148365,8 +148430,7 @@
         "tdf-hq/src/TDF/ServerAdmin.hs",
         "tdf-hq/src/TDF/ServerFanClub.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
-        "tdf-hq/src/TDF/Ticketing/Admission.hs",
-        "tdf-hq/src/TDF/Ticketing/Confirmation.hs"
+        "tdf-hq/src/TDF/Ticketing/Admission.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
@@ -148529,7 +148593,7 @@
       "lines": [
         1197
       ],
-      "consumerCount": 1018,
+      "consumerCount": 1019,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -148745,6 +148809,7 @@
         "scripts/instagram-openclaw-cdp.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/refresh-instagram-token.mjs",
         "scripts/test-music-ddex-package.mjs",
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -148787,8 +148852,7 @@
         "tdf-hq-ui/src/api/feedback.ts",
         "tdf-hq-ui/src/api/generated/client.test.ts",
         "tdf-hq-ui/src/api/generated/client.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/inventory.ts"
+        "tdf-hq-ui/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -154383,7 +154447,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 80,
+      "consumerCount": 81,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -154466,6 +154530,7 @@
         "scripts/inspect-payment-staging.mjs",
         "scripts/lib/continuous-improvement-loop.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-booking-conformance.py",
         "scripts/test-hetzner-restore.py",
@@ -154475,6 +154540,7 @@
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
+        "scripts/lib/whatsapp_consent_conformance.py",
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq/src/TDF/DDEX/Detect.hs",
@@ -154510,7 +154576,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 207,
+      "consumerCount": 208,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -154545,6 +154611,7 @@
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
@@ -154560,8 +154627,7 @@
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
         "tdf-hq/src/TDF/Version.hs",
-        "tdf-hq/src/TDF/WhatsApp/History.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/src/TDF/WhatsApp/History.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
