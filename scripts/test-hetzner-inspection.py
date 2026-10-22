@@ -53,10 +53,47 @@ def discovered_boolean_controls(text):
     # A literal lookup wrapped in a boolean parser need not follow a suffix
     # convention. Permit line wrapping, but do not cross a blank paragraph.
     names.update(re.findall(r'\b(?:parseBool\w*|readBool\w*)\b(?:(?!\n\s*\n).)*?\blookupEnv\s+"([A-Z][A-Z0-9_]*)"', text, re.S))
+    # Association-list lookups from getEnvironment can use boolean membership
+    # instead of a parser. Require every member to be a literal boolean spelling,
+    # so APP_ENV/development lists do not become boolean configuration fields.
+    for name, values in re.findall(
+            r'\blookup\w*\s+"([A-Z][A-Z0-9_]*)"(?:\s+[a-zA-Z_]\w*)?\s*`elem`\s*\[([^]]*)\]', text):
+        members = [value.strip() for value in values.split(',')]
+        if all(re.fullmatch(r'Just\s+"(?:true|false|1|0|yes|no|on|off)"', value, re.I)
+               for value in members):
+            names.add(name)
     return names
 
 
 class Boundaries(unittest.TestCase):
+    def test_environment_list_boolean_membership_is_discovered_without_suffix(self):
+        for text in [
+            'lookupNormalized "SYNTHETIC_PERSONA_SWITCH" `elem` [Just "1", Just "true", Just "yes"]',
+            'lookup "SYNTHETIC_PERSONA_SWITCH" env\n  `elem` [Just "yes", Just "no"]',
+        ]:
+            with self.subTest(text=text):
+                self.assertEqual(discovered_boolean_controls(text), {'SYNTHETIC_PERSONA_SWITCH'})
+        self.assertEqual(discovered_boolean_controls(
+            'lookupNormalized "APP_ENV" `elem` [Just "development", Just "test"]'), set())
+        self.assertEqual(discovered_boolean_controls(
+            'lookupNormalized "APP_ENV" `elem` [Just "true", Just "development"]'), set())
+        self.assertNotIn('SYNTHETIC_PERSONA_SWITCH', module.BOOLEAN_KEYS)
+
+    def test_synthetic_persona_switch_reports_raw_presence_and_absence_without_password(self):
+        key = 'TDF_ENABLE_SYNTHETIC_PERSONAS'
+        value = container(); value['Config']['Env'] = ['APP_ENV=production']
+        self.assertIn(key, module.summarize_container('api', value)['missingBooleanConfiguration'])
+        for raw in ['1', 'true', 'yes', '0', 'false', 'no', '', ' true ']:
+            with self.subTest(raw=raw):
+                probe = copy.deepcopy(value)
+                probe['Config']['Env'] += [key + '=' + raw, 'TDF_PERSONA_TEST_PASSWORD=' + SECRET]
+                result = module.summarize_container('api', probe)
+                self.assertEqual(result['booleanConfiguration'], {key: raw})
+                self.assertNotIn(key, result['missingBooleanConfiguration'])
+                self.assertNotIn(SECRET, json.dumps(result))
+        value['Config']['Env'].append(key + '=' + SECRET)
+        with self.assertRaises(ValueError): module.summarize_container('api', value)
+
     def test_boolean_parser_lookup_is_discovered_without_a_suffix(self):
         for text in ['flag <- fmap (maybe False parseBoolean) (lookupEnv "SYNTHETIC_TRUST_HEADER")',
                      'flag <- fmap (maybe False parseBoolean)\n  (liftIO (lookupEnv "SYNTHETIC_TRUST_HEADER"))']:

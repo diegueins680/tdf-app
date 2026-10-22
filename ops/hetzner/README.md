@@ -45,10 +45,12 @@ unknown effective defaults. A successful observation is **not release readiness*
 
 The collector reports both presence and absence for the known backend boolean
 controls, including invoice/notification/reconciliation workers, privacy,
-SMTP TLS, the trusted edge-country header control and both CORS boolean alias sets. The repository gate conservatively
+SMTP TLS, the synthetic-persona seed switch, the trusted edge-country header control
+and both CORS boolean alias sets. The repository gate conservatively
 discovers literal `*_ENABLED`/`*_AUTO_PUBLISH` names, calls to
 `validateStartupBooleanFlag`, literal `lookupEnv` calls wrapped in `parseBool*`/
-`readBool*` within the same paragraph, and the two CORS alias lists in backend source;
+`readBool*` within the same paragraph, literal association-list lookups compared
+against an all-boolean `Just` membership list, and the two CORS alias lists in backend source;
 a newly discovered control must enter the collector's absence register.
 The preparation step accepts the same bounded boolean spellings as the collector
 and preserves their raw values. Destructive schema flags still require an explicit
