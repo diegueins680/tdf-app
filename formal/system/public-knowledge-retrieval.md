@@ -224,7 +224,7 @@ Four new PostgreSQL cases fail against the previous Store and pass after repair:
 cohort ceases to be returned after its first session falls below the threshold;
 and cached bare/configured aliases do not expose their stored fields. The first
 case includes a later future session that must not override the earlier one and
-admits the exact threshold day. All18 database examples pass on a fresh complete
+admits the exact threshold day. All 18 database examples pass on a fresh complete
 211-migration synthetic schema. Eight pure-policy examples include the existing
 200 generated checks and explicit cohort/alias/lead-boundary cases. Earlier
 14-case receipts retain their original source identities; they are not relabeled

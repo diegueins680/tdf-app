@@ -3049,7 +3049,8 @@
         "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
         "tdf-hq/src/TDF/PublicUrl.hs",
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Trials/Server.hs"
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Courses/Production.hs"
       ],
       "tests": [
         "scripts/test-booking-conformance.py",
@@ -3075,7 +3076,7 @@
       "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
       "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.",
       "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with four named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities.",
+      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with four named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits.",
       "evidence": "Historical disclosure reproduction is retained separately; exact candidate model/HTTP/CI receipts are required. New coverage must not inherit a historical green result."
     },
     {
@@ -9932,7 +9933,8 @@
         "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
         "tdf-hq/src/TDF/PublicUrl.hs",
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Trials/Server.hs"
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Courses/Production.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
@@ -9959,7 +9961,7 @@
       "authority": "Explicit user decision 2026-10-13; AUTHORITY-RAG-PUBLIC-INDEX-20261013",
       "property": "NoLegacyAfterCleanup, NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex (public subset), EmptySkipsProvider and TypeOK in PublicKnowledgeIndex.",
       "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Pinned TLC positive model and four named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities.",
+      "verification": "Pinned TLC positive model and four named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits.",
       "evidence": "Candidate-specific test and model receipts must be recorded; historical passes do not establish current conformance."
     },
     {
@@ -11524,7 +11526,8 @@
     "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
     "tdf-hq/src/TDF/CoursePhone.hs": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
-    "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "d0b5ec925ed1f84ab444b76de540cce3c7b8f331793ad8ac263b9f6bde66750b",
+    "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
+    "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "6f5b2fc1b7bc41a46b78ebad3477ae918b837834f490cc29b42a4876ea1b45e4",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
@@ -11552,11 +11555,11 @@
     "tdf-hq/src/TDF/Operations/Worker.hs": "45363018da50e080a6f8853ecbb32c5dfb5818bd4a16b5a42cd5527eeb2635ba",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
     "tdf-hq/src/TDF/PublicUrl.hs": "f6d8765fca93de1e02416ce6aa5eab9712efb191fc5565e4b66ff22e2926ad4d",
-    "tdf-hq/src/TDF/RagStore.hs": "62b5b075b245e207e8a99ea4ad4e35fe0b3249133f6fa1babe58221872751f56",
+    "tdf-hq/src/TDF/RagStore.hs": "bf825a5a2b4c3880ef1aa1b4d4c8a30e49f314396ecfd0224b074428a39c28b7",
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "afa5ccb6af024b8e5f626dbba60214438e54997067f11549cafe9a6c820bf64a",
+    "tdf-hq/src/TDF/Server.hs": "b1c687b40ba9a09dc3c824ddc16b493d333c48e6224b3194f821d7d52e8637c2",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
@@ -11613,7 +11616,7 @@
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
     "tdf-hq/test/TDF/CorsSpec.hs": "8663de653f6eb0ba12b8889b2645a537fc6ec0f6dad951cb340f674aa3838357",
     "tdf-hq/test/TDF/CourseIdentitySpec.hs": "b2a85128b237876bf57fcf54a8e1d0047032bf68f3591ed6bb5203df28f10203",
-    "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs": "993f54d1da688de161ccda605dc1cac636a2ddcbf8b9ccf034c7c7dc379bf41f",
+    "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs": "533ad9b5e12f39fb93b02c10c0c4282f8e2f3d4a33bf70f937ca7e61b9c5865d",
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
@@ -11637,7 +11640,7 @@
     "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": "3a3aeb59ce2c378361aa9a9ff9787deb3eb51ce164643b61ae37b2c575b3ea39",
     "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
-    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "47952cc4bf61631da62c49ace50ee890c4705f717dda672d148ee52ed0b37100",
+    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "2a03ca6e979941842dbf947fddf769b648a626eff55e8c922446f5deb53a6ae8",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
@@ -14151,6 +14154,16 @@
       },
       {
         "requirement": "COURSE-SUBJECT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-RAG-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Courses/Production.hs": [
+      {
+        "requirement": "PRIV-RAG-001",
         "relationship": "implementation"
       },
       {
@@ -38078,12 +38091,21 @@
       "path": "tdf-hq/src/TDF/Courses/Production.hs",
       "sha256": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-RAG-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PRIV-RAG-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6585884b25e4a8d9",
       "path": "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
-      "sha256": "d0b5ec925ed1f84ab444b76de540cce3c7b8f331793ad8ac263b9f6bde66750b",
+      "sha256": "6f5b2fc1b7bc41a46b78ebad3477ae918b837834f490cc29b42a4876ea1b45e4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38747,7 +38769,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "62b5b075b245e207e8a99ea4ad4e35fe0b3249133f6fa1babe58221872751f56",
+      "sha256": "bf825a5a2b4c3880ef1aa1b4d4c8a30e49f314396ecfd0224b074428a39c28b7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38847,7 +38869,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "afa5ccb6af024b8e5f626dbba60214438e54997067f11549cafe9a6c820bf64a",
+      "sha256": "b1c687b40ba9a09dc3c824ddc16b493d333c48e6224b3194f821d7d52e8637c2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40187,7 +40209,7 @@
     {
       "id": "SURFACE-0ca3fcf522edb0bf",
       "path": "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs",
-      "sha256": "993f54d1da688de161ccda605dc1cac636a2ddcbf8b9ccf034c7c7dc379bf41f",
+      "sha256": "533ad9b5e12f39fb93b02c10c0c4282f8e2f3d4a33bf70f937ca7e61b9c5865d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40546,7 +40568,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "47952cc4bf61631da62c49ace50ee890c4705f717dda672d148ee52ed0b37100",
+      "sha256": "2a03ca6e979941842dbf947fddf769b648a626eff55e8c922446f5deb53a6ae8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45969,7 +45991,6 @@
     "SURFACE-95011c3eb812e7fd",
     "SURFACE-de7641689e63ad01",
     "SURFACE-2bac4bb831675dd6",
-    "SURFACE-b5ed9df91b31bc61",
     "SURFACE-7774c01ac1644990",
     "SURFACE-980d517db26f5cab",
     "SURFACE-b9f1acd9b5c4a2a3",
@@ -47584,7 +47605,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a60413bcada4c2f8730500d289d8c3562653d4783720aa5ec3b190a0fc6c53c0",
+      "sourceSha256": "cccf131360b5d150ffa8c7e01914c5588a3f7d47af8714b380a275dd74453d2c",
       "definition": {
         "states": [
           "absent",
@@ -47614,7 +47635,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a60413bcada4c2f8730500d289d8c3562653d4783720aa5ec3b190a0fc6c53c0",
+      "sourceSha256": "cccf131360b5d150ffa8c7e01914c5588a3f7d47af8714b380a275dd74453d2c",
       "definition": {
         "export": [
           "queued",
