@@ -911,3 +911,12 @@ snapshots and fails closed on historical conflicts. Keep this guard and its inde
 when rolling application code back; removing it would restore the consent bug.
 Previous migration bytes remain unchanged. This does not authorize rewriting
 historical snapshots or applying the migration to production.
+
+The additive `2026-10-22_checkout_terms_history_append_only` migration blocks
+UPDATE/DELETE row mutations and TRUNCATE statements on both archive tables,
+while leaving snapshot INSERTs available. The history model now retains an
+independent `disclosed` observation; erasing or rewriting the stored archive
+cannot erase the invariant. Three separate mutation configurations require
+append-only counterexamples. Six selective PostgreSQL guard-removal controls
+exercise the two tables and three operations. These bounds do not prove role/DDL
+security, retention correctness or full checkout-handler refinement.

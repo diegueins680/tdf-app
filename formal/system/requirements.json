@@ -9584,7 +9584,7 @@
       "concurrency": "Policy is re-read at checkout; a concurrent policy change surfaces as 409 rather than binding stale terms. Terms-identity migration locks both policy tables before preflight and retains the locks through atomic trigger installation; concurrent writers cannot introduce conflicting history in that interval.",
       "idempotency": "Accepted version is validated before the existing idempotent hold logic; replays with the same version behave as before.",
       "failure": "Missing ticket acceptance returns 400; stale version returns 409; clients reload the policy and clear acceptance.",
-      "recovery": "Buyer reviews the new terms and accepts again.",
+      "recovery": "Buyer reviews the new terms and accepts again. Retain append-only history guards during application rollback; this repair grants no history deletion or retention authorization.",
       "observability": "Haskell decode specs, web/mobile unit tests for display, gating and version binding.",
       "implementation": [
         "tdf-hq/src/TDF/Routes/Courses.hs",
@@ -9605,7 +9605,8 @@
         "tdf-mobile/src/types/index.ts",
         "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql",
         "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql",
-        "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql"
+        "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql",
+        "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
@@ -9628,9 +9629,12 @@
         "formal/event-operations/TermsIdentityUpgradeUnchecked.cfg",
         "formal/event-operations/TermsIdentityHistory.tla",
         "formal/event-operations/TermsIdentityHistory.cfg",
-        "formal/event-operations/TermsIdentityHistoryLiveOnly.cfg"
+        "formal/event-operations/TermsIdentityHistoryLiveOnly.cfg",
+        "formal/event-operations/TermsIdentityHistoryDelete.cfg",
+        "formal/event-operations/TermsIdentityHistoryUpdate.cfg",
+        "formal/event-operations/TermsIdentityHistoryTruncate.cfg"
       ],
-      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required. Database test of the terms-version identity triggers (scripts/test-checkout-policy-terms-identity-migration.sh). Scope-only course/event reassignment is checked against destination terms; matching and unused destination versions remain permitted. Independent guard-removal controls reproduce conflicting reassignments for each table. A controlled PostgreSQL barrier witnesses a conflicting writer after preflight and before trigger DDL for each table; the original migration admits both texts, while the fenced migration blocks and then rejects the writer. TermsIdentityUpgrade checks the finite two-scope upgrade boundary with three expected counterexamples; this does not prove whole checkout consent, arbitrary schedules or SQL refinement. Historical policy snapshots also fence version reuse after deleting the last live policy or editing it in place. Full-schema SQL checks cover course and event history, identical replay and a distinct new version. Independent old-guard controls admit the forbidden reuse; conflicting historical preflight controls fail closed. The finite history model covers two scopes, one version and two texts, not all production schedules.",
+      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required. Database test of the terms-version identity triggers (scripts/test-checkout-policy-terms-identity-migration.sh). Scope-only course/event reassignment is checked against destination terms; matching and unused destination versions remain permitted. Independent guard-removal controls reproduce conflicting reassignments for each table. A controlled PostgreSQL barrier witnesses a conflicting writer after preflight and before trigger DDL for each table; the original migration admits both texts, while the fenced migration blocks and then rejects the writer. TermsIdentityUpgrade checks the finite two-scope upgrade boundary with three expected counterexamples; this does not prove whole checkout consent, arbitrary schedules or SQL refinement. Historical policy snapshots also fence version reuse after deleting the last live policy or editing it in place. Full-schema SQL checks cover course and event history, identical replay and a distinct new version. Independent old-guard controls admit the forbidden reuse; conflicting historical preflight controls fail closed. The finite history model covers two scopes, one version and two texts, not all production schedules. Both retained policy-history tables also reject UPDATE, DELETE and TRUNCATE while continuing to append legitimate snapshots. Six independent full-schema regressions expose the missing guards; six selective guard-removal controls require the named rejection and exact guard restoration. The finite model retains independent disclosed text so archive erasure cannot erase the invariant, with separate delete/update/truncate counterexamples.",
       "evidence": "Exact-revision CI receipt required before claiming conformance.",
       "status": "specified and implemented",
       "historicalStatus": "new",

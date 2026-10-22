@@ -1100,6 +1100,11 @@
       "id": "2026-10-16_ledger_entry_write_fence",
       "path": "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
       "introducedBy": "493d40252f48643a14ce47c5328a13844f3b837f"
+    },
+    {
+      "id": "2026-10-22_checkout_terms_history_append_only",
+      "path": "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql",
+      "introducedBy": "5f32d4054a35bc76e7505ed4f83f1b6480130d25"
     }
   ]
 }
