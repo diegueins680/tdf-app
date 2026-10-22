@@ -32,12 +32,12 @@ import           Data.Int               (Int64)
 import           Data.List              (foldl')
 import qualified Data.IntMap.Strict     as IntMap
 import qualified Data.Map.Strict        as Map
-import           Data.Maybe             (catMaybes)
+import           Data.Maybe             (catMaybes, mapMaybe)
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           Data.Time              (UTCTime, diffUTCTime, getCurrentTime)
-import           Database.Persist       (Entity(..), Key, SelectOpt(..), getEntity, selectList)
+import           Database.Persist       (Entity(..), Key, getEntity)
 import           Database.Persist.Sql   (PersistValue(..), Single(..), SqlPersistT, toSqlKey, rawExecute, rawSql, runSqlPool)
 import           GHC.Generics           (Generic)
 import           Network.HTTP.Client    (Request(..), Response, httpLbs, parseRequest, responseBody, responseStatus, RequestBody(..))
@@ -48,6 +48,7 @@ import           Text.Read              (readMaybe)
 
 import           TDF.Config             (AppConfig(..), openAiEmbedDimensions, ragEmbeddingDim)
 import           TDF.DB                 (ConnectionPool, sharedTlsManager)
+import qualified TDF.Courses.PublicMetadata as CoursePublic
 import qualified TDF.Trials.Models      as Trials
 
 -- Only a course can become a document for the customer-facing embedding index.
@@ -189,12 +190,17 @@ getRagIndexStats pool = do
 
 buildPublicCourseDocuments :: SqlPersistT IO [PublicCourseDocument]
 buildPublicCourseDocuments = do
-  courses <- selectList [] [Desc Trials.CourseUpdatedAt, LimitTo 50]
-  pure (map courseToDoc courses)
+  -- Filter before the limit: unreachable legacy rows must neither be disclosed
+  -- nor crowd eligible courses out of the newest public corpus.
+  courses <- rawSql
+    "SELECT ?? FROM course WHERE slug COLLATE \"C\" ~ '^[a-z0-9-]{1,96}$'\
+    \ AND slug COLLATE \"C\" ~ '[a-z0-9]' ORDER BY updated_at DESC LIMIT 50" []
+  pure (mapMaybe courseToDoc courses)
 
-courseToDoc :: Entity Trials.Course -> PublicCourseDocument
-courseToDoc (Entity _ c) =
-  PublicCourseDocument
+courseToDoc :: Entity Trials.Course -> Maybe PublicCourseDocument
+courseToDoc (Entity _ c)
+  | not (CoursePublic.isCanonicalCourseSlug (Trials.courseSlug c)) = Nothing
+  | otherwise = Just PublicCourseDocument
     { courseDocumentSlug = Trials.courseSlug c
     , courseDocumentContent = T.intercalate " · " (catMaybes
         [ Just ("Curso: " <> Trials.courseTitle c)
@@ -206,14 +212,18 @@ courseToDoc (Entity _ c) =
         , ("Inicio: " <>) <$> (formatStartHour <$> Trials.courseSessionStartHour c)
         , ("Duración sesión: " <>) <$> (formatHours <$> Trials.courseSessionDurationHours c)
         , ("Ubicación: " <>) <$> nonEmpty (Trials.courseLocationLabel c)
-        , ("Mapa: " <>) <$> nonEmpty (Trials.courseLocationMapUrl c)
-        , ("WhatsApp: " <>) <$> nonEmpty (Trials.courseWhatsappCtaUrl c)
-        , ("Landing: " <>) <$> nonEmpty (Trials.courseLandingUrl c)
+        , ("Mapa: " <>) <$> CoursePublic.sanitizeStoredCoursePublicUrl
+            "locationMapUrl" (Trials.courseLocationMapUrl c)
+        , ("WhatsApp: " <>) <$> CoursePublic.sanitizeStoredCoursePublicUrl
+            "whatsappCtaUrl" (Trials.courseWhatsappCtaUrl c)
+        , ("Landing: " <>) <$> CoursePublic.sanitizeStoredCoursePublicUrl
+            "landingUrl" (Trials.courseLandingUrl c)
         , ("DAWs: " <>) <$> nonEmptyList (Trials.courseDaws c)
         , ("Incluye: " <>) <$> nonEmptyList (Trials.courseIncludes c)
         , ("Instructor: " <>) <$> nonEmpty (Trials.courseInstructorName c)
         , ("Bio instructor: " <>) <$> nonEmpty (Trials.courseInstructorBio c)
-        , ("Avatar instructor: " <>) <$> nonEmpty (Trials.courseInstructorAvatarUrl c)
+        , ("Avatar instructor: " <>) <$> CoursePublic.sanitizeStoredCoursePublicUrl
+            "instructorAvatarUrl" (Trials.courseInstructorAvatarUrl c)
         ])
     }
   where
@@ -428,11 +438,13 @@ selectRagChunks cfg embedding =
           -- course IDs; render current public fields, never cached raw content.
           "SELECT c.id FROM rag_chunk chunk JOIN course c ON c.slug = chunk.source_id\
           \ WHERE chunk.source = 'course'\
+          \ AND c.slug COLLATE \"C\" ~ '^[a-z0-9-]{1,96}$'\
+          \ AND c.slug COLLATE \"C\" ~ '[a-z0-9]'\
           \ ORDER BY embedding <=> ?::vector LIMIT ?"
           [PersistText vector, PersistInt64 limitVal] :: SqlPersistT IO [Single Int64]
         docs <- forM rows $ \(Single courseId) -> do
           course <- getEntity (toSqlKey courseId :: Key Trials.Course)
-          pure (courseDocumentContent . courseToDoc <$> course)
+          pure (courseDocumentContent <$> (course >>= courseToDoc))
         pure (catMaybes docs)
 
 embedTexts :: AppConfig -> [Text] -> IO (Either Text [[Double]])
