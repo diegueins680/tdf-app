@@ -2,7 +2,7 @@
 module TDF.RagIndexPrivacySpec (spec) where
 
 import Control.Exception (bracket)
-import Control.Monad (void)
+import Control.Monad (forM_, void)
 import Data.String (fromString)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID
@@ -14,12 +14,12 @@ import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Database.Persist.Postgresql (createPostgresqlPoolModified)
-import Database.Persist.Sql (ConnectionPool, rawExecute, rawSql, runSqlPool, Single(..))
+import Database.Persist.Sql (ConnectionPool, PersistValue(..), rawExecute, rawSql, runSqlPool, Single(..))
 import Database.PostgreSQL.Simple (SqlError, sqlState)
 import System.Environment (lookupEnv)
 import Test.Hspec
 import TDF.Config (AppConfig(..), loadConfig)
-import TDF.RagStore (ensureRagIndex, refreshRagIndexWith)
+import TDF.RagStore (ensureRagIndex, refreshRagIndexWith, retrieveRagContext)
 
 spec :: Spec
 spec = describe "rag-index-privacy-postgresql" $ do
@@ -61,6 +61,94 @@ spec = describe "rag-index-privacy-postgresql" $ do
         rows `shouldSatisfy` (not . null)
         map fst rows `shouldSatisfy` all (== "course")
         T.unwords (map snd rows) `shouldSatisfy` (not . T.isInfixOf "PRIVATE_")
+
+      it "omits stored URLs rejected by public metadata, including instructor avatars" $ \pool -> do
+        publicCourse pool
+        cfg <- testConfig
+        forM_
+          [ "http://example.com/PRIVATE_URL"
+          , "https://localhost/PRIVATE_URL"
+          , "javascript:PRIVATE_URL"
+          , "https://example.com/#PRIVATE_URL"
+          , "https://example.com/%2fPRIVATE_URL"
+          , "https://example.com/%0aPRIVATE_URL"
+          , "https://user:PRIVATE_URL@example.com/"
+          ] $ \url -> do
+            storedUrls pool [url, url, url, url]
+            sent <- newIORef []
+            result <- refreshRagIndexWith (\inputs -> do
+              writeIORef sent inputs
+              pure (Right (vectors inputs))) cfg pool
+            result `shouldSatisfy` either (const False) (> 0)
+            inputs <- T.unwords <$> readIORef sent
+            inputs `shouldSatisfy` T.isInfixOf "PUBLIC_COURSE_SENTINEL"
+            inputs `shouldSatisfy` (not . T.isInfixOf "PRIVATE_URL")
+            rows <- indexRows pool
+            T.unwords (map snd rows) `shouldSatisfy` (not . T.isInfixOf "PRIVATE_URL")
+        let publicUrls =
+              [ "https://maps.example.com/public-location"
+              , "https://wa.me/593991234567"
+              , "https://tdf.example.com/public-course"
+              , "https://cdn.example.com/public-avatar.png"
+              ]
+        storedUrls pool (map (\url -> " " <> url <> " ") publicUrls)
+        sent <- newIORef []
+        _ <- refreshRagIndexWith (\inputs -> do
+          writeIORef sent inputs
+          pure (Right (vectors inputs))) cfg pool
+        inputs <- T.unwords <$> readIORef sent
+        forM_ publicUrls $ \url -> inputs `shouldSatisfy` T.isInfixOf url
+
+      it "filters unreachable slugs before taking the newest 50 public courses" $ \pool -> do
+        publicCourse pool
+        forM_ (["", " padded ", "---", "curso/privado", "ma\241ana", T.replicate 97 "a"]
+          <> ["UPPERCASE-" <> T.pack (show n) | n <- [1..51 :: Int]]) $ \slug ->
+            runSqlPool (rawExecute
+              "INSERT INTO course(slug,title,price_cents,currency,capacity,updated_at) \
+              \VALUES (?,'PRIVATE_UNREACHABLE_COURSE',100,'USD',1,now()+interval '1 day')"
+              [PersistText slug]) pool
+        cfg <- testConfig
+        sent <- newIORef []
+        result <- refreshRagIndexWith (\inputs -> do
+          writeIORef sent inputs
+          pure (Right (vectors inputs))) cfg pool
+        result `shouldBe` Right 1
+        inputs <- T.unwords <$> readIORef sent
+        inputs `shouldSatisfy` T.isInfixOf "PUBLIC_COURSE_SENTINEL"
+        inputs `shouldSatisfy` (not . T.isInfixOf "PRIVATE_UNREACHABLE_COURSE")
+
+      it "never calls the embedding adapter for an unreachable-only corpus" $ \pool -> do
+        runSqlPool (rawExecute
+          "INSERT INTO course(slug,title,price_cents,currency,capacity,updated_at) \
+          \VALUES ('UPPERCASE','PRIVATE_UNREACHABLE_COURSE',100,'USD',1,now())" []) pool
+        cfg <- testConfig
+        refreshRagIndexWith (\_ -> do
+          expectationFailure "Unreachable-only corpus must not reach the embedding adapter"
+          pure (Left "unexpected adapter call")) cfg pool `shouldReturn` Right 0
+        indexRows pool `shouldReturn` []
+
+      it "sanitizes current course URLs when reading an existing public index entry" $ \pool -> do
+        publicCourse pool
+        cfg <- testConfig
+        _ <- refreshRagIndexWith (pure . Right . vectors) cfg pool
+        storedUrls pool (replicate 4 "https://localhost/PRIVATE_CURRENT_URL")
+        docs <- retrieveRagContext cfg pool "synthetic course query"
+        docs `shouldSatisfy` (not . null)
+        T.unwords docs `shouldSatisfy` T.isInfixOf "PUBLIC_COURSE_SENTINEL"
+        T.unwords docs `shouldSatisfy` (not . T.isInfixOf "PRIVATE_CURRENT_URL")
+
+      it "rejects unreachable identities even when a course-kind index row ranks them" $ \pool -> do
+        runSqlPool (do
+          rawExecute
+            "INSERT INTO course(slug,title,price_cents,currency,capacity,updated_at) \
+            \VALUES ('UPPERCASE','PRIVATE_UNREACHABLE_COURSE',100,'USD',1,now())" []
+          rawExecute
+            "INSERT INTO rag_chunk(source,source_id,chunk_index,content,metadata,embedding) \
+            \VALUES ('course','UPPERCASE',0,'PRIVATE_CACHED','{}', \
+            \('[' || repeat('0,',1535) || '1]')::vector)" []
+          ) pool
+        cfg <- testConfig
+        retrieveRagContext cfg pool "synthetic course query" `shouldReturn` []
 
       it "replaces an empty public corpus without calling the embedding adapter" $ \pool -> do
         cfg <- testConfig
@@ -195,6 +283,11 @@ publicCourse :: ConnectionPool -> IO ()
 publicCourse = runSqlPool (rawExecute
   "INSERT INTO course(slug,title,price_cents,currency,capacity,updated_at) \
   \VALUES ('public-course','PUBLIC_COURSE_SENTINEL',15000,'USD',12,now())" [])
+
+storedUrls :: ConnectionPool -> [Text] -> IO ()
+storedUrls pool urls = runSqlPool (rawExecute
+  "UPDATE course SET location_map_url=?,whatsapp_cta_url=?,landing_url=?,instructor_avatar_url=? \
+  \WHERE slug='public-course'" (map PersistText urls)) pool
 
 indexRows :: ConnectionPool -> IO [(Text, Text)]
 indexRows pool = do
