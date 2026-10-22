@@ -5801,7 +5801,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "1fc69980366f09301ddb8f46f083edfff7304a62b61d379d42ef78c302c8f4b9",
+      "sha256": "681a49962fd5095002da70cbbcbb3512e31958690c183bed776156890167a3c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14285,7 +14285,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "e1269d97de6952bbfa2485c343bf71edf442f1897ab9fea11e8e34726ef5fa1b",
+      "sha256": "f76a6745947e7f2087606d2d78a2fb8309560fc43c7adb00da9f210b430bd4c6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23825,49 +23825,56 @@
     },
     {
       "path": "formal/event-operations/PublicKnowledgeRead.cfg",
-      "sha256": "68fc889d245272c29969dcba28e01b8cf94da4c9e59d9246f540cd0dfca46239",
+      "sha256": "afd4cfdc1b5e49a26e65ed6757ce457df798e7a407ff731385ba0d975b423df1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeRead.tla",
-      "sha256": "c61217da58b0ad4a5584e05dcf0b857368c2cfd2c148faac9f2979aa812160ac",
+      "sha256": "39b2aeaa07589c0375d07b4a6f5bd8949846e2233d86210bc220265fe8c2e55e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeReadCachedMetadata.cfg",
-      "sha256": "cd8ce97d32d606e26b92845159034c6b2b62649e246d7c83d197450ffb94febd",
+      "sha256": "d2e15f4fc78ebfcc4c144d15d36b8fa20b85fd4e38bed84352dfcfa5c7632aa7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeReadCollision.cfg",
-      "sha256": "b1eaf721fc5205f37aca9c074e0fddfea77e03d9d820d1f71b75be5c1b454d3a",
+      "sha256": "d86d7823635966737c9e4b31af25c1a3f635c7e2d003d851abe512d4c02b885c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeReadMissingFallback.cfg",
-      "sha256": "52f8c010dbc9a4a078ccc9f903a624d8fcfa48431e0d4c4116dcfed61114b15f",
+      "sha256": "3da91e454821c0a7f16b8f009532c389c4300090822cf24f342234bf444e7cc7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicKnowledgeReadMixedSnapshot.cfg",
+      "sha256": "65c5584f0d28b4399b7bc94e070bf9f660e2e1743c4ba7024f6b4a00a2eae989",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeReadRawText.cfg",
-      "sha256": "05208cab758808545ff20b3fd211febad1b555c3354e026ccd31e620a0593298",
+      "sha256": "6ffd4b1fce062b139766d7fe9ef54737a99980e35030738abcebd616b54a5212",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeReadUnfiltered.cfg",
-      "sha256": "2649a1a582d6e11110a212ccc67dd5e7c9aa071c61e4fcdcdf2f9872a02958d9",
+      "sha256": "12f0f5ee730bc781f23298ff03abd15e842cd534882df1d3828765a390236f2f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -23916,7 +23923,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "d1257ffdc9a97ee7bfa701ee40ae040937082bd8a7b118c156ff3657dcb83394",
+      "sha256": "c1f0d3e779b2c95fed8f4a3e86dfa5d7e29eb7ba1e1e0a5ce25a6e6b34efb332",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25918,7 +25925,7 @@
     },
     {
       "path": "formal/system/public-knowledge-retrieval.md",
-      "sha256": "c44cfee58a598125a91870f0315c96a2288f8ee1ef3718925ba9dd826f569b2f",
+      "sha256": "4a00570991ab6ad89525de51e2b5b2a77127116bd8743d1f6175f6d977047c4d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25967,7 +25974,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "584160b6af2ab811fb9a45f305ff118ff90266e9b3a91a80e52af03ebda403f8",
+      "sha256": "78dbc57989df5641f83cdf0058f5480f2d918f5890414e9bd09d342d63fec015",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -37645,6 +37652,7 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  AtomicMetadata = TRUE",
         "  RejectAmbiguous = TRUE",
         "  FilterSource = TRUE",
         "  RenderCurrent = TRUE",
@@ -37661,6 +37669,7 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  AtomicMetadata = TRUE",
         "  RejectAmbiguous = TRUE",
         "  FilterSource = TRUE",
         "  RenderCurrent = FALSE",
@@ -37677,6 +37686,7 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  AtomicMetadata = TRUE",
         "  RejectAmbiguous = FALSE",
         "  FilterSource = TRUE",
         "  RenderCurrent = TRUE",
@@ -37693,10 +37703,28 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  AtomicMetadata = TRUE",
         "  RejectAmbiguous = TRUE",
         "  FilterSource = TRUE",
         "  RenderCurrent = TRUE",
         "  DropMissing = FALSE",
+        "  ExcludeRaw = TRUE",
+        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata NoAmbiguousRead"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicKnowledgeReadMixedSnapshot.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  AtomicMetadata = FALSE",
+        "  RejectAmbiguous = TRUE",
+        "  FilterSource = TRUE",
+        "  RenderCurrent = TRUE",
+        "  DropMissing = TRUE",
         "  ExcludeRaw = TRUE",
         "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata NoAmbiguousRead"
       ],
@@ -37709,6 +37737,7 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  AtomicMetadata = TRUE",
         "  RejectAmbiguous = TRUE",
         "  FilterSource = TRUE",
         "  RenderCurrent = TRUE",
@@ -37725,6 +37754,7 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  AtomicMetadata = TRUE",
         "  RejectAmbiguous = TRUE",
         "  FilterSource = FALSE",
         "  RenderCurrent = TRUE",

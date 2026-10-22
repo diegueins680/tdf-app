@@ -3069,7 +3069,7 @@
       ],
       "authorization": "The assistant requires authentication and Social Inbox access (AUTHORITY-049); customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
       "privacy": "Private historical index contents stay excluded even before reindexing. PRIV-RAG-002 prohibits private material in future refresh payloads; historical provider retention remains a separate obligation.",
-      "concurrency": "Ranking and per-course metadata reads share one transaction but separate statement snapshots under the modeled Read Committed assumption. A deletion committed after metadata read may precede delivery; no delivery-time linearization is claimed.",
+      "concurrency": "Ranking and per-course metadata reads share one transaction but separate statement snapshots under the modeled Read Committed assumption. A deletion committed after metadata read may precede delivery; no delivery-time linearization is claimed. Current document construction reads course fields, earliest session and collision inputs in one SELECT snapshot; ranking and earlier pre-limit classification remain separate statements.",
       "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
       "failure": "Missing course rows and unsupported source kinds yield no eligible document. Existing database/provider failures retain adapter error handling.",
       "recovery": "Public metadata changes take effect on the next read; stale raw text need not be purged to enforce this retrieval boundary.",
@@ -3092,7 +3092,8 @@
       ],
       "formalModels": [
         "formal/event-operations/PublicKnowledgeRead.tla",
-        "formal/event-operations/PublicKnowledgeReadCollision.cfg"
+        "formal/event-operations/PublicKnowledgeReadCollision.cfg",
+        "formal/event-operations/PublicKnowledgeReadMixedSnapshot.cfg"
       ],
       "status": "specified and implemented",
       "confidence": "medium",
@@ -3108,7 +3109,7 @@
       "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
       "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.; NoAmbiguousRead.",
       "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with five named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits. Require exact Text-normalized production collision rejection before both selection limits and during metadata rendering. Six actual Store regressions cover ASCII/Unicode whitespace, case, limit starvation, new cached-read collisions and recovery; pure generated checks cover normalization, with named embedding/read collision counterexamples in the bounded models. Multiple-row normalization and delivery-time retraction remain outside the refinement claim.",
+      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with six named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits. Require exact Text-normalized production collision rejection before both selection limits and during metadata rendering. Six actual Store regressions cover ASCII/Unicode whitespace, case, limit starvation, new cached-read collisions and recovery; pure generated checks cover normalization, with named embedding/read collision counterexamples in the bounded models. Multiple-row normalization and delivery-time retraction remain outside the refinement claim. Course fields, earliest session and collision inputs must share one SQL SELECT snapshot; the mixed-snapshot control must fail NoAmbiguousRead.",
       "evidence": "Historical disclosure reproduction is retained separately; exact candidate model/HTTP/CI receipts are required. New coverage must not inherit a historical green result."
     },
     {
@@ -9955,7 +9956,7 @@
       ],
       "authorization": "Existing administrator and worker admission remains unchanged. Index source selection is enforced in the backend, independently of retrieval guards.",
       "privacy": "Explicit product decision on 2026-10-13: public courses only; stop indexing private material. This policy concerns index refreshes, not a claim that query embeddings or other assistant provider payloads are public.",
-      "concurrency": "One refresh captures a database read snapshot before embedding and atomically replaces the index. Parallel refresh ordering/freshness is not guaranteed; all revised writers still construct only course chunks. Retrieval separately checks current course metadata. Cleanup and replacement are separate transactions. Deployment must drain old mixed-source writers; no claim covers privileged external SQL writers or rollback to the old builder.",
+      "concurrency": "One refresh captures public documents from statement snapshots before embedding and atomically replaces the index. Parallel refresh ordering/freshness is not guaranteed; all revised writers still construct only course chunks. Retrieval separately checks current course metadata. Cleanup and replacement are separate transactions. Deployment must drain old mixed-source writers; no claim covers privileged external SQL writers or rollback to the old builder. Each constructed document reads its fields, earliest session and collision inputs in one SELECT snapshot.",
       "idempotency": "Repeated successful refreshes replace the derived index; provider requests may repeat and chunk identifiers/timestamps are not stable.",
       "failure": "Cleanup SQL failure aborts before embedding. Model/schema mismatch and provider/count errors return Left after legacy cleanup; replacement SQL errors propagate after rollback of public replacement. A missing index table skips cleanup and fails existing schema validation.",
       "recovery": "Retry failed public refreshes while retaining existing public chunks. Do not restore non-course chunks or roll back to a mixed-source builder. Historical backups and provider-held data require separate retention/erasure decisions.",
@@ -10948,8 +10949,9 @@
     "formal/event-operations/ProviderRollback.tla": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
     "formal/event-operations/PublicKnowledgeIndex.tla": "c51254f083b40972f67052c4f150745132f60ffbb042483b52ef0a73eb627c1b",
     "formal/event-operations/PublicKnowledgeIndexCollision.cfg": "e275baf98f73d812f21c07e4f08c60b0c31e3aa6fd1e9ac5b60a63185e8d9800",
-    "formal/event-operations/PublicKnowledgeRead.tla": "c61217da58b0ad4a5584e05dcf0b857368c2cfd2c148faac9f2979aa812160ac",
-    "formal/event-operations/PublicKnowledgeReadCollision.cfg": "b1eaf721fc5205f37aca9c074e0fddfea77e03d9d820d1f71b75be5c1b454d3a",
+    "formal/event-operations/PublicKnowledgeRead.tla": "39b2aeaa07589c0375d07b4a6f5bd8949846e2233d86210bc220265fe8c2e55e",
+    "formal/event-operations/PublicKnowledgeReadCollision.cfg": "d86d7823635966737c9e4b31af25c1a3f635c7e2d003d851abe512d4c02b885c",
+    "formal/event-operations/PublicKnowledgeReadMixedSnapshot.cfg": "65c5584f0d28b4399b7bc94e070bf9f660e2e1743c4ba7024f6b4a00a2eae989",
     "formal/event-operations/PublicRouteAdmission.tla": "df68c2524239e05f17fb3c1d479cab887803a606cda6bc145a18d23bad0752c7",
     "formal/event-operations/ReadinessProbe.tla": "5c084b53a4928a9e99594febc6998ab2bd403f8aab8cce3e1ad4272eb58237ec",
     "formal/event-operations/RecoveryExpiry.tla": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
@@ -11252,7 +11254,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "1fc69980366f09301ddb8f46f083edfff7304a62b61d379d42ef78c302c8f4b9",
+    "scripts/verify-event-operations-formal.sh": "681a49962fd5095002da70cbbcbb3512e31958690c183bed776156890167a3c7",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -11676,7 +11678,7 @@
     "tdf-hq/src/TDF/Operations/Worker.hs": "45363018da50e080a6f8853ecbb32c5dfb5818bd4a16b5a42cd5527eeb2635ba",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
     "tdf-hq/src/TDF/PublicUrl.hs": "f6d8765fca93de1e02416ce6aa5eab9712efb191fc5565e4b66ff22e2926ad4d",
-    "tdf-hq/src/TDF/RagStore.hs": "e1269d97de6952bbfa2485c343bf71edf442f1897ab9fea11e8e34726ef5fa1b",
+    "tdf-hq/src/TDF/RagStore.hs": "f76a6745947e7f2087606d2d78a2fb8309560fc43c7adb00da9f210b430bd4c6",
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
@@ -14443,6 +14445,12 @@
       }
     ],
     "formal/event-operations/PublicKnowledgeReadCollision.cfg": [
+      {
+        "requirement": "PRIV-RAG-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/PublicKnowledgeReadMixedSnapshot.cfg": [
       {
         "requirement": "PRIV-RAG-001",
         "relationship": "formalModels"
@@ -26340,7 +26348,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "1fc69980366f09301ddb8f46f083edfff7304a62b61d379d42ef78c302c8f4b9",
+      "sha256": "681a49962fd5095002da70cbbcbb3512e31958690c183bed776156890167a3c7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39088,7 +39096,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "e1269d97de6952bbfa2485c343bf71edf442f1897ab9fea11e8e34726ef5fa1b",
+      "sha256": "f76a6745947e7f2087606d2d78a2fb8309560fc43c7adb00da9f210b430bd4c6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47920,7 +47928,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "584160b6af2ab811fb9a45f305ff118ff90266e9b3a91a80e52af03ebda403f8",
+      "sourceSha256": "78dbc57989df5641f83cdf0058f5480f2d918f5890414e9bd09d342d63fec015",
       "definition": {
         "states": [
           "absent",
@@ -47950,7 +47958,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "584160b6af2ab811fb9a45f305ff118ff90266e9b3a91a80e52af03ebda403f8",
+      "sourceSha256": "78dbc57989df5641f83cdf0058f5480f2d918f5890414e9bd09d342d63fec015",
       "definition": {
         "export": [
           "queued",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-22T22:54:50.235Z",
+  "generatedAt": "2026-10-22T23:22:38.113Z",
   "repositoryRoot": ".",
   "filesScanned": 2315,
   "candidateCount": 1324,
@@ -147444,7 +147444,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 60,
+      "consumerCount": 61,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
@@ -147463,6 +147463,7 @@
         "tdf-hq/src/TDF/Catalog/Models.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server/ProviderExecution.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
