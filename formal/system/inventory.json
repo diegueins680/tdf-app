@@ -8496,7 +8496,7 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "cdee9c63a639afb203b48308e0a08783ca7581f3c6413cf0abacbb4f4cb5625d",
+      "sha256": "545402d0b86ef118c857130ef91a28c4e5a9fc90d4df25c914395aa81241c894",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20339,7 +20339,7 @@
     },
     {
       "path": "docs/notifications/chat-delivery-2026-10-13.md",
-      "sha256": "0ced71a1193b50dd435cb9668d066115804c89d7d4a8e4e20a29548378f7bc12",
+      "sha256": "a9c03cc324cd74ecf8d1430d97caf5c18415e96bb98c8701036533fad1427b83",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25827,7 +25827,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b185db4576c5efbb59dc13ede679c47d54a8ae2add39b85366ba3daa78fe3db1",
+      "sha256": "1ebc967bf2b3dc200ac28edc08e817581197ccbf930cd4fe794de34eadbeec37",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
