@@ -162,3 +162,16 @@ A controlled bootstrap/final-server regression fixture rejects the prior socket
 behavior. This repairs evidence collection, not an application correctness bug.
 The failed hosted run remains part of the audit history; tests and proofs must
 be regenerated for the corrected runner revision.
+
+## Prepared integration source review, 2026-10-22
+
+The local merge of `580a74560405112ae817748f4d9e796a8ba2a002` with prepared
+retrieval parent `c063bb5d806f73c9b4e305d1ccef53a353db6f33` changes only the
+Cabal manifest among the pinned recovery inputs. Its complete diff registers
+`TDF.Courses.PublicMetadata` and `TDF.PublicUrl` in the executable and test suite,
+and adds `RagIndexPrivacySpec`, `CoursePublicMetadataSpec` and
+`MusicPublicationSpec` to test modules. Dependencies and compiler configuration
+are unchanged. `ServerAuth.hs`, the recovery migration and the identity contract
+remain byte-identical. The Cabal hash is refreshed after that review; recovery
+claims, translation and negative controls remain unchanged and require fresh
+execution. This preparation is not independent approval or protected admission.

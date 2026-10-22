@@ -142,3 +142,18 @@ found no changes to role constructors, Party identity, imports or translated
 authorization expressions. Those two source pins were refreshed after that
 review; all proof obligations must still be regenerated for the integrated
 candidate. Historical success is not carried forward as current evidence.
+
+## Prepared integration source review, 2026-10-22
+
+The local merge of `580a74560405112ae817748f4d9e796a8ba2a002` with prepared
+retrieval parent `c063bb5d806f73c9b4e305d1ccef53a353db6f33` changes two pinned
+files. `Models.hs` adds only the two-line explanatory comment after `ChatMessage`;
+role constructors, Party identity and imports are byte-identical. The Cabal diff
+registers `TDF.Courses.PublicMetadata` and `TDF.PublicUrl` in the executable and
+test suite, plus `RagIndexPrivacySpec`, `CoursePublicMetadataSpec` and
+`MusicPublicationSpec` in the test modules. Dependencies, compiler configuration,
+authorization predicates and ingestion guard are unchanged. The two hashes are
+refreshed after reviewing those complete diffs. Claims, assumptions, translation
+and negative controls are unchanged; all obligations require fresh execution.
+This local source review supplies neither independent PR approval nor admission
+for the prepared parent, which has not yet reached protected main.
