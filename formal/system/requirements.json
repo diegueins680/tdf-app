@@ -4124,7 +4124,7 @@
       "id": "MEDIA-DRIVE-001",
       "title": "Bind Drive upload retries to actor and exact request",
       "statement": "An existing Drive idempotency entry may be reused only when its stored versioned fingerprint matches the authenticated Party and effective filename, MIME, destination and file bytes; missing or conflicting binding rejects before provider mutation.",
-      "authority": "implementation safety repair under authorized conformance audit",
+      "authority": "implementation safety repair under authorized conformance audit; AUTHORITY-071",
       "domain": "MEDIA",
       "actors": [
         "Authorized operations actor",
@@ -4167,7 +4167,7 @@
       "failure": "Conflicts409 before create/permission; provider failures502; missing configuration503. Successful file create can precede a failed permission operation.",
       "recovery": "Preserve legacy and conflicting objects. Reconcile their provenance explicitly or choose a new intentional upload; never silently attach actor ownership. No production provider mutation during verification.",
       "observability": "Retain exact test revision, synthetic wire trace, command and result; never log credentials or uploaded user content.",
-      "source": "Server.uploadToDrive and findDriveUploadByIdempotencyKey; scripts/artist-enrichment.mjs caller; AUTHORITY-031",
+      "source": "Server.uploadToDrive and findDriveUploadByIdempotencyKey; scripts/artist-enrichment.mjs caller; AUTHORITY-031; formal/system/drive-replay.md",
       "property": "reuse implies stored fingerprint equals current actor-and-request fingerprint; conflict implies no subsequent provider mutation",
       "contract": "formal/system/drive-replay.md",
       "implementation": [
@@ -4175,15 +4175,25 @@
         "tdf-hq/src/TDF/API/Drive.hs",
         "tdf-hq/tdf-hq.cabal"
       ],
-      "verification": "In-memory HTTP transport tests inspect real multipart metadata and provider-effect order without sockets, DNS or credential refresh.",
-      "evidence": "tdf-hq/test/TDF/DriveReplaySpec.hs; current execution evidence pending",
+      "verification": "In-memory HTTP transport tests inspect real multipart metadata and provider-effect order without sockets, DNS or credential refresh. 2026-10-12: DriveReplay.tla states the reuse rule (ReuseBinds, NoForeignReuse, NoLegacyAdoption, ConflictNoMutation) with three single-guard controls; the Race configuration checks SingleObject and is an expected counterexample, recording that lookup-then-create gives no exactly-once guarantee. DriveReplaySpec: 9 examples pass on a local test binary built on 2026-10-12 from 86b6611fc, whose uploadToDrive, Drive API module and spec are byte-identical to main 7d4375550; a CI receipt on the merged SHA is still the required current evidence. The updated finite model partitions provider entries across two explicit folders, retains a same-folder race counterexample, and checks sequential cross-folder creation with a reachable two-object witness. A global-lookup mutation fails that cross-folder property; missing-folder lookup and mutable credential visibility are excluded.",
+      "evidence": "formal/system/drive-replay.md; DriveReplaySpec 9/9 on the 2026-10-12 local test binary (helper and spec byte-identical to main); a CI receipt on the merged SHA remains pending.",
       "status": "specified and implemented",
       "historicalStatus": "implementation-repair-awaiting-current-execution",
       "tests": [
         "tdf-hq/test/TDF/DriveReplaySpec.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/DriveReplay.tla",
+        "formal/event-operations/DriveReplay.cfg",
+        "formal/event-operations/DriveReplayUnchecked.cfg",
+        "formal/event-operations/DriveReplayActorIgnored.cfg",
+        "formal/event-operations/DriveReplayLegacyAdopted.cfg",
+        "formal/event-operations/DriveReplayRace.cfg",
+        "formal/event-operations/DriveReplayCrossFolder.cfg",
+        "formal/event-operations/DriveReplayCrossFolderObjects.cfg"
+      ],
       "confidence": "source-reviewed request binding; execution and deployment still pending",
       "ambiguity": [
         "Current production usage/legacy entry count unobserved.",
@@ -6015,7 +6025,7 @@
     {
       "id": "DEPLOY-READINESS-001",
       "title": "Fresh database readiness without private failure detail",
-      "statement": "A ready HTTP response requires a successful fresh SELECT 1 through the application database pool. Pool or query failure and expiry of the two-second cooperative deadline return503 with fixed non-private fields; every readiness response forbids caching.",
+      "statement": "A ready HTTP response requires a successful fresh SELECT 1 through the application database pool. A probe discards pooled connections PostgreSQL has closed, retrying up to the pool size plus one inside its deadline, so one request answers ready once the database is back. Pool or query failure of every attempt and expiry of the two-second cooperative deadline return 503 with fixed non-private fields; every readiness response forbids caching.",
       "domain": "DEPLOY",
       "authority": "User deployment verification and failed-worker success requirements; existing documented health intent",
       "source": "tdf-hq/docs/openapi/api.yaml; formal/system/readiness.md",
@@ -6046,6 +6056,7 @@
       "allowedTransitions": [
         "starting -> probing after boot succeeds",
         "probing -> ready only after fresh successful query",
+        "probing -> probing on a synchronous failure while attempts (the pool size plus one) remain: the failed pooled connection is destroyed",
         "probing -> unavailable on synchronous error, false result or deadline",
         "A subsequent request independently probes current state"
       ],
@@ -6061,10 +6072,10 @@
       ],
       "authorization": "Public non-mutating fixed SELECT1; no caller SQL or chosen database target.",
       "privacy": "Fixed JSON fields exclude database errors, credentials and hostnames; no probe exception rendering.",
-      "concurrency": "Each request includes pool acquisition in its deadline; runtime cancellation must propagate. System.Timeout is cooperative and cannot bound uninterruptible native operations or prove release writer exclusion.",
+      "concurrency": "Each request includes pool acquisition in its deadline; runtime cancellation must propagate. System.Timeout is cooperative and cannot bound uninterruptible native operations or prove release writer exclusion. The attempt budget is the pool size of TDF.DB.makePool plus one (source-bound check): a pool cannot hold more stale connections than its size, and one attempt must remain for a live connection.",
       "idempotency": "Read-only independent observations; retry cannot reuse a cached positive observation.",
-      "failure": "Synchronous exception, negative probe or expired deadline yields503. Runtime cancellation propagates.",
-      "recovery": "Retry a fresh request after database/pool recovery; health does not establish migration, worker, provider, backup or whole-system readiness.",
+      "failure": "Synchronous exception on every attempt (at most the pool size plus one), negative probe or expired deadline yields 503. Runtime cancellation propagates through every attempt.",
+      "recovery": "A fresh request after database/pool recovery answers ready at once: stale pooled connections are consumed by that request's own attempts. Health does not establish migration, worker, provider, backup or whole-system readiness.",
       "observability": "Exact handler HTTP checks, source-bound verifier output and deployed read-only probes; record source and time.",
       "implementation": [
         "tdf-hq/src/TDF/App/Readiness.hs",
@@ -6085,17 +6096,19 @@
         "scripts/lib/readiness_conformance.py",
         "scripts/test-booking-conformance.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/ReadinessProbe.tla"
+      ],
       "status": "specified and implemented",
       "confidence": "Source-derived narrow boundary; exact full-handler and deployed validation outstanding.",
       "ambiguity": [],
-      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery.",
+      "verification": "Actual Haskell boundary tests and six detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery. Attempt retry: Haskell probe tests (stale-then-live, budget exhaustion, final negative result, cancellation through retry) (the mutations include single attempt, no retry and cancellation swallowed in the retry; the attempt budget is bound to the pool size plus one); the PostgreSQL harness first leaves more idle pooled connections than it makes degraded probes, so the probes must discard the terminated connections within their own attempts (with one attempt per probe the recovery probe took the next terminated connection and failed, 2026-10-12). ReadinessProbe.tla: ProbeReportsDatabase over every stale count and database state for PoolSize 4; the one-attempt and pool-size budgets fail it (the model found that a budget of the pool size is one short).",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Full handler build, PostgreSQL failure/recovery and final deployed validation remain outstanding."
+        "reason": "Deployed validation of the handler remains outstanding; the stale-connection recovery is fixed and checked at the Haskell, PostgreSQL-harness and model levels (AUTHORITY-078)."
       },
       "property": "HTTP200 implies a fresh successful application-pool database round trip; failure details remain fixed and responses uncacheable.",
-      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation."
+      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, the deadline, cancellation propagation (in the deadline and in the retry), the retry and all but one attempt."
     },
     {
       "id": "DEPLOY-CANARY-001",
@@ -7802,7 +7815,7 @@
         "scripts/test-whatsapp-consent.sh"
       ],
       "verification": "Bounded TLA+ model with eight negative controls; unit tests; PostgreSQL concurrency tests on the migrated fixture in CI",
-      "evidence": "Keyword unit test, SQLite window/withdrawal/undelivered tests, PostgreSQL simultaneous-claim, duplicate-reply and withdrawal-lock tests, served-app check that the public lookup is gone",
+      "evidence": "formal/system/whatsapp-consent.md; keyword, SQLite and PostgreSQL consent checks; real-backend harness for simultaneous requests, signed confirmation, one notice, redelivery and migrated non-unique history indexes. The historical constraint collision was reproduced before the additive index repair; fresh combined-candidate execution remains required.",
       "status": "specified and implemented",
       "historicalStatus": null,
       "critical": true,
@@ -7850,20 +7863,22 @@
         "superseded attempt failure -> any change to a newer request, consent or withdrawal"
       ],
       "effects": [
-        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages."
+        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages; the confirmation notice samples its own timestamp after the atomic inbound receipt. Current main permits distinct messages at one phone/party timestamp through the index-declaration migration."
       ],
       "authorization": "Only the number's own reply (verified Meta webhook signature) or an Admin can activate consent.",
       "privacy": "Public responses are identical regardless of prior state; display names are not returned publicly.",
       "concurrency": "Claim, confirmation and the undelivered mark are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits. Row creation uses ON CONFLICT DO NOTHING. A withdrawal raises revoked_at to the request instant inside its own transaction, so a clock read before the row lock cannot predate the request.",
       "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours of a request send nothing unless they retry an undelivered request inside its hour; a send failure is bound to its own request instant.",
-      "failure": "A WhatsApp send failure is recorded on the outgoing message and marks only its own request undelivered; consent is unaffected.",
+      "failure": "A WhatsApp send failure is recorded on the outgoing message and marks only its own request undelivered; consent is unaffected. The signed confirmation fixture requires HTTP200, consent activation and one recorded notice. The historical phone/timestamp collision is removed by the existing index-declaration migration; a separate notice clock sample alone was only best-effort on the old schema.",
       "recovery": "A number can request again 24 hours after its last request instant, or retry an undelivered, unwithdrawn request within 1 hour.",
       "observability": "whats_app_consent note (pending_confirmation, pending_unsent, confirmed_by_reply), confirmation_requested_at, revoked_at, outgoing message sources.",
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "scripts/test-whatsapp-consent.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/lib/whatsapp_consent_conformance.py",
+        "scripts/test-booking-conformance.py"
       ],
       "formalModels": [
         "formal/event-operations/WhatsAppConsent.tla",
@@ -7885,7 +7900,8 @@
         "The 1-hour window for an undelivered request is an engineering default chosen because the number never saw a prompt; the product owner has not confirmed the duration.",
         "A provider failure that hides an actual delivery (ambiguous timeout) is treated as undelivered and could allow a second request inside the interval.",
         "A withdrawn request cannot be replaced until 24 hours after its request instant. Because opting out needs no proof of control, a third party can impose that wait on someone else's pending request; this is accepted so that the unauthenticated opt-out cannot be used to message a number repeatedly. Staff capture remains available.",
-        "An undelivered request that is neither confirmed nor retried within 1 hour waits for the 24-hour interval even though nothing was delivered."
+        "An undelivered request that is neither confirmed nor retried within 1 hour waits for the 24-hour interval even though nothing was delivered.",
+        "Provider notice delivery and durable retry after an accepted inbound receipt are separate obligations; the existing index-declaration migration supersedes the historical same-timestamp uniqueness hazards without establishing exactly-once provider delivery."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9623,7 +9639,8 @@
       "effects": [
         "Search document upsert/delete",
         "Venue city_id resolution",
-        "Lineup genres mapped to catalog genre ids and lineup names added to the event search text"
+        "Lineup genres mapped to catalog genre ids and lineup names added to the event search text",
+        "A genre search alias edit resyncs the events whose lineup legacy genre words name its old or new term, or whose document carries its genre id"
       ],
       "authorization": "Derived data only; written by database triggers on source changes.",
       "privacy": "Projection from the privacy-reviewed public views; reads still re-check the views.",
@@ -9636,6 +9653,8 @@
       "implementation": [
         "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
+        "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
+        "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync_rollback.sql",
         "scripts/production-migrations.json",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
@@ -9643,14 +9662,15 @@
       ],
       "tests": [
         "tdf-hq/test/integration/directory_event_search_sync.sql",
+        "tdf-hq/test/integration/directory_event_search_alias_sync.sql",
         "tdf-hq/test/integration/directory_event_search_http_seed.sql",
         "scripts/__tests__/directory-event-search-http.mjs",
         "scripts/test-music-directory-migration.sh",
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
       ],
       "formalModels": [],
-      "verification": "PostgreSQL integration checks for create, edit, unsafe image, same-origin image, lineup genres, bounded expiry, private, republish, suppression, venue rename, delete, city resolution, kind words, reindex metrics and full-refresh agreement; rollback and reapply; HTTP checks of /directory/search (Eventos + city, Todo, tab counts, people-only filters, lineup genre, card fields) against the real API; web page tests for the deep link, tab counts, event date and history back.",
-      "evidence": "Local PostgreSQL 16 run on a fully migrated schema on 2026-10-09; CI directory migration test.",
+      "verification": "PostgreSQL integration checks for create, edit, unsafe image, same-origin image, lineup genres, bounded expiry, private, republish, suppression, venue rename, delete, city resolution, kind words, reindex metrics and full-refresh agreement; genre alias add, move to another genre, change away and back, profession alias ignored, unrelated events untouched, and the migration repairing a document left stale by an alias added before the trigger existed without alerting saved searches; rollback and reapply; HTTP checks of /directory/search (Eventos + city, Todo, tab counts, people-only filters, lineup genre, card fields) against the real API; web page tests for the deep link, tab counts, event date and history back.",
+      "evidence": "Local PostgreSQL 16 run on a fully migrated schema on 2026-10-09; CI directory migration test. Alias resync: local PostgreSQL 16 on a fully migrated schema on 2026-10-14 (fails without the trigger, passes with it; apply twice, rollback twice, reapply).",
       "status": "specified and implemented",
       "critical": false,
       "confidence": "Exercised directly in the database; production effect verified after release.",
@@ -10138,7 +10158,8 @@
       "tests": [
         "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
         "scripts/test-index-declarations.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/lib/whatsapp_consent_conformance.py"
       ],
       "formalModels": [
         "formal/event-operations/IndexDeclaration.tla",
@@ -10160,6 +10181,92 @@
         "classification": "PARTIAL",
         "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
       }
+    },
+    {
+      "id": "BOOK-SERVICE-PICKER-001",
+      "title": "Every published service is selectable from the first step of the public booking form",
+      "domain": "BOOK",
+      "statement": "The public booking form at /reservar shows the service selector on its first step (contact) as well as on the schedule step, listing every active offering returned by the public service catalog (recording, voice, podcast, mixing, mastering, rehearsal, DJ booth practice, classes, event production, ...). DJ booth practice is an ordinary offering: there is no dedicated booking page, header entry, Instagram entry link, platform or commerce card for it. The legacy /dj-booth and /reservar/dj-booth URLs redirect to /reservar with the DJ booth service preselected and tracking parameters preserved; a ?servicio= or ?service= query preselects a service without locking the selector. The legacy DJ booth feature remains addressable for compatibility but is absent from feature search on web and Mobile. Legacy DJ URLs remove conflicting service parameters before selecting DJ booth.",
+      "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link.",
+      "source": "tdf-hq-ui public booking form, public navigation and landing links",
+      "contract": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+      "actors": [
+        "Visitor",
+        "Signed-in user"
+      ],
+      "preconditions": [
+        "Public service catalog reachable (GET /services/catalog/public)"
+      ],
+      "inputs": [
+        "GET /services/catalog/public",
+        "?servicio= / ?service= query parameter",
+        "legacy /dj-booth and /reservar/dj-booth URLs"
+      ],
+      "state": {
+        "serviceSelector": [
+          "catalog loading",
+          "first active offering selected",
+          "visitor-selected offering",
+          "catalog unavailable"
+        ]
+      },
+      "allowedTransitions": [
+        "catalog loading -> first active offering selected",
+        "first active offering selected -> visitor-selected offering (any step before confirmation)",
+        "/dj-booth -> /reservar?servicio=dj-booth-practice (replace navigation, query and hash preserved)"
+      ],
+      "forbiddenTransitions": [
+        "Service selector hidden until the schedule step",
+        "Service selector locked by a route preset",
+        "A second booking entry point dedicated to one service in public navigation or landing cards",
+        "Showing or accepting the previous service quote after changing offerings; applying an obsolete availability response to the current form."
+      ],
+      "effects": [
+        "Estimate banner and quote follow the selected offering",
+        "Booking submissions carry the selected canonical offering id"
+      ],
+      "authorization": "Not applicable: the public catalog endpoint is anonymous; booking authorization is unchanged.",
+      "privacy": "No personal data in the redirect beyond the tracking parameters already present in the inbound URL.",
+      "concurrency": "Catalog refetches keep the visitor's selection when the offering is still active and fall back to the first active offering otherwise. Changing the service synchronously clears the previous quote and terms acceptance. New availability requests clear stale pricing; aborted responses and cancellations cannot overwrite a newer quote.",
+      "idempotency": "Re-selecting the same offering is a no-op; the redirect is replace-navigation.",
+      "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps.",
+      "recovery": "Reloading the page refetches the catalog.",
+      "observability": "Existing booking and API telemetry; no new events.",
+      "property": "AllActiveOfferingsSelectableOnContactStep and LegacyDjBoothUrlRedirects",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/pages/CommerceHubPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq/assets/feature-registry.json"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-mobile/__tests__/featureRegistry.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression.",
+      "evidence": "Local Jest execution (PublicBookingPage, publicRoutes, PublicBranding suites)",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Medium: unit tests with a mocked catalog; production catalog verified to return 11 active offerings on 2026-10-12, deployed behaviour not yet re-verified.",
+      "ambiguity": [
+        "Whether the DJ booth marketing copy should reappear as a generic service highlight is a product decision outside this requirement."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with unit evidence; not deployed."
+      },
+      "historicalStatus": null
     },
     {
       "authority": "AUTHORITY-065",
@@ -10320,6 +10427,200 @@
       "tests": [],
       "formalModels": [],
       "ambiguity": []
+    },
+    {
+      "id": "DISCOVERY-NAV-001",
+      "title": "Shared community artist discovery and history-aware navigation",
+      "statement": "Community and Global Search discover publicly eligible artists, bands, projects and profiles through shared normalized bounded server queries. New pages start at the top; history, refresh, anchors and inline actions preserve their appropriate context.",
+      "authority": "Explicit product owner implementation and deployment request, 2026-10-13",
+      "domain": "UX",
+      "source": "docs/discovery/community-search-navigation.md",
+      "contract": "docs/discovery/community-search-navigation.md",
+      "actors": [
+        "Public visitor",
+        "Authenticated community member"
+      ],
+      "preconditions": [
+        "Existing directory schema and public artist profiles",
+        "Browser supports History, ResizeObserver and MutationObserver"
+      ],
+      "inputs": [
+        "Search query and supported taxonomy filters",
+        "Router location and navigation type"
+      ],
+      "state": {
+        "boundary": "Public search projection, query cache and history-entry scroll positions",
+        "authority": "Database visibility and identity links; React Router history keys"
+      },
+      "allowedTransitions": [
+        "Query edit -> debounced bounded search",
+        "New route -> top",
+        "History POP -> prior scroll",
+        "Valid fragment -> rendered anchor"
+      ],
+      "forbiddenTransitions": [
+        "Private directory identity exposed through legacy artist fallback",
+        "Obsolete query response replacing current results",
+        "Inline filter change resetting page scroll"
+      ],
+      "effects": [
+        "Read-only profile projection",
+        "Abort obsolete search requests",
+        "URL filter updates",
+        "Scroll restoration"
+      ],
+      "authorization": "Existing public directory visibility and artist public-read surfaces; no new private account lookup.",
+      "privacy": "Any directory identity or legacy link suppresses the legacy fallback; private fields are absent from results.",
+      "concurrency": "Query keys and AbortSignal isolate concurrent requests. Observers retry pending restoration until content renders or the visitor interacts.",
+      "idempotency": "Read-only projection and same-position scrolling are repeatable.",
+      "failure": "Recoverable search alerts; optional session storage failure does not block navigation.",
+      "recovery": "Retry failed search, clear filters or use browser history.",
+      "observability": "Search result and API errors through existing UI; isolated SQL, component and browser regression evidence.",
+      "property": "Textual exact matches outrank other textual tiers; private fallback remains absent; route changes never deliberately retain the old page offset.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/sql/2026-10-13_community_search_indexes.sql",
+        "scripts/production-migrations.json",
+        "tdf-hq-ui/src/App.tsx",
+        "tdf-hq-ui/src/main.tsx",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/features/discovery/useDirectorySearch.ts",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "tdf-hq-ui/src/routes/NavigationScrollRestoration.tsx",
+        "tdf-hq-ui/src/routes/AppShell.tsx",
+        "tdf-hq-ui/src/routes/RouteLoadingFallback.tsx",
+        "tdf-hq-ui/src/styles/navigation.css",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/components/TopBar.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        "scripts/test-community-search.py",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/utils/loginRouting.test.ts",
+        "e2e/web/community-discovery.spec.mjs",
+        "e2e/web/directory-entry.spec.mjs",
+        "e2e/web/persona-public.spec.mjs",
+        "e2e/web/auth-landing.spec.mjs",
+        "e2e/web/records-thumbnails.spec.mjs",
+        "tdf-mobile/src/navigation/notificationResponses.test.ts",
+        "playwright.discovery.config.mjs",
+        "tdf-hq-ui/src/api/directory.test.ts",
+        "scripts/test-music-directory-migration.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/DiscoveryFallbackPrivacy.tla",
+        "formal/event-operations/DiscoveryFallbackPrivacy.cfg",
+        "formal/event-operations/DiscoveryFallbackPrivacyPrivateSubject.cfg",
+        "formal/event-operations/DiscoveryFallbackPrivacyIgnoredLink.cfg"
+      ],
+      "verification": "Real PostgreSQL SQL cases, Jest component regressions, Playwright browser integration; no formal proof claimed. Finite fallback-privacy model plus two expected counterexamples; actual SQL subject/link suppression negative controls. No general SQL refinement or cache revocation proof.",
+      "evidence": "Local validation recorded in delivery report; hosted and production verification pending.",
+      "status": "specified and implemented",
+      "openQuestions": [
+        "Legacy typo-only matches are outside the indexed candidate prefilter.",
+        "Physical mobile/PWA and production evidence remain separate from browser emulation."
+      ],
+      "confidence": "Runtime regressions and local compiler validation; no proof or production claim.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and local validation; hosted checks, review, merge, production and physical-device evidence are separate gates."
+      }
+    },
+    {
+      "domain": "MSG",
+      "actors": [
+        "Authenticated direct-message participant",
+        "Other participant controlling their own consent/block",
+        "Administrator subject to canonical participant/consent policy"
+      ],
+      "authority": "explicit operator requirement",
+      "source": "Operator confirmation on 2026-10-13; docs/notifications/chat-delivery-2026-10-13.md",
+      "contract": "docs/notifications/chat-delivery-2026-10-13.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "privacy": "In-app notice has generic content; canonical chat read authority gates list/detail/count.",
+      "idempotency": "Normalized direct-message open returns one unique pair thread. Send has no idempotency key: an uncertain accepted response can cause a duplicate on retry; no exactly-once guarantee.",
+      "recovery": "Preserve notices, mappings, visibility policy and non-unique history index across application rollback; never reintroduce one-message uniqueness.",
+      "observability": "Synthetic regression evidence and aggregate read-only incident facts only.",
+      "confidence": "SQL runtime and web regression evidence; external delivery and production rollout remain unverified.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "In-app implementation has local SQL/web evidence; required CI, production rollout and recipient-side verification remain pending."
+      },
+      "id": "MSG-NOTIFY-001",
+      "title": "Atomic recipient inbox notifications and multi-message conversations",
+      "statement": "Every newly committed direct message must have one minimized notice for the other participant, and a conversation must support subsequent messages and replies. Inbox reads apply current chat visibility and links select only an authorized existing thread.",
+      "property": "Accepted message and recipient notice commit together; a rejected or rolled-back send leaves neither. Current chat read authority (including canonical block, revoked consent and inactive-account rules) and message deletion govern notice visibility.",
+      "preconditions": [
+        "Governed production migration installed; existing chat session/consent authority remains in force."
+      ],
+      "inputs": [
+        "Authorized message insert",
+        "Recipient notification reads and typed thread links"
+      ],
+      "state": {
+        "variables": [
+          "Persisted messages, recipient notices and one-to-one mappings",
+          "Current consent, block and account lifecycle"
+        ],
+        "bounds": "Synthetic PostgreSQL assertions and web tests; no universal proof. Notification model: one cached target, Boolean display/read history, no ordinary background-polling or backend-policy refinement proof. Navigation model: two same-route navigations, one prior pending poll, Boolean membership and display/read history; no backend refinement or liveness claim."
+      },
+      "allowedTransitions": [
+        "Authorized send atomically stores a message, notice and mapping.",
+        "Recipient follows a notice to an already authorized thread.",
+        "Current policy denial hides an old notice."
+      ],
+      "forbiddenTransitions": [
+        "A second message is rejected solely because a thread already has one message.",
+        "Notification text contains private message contents.",
+        "A failed send leaves a notice or a notice-storage failure leaves a message."
+      ],
+      "effects": [
+        "Durable recipient notice; repeatable migration; no historical replay or external sends."
+      ],
+      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights. A notification target cannot use cached previews, message bodies or read bookkeeping while its fresh thread-list authorization is pending. Each navigation key requires its own successful list request; old cache writes, an earlier poll, or a previous notification response cannot authorize the new target.",
+      "concurrency": "Existing Party and credential locks serialize send/block. Message and notice share the database transaction; read visibility uses statement snapshot semantics.",
+      "failure": "Notification insert failure aborts the send; transient list errors retain the notification target for recovery; unavailable/foreign links show a generic unavailable state and never auto-select or mark another thread read.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-hq-ui/src/pages/ChatPage.tsx",
+        "scripts/production-migrations.json",
+        ".github/workflows/ci.yml",
+        "tdf-mobile/src/navigation/notificationTarget.ts",
+        "tdf-hq-ui/src/components/NotificationBell.tsx"
+      ],
+      "tests": [
+        "scripts/test-chat-notifications.sh",
+        "scripts/social/chat-notifications.sql",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
+        "tdf-mobile/src/navigation/notificationResponses.test.ts",
+        "tdf-hq/test/integration/interactions/notification-properties.sql",
+        "e2e/web/chat-notification-navigation.spec.mjs"
+      ],
+      "formalModels": [
+        "formal/event-operations/ChatNotificationAuthorization.tla",
+        "formal/event-operations/ChatNotificationNavigation.tla"
+      ],
+      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response. An offline-paused, cache-success regression requires an actual authorization response for the current navigation and preserves the link until reconnection. Same-route allowed/revoked tests and delayed ordinary-poll/previous-notification responses exercise a separate navigation-scoped query. The navigation model checks both display/read safety and three cache/response-scope counterexamples.",
+      "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
+      "ambiguity": [
+        "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."
+      ]
     }
   ]
 }
