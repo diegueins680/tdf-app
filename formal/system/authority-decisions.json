@@ -860,6 +860,20 @@
       "authority": "The requirement's recovery clause and the operational intent of a readiness probe: it reports the database, not the pool's history. The probe now retries up to the pool size plus one (the pool bounds the stale connections; one attempt must remain for a live connection, a bound the model found) inside its unchanged two-second deadline, discarding each failed connection; a result, ready or not, is final and cancellation propagates through every attempt. The attempt budget is bound to the pool size plus one by the source-bound verifier. A connection dead without a close blocks until the deadline, one per probe; that case is outside the bound and unchanged. An unavailable database still answers 503 within the deadline, now after at most pool-size-plus-one connection attempts per probe.",
       "decidedOn": "2026-10-12",
       "status": "applied"
+    },
+    {
+      "id": "AUTHORITY-079",
+      "sources": [
+        "formal/system/requirements.json#AUTH-PUBLIC-001",
+        "formal/system/public-routes.json",
+        "formal/system/public-route-admission.md",
+        "scripts/lib/public_routes_conformance.py",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "conflict": "AUTH-PUBLIC-001 admits unauthenticated routes by reviewed boundary but nothing exercised the handlers: the register's handler-session rule said the handler rejects a missing session, while GET /session and POST /session/logout answer an anonymous caller 200 with the anonymous value (null, empty) and give a wrong bearer token the same answer; and POST /social-events/stripe/webhook, a public unsigned callback, answered 500 to any caller while Stripe was unconfigured, where its sibling provider callbacks answer 503. Both found by sweeping all 90 deny-boundary routes on the real backend on 2026-10-13; every other route answered both probes with a client error or 503, most before reaching the capability check.",
+      "authority": "The requirement's intent (no disclosure or action without the capability) and the sibling callbacks' behaviour. The anonymous answers disclose nothing and resolve no session, so the rule is amended to admit answering the anonymous value, and the sweep pins that a wrong token receives exactly it. The unconfigured Stripe callback answers 503 like the other provider callbacks; the signed path is unchanged. The sweep joins the booking conformance harness so a future route that succeeds, faults or discloses without its capability fails CI. The requirement's open-debt wording is corrected: no registered debt remains. Other unconfigured-Stripe 500s remain on authenticated routes outside this register.",
+      "decidedOn": "2026-10-13",
+      "status": "applied"
     }
   ]
 }
