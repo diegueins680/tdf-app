@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "39f2c175344542009253",
+      "currentId": "3834687cda771cfcd52b",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 215,
-      "change": "Ordered 215-entry source manifest retains the exact protected 211-entry main prefix plus four original ledger, checkout snapshot and terms migrations; both parent source reviews remain immutable history. Production execution is separately gated.",
+      "valueCount": 216,
+      "change": "Ordered 216-entry source manifest retains the exact 215-entry ledger dependency prefix and appends the original physical parent-row-version fence; both parent source reviews remain immutable history. Production execution is separately gated.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -430,6 +430,26 @@
             "index": 8
           },
           "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "935beed5d053bfc75d1a0e1a6e4ae204c1c64423",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "3db0c4480bf0ffde30c41a564b836831134da16c39bb4c7df2b06f3f910221d1",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "455e25dae4f5762b166b55846ddad5482362f8ce15387e4a07ec0ca3f8c44d31",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "380da8855ade877f79593e80f93291cd314d311d",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "9afc8f12626eeb1b5a2b1c2183d9e2c514f9ff12fa34b5b24006076fada0feb9",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "79ba6acb6cabcb85d7d5c789bae340ce39e95921794ce093bcfdae689f5deeb9",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]

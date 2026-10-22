@@ -1095,6 +1095,11 @@
       "id": "2026-10-15_checkout_terms_historical_identity",
       "path": "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql",
       "introducedBy": "2af5a662f3e7acca133e154d0c890114f3436177"
+    },
+    {
+      "id": "2026-10-16_ledger_entry_write_fence",
+      "path": "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
+      "introducedBy": "493d40252f48643a14ce47c5328a13844f3b837f"
     }
   ]
 }

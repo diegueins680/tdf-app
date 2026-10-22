@@ -325,7 +325,8 @@
       ]
     },
     "publicUxMainIntegration": "docs/catalog-persistence/public-ux-main-reconciliation-20261021.json",
-    "ledgerReadinessIntegration": "docs/catalog-persistence/ledger-readiness-reconciliation-20261021.json"
+    "ledgerReadinessIntegration": "docs/catalog-persistence/ledger-readiness-reconciliation-20261021.json",
+    "ledgerSnapshotReadinessIntegration": "docs/catalog-persistence/ledger-snapshot-readiness-reconciliation-20261021.json"
   },
   "decisions": [
     {
@@ -17824,12 +17825,12 @@
       "reviewBatch": "checkout-session-readiness-2026-10-14"
     },
     {
-      "id": "39f2c175344542009253",
+      "id": "3834687cda771cfcd52b",
       "classification": "security-system-registry",
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial deployment history.",
-      "justification": "The ordered 215-entry deployment manifest retains protected main’s exact 211-entry prefix and the four original ledger, checkout snapshot and terms migrations in their original relative order. It is a reviewed deployment registry, not selectable product data. SQL and introduction identities remain unchanged. This draft source review does not authorize production execution.",
+      "justification": "The ordered 216-entry deployment manifest retains the exact 215-entry ledger dependency prefix and appends the unchanged physical parent-row-version fence. Its original SQL and introduction identity are preserved. It remains a reviewed deployment registry with separately gated production execution; draft source reconciliation does not authorize deployment or ledger transactions.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
       "evidence": {
@@ -17837,28 +17838,28 @@
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 215
+        "valueCount": 216
       },
-      "reviewBatch": "ledger-readiness-integration-2026-10-21",
+      "reviewBatch": "ledger-snapshot-readiness-integration-2026-10-21",
       "sourceReviewReferences": [
         {
-          "sourceRevision": "f58f6ac1859d3cc294a3ed3cee23cb3da6fac487",
+          "sourceRevision": "935beed5d053bfc75d1a0e1a6e4ae204c1c64423",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "f0d36c6bc10103d71b8cba48f99eb1caa5794515bc229f388a41b45a3ab68e0c",
+          "sourceFileSha256": "fc06f800d0bd20144d0cdd9f49ef6c35330b6ba5e7995c9dcf432c9961611302",
           "sourceEntry": {
-            "id": "65a6948aaeae13164e3e"
+            "id": "8d25e57f854135dc456e"
           },
-          "sourceEntryCanonicalSha256": "e0e09a7d618e470dfa2c656140460e4f3a0fa990501e53d4e56fef313db9d881",
+          "sourceEntryCanonicalSha256": "0e72c2b5613abacbdf246fd9fcf6ece7261378cbd9ab01fd8b2dab85cac1631c",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         },
         {
-          "sourceRevision": "8de1bae4c30961eaa11637e5b4307271250ee176",
+          "sourceRevision": "380da8855ade877f79593e80f93291cd314d311d",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceFileSha256": "5e86f32c7503fb7372fefe49633014a50d10ea92b170e13659b18f8a3d5e8b14",
           "sourceEntry": {
-            "id": "e60cbdb9121493f47fa6"
+            "id": "39f2c175344542009253"
           },
-          "sourceEntryCanonicalSha256": "24ba7ed913a4b392df53e5ea645f0f83dd233ceefc34e67565c785156d6d98f3",
+          "sourceEntryCanonicalSha256": "f56241f0be995649c07a9ebe91c9dd53a8c97bec21d2dc10e0fbc108cc1fb096",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]
