@@ -23,17 +23,35 @@ import System.Environment (lookupEnv)
 import Test.Hspec
 import TDF.Config (AppConfig(..), loadConfig)
 import TDF.RagStore (ensureRagIndex, refreshRagIndexWith, retrieveRagContext)
+import TDF.Test.DisposablePostgres (isDisposablePostgresUrl)
 
 spec :: Spec
 spec = describe "rag-index-privacy-postgresql" $ do
   it "rejects ambiguous or redirected database authority before connecting" $ do
-    map safeConnection
+    map (isDisposablePostgresUrl True)
       [ "postgresql://127.0.0.1:password@external.example/production_test"
       , "postgresql://localhost:5432/fixture_test?host=external.example"
       , "postgresql://127.0.0.1:5432/a/fixture_test"
       , "postgresql://external.example/fixture_test"
-      ] `shouldBe` replicate 4 False
-    safeConnection "postgresql://127.0.0.1:55439/tdf_rag_index_privacy_test" `shouldBe` True
+      , "postgresql://localhost:0/fixture_test"
+      , "postgresql://localhost:65536/fixture_test"
+      , "postgresql://localhost/%70roduction_test"
+      , "postgresql://localhost/production"
+      , "postgresql://localhost/fixture_test#ignored"
+      , " postgresql://localhost/fixture_test"
+      , "https://localhost/fixture_test"
+      ] `shouldBe` replicate 11 False
+  it "accepts parsed authenticated loopback URLs and both PostgreSQL schemes" $ do
+    map (isDisposablePostgresUrl False)
+      [ "postgresql://127.0.0.1:55439/tdf_rag_index_privacy_test"
+      , "postgresql://postgres:postgres@localhost:5432/tdf_rag_index_privacy_test"
+      , "postgres://localhost/tdf_rag_index_privacy_test"
+      , "postgres://user:pa%40ss@127.0.0.1:5432/orders-local_test"
+      ] `shouldBe` replicate 4 True
+  it "admits the CI service hostname only with explicit CI authority" $ do
+    let service = "postgres://postgres:postgres@postgres:5432/tdf_rag_index_privacy_test"
+    isDisposablePostgresUrl False service `shouldBe` False
+    isDisposablePostgresUrl True service `shouldBe` True
   ci <- runIO (lookupEnv "CI")
   configured <- runIO (lookupEnv "TDF_RAG_INDEX_DATABASE_URL")
   overrides <- runIO (traverse lookupEnv ["PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"])
@@ -43,9 +61,7 @@ spec = describe "rag-index-privacy-postgresql" $ do
     Just _ | any (maybe False (not . null)) overrides ->
       it "refuses inherited libpq routing overrides" $
         expectationFailure "Unset inherited libpq routing overrides"
-    Just connection | not (safeConnection connection)
-      || ("postgresql://postgres:postgres@postgres:" `T.isPrefixOf` T.pack connection
-          && ci /= Just "true") ->
+    Just connection | not (isDisposablePostgresUrl (ci == Just "true") connection) ->
       it "refuses a non-disposable database" $
         expectationFailure "Use the isolated integration runner"
     Just connection -> around (withFixture connection) $ do
@@ -352,23 +368,6 @@ testConfig = do
   cfg <- loadConfig
   pure cfg { openAiApiKey = Nothing, openAiEmbedModel = "text-embedding-3-small", ragChunkWords = 1000,
              ragChunkOverlap = 0 }
-
-safeConnection :: String -> Bool
-safeConnection value = case T.stripPrefix "postgresql://" (T.pack value) of
-  Just rest -> case T.splitOn "/" rest of
-    [authority, database] -> validAuthority authority && validDatabase database
-    _ -> False
-  Nothing -> False
-  where
-    validAuthority authority = authority == "postgres:postgres@postgres:5432"
-      || case T.splitOn ":" authority of
-        [host] -> host `elem` ["127.0.0.1", "localhost"]
-        [host, port] -> host `elem` ["127.0.0.1", "localhost"]
-          && not (T.null port) && T.all (\c -> c >= '0' && c <= '9') port
-        _ -> False
-    validDatabase name = "_test" `T.isSuffixOf` name
-      && T.all (\c -> (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-                      || (c >= '0' && c <= '9') || c == '_') name
 
 -- A nonce schema survives pool connection replacement on SQL errors. Each
 -- connection restores its search_path; no shared fixture rows are changed.
