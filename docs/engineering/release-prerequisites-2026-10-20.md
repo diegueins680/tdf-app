@@ -1,23 +1,23 @@
 # Production verification integration — 21 October 2026
 
 PR #574's production migration, startup and runtime inspection work is reconciled
-with protected main `a25971359f21bad4ad2e9debf636b9230a897859`. The other merge
+with protected main `8de1bae4c30961eaa11637e5b4307271250ee176`. The other merge
 parent is the previously approved candidate
-`c359764a038d2228c0e0c0c94c2b9aadb91614b7`. This continues the existing PR;
+`d53c9da6ad965bb49d14264e429738662a4aef4f`. This continues the existing PR;
 the unfinished recovery coordinator remains separate in draft #495.
 
 ## Reconciliation
 
 - Preserve both parents' CI steps and formal model invocations, including the
   migration batch, startup flags and poisoned Operations outbox checks.
-- Preserve all 127 requirement IDs and 76 distinct authority decision IDs by
+- Preserve all 127 requirement IDs and 78 distinct authority decision IDs by
   checking each merged field against both parents and their common ancestor.
 - Preserve main's complete 211-entry migration manifest, SQL, application
   sources, generated API clients and exact Mobile pin
   `3194982a01174d36017533e79400ce9209086162`.
 - Preserve the Operations inbound-capture retention blocker in preparation.
 - Preserve main's current catalog reviews and all existing successor/retirement
-  records. Add only the original startup sweep domain review. The refresh
+  records. Add only the original startup sweep domain review. The earlier refresh
   archives 24 differing shared reviews and six replaced source reviews through
   immutable parent-file and canonical entry hashes in
   `docs/catalog-persistence/runtime-main-refresh-20261021.json`.
@@ -25,11 +25,19 @@ the unfinished recovery coordinator remains separate in draft #495.
 - Regenerate source fingerprints, traceability and catalog reports. No
   requirement conformance classification is promoted by this reconciliation.
 
-## Fresh local validation
+## Scoped local validation
 
-Validation used an owned, disposable PostgreSQL 16.13 cluster on loopback port
-55437, with pgvector 0.8.1 and the committed production-schema/catalog fixtures.
-No production database or provider was used.
+The following runtime and model receipts were executed at candidate
+`d53c9da6ad965bb49d14264e429738662a4aef4f`. This readiness integration preserves
+their migration/startup implementations, test fixtures and expanded SQL bytes.
+Source equivalence retains that bounded evidence; it is not a fresh execution of
+every test at the new merge head. Current inventory, generated-client, source
+admission and catalog checks are rerun. Full new-head hosted qualification is
+required.
+
+The database run used an owned, disposable PostgreSQL 16.13 cluster on loopback
+port 55437, with pgvector 0.8.1 and the committed schema/catalog fixtures. No
+production database or provider was used.
 
 - All 211 migrations apply and replay; the ledger count matches the manifest.
 - `migration-batch-postgres.mjs` passes, including crash after commit, transaction

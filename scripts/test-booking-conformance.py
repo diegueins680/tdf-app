@@ -715,6 +715,8 @@ try:
     verify_invoice_receipts(sql, request, check, ENV, NAME, OUTPUT, actors)
     from operations_conformance import verify_operations
     verify_operations(sql, request, check, ENV, NAME, OUTPUT, actors)
+    from whatsapp_consent_conformance import verify_whatsapp_consent
+    verify_whatsapp_consent(sql, request, check)
 
     from readiness_conformance import verify_readiness
     verify_readiness(run, NAME, http_port, check)

@@ -3499,7 +3499,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5991,7 +5991,7 @@
     {
       "id": "DEPLOY-READINESS-001",
       "title": "Fresh database readiness without private failure detail",
-      "statement": "A ready HTTP response requires a successful fresh SELECT 1 through the application database pool. Pool or query failure and expiry of the two-second cooperative deadline return503 with fixed non-private fields; every readiness response forbids caching.",
+      "statement": "A ready HTTP response requires a successful fresh SELECT 1 through the application database pool. A probe discards pooled connections PostgreSQL has closed, retrying up to the pool size plus one inside its deadline, so one request answers ready once the database is back. Pool or query failure of every attempt and expiry of the two-second cooperative deadline return 503 with fixed non-private fields; every readiness response forbids caching.",
       "domain": "DEPLOY",
       "authority": "User deployment verification and failed-worker success requirements; existing documented health intent",
       "source": "tdf-hq/docs/openapi/api.yaml; formal/system/readiness.md",
@@ -6022,6 +6022,7 @@
       "allowedTransitions": [
         "starting -> probing after boot succeeds",
         "probing -> ready only after fresh successful query",
+        "probing -> probing on a synchronous failure while attempts (the pool size plus one) remain: the failed pooled connection is destroyed",
         "probing -> unavailable on synchronous error, false result or deadline",
         "A subsequent request independently probes current state"
       ],
@@ -6037,10 +6038,10 @@
       ],
       "authorization": "Public non-mutating fixed SELECT1; no caller SQL or chosen database target.",
       "privacy": "Fixed JSON fields exclude database errors, credentials and hostnames; no probe exception rendering.",
-      "concurrency": "Each request includes pool acquisition in its deadline; runtime cancellation must propagate. System.Timeout is cooperative and cannot bound uninterruptible native operations or prove release writer exclusion.",
+      "concurrency": "Each request includes pool acquisition in its deadline; runtime cancellation must propagate. System.Timeout is cooperative and cannot bound uninterruptible native operations or prove release writer exclusion. The attempt budget is the pool size of TDF.DB.makePool plus one (source-bound check): a pool cannot hold more stale connections than its size, and one attempt must remain for a live connection.",
       "idempotency": "Read-only independent observations; retry cannot reuse a cached positive observation.",
-      "failure": "Synchronous exception, negative probe or expired deadline yields503. Runtime cancellation propagates.",
-      "recovery": "Retry a fresh request after database/pool recovery; health does not establish migration, worker, provider, backup or whole-system readiness.",
+      "failure": "Synchronous exception on every attempt (at most the pool size plus one), negative probe or expired deadline yields 503. Runtime cancellation propagates through every attempt.",
+      "recovery": "A fresh request after database/pool recovery answers ready at once: stale pooled connections are consumed by that request's own attempts. Health does not establish migration, worker, provider, backup or whole-system readiness.",
       "observability": "Exact handler HTTP checks, source-bound verifier output and deployed read-only probes; record source and time.",
       "implementation": [
         "tdf-hq/src/TDF/App/Readiness.hs",
@@ -6061,17 +6062,19 @@
         "scripts/lib/readiness_conformance.py",
         "scripts/test-booking-conformance.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/ReadinessProbe.tla"
+      ],
       "status": "specified and implemented",
       "confidence": "Source-derived narrow boundary; exact full-handler and deployed validation outstanding.",
       "ambiguity": [],
-      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery.",
+      "verification": "Actual Haskell boundary tests and six detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery. Attempt retry: Haskell probe tests (stale-then-live, budget exhaustion, final negative result, cancellation through retry) (the mutations include single attempt, no retry and cancellation swallowed in the retry; the attempt budget is bound to the pool size plus one); the PostgreSQL harness first leaves more idle pooled connections than it makes degraded probes, so the probes must discard the terminated connections within their own attempts (with one attempt per probe the recovery probe took the next terminated connection and failed, 2026-10-12). ReadinessProbe.tla: ProbeReportsDatabase over every stale count and database state for PoolSize 4; the one-attempt and pool-size budgets fail it (the model found that a budget of the pool size is one short).",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Full handler build, PostgreSQL failure/recovery and final deployed validation remain outstanding."
+        "reason": "Deployed validation of the handler remains outstanding; the stale-connection recovery is fixed and checked at the Haskell, PostgreSQL-harness and model levels (AUTHORITY-078)."
       },
       "property": "HTTP200 implies a fresh successful application-pool database round trip; failure details remain fixed and responses uncacheable.",
-      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation."
+      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, the deadline, cancellation propagation (in the deadline and in the retry), the retry and all but one attempt."
     },
     {
       "id": "DEPLOY-CANARY-001",
@@ -7502,7 +7505,7 @@
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
       "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
-      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (D\u00e1til)",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
@@ -7602,7 +7605,7 @@
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Provider contract taken from D\u00e1til public documentation; an actual pruebas invoice is required before production.",
+      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
@@ -7614,7 +7617,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real D\u00e1til pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -7778,7 +7781,7 @@
         "scripts/test-whatsapp-consent.sh"
       ],
       "verification": "Bounded TLA+ model with eight negative controls; unit tests; PostgreSQL concurrency tests on the migrated fixture in CI",
-      "evidence": "Keyword unit test, SQLite window/withdrawal/undelivered tests, PostgreSQL simultaneous-claim, duplicate-reply and withdrawal-lock tests, served-app check that the public lookup is gone",
+      "evidence": "formal/system/whatsapp-consent.md; keyword, SQLite and PostgreSQL consent checks; real-backend harness for simultaneous requests, signed confirmation, one notice, redelivery and migrated non-unique history indexes. The historical constraint collision was reproduced before the additive index repair; fresh combined-candidate execution remains required.",
       "status": "specified and implemented",
       "historicalStatus": null,
       "critical": true,
@@ -7826,20 +7829,22 @@
         "superseded attempt failure -> any change to a newer request, consent or withdrawal"
       ],
       "effects": [
-        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages."
+        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages; the confirmation notice samples its own timestamp after the atomic inbound receipt. Current main permits distinct messages at one phone/party timestamp through the index-declaration migration."
       ],
       "authorization": "Only the number's own reply (verified Meta webhook signature) or an Admin can activate consent.",
       "privacy": "Public responses are identical regardless of prior state; display names are not returned publicly.",
       "concurrency": "Claim, confirmation and the undelivered mark are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits. Row creation uses ON CONFLICT DO NOTHING. A withdrawal raises revoked_at to the request instant inside its own transaction, so a clock read before the row lock cannot predate the request.",
       "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours of a request send nothing unless they retry an undelivered request inside its hour; a send failure is bound to its own request instant.",
-      "failure": "A WhatsApp send failure is recorded on the outgoing message and marks only its own request undelivered; consent is unaffected.",
+      "failure": "A WhatsApp send failure is recorded on the outgoing message and marks only its own request undelivered; consent is unaffected. The signed confirmation fixture requires HTTP200, consent activation and one recorded notice. The historical phone/timestamp collision is removed by the existing index-declaration migration; a separate notice clock sample alone was only best-effort on the old schema.",
       "recovery": "A number can request again 24 hours after its last request instant, or retry an undelivered, unwithdrawn request within 1 hour.",
       "observability": "whats_app_consent note (pending_confirmation, pending_unsent, confirmed_by_reply), confirmation_requested_at, revoked_at, outgoing message sources.",
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "scripts/test-whatsapp-consent.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/lib/whatsapp_consent_conformance.py",
+        "scripts/test-booking-conformance.py"
       ],
       "formalModels": [
         "formal/event-operations/WhatsAppConsent.tla",
@@ -7861,7 +7866,8 @@
         "The 1-hour window for an undelivered request is an engineering default chosen because the number never saw a prompt; the product owner has not confirmed the duration.",
         "A provider failure that hides an actual delivery (ambiguous timeout) is treated as undelivered and could allow a second request inside the interval.",
         "A withdrawn request cannot be replaced until 24 hours after its request instant. Because opting out needs no proof of control, a third party can impose that wait on someone else's pending request; this is accepted so that the unauthenticated opt-out cannot be used to message a number repeatedly. Staff capture remains available.",
-        "An undelivered request that is neither confirmed nor retried within 1 hour waits for the 24-hour interval even though nothing was delivered."
+        "An undelivered request that is neither confirmed nor retried within 1 hour waits for the 24-hour interval even though nothing was delivered.",
+        "Provider notice delivery and durable retry after an accepted inbound receipt are separate obligations; the existing index-declaration migration supersedes the historical same-timestamp uniqueness hazards without establishing exactly-once provider delivery."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9335,7 +9341,7 @@
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
-      "idempotency": "Re-tapping Asistir\u00e9 re-upserts the same accepted RSVP.",
+      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
       "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
@@ -10102,7 +10108,8 @@
       "tests": [
         "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
         "scripts/test-index-declarations.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/lib/whatsapp_consent_conformance.py"
       ],
       "formalModels": [
         "formal/event-operations/IndexDeclaration.tla",

@@ -78,7 +78,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [whatsapp-redelivery.md](whatsapp-redelivery.md): a redelivered WhatsApp message changes nothing and is not answered again; opt-out stored and applied in one transaction; bounded model, four negative controls and PostgreSQL tests.
 - [ticket-invoice-worker.md](ticket-invoice-worker.md): tax document submission worker rules, bounded model, four negative controls, PostgreSQL worker tests and the uncertain/rejected recovery gaps.
 - [music-ddex-export.md](music-ddex-export.md): DDEX export/job lifecycle under worker leases, two gates, valid and failed finality, queued-only replay repair, bounded model with five controls and the fixed failure report.
-- [whatsapp-consent.md](whatsapp-consent.md): double opt-in request, reply, withdrawal and undelivered-request rules with a bounded model, eight negative controls and PostgreSQL concurrency checks.
+- [whatsapp-consent.md](whatsapp-consent.md): double opt-in request, reply, withdrawal and undelivered-request rules with a bounded model, eight negative controls and PostgreSQL concurrency checks; confirmation-notice timestamps and real-backend checks (AUTHORITY-074).
 - [migration-correspondence.md](migration-correspondence.md): production migration batch and release preparation: atomic ledger rows, fail-closed lock refusal (AUTHORITY-075), checksum drift, unknown rows and holes, bounded negative controls.
 
 - [startup-gates.md](startup-gates.md): the capability-gate policy of the startup verifier, every asserted flag in every state against the real SQL, the restart-hazard list (AUTHORITY-077), exhaustive one-state model with controls.
