@@ -2107,6 +2107,12 @@ paths:
         '401': { description: Current credentials or identifier session are invalid }
         '403': { description: Credential is disabled }
         '500': { description: Transaction failed; no credential or session changes committed }
+  /integrations/event-watch/token:
+    $ref: ./event-watch.yaml#/paths/~1integrations~1event-watch~1token
+  /integrations/event-watch/candidates:
+    $ref: ./event-watch.yaml#/paths/~1integrations~1event-watch~1candidates
+  /integrations/event-watch/import:
+    $ref: ./event-watch.yaml#/paths/~1integrations~1event-watch~1import
   /login:
     post:
       summary: Login with username or email
@@ -9848,6 +9854,10 @@ security:
 
 components:
   securitySchemes:
+    eventWatchToken:
+      type: http
+      scheme: bearer
+      description: Isolated opaque event-watch session; never an interactive or administrative token.
     bearerAuth:
       type: http
       scheme: bearer

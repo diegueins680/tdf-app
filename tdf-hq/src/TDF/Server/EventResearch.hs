@@ -14,6 +14,11 @@ module TDF.Server.EventResearch
     , materializationPublicationHoldSourceStatus
     , materializationVenueCountryMatches
     , materializationWorkflowStateCode
+    -- Shared transactional primitives for the isolated service-authenticated lane.
+    , createRunDb
+    , upsertCandidateDb
+    , candidateEntityToDTO
+    , materializeCandidateDb
     ) where
 
 import Control.Exception (SomeException, displayException, try)

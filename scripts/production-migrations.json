@@ -1075,6 +1075,11 @@
       "id": "2026-10-13_chat_message_notifications",
       "path": "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
       "introducedBy": "1be9d0d7dba613ced9cfe553529a5445b000ecf9"
+    },
+    {
+      "id": "2026-10-21_event_watch_service_auth",
+      "path": "tdf-hq/sql/2026-10-21_event_watch_service_auth.sql",
+      "introducedBy": "1cb1dada1ec2bfdd1abc3d4d4053979ba482f287"
     }
   ]
 }

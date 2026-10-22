@@ -9,6 +9,10 @@ Historical green results are not current-candidate evidence.
 
 ## Executable gates
 
+- [event-watch-service-auth.md](event-watch-service-auth.md): isolated short-lived
+  service credentials, revocation and bounded event ingestion; runtime release
+  obligations remain explicit.
+
 These checks make drift fail CI; run them before changing a mapped surface.
 
 | Gate | Enforces |
