@@ -10549,6 +10549,73 @@
       "ambiguity": [
         "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."
       ]
+    },
+    {
+      "id": "SYS-CI-DB-001",
+      "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
+      "statement": "The owned event-operations API migration test must wait for a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
+      "domain": "SYS",
+      "actors": [
+        "CI fixture runner",
+        "Developer"
+      ],
+      "preconditions": [
+        "The runner has started its own disposable PostgreSQL 16 container with a fixed synthetic test database."
+      ],
+      "inputs": [
+        "Owned container identity",
+        "Fixed test database",
+        "Bounded final-listener readiness query"
+      ],
+      "state": {
+        "states": [
+          "container starting",
+          "initialization server only",
+          "final server ready",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Starting or initialization-only -> final server ready after the loopback TCP query succeeds.",
+        "Readiness deadline exceeded -> failed with container diagnostics."
+      ],
+      "forbiddenTransitions": [
+        "A socket-only initialization query succeeds -> apply fixtures.",
+        "Readiness deadline exceeded -> continue SQL tests."
+      ],
+      "effects": [
+        "Wait for the final database process before fixture and migration SQL."
+      ],
+      "authorization": "Only the existing owned disposable test container is addressed; this runner grants no production authority.",
+      "privacy": "The database and its password are fixed synthetic test values.",
+      "concurrency": "The temporary initialization process can stop after accepting socket connections; TCP readiness excludes that process.",
+      "idempotency": "Readiness SELECT has no fixture or migration side effect.",
+      "failure": "Retain the existing 30-attempt bound, print container logs and fail when the final listener is unavailable.",
+      "recovery": "Repair fixture startup and rerun the complete Linux migration job; no SQL assertion or audit policy is waived.",
+      "observability": "Real PostgreSQL control: old socket probe accepts initialization, repaired TCP probe rejects initialization/stopped phases and accepts the final listener.",
+      "authority": "inferred",
+      "source": "Failed hosted postgres-api run 39712279548; official postgres image initialization lifecycle; local PostgreSQL 16 socket/TCP reproduction on 2026-10-21.",
+      "property": "Initialization-only PostgreSQL cannot admit the API fixture SQL.",
+      "contract": "formal/system/test-database-readiness.md",
+      "implementation": [
+        "scripts/test-event-operations-api-migration.sh"
+      ],
+      "tests": [
+        ".github/workflows/event-operations-formal.yml"
+      ],
+      "formalModels": [],
+      "verification": "Actual PostgreSQL 16 socket-only and TCP phases exercise the extracted readiness query; the full owned-container migration job remains required.",
+      "evidence": "Private 2026-10-21 protocol receipt and exact-head hosted postgres-api job; the original failed run is retained.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "High for distinguishing these finite server phases; no general fixture-readiness or full Docker execution claim.",
+      "ambiguity": [
+        "Other disposable PostgreSQL runners have separate readiness and ownership obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Actual native PostgreSQL phase controls pass; fresh combined-head Linux Docker migration qualification is pending."
+      }
     }
   ]
 }

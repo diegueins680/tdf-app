@@ -27,7 +27,9 @@ docker run --rm -d \
   postgres:16-alpine >/dev/null
 
 attempt=0
-until docker exec "$test_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d "$test_database" -qAtc 'SELECT 1' >/dev/null 2>&1; do
+# The image starts a socket-only server during initialization, then stops it.
+# Wait for the final TCP listener before applying fixtures and migrations.
+until docker exec "$test_container" psql -h 127.0.0.1 -X -v ON_ERROR_STOP=1 -U postgres -d "$test_database" -qAtc 'SELECT 1' >/dev/null 2>&1; do
   attempt=$((attempt + 1))
   if [ "$attempt" -ge 30 ]; then
     docker logs "$test_container" >&2
