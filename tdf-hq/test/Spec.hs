@@ -54,6 +54,7 @@ import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
+import qualified TDF.TicketManualReviewSpec as TicketManualReviewSpec
 import qualified TDF.IndexDeclarationSpec as IndexDeclarationSpec
 import qualified TDF.InvoiceWorkerSpec as InvoiceWorkerSpec
 import qualified Test.QuickCheck as QC
@@ -628,6 +629,7 @@ import qualified TDF.MetaRedeliverySpec as MetaRedeliverySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
 import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
+import qualified TDF.MusicPublicationSpec as MusicPublicationSpec
 import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
 import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
@@ -884,6 +886,7 @@ main = hspec $ do
     TicketConfirmationSpec.spec
     EventOrganizerSpec.spec
     InvoiceDatilSpec.spec
+    TicketManualReviewSpec.spec
     IndexDeclarationSpec.spec
     InvoiceWorkerSpec.spec
     describe "merch commercial reputation formula v1" $ do
@@ -17894,6 +17897,7 @@ main = hspec $ do
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
     WhatsAppConsentSpec.spec
+    MusicPublicationSpec.spec
     InteractionWriteBudgetSpec.spec
     MusicPurchaseSpec.spec
     DriveReplaySpec.spec

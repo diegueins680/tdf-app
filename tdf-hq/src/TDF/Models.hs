@@ -590,6 +590,8 @@ ChatMessage
     body             Text
     createdAt        UTCTime
     deriving Show Generic
+    -- Non-unique history index is governed by SQL; a Persistent unique here
+    -- would incorrectly limit the conversation to one message.
 PartyRadioPresence
     partyId          PartyId
     streamUrl        Text

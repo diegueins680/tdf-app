@@ -306,6 +306,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true, toggleButt
         </Box>
 
         <Stack direction="row" spacing={1} alignItems="center" sx={{ flexGrow: 1 }}>
+          <Tooltip title="Buscar artistas y comunidad"><IconButton component={RouterLink} to="/buscar" aria-label="Buscar artistas y comunidad" sx={{ minWidth: 44, minHeight: 44 }}><SearchIcon /></IconButton></Tooltip>
           <Tooltip title="Cmd/Ctrl + K">
             <Button
               color="inherit"

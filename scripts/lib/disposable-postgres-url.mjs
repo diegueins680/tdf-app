@@ -7,9 +7,11 @@ export function disposablePostgresUrl(value, { ci = false, env = process.env } =
     assert.ok(!env[name], `Connection-overriding ${name} is forbidden in disposable runners`);
   }
   assert.equal(typeof value, 'string', 'A disposable database URL is required');
+  assert.equal(value, value.trim(), 'Database URL whitespace is forbidden');
   assert.ok(!value.includes('?') && !value.includes('#'), 'Database URL overrides are forbidden');
   const url = new URL(value);
   assert.ok(['postgres:', 'postgresql:'].includes(url.protocol), 'PostgreSQL URL required');
+  assert.ok(!url.port || (Number(url.port) > 0 && Number(url.port) <= 65535), 'Valid database port required');
   assert.ok(['127.0.0.1', 'localhost'].includes(url.hostname)
     || (ci && url.hostname === 'postgres'), 'Only isolated local/CI databases are allowed');
   assert.match(url.pathname, /^\/[a-zA-Z0-9_-]+_test$/, 'Disposable database name required');
