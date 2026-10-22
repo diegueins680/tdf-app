@@ -325,8 +325,10 @@
       ]
     },
     "publicUxMainIntegration": "docs/catalog-persistence/public-ux-main-reconciliation-20261021.json",
+    "runtimeMainRefresh": "docs/catalog-persistence/runtime-main-refresh-20261021.json",
     "ledgerReadinessIntegration": "docs/catalog-persistence/ledger-readiness-reconciliation-20261021.json",
-    "ledgerSnapshotReadinessIntegration": "docs/catalog-persistence/ledger-snapshot-readiness-reconciliation-20261021.json"
+    "ledgerSnapshotReadinessIntegration": "docs/catalog-persistence/ledger-snapshot-readiness-reconciliation-20261021.json",
+    "ledgerCombinedIntegration": "docs/catalog-persistence/ledger-combined-reconciliation-20261022.json"
   },
   "decisions": [
     {
@@ -17808,6 +17810,22 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "3b552ac5c12256abe0b4",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing this sweep domain without changing the startup verifier and its policy note can leave a production capability-gate state unverified, so a later container start fails without a test having said so.",
+      "justification": "The three states (missing, disabled, enabled) are the exhaustive domain of one revenue_feature_flag row that the startup-gates sweep varies per asserted flag. It is a finite test domain copied from the verifier's rule shape, not a selectable catalog or a production source of authority.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-12",
+      "reviewBatch": "startup-gates-2026-10-12",
+      "evidence": {
+        "file": "scripts/__tests__/startup-gates-postgres.mjs",
+        "line": 40
+      }
     },
     {
       "id": "cf264a325e5b4853ecac",

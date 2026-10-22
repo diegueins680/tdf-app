@@ -109,6 +109,18 @@ run_negative_tlc AccessGrantRebind.cfg accessgrantrebind 'Invariant SingleRedeem
 run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant RedeemedNeverRevoked is violated' AccessGrant.tla
 run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
 run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
+
+run_tlc MigrationLedger.tla MigrationLedger.cfg migration-ledger
+run_negative_tlc MigrationLedgerRecordAfterCommit.cfg migration-ledger-record-after-commit 'Invariant EffectsRecorded is violated' MigrationLedger.tla
+run_negative_tlc MigrationLedgerBatchUnchecked.cfg migration-ledger-batch-unchecked 'Invariant NoRunPastDrift is violated' MigrationLedger.tla
+run_negative_tlc MigrationLedgerPrepareUnchecked.cfg migration-ledger-prepare-unchecked 'Invariant PreparationSound is violated' MigrationLedger.tla
+run_negative_tlc MigrationLedgerUnknownAccepted.cfg migration-ledger-unknown-accepted 'Invariant PreparationSound is violated' MigrationLedger.tla
+
+run_tlc StartupGates.tla StartupGates.cfg startup-gates
+run_negative_tlc StartupGatesStagedAccepted.cfg startup-gates-staged-accepted 'The invariant of StartImpliesApproved is equal to FALSE' StartupGates.tla
+run_negative_tlc StartupGatesMissingAccepted.cfg startup-gates-missing-accepted 'The invariant of StartImpliesApproved is equal to FALSE' StartupGates.tla
+run_negative_tlc StartupGatesEitherRejected.cfg startup-gates-either-rejected 'The invariant of ApprovedStarts is equal to FALSE' StartupGates.tla
+run_negative_tlc StartupGatesRequiredUnchecked.cfg startup-gates-required-unchecked 'The invariant of StartImpliesApproved is equal to FALSE' StartupGates.tla
 # AUTH-OPS-READ-001: one state; every invariant quantifies over the whole finite policy, so TLC reports a constant-level failure.
 run_tlc OperationsReadPolicy.tla OperationsReadPolicy.cfg operations-read-policy
 run_negative_tlc OperationsReadPolicyWildcardSecurity.cfg operations-read-policy-wildcard-security 'The invariant of NoSecurityDisclosure is equal to FALSE' OperationsReadPolicy.tla
@@ -249,6 +261,11 @@ run_negative_tlc WhatsAppConsentUnboundFailure.cfg whatsapp-consent-unbound-fail
 run_negative_tlc WhatsAppConsentReleasedFailure.cfg whatsapp-consent-released-failure 'Invariant UndeliveredStaysPending is violated' WhatsAppConsent.tla
 run_negative_tlc WhatsAppConsentLongUnsentWindow.cfg whatsapp-consent-long-unsent-window 'Invariant ConfirmedInsideWindow is violated' WhatsAppConsent.tla
 run_negative_tlc WhatsAppConsentRenewedUnsent.cfg whatsapp-consent-renewed-unsent 'Invariant ConfirmedInsideWindow is violated' WhatsAppConsent.tla
+run_tlc PublicRouteAdmission.tla PublicRouteAdmission.cfg public-route-admission
+run_negative_tlc PublicRouteAdmissionUnregistered.cfg public-route-admission-unregistered 'The invariant of ServedRoutesRegistered is equal to FALSE' PublicRouteAdmission.tla
+run_negative_tlc PublicRouteAdmissionStale.cfg public-route-admission-stale 'The invariant of NoStaleEntries is equal to FALSE' PublicRouteAdmission.tla
+run_negative_tlc PublicRouteAdmissionUnreviewedMutation.cfg public-route-admission-unreviewed-mutation 'The invariant of MutationReviewed is equal to FALSE' PublicRouteAdmission.tla
+run_negative_tlc PublicRouteAdmissionDebtConformant.cfg public-route-admission-debt-conformant 'The invariant of DebtNeverConformant is equal to FALSE' PublicRouteAdmission.tla
 run_tlc ReadinessProbe.tla ReadinessProbe.cfg readiness-probe
 run_negative_tlc ReadinessProbeSingleAttempt.cfg readiness-probe-single-attempt 'Invariant ProbeReportsDatabase is violated' ReadinessProbe.tla
 run_negative_tlc ReadinessProbePoolSizeAttempts.cfg readiness-probe-pool-size-attempts 'Invariant ProbeReportsDatabase is violated' ReadinessProbe.tla

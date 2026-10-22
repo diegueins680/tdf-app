@@ -1134,7 +1134,7 @@
       "formalModels": [],
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for finite middleware cases and observed configuration; deployed correction pending.",
+      "confidence": "High for finite middleware cases; October13 configuration and two health-origin requests observed. Full deployed contract remains unverified.",
       "ambiguity": [
         "Endpoint CSRF defenses and every alternate deployment environment are not established by these CORS tests."
       ],
@@ -1146,7 +1146,7 @@
       "property": "Production credentialed origin admission requires an explicitly trusted origin; arbitrary origins cannot reach the handler.",
       "contract": "formal/system/cors-boundary.md",
       "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins.",
-      "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts."
+      "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts. October13 runtime configuration and two health-origin smoke observations are retained in formal/system/evidence/2026-10-13-runtime-controls/; they supersede the October4 allow-all observation for that instant."
     },
     {
       "id": "AUTH-REGISTRY-001",
@@ -2273,9 +2273,9 @@
       "idempotency": "Read-only repeat observations do not mutate application state. Exclusive receipt creation rejects accidental overwrite.",
       "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider.",
       "recovery": "Retry observation after authorized configuration correction; retain previous receipts. No database restoration or image rollback is performed.",
-      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata.",
+      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata. Known backend boolean controls must be represented even when absent; record CORS boolean aliases and preserve absent/empty/false distinctions. Conservative source discovery must reject newly introduced literal controls missing from the collector register.",
       "formalModels": [],
-      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established.",
+      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established. Boolean discovery includes literal parser-wrapped lookups and association-list lookups compared with all-boolean Just membership lists, without requiring a naming suffix; preparation accepts collector-valid raw spellings while requiring explicitly false destructive flags. Synthetic regressions only; this does not evaluate per-handler defaults or whitespace semantics.",
       "evidence": "Exact-revision inspection receipt and repository quality-gate logs.",
       "status": "specified and implemented",
       "confidence": "High within read-only target/disclosure guard scope; routine guarded release remains unimplemented.",
@@ -2283,7 +2283,8 @@
         "Absent environment variables need effective-default analysis.",
         "Container image/public version observations require artifact metadata correspondence before release.",
         "Optional event-operations flag-table absence and missing merchandise flag rows remain explicit unknowns; observed flag state alone is not authorization to enable or mount features.",
-        "The catalog-role SQL requires separately authorized provisioning; read-only monitoring does not authorize sending mail, suppressing recipients or modifying application records."
+        "The catalog-role SQL requires separately authorized provisioning; read-only monitoring does not authorize sending mail, suppressing recipients or modifying application records.",
+        "Lexical boolean discovery excludes computed environment names and does not resolve effective defaults or CORS alias precedence; that analysis must use the observed backend revision."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2299,14 +2300,16 @@
         "scripts/production_access.py",
         "scripts/production-catalog-inventory.mjs",
         "ops/hetzner/catalog-readonly-role.sql",
-        "scripts/mail-deliverability-monitor.py"
+        "scripts/mail-deliverability-monitor.py",
+        "scripts/lib/hetzner-preparation.mjs"
       ],
       "tests": [
         "scripts/test-hetzner-inspection.py",
         "scripts/__tests__/hetzner-inspection.test.mjs",
         "scripts/test_production_access.py",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
-        "scripts/test_mail_deliverability_monitor.py"
+        "scripts/test_mail_deliverability_monitor.py",
+        "scripts/__tests__/hetzner-preparation.test.mjs"
       ],
       "critical": false
     },
@@ -2379,7 +2382,7 @@
     {
       "authority": "inferred",
       "source": "ops/hetzner/README.md; formal/system/authority-decisions.json",
-      "contract": "ops/hetzner/README.md",
+      "contract": "formal/system/migration-correspondence.md",
       "domain": "DEPLOY",
       "actors": [
         "Release operator",
@@ -2411,19 +2414,29 @@
       ],
       "authorization": "Preparation is local inspection. Deployment requires independent exact-head review, merge, post-merge gates and a guarded executor.",
       "privacy": "Plans contain migration hashes and allowlisted identities, never SQL data, credentials or raw child-process diagnostics.",
-      "concurrency": "Source is immutable and the CLI checks checkout cleanliness/head before and after. A future executor must re-observe live state under its release lock; a recent observation does not prevent runtime races.",
+      "concurrency": "Source is immutable and the CLI checks checkout cleanliness/head before and after. The batch runs under one advisory lock and exits 3 while another migration holds it. Each ledger row commits in the transaction of its migration (a file's own COMMIT commits both), so a crash leaves effects and ledger row together or neither. A future executor must re-observe live state under its release lock; a recent observation does not prevent runtime races.",
       "idempotency": "Repeated preparation is observational; exclusive output creation prevents receipt overwrite.",
-      "failure": "Reject malformed, stale, future-dated, wrong-target, dirty-source or checksum-incompatible inputs without remote action.",
+      "failure": "Reject malformed, stale, future-dated, wrong-target, dirty-source or checksum-incompatible inputs without remote action. A failing migration leaves no effects and no ledger row; a held lock ends the batch with status 3 before touching anything (before 2026-10-12 the refusal exited 0 and the entrypoint reported success).",
       "recovery": "Preserve prior receipts and applied migration history. Correct source/input under review; never alter applied SQL to make the comparison pass.",
       "observability": "Record source revision, raw manifest hash, expanded migration checksums, applied source/checksum, input receipt hash, preparation source hash, timestamps, pending count and outstanding release gates.",
-      "formalModels": [],
-      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags. No model-to-whole-system proof.",
-      "evidence": "Exact-candidate test logs and preparation receipt; preparation is not a deployment receipt.",
+      "formalModels": [
+        "formal/event-operations/MigrationLedger.tla",
+        "formal/event-operations/MigrationLedger.cfg",
+        "formal/event-operations/MigrationLedgerRecordAfterCommit.cfg",
+        "formal/event-operations/MigrationLedgerBatchUnchecked.cfg",
+        "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg",
+        "formal/event-operations/MigrationLedgerUnknownAccepted.cfg"
+      ],
+      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags; bounded TLC check of MigrationLedger.tla (1,282,056 states, 334,720 distinct, depth 26) with four single-guard negative controls; the rendered batch run through psql against the migrated fixture (migration-batch-postgres.mjs): atomic ledger rows for files with and without their own transaction, the previous layout as a negative control, checksum drift, compatible checksums, unknown rows, holes, unrecorded effects, lock refusal status. No model-to-whole-system proof.",
+      "evidence": "Exact-candidate test logs and preparation receipt; preparation is not a deployment receipt. TLC runs registered in scripts/verify-event-operations-formal.sh; migration-batch-postgres.mjs in CI; the lock refusal exiting 0 reproduced with psql 16 on 2026-10-12.",
       "status": "specified and implemented",
-      "confidence": "High for tested source/ledger comparison boundary; live migration application and guarded recovery remain open.",
+      "confidence": "High for the tested source/ledger comparison and the batch semantics on the migrated fixture; live migration application and guarded recovery remain open.",
       "ambiguity": [
         "Runtime receipt trust is local and unsigned; a deployment executor must acquire fresh observations itself.",
-        "Provider flag changes caused by pending migrations still require restored-database rehearsal and comparison."
+        "Provider flag changes caused by pending migrations still require restored-database rehearsal and comparison.",
+        "The batch tolerates ledger rows its manifest does not know so an older image can start after a rollback; release preparation rejects them. A hole (a pending entry before an applied one) is applied after the later entry by the next batch; independence of such migrations is assumed (AUTHORITY-075).",
+        "Effects applied without a ledger row under the previous batch layout (or by hand) are re-applied by the next batch and need a forward repair when the SQL is not idempotent; the atomic row prevents new occurrences only.",
+        "The atomic ledger row requires every manifest entry (expanded SQL) to open at most one transaction, end with its COMMIT, never roll back and use no statement that refuses a transaction block; production-release.test.mjs checks every registered entry."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2431,18 +2444,24 @@
       },
       "id": "DEPLOY-MIGRATION-001",
       "title": "Immutable production migration correspondence before release",
-      "statement": "Release preparation must bind the exact candidate revision and every included SQL blob to the manifest, reject unrecognized or changed applied history, and retain every pending migration in manifest order. Preparation must not authorize production execution.",
+      "statement": "Release preparation must bind the exact candidate revision and every included SQL blob to the manifest, reject unrecognized or changed applied history, and retain every pending migration in manifest order. Preparation must not authorize production execution. The batch that applies pending migrations records each ledger row in the same transaction as the migration it describes, and refuses to proceed with a non-zero status while another migration holds the lock.",
       "property": "Every applied ledger entry occurs once in the manifest and matches its expanded checksum or an explicitly registered compatible checksum; every introduction commit is a candidate ancestor.",
       "implementation": [
         "scripts/lib/migration-contract.mjs",
         "scripts/lib/hetzner-preparation.mjs",
         "scripts/prepare-hetzner-release.mjs",
-        "scripts/production-release.mjs"
+        "scripts/production-release.mjs",
+        "scripts/lib/production-release.mjs",
+        "scripts/render-production-migration-batch.mjs",
+        "tdf-hq/production-entrypoint.sh"
       ],
       "tests": [
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
-        "scripts/__tests__/provider-rollback.test.mjs"
+        "scripts/__tests__/provider-rollback.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
+        "scripts/__tests__/production-entrypoint.test.mjs",
+        "scripts/test-automatic-migrations-production-schema.sh"
       ],
       "critical": true
     },
@@ -2771,7 +2790,7 @@
     {
       "authority": "reconciled",
       "source": "Production outage 2026-10-07 (restart rejected by the verifier after checkout.paypal.refunds was enabled); AUTHORITY-050",
-      "contract": "docs/automatic-production-migrations.md",
+      "contract": "formal/system/startup-gates.md",
       "domain": "DEPLOY",
       "actors": [
         "Production entrypoint",
@@ -2808,15 +2827,25 @@
       "concurrency": "Runs once per container start before the server accepts traffic.",
       "idempotency": "Repeated verification of an unchanged database is equivalent.",
       "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
-      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips verification only when the ledger is complete.",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and fly.toml set it true; the precheck requires it).",
       "observability": "Fixed exception text names the violated gate class.",
-      "formalModels": [],
-      "verification": "Executable SQL verification against a fully migrated PostgreSQL database",
-      "evidence": "Automatic-migration test accept/reject assertions and a failing run against the previous verifier",
+      "formalModels": [
+        "formal/event-operations/StartupGates.tla",
+        "formal/event-operations/StartupGates.cfg",
+        "formal/event-operations/StartupGatesStagedAccepted.cfg",
+        "formal/event-operations/StartupGatesMissingAccepted.cfg",
+        "formal/event-operations/StartupGatesEitherRejected.cfg",
+        "formal/event-operations/StartupGatesRequiredUnchecked.cfg"
+      ],
+      "verification": "Executable SQL verification against a fully migrated PostgreSQL database; every asserted production flag run through the real verification in each of its three states (42 runs, startup-gates-postgres.mjs) plus the approved baseline and both joint extremes of the either-state gates; one-state exhaustive TLC check of StartupGates.tla over all 4,782,969 flag assignments with four single-guard negative controls.",
+      "evidence": "Automatic-migrations rehearsal; startup-gates-postgres.mjs in CI; TLC runs registered in scripts/verify-event-operations-formal.sh.",
       "status": "specified and implemented",
-      "confidence": "High for the provider gate rule under the tested schema; other verifier checks are unchanged.",
+      "confidence": "High for the provider gate rule and the other asserted flags on the tested schema; production flag states unobserved.",
       "ambiguity": [
-        "Other startup assertions may encode states that later become approved; each needs the same review."
+        "The fourteen asserted flags and their accepted states are the complete startup gate policy as of 2026-10-12 (formal/system/startup-gates.md); enabling a staged, service-booking or course gate, or disabling a manual-settlement or marketplace gate, fails every later container start until the verifier changes (the 2026-10-07 incident class).",
+        "Production flag states are not observable from the repository; the policy is a precondition for flag changes.",
+        "The verifier also blocks startup on data toggles outside revenue_feature_flag: interaction_entity_kind artist_update must be disabled, security_role_assignment_policy artist.invitation.artist and classified_category artist-profile must be active, the directory artist-listing audit must report nothing, no suppressed imported directory event, catalog backfill run statuses and minimum active-row counts; each is a restart hazard of the same class and needs the same release discipline.",
+        "The startup verification runs only when AUTO_APPLY_PRODUCTION_MIGRATIONS is true (the shipped default); with it false the container starts with no verification at all."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2824,7 +2853,7 @@
       },
       "id": "DEPLOY-STARTUP-001",
       "title": "Startup schema verification accepts approved production state",
-      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate.",
+      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate. The verifier also requires the manual-settlement gates (checkout.bank_transfer, checkout.cash, checkout.pos) and the marketplace sales and rentals gates to exist enabled, and the service-booking and course checkout and recurring-billing gates to exist disabled; enabling or disabling any of these in production is a verifier change in the same release.",
       "property": "Every approved provider gate state passes startup verification; staged providers and missing gates fail",
       "implementation": [
         "scripts/lib/production-release.mjs",
@@ -2832,7 +2861,8 @@
       ],
       "tests": [
         "scripts/test-automatic-migrations-production-schema.sh",
-        "scripts/__tests__/production-release.test.mjs"
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/startup-gates-postgres.mjs"
       ],
       "critical": true
     },
@@ -3197,7 +3227,7 @@
       "critical": true,
       "ambiguity": [
         "Full upload lifecycle, DB/file atomicity, retries, retention, quotas and deletion require separate reconciliation.",
-        "Production storage rollout and coordinated backup/restore remain unimplemented and unverified."
+        "Canonical writable production bind observed October13; legacy file preservation, deployed startup admission and coordinated backup/restore remain unverified."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3207,7 +3237,7 @@
       "property": "Production starts only after private upload storage admission, and replacement preserves accepted legacy files.",
       "contract": "formal/system/private-upload-persistence.md",
       "verification": "Actual shell negative controls, digest-pinned synthetic Linux container replacement, redacted production mount inspection and guarded coordinated recovery verification.",
-      "evidence": "Exact-revision CI logs and private runtime receipts; current production observation is nonconforming, not repaired by source edits."
+      "evidence": "The October13 source-bound runtime receipt at formal/system/evidence/2026-10-13-runtime-controls/runtime.json observes the canonical writable private bind. It supersedes the October5 missing-mount observation, not the remaining preservation, startup, file-access and recovery obligations."
     },
     {
       "id": "SYS-API-003",
@@ -3536,7 +3566,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5201,15 +5231,15 @@
       "critical": true,
       "source": "formal/system/public-route-admission.md; audit of main 1f99d143900a67aa9b82f4138630684afbd7db2f on 2026-10-06; OWASP API Security Top 10 2023 API1 and API5",
       "status": "specified and implemented",
-      "confidence": "High for structural admission; handler enforcement verified only for repaired routes.",
+      "confidence": "High for structural admission; handler behaviour bounded by the denial sweep, with the capability comparison observed only where the probe reaches it.",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Admission gate, negative controls and served HTTP denial checks exist; two registered debts remain open."
+        "reason": "Admission gate, its controls and model, and the served denial sweep over every deny-boundary route pass; handler enforcement on records that only provider-backed intakes create rests on their own suites; no registered debt remains."
       },
-      "evidence": "Gate output, fourteen negative controls, served-application HTTP status checks and the PostgreSQL-backed booking conformance assistant checks",
+      "evidence": "Gate output, fourteen negative controls, four model controls, the served denial sweep (90 routes, two probes each) and the PostgreSQL-backed booking conformance checks",
       "observability": "Gate output names each offending method and path.",
       "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
-      "verification": "Deterministic declaration comparison plus scoped HTTP tests; no handler-level proof for unrepaired routes",
+      "verification": "Deterministic declaration comparison with fourteen gate controls; PublicRouteAdmission.tla states three of the gate's rules (unregistered, stale, mutating boundary) over every situation of three routes with four single-guard controls (header, query, body-shape, raw-mount, duplicate and debt-reference rules are not modelled); the PostgreSQL-backed booking conformance harness requests every registered deny-boundary route (90) without and with a wrong capability on the real backend and requires no success, no server fault, no fixture-private content (denial for most routes arises before the capability check: parsing, absent record, unconfigured provider), the anonymous status for a wrong bearer token on session routes and the anonymous value on the two anonymous-answer routes, and the marketplace cart readable only through its random UUIDv4 identifier. Records behind provider-backed intakes are not created by the sweep; their token checks rest on their own suites. Local HTTP fault fixtures require ordinary session/capability/operator 503 responses to fail the sweep; only the registered provider boundaries and named provider-gated route may return 503. Other provider 5xx responses remain faults. Payment-status polling authorizes the checkout/attempt/token binding before consulting its encryption key; actual handler regressions cover missing and invalid configuration, wrong tokens and identifiers, and authorized recovery of closed checkouts.",
       "id": "AUTH-PUBLIC-001",
       "title": "Reviewed admission of every unauthenticated route",
       "domain": "AUTH",
@@ -5257,7 +5287,7 @@
       "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
       "concurrency": "Static declaration check; no runtime concurrency assumption.",
       "idempotency": "Deterministic over the committed snapshot and register.",
-      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI.",
+      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI. A deny-boundary route that answers a caller without its capability with success, a server fault or private content fails the booking conformance harness.",
       "property": "Unauthenticated compiled surface equals the reviewed register and each entry satisfies its boundary's structural rule",
       "implementation": [
         "tdf-hq/src/TDF/API.hs",
@@ -5267,18 +5297,26 @@
         "scripts/check-public-routes.py",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
         "tdf-hq/src/TDF/Services/Stripe.hs",
-        "tdf-hq/src/TDF/Routes/Academy.hs"
+        "tdf-hq/src/TDF/Routes/Academy.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "scripts/test-public-routes.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/lib/public_routes_conformance.py",
+        "scripts/test-public-route-denial.py",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/PublicRouteAdmission.tla"
+      ],
       "ambiguity": [
-        "Handler enforcement of each registered capability is not mechanically verified.",
-        "Raw mounts may serve paths beyond their prefix."
+        "Raw mounts may serve paths beyond their prefix.",
+        "The sweep bounds every deny-boundary route to denial without success, fault or disclosure for a fixed probe; it observes the capability comparison only on routes the probe reaches (signatures, sessions, random identifiers, one header); enforcement on provider-created records rests on their suites."
       ]
     },
     {
@@ -7542,7 +7580,7 @@
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
       "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
-      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (D\u00e1til)",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
@@ -7642,7 +7680,7 @@
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Provider contract taken from D\u00e1til public documentation; an actual pruebas invoice is required before production.",
+      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
@@ -7654,7 +7692,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real D\u00e1til pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -9378,7 +9416,7 @@
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
-      "idempotency": "Re-tapping Asistir\u00e9 re-upserts the same accepted RSVP.",
+      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
       "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",

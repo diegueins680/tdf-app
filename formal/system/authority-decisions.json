@@ -862,6 +862,60 @@
       "status": "applied"
     },
     {
+      "id": "AUTHORITY-079",
+      "sources": [
+        "formal/system/requirements.json#AUTH-PUBLIC-001",
+        "formal/system/public-routes.json",
+        "formal/system/public-route-admission.md",
+        "scripts/lib/public_routes_conformance.py",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "conflict": "AUTH-PUBLIC-001 admits unauthenticated routes by reviewed boundary but nothing exercised the handlers: the register's handler-session rule said the handler rejects a missing session, while GET /session and POST /session/logout answer an anonymous caller 200 with the anonymous value (null, empty) and give a wrong bearer token the same answer; and POST /social-events/stripe/webhook, a public unsigned callback, answered 500 to any caller while Stripe was unconfigured, where its sibling provider callbacks answer 503. Both found by sweeping all 90 deny-boundary routes on the real backend on 2026-10-13; every other route answered both probes with a client error or 503, most before reaching the capability check.",
+      "authority": "The requirement's intent (no disclosure or action without the capability) and the sibling callbacks' behaviour. The anonymous answers disclose nothing and resolve no session, so the rule is amended to admit answering the anonymous value, and the sweep pins that a wrong token receives exactly it. The unconfigured Stripe callback answers 503 like the other provider callbacks; the signed path is unchanged. The sweep joins the booking conformance harness so a future route that succeeds, faults or discloses without its capability fails CI. The requirement's open-debt wording is corrected: no registered debt remains. Other unconfigured-Stripe 500s remain on authenticated routes outside this register.",
+      "decidedOn": "2026-10-13",
+      "status": "applied"
+    },
+    {
+      "id": "AUTHORITY-RUNTIME-FLAG-ABSENCE-001",
+      "sources": [
+        "ops/hetzner/inspect-runtime.py",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Cors.hs",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "Runtime receipts included configured suffix flags but omitted many known absent controls, privacy/SMTP controls and alternate CORS boolean names. Silence could not establish disabled state or effective defaults.",
+      "authority": "DEPLOY-OBSERVE-001 requires explicit unknowns and source-bound read-only observation.",
+      "resolution": "Expand the absence register and make conservative backend literal discovery part of the existing inspection boundary gate. Preserve raw presence, empty values and absence; do not infer effective values from candidate defaults or activate any feature."
+    },
+    {
+      "id": "AUTHORITY-075",
+      "sources": [
+        "formal/system/requirements.json#DEPLOY-MIGRATION-001",
+        "scripts/lib/production-release.mjs",
+        "scripts/lib/migration-contract.mjs",
+        "tdf-hq/production-entrypoint.sh",
+        "formal/system/migration-correspondence.md",
+        "formal/event-operations/MigrationLedger.tla",
+        "docs/automatic-production-migrations.md"
+      ],
+      "conflict": "DEPLOY-MIGRATION-001 requires immutable correspondence between applied history and the manifest, but the batch inserted each ledger row as a separate statement after the migration's own COMMIT (a crash between them left effects applied and unrecorded, re-applied by the next run) and its lock-refusal branch ended with \\quit 3, which psql ignores, so an active concurrent migration made the batch exit 0 and the entrypoint report success without applying or verifying. The batch also ignores ledger rows its manifest does not know while preparation rejects them.",
+      "authority": "The requirement statement and docs/automatic-production-migrations.md (\"A concurrent runner also exits nonzero\"); the batch's tolerance of unknown ledger rows is a code fact that image rollback relies on, recorded here as the decision, not a documented policy.",
+      "resolution": "The batch opens a transaction before the ledger row so a file's own COMMIT commits row and effects together, and raises an SQL error under ON_ERROR_STOP (exit 3) while the lock is held; every manifest file is checked to end with its COMMIT and to avoid non-transactional statements. The batch keeps tolerating unknown ledger rows (image rollback) while preparation keeps rejecting them; holes are applied after later entries and reported pending by preparation. Both recorded as ambiguities; checked by the bounded MigrationLedger model and the psql batch test."
+    },
+    {
+      "id": "AUTHORITY-077",
+      "sources": [
+        "formal/system/requirements.json#DEPLOY-STARTUP-001",
+        "scripts/lib/production-release.mjs",
+        "formal/system/startup-gates.md",
+        "formal/event-operations/StartupGates.tla",
+        "scripts/__tests__/startup-gates-postgres.mjs"
+      ],
+      "conflict": "DEPLOY-STARTUP-001 described only the six provider gates, while the startup verifier also requires the three manual-settlement gates and the two marketplace gates enabled and the service-booking and two course gates disabled; a flag change in any of those nine would pass unnoticed by the requirement and fail every later container start, as checkout.paypal.refunds did on 2026-10-07 (AUTHORITY-050).",
+      "authority": "The verifier as reviewed, read as the current policy (AUTHORITY-050 for the PayPal and Datafast gates; no separate product decision is on record for the service-booking, course and staged-provider gates, whose disabled state is taken from the code).",
+      "resolution": "The requirement is completed with the full asserted set and the rule that enabling or disabling an asserted gate is a verifier change in the same release; the code is unchanged. The policy is pinned by the exhaustive one-state model and by running the real verification for every flag in every state. The verifier also asserts data toggles outside revenue_feature_flag (artist_update interaction kind disabled, artist invitation policy and artist-profile category active, directory audit clean, catalog backfill statuses, minimum row counts); they are listed with the flag policy as restart hazards."
+    },
+    {
       "id": "AUTHORITY-069",
       "sources": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
