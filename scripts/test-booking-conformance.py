@@ -727,6 +727,9 @@ try:
     from whatsapp_consent_conformance import verify_whatsapp_consent
     verify_whatsapp_consent(sql, request, check)
 
+    from public_routes_conformance import verify_public_route_denial
+    verify_public_route_denial(ROOT, http_port, check)
+
     from readiness_conformance import verify_readiness
     verify_readiness(run, NAME, http_port, check)
 

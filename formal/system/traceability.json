@@ -3037,12 +3037,12 @@
         "Only current public course documents reach the calling assistant adapter."
       ],
       "authorization": "The assistant requires authentication and Social Inbox access (AUTHORITY-049); customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
-      "privacy": "Private historical index contents stay excluded even before reindexing. PRIV-RAG-002 prohibits private material in future refresh payloads; historical provider retention remains a separate obligation.",
-      "concurrency": "Ranking and per-course metadata reads share one transaction but separate statement snapshots under the modeled Read Committed assumption. A deletion committed after metadata read may precede delivery; no delivery-time linearization is claimed.",
+      "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
+      "concurrency": "Candidate course identities and metadata are read during one retrieval transaction; deletion committed after a read may precede response delivery and is not linearized here.",
       "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
       "failure": "Missing course rows and unsupported source kinds yield no eligible document. Existing database/provider failures retain adapter error handling.",
       "recovery": "Public metadata changes take effect on the next read; stale raw text need not be purged to enforce this retrieval boundary.",
-      "observability": "Synthetic staff-authenticated HTTP checks observe private-source exclusion including colliding course slugs, poisoned-cache rejection, metadata freshness and deleted-course exclusion. Anonymous and unprivileged assistant calls are denied.",
+      "observability": "Synthetic anonymous HTTP checks observe private-source exclusion, poisoned-cache rejection, metadata freshness and deleted-course exclusion.",
       "source": "Observed anonymous private-booking-content disclosure; formal/system/bookings.md customer-facing retrieval boundary.",
       "implementation": [
         "tdf-hq/src/TDF/RagStore.hs"
@@ -3050,25 +3050,23 @@
       "tests": [
         "scripts/test-booking-conformance.py"
       ],
-      "formalModels": [
-        "formal/event-operations/PublicKnowledgeRead.tla"
-      ],
+      "formalModels": [],
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
-        "Historical embedding-provider retention and curated conversation examples need separate privacy reconciliation.",
-        "Channel-specific provider delivery is not exercised by the staff-authenticated HTTP fixture."
+        "Embedding-provider sharing, internal retention and curated conversation examples need separate privacy reconciliation.",
+        "Channel-specific provider delivery is not exercised by the anonymous HTTP fixture."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Bounded model and source-mapped HTTP regressions cover the retrieval boundary; final candidate execution and deployed/channel/provider/retention evidence remain separate obligations."
+        "reason": "Old-binary disclosure was reproduced; repaired HTTP checks and all channel integrations need execution evidence. No formal deletion linearization proof is claimed."
       },
       "critical": true,
       "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
-      "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.",
-      "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with four named negative controls. Neither is a whole-program refinement proof.",
-      "evidence": "Historical disclosure reproduction is retained separately; exact candidate model/HTTP/CI receipts are required. New coverage must not inherit a historical green result."
+      "property": "Every returned document is freshly rendered from an existing public course, never raw private indexed content.",
+      "contract": "formal/system/bookings.md",
+      "verification": "Anonymous HTTP on a fresh synthetic PostgreSQL database with private, poisoned, updated and deleted index fixtures.",
+      "evidence": "Preserved old-backend anonymous disclosure reproduction and exact-candidate booking-conformance HTTP artifact; repaired execution remains pending."
     },
     {
       "id": "MEDIA-PERSIST-001",
@@ -5137,15 +5135,15 @@
       "critical": true,
       "source": "formal/system/public-route-admission.md; audit of main 1f99d143900a67aa9b82f4138630684afbd7db2f on 2026-10-06; OWASP API Security Top 10 2023 API1 and API5",
       "status": "specified and implemented",
-      "confidence": "High for structural admission; handler enforcement verified only for repaired routes.",
+      "confidence": "High for structural admission; handler behaviour bounded by the denial sweep, with the capability comparison observed only where the probe reaches it.",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Admission gate, negative controls and served HTTP denial checks exist; two registered debts remain open."
+        "reason": "Admission gate, its controls and model, and the served denial sweep over every deny-boundary route pass; handler enforcement on records that only provider-backed intakes create rests on their own suites; no registered debt remains."
       },
-      "evidence": "Gate output, fourteen negative controls, served-application HTTP status checks and the PostgreSQL-backed booking conformance assistant checks",
+      "evidence": "Gate output, fourteen negative controls, four model controls, the served denial sweep (90 routes, two probes each) and the PostgreSQL-backed booking conformance checks",
       "observability": "Gate output names each offending method and path.",
       "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
-      "verification": "Deterministic declaration comparison plus scoped HTTP tests; no handler-level proof for unrepaired routes",
+      "verification": "Deterministic declaration comparison with fourteen gate controls; PublicRouteAdmission.tla states three of the gate's rules (unregistered, stale, mutating boundary) over every situation of three routes with four single-guard controls (header, query, body-shape, raw-mount, duplicate and debt-reference rules are not modelled); the PostgreSQL-backed booking conformance harness requests every registered deny-boundary route (90) without and with a wrong capability on the real backend and requires no success, no server fault, no fixture-private content (denial for most routes arises before the capability check: parsing, absent record, unconfigured provider), the anonymous status for a wrong bearer token on session routes and the anonymous value on the two anonymous-answer routes, and the marketplace cart readable only through its random UUIDv4 identifier. Records behind provider-backed intakes are not created by the sweep; their token checks rest on their own suites. Local HTTP fault fixtures require ordinary session/capability/operator 503 responses to fail the sweep; only the registered provider boundaries and named provider-gated route may return 503. Other provider 5xx responses remain faults. Payment-status polling authorizes the checkout/attempt/token binding before consulting its encryption key; actual handler regressions cover missing and invalid configuration, wrong tokens and identifiers, and authorized recovery of closed checkouts.",
       "id": "AUTH-PUBLIC-001",
       "title": "Reviewed admission of every unauthenticated route",
       "domain": "AUTH",
@@ -5193,7 +5191,7 @@
       "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
       "concurrency": "Static declaration check; no runtime concurrency assumption.",
       "idempotency": "Deterministic over the committed snapshot and register.",
-      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI.",
+      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI. A deny-boundary route that answers a caller without its capability with success, a server fault or private content fails the booking conformance harness.",
       "property": "Unauthenticated compiled surface equals the reviewed register and each entry satisfies its boundary's structural rule",
       "implementation": [
         "tdf-hq/src/TDF/API.hs",
@@ -5203,18 +5201,26 @@
         "scripts/check-public-routes.py",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
         "tdf-hq/src/TDF/Services/Stripe.hs",
-        "tdf-hq/src/TDF/Routes/Academy.hs"
+        "tdf-hq/src/TDF/Routes/Academy.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "scripts/test-public-routes.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/lib/public_routes_conformance.py",
+        "scripts/test-public-route-denial.py",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/PublicRouteAdmission.tla"
+      ],
       "ambiguity": [
-        "Handler enforcement of each registered capability is not mechanically verified.",
-        "Raw mounts may serve paths beyond their prefix."
+        "Raw mounts may serve paths beyond their prefix.",
+        "The sweep bounds every deny-boundary route to denial without success, fault or disclosure for a fixed probe; it observes the capability comparison only on routes the probe reaches (signatures, sessions, random identifiers, one header); enforcement on provider-created records rests on their suites."
       ]
     },
     {
@@ -9858,89 +9864,6 @@
       }
     },
     {
-      "id": "PRIV-RAG-002",
-      "title": "Public-course-only index refresh",
-      "statement": "RAG index checks and refreshes shall first remove legacy non-course derived chunks independently of freshness, embedding configuration or provider availability. Refreshes shall embed only public course fields, atomically replace the public index on success (including an empty corpus without a provider call), and preserve the previous public index on provider or persistence failure.",
-      "domain": "PRIV",
-      "actors": [
-        "Authorized RAG administrator",
-        "Automated index refresh worker",
-        "Embedding provider"
-      ],
-      "preconditions": [
-        "The configured embedding model and database vector dimensions agree.",
-        "Course fields exposed by the public course contract are approved public material."
-      ],
-      "inputs": [
-        "Up to 50 course rows ordered by updated_at descending",
-        "Chunk size and overlap",
-        "Embedding adapter results"
-      ],
-      "state": {
-        "fields": [
-          "Captured public course documents",
-          "Provider payload",
-          "Derived rag_chunk rows",
-          "Refresh outcome"
-        ],
-        "initial": "The historical index may include private sources."
-      },
-      "allowedTransitions": [
-        "Commit non-course derived-index cleanup before checking freshness or validating embedding configuration.",
-        "Collect public course fields, chunk and embed them.",
-        "Replace all derived index rows after a complete successful embedding response.",
-        "Clear the index without embedding when the captured corpus is empty.",
-        "Reject a failed refresh while retaining the previous public index; committed legacy cleanup is not undone."
-      ],
-      "forbiddenTransitions": [
-        "Include bookings, availability, campaigns, ads, services, resources, rooms or studio notes in refresh embedding payloads.",
-        "Report an empty refresh as successful while retaining old chunks.",
-        "Commit public-index deletion if replacement insertion fails.",
-        "Skip legacy cleanup because the index is fresh or an embedding provider/configuration is unavailable."
-      ],
-      "effects": [
-        "The next admitted worker check or administrator refresh removes legacy non-course chunks locally without a provider call; public replacement remains a separate transaction.",
-        "Source entities are not deleted; external provider records and backups are not erased by reindexing."
-      ],
-      "authorization": "Existing administrator and worker admission remains unchanged. Index source selection is enforced in the backend, independently of retrieval guards.",
-      "privacy": "Explicit product decision on 2026-10-13: public courses only; stop indexing private material. This policy concerns index refreshes, not a claim that query embeddings or other assistant provider payloads are public.",
-      "concurrency": "One refresh captures a database read snapshot before embedding and atomically replaces the index. Parallel refresh ordering/freshness is not guaranteed; all revised writers still construct only course chunks. Retrieval separately checks current course metadata. Cleanup and replacement are separate transactions. Deployment must drain old mixed-source writers; no claim covers privileged external SQL writers or rollback to the old builder.",
-      "idempotency": "Repeated successful refreshes replace the derived index; provider requests may repeat and chunk identifiers/timestamps are not stable.",
-      "failure": "Cleanup SQL failure aborts before embedding. Model/schema mismatch and provider/count errors return Left after legacy cleanup; replacement SQL errors propagate after rollback of public replacement. A missing index table skips cleanup and fails existing schema validation.",
-      "recovery": "Retry failed public refreshes while retaining existing public chunks. Do not restore non-course chunks or roll back to a mixed-source builder. Historical backups and provider-held data require separate retention/erasure decisions.",
-      "observability": "PostgreSQL tests capture adapter payloads and persisted rows, check empty-corpus no-call behavior, provider/count refusal and SQL rollback. Existing administrator result and index statistics report refresh outcome. Aggregate source counts verify cleanup without disclosing content; tests cover a fresh index and invalid configuration before provider admission.",
-      "source": "Explicit user product decision 2026-10-13: Public courses only; stop indexing private material (Recommended).",
-      "implementation": [
-        "tdf-hq/src/TDF/RagStore.hs"
-      ],
-      "tests": [
-        "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-        "tdf-hq/test/Spec.hs",
-        "tdf-hq/tdf-hq.cabal",
-        "scripts/test-rag-index-privacy.sh",
-        ".github/workflows/ci.yml"
-      ],
-      "formalModels": [
-        "formal/event-operations/PublicKnowledgeIndex.tla"
-      ],
-      "status": "specified and implemented",
-      "confidence": "medium",
-      "ambiguity": [
-        "Historical external provider retention/erasure requires separate evidence.",
-        "Concurrent refresh ordering and index freshness are not serialized by this change."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Implementation, bounded model and PostgreSQL regression checks are mapped; exact candidate and deployed verification remain required. Historical provider retention is outside the refresh boundary."
-      },
-      "critical": true,
-      "authority": "Explicit user decision 2026-10-13; AUTHORITY-RAG-PUBLIC-INDEX-20261013",
-      "property": "NoLegacyAfterCleanup, NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex (public subset), EmptySkipsProvider and TypeOK in PublicKnowledgeIndex.",
-      "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Pinned TLC positive model and four named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls.",
-      "evidence": "Candidate-specific test and model receipts must be recorded; historical passes do not establish current conformance."
-    },
-    {
       "id": "MOB-FEEDBACK-001",
       "title": "Consented mobile tester feedback with minimized diagnostics",
       "statement": "The mobile tester feedback form enables submission only with consent, nonempty text and published catalog choices. Optional diagnostics use an explicit field allowlist and coarse device class; full device model, tokens and arbitrary input fields are not spread into metadata. Prompt eligibility honors opt-out and dismissal.",
@@ -10634,7 +10557,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "963f2c6062aa792cb03882c8fa4e0cc0a9f3b24824c61e23e4d47cfb1c3b6a62",
+    ".github/workflows/ci.yml": "56045a3a377a5b6c434121b0b6b65b72dc0641688e7dd0998b51e4e1b1fc9811",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -10651,7 +10574,7 @@
     "e2e/web/auth-landing.spec.mjs": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
     "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
     "e2e/web/community-discovery.spec.mjs": "9fb22467b072db50eeffc2deb009c2361c21d0ac496e96a07076a9af367d6260",
-    "e2e/web/course-enrollment.spec.mjs": "f64fed981fa69b332499556853637fca938c9b026b90c4aaf1b4f5bb97633311",
+    "e2e/web/course-enrollment.spec.mjs": "fceb783370a3a0fbdf7e44dbb417814e9b9dd9825ad884ae78636aa252bc78ba",
     "e2e/web/directory-entry.spec.mjs": "17d56aaa082a13e71c2442b6f09ee29b158413e9a41eb7b07969e3bee61c8c97",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
@@ -10813,8 +10736,7 @@
     "formal/event-operations/ProviderRetryAdmissionLate.cfg": "e8f74982567c8bfe974e9d7ab168d45043bbb8826a6e9b99f1805e99ee6f79d2",
     "formal/event-operations/ProviderRetryAdmissionPayload.cfg": "e45311f9c71bbcfe46171a0fba4bde38f656f8a5781fc6efbc8eb53fa86e86dd",
     "formal/event-operations/ProviderRollback.tla": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
-    "formal/event-operations/PublicKnowledgeIndex.tla": "4eca6e7a301e36d486ed0135e966acdcbd74f8c0288a832bb9e556c88393b432",
-    "formal/event-operations/PublicKnowledgeRead.tla": "112d5cf4a069ee8e7369dd62ea196058f688afee91db6233b928a9e177879f96",
+    "formal/event-operations/PublicRouteAdmission.tla": "df68c2524239e05f17fb3c1d479cab887803a606cda6bc145a18d23bad0752c7",
     "formal/event-operations/ReadinessProbe.tla": "5c084b53a4928a9e99594febc6998ab2bd403f8aab8cce3e1ad4272eb58237ec",
     "formal/event-operations/RecoveryExpiry.tla": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
     "formal/event-operations/RefundRecovery.cfg": "ba10aef6f3933c799a44bff583ad40eae5e62931f5cf3acd98caf6d147c30457",
@@ -10872,7 +10794,7 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "77b43756214dc64a011823c8f9176ed6924aa64a64b14de55f031b217528afca",
-    "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
+    "formal/system/public-routes.json": "8454edc5d8bd137e4bfc0caa1cffd3d6f6a569a6ef1ae5c0d9f1c27fe91f3243",
     "formal/system/state-machine-bindings.json": "e8fa76cbe3de9233c42cf3f819d225dd41150bd030f869585c4ca49a7d11d3c4",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -10997,6 +10919,7 @@
     "scripts/lib/operations_conformance.py": "1978873ba86472cc29198bf14fcc428102d69db29e6816a197a1140118ef2654",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
+    "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -11015,7 +10938,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "a5041669e3881d019e35512e8b4e7febcc2ebd98ebea0d3eb05568ea9f0f83c8",
+    "scripts/quality-repo.sh": "3e65e7838c189c408c2e7a7d49412f25d6a7ebaace66ee63dfe7604ceff6173e",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/run-music-release-worker-once.sh": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
@@ -11035,7 +10958,7 @@
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
-    "scripts/test-booking-conformance.py": "9f8d4845b0944c81b57b81e9809c3ea163d329886e108ea8e15b40082e3ce83a",
+    "scripts/test-booking-conformance.py": "180a655244fc54c0528f8a094822ab5e0e6c2076ce5cd01d2dcce0e1c8a38717",
     "scripts/test-chat-notifications.sh": "d01a8cbf2c0852222f53b36bd813a7f2dc8875ae6f3b53ea0ab108fba1f2b552",
     "scripts/test-community-search.py": "c6be90dbc19bfd6fc6c06e72c300f77f75729e94e518d5132560e94cd1b58c24",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
@@ -11076,9 +10999,9 @@
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
+    "scripts/test-public-route-denial.py": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
-    "scripts/test-rag-index-privacy.sh": "d7086eccde1db152d9a6b0df4d7f9c806157aed92f654b489d4e677fcfb00ce9",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
@@ -11104,7 +11027,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "04b4938b5d95fb4bf557b96c9b4184b636ef329c2ec3ee537348ea9d4e19c269",
+    "scripts/verify-event-operations-formal.sh": "a0c3c9a77e97fa349eda834c92e88fb37b5e5d38fe352ca079a93a40ee98e7b4",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -11491,7 +11414,7 @@
     "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs": "a98813457fa7fb7b967e2ac708340d0fb44298b5cd093771fe732cf6b03ac881",
     "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac",
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "ecb41cb484578984533f0363bb95cc2b9bb49255082f353a84c0251484a68b5b",
-    "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "213b92a75365d6e85e441a0a3263d3cecfedca98a46d05f83165286158b00f52",
+    "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
     "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "6791d94fd7808fd13c8e371122d3f082c7668f78a9ae660297019d0032d0b7c9",
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
@@ -11525,7 +11448,7 @@
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "45363018da50e080a6f8853ecbb32c5dfb5818bd4a16b5a42cd5527eeb2635ba",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
-    "tdf-hq/src/TDF/RagStore.hs": "dfc04bd1330ed48e742869dd0405a51028215aa10cc16131a6ed7304a2e82e4f",
+    "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
@@ -11543,11 +11466,11 @@
     "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "92259a976c8c4e7d45c32bedb469ddb27e749319a180d4bf881cd2d3ef86a8c8",
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
-    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "ca99eb94d7a285f976b592adf8ad14b2adaf39566f304cc84c677aed5e991330",
+    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "7df3e2a96aee5c78e5951f5b29526c1a17690b772f17f54ff5cbb74007b3231e",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "cdf7d43255359dfd79674690fb518b8f906e275ba798ade14ffbc40bf0628df9",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "e25bf47bb88ea0fe20df7e99df3f0a93d392ae9672a19d372ba926cc5be0c105",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "57e716e80d57d0581a2ac90cc57e76ea31bc4d2b0f6c84b5dd457121a7b8f8be",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
@@ -11570,17 +11493,17 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "5359b3f1cad070fa268ae9aeac699afe0fc4abb1a629439f6013a8a389d215ed",
+    "tdf-hq/tdf-hq.cabal": "e31b09b652ef120e22412562a4fb35aaf1a0306401ecd2eff30817410ad42a21",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "4010634bff6c598028de3fd5c776f81dc436e673793cf6b8a609cd396eea07de",
+    "tdf-hq/test/Spec.hs": "909a22462706e8f0ebec8d74d59b9945da2a5d6641b721a2069eb7e7f5d38573",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "c874ed26524da3896abc173d2ceff6624b86b3fec67414e85d8e9154092de334",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "3724057900552d950d478b41348a1c1a0415c5e49edd68af1f62b5c49c139e0d",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -11609,7 +11532,6 @@
     "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": "3a3aeb59ce2c378361aa9a9ff9787deb3eb51ce164643b61ae37b2c575b3ea39",
     "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
-    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "e8c8fc362c4fc388077c54c655b27fb45a94f1248a232588fc4a40af58b9b550",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
@@ -12348,10 +12270,6 @@
         "relationship": "implementation"
       },
       {
-        "requirement": "PRIV-RAG-002",
-        "relationship": "tests"
-      },
-      {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "implementation"
       },
@@ -12992,10 +12910,6 @@
       {
         "requirement": "DEPLOY-READINESS-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-RAG-002",
-        "relationship": "tests"
       }
     ],
     "scripts/check-build-trust.mjs": [
@@ -13208,6 +13122,10 @@
       {
         "requirement": "EVT-TICKET-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-provider-retry-runtime.sh": [
@@ -13340,6 +13258,10 @@
       {
         "requirement": "PAY-RECOVERY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": [
@@ -13395,10 +13317,6 @@
       },
       {
         "requirement": "PRIV-INTAKE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PRIV-RAG-002",
         "relationship": "tests"
       }
     ],
@@ -13928,10 +13846,6 @@
       {
         "requirement": "PRIV-RAG-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-RAG-002",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/api/bookings.ts": [
@@ -14070,12 +13984,6 @@
       {
         "requirement": "SYS-UX-001",
         "relationship": "tests"
-      }
-    ],
-    "formal/event-operations/PublicKnowledgeRead.tla": [
-      {
-        "requirement": "PRIV-RAG-001",
-        "relationship": "formalModels"
       }
     ],
     "tdf-hq/persistent-uploads.sh": [
@@ -14285,6 +14193,10 @@
     "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": [
       {
         "requirement": "PAY-RETRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
         "relationship": "implementation"
       }
     ],
@@ -14763,6 +14675,10 @@
       },
       {
         "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
         "relationship": "implementation"
       },
       {
@@ -15614,6 +15530,24 @@
       {
         "requirement": "AUTH-PUBLIC-001",
         "relationship": "tests"
+      }
+    ],
+    "scripts/lib/public_routes_conformance.py": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-public-route-denial.py": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/PublicRouteAdmission.tla": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "formalModels"
       }
     ],
     "formal/event-operations/OperationsAuxiliaryWrite.tla": [
@@ -19878,24 +19812,6 @@
         "relationship": "formalModels"
       }
     ],
-    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": [
-      {
-        "requirement": "PRIV-RAG-002",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/test-rag-index-privacy.sh": [
-      {
-        "requirement": "PRIV-RAG-002",
-        "relationship": "tests"
-      }
-    ],
-    "formal/event-operations/PublicKnowledgeIndex.tla": [
-      {
-        "requirement": "PRIV-RAG-002",
-        "relationship": "formalModels"
-      }
-    ],
     "tdf-mobile/src/feedback/FeedbackEntry.tsx": [
       {
         "requirement": "MOB-FEEDBACK-001",
@@ -20345,7 +20261,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "963f2c6062aa792cb03882c8fa4e0cc0a9f3b24824c61e23e4d47cfb1c3b6a62",
+      "sha256": "56045a3a377a5b6c434121b0b6b65b72dc0641688e7dd0998b51e4e1b1fc9811",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20367,10 +20283,6 @@
         {
           "requirement": "OPS-CI-REGISTRY-001",
           "relationship": "implementation"
-        },
-        {
-          "requirement": "PRIV-RAG-002",
-          "relationship": "tests"
         },
         {
           "requirement": "DISCOVERY-NAV-001",
@@ -20609,7 +20521,7 @@
     {
       "id": "SURFACE-593f65650b716b87",
       "path": "e2e/web/course-enrollment.spec.mjs",
-      "sha256": "f64fed981fa69b332499556853637fca938c9b026b90c4aaf1b4f5bb97633311",
+      "sha256": "fceb783370a3a0fbdf7e44dbb417814e9b9dd9825ad884ae78636aa252bc78ba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23222,6 +23134,18 @@
       ]
     },
     {
+      "id": "SURFACE-a3554db132982020",
+      "path": "scripts/lib/public_routes_conformance.py",
+      "sha256": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-f9884c5ddfa3d37d",
       "path": "scripts/lib/readiness_conformance.py",
       "sha256": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
@@ -23613,7 +23537,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "a5041669e3881d019e35512e8b4e7febcc2ebd98ebea0d3eb05568ea9f0f83c8",
+      "sha256": "3e65e7838c189c408c2e7a7d49412f25d6a7ebaace66ee63dfe7604ceff6173e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24417,7 +24341,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "9f8d4845b0944c81b57b81e9809c3ea163d329886e108ea8e15b40082e3ce83a",
+      "sha256": "180a655244fc54c0528f8a094822ab5e0e6c2076ce5cd01d2dcce0e1c8a38717",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25377,6 +25301,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-46813d40317234ae",
+      "path": "scripts/test-public-route-denial.py",
+      "sha256": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-e6df847c7de6b4ac",
       "path": "scripts/test-public-routes.py",
       "sha256": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
@@ -25408,18 +25344,6 @@
         },
         {
           "requirement": "EVT-TICKET-INVOICE-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-a8d484816fb5b599",
-      "path": "scripts/test-rag-index-privacy.sh",
-      "sha256": "d7086eccde1db152d9a6b0df4d7f9c806157aed92f654b489d4e677fcfb00ce9",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "PRIV-RAG-002",
           "relationship": "tests"
         }
       ]
@@ -25868,7 +25792,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "04b4938b5d95fb4bf557b96c9b4184b636ef329c2ec3ee537348ea9d4e19c269",
+      "sha256": "a0c3c9a77e97fa349eda834c92e88fb37b5e5d38fe352ca079a93a40ee98e7b4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37765,11 +37689,15 @@
     {
       "id": "SURFACE-1d441708a9c7e070",
       "path": "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-      "sha256": "213b92a75365d6e85e441a0a3263d3cecfedca98a46d05f83165286158b00f52",
+      "sha256": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-RETRY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "implementation"
         }
       ]
@@ -38567,7 +38495,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "dfc04bd1330ed48e742869dd0405a51028215aa10cc16131a6ed7304a2e82e4f",
+      "sha256": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38576,10 +38504,6 @@
         },
         {
           "requirement": "PRIV-RAG-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "PRIV-RAG-002",
           "relationship": "implementation"
         }
       ]
@@ -38974,11 +38898,15 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "ca99eb94d7a285f976b592adf8ad14b2adaf39566f304cc84c677aed5e991330",
+      "sha256": "7df3e2a96aee5c78e5951f5b29526c1a17690b772f17f54ff5cbb74007b3231e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-RECOVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "implementation"
         }
       ]
@@ -39040,7 +38968,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "cdf7d43255359dfd79674690fb518b8f906e275ba798ade14ffbc40bf0628df9",
+      "sha256": "e25bf47bb88ea0fe20df7e99df3f0a93d392ae9672a19d372ba926cc5be0c105",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39053,6 +38981,10 @@
         },
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "implementation"
         },
         {
@@ -39609,7 +39541,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "5359b3f1cad070fa268ae9aeac699afe0fc4abb1a629439f6013a8a389d215ed",
+      "sha256": "e31b09b652ef120e22412562a4fb35aaf1a0306401ecd2eff30817410ad42a21",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39627,10 +39559,6 @@
         {
           "requirement": "DEPLOY-READINESS-001",
           "relationship": "implementation"
-        },
-        {
-          "requirement": "PRIV-RAG-002",
-          "relationship": "tests"
         }
       ]
     },
@@ -39727,7 +39655,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "4010634bff6c598028de3fd5c776f81dc436e673793cf6b8a609cd396eea07de",
+      "sha256": "909a22462706e8f0ebec8d74d59b9945da2a5d6641b721a2069eb7e7f5d38573",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39764,10 +39692,6 @@
         },
         {
           "requirement": "PRIV-INTAKE-001",
-          "relationship": "tests"
-        },
-        {
-          "requirement": "PRIV-RAG-002",
           "relationship": "tests"
         }
       ]
@@ -39879,7 +39803,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "c874ed26524da3896abc173d2ceff6624b86b3fec67414e85d8e9154092de334",
+      "sha256": "3724057900552d950d478b41348a1c1a0415c5e49edd68af1f62b5c49c139e0d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39896,6 +39820,10 @@
         },
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "tests"
         }
       ]
@@ -40307,18 +40235,6 @@
       "requirements": [
         {
           "requirement": "ID-SESSION-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-7a8c25536f4eeac3",
-      "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "e8c8fc362c4fc388077c54c655b27fb45a94f1248a232588fc4a40af58b9b550",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "PRIV-RAG-002",
           "relationship": "tests"
         }
       ]
@@ -46206,6 +46122,7 @@
     "DEPLOY-TARGET-001",
     "DEPLOY-MIGRATION-001",
     "DEPLOY-STARTUP-001",
+    "PRIV-RAG-001",
     "MEDIA-PERSIST-001",
     "SYS-API-003",
     "SYS-VERIFY-004",
@@ -46217,7 +46134,6 @@
     "AUTH-WEBHOOK-001",
     "MEDIA-STREAM-001",
     "OPS-METRICS-001",
-    "AUTH-PUBLIC-001",
     "SYS-CI-001",
     "PRIV-ERROR-001",
     "PRIV-ANALYTICS-001",
@@ -47349,7 +47265,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "901898db809b248a5df500a2be102c2c54af4b1016c895f4dac095cf6f3864cb",
+      "sourceSha256": "d9dd0a492179f3ad9564bebc7347c274069467a5157cbe5e593ab14e317a4de5",
       "definition": {
         "states": [
           "absent",
@@ -47379,7 +47295,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "901898db809b248a5df500a2be102c2c54af4b1016c895f4dac095cf6f3864cb",
+      "sourceSha256": "d9dd0a492179f3ad9564bebc7347c274069467a5157cbe5e593ab14e317a4de5",
       "definition": {
         "export": [
           "queued",
@@ -69603,7 +69519,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 128,
+    "PARTIAL": 127,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
