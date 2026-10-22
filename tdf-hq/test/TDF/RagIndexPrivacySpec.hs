@@ -190,7 +190,7 @@ spec = describe "rag-index-privacy-postgresql" $ do
         refreshRagIndexWith (\_ -> do
           expectationFailure "Retired or alias course rows must not reach the adapter"
           pure (Left "unexpected adapter call"))
-          (cfg { courseSlugFallback = "configured-production" }) pool `shouldReturn` Right 0
+          (cfg { courseDefaultSlug = "configured-production" }) pool `shouldReturn` Right 0
         indexRows pool `shouldReturn` []
 
       it "stops returning a cohort after its first session loses the public lead time" $ \pool -> do
@@ -213,7 +213,7 @@ spec = describe "rag-index-privacy-postgresql" $ do
             \VALUES ('course',?,0,'PRIVATE_ALIAS_CACHED','{}', \
             \('[' || repeat('0,',1535) || '1]')::vector)" [PersistText slug]) pool
         cfg <- testConfig
-        retrieveRagContext (cfg { courseSlugFallback = "configured-production" }) pool
+        retrieveRagContext (cfg { courseDefaultSlug = "configured-production" }) pool
           "synthetic cohort query" `shouldReturn` []
 
       it "purges legacy chunks even when the remaining public index is fresh" $ \pool -> do
