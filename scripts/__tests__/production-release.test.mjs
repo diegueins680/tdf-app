@@ -970,7 +970,9 @@ test('buildMigrationBatchSql enables psql fail-fast behavior and preserves migra
   assert.equal((sql.match(/\\unset\s+run_code/g) ?? []).length, 2);
   assert.equal((sql.match(/\\unset\s+safety_threshold/g) ?? []).length, 2);
   assert.match(sql, /pg_try_advisory_lock/i);
-  assert.match(sql, /\\quit\s+3/i);
+  // A held lock must end the batch with a non-zero psql status: \quit cannot.
+  assert.doesNotMatch(sql, /\\quit/i);
+  assert.match(sql, /\\else\n\n\\echo Another production schema migration is active[^\n]*\n\nDO \$lock\$ BEGIN RAISE EXCEPTION 'Another production schema migration is active[^']*'; END \$lock\$;/);
   assert.doesNotMatch(sql, /SELECT\s+pg_advisory_lock\s*\(/i);
   assert.ok(sql.indexOf(ticketMigration) >= 0, 'ticket migration must be included');
   assert.ok(sql.indexOf(discoveryMigration) > sql.indexOf(ticketMigration), 'migration order must be preserved');
@@ -983,6 +985,42 @@ test('buildMigrationBatchSql validates every path before rendering psql input', 
     () => buildMigrationBatchSql([ticketMigration, 'tdf-hq/sql/../secrets.sql']),
     /migration|path|unsafe/i,
   );
+});
+
+test('buildMigrationBatchSql commits each ledger row together with its migration', () => {
+  const migration = { id: 'atomic-test', path: 'tdf-hq/sql/2026-10-12_atomic_test.sql', checksum: 'a'.repeat(64),
+    content: 'CREATE TABLE atomic_test ();' };
+  const sql = buildMigrationBatchSql([migration]);
+  const block = sql.slice(sql.indexOf('\\if :apply_migration_1'), sql.indexOf('\\else'));
+  const order = ['BEGIN;', 'INSERT INTO public.tdf_schema_migration', migration.content, 'COMMIT;'].map(part => block.indexOf(part));
+  assert.ok(order.every(index => index >= 0) && order.every((index, n) => n === 0 || index > order[n - 1]),
+    'the ledger insert must sit inside the transaction, before the migration source');
+  assert.equal((block.match(/INSERT INTO public\.tdf_schema_migration/g) ?? []).length, 1);
+});
+
+test('every manifest migration can run inside the batch transaction', async () => {
+  // Precondition of the atomic ledger row: a file with its own transaction ends
+  // with its COMMIT, so nothing escapes the transaction opened by the batch, and
+  // no statement refuses a transaction block. Checked on the expanded SQL the
+  // batch runs, includes resolved.
+  const manifest = JSON.parse(readFileSync(new URL('../production-migrations.json', import.meta.url), 'utf8'));
+  const read = relative => readFileSync(new URL(`../../${relative}`, import.meta.url), 'utf8');
+  for (const entry of manifest.migrations) {
+    const content = await expandMigrationIncludes({ path: entry.path, content: read(entry.path) }, read);
+    const lines = content.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('--'));
+    assert.doesNotMatch(content, /\bCONCURRENTLY\b|^\s*(?:VACUUM|REINDEX|CLUSTER|DISCARD|LISTEN|UNLISTEN)\b|ALTER\s+SYSTEM|(?:CREATE|DROP)\s+(?:DATABASE|TABLESPACE|SUBSCRIPTION)|ALTER\s+TYPE[^;]*\bADD\s+VALUE|^\s*(?:START\s+TRANSACTION|SET\s+TRANSACTION)\b|^\s*BEGIN\s+(?:ISOLATION|READ|DEFERRABLE)|\r/im,
+      `${entry.id} uses a statement that cannot run inside the batch transaction`);
+    const begins = content.match(/^\s*BEGIN(?:\s+(?:TRANSACTION|WORK))?\s*;/gim) ?? [];
+    // END is not counted as COMMIT: PL/pgSQL blocks end with it. A file that
+    // used END as the commit synonym would fail the tail check below.
+    const commits = content.match(/^\s*COMMIT(?:\s+(?:TRANSACTION|WORK))?\s*;/gim) ?? [];
+    assert.ok(begins.length <= 1 && commits.length <= 1 && !lines.some(line => /^(?:ROLLBACK|SAVEPOINT|PREPARE\s+TRANSACTION)\b/i.test(line)),
+      `${entry.id} must hold at most one transaction and never roll it back`);
+    if (begins.length) {
+      assert.equal(commits.length, 1, `${entry.id} opens a transaction it does not commit`);
+      assert.match(lines.at(-1), /^COMMIT(?:\s+(?:TRANSACTION|WORK))?\s*;$/i, `${entry.id} has statements after its COMMIT`);
+    }
+  }
 });
 
 test('buildMigrationBatchSql rejects unexpanded include directives', () => {

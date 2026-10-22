@@ -114,6 +114,11 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `MusicDdexExportUnfenced/Reopen/NoCommitGate/ReplayFailed/SplitDeadLetter.cfg` | Negative controls: no attempt token, valid regenerated, no rule check at commit, replay re-enqueues a failed export, dead letter split from the export's failed status | Expected exit 12 with `CurrentWriter`, `ValidForever`, `ValidOnlyUnderRules`, `FailedIsFinal`, `PendingHasLiveJob` |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `MigrationLedger.cfg` (2026-10-12) | 3 manifest entries, 2 source versions, 3 batch runs; source changes with or without a declared compatible checksum, image rollback, preparation | PASS; 1,282,056 generated, 334,720 distinct states, depth 26; `EffectsRecorded`, `SingleApplication`, `NoRunPastDrift`, `PreparationSound` (`LedgerImpliesEffects` as a sanity invariant) |
+| `MigrationLedgerRecordAfterCommit.cfg`, `MigrationLedgerBatchUnchecked.cfg`, `MigrationLedgerPrepareUnchecked.cfg`, `MigrationLedgerUnknownAccepted.cfg` | Negative controls: ledger row written after the migration's commit, batch checksum check removed, preparation checksum check removed, unknown ledger rows accepted by preparation | Expected non-zero exit with `EffectsRecorded`, `NoRunPastDrift`, `PreparationSound`, `PreparationSound` violated |
+
+| `StartupGates.cfg` (2026-10-12) | One state; the fourteen production flags the startup verifier asserts, each over {missing, disabled, enabled} (4,782,969 configurations per invariant) | PASS; `ApprovedStarts`, `StartImpliesApproved` |
+| `StartupGatesStagedAccepted.cfg`, `StartupGatesMissingAccepted.cfg`, `StartupGatesEitherRejected.cfg`, `StartupGatesRequiredUnchecked.cfg` | Negative controls: an enabled staged provider accepted, a missing gate accepted, PayPal/Datafast gates required disabled (a coarser stand-in for the pre-AUTHORITY-050 verifier), required states unchecked | Expected non-zero exit with "The invariant of ... is equal to FALSE" for `StartImpliesApproved`, `StartImpliesApproved`, `ApprovedStarts`, `StartImpliesApproved` |
 | `DriveReplay.cfg` (revised 2026-10-14) | One idempotency key, two explicit folder namespaces, two requests from two actors with two content/name/MIME shapes, entries initially absent, legacy or bound; lookup, create, reuse (no new object; sharing still runs), conflict (lookup GET only; no subsequent provider mutation) | PASS; 33,168 generated, 21,648 distinct states; `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `ConflictNoMutation` |
 | `DriveReplayUnchecked.cfg`, `DriveReplayActorIgnored.cfg`, `DriveReplayLegacyAdopted.cfg`, `DriveReplayRace.cfg` | Three negative controls (fingerprint not checked, actor not bound, legacy entry adopted) and one documented non-guarantee (`SingleObject`: two concurrent misses both create) | Expected exit 12 with `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `SingleObject` |
 | `OperationsAuxiliaryWrite.cfg` (2026-10-12) | Two auxiliary Operations commands (note, retry, view or push) of one actor; session, grant, membership, assignment-dependent visibility, failure state and push key as the environment; lock, commit with audit, reject | PASS; 34,172 generated, 13,744 distinct states, depth 10; `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
@@ -793,6 +798,31 @@ mandatory in the formal runner. Bounds, abstractions and the recovery gap found 
 stated there.
 
 
+
+`MigrationLedger.tla` checks the production migration correspondence of
+DEPLOY-MIGRATION-001: a batch run walks the manifest in order, halts on an
+applied entry whose recorded checksum the candidate does not allow, skips other
+applied entries and applies pending ones, recording each in the ledger in the
+same transaction; release preparation reconciles the ledger with the candidate
+manifest and rejects unknown or changed history, while the batch tolerates a
+ledger row an older image does not know (image rollback). Four controls each
+remove one guard (`RecordAfterCommit`, `BatchUnchecked`, `PrepareUnchecked`,
+`UnknownAccepted`) and must violate the named invariant. The advisory lock is
+below the model; `scripts/__tests__/migration-batch-postgres.mjs` runs the
+rendered batch through psql. Bounds and exclusions are in
+`formal/system/migration-correspondence.md`.
+
+
+`StartupGates.tla` is not a state machine: it copies the capability-gate policy
+of the startup schema verification (DEPLOY-STARTUP-001) for the fourteen
+production flags it asserts and checks, over every assignment of those flags
+to missing, disabled or enabled, that every approved configuration starts and
+that a configuration that starts has every flag in an approved state. Four
+controls each remove one guard and must violate the named invariant (these are
+constant-level failures, reported by TLC as "The invariant of X is equal to
+FALSE"). `scripts/__tests__/startup-gates-postgres.mjs` runs the real
+verification SQL for each flag in each state. Bounds are in
+`formal/system/startup-gates.md`.
 ## Operations auxiliary writes (2026-10-12)
 
 `OperationsAuxiliaryWrite.tla` models the four auxiliary Operations

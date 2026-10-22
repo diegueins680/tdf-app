@@ -491,9 +491,17 @@ export function buildMigrationBatchSql(migrations, options = {}) {
       `SELECT NOT EXISTS (SELECT 1 FROM public.tdf_schema_migration WHERE migration_id = ${sqlLiteral(entry.id)}) AS ${applyVariable} \\gset`,
       `\\if :${applyVariable}`,
       `\\echo Applying migration ${entry.id}`,
-      entry.source,
+      // The ledger row and the migration's effects commit together: the row is
+      // inserted inside a transaction opened here, a migration's own BEGIN only
+      // warns, and its COMMIT (or the trailing one, for files without their own
+      // transaction) commits both. A failure anywhere leaves neither. Every
+      // manifest file ends with its COMMIT and uses no statement that refuses a
+      // transaction block (checked by production-release.test.mjs).
+      'BEGIN;',
       'INSERT INTO public.tdf_schema_migration (migration_id, checksum, source_commit)',
       `VALUES (${sqlLiteral(entry.id)}, ${sqlLiteral(entry.checksum)}, ${sqlLiteral(sourceCommit)});`,
+      entry.source,
+      'COMMIT;',
       '\\else',
       `\\echo Already applied ${entry.id}`,
       '\\endif',
@@ -516,7 +524,9 @@ export function buildMigrationBatchSql(migrations, options = {}) {
     "SELECT pg_advisory_unlock(hashtextextended('tdf-production-schema-migrations', 0));",
     '\\else',
     '\\echo Another production schema migration is active; refusing to wait',
-    '\\quit 3',
+    // psql's \quit takes no exit status (a numeric argument is ignored with a
+    // warning and the batch exited 0); an SQL error under ON_ERROR_STOP exits 3.
+    'DO $lock$ BEGIN RAISE EXCEPTION \'Another production schema migration is active; refusing to wait\'; END $lock$;',
     '\\endif',
     '',
   ].join('\n\n');

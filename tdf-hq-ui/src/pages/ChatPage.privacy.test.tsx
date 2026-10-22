@@ -127,7 +127,12 @@ it.each([true, false])('rechecks notification authorization during same-route na
   }
   expect(getOrCreateDmThread).not.toHaveBeenCalled();
 });
-it.each(['ordinary poll', 'previous notification'])('ignores late authorization from a %s', async (source) => {
+it.each([
+  { source: 'ordinary poll', oldFirst: true },
+  { source: 'ordinary poll', oldFirst: false },
+  { source: 'previous notification', oldFirst: true },
+  { source: 'previous notification', oldFirst: false },
+])('ignores late authorization from a $source (oldFirst=$oldFirst)', async ({ source, oldFirst }) => {
   const other = { ...thread, ctThreadId: 20, ctLastMessage: 'Other preview' };
   listThreads.mockResolvedValue([other, thread]);
   listMessages.mockImplementation(async (id) => id === 20
@@ -137,7 +142,11 @@ it.each(['ordinary poll', 'previous notification'])('ignores late authorization 
   const baseline = listThreads.mock.calls.length;
   let resolveOld!: (rows: ChatThreadDTO[]) => void;
   let resolveCurrent!: (rows: ChatThreadDTO[]) => void;
-  listThreads.mockReturnValueOnce(new Promise((resolve) => { resolveOld = resolve; }))
+  let resolveFreshPoll!: (rows: ChatThreadDTO[]) => void;
+  // Consuming the link re-enables ordinary polling. Hold that distinct request
+  // so the default authorized response cannot mask the denied notification.
+  listThreads.mockReturnValue(new Promise((resolve) => { resolveFreshPoll = resolve; }))
+    .mockReturnValueOnce(new Promise((resolve) => { resolveOld = resolve; }))
     .mockReturnValueOnce(new Promise((resolve) => { resolveCurrent = resolve; }));
   if (source === 'ordinary poll') {
     act(() => { void client.refetchQueries({ queryKey: ['chat-threads', 1] }); });
@@ -148,15 +157,28 @@ it.each(['ordinary poll', 'previous notification'])('ignores late authorization 
   fireEvent.click(screen.getByRole('button', { name: 'Open chat notification' }));
   // A ten-second background poll must not stand in for navigation admission.
   await waitFor(() => expect(listThreads.mock.calls.length).toBe(baseline + 2), { timeout: 2000 });
-  await act(async () => { resolveOld([thread]); });
+  if (oldFirst) await act(async () => { resolveOld([thread]); });
   expect(screen.queryByText('Private body')).toBeNull();
   expect(screen.queryByText('Private preview')).toBeNull();
   expect(loadChatReadMap(1)['10']).toBeUndefined();
   expect(screen.getByTestId('location').textContent).toBe('?threadId=10');
   await act(async () => { resolveCurrent([]); });
   await screen.findByText('La conversación de esta notificación no está disponible.');
+  await waitFor(() => expect(listThreads.mock.calls.length).toBe(baseline + 3), { timeout: 2000 });
+  if (!oldFirst) await act(async () => { resolveOld([thread]); });
+  expect(client.getQueryData(['chat-threads', 1])).toEqual([]);
+  expect(screen.getByTestId('badge').textContent).toBe('0');
   expect(screen.queryByText('Private body')).toBeNull();
   expect(screen.queryByText('Private preview')).toBeNull();
+  expect(listMessages.mock.calls.every(([id]) => id !== 10)).toBe(true);
+  expect(loadChatReadMap(1)['10']).toBeUndefined();
+  // A genuinely fresh ordinary response may restore the sidebar, while only an
+  // explicit conversation choice may leave the unavailable-link state.
+  await act(async () => { resolveFreshPoll([other, thread]); });
+  await screen.findByText('Private preview');
+  expect(screen.getByTestId('badge').textContent).toBe('1');
+  expect(screen.queryByText('Private body')).toBeNull();
+  expect(screen.getByText('La conversación de esta notificación no está disponible.')).toBeTruthy();
   expect(listMessages.mock.calls.every(([id]) => id !== 10)).toBe(true);
   expect(loadChatReadMap(1)['10']).toBeUndefined();
 });
