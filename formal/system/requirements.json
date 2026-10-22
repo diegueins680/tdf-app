@@ -3114,7 +3114,8 @@
       "forbiddenTransitions": [
         "Return a private availability/studio/campaign chunk.",
         "Return poisoned cached raw content for an otherwise valid public course.",
-        "Return deleted-course content from a stale index."
+        "Return deleted-course content from a stale index.",
+        "Return production metadata for an identity classified as ambiguous at metadata read."
       ],
       "effects": [
         "Only current public course documents reach the calling assistant adapter."
@@ -3143,7 +3144,8 @@
         "tdf-hq/tdf-hq.cabal"
       ],
       "formalModels": [
-        "formal/event-operations/PublicKnowledgeRead.tla"
+        "formal/event-operations/PublicKnowledgeRead.tla",
+        "formal/event-operations/PublicKnowledgeReadCollision.cfg"
       ],
       "status": "specified and implemented",
       "confidence": "medium",
@@ -3157,9 +3159,9 @@
       },
       "critical": true,
       "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
-      "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.",
+      "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.; NoAmbiguousRead.",
       "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with four named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits.",
+      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with five named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits. Require exact Text-normalized production collision rejection before both selection limits and during metadata rendering. Six actual Store regressions cover ASCII/Unicode whitespace, case, limit starvation, new cached-read collisions and recovery; pure generated checks cover normalization, with named embedding/read collision counterexamples in the bounded models. Multiple-row normalization and delivery-time retraction remain outside the refinement claim.",
       "evidence": "Historical disclosure reproduction is retained separately; exact candidate model/HTTP/CI receipts are required. New coverage must not inherit a historical green result."
     },
     {
@@ -10030,7 +10032,8 @@
         "Report an empty refresh as successful while retaining old chunks.",
         "Commit public-index deletion if replacement insertion fails.",
         "Skip legacy cleanup because the index is fresh or an embedding provider/configuration is unavailable.",
-        "Raw rejected stored URLs or route-unreachable course identities -> embedding payload."
+        "Raw rejected stored URLs or route-unreachable course identities -> embedding payload.",
+        "Disclose a captured production identity shared by multiple Text-normalized stored course rows."
       ],
       "effects": [
         "The next admitted worker check or administrator refresh removes legacy non-course chunks locally without a provider call; public replacement remains a separate transaction.",
@@ -10061,7 +10064,8 @@
         "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs"
       ],
       "formalModels": [
-        "formal/event-operations/PublicKnowledgeIndex.tla"
+        "formal/event-operations/PublicKnowledgeIndex.tla",
+        "formal/event-operations/PublicKnowledgeIndexCollision.cfg"
       ],
       "status": "specified and implemented",
       "confidence": "medium",
@@ -10075,9 +10079,9 @@
       },
       "critical": true,
       "authority": "Explicit user decision 2026-10-13; AUTHORITY-RAG-PUBLIC-INDEX-20261013",
-      "property": "NoLegacyAfterCleanup, NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex (public subset), EmptySkipsProvider and TypeOK in PublicKnowledgeIndex.",
+      "property": "NoLegacyAfterCleanup, NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex (public subset), EmptySkipsProvider NoAmbiguousEmbedding and TypeOK in PublicKnowledgeIndex.",
       "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Pinned TLC positive model and four named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits.",
+      "verification": "Pinned TLC positive model and five named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits. Require exact Text-normalized production collision rejection before both selection limits and during metadata rendering. Six actual Store regressions cover ASCII/Unicode whitespace, case, limit starvation, new cached-read collisions and recovery; pure generated checks cover normalization, with named embedding/read collision counterexamples in the bounded models. Multiple-row normalization and delivery-time retraction remain outside the refinement claim.",
       "evidence": "Candidate-specific test and model receipts must be recorded; historical passes do not establish current conformance."
     },
     {

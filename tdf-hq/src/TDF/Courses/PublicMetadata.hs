@@ -8,6 +8,7 @@ module TDF.Courses.PublicMetadata
   , isProductionCoursePublicSlug
   , hasRequiredProductionLead
   , isCurrentPublicCourseIdentity
+  , ambiguousProductionCourseSlugs
   , validateCoursePublicUrlField
   , sanitizeStoredCoursePublicUrl
   , isInternationalWhatsappCtaNumber
@@ -15,6 +16,7 @@ module TDF.Courses.PublicMetadata
 
 import Control.Applicative ((<|>))
 import Data.Char (digitToInt, isAsciiLower, isDigit, isHexDigit)
+import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time.Calendar (Day)
@@ -50,6 +52,18 @@ isCurrentPublicCourseIdentity configuredSlug today slug firstSession =
     && if "produccion-musical-" `T.isPrefixOf` slug
          then hasRequiredProductionLead today firstSession
          else not (isProductionCoursePublicSlug configuredSlug slug)
+
+-- Public production lookup normalizes all stored identities, including legacy
+-- rows. Suppress every ambiguous identity instead of choosing a competing row.
+-- Text's whitespace and case semantics deliberately match the public resolver.
+ambiguousProductionCourseSlugs :: [Text] -> [Text]
+ambiguousProductionCourseSlugs slugs =
+  Map.keys $ Map.filter (> (1 :: Int)) $ Map.fromListWith (+)
+    [ (normalized, 1)
+    | slug <- slugs
+    , let normalized = T.toLower (T.strip slug)
+    , "produccion-musical-" `T.isPrefixOf` normalized
+    ]
 
 isAsciiPhoneDigit :: Char -> Bool
 isAsciiPhoneDigit ch = ch >= '0' && ch <= '9'
