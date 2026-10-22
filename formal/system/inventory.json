@@ -3087,7 +3087,7 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "7f284510c547ce6b68aebcf02bf5be42a1c5f3a4f14c3c60b31690a85b04dd68",
+      "sha256": "b675c3564962de5d8fb5319c3bba57ababb2bba6efb36f40b867593f18947507",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14319,7 +14319,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "401070a75ca9ee6fd63d527e6dc2b7ce3e4a22533fdb5c8090db4b97f9beba01",
+      "sha256": "afa5ccb6af024b8e5f626dbba60214438e54997067f11549cafe9a6c820bf64a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25519,14 +25519,14 @@
     },
     {
       "path": "formal/system/dependency-security.json",
-      "sha256": "b6616e9a4f13afcbd96c4051d4d65cc5f65ac90166b3e283224315f932c0147e",
+      "sha256": "d58219378f9f95dfa6db5a2b1148d8576b41d6e64095805e8ea210b9daaffdd9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/dependency-security.md",
-      "sha256": "cb5ae6a52cb03b4a4a5da244ef11b8fe1c69186e2641ddb3690aa8f8b15ac7ea",
+      "sha256": "c9aaca48001536914a40e650b28ff16a04a00bee14aa9f98c5945298f017ceb0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
