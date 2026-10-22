@@ -5098,7 +5098,7 @@
     {
       "id": "SURFACE-a8aba62876599655",
       "path": "scripts/test-event-operations-api-migration.sh",
-      "sha256": "85cde47aa142e673e66915b22a021a2bed52a30bc0637caf185832964ce8cd42",
+      "sha256": "b86cc578d9092b396ef2d3972270f19eddc845328f76c2f9df931ad0461f427f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25715,7 +25715,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d9dd0a492179f3ad9564bebc7347c274069467a5157cbe5e593ab14e317a4de5",
+      "sha256": "e8ed01dc95282c76ce46eec5e4ea3ec21746ea87a64185ff6a302cd32172dec5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -25758,6 +25758,13 @@
     {
       "path": "formal/system/streaming-admission.md",
       "sha256": "955b038a2ccd5ce7daf9d6c4e0aa8f0d53afd5f2f9d537bb60d10dcb35afb88e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/test-database-readiness.md",
+      "sha256": "8385975f6603ba7dcf5b6fbeda05a94afe76f8cc61d30f563cb4c994dd9190a3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

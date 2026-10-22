@@ -10550,6 +10550,73 @@
       "ambiguity": [
         "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."
       ]
+    },
+    {
+      "id": "SYS-CI-DB-001",
+      "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
+      "statement": "The owned event-operations API migration test must wait for a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
+      "domain": "SYS",
+      "actors": [
+        "CI fixture runner",
+        "Developer"
+      ],
+      "preconditions": [
+        "The runner has started its own disposable PostgreSQL 16 container with a fixed synthetic test database."
+      ],
+      "inputs": [
+        "Owned container identity",
+        "Fixed test database",
+        "Bounded final-listener readiness query"
+      ],
+      "state": {
+        "states": [
+          "container starting",
+          "initialization server only",
+          "final server ready",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Starting or initialization-only -> final server ready after the loopback TCP query succeeds.",
+        "Readiness deadline exceeded -> failed with container diagnostics."
+      ],
+      "forbiddenTransitions": [
+        "A socket-only initialization query succeeds -> apply fixtures.",
+        "Readiness deadline exceeded -> continue SQL tests."
+      ],
+      "effects": [
+        "Wait for the final database process before fixture and migration SQL."
+      ],
+      "authorization": "Only the existing owned disposable test container is addressed; this runner grants no production authority.",
+      "privacy": "The database and its password are fixed synthetic test values.",
+      "concurrency": "The temporary initialization process can stop after accepting socket connections; TCP readiness excludes that process.",
+      "idempotency": "Readiness SELECT has no fixture or migration side effect.",
+      "failure": "Retain the existing 30-attempt bound, print container logs and fail when the final listener is unavailable.",
+      "recovery": "Repair fixture startup and rerun the complete Linux migration job; no SQL assertion or audit policy is waived.",
+      "observability": "Real PostgreSQL control: old socket probe accepts initialization, repaired TCP probe rejects initialization/stopped phases and accepts the final listener.",
+      "authority": "inferred",
+      "source": "Failed hosted postgres-api run 39712279548; official postgres image initialization lifecycle; local PostgreSQL 16 socket/TCP reproduction on 2026-10-21.",
+      "property": "Initialization-only PostgreSQL cannot admit the API fixture SQL.",
+      "contract": "formal/system/test-database-readiness.md",
+      "implementation": [
+        "scripts/test-event-operations-api-migration.sh"
+      ],
+      "tests": [
+        ".github/workflows/event-operations-formal.yml"
+      ],
+      "formalModels": [],
+      "verification": "Actual PostgreSQL 16 socket-only and TCP phases exercise the extracted readiness query; the full owned-container migration job remains required.",
+      "evidence": "Private 2026-10-21 protocol receipt and exact-head hosted postgres-api job; the original failed run is retained.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "High for distinguishing these finite server phases; no general fixture-readiness or full Docker execution claim.",
+      "ambiguity": [
+        "Other disposable PostgreSQL runners have separate readiness and ownership obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Actual native PostgreSQL phase controls pass; fresh combined-head Linux Docker migration qualification is pending."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -10963,6 +11030,7 @@
     "scripts/test-community-search.py": "c6be90dbc19bfd6fc6c06e72c300f77f75729e94e518d5132560e94cd1b58c24",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
+    "scripts/test-event-operations-api-migration.sh": "b86cc578d9092b396ef2d3972270f19eddc845328f76c2f9df931ad0461f427f",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
@@ -11856,6 +11924,10 @@
       {
         "requirement": "OPS-CI-REGISTRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-CI-DB-001",
+        "relationship": "tests"
       }
     ],
     "scripts/lib/formal-result-summary.mjs": [
@@ -20193,6 +20265,12 @@
         "requirement": "MSG-NOTIFY-001",
         "relationship": "formalModels"
       }
+    ],
+    "scripts/test-event-operations-api-migration.sh": [
+      {
+        "requirement": "SYS-CI-DB-001",
+        "relationship": "implementation"
+      }
     ]
   },
   "surfaces": [
@@ -20331,6 +20409,10 @@
         {
           "requirement": "OPS-CI-REGISTRY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-CI-DB-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -24573,9 +24655,14 @@
     {
       "id": "SURFACE-a8aba62876599655",
       "path": "scripts/test-event-operations-api-migration.sh",
-      "sha256": "85cde47aa142e673e66915b22a021a2bed52a30bc0637caf185832964ce8cd42",
+      "sha256": "b86cc578d9092b396ef2d3972270f19eddc845328f76c2f9df931ad0461f427f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-CI-DB-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-efadb35e0fa07952",
@@ -44640,7 +44727,6 @@
     "SURFACE-c3644dae3f31864c",
     "SURFACE-ce3ab4115ddf1e35",
     "SURFACE-c83ef025ca87e555",
-    "SURFACE-a8aba62876599655",
     "SURFACE-efadb35e0fa07952",
     "SURFACE-8222f17ff103ec51",
     "SURFACE-536b0c7c569b3f6b",
@@ -47265,7 +47351,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d9dd0a492179f3ad9564bebc7347c274069467a5157cbe5e593ab14e317a4de5",
+      "sourceSha256": "e8ed01dc95282c76ce46eec5e4ea3ec21746ea87a64185ff6a302cd32172dec5",
       "definition": {
         "states": [
           "absent",
@@ -47295,7 +47381,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d9dd0a492179f3ad9564bebc7347c274069467a5157cbe5e593ab14e317a4de5",
+      "sourceSha256": "e8ed01dc95282c76ce46eec5e4ea3ec21746ea87a64185ff6a302cd32172dec5",
       "definition": {
         "export": [
           "queued",
@@ -69519,7 +69605,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 127,
+    "PARTIAL": 128,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
