@@ -32,6 +32,10 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [alloy-negative-controls.md](alloy-negative-controls.md): assertion-preserving
   mutations, named counterexample admission and retained bounded solver evidence.
 
+- [public-knowledge-retrieval.md](public-knowledge-retrieval.md): current public
+  metadata admission, colliding private index identities and bounded read/delete
+  interleavings with four negative controls.
+
 - [physical-recovery.md](physical-recovery.md): verified cold PG17 copy startup, isolated configuration and explicit coordinated-recovery exclusions.
 
 - [recovery-envelope.md](recovery-envelope.md): sealed executable encryption/decryption and explicit off-host recovery obligations.
@@ -86,7 +90,12 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [private-upload-persistence.md](private-upload-persistence.md): private attachment mount admission, legacy-file preservation and remaining coordinated recovery obligations.
 - [whatsapp-redelivery.md](whatsapp-redelivery.md): a redelivered WhatsApp message changes nothing and is not answered again; opt-out stored and applied in one transaction; bounded model, four negative controls and PostgreSQL tests.
 - [ticket-invoice-worker.md](ticket-invoice-worker.md): tax document submission worker rules, bounded model, four negative controls, PostgreSQL worker tests and the uncertain/rejected recovery gaps.
-- [whatsapp-consent.md](whatsapp-consent.md): double opt-in request, reply, withdrawal and undelivered-request rules with a bounded model, eight negative controls and PostgreSQL concurrency checks.
+- [music-ddex-export.md](music-ddex-export.md): DDEX export/job lifecycle under worker leases, two gates, valid and failed finality, queued-only replay repair, bounded model with five controls and the fixed failure report.
+- [whatsapp-consent.md](whatsapp-consent.md): double opt-in request, reply, withdrawal and undelivered-request rules with a bounded model, eight negative controls and PostgreSQL concurrency checks; confirmation-notice timestamps and real-backend checks (AUTHORITY-074).
+- [migration-correspondence.md](migration-correspondence.md): production migration batch and release preparation: atomic ledger rows, fail-closed lock refusal (AUTHORITY-075), checksum drift, unknown rows and holes, bounded negative controls.
+
+- [startup-gates.md](startup-gates.md): the capability-gate policy of the startup verifier, every asserted flag in every state against the real SQL, the restart-hazard list (AUTHORITY-077), exhaustive one-state model with controls.
+- [operations-worker-tick.md](operations-worker-tick.md): Operations worker maintenance tick: poisoned outbox rows fail alone with attempts, backoff and dead letter (AUTHORITY-076), bounded negative controls.
 - [access-grant.md](access-grant.md): reviewed access-request decisions, self-service correction (AUTHORITY-054), invitation-link claims, expiry repair and bounded negative controls.
 - [messaging.md](messaging.md): current-session/consent authority, rejected mutation rollback, bounded model and delivery/idempotency exclusions.
 - Domain contracts retain their existing source locations. This index references
@@ -96,6 +105,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [music-purchase-entitlement.md](music-purchase-entitlement.md): music order payment record, single entitlement, download limit and request replay window; bounded model, five negative controls, PostgreSQL tests and the open failed-attempt cancellation defect.
 - [manual-bank-transfer.md](manual-bank-transfer.md): staff-verified ticket transfer review on the production schema, approval and ticket issuance in one transaction, bounded model with eight mutation controls and explicit bank exclusions.
 - [payment-retry.md](payment-retry.md): serialized retry admission, immutable evidence, bounded mutation controls and retirement of the conflicting non-runtime checkout table.
+- [operations-failure-replay.md](operations-failure-replay.md): a manager's retry of a dead-lettered Operations projection re-queues it; the failure follows the projection to resolved or back to dead letter.
 - [ticket-manual-review.md](ticket-manual-review.md): staff review of a ticket bank transfer keeps its row locks to commit; bounded model, three negative controls and PostgreSQL race tests.
 - [index-declarations.md](index-declarations.md): nine uniqueness constraints created from index declarations become plain indexes; bounded model, three negative controls and PostgreSQL tests.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)

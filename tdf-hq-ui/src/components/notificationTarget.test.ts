@@ -1,12 +1,19 @@
 import { buildLoginRedirectPath, resolvePostAuthPath } from '../utils/loginRouting';
 import type { NotificationDTO } from '../api/types';
-import { notificationLink, notificationTargetPath } from './notificationTarget';
+import { notificationFallbackPath, notificationLink, notificationTargetPath } from './notificationTarget';
 const key = '00000000-0000-0000-0000-000000000017';
 const notification = (overrides: Partial<NotificationDTO>): NotificationDTO => ({
   nId: 1, nType: 'test', nTitle: 'Test', nBody: 'Test', nTargetType: null,
   nTargetId: null, nIsRead: false, nCreatedAt: '2026-09-10T00:00:00Z', ...overrides,
 });
 describe('notification destination identities', () => {
+  it('preserves the merged mobile chat destination using only a positive safe thread ID', () => {
+    expect(notificationTargetPath(notification({ nTargetType: 'chat_thread', nTargetKey: '42' }))).toBe('/chat?threadId=42');
+    for (const nTargetKey of ['0', '-1', '1.2', '9007199254740992', 'https://evil.example', '42?partyId=5']) {
+      expect(notificationTargetPath(notification({ nTargetType: 'chat_thread', nTargetKey }))).toBeNull();
+    }
+    expect(notificationFallbackPath(notification({ nTargetType: 'chat_thread' }))).toBe('/chat');
+  });
   it('uses the stored follower identity, never names or the old recipient target', () => {
     expect(notificationTargetPath(notification({ nType: 'artist_liked', nTargetType: 'party_profile', nTargetId: 7, nBody: 'Galo' }))).toBe('/perfil/7');
     expect(notificationTargetPath(notification({ nType: 'artist_liked', nTargetType: 'artist', nTargetId: 5, nBody: 'Galo' }))).toBeNull();
@@ -41,9 +48,16 @@ describe('notification destination identities', () => {
   });
 });
 
-it.each(['/perfil/7', '/solicitudes-acceso?request=17', '/notificaciones/3'])('retains notification destination through an expired session: %s', (path) => {
+it.each(['/perfil/7', '/solicitudes-acceso?request=17', '/notificaciones/3', '/chat?threadId=42'])('retains notification destination through an expired session: %s', (path) => {
   const login = buildLoginRedirectPath(path);
   const redirect = new URL(login, 'https://tdf.local').searchParams.get('redirect');
   expect(redirect).toBe(path);
   expect(resolvePostAuthPath(null, ['Customer'], [], redirect)).toBe(path);
+});
+
+it('opens a chat notification by its stored thread identity', () => {
+  expect(notificationTargetPath(notification({ nTargetType: 'chat_thread', nTargetKey: '42' }))).toBe('/chat?threadId=42');
+});
+it.each(['0', '-1', '1.2', '9007199254740992', 'https://evil.example', '42?partyId=5'])('rejects unsafe chat thread identity %s', (nTargetKey) => {
+  expect(notificationTargetPath(notification({ nTargetType: 'chat_thread', nTargetKey }))).toBeNull();
 });

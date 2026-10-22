@@ -182,6 +182,12 @@
         "renderer": "workStatusText",
         "rendererFile": "tdf-hq/src/TDF/Operations/Types.hs"
       }
+    },
+    "MEDIA-MUSIC-DDEX-001": {
+      "source": "formal/system/requirements.json",
+      "table": "music_ddex_export",
+      "column": "status",
+      "decision": "AUTHORITY-082"
     }
   },
   "unbound": {

@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -645,6 +645,36 @@
       "decision": "adopted",
       "rationale": "A customer-scoped key must be issued only to the authenticated owner of that customer; the legacy course route issued it to any caller presenting a sequential registration ID, so it was retired.",
       "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-OPS-CAPTURE-LOCK-001",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html#LOCKING-ROWS",
+      "title": "PostgreSQL17 row-level lock modes",
+      "verifiedAt": "2026-10-15",
+      "recommendation": "FOR SHARE conflicts with non-key UPDATE; FOR KEY SHARE does not. Successful row locks last through transaction completion, while exception/savepoint rollback releases locks acquired within the failed scope.",
+      "applicability": "OPS-INBOUND-CAPTURE-001 admission versus operations_enabled/active updates",
+      "decision": "adopted",
+      "rationale": "Take SHARE locks on both authority rows inside the capture transaction. A non-key disablement must not race a previously checked boolean. Actual PostgreSQL17 tests witness both lock orders; capture errors remain contained and do not promise successful delivery."
+    },
+    {
+      "id": "RES-OPS-CAPTURE-RETENTION-001",
+      "source": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html#disposal-of-logs",
+      "title": "OWASP Logging Cheat Sheet: sensitive data and disposal",
+      "verifiedAt": "2026-10-15",
+      "recommendation": "Review personal data in logging and set retention/disposal periods for records, copies, backups and extracts according to their purpose and applicable obligations.",
+      "applicability": "Sender identifiers copied into permanent Operations events/audits",
+      "decision": "adopted as activation prerequisite",
+      "rationale": "The source does not supply a TDF retention duration or authorize identifier collection. Keep capture disabled until product-specific retention, deletion/anonymization, exceptions and backup expiry are defined and executable. No arbitrary duration or blanket financial-record exception is inferred."
+    },
+    {
+      "id": "RES-RAG-SNAPSHOT-001",
+      "source": "https://www.postgresql.org/docs/17/transaction-iso.html#XACT-READ-COMMITTED",
+      "title": "PostgreSQL17 Read Committed statement snapshots",
+      "recommendation": "Successive statements in one transaction may observe different committed versions. State the observation point for a current-data guarantee.",
+      "applicability": "PRIV-RAG-001 ranking followed by course metadata reads",
+      "decision": "adopted",
+      "rationale": "Model edits/deletion between ranking, metadata read and delivery. Require current public data at metadata read, not deletion-linearized delivery. Do not infer production isolation configuration from the default or claim full SQL/Haskell refinement.",
+      "checkedAt": "2026-10-13"
     },
     {
       "id": "RES-ALLOY-CONTROLS-001",
