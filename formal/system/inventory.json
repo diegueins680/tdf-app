@@ -5801,7 +5801,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "f3b8d42421e2acc094d14ca079c89603f34d2d8433aa059581133279d80f16c7",
+      "sha256": "1fc69980366f09301ddb8f46f083edfff7304a62b61d379d42ef78c302c8f4b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13901,7 +13901,7 @@
     {
       "id": "SURFACE-6585884b25e4a8d9",
       "path": "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
-      "sha256": "6f5b2fc1b7bc41a46b78ebad3477ae918b837834f490cc29b42a4876ea1b45e4",
+      "sha256": "d084222b9da081d89cfb4f80dc7442e6be0fe3f54873c547c96a77a3f1003af2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14285,7 +14285,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "bf825a5a2b4c3880ef1aa1b4d4c8a30e49f314396ecfd0224b074428a39c28b7",
+      "sha256": "e1269d97de6952bbfa2485c343bf71edf442f1897ab9fea11e8e34726ef5fa1b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14963,7 +14963,7 @@
     {
       "id": "SURFACE-0ca3fcf522edb0bf",
       "path": "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs",
-      "sha256": "533ad9b5e12f39fb93b02c10c0c4282f8e2f3d4a33bf70f937ca7e61b9c5865d",
+      "sha256": "320d459c822262d4241f2cba3f7557de8717617d57dab9200b0182d5bb217dd6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15161,7 +15161,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "37fb5ac7de0522de3ede41856747310294bbec415f8b5c60ff199ce5a2217cff",
+      "sha256": "76f9a576c21078c24559998b492a605e53162f58c46762c2fd5da1e15da73063",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23776,84 +23776,98 @@
     },
     {
       "path": "formal/event-operations/PublicKnowledgeIndex.cfg",
-      "sha256": "1020a1a6c8ca342e1fa50b530560cdd4e7f66e6a4a5697b8279f9fdf24fd1625",
+      "sha256": "110364d5b6e79afb7bae9589781c47b6501058d91518649f7e49a2d54e9d4f86",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeIndex.tla",
-      "sha256": "4eca6e7a301e36d486ed0135e966acdcbd74f8c0288a832bb9e556c88393b432",
+      "sha256": "c51254f083b40972f67052c4f150745132f60ffbb042483b52ef0a73eb627c1b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
     },
     {
+      "path": "formal/event-operations/PublicKnowledgeIndexCollision.cfg",
+      "sha256": "e275baf98f73d812f21c07e4f08c60b0c31e3aa6fd1e9ac5b60a63185e8d9800",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/PublicKnowledgeIndexEmpty.cfg",
-      "sha256": "d857f61fb63a8284476c8489bbbe840120ee65de81bd0e8684dc19deab766a34",
+      "sha256": "8f13964a9f91cb89de6e8ad259021889519d6732e79ff6324221e72255f4b837",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeIndexFailure.cfg",
-      "sha256": "ec77f09fd2978b935fac1a72ad95972b8ce9b53b7a90d3c186cfd946dfa0dda9",
+      "sha256": "fc56c4bbf7316024a69b5c50dbc59486f204dfe421852ca85c2e061a76f5d389",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeIndexLegacy.cfg",
-      "sha256": "f55909251bd0a55ee802e5455084a07d9b603b3d09532228b33553c95275f776",
+      "sha256": "cc6357a260598142a1c6dd3539022ed6a87efe5ce14d287380dc413831659166",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeIndexPrivate.cfg",
-      "sha256": "4b038b95ecd2d168f46b3456e3ab0f24cf90202d33759f46fc8add1df5250a18",
+      "sha256": "08fbf46652c2c63c504be1889e036a3d1fbc6d10c31716e15171f2fdbc8d4ddd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeRead.cfg",
-      "sha256": "5f4c43cd22e06836c95df4ee1870716346f08069dec380e5bafe73bb20cb9a9a",
+      "sha256": "68fc889d245272c29969dcba28e01b8cf94da4c9e59d9246f540cd0dfca46239",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeRead.tla",
-      "sha256": "112d5cf4a069ee8e7369dd62ea196058f688afee91db6233b928a9e177879f96",
+      "sha256": "c61217da58b0ad4a5584e05dcf0b857368c2cfd2c148faac9f2979aa812160ac",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeReadCachedMetadata.cfg",
-      "sha256": "2a74a790c24fbb72495c448b83372dbcafb6735cd7e8c7166ff326b80deb76e7",
+      "sha256": "cd8ce97d32d606e26b92845159034c6b2b62649e246d7c83d197450ffb94febd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicKnowledgeReadCollision.cfg",
+      "sha256": "b1eaf721fc5205f37aca9c074e0fddfea77e03d9d820d1f71b75be5c1b454d3a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeReadMissingFallback.cfg",
-      "sha256": "43d6bfb174fac6a64655c7f6f472a198c90a03f82b725753cba975eafbb60097",
+      "sha256": "52f8c010dbc9a4a078ccc9f903a624d8fcfa48431e0d4c4116dcfed61114b15f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeReadRawText.cfg",
-      "sha256": "0fe8675cf2e412eb6b71b1e0904d7f7bef18d214175ef9092895be66bec8f136",
+      "sha256": "05208cab758808545ff20b3fd211febad1b555c3354e026ccd31e620a0593298",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/PublicKnowledgeReadUnfiltered.cfg",
-      "sha256": "012f91bf3cc6f6d4f68e068b092013e01197cde51ea6df22b7491e80e7ef4272",
+      "sha256": "2649a1a582d6e11110a212ccc67dd5e7c9aa071c61e4fcdcdf2f9872a02958d9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -23902,7 +23916,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "407b252ade3e9d4c147a98c64d72f2d17d64b69acf4154fe651346a73bb52edc",
+      "sha256": "d1257ffdc9a97ee7bfa701ee40ae040937082bd8a7b118c156ff3657dcb83394",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25904,7 +25918,7 @@
     },
     {
       "path": "formal/system/public-knowledge-retrieval.md",
-      "sha256": "6dba07392dcea4756b341d008336d1129fbeee61743c7dc03c88ca3cba84b472",
+      "sha256": "c44cfee58a598125a91870f0315c96a2288f8ee1ef3718925ba9dd826f569b2f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25953,7 +25967,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "951ca0cad81ed165559cf3296fe990e931761cce09ec9409ef92d5bc3d106ad8",
+      "sha256": "584160b6af2ab811fb9a45f305ff118ff90266e9b3a91a80e52af03ebda403f8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -37535,11 +37549,28 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  RejectAmbiguous = TRUE",
         "  PurgeLegacy = TRUE",
         "  PublicOnly = TRUE",
         "  ClearEmpty = TRUE",
         "  PreserveFailure = TRUE",
-        "INVARIANTS TypeOK NoLegacyAfterCleanup NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider"
+        "INVARIANTS TypeOK NoLegacyAfterCleanup NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider NoAmbiguousEmbedding"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicKnowledgeIndexCollision.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  RejectAmbiguous = FALSE",
+        "  PurgeLegacy = TRUE",
+        "  PublicOnly = TRUE",
+        "  ClearEmpty = TRUE",
+        "  PreserveFailure = TRUE",
+        "INVARIANTS TypeOK NoLegacyAfterCleanup NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider NoAmbiguousEmbedding"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -37550,11 +37581,12 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  RejectAmbiguous = TRUE",
         "  PurgeLegacy = TRUE",
         "  PublicOnly = TRUE",
         "  ClearEmpty = FALSE",
         "  PreserveFailure = TRUE",
-        "INVARIANTS TypeOK NoLegacyAfterCleanup NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider"
+        "INVARIANTS TypeOK NoLegacyAfterCleanup NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider NoAmbiguousEmbedding"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -37565,11 +37597,12 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  RejectAmbiguous = TRUE",
         "  PurgeLegacy = TRUE",
         "  PublicOnly = TRUE",
         "  ClearEmpty = TRUE",
         "  PreserveFailure = FALSE",
-        "INVARIANTS TypeOK NoLegacyAfterCleanup NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider"
+        "INVARIANTS TypeOK NoLegacyAfterCleanup NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider NoAmbiguousEmbedding"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -37580,11 +37613,12 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  RejectAmbiguous = TRUE",
         "  PurgeLegacy = FALSE",
         "  PublicOnly = TRUE",
         "  ClearEmpty = TRUE",
         "  PreserveFailure = TRUE",
-        "INVARIANTS TypeOK NoLegacyAfterCleanup NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider"
+        "INVARIANTS TypeOK NoLegacyAfterCleanup NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider NoAmbiguousEmbedding"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -37595,11 +37629,12 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  RejectAmbiguous = TRUE",
         "  PurgeLegacy = TRUE",
         "  PublicOnly = FALSE",
         "  ClearEmpty = TRUE",
         "  PreserveFailure = TRUE",
-        "INVARIANTS TypeOK NoLegacyAfterCleanup NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider"
+        "INVARIANTS TypeOK NoLegacyAfterCleanup NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider NoAmbiguousEmbedding"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -37610,11 +37645,12 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  RejectAmbiguous = TRUE",
         "  FilterSource = TRUE",
         "  RenderCurrent = TRUE",
         "  DropMissing = TRUE",
         "  ExcludeRaw = TRUE",
-        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata"
+        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata NoAmbiguousRead"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -37625,11 +37661,28 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  RejectAmbiguous = TRUE",
         "  FilterSource = TRUE",
         "  RenderCurrent = FALSE",
         "  DropMissing = TRUE",
         "  ExcludeRaw = TRUE",
-        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata"
+        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata NoAmbiguousRead"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicKnowledgeReadCollision.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  RejectAmbiguous = FALSE",
+        "  FilterSource = TRUE",
+        "  RenderCurrent = TRUE",
+        "  DropMissing = TRUE",
+        "  ExcludeRaw = TRUE",
+        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata NoAmbiguousRead"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -37640,11 +37693,12 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  RejectAmbiguous = TRUE",
         "  FilterSource = TRUE",
         "  RenderCurrent = TRUE",
         "  DropMissing = FALSE",
         "  ExcludeRaw = TRUE",
-        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata"
+        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata NoAmbiguousRead"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -37655,11 +37709,12 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  RejectAmbiguous = TRUE",
         "  FilterSource = TRUE",
         "  RenderCurrent = TRUE",
         "  DropMissing = TRUE",
         "  ExcludeRaw = FALSE",
-        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata"
+        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata NoAmbiguousRead"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -37670,11 +37725,12 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  RejectAmbiguous = TRUE",
         "  FilterSource = FALSE",
         "  RenderCurrent = TRUE",
         "  DropMissing = TRUE",
         "  ExcludeRaw = TRUE",
-        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata"
+        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata NoAmbiguousRead"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

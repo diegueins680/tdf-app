@@ -3061,7 +3061,8 @@
       "forbiddenTransitions": [
         "Return a private availability/studio/campaign chunk.",
         "Return poisoned cached raw content for an otherwise valid public course.",
-        "Return deleted-course content from a stale index."
+        "Return deleted-course content from a stale index.",
+        "Return production metadata for an identity classified as ambiguous at metadata read."
       ],
       "effects": [
         "Only current public course documents reach the calling assistant adapter."
@@ -3090,7 +3091,8 @@
         "tdf-hq/tdf-hq.cabal"
       ],
       "formalModels": [
-        "formal/event-operations/PublicKnowledgeRead.tla"
+        "formal/event-operations/PublicKnowledgeRead.tla",
+        "formal/event-operations/PublicKnowledgeReadCollision.cfg"
       ],
       "status": "specified and implemented",
       "confidence": "medium",
@@ -3104,9 +3106,9 @@
       },
       "critical": true,
       "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
-      "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.",
+      "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.; NoAmbiguousRead.",
       "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with four named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits.",
+      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with five named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits. Require exact Text-normalized production collision rejection before both selection limits and during metadata rendering. Six actual Store regressions cover ASCII/Unicode whitespace, case, limit starvation, new cached-read collisions and recovery; pure generated checks cover normalization, with named embedding/read collision counterexamples in the bounded models. Multiple-row normalization and delivery-time retraction remain outside the refinement claim.",
       "evidence": "Historical disclosure reproduction is retained separately; exact candidate model/HTTP/CI receipts are required. New coverage must not inherit a historical green result."
     },
     {
@@ -9944,7 +9946,8 @@
         "Report an empty refresh as successful while retaining old chunks.",
         "Commit public-index deletion if replacement insertion fails.",
         "Skip legacy cleanup because the index is fresh or an embedding provider/configuration is unavailable.",
-        "Raw rejected stored URLs or route-unreachable course identities -> embedding payload."
+        "Raw rejected stored URLs or route-unreachable course identities -> embedding payload.",
+        "Disclose a captured production identity shared by multiple Text-normalized stored course rows."
       ],
       "effects": [
         "The next admitted worker check or administrator refresh removes legacy non-course chunks locally without a provider call; public replacement remains a separate transaction.",
@@ -9975,7 +9978,8 @@
         "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs"
       ],
       "formalModels": [
-        "formal/event-operations/PublicKnowledgeIndex.tla"
+        "formal/event-operations/PublicKnowledgeIndex.tla",
+        "formal/event-operations/PublicKnowledgeIndexCollision.cfg"
       ],
       "status": "specified and implemented",
       "confidence": "medium",
@@ -9989,9 +9993,9 @@
       },
       "critical": true,
       "authority": "Explicit user decision 2026-10-13; AUTHORITY-RAG-PUBLIC-INDEX-20261013",
-      "property": "NoLegacyAfterCleanup, NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex (public subset), EmptySkipsProvider and TypeOK in PublicKnowledgeIndex.",
+      "property": "NoLegacyAfterCleanup, NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex (public subset), EmptySkipsProvider NoAmbiguousEmbedding and TypeOK in PublicKnowledgeIndex.",
       "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Pinned TLC positive model and four named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits.",
+      "verification": "Pinned TLC positive model and five named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits. Require exact Text-normalized production collision rejection before both selection limits and during metadata rendering. Six actual Store regressions cover ASCII/Unicode whitespace, case, limit starvation, new cached-read collisions and recovery; pure generated checks cover normalization, with named embedding/read collision counterexamples in the bounded models. Multiple-row normalization and delivery-time retraction remain outside the refinement claim.",
       "evidence": "Candidate-specific test and model receipts must be recorded; historical passes do not establish current conformance."
     },
     {
@@ -10942,8 +10946,10 @@
     "formal/event-operations/ProviderRetryAdmissionLate.cfg": "e8f74982567c8bfe974e9d7ab168d45043bbb8826a6e9b99f1805e99ee6f79d2",
     "formal/event-operations/ProviderRetryAdmissionPayload.cfg": "e45311f9c71bbcfe46171a0fba4bde38f656f8a5781fc6efbc8eb53fa86e86dd",
     "formal/event-operations/ProviderRollback.tla": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
-    "formal/event-operations/PublicKnowledgeIndex.tla": "4eca6e7a301e36d486ed0135e966acdcbd74f8c0288a832bb9e556c88393b432",
-    "formal/event-operations/PublicKnowledgeRead.tla": "112d5cf4a069ee8e7369dd62ea196058f688afee91db6233b928a9e177879f96",
+    "formal/event-operations/PublicKnowledgeIndex.tla": "c51254f083b40972f67052c4f150745132f60ffbb042483b52ef0a73eb627c1b",
+    "formal/event-operations/PublicKnowledgeIndexCollision.cfg": "e275baf98f73d812f21c07e4f08c60b0c31e3aa6fd1e9ac5b60a63185e8d9800",
+    "formal/event-operations/PublicKnowledgeRead.tla": "c61217da58b0ad4a5584e05dcf0b857368c2cfd2c148faac9f2979aa812160ac",
+    "formal/event-operations/PublicKnowledgeReadCollision.cfg": "b1eaf721fc5205f37aca9c074e0fddfea77e03d9d820d1f71b75be5c1b454d3a",
     "formal/event-operations/PublicRouteAdmission.tla": "df68c2524239e05f17fb3c1d479cab887803a606cda6bc145a18d23bad0752c7",
     "formal/event-operations/ReadinessProbe.tla": "5c084b53a4928a9e99594febc6998ab2bd403f8aab8cce3e1ad4272eb58237ec",
     "formal/event-operations/RecoveryExpiry.tla": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
@@ -11246,7 +11252,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "f3b8d42421e2acc094d14ca079c89603f34d2d8433aa059581133279d80f16c7",
+    "scripts/verify-event-operations-formal.sh": "1fc69980366f09301ddb8f46f083edfff7304a62b61d379d42ef78c302c8f4b9",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -11642,7 +11648,7 @@
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
     "tdf-hq/src/TDF/CoursePhone.hs": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
     "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
-    "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "6f5b2fc1b7bc41a46b78ebad3477ae918b837834f490cc29b42a4876ea1b45e4",
+    "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "d084222b9da081d89cfb4f80dc7442e6be0fe3f54873c547c96a77a3f1003af2",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
@@ -11670,7 +11676,7 @@
     "tdf-hq/src/TDF/Operations/Worker.hs": "45363018da50e080a6f8853ecbb32c5dfb5818bd4a16b5a42cd5527eeb2635ba",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
     "tdf-hq/src/TDF/PublicUrl.hs": "f6d8765fca93de1e02416ce6aa5eab9712efb191fc5565e4b66ff22e2926ad4d",
-    "tdf-hq/src/TDF/RagStore.hs": "bf825a5a2b4c3880ef1aa1b4d4c8a30e49f314396ecfd0224b074428a39c28b7",
+    "tdf-hq/src/TDF/RagStore.hs": "e1269d97de6952bbfa2485c343bf71edf442f1897ab9fea11e8e34726ef5fa1b",
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
@@ -11731,7 +11737,7 @@
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
     "tdf-hq/test/TDF/CorsSpec.hs": "8663de653f6eb0ba12b8889b2645a537fc6ec0f6dad951cb340f674aa3838357",
     "tdf-hq/test/TDF/CourseIdentitySpec.hs": "b2a85128b237876bf57fcf54a8e1d0047032bf68f3591ed6bb5203df28f10203",
-    "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs": "533ad9b5e12f39fb93b02c10c0c4282f8e2f3d4a33bf70f937ca7e61b9c5865d",
+    "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs": "320d459c822262d4241f2cba3f7557de8717617d57dab9200b0182d5bb217dd6",
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
@@ -11755,7 +11761,7 @@
     "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": "3a3aeb59ce2c378361aa9a9ff9787deb3eb51ce164643b61ae37b2c575b3ea39",
     "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
-    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "37fb5ac7de0522de3ede41856747310294bbec415f8b5c60ff199ce5a2217cff",
+    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "76f9a576c21078c24559998b492a605e53162f58c46762c2fd5da1e15da73063",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
@@ -14431,6 +14437,12 @@
       }
     ],
     "formal/event-operations/PublicKnowledgeRead.tla": [
+      {
+        "requirement": "PRIV-RAG-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/PublicKnowledgeReadCollision.cfg": [
       {
         "requirement": "PRIV-RAG-001",
         "relationship": "formalModels"
@@ -20257,6 +20269,12 @@
       }
     ],
     "formal/event-operations/PublicKnowledgeIndex.tla": [
+      {
+        "requirement": "PRIV-RAG-002",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/PublicKnowledgeIndexCollision.cfg": [
       {
         "requirement": "PRIV-RAG-002",
         "relationship": "formalModels"
@@ -26322,7 +26340,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "f3b8d42421e2acc094d14ca079c89603f34d2d8433aa059581133279d80f16c7",
+      "sha256": "1fc69980366f09301ddb8f46f083edfff7304a62b61d379d42ef78c302c8f4b9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38406,7 +38424,7 @@
     {
       "id": "SURFACE-6585884b25e4a8d9",
       "path": "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
-      "sha256": "6f5b2fc1b7bc41a46b78ebad3477ae918b837834f490cc29b42a4876ea1b45e4",
+      "sha256": "d084222b9da081d89cfb4f80dc7442e6be0fe3f54873c547c96a77a3f1003af2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39070,7 +39088,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "bf825a5a2b4c3880ef1aa1b4d4c8a30e49f314396ecfd0224b074428a39c28b7",
+      "sha256": "e1269d97de6952bbfa2485c343bf71edf442f1897ab9fea11e8e34726ef5fa1b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40510,7 +40528,7 @@
     {
       "id": "SURFACE-0ca3fcf522edb0bf",
       "path": "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs",
-      "sha256": "533ad9b5e12f39fb93b02c10c0c4282f8e2f3d4a33bf70f937ca7e61b9c5865d",
+      "sha256": "320d459c822262d4241f2cba3f7557de8717617d57dab9200b0182d5bb217dd6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40869,7 +40887,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "37fb5ac7de0522de3ede41856747310294bbec415f8b5c60ff199ce5a2217cff",
+      "sha256": "76f9a576c21078c24559998b492a605e53162f58c46762c2fd5da1e15da73063",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47902,7 +47920,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "951ca0cad81ed165559cf3296fe990e931761cce09ec9409ef92d5bc3d106ad8",
+      "sourceSha256": "584160b6af2ab811fb9a45f305ff118ff90266e9b3a91a80e52af03ebda403f8",
       "definition": {
         "states": [
           "absent",
@@ -47932,7 +47950,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "951ca0cad81ed165559cf3296fe990e931761cce09ec9409ef92d5bc3d106ad8",
+      "sourceSha256": "584160b6af2ab811fb9a45f305ff118ff90266e9b3a91a80e52af03ebda403f8",
       "definition": {
         "export": [
           "queued",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-22T21:20:25.258Z",
+  "generatedAt": "2026-10-22T22:54:50.235Z",
   "repositoryRoot": ".",
   "filesScanned": 2315,
   "candidateCount": 1324,
@@ -64914,7 +64914,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 482,
+      "consumerCount": 483,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -64952,6 +64952,7 @@
         "tdf-hq/src/TDF/Contracts/Server.hs",
         "tdf-hq/src/TDF/Cors.hs",
         "tdf-hq/src/TDF/CoursePhone.hs",
+        "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
         "tdf-hq/src/TDF/Cron.hs",
         "tdf-hq/src/TDF/DB.hs",
         "tdf-hq/src/TDF/DDEX/DB.hs",
@@ -64964,8 +64965,7 @@
         "tdf-hq/src/TDF/Directory/Policy.hs",
         "tdf-hq/src/TDF/Email.hs",
         "tdf-hq/src/TDF/Email/Headers.hs",
-        "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs",
-        "tdf-hq/src/TDF/FeatureRegistry.hs"
+        "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
@@ -76004,7 +76004,7 @@
       "lines": [
         10620
       ],
-      "consumerCount": 893,
+      "consumerCount": 895,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -84155,7 +84155,7 @@
       "lines": [
         18135
       ],
-      "consumerCount": 889,
+      "consumerCount": 891,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -146842,7 +146842,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 518,
+      "consumerCount": 519,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
