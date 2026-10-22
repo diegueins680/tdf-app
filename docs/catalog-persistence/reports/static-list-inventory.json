@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-21T17:54:42.228Z",
+  "generatedAt": "2026-10-22T02:00:33.259Z",
   "repositoryRoot": ".",
-  "filesScanned": 2305,
+  "filesScanned": 2307,
   "candidateCount": 1323,
   "byClassification": {
     "dynamic-business-catalog": 851,
@@ -15388,11 +15388,10 @@
       "lines": [
         4
       ],
-      "consumerCount": 37,
+      "consumerCount": 36,
       "backendConsumers": [
         "tdf-hq/src/TDF/API/Future.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Seed.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -15820,7 +15819,7 @@
       "lines": [
         627
       ],
-      "consumerCount": 618,
+      "consumerCount": 617,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -19578,7 +19577,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 37,
+      "consumerCount": 38,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
@@ -19600,6 +19599,7 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/Operations/ModelSpec.hs",
+        "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/TicketManualReviewSpec.hs"
       ],
@@ -23428,7 +23428,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 649,
+      "consumerCount": 648,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -27040,7 +27040,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 623,
+      "consumerCount": 622,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29526,7 +29526,7 @@
       "lines": [
         105
       ],
-      "consumerCount": 442,
+      "consumerCount": 444,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -30273,7 +30273,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 623,
+      "consumerCount": 622,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -34231,7 +34231,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 602,
+      "consumerCount": 601,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -36638,7 +36638,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 269,
+      "consumerCount": 268,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -38443,7 +38443,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 91,
+      "consumerCount": 90,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
@@ -38462,7 +38462,6 @@
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
         "tdf-hq/src/TDF/Artists/Promotion.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Routes/Courses.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
@@ -44887,7 +44886,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 208,
+      "consumerCount": 207,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -44922,7 +44921,6 @@
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
@@ -44938,7 +44936,8 @@
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
         "tdf-hq/src/TDF/Version.hs",
-        "tdf-hq/src/TDF/WhatsApp/History.hs"
+        "tdf-hq/src/TDF/WhatsApp/History.hs",
+        "tdf-hq/test/Spec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -45112,7 +45111,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 208,
+      "consumerCount": 207,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -46145,7 +46144,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 288,
+      "consumerCount": 289,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -47757,7 +47756,7 @@
       "lines": [
         4441
       ],
-      "consumerCount": 288,
+      "consumerCount": 289,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -50843,7 +50842,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 208,
+      "consumerCount": 207,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -50878,7 +50877,6 @@
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
@@ -50894,7 +50892,8 @@
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
         "tdf-hq/src/TDF/Version.hs",
-        "tdf-hq/src/TDF/WhatsApp/History.hs"
+        "tdf-hq/src/TDF/WhatsApp/History.hs",
+        "tdf-hq/test/Spec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -57822,7 +57821,7 @@
       "lines": [
         257
       ],
-      "consumerCount": 54,
+      "consumerCount": 53,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_apply.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -57839,7 +57838,6 @@
         "tdf-hq/src/TDF/API/Merch.hs",
         "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs",
         "tdf-hq/src/TDF/ModelsExtra.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
@@ -57925,7 +57923,7 @@
       "lines": [
         1052
       ],
-      "consumerCount": 311,
+      "consumerCount": 310,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/interactions.yaml",
@@ -59138,7 +59136,7 @@
         102,
         111
       ],
-      "consumerCount": 485,
+      "consumerCount": 484,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -60632,7 +60630,7 @@
         1401,
         1413
       ],
-      "consumerCount": 74,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -60657,7 +60655,6 @@
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -60769,7 +60766,7 @@
         1263,
         1310
       ],
-      "consumerCount": 74,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -60794,7 +60791,6 @@
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -60902,7 +60898,7 @@
       "lines": [
         825
       ],
-      "consumerCount": 74,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -60927,7 +60923,6 @@
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -61034,7 +61029,7 @@
         889,
         1355
       ],
-      "consumerCount": 74,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -61059,7 +61054,6 @@
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -61165,7 +61159,7 @@
       "lines": [
         1075
       ],
-      "consumerCount": 74,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -61190,7 +61184,6 @@
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -64662,7 +64655,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 479,
+      "consumerCount": 481,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -65893,7 +65886,7 @@
       "lines": [
         47
       ],
-      "consumerCount": 24,
+      "consumerCount": 23,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-05_refactor_students_teachers_to_parties.sql",
         "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
@@ -65903,7 +65896,6 @@
         "tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/LiveSessions.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/EventResearch.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
@@ -66099,7 +66091,7 @@
       "lines": [
         1143
       ],
-      "consumerCount": 24,
+      "consumerCount": 23,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-05_refactor_students_teachers_to_parties.sql",
         "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
@@ -66109,7 +66101,6 @@
         "tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/LiveSessions.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/EventResearch.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
@@ -67728,7 +67719,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 623,
+      "consumerCount": 622,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -74419,7 +74410,7 @@
         2954,
         3056
       ],
-      "consumerCount": 315,
+      "consumerCount": 316,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -74930,7 +74921,7 @@
       "lines": [
         7723
       ],
-      "consumerCount": 404,
+      "consumerCount": 405,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -80466,7 +80457,7 @@
       "lines": [
         15136
       ],
-      "consumerCount": 525,
+      "consumerCount": 524,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -80743,7 +80734,7 @@
       "lines": [
         15151
       ],
-      "consumerCount": 489,
+      "consumerCount": 488,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -81223,7 +81214,7 @@
       "lines": [
         15197
       ],
-      "consumerCount": 510,
+      "consumerCount": 509,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -103675,7 +103666,7 @@
       "lines": [
         871
       ],
-      "consumerCount": 35,
+      "consumerCount": 34,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-07-07_marketplace_stripe_checkout.sql",
@@ -103690,7 +103681,6 @@
         "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
         "tdf-hq/src/TDF/Operations/Model.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Reviews.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
@@ -133157,7 +133147,7 @@
       "lines": [
         208
       ],
-      "consumerCount": 134,
+      "consumerCount": 133,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -133203,12 +133193,12 @@
         "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs",
         "tdf-hq/src/TDF/Operations/Model.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Seed.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
-        "tdf-hq/src/TDF/Server/Reviews.hs"
+        "tdf-hq/src/TDF/Server/Reviews.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -139446,7 +139436,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 25,
+      "consumerCount": 24,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -139455,7 +139445,6 @@
         "tdf-hq/src/TDF/API/Types.hs",
         "tdf-hq/src/TDF/Catalog/Models.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Seed.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
@@ -139517,7 +139506,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 34,
+      "consumerCount": 33,
       "backendConsumers": [
         "tdf-hq/src/TDF/Catalog/Types.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
@@ -139529,7 +139518,6 @@
         "tdf-hq/src/TDF/DDEX/ERN/V432/Parse.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/Render.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/Types.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
@@ -139603,7 +139591,7 @@
       "lines": [
         76
       ],
-      "consumerCount": 25,
+      "consumerCount": 24,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -139611,7 +139599,6 @@
         "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
         "tdf-hq/sql/init_schema.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Trials/Server.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
@@ -145720,7 +145707,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 739,
+      "line": 740,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -145732,7 +145719,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        739
+        740
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -146552,7 +146539,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 515,
+      "consumerCount": 516,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -148328,7 +148315,7 @@
       "lines": [
         435
       ],
-      "consumerCount": 213,
+      "consumerCount": 212,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -148358,7 +148345,6 @@
         "tdf-hq/src/TDF/Models/SocialEventsModels.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
         "tdf-hq/src/TDF/Profiles/Artist.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Reputation/Worker.hs",
         "tdf-hq/src/TDF/Routes/Courses.hs",
         "tdf-hq/src/TDF/Routes/DomoQuotes.hs",
@@ -148379,7 +148365,8 @@
         "tdf-hq/src/TDF/ServerAdmin.hs",
         "tdf-hq/src/TDF/ServerFanClub.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
-        "tdf-hq/src/TDF/Ticketing/Admission.hs"
+        "tdf-hq/src/TDF/Ticketing/Admission.hs",
+        "tdf-hq/src/TDF/Ticketing/Confirmation.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
@@ -154523,7 +154510,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 208,
+      "consumerCount": 207,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -154558,7 +154545,6 @@
         "tdf-hq/src/TDF/Models.hs",
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
@@ -154574,7 +154560,8 @@
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
         "tdf-hq/src/TDF/Version.hs",
-        "tdf-hq/src/TDF/WhatsApp/History.hs"
+        "tdf-hq/src/TDF/WhatsApp/History.hs",
+        "tdf-hq/test/Spec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
