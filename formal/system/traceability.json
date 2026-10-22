@@ -1097,7 +1097,7 @@
       "formalModels": [],
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for finite middleware cases; October13 configuration and two health-origin requests observed. Full deployed contract remains unverified.",
+      "confidence": "High for finite middleware cases and observed configuration; deployed correction pending.",
       "ambiguity": [
         "Endpoint CSRF defenses and every alternate deployment environment are not established by these CORS tests."
       ],
@@ -1109,7 +1109,7 @@
       "property": "Production credentialed origin admission requires an explicitly trusted origin; arbitrary origins cannot reach the handler.",
       "contract": "formal/system/cors-boundary.md",
       "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins.",
-      "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts. October13 runtime configuration and two health-origin smoke observations are retained in formal/system/evidence/2026-10-13-runtime-controls/; they supersede the October4 allow-all observation for that instant."
+      "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts."
     },
     {
       "id": "AUTH-REGISTRY-001",
@@ -2221,9 +2221,9 @@
       "idempotency": "Read-only repeat observations do not mutate application state. Exclusive receipt creation rejects accidental overwrite.",
       "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider.",
       "recovery": "Retry observation after authorized configuration correction; retain previous receipts. No database restoration or image rollback is performed.",
-      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata. Known backend boolean controls must be represented even when absent; record CORS boolean aliases and preserve absent/empty/false distinctions. Conservative source discovery must reject newly introduced literal controls missing from the collector register.",
+      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata.",
       "formalModels": [],
-      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established. Boolean discovery includes literal parser-wrapped lookups without a naming suffix; preparation accepts collector-valid raw spellings while requiring explicitly false destructive flags. Synthetic regressions only; this does not evaluate per-handler defaults or whitespace semantics.",
+      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established.",
       "evidence": "Exact-revision inspection receipt and repository quality-gate logs.",
       "status": "specified and implemented",
       "confidence": "High within read-only target/disclosure guard scope; routine guarded release remains unimplemented.",
@@ -2231,8 +2231,7 @@
         "Absent environment variables need effective-default analysis.",
         "Container image/public version observations require artifact metadata correspondence before release.",
         "Optional event-operations flag-table absence and missing merchandise flag rows remain explicit unknowns; observed flag state alone is not authorization to enable or mount features.",
-        "The catalog-role SQL requires separately authorized provisioning; read-only monitoring does not authorize sending mail, suppressing recipients or modifying application records.",
-        "Lexical boolean discovery excludes computed environment names and does not resolve effective defaults or CORS alias precedence; that analysis must use the observed backend revision."
+        "The catalog-role SQL requires separately authorized provisioning; read-only monitoring does not authorize sending mail, suppressing recipients or modifying application records."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2248,16 +2247,14 @@
         "scripts/production_access.py",
         "scripts/production-catalog-inventory.mjs",
         "ops/hetzner/catalog-readonly-role.sql",
-        "scripts/mail-deliverability-monitor.py",
-        "scripts/lib/hetzner-preparation.mjs"
+        "scripts/mail-deliverability-monitor.py"
       ],
       "tests": [
         "scripts/test-hetzner-inspection.py",
         "scripts/__tests__/hetzner-inspection.test.mjs",
         "scripts/test_production_access.py",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
-        "scripts/test_mail_deliverability_monitor.py",
-        "scripts/__tests__/hetzner-preparation.test.mjs"
+        "scripts/test_mail_deliverability_monitor.py"
       ],
       "critical": false
     },
@@ -2330,7 +2327,7 @@
     {
       "authority": "inferred",
       "source": "ops/hetzner/README.md; formal/system/authority-decisions.json",
-      "contract": "formal/system/migration-correspondence.md",
+      "contract": "ops/hetzner/README.md",
       "domain": "DEPLOY",
       "actors": [
         "Release operator",
@@ -2362,29 +2359,19 @@
       ],
       "authorization": "Preparation is local inspection. Deployment requires independent exact-head review, merge, post-merge gates and a guarded executor.",
       "privacy": "Plans contain migration hashes and allowlisted identities, never SQL data, credentials or raw child-process diagnostics.",
-      "concurrency": "Source is immutable and the CLI checks checkout cleanliness/head before and after. The batch runs under one advisory lock and exits 3 while another migration holds it. Each ledger row commits in the transaction of its migration (a file's own COMMIT commits both), so a crash leaves effects and ledger row together or neither. A future executor must re-observe live state under its release lock; a recent observation does not prevent runtime races.",
+      "concurrency": "Source is immutable and the CLI checks checkout cleanliness/head before and after. A future executor must re-observe live state under its release lock; a recent observation does not prevent runtime races.",
       "idempotency": "Repeated preparation is observational; exclusive output creation prevents receipt overwrite.",
-      "failure": "Reject malformed, stale, future-dated, wrong-target, dirty-source or checksum-incompatible inputs without remote action. A failing migration leaves no effects and no ledger row; a held lock ends the batch with status 3 before touching anything (before 2026-10-12 the refusal exited 0 and the entrypoint reported success).",
+      "failure": "Reject malformed, stale, future-dated, wrong-target, dirty-source or checksum-incompatible inputs without remote action.",
       "recovery": "Preserve prior receipts and applied migration history. Correct source/input under review; never alter applied SQL to make the comparison pass.",
       "observability": "Record source revision, raw manifest hash, expanded migration checksums, applied source/checksum, input receipt hash, preparation source hash, timestamps, pending count and outstanding release gates.",
-      "formalModels": [
-        "formal/event-operations/MigrationLedger.tla",
-        "formal/event-operations/MigrationLedger.cfg",
-        "formal/event-operations/MigrationLedgerRecordAfterCommit.cfg",
-        "formal/event-operations/MigrationLedgerBatchUnchecked.cfg",
-        "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg",
-        "formal/event-operations/MigrationLedgerUnknownAccepted.cfg"
-      ],
-      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags; bounded TLC check of MigrationLedger.tla (1,282,056 states, 334,720 distinct, depth 26) with four single-guard negative controls; the rendered batch run through psql against the migrated fixture (migration-batch-postgres.mjs): atomic ledger rows for files with and without their own transaction, the previous layout as a negative control, checksum drift, compatible checksums, unknown rows, holes, unrecorded effects, lock refusal status. No model-to-whole-system proof.",
-      "evidence": "Exact-candidate test logs and preparation receipt; preparation is not a deployment receipt. TLC runs registered in scripts/verify-event-operations-formal.sh; migration-batch-postgres.mjs in CI; the lock refusal exiting 0 reproduced with psql 16 on 2026-10-12.",
+      "formalModels": [],
+      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags. No model-to-whole-system proof.",
+      "evidence": "Exact-candidate test logs and preparation receipt; preparation is not a deployment receipt.",
       "status": "specified and implemented",
-      "confidence": "High for the tested source/ledger comparison and the batch semantics on the migrated fixture; live migration application and guarded recovery remain open.",
+      "confidence": "High for tested source/ledger comparison boundary; live migration application and guarded recovery remain open.",
       "ambiguity": [
         "Runtime receipt trust is local and unsigned; a deployment executor must acquire fresh observations itself.",
-        "Provider flag changes caused by pending migrations still require restored-database rehearsal and comparison.",
-        "The batch tolerates ledger rows its manifest does not know so an older image can start after a rollback; release preparation rejects them. A hole (a pending entry before an applied one) is applied after the later entry by the next batch; independence of such migrations is assumed (AUTHORITY-075).",
-        "Effects applied without a ledger row under the previous batch layout (or by hand) are re-applied by the next batch and need a forward repair when the SQL is not idempotent; the atomic row prevents new occurrences only.",
-        "The atomic ledger row requires every manifest entry (expanded SQL) to open at most one transaction, end with its COMMIT, never roll back and use no statement that refuses a transaction block; production-release.test.mjs checks every registered entry."
+        "Provider flag changes caused by pending migrations still require restored-database rehearsal and comparison."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2392,24 +2379,18 @@
       },
       "id": "DEPLOY-MIGRATION-001",
       "title": "Immutable production migration correspondence before release",
-      "statement": "Release preparation must bind the exact candidate revision and every included SQL blob to the manifest, reject unrecognized or changed applied history, and retain every pending migration in manifest order. Preparation must not authorize production execution. The batch that applies pending migrations records each ledger row in the same transaction as the migration it describes, and refuses to proceed with a non-zero status while another migration holds the lock.",
+      "statement": "Release preparation must bind the exact candidate revision and every included SQL blob to the manifest, reject unrecognized or changed applied history, and retain every pending migration in manifest order. Preparation must not authorize production execution.",
       "property": "Every applied ledger entry occurs once in the manifest and matches its expanded checksum or an explicitly registered compatible checksum; every introduction commit is a candidate ancestor.",
       "implementation": [
         "scripts/lib/migration-contract.mjs",
         "scripts/lib/hetzner-preparation.mjs",
         "scripts/prepare-hetzner-release.mjs",
-        "scripts/production-release.mjs",
-        "scripts/lib/production-release.mjs",
-        "scripts/render-production-migration-batch.mjs",
-        "tdf-hq/production-entrypoint.sh"
+        "scripts/production-release.mjs"
       ],
       "tests": [
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
-        "scripts/__tests__/provider-rollback.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs",
-        "scripts/__tests__/production-entrypoint.test.mjs",
-        "scripts/test-automatic-migrations-production-schema.sh"
+        "scripts/__tests__/provider-rollback.test.mjs"
       ],
       "critical": true
     },
@@ -2737,7 +2718,7 @@
     {
       "authority": "reconciled",
       "source": "Production outage 2026-10-07 (restart rejected by the verifier after checkout.paypal.refunds was enabled); AUTHORITY-050",
-      "contract": "formal/system/startup-gates.md",
+      "contract": "docs/automatic-production-migrations.md",
       "domain": "DEPLOY",
       "actors": [
         "Production entrypoint",
@@ -2774,25 +2755,15 @@
       "concurrency": "Runs once per container start before the server accepts traffic.",
       "idempotency": "Repeated verification of an unchanged database is equivalent.",
       "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
-      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and fly.toml set it true; the precheck requires it).",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips verification only when the ledger is complete.",
       "observability": "Fixed exception text names the violated gate class.",
-      "formalModels": [
-        "formal/event-operations/StartupGates.tla",
-        "formal/event-operations/StartupGates.cfg",
-        "formal/event-operations/StartupGatesStagedAccepted.cfg",
-        "formal/event-operations/StartupGatesMissingAccepted.cfg",
-        "formal/event-operations/StartupGatesEitherRejected.cfg",
-        "formal/event-operations/StartupGatesRequiredUnchecked.cfg"
-      ],
-      "verification": "Executable SQL verification against a fully migrated PostgreSQL database; every asserted production flag run through the real verification in each of its three states (42 runs, startup-gates-postgres.mjs) plus the approved baseline and both joint extremes of the either-state gates; one-state exhaustive TLC check of StartupGates.tla over all 4,782,969 flag assignments with four single-guard negative controls.",
-      "evidence": "Automatic-migrations rehearsal; startup-gates-postgres.mjs in CI; TLC runs registered in scripts/verify-event-operations-formal.sh.",
+      "formalModels": [],
+      "verification": "Executable SQL verification against a fully migrated PostgreSQL database",
+      "evidence": "Automatic-migration test accept/reject assertions and a failing run against the previous verifier",
       "status": "specified and implemented",
-      "confidence": "High for the provider gate rule and the other asserted flags on the tested schema; production flag states unobserved.",
+      "confidence": "High for the provider gate rule under the tested schema; other verifier checks are unchanged.",
       "ambiguity": [
-        "The fourteen asserted flags and their accepted states are the complete startup gate policy as of 2026-10-12 (formal/system/startup-gates.md); enabling a staged, service-booking or course gate, or disabling a manual-settlement or marketplace gate, fails every later container start until the verifier changes (the 2026-10-07 incident class).",
-        "Production flag states are not observable from the repository; the policy is a precondition for flag changes.",
-        "The verifier also blocks startup on data toggles outside revenue_feature_flag: interaction_entity_kind artist_update must be disabled, security_role_assignment_policy artist.invitation.artist and classified_category artist-profile must be active, the directory artist-listing audit must report nothing, no suppressed imported directory event, catalog backfill run statuses and minimum active-row counts; each is a restart hazard of the same class and needs the same release discipline.",
-        "The startup verification runs only when AUTO_APPLY_PRODUCTION_MIGRATIONS is true (the shipped default); with it false the container starts with no verification at all."
+        "Other startup assertions may encode states that later become approved; each needs the same review."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2800,7 +2771,7 @@
       },
       "id": "DEPLOY-STARTUP-001",
       "title": "Startup schema verification accepts approved production state",
-      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate. The verifier also requires the manual-settlement gates (checkout.bank_transfer, checkout.cash, checkout.pos) and the marketplace sales and rentals gates to exist enabled, and the service-booking and course checkout and recurring-billing gates to exist disabled; enabling or disabling any of these in production is a verifier change in the same release.",
+      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate.",
       "property": "Every approved provider gate state passes startup verification; staged providers and missing gates fail",
       "implementation": [
         "scripts/lib/production-release.mjs",
@@ -2808,8 +2779,7 @@
       ],
       "tests": [
         "scripts/test-automatic-migrations-production-schema.sh",
-        "scripts/__tests__/production-release.test.mjs",
-        "scripts/__tests__/startup-gates-postgres.mjs"
+        "scripts/__tests__/production-release.test.mjs"
       ],
       "critical": true
     },
@@ -3174,7 +3144,7 @@
       "critical": true,
       "ambiguity": [
         "Full upload lifecycle, DB/file atomicity, retries, retention, quotas and deletion require separate reconciliation.",
-        "Canonical writable production bind observed October13; legacy file preservation, deployed startup admission and coordinated backup/restore remain unverified."
+        "Production storage rollout and coordinated backup/restore remain unimplemented and unverified."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3184,7 +3154,7 @@
       "property": "Production starts only after private upload storage admission, and replacement preserves accepted legacy files.",
       "contract": "formal/system/private-upload-persistence.md",
       "verification": "Actual shell negative controls, digest-pinned synthetic Linux container replacement, redacted production mount inspection and guarded coordinated recovery verification.",
-      "evidence": "The October13 source-bound runtime receipt at formal/system/evidence/2026-10-13-runtime-controls/runtime.json observes the canonical writable private bind. It supersedes the October5 missing-mount observation, not the remaining preservation, startup, file-access and recovery obligations."
+      "evidence": "Exact-revision CI logs and private runtime receipts; current production observation is nonconforming, not repaired by source edits."
     },
     {
       "id": "SYS-API-003",
@@ -5165,15 +5135,15 @@
       "critical": true,
       "source": "formal/system/public-route-admission.md; audit of main 1f99d143900a67aa9b82f4138630684afbd7db2f on 2026-10-06; OWASP API Security Top 10 2023 API1 and API5",
       "status": "specified and implemented",
-      "confidence": "High for structural admission; handler enforcement verified only for repaired routes.",
+      "confidence": "High for structural admission; handler behaviour bounded by the denial sweep, with the capability comparison observed only where the probe reaches it.",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Admission gate, negative controls and served HTTP denial checks exist; two registered debts remain open."
+        "reason": "Admission gate, its controls and model, and the served denial sweep over every deny-boundary route pass; handler enforcement on records that only provider-backed intakes create rests on their own suites; no registered debt remains."
       },
-      "evidence": "Gate output, fourteen negative controls, served-application HTTP status checks and the PostgreSQL-backed booking conformance assistant checks",
+      "evidence": "Gate output, fourteen negative controls, four model controls, the served denial sweep (90 routes, two probes each) and the PostgreSQL-backed booking conformance checks",
       "observability": "Gate output names each offending method and path.",
       "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
-      "verification": "Deterministic declaration comparison plus scoped HTTP tests; no handler-level proof for unrepaired routes",
+      "verification": "Deterministic declaration comparison with fourteen gate controls; PublicRouteAdmission.tla states three of the gate's rules (unregistered, stale, mutating boundary) over every situation of three routes with four single-guard controls (header, query, body-shape, raw-mount, duplicate and debt-reference rules are not modelled); the PostgreSQL-backed booking conformance harness requests every registered deny-boundary route (90) without and with a wrong capability on the real backend and requires no success, no server fault, no fixture-private content (denial for most routes arises before the capability check: parsing, absent record, unconfigured provider), the anonymous status for a wrong bearer token on session routes and the anonymous value on the two anonymous-answer routes, and the marketplace cart readable only through its random UUIDv4 identifier. Records behind provider-backed intakes are not created by the sweep; their token checks rest on their own suites. Local HTTP fault fixtures require ordinary session/capability/operator 503 responses to fail the sweep; only the registered provider boundaries and named provider-gated route may return 503. Other provider 5xx responses remain faults. Payment-status polling authorizes the checkout/attempt/token binding before consulting its encryption key; actual handler regressions cover missing and invalid configuration, wrong tokens and identifiers, and authorized recovery of closed checkouts.",
       "id": "AUTH-PUBLIC-001",
       "title": "Reviewed admission of every unauthenticated route",
       "domain": "AUTH",
@@ -5221,7 +5191,7 @@
       "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
       "concurrency": "Static declaration check; no runtime concurrency assumption.",
       "idempotency": "Deterministic over the committed snapshot and register.",
-      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI.",
+      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI. A deny-boundary route that answers a caller without its capability with success, a server fault or private content fails the booking conformance harness.",
       "property": "Unauthenticated compiled surface equals the reviewed register and each entry satisfies its boundary's structural rule",
       "implementation": [
         "tdf-hq/src/TDF/API.hs",
@@ -5231,18 +5201,26 @@
         "scripts/check-public-routes.py",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
         "tdf-hq/src/TDF/Services/Stripe.hs",
-        "tdf-hq/src/TDF/Routes/Academy.hs"
+        "tdf-hq/src/TDF/Routes/Academy.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "scripts/test-public-routes.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/lib/public_routes_conformance.py",
+        "scripts/test-public-route-denial.py",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/PublicRouteAdmission.tla"
+      ],
       "ambiguity": [
-        "Handler enforcement of each registered capability is not mechanically verified.",
-        "Raw mounts may serve paths beyond their prefix."
+        "Raw mounts may serve paths beyond their prefix.",
+        "The sweep bounds every deny-boundary route to denial without success, fault or disclosure for a fixed probe; it observes the capability comparison only on routes the probe reaches (signatures, sessions, random identifiers, one header); enforcement on provider-created records rests on their suites."
       ]
     },
     {
@@ -10579,7 +10557,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "479e7bf326566f8d78f1ef854a716866aef937aba8ed52d9a41ba80f0eacf48a",
+    ".github/workflows/ci.yml": "56045a3a377a5b6c434121b0b6b65b72dc0641688e7dd0998b51e4e1b1fc9811",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -10587,7 +10565,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "8d3d9e64531b6762a3b27580faa3c0ebfe0e58e20104473203b78b0d1abef4c4",
+    "docs/catalog-persistence/catalog-list-decisions.json": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -10689,12 +10667,6 @@
     "formal/event-operations/MetaRedeliveryRepeatMovesDeletion.cfg": "4d82b02dd6d3e28d462cecea8ded5df695474aced641ceec87b3eabb63e86ded",
     "formal/event-operations/MetaRedeliveryRepeatResetsReply.cfg": "f287a45782f040f7b03ca47d26f9e08a640cd18fd7465698ab9b90113331a865",
     "formal/event-operations/MetaRedeliveryRepeatRewritesText.cfg": "2aa32978ce8cf5bcf9131559d75f6f9512d2a8a7cafad20ae1d4ef5a5272cfad",
-    "formal/event-operations/MigrationLedger.cfg": "0f757c07e56c045be149f4b14e41ad0ea03b04f550078df4c4ed3014cfc5312c",
-    "formal/event-operations/MigrationLedger.tla": "0e981a312edb48d9359c3637e174a77c301aab66b2e7ff966c025d66b0d8e1d2",
-    "formal/event-operations/MigrationLedgerBatchUnchecked.cfg": "abe5ed5ea3e04133aed1a588f93db73bf13561e46734c626f341e04b4efd32ec",
-    "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg": "d58398e2d189544d7ebe65580e7c5cd4eac0740210f30744f530b289cfc5dc92",
-    "formal/event-operations/MigrationLedgerRecordAfterCommit.cfg": "1df67107dc4f8d5061101506c7fa85b691cd7a838036030f862c872fce0fecb9",
-    "formal/event-operations/MigrationLedgerUnknownAccepted.cfg": "26bcdcdb9ebd45f83e9f5990221ebf2e2c56b74e4bb81bdaca67b33161c6dee7",
     "formal/event-operations/MusicAssetProcessing.cfg": "0972d9ab80204b322beb24dd99d49312b44c1e23595aa54ac846b973c4b1cf15",
     "formal/event-operations/MusicAssetProcessing.tla": "6f0167da2f93118739c333411bdb2de475188072ab6402c4b3aa4d383a8abfab",
     "formal/event-operations/MusicAssetProcessingOverLimit.cfg": "64f463cf7a8356dab9d5f0bac790b586a3cd35e7d717dc3dfe667250d022b3c7",
@@ -10764,6 +10736,7 @@
     "formal/event-operations/ProviderRetryAdmissionLate.cfg": "e8f74982567c8bfe974e9d7ab168d45043bbb8826a6e9b99f1805e99ee6f79d2",
     "formal/event-operations/ProviderRetryAdmissionPayload.cfg": "e45311f9c71bbcfe46171a0fba4bde38f656f8a5781fc6efbc8eb53fa86e86dd",
     "formal/event-operations/ProviderRollback.tla": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
+    "formal/event-operations/PublicRouteAdmission.tla": "df68c2524239e05f17fb3c1d479cab887803a606cda6bc145a18d23bad0752c7",
     "formal/event-operations/ReadinessProbe.tla": "5c084b53a4928a9e99594febc6998ab2bd403f8aab8cce3e1ad4272eb58237ec",
     "formal/event-operations/RecoveryExpiry.tla": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
     "formal/event-operations/RefundRecovery.cfg": "ba10aef6f3933c799a44bff583ad40eae5e62931f5cf3acd98caf6d147c30457",
@@ -10785,12 +10758,6 @@
     "formal/event-operations/RestoreIsolationSourceTarget.cfg": "2855814fc67299069d73cf6430c98a2ed486c3ffd265676e315d3843fa90e1c5",
     "formal/event-operations/SessionCacheIsolation.tla": "49a1e4d7f27a1845ed6bfd0865fa37df54bdb54bafa1680cfbe2d929e18bdb02",
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
-    "formal/event-operations/StartupGates.cfg": "e3f5eda4b6a1011d4c1833e16c3c3a9c3bc7417cd919b5bd27daf0a1b761c569",
-    "formal/event-operations/StartupGates.tla": "9c8e168531e32d8fd66c08c6e0b58704ccc2f516bc4c2c6ecb690dcf0d49f4d6",
-    "formal/event-operations/StartupGatesEitherRejected.cfg": "e5e1a9fc40d148fda964643f67d80228047b81b8dc9bb8e6da764d44287fc973",
-    "formal/event-operations/StartupGatesMissingAccepted.cfg": "b27c55fa854977daf2534febd1f16aefb44fee9c16048a27c31b4b0bcf3c9d3f",
-    "formal/event-operations/StartupGatesRequiredUnchecked.cfg": "fe98e3e81f68e2cb507b9729aea5a45e8f3f080a5a7736470a22f2ce7a72eca5",
-    "formal/event-operations/StartupGatesStagedAccepted.cfg": "1328c90cee0acd0a6097ebbae6048ba63d76a184d148f7e647b42dacad72f83c",
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
     "formal/event-operations/TaxDocumentSubmission.tla": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
@@ -10827,7 +10794,7 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "77b43756214dc64a011823c8f9176ed6924aa64a64b14de55f031b217528afca",
-    "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
+    "formal/system/public-routes.json": "8454edc5d8bd137e4bfc0caa1cffd3d6f6a569a6ef1ae5c0d9f1c27fe91f3243",
     "formal/system/state-machine-bindings.json": "e8fa76cbe3de9233c42cf3f819d225dd41150bd030f869585c4ca49a7d11d3c4",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -10842,7 +10809,7 @@
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
-    "ops/hetzner/inspect-runtime.py": "7d38af496b881d79d4d0a4731e85d3ff55b8357a6e03f5f890b54781fb777a5a",
+    "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
     "ops/hetzner/isolated-application-canary.py": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
@@ -10880,14 +10847,13 @@
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
     "scripts/__tests__/hetzner-inspection.test.mjs": "21ec6653c818ca31badb7aa7e6f16b485cf7a03abeadc7bc7cf6288906d7e053",
     "scripts/__tests__/hetzner-migration-rehearsal.test.mjs": "8fd637e986cb2ee892a6d07641c1365ed929e1e52b840cfa2ea8f420ac2f9e05",
-    "scripts/__tests__/hetzner-preparation.test.mjs": "f5c996dbf9fd298e088531bfbde258202d7b54f30832427b2868f1718d82ad36",
+    "scripts/__tests__/hetzner-preparation.test.mjs": "dd8cb85e356d8feac2e1e41fe2fd4f0e3a516b16f8c7d24fe1bae02857f30f2f",
     "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/instagram-token-workflows.test.mjs": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
     "scripts/__tests__/merch-runtime-safety.test.mjs": "f6bb3266949645d3e7f8db366503e2d7104bbc2017da86837a9f6a7363246f02",
-    "scripts/__tests__/migration-batch-postgres.mjs": "198271c553feb4278eed494aa3bf01da43343b86c67901028eecfc41407e797d",
     "scripts/__tests__/mobile-distribution-expiry.test.mjs": "df4e0604abc1dabbc377f14f80a2c598c1e4eaf0c638244bfe7e7b88e2d1e521",
     "scripts/__tests__/music-browser-config.test.mjs": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
     "scripts/__tests__/music-browser-probe.test.mjs": "af085008889448379e599f52592114b6697c49e17139b9247f251c374b8b2ffb",
@@ -10903,11 +10869,10 @@
     "scripts/__tests__/payment-readiness-helper.test.mjs": "bddad0df011362abedc3cb346688ab3beead734f4e3dc787828ffd057f204a03",
     "scripts/__tests__/persistent-uploads.test.mjs": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
-    "scripts/__tests__/production-entrypoint.test.mjs": "33c168dcb5b4a6b3d9eaccec6683d368a90f1dd9b47c1223f949e5e1d234feac",
-    "scripts/__tests__/production-release.test.mjs": "89bcde93815f17e78ec777e1a8f1c2711eacebb00a5a1b1aa99165e23d6d0233",
+    "scripts/__tests__/production-entrypoint.test.mjs": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
+    "scripts/__tests__/production-release.test.mjs": "e457c1521db3347e64a96b3c09f7eeba9b73495a29ff72f72f3613054cb3b626",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
-    "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
@@ -10939,7 +10904,7 @@
     "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
-    "scripts/lib/hetzner-preparation.mjs": "3bbb53c73c74565062b2c3caaaddb3db7322b6e227dcac3276e0d10d315a8131",
+    "scripts/lib/hetzner-preparation.mjs": "f83ae197b89242406cc9476b0f6d1bc80f51606c060796bae24e3719d47e1886",
     "scripts/lib/invoice_receipt_conformance.py": "c83a551fadd81cfe006dd6bc59f3a9f20ffea17629144efd9aba5d47e8cfa544",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/music-api-s3-probe.mjs": "8972e841d5ff83f6abfbf8f5a51d66e64e7be1290dfa49c67e76400824ffb105",
@@ -10953,7 +10918,8 @@
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
     "scripts/lib/operations_conformance.py": "1978873ba86472cc29198bf14fcc428102d69db29e6816a197a1140118ef2654",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "acc62c4826f199e38fcec043e1d79f0edb9a576670140de2013177c5072253b2",
+    "scripts/lib/production-release.mjs": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
+    "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -10972,10 +10938,9 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "a5041669e3881d019e35512e8b4e7febcc2ebd98ebea0d3eb05568ea9f0f83c8",
+    "scripts/quality-repo.sh": "3e65e7838c189c408c2e7a7d49412f25d6a7ebaace66ee63dfe7604ceff6173e",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
-    "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
     "scripts/run-music-release-worker-once.sh": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
     "scripts/run-music-release-worker.sh": "521e52bb3b059c86c17765100957bacbfcf66d1575978b710bc6dc22e916cc5b",
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
@@ -10993,14 +10958,14 @@
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
-    "scripts/test-booking-conformance.py": "967d94758aaf4213b9b18711886f6e5996345ebd2c50482e97f812311f371be3",
+    "scripts/test-booking-conformance.py": "180a655244fc54c0528f8a094822ab5e0e6c2076ce5cd01d2dcce0e1c8a38717",
     "scripts/test-chat-notifications.sh": "d01a8cbf2c0852222f53b36bd813a7f2dc8875ae6f3b53ea0ab108fba1f2b552",
     "scripts/test-community-search.py": "c6be90dbc19bfd6fc6c06e72c300f77f75729e94e518d5132560e94cd1b58c24",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
-    "scripts/test-hetzner-inspection.py": "12cae0007775a3520c9b9cf276e16ebe97ee00a0128ba733dcab4d37dd59779a",
+    "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
     "scripts/test-index-declarations.sh": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
@@ -11034,6 +10999,7 @@
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
+    "scripts/test-public-route-denial.py": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
@@ -11061,7 +11027,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "f9d46a32cdd8b301570f63d7c61a8de423b92dda4a5fa839e03b5695574a425e",
+    "scripts/verify-event-operations-formal.sh": "a0c3c9a77e97fa349eda834c92e88fb37b5e5d38fe352ca079a93a40ee98e7b4",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -11448,7 +11414,7 @@
     "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs": "a98813457fa7fb7b967e2ac708340d0fb44298b5cd093771fe732cf6b03ac881",
     "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac",
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "ecb41cb484578984533f0363bb95cc2b9bb49255082f353a84c0251484a68b5b",
-    "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "213b92a75365d6e85e441a0a3263d3cecfedca98a46d05f83165286158b00f52",
+    "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
     "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "6791d94fd7808fd13c8e371122d3f082c7668f78a9ae660297019d0032d0b7c9",
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
@@ -11500,11 +11466,11 @@
     "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "92259a976c8c4e7d45c32bedb469ddb27e749319a180d4bf881cd2d3ef86a8c8",
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
-    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "ca99eb94d7a285f976b592adf8ad14b2adaf39566f304cc84c677aed5e991330",
+    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "7df3e2a96aee5c78e5951f5b29526c1a17690b772f17f54ff5cbb74007b3231e",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "cdf7d43255359dfd79674690fb518b8f906e275ba798ade14ffbc40bf0628df9",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "e25bf47bb88ea0fe20df7e99df3f0a93d392ae9672a19d372ba926cc5be0c105",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "57e716e80d57d0581a2ac90cc57e76ea31bc4d2b0f6c84b5dd457121a7b8f8be",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
@@ -11537,7 +11503,7 @@
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "c874ed26524da3896abc173d2ceff6624b86b3fec67414e85d8e9154092de334",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "3724057900552d950d478b41348a1c1a0415c5e49edd68af1f62b5c49c139e0d",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -13052,10 +13018,6 @@
         "relationship": "implementation"
       },
       {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "implementation"
-      },
-      {
         "requirement": "DEPLOY-RESTORE-001",
         "relationship": "implementation"
       },
@@ -13159,6 +13121,10 @@
       },
       {
         "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
         "relationship": "tests"
       }
     ],
@@ -13291,6 +13257,10 @@
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": [
       {
         "requirement": "PAY-RECOVERY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
         "relationship": "implementation"
       }
     ],
@@ -13428,24 +13398,6 @@
         "relationship": "implementation"
       }
     ],
-    "scripts/lib/hetzner-preparation.mjs": [
-      {
-        "requirement": "DEPLOY-OBSERVE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-PERSIST-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "OPS-INBOUND-CAPTURE-001",
-        "relationship": "implementation"
-      }
-    ],
     "scripts/test-hetzner-inspection.py": [
       {
         "requirement": "DEPLOY-OBSERVE-001",
@@ -13492,24 +13444,6 @@
         "relationship": "tests"
       }
     ],
-    "scripts/__tests__/hetzner-preparation.test.mjs": [
-      {
-        "requirement": "DEPLOY-OBSERVE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-PERSIST-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "OPS-INBOUND-CAPTURE-001",
-        "relationship": "tests"
-      }
-    ],
     "scripts/deploy-stripe-ticketing.sh": [
       {
         "requirement": "DEPLOY-TARGET-001",
@@ -13540,39 +13474,27 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/lib/hetzner-preparation.mjs": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-PERSIST-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/prepare-hetzner-release.mjs": [
       {
         "requirement": "DEPLOY-MIGRATION-001",
         "relationship": "implementation"
       }
     ],
-    "scripts/render-production-migration-batch.mjs": [
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/production-entrypoint.sh": [
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-STARTUP-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-PERSIST-001",
-        "relationship": "implementation"
-      }
-    ],
-    "scripts/__tests__/migration-batch-postgres.mjs": [
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/__tests__/production-entrypoint.test.mjs": [
+    "scripts/__tests__/hetzner-preparation.test.mjs": [
       {
         "requirement": "DEPLOY-MIGRATION-001",
         "relationship": "tests"
@@ -13580,52 +13502,10 @@
       {
         "requirement": "MEDIA-PERSIST-001",
         "relationship": "tests"
-      }
-    ],
-    "scripts/test-automatic-migrations-production-schema.sh": [
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "tests"
       },
       {
-        "requirement": "DEPLOY-STARTUP-001",
+        "requirement": "OPS-INBOUND-CAPTURE-001",
         "relationship": "tests"
-      }
-    ],
-    "formal/event-operations/MigrationLedger.tla": [
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/MigrationLedger.cfg": [
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/MigrationLedgerRecordAfterCommit.cfg": [
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/MigrationLedgerBatchUnchecked.cfg": [
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg": [
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/MigrationLedgerUnknownAccepted.cfg": [
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "formalModels"
       }
     ],
     "tdf-hq/src/TDF/Social/Chat.hs": [
@@ -13922,46 +13802,20 @@
         "relationship": "formalModels"
       }
     ],
-    "scripts/__tests__/startup-gates-postgres.mjs": [
+    "tdf-hq/production-entrypoint.sh": [
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-PERSIST-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-automatic-migrations-production-schema.sh": [
       {
         "requirement": "DEPLOY-STARTUP-001",
         "relationship": "tests"
-      }
-    ],
-    "formal/event-operations/StartupGates.tla": [
-      {
-        "requirement": "DEPLOY-STARTUP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/StartupGates.cfg": [
-      {
-        "requirement": "DEPLOY-STARTUP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/StartupGatesStagedAccepted.cfg": [
-      {
-        "requirement": "DEPLOY-STARTUP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/StartupGatesMissingAccepted.cfg": [
-      {
-        "requirement": "DEPLOY-STARTUP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/StartupGatesEitherRejected.cfg": [
-      {
-        "requirement": "DEPLOY-STARTUP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/StartupGatesRequiredUnchecked.cfg": [
-      {
-        "requirement": "DEPLOY-STARTUP-001",
-        "relationship": "formalModels"
       }
     ],
     "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": [
@@ -14160,6 +14014,12 @@
         "relationship": "tests"
       }
     ],
+    "scripts/__tests__/production-entrypoint.test.mjs": [
+      {
+        "requirement": "MEDIA-PERSIST-001",
+        "relationship": "tests"
+      }
+    ],
     "scripts/test-persistent-uploads-container.py": [
       {
         "requirement": "MEDIA-PERSIST-001",
@@ -14333,6 +14193,10 @@
     "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": [
       {
         "requirement": "PAY-RETRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
         "relationship": "implementation"
       }
     ],
@@ -14811,6 +14675,10 @@
       },
       {
         "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
         "relationship": "implementation"
       },
       {
@@ -15662,6 +15530,24 @@
       {
         "requirement": "AUTH-PUBLIC-001",
         "relationship": "tests"
+      }
+    ],
+    "scripts/lib/public_routes_conformance.py": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-public-route-denial.py": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/PublicRouteAdmission.tla": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "formalModels"
       }
     ],
     "formal/event-operations/OperationsAuxiliaryWrite.tla": [
@@ -20375,7 +20261,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "479e7bf326566f8d78f1ef854a716866aef937aba8ed52d9a41ba80f0eacf48a",
+      "sha256": "56045a3a377a5b6c434121b0b6b65b72dc0641688e7dd0998b51e4e1b1fc9811",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21093,7 +20979,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "7d38af496b881d79d4d0a4731e85d3ff55b8357a6e03f5f890b54781fb777a5a",
+      "sha256": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21695,13 +21581,9 @@
     {
       "id": "SURFACE-b1dae8bd0d7ae4ca",
       "path": "scripts/__tests__/hetzner-preparation.test.mjs",
-      "sha256": "f5c996dbf9fd298e088531bfbde258202d7b54f30832427b2868f1718d82ad36",
+      "sha256": "dd8cb85e356d8feac2e1e41fe2fd4f0e3a516b16f8c7d24fe1bae02857f30f2f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
-        {
-          "requirement": "DEPLOY-OBSERVE-001",
-          "relationship": "tests"
-        },
         {
           "requirement": "DEPLOY-MIGRATION-001",
           "relationship": "tests"
@@ -21844,18 +21726,6 @@
       "requirements": [
         {
           "requirement": "SYS-VERIFY-004",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-e9849b3ef51bdb0f",
-      "path": "scripts/__tests__/migration-batch-postgres.mjs",
-      "sha256": "198271c553feb4278eed494aa3bf01da43343b86c67901028eecfc41407e797d",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "DEPLOY-MIGRATION-001",
           "relationship": "tests"
         }
       ]
@@ -22097,13 +21967,9 @@
     {
       "id": "SURFACE-bd35aa30f70923f7",
       "path": "scripts/__tests__/production-entrypoint.test.mjs",
-      "sha256": "33c168dcb5b4a6b3d9eaccec6683d368a90f1dd9b47c1223f949e5e1d234feac",
+      "sha256": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
-        {
-          "requirement": "DEPLOY-MIGRATION-001",
-          "relationship": "tests"
-        },
         {
           "requirement": "MEDIA-PERSIST-001",
           "relationship": "tests"
@@ -22113,7 +21979,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "89bcde93815f17e78ec777e1a8f1c2711eacebb00a5a1b1aa99165e23d6d0233",
+      "sha256": "e457c1521db3347e64a96b3c09f7eeba9b73495a29ff72f72f3613054cb3b626",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22175,18 +22041,6 @@
       "sha256": "98ea9a01d47c1ca5e033f7a6ab686ccbf41b2f84e7aa213f8bd461ed2865cfee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
-    },
-    {
-      "id": "SURFACE-8599bbddd15faa14",
-      "path": "scripts/__tests__/startup-gates-postgres.mjs",
-      "sha256": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "DEPLOY-STARTUP-001",
-          "relationship": "tests"
-        }
-      ]
     },
     {
       "id": "SURFACE-80b41740576c6c1f",
@@ -22992,13 +22846,9 @@
     {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
-      "sha256": "3bbb53c73c74565062b2c3caaaddb3db7322b6e227dcac3276e0d10d315a8131",
+      "sha256": "f83ae197b89242406cc9476b0f6d1bc80f51606c060796bae24e3719d47e1886",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
-        {
-          "requirement": "DEPLOY-OBSERVE-001",
-          "relationship": "implementation"
-        },
         {
           "requirement": "DEPLOY-MIGRATION-001",
           "relationship": "implementation"
@@ -23250,7 +23100,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "acc62c4826f199e38fcec043e1d79f0edb9a576670140de2013177c5072253b2",
+      "sha256": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23259,10 +23109,6 @@
         },
         {
           "requirement": "PAY-CHECKOUT-003",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "DEPLOY-MIGRATION-001",
           "relationship": "implementation"
         },
         {
@@ -23284,6 +23130,18 @@
         {
           "requirement": "MKT-ARTIST-LISTING-001",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-a3554db132982020",
+      "path": "scripts/lib/public_routes_conformance.py",
+      "sha256": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-PUBLIC-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -23679,7 +23537,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "a5041669e3881d019e35512e8b4e7febcc2ebd98ebea0d3eb05568ea9f0f83c8",
+      "sha256": "3e65e7838c189c408c2e7a7d49412f25d6a7ebaace66ee63dfe7604ceff6173e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23771,12 +23629,7 @@
       "path": "scripts/render-production-migration-batch.mjs",
       "sha256": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "DEPLOY-MIGRATION-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-173452b4342d16ba",
@@ -24480,10 +24333,6 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "DEPLOY-MIGRATION-001",
-          "relationship": "tests"
-        },
-        {
           "requirement": "DEPLOY-STARTUP-001",
           "relationship": "tests"
         }
@@ -24492,7 +24341,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "967d94758aaf4213b9b18711886f6e5996345ebd2c50482e97f812311f371be3",
+      "sha256": "180a655244fc54c0528f8a094822ab5e0e6c2076ce5cd01d2dcce0e1c8a38717",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24871,7 +24720,7 @@
     {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "12cae0007775a3520c9b9cf276e16ebe97ee00a0128ba733dcab4d37dd59779a",
+      "sha256": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25452,6 +25301,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-46813d40317234ae",
+      "path": "scripts/test-public-route-denial.py",
+      "sha256": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-e6df847c7de6b4ac",
       "path": "scripts/test-public-routes.py",
       "sha256": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
@@ -25931,7 +25792,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "f9d46a32cdd8b301570f63d7c61a8de423b92dda4a5fa839e03b5695574a425e",
+      "sha256": "a0c3c9a77e97fa349eda834c92e88fb37b5e5d38fe352ca079a93a40ee98e7b4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33677,10 +33538,6 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "DEPLOY-MIGRATION-001",
-          "relationship": "implementation"
-        },
-        {
           "requirement": "DEPLOY-STARTUP-001",
           "relationship": "implementation"
         },
@@ -37832,11 +37689,15 @@
     {
       "id": "SURFACE-1d441708a9c7e070",
       "path": "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-      "sha256": "213b92a75365d6e85e441a0a3263d3cecfedca98a46d05f83165286158b00f52",
+      "sha256": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-RETRY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "implementation"
         }
       ]
@@ -39037,11 +38898,15 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "ca99eb94d7a285f976b592adf8ad14b2adaf39566f304cc84c677aed5e991330",
+      "sha256": "7df3e2a96aee5c78e5951f5b29526c1a17690b772f17f54ff5cbb74007b3231e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-RECOVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "implementation"
         }
       ]
@@ -39103,7 +38968,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "cdf7d43255359dfd79674690fb518b8f906e275ba798ade14ffbc40bf0628df9",
+      "sha256": "e25bf47bb88ea0fe20df7e99df3f0a93d392ae9672a19d372ba926cc5be0c105",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39116,6 +38981,10 @@
         },
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "implementation"
         },
         {
@@ -39934,7 +39803,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "c874ed26524da3896abc173d2ceff6624b86b3fec67414e85d8e9154092de334",
+      "sha256": "3724057900552d950d478b41348a1c1a0415c5e49edd68af1f62b5c49c139e0d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39951,6 +39820,10 @@
         },
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "tests"
         }
       ]
@@ -44685,6 +44558,7 @@
     "SURFACE-bac1f41447e33768",
     "SURFACE-63149d1c69a3c6a7",
     "SURFACE-0210b80fb6caf081",
+    "SURFACE-b6551e477e5d382b",
     "SURFACE-173452b4342d16ba",
     "SURFACE-39275efbaea5cb7e",
     "SURFACE-0d0cc214c0715c2d",
@@ -46246,6 +46120,8 @@
     "PAY-CHECKOUT-002",
     "PAY-CHECKOUT-003",
     "DEPLOY-TARGET-001",
+    "DEPLOY-MIGRATION-001",
+    "DEPLOY-STARTUP-001",
     "PRIV-RAG-001",
     "MEDIA-PERSIST-001",
     "SYS-API-003",
@@ -46258,7 +46134,6 @@
     "AUTH-WEBHOOK-001",
     "MEDIA-STREAM-001",
     "OPS-METRICS-001",
-    "AUTH-PUBLIC-001",
     "SYS-CI-001",
     "PRIV-ERROR-001",
     "PRIV-ANALYTICS-001",
@@ -47390,7 +47265,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "57bbeff36079a4c49885496c416c686c9ee4355e46ee77eda83336dbb0d87864",
+      "sourceSha256": "d9dd0a492179f3ad9564bebc7347c274069467a5157cbe5e593ab14e317a4de5",
       "definition": {
         "states": [
           "absent",
@@ -47420,7 +47295,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "57bbeff36079a4c49885496c416c686c9ee4355e46ee77eda83336dbb0d87864",
+      "sourceSha256": "d9dd0a492179f3ad9564bebc7347c274069467a5157cbe5e593ab14e317a4de5",
       "definition": {
         "export": [
           "queued",

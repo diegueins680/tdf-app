@@ -74,3 +74,7 @@ retrievable recovery keys, coordinated backup/restore, image identity and
 restricted canary remain separate production prerequisites. Release preparation
 continues to return `executionAllowed: false`. No deployment, production migration,
 provider activation or financial transaction is established by this checkpoint.
+
+## Polling-admission base refresh — 21 October 2026
+
+The candidate now retains approved runtime head `1e1fbea150ce3497653eb189a6b7bcab64275d25` and verified protected main `5aea795e6a12d2fbe084a4d24b817ed4be83ab01` as normal merge parents. Main includes the completed public-route polling repair and its original checks; its application sources, exact 211-entry migration manifest and SQL tree, API clients and Mobile pin are retained. The 32 migration/startup/inspection qualification inputs remain byte-identical to the d53 execution recorded above. Both parent requirement fields, authority decisions, CI/model commands and existing catalog source reviews are preserved. Generated fingerprints and catalog reports are refreshed. New exact-head hosted CI and independent review remain required; source PRs remain open. Production recovery and retention gates remain unresolved.

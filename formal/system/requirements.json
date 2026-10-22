@@ -5164,15 +5164,15 @@
       "critical": true,
       "source": "formal/system/public-route-admission.md; audit of main 1f99d143900a67aa9b82f4138630684afbd7db2f on 2026-10-06; OWASP API Security Top 10 2023 API1 and API5",
       "status": "specified and implemented",
-      "confidence": "High for structural admission; handler enforcement verified only for repaired routes.",
+      "confidence": "High for structural admission; handler behaviour bounded by the denial sweep, with the capability comparison observed only where the probe reaches it.",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Admission gate, negative controls and served HTTP denial checks exist; two registered debts remain open."
+        "reason": "Admission gate, its controls and model, and the served denial sweep over every deny-boundary route pass; handler enforcement on records that only provider-backed intakes create rests on their own suites; no registered debt remains."
       },
-      "evidence": "Gate output, fourteen negative controls, served-application HTTP status checks and the PostgreSQL-backed booking conformance assistant checks",
+      "evidence": "Gate output, fourteen negative controls, four model controls, the served denial sweep (90 routes, two probes each) and the PostgreSQL-backed booking conformance checks",
       "observability": "Gate output names each offending method and path.",
       "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
-      "verification": "Deterministic declaration comparison plus scoped HTTP tests; no handler-level proof for unrepaired routes",
+      "verification": "Deterministic declaration comparison with fourteen gate controls; PublicRouteAdmission.tla states three of the gate's rules (unregistered, stale, mutating boundary) over every situation of three routes with four single-guard controls (header, query, body-shape, raw-mount, duplicate and debt-reference rules are not modelled); the PostgreSQL-backed booking conformance harness requests every registered deny-boundary route (90) without and with a wrong capability on the real backend and requires no success, no server fault, no fixture-private content (denial for most routes arises before the capability check: parsing, absent record, unconfigured provider), the anonymous status for a wrong bearer token on session routes and the anonymous value on the two anonymous-answer routes, and the marketplace cart readable only through its random UUIDv4 identifier. Records behind provider-backed intakes are not created by the sweep; their token checks rest on their own suites. Local HTTP fault fixtures require ordinary session/capability/operator 503 responses to fail the sweep; only the registered provider boundaries and named provider-gated route may return 503. Other provider 5xx responses remain faults. Payment-status polling authorizes the checkout/attempt/token binding before consulting its encryption key; actual handler regressions cover missing and invalid configuration, wrong tokens and identifiers, and authorized recovery of closed checkouts.",
       "id": "AUTH-PUBLIC-001",
       "title": "Reviewed admission of every unauthenticated route",
       "domain": "AUTH",
@@ -5220,7 +5220,7 @@
       "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
       "concurrency": "Static declaration check; no runtime concurrency assumption.",
       "idempotency": "Deterministic over the committed snapshot and register.",
-      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI.",
+      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI. A deny-boundary route that answers a caller without its capability with success, a server fault or private content fails the booking conformance harness.",
       "property": "Unauthenticated compiled surface equals the reviewed register and each entry satisfies its boundary's structural rule",
       "implementation": [
         "tdf-hq/src/TDF/API.hs",
@@ -5230,18 +5230,26 @@
         "scripts/check-public-routes.py",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
         "tdf-hq/src/TDF/Services/Stripe.hs",
-        "tdf-hq/src/TDF/Routes/Academy.hs"
+        "tdf-hq/src/TDF/Routes/Academy.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "scripts/test-public-routes.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/lib/public_routes_conformance.py",
+        "scripts/test-public-route-denial.py",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/PublicRouteAdmission.tla"
+      ],
       "ambiguity": [
-        "Handler enforcement of each registered capability is not mechanically verified.",
-        "Raw mounts may serve paths beyond their prefix."
+        "Raw mounts may serve paths beyond their prefix.",
+        "The sweep bounds every deny-boundary route to denial without success, fault or disclosure for a fixed probe; it observes the capability comparison only on routes the probe reaches (signatures, sessions, random identifiers, one header); enforcement on provider-created records rests on their suites."
       ]
     },
     {
