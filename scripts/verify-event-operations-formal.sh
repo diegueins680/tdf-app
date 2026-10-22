@@ -109,6 +109,18 @@ run_negative_tlc AccessGrantRebind.cfg accessgrantrebind 'Invariant SingleRedeem
 run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant RedeemedNeverRevoked is violated' AccessGrant.tla
 run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
 run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
+
+run_tlc MigrationLedger.tla MigrationLedger.cfg migration-ledger
+run_negative_tlc MigrationLedgerRecordAfterCommit.cfg migration-ledger-record-after-commit 'Invariant EffectsRecorded is violated' MigrationLedger.tla
+run_negative_tlc MigrationLedgerBatchUnchecked.cfg migration-ledger-batch-unchecked 'Invariant NoRunPastDrift is violated' MigrationLedger.tla
+run_negative_tlc MigrationLedgerPrepareUnchecked.cfg migration-ledger-prepare-unchecked 'Invariant PreparationSound is violated' MigrationLedger.tla
+run_negative_tlc MigrationLedgerUnknownAccepted.cfg migration-ledger-unknown-accepted 'Invariant PreparationSound is violated' MigrationLedger.tla
+
+run_tlc StartupGates.tla StartupGates.cfg startup-gates
+run_negative_tlc StartupGatesStagedAccepted.cfg startup-gates-staged-accepted 'The invariant of StartImpliesApproved is equal to FALSE' StartupGates.tla
+run_negative_tlc StartupGatesMissingAccepted.cfg startup-gates-missing-accepted 'The invariant of StartImpliesApproved is equal to FALSE' StartupGates.tla
+run_negative_tlc StartupGatesEitherRejected.cfg startup-gates-either-rejected 'The invariant of ApprovedStarts is equal to FALSE' StartupGates.tla
+run_negative_tlc StartupGatesRequiredUnchecked.cfg startup-gates-required-unchecked 'The invariant of StartImpliesApproved is equal to FALSE' StartupGates.tla
 # AUTH-OPS-READ-001: one state; every invariant quantifies over the whole finite policy, so TLC reports a constant-level failure.
 run_tlc OperationsReadPolicy.tla OperationsReadPolicy.cfg operations-read-policy
 run_negative_tlc OperationsReadPolicyWildcardSecurity.cfg operations-read-policy-wildcard-security 'The invariant of NoSecurityDisclosure is equal to FALSE' OperationsReadPolicy.tla
