@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-22T02:15:08.102Z",
+  "generatedAt": "2026-10-22T03:33:52.886Z",
   "repositoryRoot": ".",
   "filesScanned": 2308,
   "candidateCount": 1323,
@@ -13071,7 +13071,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 73,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/sql/001_multi_role_migration.sql",
         "tdf-hq/sql/2026-07-15_social_sync_runtime_schema.sql",
@@ -13140,6 +13140,7 @@
         "scripts/social/test-schema-compatibility.sh",
         "scripts/test-automatic-migrations-production-schema.sh",
         "scripts/test-booking-conformance.py",
+        "scripts/test-event-operations-api-migration.sh",
         "scripts/test-event-operations-schema-rehearsal.sh",
         "scripts/test-feature-migrations.sh",
         "scripts/test-hetzner-inspection.py",
@@ -13148,8 +13149,7 @@
         "scripts/test-music-integration-rehearsal.mjs",
         "scripts/test-music-release-api-e2e.sh",
         "scripts/test-music-release-worker-runtime.mjs",
-        "scripts/test-public-booking-http-concurrency.sh",
-        "scripts/test-specification-inventory.py"
+        "scripts/test-public-booking-http-concurrency.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/deploy-stripe-ticketing.sh"
