@@ -13785,7 +13785,7 @@
     {
       "id": "SURFACE-1d441708a9c7e070",
       "path": "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-      "sha256": "213b92a75365d6e85e441a0a3263d3cecfedca98a46d05f83165286158b00f52",
+      "sha256": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14403,7 +14403,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "ca99eb94d7a285f976b592adf8ad14b2adaf39566f304cc84c677aed5e991330",
+      "sha256": "7df3e2a96aee5c78e5951f5b29526c1a17690b772f17f54ff5cbb74007b3231e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14883,7 +14883,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "c874ed26524da3896abc173d2ceff6624b86b3fec67414e85d8e9154092de334",
+      "sha256": "3724057900552d950d478b41348a1c1a0415c5e49edd68af1f62b5c49c139e0d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25638,7 +25638,7 @@
     },
     {
       "path": "formal/system/public-route-admission.md",
-      "sha256": "b100992dc3cae13307a9911e3e6b46b2f04618290175e15e9213fbde83bbd068",
+      "sha256": "f64ee2536182bd39cc80878ee92d5e7a5275e8051177127e47e398639ef8e438",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25680,7 +25680,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ba49c0ef29dd26d8cdd3133df3693ade3fb0bc26faa04b6e507e2abe414ad76a",
+      "sha256": "0b33f443af7db8cca458065155aa9af0120a9fffa6bdbca20aeee8fbc3fa0954",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

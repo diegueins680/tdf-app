@@ -141,3 +141,19 @@ provider routes. `scripts/test-public-route-denial.py` exercises the entire swee
 against local HTTP fixtures, including both anonymous and wrong-capability
 responses; restoring the former global 503 exemption fails the regression. These
 fixtures test the checker, not real handler authorization.
+
+## Payment-status polling and unavailable encryption configuration
+
+The checkout/attempt/lookup-token binding is authorized before consulting the
+provider-operation encryption key. Missing or invalid capabilities, unknown
+checkouts and unrelated attempts receive 404 even when that key is unavailable.
+An authorized caller still receives 503 if the key is missing or invalid; a
+configured authorized caller retains access to an expired or closed checkout's
+existing outcome. This read does not authorize a new charge. The data load
+rechecks the same binding after the preliminary authorization, and polling
+changes no payment or audit state. The ordinary-route 503 rejection in the
+public denial sweep remains unchanged.
+
+ProviderRetrySpec's closed-checkout cases exercise these branches for both
+PlaceToPay and PayPhone, with absent and invalid configuration. Fresh compiled
+PostgreSQL qualification is required; source reconciliation is not a test pass.
