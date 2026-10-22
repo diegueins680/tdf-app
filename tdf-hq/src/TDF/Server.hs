@@ -12240,6 +12240,8 @@ validateRequiredCmsLocale rawLocale =
 validateRequiredCmsSlug :: Text -> Either ServerError Text
 validateRequiredCmsSlug rawSlug =
   let slugVal = normalizeSlug rawSlug
+      isSlugAtom ch = isAsciiLower ch || isDigit ch
+      isSlugChar ch = isSlugAtom ch || ch == '-'
   in if T.null slugVal
     then Left err400 { errBody = "slug requerido" }
     else
