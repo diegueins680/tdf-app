@@ -7,6 +7,7 @@
 module TDF.API where
 
 import qualified TDF.API.Chat as Chat
+import TDF.EventWatch (EventWatchAPI)
 import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
 import TDF.API.SocialRelationships (FollowersAPI, FollowingAPI, FriendsAPI, SuggestionsAPI, AddFriendAPI, RemoveFriendAPI, VCardAPI)
 import TDF.API.SocialProfiles (ProfileListAPI, ProfileGetAPI)
@@ -662,6 +663,7 @@ type API =
        VersionAPI
   :<|> "health" :> HealthAPI
   :<|> "mcp" :> McpAPI
+  :<|> EventWatchAPI
   :<|> SessionAPI
   :<|> "login"  :> LoginAPI
   :<|> "login"  :> "google" :> GoogleLoginAPI

@@ -1468,6 +1468,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/integrations/event-watch/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exchange operator-provisioned credentials for a short-lived service token
+         * @description Purpose-specific JSON exchange, not an OAuth token endpoint. No interactive cookies or administrative role grants. Secrets and returned bearer values must never be logged.
+         */
+        post: operations["exchangeEventWatchCredentials"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/event-watch/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List at most 500 candidates owned by this service client */
+        get: operations["listEventWatchCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/event-watch/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Atomically save and optionally materialize a source-backed event candidate
+         * @description Client owns its provider/run namespace. Server overrides candidate provider, run ID and source ID. Publication requires a separate operator grant and existing publication checks. Materialization failure rolls back all writes. Replays use existing dedupe, preserving manual event edits. No pilot approval or general administration is exposed.
+         */
+        put: operations["importEventWatchCandidate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/login": {
         parameters: {
             query?: never;
@@ -21563,6 +21620,162 @@ export interface operations {
             };
             /** @description Transaction failed; no credential or session changes committed */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    exchangeEventWatchCredentials: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    grant_type: "client_credentials";
+                    client_id: string;
+                    client_secret: string;
+                };
+            };
+        };
+        responses: {
+            /** @description A token valid for at most 900 seconds */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        access_token: string;
+                        /** @enum {string} */
+                        token_type: "Bearer";
+                        expires_in: number;
+                        scope: string;
+                    };
+                };
+            };
+            /** @description Invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Service schema or database unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventWatchCandidates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Client-scoped candidates, newest verification first */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchCandidate"][];
+                };
+            };
+            /** @description Invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Service schema or database unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    importEventWatchCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    runKey: string;
+                    candidate: components["schemas"]["EventResearchCandidateWrite"];
+                    materialize: boolean;
+                    publish: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Committed candidate and optional event link */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        candidateRecord: components["schemas"]["EventResearchCandidate"];
+                        eventLink: components["schemas"]["EventResearchMaterialization"] | null;
+                    };
+                };
+            };
+            /** @description Invalid candidate or run key */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Publication or country scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Research */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Service schema or database unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

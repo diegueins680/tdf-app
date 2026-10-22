@@ -105,6 +105,7 @@ import           TDF.API.Types (maxMarketplaceCartItemQuantity)
 import qualified TDF.API.Types as APITypes
 import           TDF.API.WhatsApp (validateHookVerifyRequest)
 import qualified TDF.API      as Api
+import qualified TDF.EventWatch as EventWatch
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
@@ -724,8 +725,9 @@ mkApp :: Env -> Application
 mkApp env =
   let apiProxy = Proxy :: Proxy API
       combinedProxy = Proxy :: Proxy CombinedAPI
-      ctxProxy = Proxy :: Proxy '[AuthHandler Wai.Request AuthedUser]
-      ctx      = authContext env
+      ctxProxy = Proxy :: Proxy '[AuthHandler Wai.Request EventWatch.EventWatchPrincipal,
+                                  AuthHandler Wai.Request AuthedUser]
+      ctx      = EventWatch.authHandler env :. authContext env
       trials   = TrialsServer.trialsServer (envPool env)
       apiSrv   = hoistServerWithContext apiProxy ctxProxy (nt env) (server env)
   in serveWithContext combinedProxy ctx (trials :<|> apiSrv)
@@ -741,6 +743,7 @@ server env =
        versionServer
   :<|> health
   :<|> mcpServer
+  :<|> EventWatch.eventWatchServer
   :<|> AuthServer.sessionServer
   :<|> AuthServer.login
   :<|> AuthServer.googleLogin

@@ -78,6 +78,7 @@ executable tdf-hq-exe
     TDF.Artists.Promotion
     TDF.Artists.Enrichment
     TDF.Auth
+    TDF.EventWatch
     TDF.CampaignAutomation
     TDF.Commerce.Money
     TDF.Commerce.CheckoutStore
@@ -441,6 +442,7 @@ test-suite tdf-hq-test
     TDF.Artists.Enrichment
     TDF.Artists.EnrichmentSpec
     TDF.Auth
+    TDF.EventWatch
     TDF.CampaignAutomation
     TDF.Commerce.Money
     TDF.Commerce.CheckoutStore
@@ -615,6 +617,7 @@ test-suite tdf-hq-test
     TDF.Services.YouTubeSpec
     TDF.Services.RecordsIngestionSpec
     TDF.Server.EventResearchSpec
+    TDF.EventWatchSpec
     TDF.Services.InstagramSync
     TDF.Services.Stripe
     TDF.Trials.API

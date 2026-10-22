@@ -181,6 +181,7 @@ import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
 import qualified TDF.Server.PaymentAvailability as PaymentAvailabilityServer
 import qualified TDF.Server.ProviderExecution as ProviderExecutionServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
+import qualified TDF.EventWatchSpec as EventWatchSpec
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MerchRuntimeSpec as MerchRuntimeSpec
 import qualified TDF.Server.PaymentAuditSpec as PaymentAuditSpec
@@ -17890,6 +17891,7 @@ main = hspec $ do
     EventOperationsTypesSpec.spec
     EventOperationsDatabaseBoundarySpec.spec
     EventResearchSpec.spec
+    EventWatchSpec.spec
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec

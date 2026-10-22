@@ -1,0 +1,106 @@
+openapi: 3.0.3
+info: {title: Isolated event watch, version: '1'}
+paths:
+  /integrations/event-watch/token:
+    post:
+      operationId: exchangeEventWatchCredentials
+      tags: [Event watch]
+      summary: Exchange operator-provisioned credentials for a short-lived service token
+      description: Purpose-specific JSON exchange, not an OAuth token endpoint. No interactive cookies or administrative role grants. Secrets and returned bearer values must never be logged.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [grant_type, client_id, client_secret]
+              properties:
+                grant_type: {type: string, enum: [client_credentials]}
+                client_id: {type: string, pattern: '^[a-z0-9][a-z0-9_-]{2,47}$'}
+                client_secret: {type: string, pattern: '^[0-9a-f]{64}$', writeOnly: true}
+      responses:
+        '200':
+          description: A token valid for at most 900 seconds
+          headers:
+            Cache-Control: {schema: {type: string, enum: [no-store]}}
+            Pragma: {schema: {type: string, enum: [no-cache]}}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [access_token, token_type, expires_in, scope]
+                properties:
+                  access_token: {type: string}
+                  token_type: {type: string, enum: [Bearer]}
+                  expires_in: {type: integer, minimum: 0, maximum: 900}
+                  scope: {type: string}
+        '401': {description: Invalid, revoked or expired credentials; no identity details}
+        '503': {description: Service schema or database unavailable}
+  /integrations/event-watch/candidates:
+    get:
+      operationId: listEventWatchCandidates
+      tags: [Event watch]
+      summary: List at most 500 candidates owned by this service client
+      security: [{eventWatchToken: []}]
+      responses:
+        '200':
+          description: Client-scoped candidates, newest verification first
+          headers:
+            Cache-Control: {schema: {type: string, enum: [no-store]}}
+            Pragma: {schema: {type: string, enum: [no-cache]}}
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: './api.yaml#/components/schemas/EventResearchCandidate'}
+        '401': {description: Invalid, revoked or expired service session}
+        '503': {description: Service schema or database unavailable}
+  /integrations/event-watch/import:
+    put:
+      operationId: importEventWatchCandidate
+      tags: [Event watch]
+      summary: Atomically save and optionally materialize a source-backed event candidate
+      description: Client owns its provider/run namespace. Server overrides candidate provider, run ID and source ID. Publication requires a separate operator grant and existing publication checks. Materialization failure rolls back all writes. Replays use existing dedupe, preserving manual event edits. No pilot approval or general administration is exposed.
+      security: [{eventWatchToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [runKey, candidate, materialize, publish]
+              properties:
+                runKey: {type: string, minLength: 1, maxLength: 80, pattern: '^[A-Za-z0-9._-]+$'}
+                candidate: {$ref: './api.yaml#/components/schemas/EventResearchCandidateWrite'}
+                materialize: {type: boolean}
+                publish: {type: boolean}
+      responses:
+        '200':
+          description: Committed candidate and optional event link
+          headers:
+            Cache-Control: {schema: {type: string, enum: [no-store]}}
+            Pragma: {schema: {type: string, enum: [no-cache]}}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [candidateRecord, eventLink]
+                properties:
+                  candidateRecord: {$ref: './api.yaml#/components/schemas/EventResearchCandidate'}
+                  eventLink:
+                    nullable: true
+                    allOf: [{$ref: './api.yaml#/components/schemas/EventResearchMaterialization'}]
+        '400': {description: Invalid candidate or run key}
+        '401': {description: Invalid, revoked or expired service session}
+        '403': {description: Publication or country scope denied}
+        '409': {description: Research, pilot, publication or identity blocker; transaction rolled back}
+        '503': {description: Service schema or database unavailable}
+components:
+  securitySchemes:
+    eventWatchToken:
+      type: http
+      scheme: bearer
+      description: Purpose-specific opaque service token; human/API session tokens are not accepted.
