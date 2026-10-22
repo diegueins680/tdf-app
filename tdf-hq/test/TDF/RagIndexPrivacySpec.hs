@@ -347,7 +347,7 @@ publicCourse = runSqlPool (rawExecute
   \VALUES ('public-course','PUBLIC_COURSE_SENTINEL',15000,'USD',12,now())" [])
 
 cohortCourse :: ConnectionPool -> Text -> Text -> [Day] -> IO ()
-cohortCourse pool slug title dates = runSqlPool $ do
+cohortCourse pool slug title dates = flip runSqlPool pool $ do
   rows <- rawSql
     "INSERT INTO course(slug,title,price_cents,currency,capacity,updated_at) \
     \VALUES (?,?,15000,'USD',12,now()+interval '1 day') RETURNING id"
