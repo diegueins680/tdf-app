@@ -3,7 +3,7 @@
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "reconciliation": {
-    "preservedDecisions": 1177,
+    "preservedDecisions": 1176,
     "reviewedByPolicy": 147,
     "removedStaleDecisions": 0,
     "reviewBatch": "deterministic-policy-v3",
@@ -324,7 +324,8 @@
         }
       ]
     },
-    "runtimeMainIntegration": "docs/catalog-persistence/runtime-main-reconciliation-20261021.json"
+    "publicUxMainIntegration": "docs/catalog-persistence/public-ux-main-reconciliation-20261021.json",
+    "runtimeMainRefresh": "docs/catalog-persistence/runtime-main-refresh-20261021.json"
   },
   "decisions": [
     {
@@ -374,7 +375,7 @@
         "kind": "object-registry",
         "name": "publicEvent",
         "valueCount": 11,
-        "consumerCount": 129,
+        "consumerCount": 131,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -429,22 +430,6 @@
       "evidence": {
         "file": "scripts/__tests__/instagram-token-workflows.test.mjs",
         "name": "setupOptions"
-      }
-    },
-    {
-      "id": "3b552ac5c12256abe0b4",
-      "classification": "genuine-technical-constant",
-      "disposition": "explicit-allowlist",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Changing this sweep domain without changing the startup verifier and its policy note can leave a production capability-gate state unverified, so a later container start fails without a test having said so.",
-      "justification": "The three states (missing, disabled, enabled) are the exhaustive domain of one revenue_feature_flag row that the startup-gates sweep varies per asserted flag. It is a finite test domain copied from the verifier's rule shape, not a selectable catalog or a production source of authority.",
-      "reviewed": true,
-      "reviewMethod": "source-review-2026-10-12",
-      "reviewBatch": "startup-gates-2026-10-12",
-      "evidence": {
-        "file": "scripts/__tests__/startup-gates-postgres.mjs",
-        "line": 40
       }
     },
     {
@@ -582,7 +567,7 @@
         "kind": "object-registry",
         "name": "options",
         "valueCount": 4,
-        "consumerCount": 219,
+        "consumerCount": 220,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -1030,13 +1015,13 @@
       "reviewed": true
     },
     {
-      "id": "254cc8e9014b4fe1347c",
+      "id": "e60cbdb9121493f47fa6",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Changing migration order, SQL bytes or introduction ancestry can corrupt immutable deployment history.",
-      "justification": "Ordered 208-entry manifest retains protected main 6ceca759cdb19a100afbce7063eef6a7fe09a117 as its exact 206-entry prefix, including Operations failure replay and enabled-only inbound capture; publication isolation and upload rebinding follow in original music order. All introduction commits and SQL bytes are unchanged. Both parent reviews remain immutable historical evidence. Checksum, introduction ancestry, isolated PostgreSQL apply/replay and rollback/reapply gates remain mandatory. This review authorizes no production migration, deployment or music/payment activation.",
+      "justification": "Ordered 211-entry manifest retains protected main 0a37123ea1d9d6b7c6b44d73c9342e18515c06c9 as its exact 208-entry prefix. Community search indexes, genre-alias event resynchronization and chat recipient notifications follow in original public UX order. All introduction SHAs, SQL bytes and immutable parent reviews are preserved. Apply/replay, alias rollback/reapply and chat notification controls remain required. This is migration authority, not editable business data or production rollout approval.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
       "reviewBatch": "music-main-integration-20261020",
@@ -1045,10 +1030,7 @@
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 208,
-        "consumerCount": 71,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
+        "valueCount": 211
       },
       "supersededReviews": [
         {
@@ -2290,16 +2272,6 @@
       "reviewed": true
     },
     {
-      "id": "7a64750714562d66a881",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "service_category, service_offering, booking_type",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "5be5eb16c5c12dbf1b7e",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -2372,34 +2344,82 @@
       }
     },
     {
-      "id": "1a20aae8bb74a6df248f",
+      "id": "2a0d6d57a51e35d91376",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
+      "justification": "Canonical typed notification destination registry; chat_thread uses a validated positive safe thread identity, selects only an authorized existing conversation and never accepts an arbitrary URL. Generated into Mobile.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/components/notificationTarget.ts",
         "line": 14
       },
-      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewBatch": "chat-notification-destination-2026-10-13",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
-        "id": "d8058e9fe53556cbf690",
+        "id": "1a20aae8bb74a6df248f",
         "classification": "security-system-registry",
         "disposition": "canonical-contract",
         "specializedModel": "notification_destination_registry",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+        "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
         "reviewed": true,
         "evidence": {
           "file": "tdf-hq-ui/src/components/notificationTarget.ts",
           "line": 14
         },
-        "reviewBatch": "universal-interactions-2026-09-28"
+        "reviewBatch": "music-release-platform-sync-2026-10-07",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "d8058e9fe53556cbf690",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+            "line": 14
+          },
+          "reviewBatch": "universal-interactions-2026-09-28"
+        }
+      },
+      "mergedSourceDecision": {
+        "id": "2a0d6d57a51e35d91376",
+        "classification": "security-system-registry",
+        "disposition": "canonical-contract",
+        "specializedModel": "notification_destination_registry",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+          "line": 14
+        },
+        "reviewBatch": "music-release-platform-sync-2026-10-07",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "d8058e9fe53556cbf690",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+            "line": 14
+          },
+          "reviewBatch": "universal-interactions-2026-09-28"
+        },
+        "previousFingerprint": "1a20aae8bb74a6df248f"
       }
     },
     {
@@ -2513,13 +2533,13 @@
       "reviewed": true
     },
     {
-      "id": "8ea9381b405e317f5e7f",
+      "id": "d6b3102f762f66266bf0",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "navigation_item",
       "priority": "P3-retain",
       "risk": "Changing UI constants could break rendering or user experience.",
-      "justification": "Reviewed public header navigation: the TDF Mobile entry now carries its entry surface (surface=nav) so the landing attributes the visit and the click is measured as interest. Still client routes and localized labels only; distribution state keeps coming from the validated manifest.",
+      "justification": "The public header preserves the current-main search and event links and removes the dedicated DJ booth entry. DJ booth remains an ordinary service in the general booking catalog. These navigation routes and localized labels do not grant service availability or pricing authority.",
       "reviewed": true,
       "previousDecision": {
         "id": "7804604c0af849751309",
@@ -2549,20 +2569,114 @@
             "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
             "reviewed": true
           }
-        },
-        "evidence": {
-          "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
-          "line": 23
-        },
-        "reviewBatch": "events-nav-carousel-2026-10-08",
-        "reviewMethod": "successor-of-reviewed-decision"
+        }
       },
       "evidence": {
         "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
         "line": 23
       },
-      "reviewBatch": "events-nav-carousel-2026-10-08",
-      "reviewMethod": "successor-of-reviewed-decision"
+      "reviewBatch": "public-booking-queue-20261014",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "concurrentNavigationReviews": [
+        {
+          "id": "8ea9381b405e317f5e7f",
+          "classification": "dynamic-business-catalog",
+          "disposition": "retain-in-code",
+          "specializedModel": "navigation_item",
+          "priority": "P3-retain",
+          "risk": "Changing UI constants could break rendering or user experience.",
+          "justification": "Reviewed public header navigation: the TDF Mobile entry now carries its entry surface (surface=nav) so the landing attributes the visit and the click is measured as interest. Still client routes and localized labels only; distribution state keeps coming from the validated manifest.",
+          "reviewed": true,
+          "previousDecision": {
+            "id": "7804604c0af849751309",
+            "classification": "dynamic-business-catalog",
+            "disposition": "retain-in-code",
+            "specializedModel": "navigation_item",
+            "priority": "P3-retain",
+            "risk": "Changing UI constants could break rendering or user experience.",
+            "justification": "Reviewed public header navigation adds a single Eventos entry pointing to the canonical /social/eventos route (public agenda for visitors, events workspace for signed-in users). It holds client routes and localized labels only; event visibility and RSVP authority remain server-side.",
+            "reviewed": true,
+            "previousDecision": {
+              "id": "d24fc428c18f60568996",
+              "classification": "dynamic-business-catalog",
+              "disposition": "retain-in-code",
+              "specializedModel": "navigation_item",
+              "priority": "P3-retain",
+              "risk": "Changing UI constants could break rendering or user experience.",
+              "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
+              "reviewed": true,
+              "previousDecision": {
+                "id": "f9819fa4b81bdd8f3f21",
+                "classification": "dynamic-business-catalog",
+                "disposition": "retain-in-code",
+                "specializedModel": "navigation_item",
+                "priority": "P3-retain",
+                "risk": "Changing UI constants could break rendering or user experience.",
+                "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
+                "reviewed": true
+              }
+            },
+            "evidence": {
+              "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+              "line": 23
+            },
+            "reviewBatch": "events-nav-carousel-2026-10-08",
+            "reviewMethod": "successor-of-reviewed-decision"
+          },
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+            "line": 23
+          },
+          "reviewBatch": "events-nav-carousel-2026-10-08",
+          "reviewMethod": "successor-of-reviewed-decision"
+        },
+        {
+          "id": "d788513cb3b232039b94",
+          "classification": "dynamic-business-catalog",
+          "disposition": "retain-in-code",
+          "specializedModel": "navigation_item",
+          "priority": "P3-retain",
+          "risk": "Changing UI constants could break rendering or user experience.",
+          "justification": "Reviewed public header navigation drops the dedicated DJ Booth entry: DJ booth practice is an ordinary service offering chosen inside /reservar, so the header keeps one booking entry. It still holds client routes and localized labels only; service availability and pricing remain server-side catalog data.",
+          "reviewed": true,
+          "previousDecision": {
+            "id": "7804604c0af849751309",
+            "classification": "dynamic-business-catalog",
+            "disposition": "retain-in-code",
+            "specializedModel": "navigation_item",
+            "priority": "P3-retain",
+            "risk": "Changing UI constants could break rendering or user experience.",
+            "justification": "Reviewed public header navigation adds a single Eventos entry pointing to the canonical /social/eventos route (public agenda for visitors, events workspace for signed-in users). It holds client routes and localized labels only; event visibility and RSVP authority remain server-side.",
+            "reviewed": true,
+            "previousDecision": {
+              "id": "d24fc428c18f60568996",
+              "classification": "dynamic-business-catalog",
+              "disposition": "retain-in-code",
+              "specializedModel": "navigation_item",
+              "priority": "P3-retain",
+              "risk": "Changing UI constants could break rendering or user experience.",
+              "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
+              "reviewed": true,
+              "previousDecision": {
+                "id": "f9819fa4b81bdd8f3f21",
+                "classification": "dynamic-business-catalog",
+                "disposition": "retain-in-code",
+                "specializedModel": "navigation_item",
+                "priority": "P3-retain",
+                "risk": "Changing UI constants could break rendering or user experience.",
+                "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
+                "reviewed": true
+              }
+            }
+          },
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+            "line": 23
+          },
+          "reviewBatch": "public-booking-service-picker-2026-10-12",
+          "reviewMethod": "successor-of-reviewed-decision"
+        }
+      ]
     },
     {
       "id": "915967d05f3593fea628",
@@ -3170,6 +3284,21 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "9c81a0d1656a3da224d8",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Unsupported profile kinds would expose filters the search handler cannot fulfill.",
+      "justification": "Subset of existing directory profile_kind schema values accepted by the profileKind query contract: artist, band, project, person. Genres and cities are loaded from server taxonomies. No new profile taxonomy is introduced.",
+      "reviewed": true,
+      "reviewBatch": "community-discovery-2026-10-13",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "line": 47
+      }
     },
     {
       "id": "4b7c1b246f49b4bf7fdf",
@@ -5874,7 +6003,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-        "line": 833,
+        "line": 767,
         "kind": "object-registry",
         "name": "bookingPayload",
         "valueCount": 10,
@@ -6259,14 +6388,30 @@
       "reviewed": true
     },
     {
-      "id": "30eacf4605aa4c213248",
+      "id": "792f0717242ca974abe2",
       "classification": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "external_provider, external_provider_code",
       "priority": "P2-domain",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
+      "justification": "The TDF platform landing removes its dedicated DJ Booth card because DJ booth practice is booked through the general /reservar form like every other service offering. The remaining cards are marketing copy with client routes; the authoritative service list stays in the persisted service_offering catalog.",
+      "reviewed": true,
+      "previousDecision": {
+        "id": "30eacf4605aa4c213248",
+        "classification": "governed-reference-data",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "external_provider, external_provider_code",
+        "priority": "P2-domain",
+        "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+        "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+        "reviewed": true
+      },
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "line": 289
+      },
+      "reviewBatch": "public-booking-service-picker-2026-10-12",
+      "reviewMethod": "successor-of-reviewed-decision"
     },
     {
       "id": "8961d748fb7093a3ac06",
@@ -7329,7 +7474,7 @@
         "kind": "openapi-enum",
         "name": "MerchProductStatus",
         "valueCount": 7,
-        "consumerCount": 159,
+        "consumerCount": 160,
         "exactDuplicateIds": [
           "ab22a28a6c1f13d36e93"
         ],
@@ -7697,7 +7842,7 @@
         "kind": "openapi-enum",
         "name": "OnboardingIntent",
         "valueCount": 6,
-        "consumerCount": 102,
+        "consumerCount": 104,
         "exactDuplicateIds": [
           "dc2478eb86deaac6aed4",
           "9ebf2e096eeddbecfa52",
@@ -7755,7 +7900,7 @@
         "kind": "openapi-enum",
         "name": "Role",
         "valueCount": 31,
-        "consumerCount": 334,
+        "consumerCount": 335,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "fffe489557d71ad441fc",
@@ -10628,7 +10773,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 93,
+        "consumerCount": 95,
         "exactDuplicateIds": [
           "dc2478eb86deaac6aed4",
           "9ebf2e096eeddbecfa52",
@@ -10871,7 +11016,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 159,
+        "consumerCount": 160,
         "exactDuplicateIds": [
           "df4db7e4f0142896d690"
         ],
@@ -10898,7 +11043,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 224,
+        "consumerCount": 226,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "466bc208eb4fdfa1d8c2",
@@ -11020,7 +11165,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 105,
+        "consumerCount": 106,
         "exactDuplicateIds": [
           "c2530dae2f9a5c20f9c9"
         ],
@@ -11322,7 +11467,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 11,
-        "consumerCount": 75,
+        "consumerCount": 74,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11450,7 +11595,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 197,
+        "consumerCount": 198,
         "exactDuplicateIds": [
           "2281d810a9d407c3857d"
         ],
@@ -11605,7 +11750,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 112,
+        "consumerCount": 113,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "fcc83a1bc147933d21b3"
@@ -11855,7 +12000,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 140,
+        "consumerCount": 139,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "6cf3c47175b7c9af19d0",
@@ -12034,7 +12179,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 197,
+        "consumerCount": 198,
         "exactDuplicateIds": [
           "9053eecad03f9b4e6349"
         ],
@@ -12061,7 +12206,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 112,
+        "consumerCount": 113,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "f99ba8fe6f37a8606d3d",
@@ -12166,7 +12311,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 82,
+        "consumerCount": 81,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12642,7 +12787,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 61,
+        "consumerCount": 63,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12793,7 +12938,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 150,
+        "consumerCount": 149,
         "exactDuplicateIds": [
           "7c7e2e150ed59b1e3fc2",
           "d14b4c467d704c72df48",
@@ -12819,7 +12964,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 190,
+        "consumerCount": 189,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12959,7 +13104,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 75,
+        "consumerCount": 74,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13038,7 +13183,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 41,
+        "consumerCount": 42,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -16238,7 +16383,7 @@
         "kind": "haskell-list",
         "name": "recognizedSocialEventCapabilityCodes",
         "valueCount": 3,
-        "consumerCount": 20,
+        "consumerCount": 21,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -16563,7 +16708,7 @@
         "kind": "object-registry",
         "name": "Events",
         "valueCount": 30,
-        "consumerCount": 212,
+        "consumerCount": 213,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -17517,19 +17662,19 @@
       "reviewed": true
     },
     {
-      "id": "9de842d0529aa06faf6b",
+      "id": "4beaac5c476079656a0a",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
+      "justification": "Generated Mobile notification destination registry adds chat_thread with the same validated numeric identity and canonical web route as the web resolver; arbitrary URL navigation remains rejected.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-mobile/src/navigation/notificationTarget.ts",
         "line": 15
       },
-      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewBatch": "chat-notifications-2026-10-13",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
         "id": "2c23d0fa2bac40b01a98",
@@ -17545,6 +17690,93 @@
           "line": 15
         },
         "reviewBatch": "universal-interactions-2026-09-28"
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "cf723a45e24c7f9a8dd8300d4b7f199b261b5363",
+          "sourceDecisionId": "9de842d0529aa06faf6b",
+          "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
+          "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
+        }
+      ],
+      "mergedSourceDecision": {
+        "id": "4beaac5c476079656a0a",
+        "classification": "security-system-registry",
+        "disposition": "canonical-contract",
+        "specializedModel": "notification_destination_registry",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Pinned Mobile retains the reviewed notification destination allowlist and adds chat_thread with a positive-safe-integer threadId and /chat fallback. These client routes grant no thread access; recipient and thread membership remain backend authorities. Arbitrary URL navigation remains excluded.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+          "line": 15
+        },
+        "reviewBatch": "booking-mobile-pin-consolidation-2026-10-15",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "9de842d0529aa06faf6b",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+            "line": 15
+          },
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "2c23d0fa2bac40b01a98",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+              "line": 15
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          }
+        },
+        "mergedSourceDecision": {
+          "id": "4beaac5c476079656a0a",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Mobile main adds chat_thread to the existing notification destination allowlist, resolving to the canonical same-origin thread path. Existing destinations are preserved; the six notification response regressions pass. This is routing authority, not an editable business catalog.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+            "line": 15
+          },
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "2c23d0fa2bac40b01a98",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+              "line": 15
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          },
+          "previousFingerprint": "9de842d0529aa06faf6b"
+        }
       }
     },
     {
@@ -17616,6 +17848,22 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "3b552ac5c12256abe0b4",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing this sweep domain without changing the startup verifier and its policy note can leave a production capability-gate state unverified, so a later container start fails without a test having said so.",
+      "justification": "The three states (missing, disabled, enabled) are the exhaustive domain of one revenue_feature_flag row that the startup-gates sweep varies per asserted flag. It is a finite test domain copied from the verifier's rule shape, not a selectable catalog or a production source of authority.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-12",
+      "reviewBatch": "startup-gates-2026-10-12",
+      "evidence": {
+        "file": "scripts/__tests__/startup-gates-postgres.mjs",
+        "line": 40
+      }
     }
   ]
 }

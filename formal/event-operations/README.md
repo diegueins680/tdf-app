@@ -119,6 +119,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 
 | `StartupGates.cfg` (2026-10-12) | One state; the fourteen production flags the startup verifier asserts, each over {missing, disabled, enabled} (4,782,969 configurations per invariant) | PASS; `ApprovedStarts`, `StartImpliesApproved` |
 | `StartupGatesStagedAccepted.cfg`, `StartupGatesMissingAccepted.cfg`, `StartupGatesEitherRejected.cfg`, `StartupGatesRequiredUnchecked.cfg` | Negative controls: an enabled staged provider accepted, a missing gate accepted, PayPal/Datafast gates required disabled (a coarser stand-in for the pre-AUTHORITY-050 verifier), required states unchecked | Expected non-zero exit with "The invariant of ... is equal to FALSE" for `StartImpliesApproved`, `StartImpliesApproved`, `ApprovedStarts`, `StartImpliesApproved` |
+| `DriveReplay.cfg` (revised 2026-10-14) | One idempotency key, two explicit folder namespaces, two requests from two actors with two content/name/MIME shapes, entries initially absent, legacy or bound; lookup, create, reuse (no new object; sharing still runs), conflict (lookup GET only; no subsequent provider mutation) | PASS; 33,168 generated, 21,648 distinct states; `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `ConflictNoMutation` |
+| `DriveReplayUnchecked.cfg`, `DriveReplayActorIgnored.cfg`, `DriveReplayLegacyAdopted.cfg`, `DriveReplayRace.cfg` | Three negative controls (fingerprint not checked, actor not bound, legacy entry adopted) and one documented non-guarantee (`SingleObject`: two concurrent misses both create) | Expected exit 12 with `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `SingleObject` |
 | `OperationsAuxiliaryWrite.cfg` (2026-10-12) | Two auxiliary Operations commands (note, retry, view or push) of one actor; session, grant, membership, assignment-dependent visibility, failure state and push key as the environment; lock, commit with audit, reject | PASS; 34,172 generated, 13,744 distinct states, depth 10; `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
 | `OperationsAuxiliaryWriteUnlocked.cfg`, `OperationsAuxiliaryWritePartialAudit.cfg`, `OperationsAuxiliaryWriteRetryTwice.cfg`, `OperationsAuxiliaryWriteUnencrypted.cfg` | Negative controls: environment moves while a command holds its locks, a result without its audit, a second retry admitted, a push token stored without the key | Expected exit 12 with `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
 | `OperationsReadPolicy.cfg` (2026-10-12) | One state; the grant table of `Model.hs` and the SQL scope filter evaluated over every subset of ten roles, both assignment flags and fifteen entity types (up to 30,720 cases per invariant) | PASS; `ReadersAgree`, `NoSecurityDisclosure`, `ReadOnlyNoWriteGain`, `SpecialistsAssigned`, `UnknownNothing` |
@@ -707,6 +709,22 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+
+## Drive upload replay (2026-10-12)
+
+`DriveReplay.tla` models the reuse of a Google Drive upload by idempotency
+key (MEDIA-DRIVE-001): a request reuses an existing entry only when the
+stored fingerprint binds its own actor and request shape, never adopts a
+legacy entry without a fingerprint, creates no object on a reuse, and
+performs the lookup GET but no subsequent provider mutation on a conflict.
+Provider entries are scoped by folder. The sequential cross-folder configuration
+creates one object in each folder, with a counterexample to global uniqueness
+confirming both terminal creations are reachable. The
+`Race` configuration is an expected counterexample: lookup and create are
+separate provider calls, so two concurrent misses in the same folder both create. The model
+records that limitation; it does not remove it. See
+[drive-replay.md](../system/drive-replay.md).
+
 ## Operations failure retry
 
 `OperationsFailureReplay.tla` and four configurations check the rule in
@@ -736,6 +754,10 @@ controls are mandatory in the formal runner.
 persisted submission mark, lease-fenced results and administrator resend. The positive
 model and four negative controls are mandatory in the formal runner. Bounds, provider
 assumptions and the recovery gaps found are stated there.
+
+`ChatNotificationAuthorization.tla` models one notification target with stale cached membership/messages. Fresh success is required before display/read effects; failure and retry remain fail-closed. `ChatNotificationCachedDisplay.cfg` and `ChatNotificationEarlyRead.cfg` remove that guard and require named counterexamples. This finite client-admission model does not prove ordinary polling or backend authorization (MSG-NOTIFY-001).
+
+`ChatNotificationNavigation.tla` extends the notification boundary to two same-route navigations and an earlier pending poll. Each target needs its own response; request-scope confusion cannot authorize display or read bookkeeping. Three controls admit cached authorization, early read bookkeeping, or an older response under the current navigation marker. This finite model complements the actual React Query regressions; it does not establish backend authorization, ordinary polling correctness or liveness (MSG-NOTIFY-001).
 ## Music DDEX export
 
 `MusicDdexExport.tla` and six configurations check the export lifecycle rules in

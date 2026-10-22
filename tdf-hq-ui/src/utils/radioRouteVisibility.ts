@@ -1,7 +1,6 @@
 const HIDDEN_RADIO_PATH_PREFIXES = [
   '/login',
   '/reservar',
-  '/dj-booth',
   '/marketplace',
   '/inscripcion',
   '/configuracion/inscripciones-curso',

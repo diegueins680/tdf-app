@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "254cc8e9014b4fe1347c",
+      "currentId": "e60cbdb9121493f47fa6",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 208,
-      "change": "Ordered 208-entry manifest retains protected main 6ceca759cdb19a100afbce7063eef6a7fe09a117 as its exact 206-entry prefix, including Operations failure replay and enabled-only inbound capture; publication isolation and upload rebinding follow in original music order. All introduction commits and SQL bytes are unchanged. Both parent reviews remain immutable historical evidence. Checksum, introduction ancestry, isolated PostgreSQL apply/replay and rollback/reapply gates remain mandatory. This review authorizes no production migration, deployment or music/payment activation.",
+      "valueCount": 211,
+      "change": "Ordered 211-entry manifest retains protected main 0a37123ea1d9d6b7c6b44d73c9342e18515c06c9 as its exact 208-entry prefix. Community search indexes, genre-alias event resynchronization and chat recipient notifications follow in original public UX order. All introduction SHAs, SQL bytes and immutable parent reviews are preserved. Apply/replay, alias rollback/reapply and chat notification controls remain required. This is migration authority, not editable business data or production rollout approval.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -390,6 +390,26 @@
             "historicalReplacementId": "7578a30aa3cc5aa23870"
           },
           "sourceEntryCanonicalSha256": "743e5631efbf40cbdc4d09db4b9c06443c6d8243778cdf21d2bd212e49408bf4",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "c39bca1016ca0701cd5120ef3dc8905ca5a67baee89ba4a31f407f92dd7fc76b",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "972567b86a9a1c4256b14d90b265d8c63b5ee962d0fa18b477d02e637f6a0df9",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "0fa5bd8b05943ea7a2d32580d5a95439444b37618e1e838f5f93b754162afd0f",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "2c38a806a6b1b6150d94ab831bd323c9bb5944e9c65924dcdfdb5dc3c0fdb576",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]

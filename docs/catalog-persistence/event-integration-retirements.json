@@ -84,8 +84,30 @@
         "kind": "array",
         "name": "PUBLIC_NAV_ITEMS"
       },
-      "replacementId": "8ea9381b405e317f5e7f",
-      "reason": "The reviewed public navigation successor now includes the canonical TDF Mobile entry. Its preceding fingerprint f9819fa4b81bdd8f3f21 and exact decision remain archived as previousDecision in catalog-list-decisions.json; this mapping follows the current reviewed successor while preserving the original retirement evidence."
+      "replacementId": "d6b3102f762f66266bf0",
+      "reason": "The reviewed public navigation successor now includes the canonical TDF Mobile entry. Its preceding fingerprint f9819fa4b81bdd8f3f21 and exact decision remain archived as previousDecision in catalog-list-decisions.json; this mapping follows the current reviewed successor while preserving the original retirement evidence.",
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "ec1af567303d347d8d4e2b977a6a615cd7538c07e5933e725f71d7768b7eb08c",
+          "sourceEntry": {
+            "index": 3
+          },
+          "sourceEntryCanonicalSha256": "c6797478cc43ec73dffd002def15a46980b25b4d5f8198ade8343e4abac93a92",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "57141d9d44fdcd98d7a8b7a98242ba940022cc5a66e93dabe304f6095a832567",
+          "sourceEntry": {
+            "index": 3
+          },
+          "sourceEntryCanonicalSha256": "c438cfcf1372c4a5b44cf021ac3d644f1516ad42f2d3e6e38430f7b6d7fe0134",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ]
     },
     {
       "originalDecision": {
@@ -656,13 +678,13 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "254cc8e9014b4fe1347c",
-      "reason": "Ordered 208-entry manifest retains protected main 6ceca759cdb19a100afbce7063eef6a7fe09a117 as its exact 206-entry prefix, including Operations failure replay and enabled-only inbound capture; publication isolation and upload rebinding follow in original music order. All introduction commits and SQL bytes are unchanged. Both parent reviews remain immutable historical evidence. Checksum, introduction ancestry, isolated PostgreSQL apply/replay and rollback/reapply gates remain mandatory. This review authorizes no production migration, deployment or music/payment activation.",
+      "replacementId": "e60cbdb9121493f47fa6",
+      "reason": "Ordered 211-entry manifest retains protected main 0a37123ea1d9d6b7c6b44d73c9342e18515c06c9 as its exact 208-entry prefix. Community search indexes, genre-alias event resynchronization and chat recipient notifications follow in original public UX order. All introduction SHAs, SQL bytes and immutable parent reviews are preserved. Apply/replay, alias rollback/reapply and chat notification controls remain required. This is migration authority, not editable business data or production rollout approval.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
-        "mainRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
-        "valueCount": 208,
-        "reason": "Ordered 208-entry manifest retains protected main 6ceca759cdb19a100afbce7063eef6a7fe09a117 as its exact 206-entry prefix, including Operations failure replay and enabled-only inbound capture; publication isolation and upload rebinding follow in original music order. All introduction commits and SQL bytes are unchanged. Both parent reviews remain immutable historical evidence. Checksum, introduction ancestry, isolated PostgreSQL apply/replay and rollback/reapply gates remain mandatory. This review authorizes no production migration, deployment or music/payment activation."
+        "id": "e60cbdb9121493f47fa6",
+        "valueCount": 211,
+        "sourceRevision": "public-ux-main-integration-20261021"
       },
       "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
       "sourceReviewReferences": [
@@ -706,6 +728,26 @@
             "originalDecision.id": "7578a30aa3cc5aa23870"
           },
           "sourceEntryCanonicalSha256": "e0c1a01f381b8fe30ecfff75f25483db7f9d017342fc9b78ffdfc5a212bd6ed8",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "ec1af567303d347d8d4e2b977a6a615cd7538c07e5933e725f71d7768b7eb08c",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "6c82dc49548bd2d8146450ea9ddaa4e12bb09924d889f83a0bd90fe679ac667d",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "57141d9d44fdcd98d7a8b7a98242ba940022cc5a66e93dabe304f6095a832567",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "07d43c0d24691bc37cc34dcdd5206a25551b44e82ad83b1838877455ba6c2142",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]

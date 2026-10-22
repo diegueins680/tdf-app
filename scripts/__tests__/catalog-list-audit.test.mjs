@@ -57,9 +57,9 @@ test('music/main reconciliation retains both reviews and the protected migration
   assert.equal(preservedReviews, 10);
   const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'scripts/production-migrations.json'), 'utf8')).migrations;
-  assert.equal(manifest.length, 208);
+  assert.ok(manifest.length >= 208);
   assert.equal(canonicalHash(manifest.slice(0, 206)), ledger.protectedMainManifestCanonicalSha256);
-  assert.equal(new Set(manifest.map(entry => entry.id)).size, 208);
+  assert.equal(new Set(manifest.map(entry => entry.id)).size, manifest.length);
   for (const [index, migration] of ledger.musicMigrations.entries()) {
     const { sqlSha256, introducedSqlSha256, preservedFromRevision,
       historicalContentChangedBeforeIntegration, ...entry } = migration;
@@ -70,7 +70,15 @@ test('music/main reconciliation retains both reviews and the protected migration
     assert.equal(createHash('sha256').update(await fs.readFile(path.join(workspaceRoot,
       entry.path))).digest('hex'), sqlSha256);
   }
-  const current = active.find(entry => entry.id === ledger.currentManifestDecisionId);
+  const currentId = successors.find(entry => entry.name === 'migrations').currentId;
+  const current = active.find(entry => entry.id === currentId);
+  if (currentId !== ledger.currentManifestDecisionId) {
+    const extension = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+      'docs/catalog-persistence/public-ux-main-reconciliation-20261021.json'), 'utf8'));
+    assert.ok(extension.retiredManifestDecisions.some(entry =>
+      entry.id === ledger.currentManifestDecisionId && entry.source.sourceRevision === extension.mainParent));
+    assert.equal(canonicalHash(manifest.slice(0, 208)), extension.protectedMainManifestCanonicalSha256);
+  }
   assert.equal(current?.reviewed, true);
   assert.equal(successors.find(entry => entry.name === 'migrations').currentId, current.id);
   assert.equal(integration.retirements.find(entry => entry.source.name === 'migrations').replacementId,
