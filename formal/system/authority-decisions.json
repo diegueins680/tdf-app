@@ -830,6 +830,36 @@
       "conflict": "MEDIA-DRIVE-001 had no formal model. Its concurrency text accepts that the provider lookup and the multipart create are separate requests, so two requests that both miss can both create; a model stating exactly-once reuse would contradict the implementation, and a model omitting the race would overstate it.",
       "authority": "The requirement's own concurrency and ambiguity fields (no exactly-once guarantee; concurrent creation not covered) and the drive-replay note, which classify the race as outside the repair, not as a defect.",
       "resolution": "DriveReplay.tla states what the implementation is read to guarantee, within the model's bounds (a reuse is bound to the requester's actor and request shape, legacy entries are never adopted, a conflict performs its lookup GET but makes no subsequent provider mutation and a reuse creates no object; correspondence to the Haskell is by reading, not refinement) with three single-guard controls, and carries SingleObject as a documented non-invariant: the Race configuration is registered as an expected counterexample. No code change; the race remains an open obligation of MEDIA-DRIVE-001, closable only by a local claim before the provider create. Provider entries are partitioned by explicit folder. A sequential cross-folder configuration and reachable two-object witness capture separate creations for the same key; the concurrent race configuration is restricted to one folder. Missing-folder lookup is outside these bounds."
+    },
+    {
+      "id": "AUTHORITY-074",
+      "sources": [
+        "formal/system/requirements.json#PRIV-WHATSAPP-001",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "formal/system/whatsapp-consent.md",
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
+        "formal/system/requirements.json#DATA-INDEX-DECLARATION-001",
+        "formal/system/requirements.json#MSG-WHATSAPP-REDELIVERY-001"
+      ],
+      "conflict": "PRIV-WHATSAPP-001 requires the confirmation notice to be recorded as an outgoing message and the webhook to accept a valid confirmation. A confirming reply activated consent but the webhook then answered HTTP 500 and recorded no notice: the notice row was inserted with the handler timestamp, which the inbound reply row already holds for that number, and whats_app_message is unique on (phone_e164, created_at) because the model line IndexWhatsAppMessagePhone is a Persistent unique declaration (production constraint index_whats_app_message_phone). Reproduced against the real backend on 2026-10-12.",
+      "authority": "The requirement's effects and the 2026-10-06 double opt-in decision (AUTHORITY-052); the unique constraint is an accident of the model declaration syntax, not a rule.",
+      "resolution": "The original narrow repair sampled the notice clock separately after storing the inbound reply; while the old phone/party timestamp uniqueness remained, that was best-effort and the index/model repair was a follow-up. Current main already includes that additive index-declaration repair: both history indexes are non-unique. This integration preserves receiveWhatsAppInbound atomic receipt/confirmation and duplicate-delivery admission, then samples the outgoing notice time. The real-backend harness checks consent and redelivery plus distinct messages sharing a phone/party timestamp and both non-unique history indexes; it must not reinstate the old uniqueness assumption. Provider notice delivery and durable retry remain separate obligations."
+    },
+    {
+      "id": "AUTHORITY-078",
+      "sources": [
+        "formal/system/requirements.json#DEPLOY-READINESS-001",
+        "tdf-hq/src/TDF/App/Readiness.hs",
+        "tdf-hq/src/TDF/DB.hs",
+        "scripts/lib/readiness_conformance.py",
+        "formal/system/readiness.md"
+      ],
+      "conflict": "DEPLOY-READINESS-001 required a fresh request after database recovery to answer ready and the harness checked it with one probe. The probe made one attempt through the pool; a pooled connection whose session PostgreSQL had closed (restart, terminated backends) failed that attempt and the probe answered 503 although the database was back, once per stale connection. Reproduced on 2026-10-12: the consent section's four simultaneous public requests left the pool with more idle connections than the three degraded probes consumed one by one, and the recovery probe took the next terminated connection and failed (CI run 38316698853 on PR #559, and locally against the real backend).",
+      "authority": "The requirement's recovery clause and the operational intent of a readiness probe: it reports the database, not the pool's history. The probe now retries up to the pool size plus one (the pool bounds the stale connections; one attempt must remain for a live connection, a bound the model found) inside its unchanged two-second deadline, discarding each failed connection; a result, ready or not, is final and cancellation propagates through every attempt. The attempt budget is bound to the pool size plus one by the source-bound verifier. A connection dead without a close blocks until the deadline, one per probe; that case is outside the bound and unchanged. An unavailable database still answers 503 within the deadline, now after at most pool-size-plus-one connection attempts per probe.",
+      "decidedOn": "2026-10-12",
+      "status": "applied"
     }
   ]
 }
