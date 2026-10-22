@@ -783,6 +783,13 @@ persisted submission mark, lease-fenced results and administrator resend. The po
 model and four negative controls are mandatory in the formal runner. Bounds, provider
 assumptions and the recovery gaps found are stated there.
 
+## Public knowledge retrieval
+
+`PublicKnowledgeRead.tla` models PRIV-RAG-001 with one course, two metadata values
+and course/private source classes. The shared runner requires the positive model
+and all four named negative controls. See
+[the canonical retrieval contract](../system/public-knowledge-retrieval.md) for
+statement-snapshot assumptions, source/HTTP mappings and delivery exclusions.
 `ChatNotificationAuthorization.tla` models one notification target with stale cached membership/messages. Fresh success is required before display/read effects; failure and retry remain fail-closed. `ChatNotificationCachedDisplay.cfg` and `ChatNotificationEarlyRead.cfg` remove that guard and require named counterexamples. This finite client-admission model does not prove ordinary polling or backend authorization (MSG-NOTIFY-001).
 
 `ChatNotificationNavigation.tla` extends the notification boundary to two same-route navigations and an earlier pending poll. Each target needs its own response; request-scope confusion cannot authorize display or read bookkeeping. Three controls admit cached authorization, early read bookkeeping, or an older response under the current navigation marker. This finite model complements the actual React Query regressions; it does not establish backend authorization, ordinary polling correctness or liveness (MSG-NOTIFY-001).

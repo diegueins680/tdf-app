@@ -3120,36 +3120,47 @@
         "Only current public course documents reach the calling assistant adapter."
       ],
       "authorization": "The assistant requires authentication and Social Inbox access (AUTHORITY-049); customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
-      "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
-      "concurrency": "Candidate course identities and metadata are read during one retrieval transaction; deletion committed after a read may precede response delivery and is not linearized here.",
+      "privacy": "Private historical index contents stay excluded even before reindexing. PRIV-RAG-002 prohibits private material in future refresh payloads; historical provider retention remains a separate obligation.",
+      "concurrency": "Ranking and per-course metadata reads share one transaction but separate statement snapshots under the modeled Read Committed assumption. A deletion committed after metadata read may precede delivery; no delivery-time linearization is claimed.",
       "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
       "failure": "Missing course rows and unsupported source kinds yield no eligible document. Existing database/provider failures retain adapter error handling.",
       "recovery": "Public metadata changes take effect on the next read; stale raw text need not be purged to enforce this retrieval boundary.",
-      "observability": "Synthetic anonymous HTTP checks observe private-source exclusion, poisoned-cache rejection, metadata freshness and deleted-course exclusion.",
+      "observability": "Synthetic staff-authenticated HTTP checks observe private-source exclusion including colliding course slugs, poisoned-cache rejection, metadata freshness and deleted-course exclusion. Anonymous and unprivileged assistant calls are denied.",
       "source": "Observed anonymous private-booking-content disclosure; formal/system/bookings.md customer-facing retrieval boundary.",
       "implementation": [
-        "tdf-hq/src/TDF/RagStore.hs"
+        "tdf-hq/src/TDF/RagStore.hs",
+        "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
+        "tdf-hq/src/TDF/PublicUrl.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Courses/Production.hs"
       ],
       "tests": [
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs",
+        "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/tdf-hq.cabal"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/PublicKnowledgeRead.tla"
+      ],
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
-        "Embedding-provider sharing, internal retention and curated conversation examples need separate privacy reconciliation.",
-        "Channel-specific provider delivery is not exercised by the anonymous HTTP fixture."
+        "Historical embedding-provider retention and curated conversation examples need separate privacy reconciliation.",
+        "Channel-specific provider delivery is not exercised by the staff-authenticated HTTP fixture."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Old-binary disclosure was reproduced; repaired HTTP checks and all channel integrations need execution evidence. No formal deletion linearization proof is claimed."
+        "reason": "Bounded model and source-mapped HTTP regressions cover the retrieval boundary; final candidate execution and deployed/channel/provider/retention evidence remain separate obligations."
       },
       "critical": true,
       "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
-      "property": "Every returned document is freshly rendered from an existing public course, never raw private indexed content.",
-      "contract": "formal/system/bookings.md",
-      "verification": "Anonymous HTTP on a fresh synthetic PostgreSQL database with private, poisoned, updated and deleted index fixtures.",
-      "evidence": "Preserved old-backend anonymous disclosure reproduction and exact-candidate booking-conformance HTTP artifact; repaired execution remains pending."
+      "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.",
+      "contract": "formal/system/public-knowledge-retrieval.md",
+      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with four named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits.",
+      "evidence": "Historical disclosure reproduction is retained separately; exact candidate model/HTTP/CI receipts are required. New coverage must not inherit a historical green result."
     },
     {
       "id": "MEDIA-PERSIST-001",
@@ -9980,6 +9991,96 @@
       }
     },
     {
+      "id": "PRIV-RAG-002",
+      "title": "Public-course-only index refresh",
+      "statement": "RAG index checks and refreshes shall first remove legacy non-course derived chunks independently of freshness, embedding configuration or provider availability. Refreshes shall embed only public course fields, atomically replace the public index on success (including an empty corpus without a provider call), and preserve the previous public index on provider or persistence failure.",
+      "domain": "PRIV",
+      "actors": [
+        "Authorized RAG administrator",
+        "Automated index refresh worker",
+        "Embedding provider"
+      ],
+      "preconditions": [
+        "The configured embedding model and database vector dimensions agree.",
+        "Course fields exposed by the public course contract are approved public material."
+      ],
+      "inputs": [
+        "Up to 50 route-eligible canonical course rows ordered by updated_at descending",
+        "Chunk size and overlap",
+        "Embedding adapter results"
+      ],
+      "state": {
+        "fields": [
+          "Captured public course documents",
+          "Provider payload",
+          "Derived rag_chunk rows",
+          "Refresh outcome"
+        ],
+        "initial": "The historical index may include private sources."
+      },
+      "allowedTransitions": [
+        "Commit non-course derived-index cleanup before checking freshness or validating embedding configuration.",
+        "Collect public course fields, chunk and embed them.",
+        "Replace all derived index rows after a complete successful embedding response.",
+        "Clear the index without embedding when the captured corpus is empty.",
+        "Reject a failed refresh while retaining the previous public index; committed legacy cleanup is not undone."
+      ],
+      "forbiddenTransitions": [
+        "Include bookings, availability, campaigns, ads, services, resources, rooms or studio notes in refresh embedding payloads.",
+        "Report an empty refresh as successful while retaining old chunks.",
+        "Commit public-index deletion if replacement insertion fails.",
+        "Skip legacy cleanup because the index is fresh or an embedding provider/configuration is unavailable.",
+        "Raw rejected stored URLs or route-unreachable course identities -> embedding payload."
+      ],
+      "effects": [
+        "The next admitted worker check or administrator refresh removes legacy non-course chunks locally without a provider call; public replacement remains a separate transaction.",
+        "Source entities are not deleted; external provider records and backups are not erased by reindexing."
+      ],
+      "authorization": "Existing administrator and worker admission remains unchanged. Index source selection is enforced in the backend, independently of retrieval guards.",
+      "privacy": "Explicit product decision on 2026-10-13: public courses only; stop indexing private material. This policy concerns index refreshes, not a claim that query embeddings or other assistant provider payloads are public.",
+      "concurrency": "One refresh captures a database read snapshot before embedding and atomically replaces the index. Parallel refresh ordering/freshness is not guaranteed; all revised writers still construct only course chunks. Retrieval separately checks current course metadata. Cleanup and replacement are separate transactions. Deployment must drain old mixed-source writers; no claim covers privileged external SQL writers or rollback to the old builder.",
+      "idempotency": "Repeated successful refreshes replace the derived index; provider requests may repeat and chunk identifiers/timestamps are not stable.",
+      "failure": "Cleanup SQL failure aborts before embedding. Model/schema mismatch and provider/count errors return Left after legacy cleanup; replacement SQL errors propagate after rollback of public replacement. A missing index table skips cleanup and fails existing schema validation.",
+      "recovery": "Retry failed public refreshes while retaining existing public chunks. Do not restore non-course chunks or roll back to a mixed-source builder. Historical backups and provider-held data require separate retention/erasure decisions.",
+      "observability": "PostgreSQL tests capture adapter payloads and persisted rows, check empty-corpus no-call behavior, provider/count refusal and SQL rollback. Existing administrator result and index statistics report refresh outcome. Aggregate source counts verify cleanup without disclosing content; tests cover a fresh index and invalid configuration before provider admission.",
+      "source": "Explicit user product decision 2026-10-13: Public courses only; stop indexing private material (Recommended).",
+      "implementation": [
+        "tdf-hq/src/TDF/RagStore.hs",
+        "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
+        "tdf-hq/src/TDF/PublicUrl.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Courses/Production.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "scripts/test-rag-index-privacy.sh",
+        ".github/workflows/ci.yml",
+        "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs"
+      ],
+      "formalModels": [
+        "formal/event-operations/PublicKnowledgeIndex.tla"
+      ],
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Historical external provider retention/erasure requires separate evidence.",
+        "Concurrent refresh ordering and index freshness are not serialized by this change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation, bounded model and PostgreSQL regression checks are mapped; exact candidate and deployed verification remain required. Historical provider retention is outside the refresh boundary."
+      },
+      "critical": true,
+      "authority": "Explicit user decision 2026-10-13; AUTHORITY-RAG-PUBLIC-INDEX-20261013",
+      "property": "NoLegacyAfterCleanup, NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex (public subset), EmptySkipsProvider and TypeOK in PublicKnowledgeIndex.",
+      "contract": "formal/system/public-knowledge-retrieval.md",
+      "verification": "Pinned TLC positive model and four named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits.",
+      "evidence": "Candidate-specific test and model receipts must be recorded; historical passes do not establish current conformance."
+    },
+    {
       "id": "MOB-FEEDBACK-001",
       "title": "Consented mobile tester feedback with minimized diagnostics",
       "statement": "The mobile tester feedback form enables submission only with consent, nonempty text and published catalog choices. Optional diagnostics use an explicit field allowlist and coarse device class; full device model, tokens and arbitrary input fields are not spread into metadata. Prompt eligibility honors opt-out and dismissal.",
@@ -10661,11 +10762,80 @@
         "formal/event-operations/ChatNotificationAuthorization.tla",
         "formal/event-operations/ChatNotificationNavigation.tla"
       ],
-      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response. An offline-paused, cache-success regression requires an actual authorization response for the current navigation and preserves the link until reconnection. Same-route allowed/revoked tests and delayed ordinary-poll/previous-notification responses exercise a separate navigation-scoped query. The navigation model checks both display/read safety and three cache/response-scope counterexamples.",
+      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response. An offline-paused, cache-success regression requires an actual authorization response for the current navigation and preserves the link until reconnection. Same-route allowed/revoked tests and delayed ordinary-poll/previous-notification responses exercise a separate navigation-scoped query. The navigation model checks both display/read safety and three cache/response-scope counterexamples. Late-response fixtures hold the distinct subsequent ordinary poll, cover both old/current completion orders, and verify fresh sidebar recovery without selecting, fetching or marking the denied target read.",
       "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
       "ambiguity": [
         "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."
       ]
+    },
+    {
+      "id": "SYS-CI-DB-001",
+      "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
+      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
+      "domain": "SYS",
+      "actors": [
+        "CI fixture runner",
+        "Developer"
+      ],
+      "preconditions": [
+        "The runner has started its own disposable PostgreSQL 16 container with a fixed synthetic test database and SCRAM host authentication."
+      ],
+      "inputs": [
+        "Owned container identity",
+        "Fixed test database",
+        "Bounded final-listener readiness query",
+        "Explicit synthetic client password for the TCP probe"
+      ],
+      "state": {
+        "states": [
+          "container starting",
+          "initialization server only",
+          "final server ready",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Starting or initialization-only -> final server ready after the authenticated loopback TCP query succeeds.",
+        "Readiness deadline exceeded -> failed with container diagnostics."
+      ],
+      "forbiddenTransitions": [
+        "A socket-only initialization query succeeds -> apply fixtures.",
+        "Readiness deadline exceeded -> continue SQL tests.",
+        "A missing or incorrect client password -> ready on the SCRAM host listener."
+      ],
+      "effects": [
+        "Wait for the final database process before fixture and migration SQL."
+      ],
+      "authorization": "Only the existing owned disposable test container is addressed; this runner grants no production authority.",
+      "privacy": "The database and its password are fixed synthetic test values.",
+      "concurrency": "The temporary initialization process can stop after accepting socket connections; authenticated TCP readiness excludes that process and requires the synthetic client credential.",
+      "idempotency": "Readiness SELECT has no fixture or migration side effect.",
+      "failure": "Retain the existing 30-attempt bound, print container logs and fail when the final listener is unavailable.",
+      "recovery": "Repair fixture startup and rerun the complete Linux migration job; no SQL assertion or audit policy is waived.",
+      "observability": "Actual PostgreSQL controls: the original socket probe accepts initialization; the authenticated TCP probe rejects initialization/stopped phases and missing/wrong client credentials, then accepts the final SCRAM listener and permits the first real fixture.",
+      "authority": "inferred",
+      "source": "Failed hosted postgres-api run 39712279548; official postgres image initialization lifecycle; local PostgreSQL 16 socket/TCP reproduction on 2026-10-21. PostgreSQL 16 libpq environment-variable and initdb authentication documentation; password-authenticated protocol controls on 2026-10-22.",
+      "property": "Initialization-only PostgreSQL cannot admit the API fixture SQL.",
+      "contract": "formal/system/test-database-readiness.md",
+      "implementation": [
+        "scripts/test-event-operations-api-migration.sh"
+      ],
+      "tests": [
+        ".github/workflows/event-operations-formal.yml"
+      ],
+      "formalModels": [],
+      "verification": "Actual PostgreSQL 16 socket-only, stopped and SCRAM TCP phases exercise the extracted readiness command, including missing/wrong-password negative controls. The full current-head owned-container migration job and independent review remain required.",
+      "evidence": "formal/system/test-database-readiness-protocol-2026-10-22.json; original 2026-10-21 socket/TCP protocol receipt. Current-head hosted Docker migration qualification remains pending; the original failed run is retained.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "High for these finite readiness/authentication controls; no general fixture-readiness or full Docker execution claim.",
+      "ambiguity": [
+        "Other disposable PostgreSQL runners have separate readiness and ownership obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Actual native PostgreSQL lifecycle and missing/wrong-password controls pass; fresh current-head Linux Docker migration qualification remains pending."
+      }
     }
   ]
 }

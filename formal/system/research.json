@@ -665,6 +665,16 @@
       "applicability": "Sender identifiers copied into permanent Operations events/audits",
       "decision": "adopted as activation prerequisite",
       "rationale": "The source does not supply a TDF retention duration or authorize identifier collection. Keep capture disabled until product-specific retention, deletion/anonymization, exceptions and backup expiry are defined and executable. No arbitrary duration or blanket financial-record exception is inferred."
+    },
+    {
+      "id": "RES-RAG-SNAPSHOT-001",
+      "source": "https://www.postgresql.org/docs/17/transaction-iso.html#XACT-READ-COMMITTED",
+      "title": "PostgreSQL17 Read Committed statement snapshots",
+      "recommendation": "Successive statements in one transaction may observe different committed versions. State the observation point for a current-data guarantee.",
+      "applicability": "PRIV-RAG-001 ranking followed by course metadata reads",
+      "decision": "adopted",
+      "rationale": "Model edits/deletion between ranking, metadata read and delivery. Require current public data at metadata read, not deletion-linearized delivery. Do not infer production isolation configuration from the default or claim full SQL/Haskell refinement.",
+      "checkedAt": "2026-10-13"
     }
   ]
 }
