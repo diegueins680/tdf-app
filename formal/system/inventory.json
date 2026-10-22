@@ -15147,7 +15147,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "2a03ca6e979941842dbf947fddf769b648a626eff55e8c922446f5deb53a6ae8",
+      "sha256": "37fb5ac7de0522de3ede41856747310294bbec415f8b5c60ff199ce5a2217cff",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25792,7 +25792,7 @@
     },
     {
       "path": "formal/system/public-knowledge-retrieval.md",
-      "sha256": "75bfd96aabbbc50e34593247914f7b6db522796b08b1857208c16afdddcfa870",
+      "sha256": "6dba07392dcea4756b341d008336d1129fbeee61743c7dc03c88ca3cba84b472",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
