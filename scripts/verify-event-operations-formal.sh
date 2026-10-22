@@ -228,6 +228,13 @@ run_negative_tlc SignupIdentityUnreviewed.cfg signup-unreviewed 'Invariant Revie
 run_negative_tlc SignupIdentityRebind.cfg signup-rebind 'Invariant IndependentPrincipal is violated' SignupIdentity.tla
 run_tlc CredentialLifecycle.tla CredentialLifecycle.cfg credential-lifecycle
 run_tlc ChatMutationBoundary.tla ChatMutationBoundary.cfg chat-mutation-boundary
+run_tlc ChatNotificationAuthorization.tla ChatNotificationAuthorization.cfg chat-notification-authorization
+run_negative_tlc ChatNotificationCachedDisplay.cfg chat-notification-cached-display 'Invariant NoCachedDisplay is violated' ChatNotificationAuthorization.tla
+run_negative_tlc ChatNotificationEarlyRead.cfg chat-notification-early-read 'Invariant NoEarlyRead is violated' ChatNotificationAuthorization.tla
+run_tlc ChatNotificationNavigation.tla ChatNotificationNavigation.cfg chat-notification-navigation
+run_negative_tlc ChatNotificationNavigationCached.cfg chat-notification-navigation-cached 'Invariant NoStaleNavigationDisplay is violated' ChatNotificationNavigation.tla
+run_negative_tlc ChatNotificationNavigationEarlyRead.cfg chat-notification-navigation-read 'Invariant NoStaleNavigationRead is violated' ChatNotificationNavigation.tla
+run_negative_tlc ChatNotificationNavigationOldResponse.cfg chat-notification-navigation-old-response 'Invariant NoStaleNavigationDisplay is violated' ChatNotificationNavigation.tla
 run_negative_tlc ChatMutationEarlyCommit.cfg chat-mutation-early-commit 'Invariant RejectedLeavesNoMutation is violated' ChatMutationBoundary.tla
 run_negative_tlc ChatMutationNoRollback.cfg chat-mutation-no-rollback 'Invariant RejectedLeavesNoMutation is violated' ChatMutationBoundary.tla
 run_negative_tlc CredentialLifecycleConcurrentReset.cfg credential-reset-race 'Invariant SingleUseReset is violated' CredentialLifecycle.tla
@@ -250,6 +257,12 @@ run_negative_tlc InvoiceSubmissionUnknownAsRefused.cfg invoice-submission-unknow
 run_negative_tlc InvoiceSubmissionRetryUncertain.cfg invoice-submission-retry-uncertain 'Invariant AtMostOneProviderDocument is violated' InvoiceSubmission.tla
 run_negative_tlc MarketplaceStorageUnsafeCache.cfg marketplace-storage-cache 'Invariant NoStorageExceptionEscapes is violated' MarketplaceStorage.tla
 run_negative_tlc MarketplaceStorageUnsafeKey.cfg marketplace-storage-key 'Invariant NoDispatchWithoutDurableKey is violated' MarketplaceStorage.tla
+run_tlc MusicDdexExport.tla MusicDdexExport.cfg music-ddex-export
+run_negative_tlc MusicDdexExportUnfenced.cfg music-ddex-export-unfenced 'Invariant CurrentWriter is violated' MusicDdexExport.tla
+run_negative_tlc MusicDdexExportReopen.cfg music-ddex-export-reopen 'Invariant ValidForever is violated' MusicDdexExport.tla
+run_negative_tlc MusicDdexExportNoCommitGate.cfg music-ddex-export-no-commit-gate 'Invariant ValidOnlyUnderRules is violated' MusicDdexExport.tla
+run_negative_tlc MusicDdexExportReplayFailed.cfg music-ddex-export-replay-failed 'Invariant FailedIsFinal is violated' MusicDdexExport.tla
+run_negative_tlc MusicDdexExportSplitDeadLetter.cfg music-ddex-export-split-dead-letter 'Invariant PendingHasLiveJob is violated' MusicDdexExport.tla
 run_tlc OptionalTokenRecovery.tla OptionalTokenRecovery.cfg optional-token-recovery
 run_negative_tlc OptionalTokenRecoveryUnsafeStorage.cfg optional-token-storage 'Temporal properties were violated' OptionalTokenRecovery.tla
 run_negative_tlc OptionalTokenRecoveryUnsafeFragment.cfg optional-token-fragment 'Invariant FragmentPrecedence is violated' OptionalTokenRecovery.tla
@@ -290,6 +303,18 @@ expect_counterexample() {
   echo "Expected mutation counterexample: ${config}: ${invariant}"
   printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc MusicPublication.tla MusicPublication.cfg music-publication
+run_negative_tlc MusicPublicationBatch.cfg music-publication-batch 'Temporal properties were violated' MusicPublication.tla
+run_negative_tlc MusicPublicationReplacedOnly.cfg music-publication-replaced-only 'Invariant OnlyInvalidFails is violated' MusicPublication.tla
+run_negative_tlc MusicPublicationStayWithdrawn.cfg music-publication-stay-withdrawn 'Temporal properties were violated' MusicPublication.tla
+run_negative_tlc MusicPublicationPointerStale.cfg music-publication-pointer-stale 'Invariant PointerLive is violated' MusicPublication.tla
+run_tlc MusicWithdrawalFairness.tla MusicWithdrawalFairness.cfg music-withdrawal-fairness
+run_negative_tlc MusicWithdrawalStarvation.cfg music-withdrawal-starvation 'Temporal properties were violated' MusicWithdrawalFairness.tla
+run_tlc MusicAssetProcessing.tla MusicAssetProcessing.cfg music-asset-processing
+run_negative_tlc MusicAssetProcessingUnfenced.cfg music-asset-processing-unfenced 'Invariant CompletionIsCurrent is violated' MusicAssetProcessing.tla
+run_negative_tlc MusicAssetProcessingPreempt.cfg music-asset-processing-preempt 'Invariant LiveLeaseIsCurrent is violated' MusicAssetProcessing.tla
+run_negative_tlc MusicAssetProcessingUnverified.cfg music-asset-processing-unverified 'Invariant PromotedOnlyVerified is violated' MusicAssetProcessing.tla
+run_negative_tlc MusicAssetProcessingOverLimit.cfg music-asset-processing-overlimit 'Invariant NoOverLimitRun is violated' MusicAssetProcessing.tla
 run_tlc PaymentRecovery.tla PaymentRecovery.cfg payment-recovery
 expect_counterexample PaymentRecoveryOverwrite.cfg NoLostRecovery payment-recovery-overwrite PaymentRecovery.tla
 expect_counterexample PaymentRecoveryReturn.cfg CorrectReturn payment-recovery-return PaymentRecovery.tla
@@ -298,6 +323,9 @@ run_tlc WorkerCompletionEvidence.tla WorkerCompletionEvidence.cfg worker-complet
 expect_counterexample WorkerCompletionEvidenceFailed.cfg CompletedHasNoFailedItems worker-completion-failed WorkerCompletionEvidence.tla
 expect_counterexample WorkerCompletionEvidenceUnacknowledged.cfg SuccessfulReturnHasEvidence worker-completion-unacknowledged WorkerCompletionEvidence.tla
 run_tlc ProviderRetryAdmission.tla ProviderRetryAdmission.cfg provider-retry-admission
+run_tlc DiscoveryFallbackPrivacy.tla DiscoveryFallbackPrivacy.cfg discovery-fallback-privacy
+expect_counterexample DiscoveryFallbackPrivacyPrivateSubject.cfg FallbackRequiresNoAuthority discovery-private-subject DiscoveryFallbackPrivacy.tla
+expect_counterexample DiscoveryFallbackPrivacyIgnoredLink.cfg FallbackRequiresNoAuthority discovery-ignored-link DiscoveryFallbackPrivacy.tla
 expect_counterexample ProviderRetryAdmissionAmbiguous.cfg OneLiveIntent provider-retry-ambiguous ProviderRetryAdmission.tla
 expect_counterexample ProviderRetryAdmissionDuplicate.cfg ImmutableKey provider-retry-duplicate ProviderRetryAdmission.tla
 expect_counterexample ProviderRetryAdmissionPayload.cfg BoundReplay provider-retry-payload ProviderRetryAdmission.tla
@@ -375,6 +403,14 @@ run_negative_tlc CheckoutCancellationPaymentUnsafe.cfg checkout-payment-unsafe '
 run_negative_tlc CheckoutReadinessUnavailable.cfg checkout-unavailable 'Invariant ReadyBeforeReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessStale.cfg checkout-stale 'Invariant CurrentReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessDuplicate.cfg checkout-duplicate 'Invariant SingleCurrentFlight is violated' CheckoutReadiness.tla
+run_tlc DriveReplay.tla DriveReplay.cfg drive-replay
+run_tlc DriveReplay.tla DriveReplayCrossFolder.cfg drive-replay-cross-folder
+run_negative_tlc DriveReplayCrossFolderObjects.cfg drive-replay-cross-folder-objects 'Invariant SingleObject is violated' DriveReplay.tla
+run_negative_tlc DriveReplayUnchecked.cfg drive-replay-unchecked 'Invariant ReuseBinds is violated' DriveReplay.tla
+run_negative_tlc DriveReplayActorIgnored.cfg drive-replay-actor-ignored 'Invariant NoForeignReuse is violated' DriveReplay.tla
+run_negative_tlc DriveReplayLegacyAdopted.cfg drive-replay-legacy-adopted 'Invariant NoLegacyAdoption is violated' DriveReplay.tla
+# Documented non-guarantee of lookup-then-create (MEDIA-DRIVE-001): expected counterexample, not a control.
+run_negative_tlc DriveReplayRace.cfg drive-replay-race 'Invariant SingleObject is violated' DriveReplay.tla
 run_tlc OperationsAuxiliaryWrite.tla OperationsAuxiliaryWrite.cfg operations-auxiliary-write
 run_negative_tlc OperationsAuxiliaryWriteUnlocked.cfg operations-auxiliary-write-unlocked 'Invariant CurrentAuthority is violated' OperationsAuxiliaryWrite.tla
 run_negative_tlc OperationsAuxiliaryWriteResolvedRetry.cfg operations-auxiliary-write-resolved-retry 'Invariant CurrentAuthority is violated' OperationsAuxiliaryWrite.tla

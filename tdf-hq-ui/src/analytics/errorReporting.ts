@@ -33,7 +33,9 @@ let reportCount = 0;
 
 const EMAIL_PATTERN = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 const JWT_PATTERN = /\beyJ[\w-]+\.[\w-]+\.[\w-]+/g;
-const BEARER_PATTERN = /\b(bearer|token|password|secret|credential)\b(\s*[:=]\s*|\s+)\S+/gi;
+// Include common credential label variants and quoted values with whitespace.
+// An unterminated quoted value is conservatively masked through the end.
+const CREDENTIAL_PATTERN = /\b(authorization|bearer|(?:access|refresh|id)[_-]?token|(?:current|new)[_-]?password|(?:client[_-]?)?secret|api[_-]?key|token|password|credential)\b(["']?\s*[:=]\s*|\s+)(?:bearer\s+)?(?:"(?:\\.|[^"\\])*(?:"|$)|'(?:\\.|[^'\\])*(?:'|$)|\S+)/gi;
 // Error strings can embed URLs rather than start with one; SDK URL-property
 // sanitizers cannot identify short query values inside those free-text fields.
 const DIAGNOSTIC_URL_PATTERN = /(?:\b(?:https?|tdf):\/\/|\/)[^\s<>"']+/gi;
@@ -43,7 +45,7 @@ export function redactErrorText(value: string): string {
   return value
     .replace(JWT_PATTERN, '[jwt]')
     .replace(DIAGNOSTIC_URL_PATTERN, '[url]')
-    .replace(BEARER_PATTERN, '$1$2[redacted]')
+    .replace(CREDENTIAL_PATTERN, '$1$2[redacted]')
     .replace(EMAIL_PATTERN, '[email]')
     .replace(OPAQUE_PATTERN, '[id]')
     .slice(0, MAX_MESSAGE_LENGTH);

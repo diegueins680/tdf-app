@@ -29,6 +29,25 @@ describe('client error reporting', () => {
     expect(text).toContain('[email]');
   });
 
+  it.each([
+    'password="private alpha beta"',
+    "'password': 'private alpha beta'",
+    'access_token=private-token',
+    'refreshToken: private-token',
+    'Authorization: Bearer private-token',
+    'api_key=private-token',
+    'clientSecret="private alpha beta"',
+    'password="private alpha beta',
+    '"password": "private \\"alpha\\" beta"',
+  ])('excludes recognized credentials from console and capture: %s', async (message) => {
+    reportClientError('auth_flow', new Error(message), { method: message });
+    await flush();
+    const output = JSON.stringify([consoleError.mock.calls, captureMock.mock.calls]);
+    for (const sentinel of ['private', 'alpha', 'beta']) expect(output).not.toContain(sentinel);
+    expect(captureMock).toHaveBeenCalledTimes(1);
+    expect(output).toContain('[redacted]');
+  });
+
   it('captures a sanitized client_error event with route path only', async () => {
     window.history.pushState({}, '', '/fans?redirect=%2Fsecret#token');
     reportClientError('app_render', new TypeError('boom for ana@example.com'), { method: 'google' });
@@ -72,17 +91,39 @@ describe('client error reporting', () => {
       kind: 'injected', route: '/reset?code=private-code',
       error_message: 'raw-private-message', error_name: 'raw-private-name',
       commit: 'raw-private-commit', token: 'private-token', account: 'private-account',
+      online: !navigator.onLine, visibility: 'raw-private-visibility',
       component_stack: 'at https://tdf.test/component?code=private-stack-code for ana@example.com',
     };
     reportClientError('auth_flow', new Error('benign'), context);
     await flush();
     const properties = captureMock.mock.calls[0]?.[1] as Record<string, unknown>;
-    expect(properties).toMatchObject({ kind: 'auth_flow', route: '/fans', error_name: 'Error', error_message: 'benign', method: 'google', timed_out: true });
+    expect(properties).toMatchObject({
+      kind: 'auth_flow', route: '/fans', error_name: 'Error', error_message: 'benign',
+      method: 'google', timed_out: true, commit: typeof __APP_COMMIT__ === 'string' ? __APP_COMMIT__ : 'dev',
+      online: navigator.onLine, visibility: document.visibilityState,
+    });
     for (const sentinel of ['private-', 'raw-private-', 'ana@example.com']) {
       expect(JSON.stringify(properties)).not.toContain(sentinel);
     }
     expect(properties).not.toHaveProperty('token');
     expect(properties).not.toHaveProperty('account');
+  });
+
+  it('redacts every selected text field and rejects nonboolean diagnostic flags', async () => {
+    const context = Object.fromEntries(
+      ['boundary', 'component_stack', 'source', 'watchdog_route', 'method'].map((key) => [key,
+        'ana@example.com password=private-password https://tdf.test/reset?code=private-code#private-fragment']),
+    );
+    reportClientError('session_bootstrap', new Error('benign'), {
+      ...context, timed_out: 'private-flag', had_stored_session: 1, creating_account: false, linking: true,
+    });
+    await flush();
+    const properties = captureMock.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(JSON.stringify(properties)).not.toContain('private-');
+    expect(JSON.stringify(properties)).not.toContain('ana@example.com');
+    expect(properties).toMatchObject({ creating_account: false, linking: true });
+    expect(properties['timed_out']).toBeUndefined();
+    expect(properties['had_stored_session']).toBeUndefined();
   });
 
   it.each([

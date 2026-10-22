@@ -12,6 +12,10 @@ The reporter redacts names, messages and the explicitly selected diagnostic text
 fields. It masks emails, recognized credential labels, JWT/opaque identifiers and
 embedded HTTP/HTTPS/tdf or relative URL/path strings, including short query and
 fragment values that a URL-property sanitizer cannot recognize inside prose.
+Recognized credential labels include bearer/authorization, access/refresh/ID
+tokens, current/new passwords, API keys and client secrets with common camel,
+underscore and hyphen spellings. Quoted values, including whitespace and escaped
+quotes, are masked as a unit; unterminated quoted values are masked to the end.
 Selected boolean flags retain their actual type. Unknown context properties are
 dropped; context cannot replace the event kind, error fields, current path,
 revision, network state or document visibility. Standard analytics serialization
@@ -35,3 +39,8 @@ console arguments, unknown/reserved context keys, embedded URLs with short
 secrets, custom error names, throwing getters/loggers and the actual routed
 boundary-to-reporter integration. These are executable tests, not a universal
 privacy or whole-application logging proof.
+
+Regression coverage also runs the routed boundary through the real shared
+reporter, analytics client and SDK `before_send` envelope using synthetic data.
+Negative context injections cover kind, name, message, path, revision, network
+state and visibility; retry controls are exercised against a rendered boundary.
