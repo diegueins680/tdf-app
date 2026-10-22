@@ -2172,6 +2172,30 @@ closedCheckoutEvidenceSpec = describe "closed checkout approval evidence" $
               pssCanRetryOrFallback dto `shouldBe` False
               request "wrong-synthetic-token" >>= assertHttpError 404
 
+          it "denies unauthorized polling before missing or invalid encryption configuration" $
+            \pool -> withRecoveryEnvironment $ do
+              payment <- closedPaymentFixture pool provider closedStatus
+              otherCheckout <- toText <$> nextRandom
+              otherAttempt <- toText <$> nextRandom
+              let checkoutId = Checkout.checkoutReferenceId (Execution.bppCheckout payment)
+                  attemptId = Checkout.paymentAttemptReferenceId (Execution.bppAttempt payment)
+                  _ :<|> getSession :<|> _ = providerExecutionServer
+                  request checkout attempt token = runHandler
+                    (runReaderT (getSession checkout attempt token) (queryEnv pool))
+              before <- runSqlPool (paymentSnapshot payment) pool
+              forM_ [Nothing, Just "too-short"] $ \key -> do
+                maybe (unsetEnv "COMMERCE_EVENT_ENCRYPTION_KEY")
+                  (setEnv "COMMERCE_EVENT_ENCRYPTION_KEY") key
+                request checkoutId attemptId Nothing >>= assertHttpError 404
+                request checkoutId attemptId (Just "wrong-synthetic-token") >>= assertHttpError 404
+                request otherCheckout attemptId (Just checkoutId) >>= assertHttpError 404
+                request checkoutId otherAttempt (Just checkoutId) >>= assertHttpError 404
+                request checkoutId attemptId (Just checkoutId) >>= assertHttpError 503
+              setEnv "COMMERCE_EVENT_ENCRYPTION_KEY" (T.unpack recoveryEncryptionKey)
+              request checkoutId attemptId (Just checkoutId) >>= requireRight
+                >>= (\dto -> pssCheckoutId dto `shouldBe` checkoutId)
+              runSqlPool (paymentSnapshot payment) pool `shouldReturn` before
+
           it "fails closed if a retained review record has conflicting money" $ \pool -> do
             payment <- closedPaymentFixture pool provider closedStatus
             result <- parsedQuery payment Adapter.AdapterSucceeded
