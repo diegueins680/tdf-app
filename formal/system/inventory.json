@@ -5112,7 +5112,7 @@
     {
       "id": "SURFACE-a8aba62876599655",
       "path": "scripts/test-event-operations-api-migration.sh",
-      "sha256": "b86cc578d9092b396ef2d3972270f19eddc845328f76c2f9df931ad0461f427f",
+      "sha256": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25827,7 +25827,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f9432e72e639960803c1466be45a4ca5bede963f1dc0b4647a79d0d69b017dc6",
+      "sha256": "b185db4576c5efbb59dc13ede679c47d54a8ae2add39b85366ba3daa78fe3db1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -25883,7 +25883,7 @@
     },
     {
       "path": "formal/system/test-database-readiness.md",
-      "sha256": "8385975f6603ba7dcf5b6fbeda05a94afe76f8cc61d30f563cb4c994dd9190a3",
+      "sha256": "e27a3491b30eb1c96a349def2a9c2dce272921cd9621986a1c146889e1da05df",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

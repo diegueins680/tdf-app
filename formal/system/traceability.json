@@ -10584,19 +10584,20 @@
     {
       "id": "SYS-CI-DB-001",
       "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
-      "statement": "The owned event-operations API migration test must wait for a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
+      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
       "domain": "SYS",
       "actors": [
         "CI fixture runner",
         "Developer"
       ],
       "preconditions": [
-        "The runner has started its own disposable PostgreSQL 16 container with a fixed synthetic test database."
+        "The runner has started its own disposable PostgreSQL 16 container with a fixed synthetic test database and SCRAM host authentication."
       ],
       "inputs": [
         "Owned container identity",
         "Fixed test database",
-        "Bounded final-listener readiness query"
+        "Bounded final-listener readiness query",
+        "Explicit synthetic client password for the TCP probe"
       ],
       "state": {
         "states": [
@@ -10607,25 +10608,26 @@
         ]
       },
       "allowedTransitions": [
-        "Starting or initialization-only -> final server ready after the loopback TCP query succeeds.",
+        "Starting or initialization-only -> final server ready after the authenticated loopback TCP query succeeds.",
         "Readiness deadline exceeded -> failed with container diagnostics."
       ],
       "forbiddenTransitions": [
         "A socket-only initialization query succeeds -> apply fixtures.",
-        "Readiness deadline exceeded -> continue SQL tests."
+        "Readiness deadline exceeded -> continue SQL tests.",
+        "A missing or incorrect client password -> ready on the SCRAM host listener."
       ],
       "effects": [
         "Wait for the final database process before fixture and migration SQL."
       ],
       "authorization": "Only the existing owned disposable test container is addressed; this runner grants no production authority.",
       "privacy": "The database and its password are fixed synthetic test values.",
-      "concurrency": "The temporary initialization process can stop after accepting socket connections; TCP readiness excludes that process.",
+      "concurrency": "The temporary initialization process can stop after accepting socket connections; authenticated TCP readiness excludes that process and requires the synthetic client credential.",
       "idempotency": "Readiness SELECT has no fixture or migration side effect.",
       "failure": "Retain the existing 30-attempt bound, print container logs and fail when the final listener is unavailable.",
       "recovery": "Repair fixture startup and rerun the complete Linux migration job; no SQL assertion or audit policy is waived.",
-      "observability": "Real PostgreSQL control: old socket probe accepts initialization, repaired TCP probe rejects initialization/stopped phases and accepts the final listener.",
+      "observability": "Actual PostgreSQL controls: the original socket probe accepts initialization; the authenticated TCP probe rejects initialization/stopped phases and missing/wrong client credentials, then accepts the final SCRAM listener and permits the first real fixture.",
       "authority": "inferred",
-      "source": "Failed hosted postgres-api run 39712279548; official postgres image initialization lifecycle; local PostgreSQL 16 socket/TCP reproduction on 2026-10-21.",
+      "source": "Failed hosted postgres-api run 39712279548; official postgres image initialization lifecycle; local PostgreSQL 16 socket/TCP reproduction on 2026-10-21. PostgreSQL 16 libpq environment-variable and initdb authentication documentation; password-authenticated protocol controls on 2026-10-22.",
       "property": "Initialization-only PostgreSQL cannot admit the API fixture SQL.",
       "contract": "formal/system/test-database-readiness.md",
       "implementation": [
@@ -10635,17 +10637,17 @@
         ".github/workflows/event-operations-formal.yml"
       ],
       "formalModels": [],
-      "verification": "Actual PostgreSQL 16 socket-only and TCP phases exercise the extracted readiness query; the full owned-container migration job remains required.",
-      "evidence": "Private 2026-10-21 protocol receipt and exact-head hosted postgres-api job; the original failed run is retained.",
+      "verification": "Actual PostgreSQL 16 socket-only, stopped and SCRAM TCP phases exercise the extracted readiness command, including missing/wrong-password negative controls. The full current-head owned-container migration job and independent review remain required.",
+      "evidence": "formal/system/test-database-readiness-protocol-2026-10-22.json; original 2026-10-21 socket/TCP protocol receipt. Current-head hosted Docker migration qualification remains pending; the original failed run is retained.",
       "status": "specified and implemented",
       "critical": false,
-      "confidence": "High for distinguishing these finite server phases; no general fixture-readiness or full Docker execution claim.",
+      "confidence": "High for these finite readiness/authentication controls; no general fixture-readiness or full Docker execution claim.",
       "ambiguity": [
         "Other disposable PostgreSQL runners have separate readiness and ownership obligations."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Actual native PostgreSQL phase controls pass; fresh combined-head Linux Docker migration qualification is pending."
+        "reason": "Actual native PostgreSQL lifecycle and missing/wrong-password controls pass; fresh current-head Linux Docker migration qualification remains pending."
       }
     }
   ],
@@ -11075,7 +11077,7 @@
     "scripts/test-community-search.py": "c6be90dbc19bfd6fc6c06e72c300f77f75729e94e518d5132560e94cd1b58c24",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
-    "scripts/test-event-operations-api-migration.sh": "b86cc578d9092b396ef2d3972270f19eddc845328f76c2f9df931ad0461f427f",
+    "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
@@ -24863,7 +24865,7 @@
     {
       "id": "SURFACE-a8aba62876599655",
       "path": "scripts/test-event-operations-api-migration.sh",
-      "sha256": "b86cc578d9092b396ef2d3972270f19eddc845328f76c2f9df931ad0461f427f",
+      "sha256": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47560,7 +47562,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f9432e72e639960803c1466be45a4ca5bede963f1dc0b4647a79d0d69b017dc6",
+      "sourceSha256": "b185db4576c5efbb59dc13ede679c47d54a8ae2add39b85366ba3daa78fe3db1",
       "definition": {
         "states": [
           "absent",
@@ -47590,7 +47592,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f9432e72e639960803c1466be45a4ca5bede963f1dc0b4647a79d0d69b017dc6",
+      "sourceSha256": "b185db4576c5efbb59dc13ede679c47d54a8ae2add39b85366ba3daa78fe3db1",
       "definition": {
         "export": [
           "queued",
