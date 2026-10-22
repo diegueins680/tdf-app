@@ -328,7 +328,8 @@
     "runtimeMainRefresh": "docs/catalog-persistence/runtime-main-refresh-20261021.json",
     "ledgerReadinessIntegration": "docs/catalog-persistence/ledger-readiness-reconciliation-20261021.json",
     "ledgerSnapshotReadinessIntegration": "docs/catalog-persistence/ledger-snapshot-readiness-reconciliation-20261021.json",
-    "ledgerCombinedIntegration": "docs/catalog-persistence/ledger-combined-reconciliation-20261022.json"
+    "ledgerCombinedIntegration": "docs/catalog-persistence/ledger-combined-reconciliation-20261022.json",
+    "termsHistoryAppendOnly": "docs/catalog-persistence/terms-history-append-only-reconciliation-20261022.json"
   },
   "decisions": [
     {
@@ -17843,12 +17844,12 @@
       "reviewBatch": "checkout-session-readiness-2026-10-14"
     },
     {
-      "id": "3834687cda771cfcd52b",
+      "id": "2b073f20afd2f3798b1e",
       "classification": "security-system-registry",
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial deployment history.",
-      "justification": "The ordered 216-entry deployment manifest retains the exact 215-entry ledger dependency prefix and appends the unchanged physical parent-row-version fence. Its original SQL and introduction identity are preserved. It remains a reviewed deployment registry with separately gated production execution; draft source reconciliation does not authorize deployment or ledger transactions.",
+      "justification": "The ordered 217-entry deployment registry preserves all 216 prior financial-candidate entries and SQL bodies, including the exact protected 211-entry prefix, and appends the terms-history mutation guard using its committed SQL ancestor. It is a source-controlled deployment contract, not selectable product data. This review grants no production execution or retention authorization.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
       "evidence": {
@@ -17856,9 +17857,9 @@
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 216
+        "valueCount": 217
       },
-      "reviewBatch": "ledger-snapshot-readiness-integration-2026-10-21",
+      "reviewBatch": "terms-history-append-only-2026-10-22",
       "sourceReviewReferences": [
         {
           "sourceRevision": "935beed5d053bfc75d1a0e1a6e4ae204c1c64423",
@@ -17878,6 +17879,16 @@
             "id": "39f2c175344542009253"
           },
           "sourceEntryCanonicalSha256": "f56241f0be995649c07a9ebe91c9dd53a8c97bec21d2dc10e0fbc108cc1fb096",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "b9ae3d73b0aba7c407c8d1fc27cda99fe40c3f37",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "fa14580859598fdc3947c99242c282e8ac2fa777980638b834d488c344efcb62",
+          "sourceEntry": {
+            "id": "3834687cda771cfcd52b"
+          },
+          "sourceEntryCanonicalSha256": "728c8893997dfac2efbb08984e1d3edc903a0629b80f2161f11f2dbd87de1be4",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]

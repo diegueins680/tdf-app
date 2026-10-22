@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "3834687cda771cfcd52b",
+      "currentId": "2b073f20afd2f3798b1e",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 216,
-      "change": "Ordered 216-entry source manifest retains the exact 215-entry ledger dependency prefix and appends the original physical parent-row-version fence; both parent source reviews remain immutable history. Production execution is separately gated.",
+      "valueCount": 217,
+      "change": "The 217-entry registry preserves all 216 prior financial migration entries and SQL bodies, then adds an append-only history guard. Prior review remains immutable source history; production execution and retention are separately gated.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -450,6 +450,16 @@
             "index": 8
           },
           "sourceEntryCanonicalSha256": "79ba6acb6cabcb85d7d5c789bae340ce39e95921794ce093bcfdae689f5deeb9",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "b9ae3d73b0aba7c407c8d1fc27cda99fe40c3f37",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "10ce2dabd94e98ffdae8a5cf8f9d5b4381da3f90817e498d7acd66efb66bc669",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "47af3bff5dc25704664d0dcfde68a6ea7a97d2f267a325b25d176aee9844b076",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]

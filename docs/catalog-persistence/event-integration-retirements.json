@@ -678,10 +678,10 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "3834687cda771cfcd52b",
-      "reason": "Ordered 216-entry source manifest retains the exact 215-entry ledger dependency prefix and appends the original physical parent-row-version fence; both parent source reviews remain immutable history. Production execution is separately gated.",
+      "replacementId": "2b073f20afd2f3798b1e",
+      "reason": "The 217-entry registry preserves all 216 prior financial migration entries and SQL bodies, then adds an append-only history guard. Prior review remains immutable source history; production execution and retention are separately gated.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
-      "currentResolution": "Ordered 216-entry source manifest retains the exact 215-entry ledger dependency prefix and appends the original physical parent-row-version fence; both parent source reviews remain immutable history. Production execution is separately gated.",
+      "currentResolution": "The 217-entry registry preserves all 216 prior financial migration entries and SQL bodies, then adds an append-only history guard. Prior review remains immutable source history; production execution and retention are separately gated.",
       "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
       "sourceReviewReferences": [
         {
@@ -784,6 +784,16 @@
             "index": 10
           },
           "sourceEntryCanonicalSha256": "44a33be281bac6e77b450604c95c9f6393b647b2501a3fc20b836d4f6d25401b",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "b9ae3d73b0aba7c407c8d1fc27cda99fe40c3f37",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "e293f98c24ac4f63c237f5d271e9c3ded79d18fbb73a17d4c8f162f296d343b4",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "3a556dbf4a14187d51c05fffd34d55d31b87f3b287dbaa21b5fc4640d0a9c58f",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]
