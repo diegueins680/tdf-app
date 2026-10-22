@@ -783,8 +783,12 @@ assumptions and the recovery gaps found are stated there.
 ## Public knowledge retrieval
 
 `PublicKnowledgeRead.tla` models PRIV-RAG-001 with one course, two metadata values
-and course/private source classes. The shared runner requires the positive model
-and all four named negative controls. See
+and course/private source classes, with a Boolean abstraction of normalized
+production identity collisions. The shared runner requires the positive model
+and all five named negative controls; the collision control retains ranking
+checks and removes only the metadata recheck. `PublicKnowledgeIndex.tla` also
+rejects an ambiguous captured corpus, with its own named guard-removal control.
+Neither model proves the multi-row normalization classifier. See
 [the canonical retrieval contract](../system/public-knowledge-retrieval.md) for
 statement-snapshot assumptions, source/HTTP mappings and delivery exclusions.
 `ChatNotificationAuthorization.tla` models one notification target with stale cached membership/messages. Fresh success is required before display/read effects; failure and retry remain fail-closed. `ChatNotificationCachedDisplay.cfg` and `ChatNotificationEarlyRead.cfg` remove that guard and require named counterexamples. This finite client-admission model does not prove ordinary polling or backend authorization (MSG-NOTIFY-001).
