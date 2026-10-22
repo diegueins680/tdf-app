@@ -20,7 +20,7 @@ import           Control.Monad          (forM, forM_, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Exception.Safe (catchAny)
 import           Data.Aeson             (Value, ToJSON(..), FromJSON(..), object, (.=), encode, eitherDecode, withObject, (.:))
-import           Data.ByteString.Lazy   (ByteString, toStrict)
+import           Data.ByteString.Lazy   (ByteString, fromStrict, toStrict)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
@@ -38,7 +38,7 @@ import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           Data.Time              (Day, UTCTime, diffUTCTime, getCurrentTime, utctDay)
-import           Database.Persist       (Entity(..), Key, getEntity)
+import           Database.Persist       (Entity(..), Key)
 import           Database.Persist.Sql
   ( PersistValue(..), Single(..), SqlPersistT, toSqlKey, fromSqlKey
   , rawExecute, rawSql, runSqlPool
@@ -201,9 +201,11 @@ buildPublicCourseDocuments cfg today = do
   -- nor crowd eligible courses out of the newest public corpus.
   ambiguous <- loadAmbiguousProductionSlugs
   courses <- rawSql
-    ("SELECT ?? FROM course WHERE " <> publicCourseEligibilitySql
+    ("SELECT course.id FROM course WHERE " <> publicCourseEligibilitySql
       <> " ORDER BY updated_at DESC LIMIT 50") (publicCourseEligibilityParams cfg today ambiguous)
-  catMaybes <$> traverse (loadPublicCourseDocument cfg today) courses
+    :: SqlPersistT IO [Single Int64]
+  catMaybes <$> traverse
+    (\(Single courseId) -> loadPublicCourseDocument cfg today (toSqlKey courseId)) courses
 
 loadAmbiguousProductionSlugs :: SqlPersistT IO [Text]
 loadAmbiguousProductionSlugs = do
@@ -231,22 +233,27 @@ publicCourseEligibilityParams cfg today ambiguous =
   ]
 
 loadPublicCourseDocument
-  :: AppConfig -> Day -> Entity Trials.Course -> SqlPersistT IO (Maybe PublicCourseDocument)
-loadPublicCourseDocument cfg today entity@(Entity courseId course) = do
-  ambiguous <- if "produccion-musical-" `T.isPrefixOf` Trials.courseSlug course
-    then loadAmbiguousProductionSlugs
-    else pure []
-  firstSession <- if "produccion-musical-" `T.isPrefixOf` Trials.courseSlug course
-    then do
-      rows <- rawSql "SELECT min(date) FROM course_session_model WHERE course_id = ?"
-        [PersistInt64 (fromSqlKey courseId)] :: SqlPersistT IO [Single (Maybe Day)]
-      pure $ case rows of
-        [Single date] -> date
+  :: AppConfig -> Day -> Key Trials.Course -> SqlPersistT IO (Maybe PublicCourseDocument)
+loadPublicCourseDocument cfg today courseId = do
+  -- One SELECT snapshot binds fields, lead time and identity classification.
+  -- A later collision removal must not authorize fields read while ambiguous.
+  rows <- rawSql
+    "SELECT ??,\
+    \ (SELECT min(session.date) FROM course_session_model session\
+    \ WHERE session.course_id = course.id),\
+    \ CASE WHEN course.slug LIKE 'produccion-musical-%' THEN\
+    \ (SELECT COALESCE(jsonb_agg(identity.slug),'[]'::jsonb)::text FROM course identity)\
+    \ ELSE '[]' END FROM course WHERE course.id = ?"
+    [PersistInt64 (fromSqlKey courseId)]
+    :: SqlPersistT IO [(Entity Trials.Course, Single (Maybe Day), Single Text)]
+  pure $ case rows of
+    [(entity@(Entity _ course), Single firstSession, Single identities)] ->
+      case eitherDecode (fromStrict (TE.encodeUtf8 identities)) of
+        Right slugs
+          | Trials.courseSlug course `notElem` CoursePublic.ambiguousProductionCourseSlugs slugs ->
+              courseToDoc cfg today firstSession entity
         _ -> Nothing
-    else pure Nothing
-  pure $ if Trials.courseSlug course `elem` ambiguous
-    then Nothing
-    else courseToDoc cfg today firstSession entity
+    _ -> Nothing
 
 courseToDoc :: AppConfig -> Day -> Maybe Day -> Entity Trials.Course -> Maybe PublicCourseDocument
 courseToDoc cfg today firstSession (Entity _ c)
@@ -497,10 +504,7 @@ selectRagChunks cfg embedding =
             <> [PersistText vector, PersistInt64 limitVal])
           :: SqlPersistT IO [Single Int64]
         docs <- forM rows $ \(Single courseId) -> do
-          course <- getEntity (toSqlKey courseId :: Key Trials.Course)
-          doc <- case course of
-            Nothing -> pure Nothing
-            Just entity -> loadPublicCourseDocument cfg today entity
+          doc <- loadPublicCourseDocument cfg today (toSqlKey courseId)
           pure (courseDocumentContent <$> doc)
         pure (catMaybes docs)
 

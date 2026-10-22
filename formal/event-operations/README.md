@@ -788,8 +788,10 @@ assumptions and the recovery gaps found are stated there.
 `PublicKnowledgeRead.tla` models PRIV-RAG-001 with one course, two metadata values
 and course/private source classes, with a Boolean abstraction of normalized
 production identity collisions. The shared runner requires the positive model
-and all five named negative controls; the collision control retains ranking
-checks and removes only the metadata recheck. `PublicKnowledgeIndex.tla` also
+and all six named negative controls; the collision control retains ranking
+checks and removes only the metadata recheck. The mixed-snapshot control keeps
+both admission checks but reads fields separately from their collision inputs.
+`PublicKnowledgeIndex.tla` also
 rejects an ambiguous captured corpus, with its own named guard-removal control.
 Neither model proves the multi-row normalization classifier. See
 [the canonical retrieval contract](../system/public-knowledge-retrieval.md) for
