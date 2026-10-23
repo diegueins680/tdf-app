@@ -17880,7 +17880,7 @@
       "id": "3f336173e03f10fc023c",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
-      "specializedModel": "reviewed production migration manifest and applied migration ledger",
+      "specializedModel": "technical_constant_allowlist",
       "priority": "P0-cutover",
       "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
       "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
