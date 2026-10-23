@@ -10648,6 +10648,80 @@
         "classification": "PARTIAL",
         "reason": "Actual native PostgreSQL lifecycle and missing/wrong-password controls pass; fresh current-head Linux Docker migration qualification remains pending."
       }
+    },
+    {
+      "id": "SYS-CI-BROWSER-001",
+      "title": "Persona CI uses aligned immutable bundled browsers",
+      "statement": "Before required persona journeys run, an immutable official Playwright image, all locked and installed Playwright packages and the bundled browser identity must agree, and Chromium, Firefox and WebKit must each launch successfully. Existing application journeys, assertions, time limits and aggregate gates remain required.",
+      "domain": "SYS",
+      "actors": [
+        "CI runner",
+        "Developer"
+      ],
+      "preconditions": [
+        "Trusted repository end-to-end tests execute in the pinned official Noble image after npm ci and the existing Node 22 setup."
+      ],
+      "inputs": [
+        "Digest-pinned container image",
+        "Package lock and installed package versions",
+        "Bundled image metadata",
+        "Bundled browser executable launches"
+      ],
+      "state": {
+        "states": [
+          "unvalidated",
+          "aligned",
+          "ready",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Unvalidated -> aligned after image, lockfile, installed versions, directory and bundled identity all match.",
+        "Aligned -> ready only after every required browser launches and closes.",
+        "Any validation or launch error -> failed."
+      ],
+      "forbiddenTransitions": [
+        "Mutable or mismatched image -> run journeys.",
+        "Missing or failed browser -> emit a complete preflight success.",
+        "Any preflight or application-stage failure -> passing aggregate quality."
+      ],
+      "effects": [
+        "Use bundled browser executables and system dependencies instead of per-job package installation."
+      ],
+      "authorization": "This test infrastructure grants no production or release authority. Root container execution addresses only trusted synthetic end-to-end tests.",
+      "privacy": "Preflight reports browser names and versions only; application test artifacts retain existing sanitization and retention.",
+      "concurrency": "Existing browser workers and fixture isolation are unchanged; the container uses the official shared-memory recommendation.",
+      "idempotency": "Preflight does not install packages or modify application data.",
+      "failure": "Fail closed on missing metadata, version drift, invalid pin, browser-path redirection or any failed launch; there is no installer fallback.",
+      "recovery": "Update the lockfile and verified official image together, then require all existing hosted browser stages and protected admission.",
+      "observability": "Emit one bundled-browser-preflight record only after all required browsers have launched and closed; retain existing application artifacts.",
+      "authority": "inferred",
+      "source": "Repeated long Playwright installation steps in hosted runs39827271101 and39873570293; official Playwright Docker/CI guidance and immutable1.59.1 image metadata.",
+      "property": "Incomplete or mismatched browser infrastructure cannot admit required persona journeys or replace their assertions.",
+      "contract": "formal/system/browser-ci-image.md",
+      "implementation": [
+        ".github/workflows/ci.yml",
+        "scripts/verify-playwright-image.mjs",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/playwright-image.test.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Finite negative controls reject mutable/foreign pins, package drift, stale metadata, redirected browser directories and partial launch success. Runtime metadata and all three actual browser launches are checked before unchanged hosted journeys; complete current-head Linux qualification remains required.",
+      "evidence": "Current-head hosted preflight and persona/deletion/discovery artifacts remain pending. Registry manifest/configuration digests were verified separately; mocks do not establish Linux executable availability.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Finite version/launch-closure controls only; fresh actual Linux image and application-test qualification is pending.",
+      "ambiguity": [
+        "Registry and image-pull availability remain external dependencies.",
+        "Successful browser launches do not establish application conformance."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Pure version checks and mocked launch failure/cleanup controls do not establish complete installed-image or application correspondence; fresh hosted execution remains required."
+      }
     }
   ]
 }
