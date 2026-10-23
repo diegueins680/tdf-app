@@ -10760,7 +10760,7 @@
     {
       "id": "SYS-CI-BROWSER-001",
       "title": "Persona CI uses aligned immutable bundled browsers",
-      "statement": "Before required persona journeys run, an immutable official Playwright image, all locked and installed Playwright packages and the bundled browser identity must agree, and Chromium, Firefox and WebKit must each launch successfully. Existing application journeys, assertions, time limits and aggregate gates remain required.",
+      "statement": "Before required persona journeys run, an immutable official Playwright image, all locked and installed Playwright packages and the bundled browser identity must agree, the browser process must own its home directory, and Chromium, Firefox and WebKit must each launch successfully. Existing application journeys, assertions, time limits and aggregate gates remain required.",
       "domain": "SYS",
       "actors": [
         "CI runner",
@@ -10773,7 +10773,8 @@
         "Digest-pinned container image",
         "Package lock and installed package versions",
         "Bundled image metadata",
-        "Bundled browser executable launches"
+        "Bundled browser executable launches",
+        "Process identity and actual home-directory owner"
       ],
       "state": {
         "states": [
@@ -10784,19 +10785,20 @@
         ]
       },
       "allowedTransitions": [
-        "Unvalidated -> aligned after image, lockfile, installed versions, directory and bundled identity all match.",
+        "Unvalidated -> aligned after image, lockfile, installed versions, directory and bundled identity all match and the process owns its home.",
         "Aligned -> ready only after every required browser launches and closes.",
         "Any validation or launch error -> failed."
       ],
       "forbiddenTransitions": [
         "Mutable or mismatched image -> run journeys.",
         "Missing or failed browser -> emit a complete preflight success.",
-        "Any preflight or application-stage failure -> passing aggregate quality."
+        "Any preflight or application-stage failure -> passing aggregate quality.",
+        "Browser process and home have different owners -> launch browsers."
       ],
       "effects": [
         "Use bundled browser executables and system dependencies instead of per-job package installation."
       ],
-      "authorization": "This test infrastructure grants no production or release authority. Root container execution addresses only trusted synthetic end-to-end tests.",
+      "authorization": "The job runs as user 1001 to match GitHub workspace/home ownership; this test infrastructure grants no production or release authority.",
       "privacy": "Preflight reports browser names and versions only; application test artifacts retain existing sanitization and retention.",
       "concurrency": "Existing browser workers and fixture isolation are unchanged; the container uses the official shared-memory recommendation.",
       "idempotency": "Preflight does not install packages or modify application data.",
@@ -10817,8 +10819,8 @@
         "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
-      "verification": "Finite negative controls reject mutable/foreign pins, package drift, stale metadata, redirected browser directories and partial launch success. Runtime metadata and all three actual browser launches are checked before unchanged hosted journeys; complete current-head Linux qualification remains required.",
-      "evidence": "Current-head hosted preflight and persona/deletion/discovery artifacts remain pending. Registry manifest/configuration digests were verified separately; mocks do not establish Linux executable availability.",
+      "verification": "Finite negative controls reject mutable/foreign pins, package drift, stale metadata, redirected browser directories partial launch success and the root/regular-user home mismatch observed in the first Linux preflight. Runtime metadata and all three actual browser launches are checked before unchanged hosted journeys; complete current-head Linux qualification remains required.",
+      "evidence": "The initial hosted Linux preflight at fb66f5189e2484b90d6dbb825a0d2a00cebe7022 fails before application tests because root does not own GitHub's mounted home. Preserve that result. Corrected current-head preflight and all three browser stages remain required; registry metadata and mocks alone do not qualify the image.",
       "status": "specified and implemented",
       "critical": false,
       "confidence": "Finite version/launch-closure controls only; fresh actual Linux image and application-test qualification is pending.",

@@ -5,6 +5,7 @@ journeys start, the official Noble image must be pinned by SHA-256, its version
 must equal all three locked and installed Playwright packages, and its bundled
 metadata must identify that version and image. Chromium, Firefox and WebKit must
 each launch and close successfully. A missing browser or mismatch fails the job.
+The browser process must own its actual home directory before any browser launch.
 
 The full persona journeys, default-off deletion rollout and discovery/navigation
 stages remain required, with their original assertions, time limits, artifacts,
@@ -25,6 +26,14 @@ and [metadata writer](https://github.com/microsoft/playwright/blob/v1.59.1/packa
 define the browser directory and bundled identity. The manifest and Linux amd64
 configuration were fetched from Microsoft's registry with digest verification.
 The existing Node 22 setup remains authoritative for repository commands.
+
+The first Linux preflight validated the pinned versions and launched Chromium,
+then Firefox refused the root process using GitHub's mounted regular-user home.
+The job now uses user 1001, as in the
+[official GitHub container example](https://playwright.dev/docs/ci#via-containers).
+Preflight checks process/home ownership without changing the host environment.
+The original failed Linux attempt remains retained; it is not a passing image
+qualification.
 
 Negative controls cover mutable/foreign images, digest syntax, package drift,
 stale metadata, browser-path redirection and failed launches. Mock launch controls

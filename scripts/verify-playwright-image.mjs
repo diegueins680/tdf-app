@@ -1,11 +1,18 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 export const packages = Object.freeze(['@playwright/test', 'playwright', 'playwright-core']);
 export const browsers = Object.freeze(['chromium', 'firefox', 'webkit']);
+
+export function validateHomeOwner(uid, homeUid) {
+  assert.ok(Number.isInteger(uid) && uid >= 0 && Number.isInteger(homeUid) && homeUid >= 0,
+    'Browser user and home owner must be known');
+  assert.equal(uid, homeUid, 'Browser user must own its home directory');
+}
 
 export function validateImage({ image, locked, installed, metadata, browserPath }) {
   const match = /^mcr\.microsoft\.com\/playwright:v(\d+\.\d+\.\d+)-noble@sha256:[a-f0-9]{64}$/.exec(image);
@@ -47,12 +54,16 @@ async function main() {
       'utf8')).version;
   }
   const metadata = JSON.parse(await readFile('/ms-playwright/.docker-info', 'utf8'));
+  const browserUser = process.getuid();
+  validateHomeOwner(browserUser, (await stat(homedir())).uid);
   const version = validateImage({
     image: workflow.jobs['persona-web-e2e'].container.image,
     locked, installed, metadata, browserPath: process.env.PLAYWRIGHT_BROWSERS_PATH,
   });
   const results = await launchBrowsers(await import('playwright'));
-  console.log(JSON.stringify({ kind: 'bundled-browser-preflight', playwright: version, browsers: results }));
+  console.log(JSON.stringify({
+    kind: 'bundled-browser-preflight', playwright: version, browserUser, browsers: results,
+  }));
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -1,6 +1,22 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { validateImage, launchBrowsers, packages, browsers } from '../verify-playwright-image.mjs';
+import {
+  validateImage, validateHomeOwner, launchBrowsers, packages, browsers,
+} from '../verify-playwright-image.mjs';
+
+test('accepts the CI browser user owning its mounted home', () => {
+  assert.doesNotThrow(() => validateHomeOwner(1001, 1001));
+});
+
+test('rejects the root process and regular-user home mismatch observed in Linux CI', () => {
+  assert.throws(() => validateHomeOwner(0, 1001), /Browser user must own its home directory/);
+});
+
+test('rejects missing or invalid user/home ownership', () => {
+  assert.throws(() => validateHomeOwner(undefined, 1001), /must be known/);
+  assert.throws(() => validateHomeOwner(1001, undefined), /must be known/);
+  assert.throws(() => validateHomeOwner(-1, 1001), /must be known/);
+});
 
 function fixture() {
   const version = '1.59.1';
