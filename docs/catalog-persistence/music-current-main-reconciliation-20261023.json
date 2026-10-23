@@ -107,5 +107,17 @@
       "introducedBy": "4fc88645f511d4c70aca2b969ec412081664978d",
       "sqlSha256": "d80703d04d4508c3a3e0b47ffe6eb2583bc1a29e84a6b05f3f09f1afe17e2782"
     }
-  ]
+  ],
+  "protectedFormalRefresh": {
+    "previousCandidate": "28e77bb867494e05d3c0423af274b886889b271f",
+    "actualProtectedMain": "030365aabfb46c14e2962e054cf3b22192cda1a8",
+    "mergeBase": "c02e758beb999d3e0fee0baee2b0e49b33e5a05a",
+    "canonicalObjectCounts": {
+      "formal/system/requirements.json": 135,
+      "formal/system/authority-decisions.json": 87,
+      "formal/system/research.json": 77,
+      "docs/catalog-persistence/catalog-list-decisions.json": 1326
+    },
+    "resolution": "Exact compatible three-way record preservation. Both additive music and assurance CI steps retained. Application, clients, Mobile pin, browser journeys and213 manifest unchanged; derived evidence regenerated for the combined source."
+  }
 }

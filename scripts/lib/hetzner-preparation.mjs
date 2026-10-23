@@ -71,6 +71,7 @@ export function prepareHetznerRelease({ contract, receipt, provenance, now = Dat
       productionRolloutAllowed: false,
       reason: 'Explicit product decision: capture only with Operations enabled; define retention before rollout. Permanent sender identifiers in event/audit records are not approved by merging the guard.' }],
     remainingGates: [
+      'Fresh exact-artifact formal assurance: no refuted mandatory P0 or stale proven claim; enumerate every unproven critical obligation and require authenticated owner risk acceptance',
       'Current exact-head review, all quality gates, normal merge and post-merge CI',
       'Registry image digest and embedded version bound to merged source; compatible reviewed recovery image',
       'Exclusive release lock; recheck runtime identity, ledger, effective Compose configuration and provider/feature flags',

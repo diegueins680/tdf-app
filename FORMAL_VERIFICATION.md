@@ -33,6 +33,12 @@ The event-operations command additionally requires `JAVA_BIN` (optional), `TLA2T
 `ALLOY_JAR`. CI downloads the checksum-pinned official releases in the dedicated
 `event-operations-formal.yml` workflow.
 
+Each formal run gives TLC its own Java temporary directory, and each PlusCal
+translation uses its own scratch directory. TLC remains sequential within a run:
+version 1.7.2 extracts standard modules into Java temporary storage and removes
+them on process exit. Concurrent runs must not share those extracted files.
+An extraction or parser failure is an execution failure, not an invariant result.
+
 ## Gate Policy
 
 - `verify:formal` model-checks the continuous-improvement loop and runs the formal audit.

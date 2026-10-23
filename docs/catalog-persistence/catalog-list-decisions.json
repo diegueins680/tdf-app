@@ -326,6 +326,7 @@
     },
     "publicUxMainIntegration": "docs/catalog-persistence/public-ux-main-reconciliation-20261021.json",
     "runtimeMainRefresh": "docs/catalog-persistence/runtime-main-refresh-20261021.json",
+    "formalPreparedIntegration": "docs/catalog-persistence/formal-prepared-reconciliation-20261022.json",
     "musicCurrentMainIntegration": {
       "document": "docs/catalog-persistence/music-current-main-reconciliation-20261023.json",
       "currentManifestDecisionId": "3f336173e03f10fc023c",
