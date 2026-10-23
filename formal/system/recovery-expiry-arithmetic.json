@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "c62b9cf69eed8fdcae2c32633690234118984c1b1ac2d5494a8ebba9efa31641",
+    "tdf-hq/tdf-hq.cabal": "c2242ebae6256d64325bbe38c157f6d616710f65ee4f6fc1addd26ae0803bac1",
     "formal/system/identity-lifecycle.md": "59dbd5b2c455d62cee46ddf2a6e0d7f60b1fe6ce6b8bfabcad83ca6cc5ef1a31"
   },
   "obligations": [
@@ -76,6 +76,17 @@
         "Z3 4.13.3 soundness"
       ],
       "limitations": "Predicate and time-constraint contracts only. No compiler/translator refinement, installed-schema, transaction/rollback, credential binding, clock freshness, HTTP, delivery or whole-system proof."
+    }
+  ],
+  "sourceContextReviews": [
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "030365aabfb46c14e2962e054cf3b22192cda1a8",
+      "previousSha256": "c62b9cf69eed8fdcae2c32633690234118984c1b1ac2d5494a8ebba9efa31641",
+      "currentSha256": "c2242ebae6256d64325bbe38c157f6d616710f65ee4f6fc1addd26ae0803bac1",
+      "change": "Add TDF.MusicRelease.Money to the executable and test other-modules lists only; removing those exact two lines reproduces the protected Cabal manifest byte for byte.",
+      "semanticReview": "No source search paths, module aliases, compiler options, CPP flags, dependencies, extensions or toolchain changes. The new module uses Data.Aeson, Data.Int, Data.Text and Text.Read and introduces no authorization or recovery binding. Entire authorization/RoleEnum/ingestion and ServerAuth/expiry SQL sources plus Stack/lock remain byte-identical to protected main. Conditional predicate translations and their assumptions are unchanged.",
+      "qualification": "Requires fresh source-bound SMT, serialized replay, mutation controls and independent CPC validation; full implementation/refinement remains UNPROVEN."
     }
   ]
 }

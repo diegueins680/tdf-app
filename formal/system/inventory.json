@@ -25890,7 +25890,7 @@
     },
     {
       "path": "formal/system/auth-predicates.md",
-      "sha256": "3eaab365d836f180cc851ef91b3be8afdd64c5f510900d4ef87e56defa6aaade",
+      "sha256": "ada91f1205b739e299fe47b8dc216153d2c9cdf6f099b48ee853b435fcaf2efc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26331,7 +26331,7 @@
     },
     {
       "path": "formal/system/recovery-expiry-arithmetic.md",
-      "sha256": "077d67062d89e0e835dfb548a49a35c1cf949d6758c4a55a67a7f4031a5188a4",
+      "sha256": "28ae34a5b7118b681c0dedffc34e1c8dc345ff849162c9aa2c949c2a1eb1db88",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
