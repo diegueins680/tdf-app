@@ -23,6 +23,10 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 ## Canonical package
 
+- [public-knowledge-retrieval.md](public-knowledge-retrieval.md): current public
+  metadata admission, colliding private index identities and bounded read/delete
+  interleavings with four negative controls.
+
 - [physical-recovery.md](physical-recovery.md): verified cold PG17 copy startup, isolated configuration and explicit coordinated-recovery exclusions.
 
 - [recovery-envelope.md](recovery-envelope.md): sealed executable encryption/decryption and explicit off-host recovery obligations.

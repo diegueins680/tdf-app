@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 2,
   "scope": "Active consolidated-main conformance obligations. Discovery candidates are separately indexed; missing semantic mappings remain explicit debt.",
+  "schemaVersion": 2,
   "requirements": [
     {
       "id": "SYS-RELEASE-001",
@@ -3060,42 +3060,57 @@
       "forbiddenTransitions": [
         "Return a private availability/studio/campaign chunk.",
         "Return poisoned cached raw content for an otherwise valid public course.",
-        "Return deleted-course content from a stale index."
+        "Return deleted-course content from a stale index.",
+        "Return production metadata for an identity classified as ambiguous at metadata read."
       ],
       "effects": [
         "Only current public course documents reach the calling assistant adapter."
       ],
       "authorization": "The assistant requires authentication and Social Inbox access (AUTHORITY-049); customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
-      "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
-      "concurrency": "Candidate course identities and metadata are read during one retrieval transaction; deletion committed after a read may precede response delivery and is not linearized here.",
+      "privacy": "Private historical index contents stay excluded even before reindexing. PRIV-RAG-002 prohibits private material in future refresh payloads; historical provider retention remains a separate obligation.",
+      "concurrency": "Ranking and per-course metadata reads share one transaction but separate statement snapshots under the modeled Read Committed assumption. A deletion committed after metadata read may precede delivery; no delivery-time linearization is claimed. Current document construction reads course fields, earliest session and collision inputs in one SELECT snapshot; ranking and earlier pre-limit classification remain separate statements.",
       "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
       "failure": "Missing course rows and unsupported source kinds yield no eligible document. Existing database/provider failures retain adapter error handling.",
       "recovery": "Public metadata changes take effect on the next read; stale raw text need not be purged to enforce this retrieval boundary.",
-      "observability": "Synthetic anonymous HTTP checks observe private-source exclusion, poisoned-cache rejection, metadata freshness and deleted-course exclusion.",
+      "observability": "Synthetic staff-authenticated HTTP checks observe private-source exclusion including colliding course slugs, poisoned-cache rejection, metadata freshness and deleted-course exclusion. Anonymous and unprivileged assistant calls are denied.",
       "source": "Observed anonymous private-booking-content disclosure; formal/system/bookings.md customer-facing retrieval boundary.",
       "implementation": [
-        "tdf-hq/src/TDF/RagStore.hs"
+        "tdf-hq/src/TDF/RagStore.hs",
+        "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
+        "tdf-hq/src/TDF/PublicUrl.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Courses/Production.hs"
       ],
       "tests": [
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs",
+        "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/test/TDF/Test/DisposablePostgres.hs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/PublicKnowledgeRead.tla",
+        "formal/event-operations/PublicKnowledgeReadCollision.cfg",
+        "formal/event-operations/PublicKnowledgeReadMixedSnapshot.cfg"
+      ],
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
-        "Embedding-provider sharing, internal retention and curated conversation examples need separate privacy reconciliation.",
-        "Channel-specific provider delivery is not exercised by the anonymous HTTP fixture."
+        "Historical embedding-provider retention and curated conversation examples need separate privacy reconciliation.",
+        "Channel-specific provider delivery is not exercised by the staff-authenticated HTTP fixture."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Old-binary disclosure was reproduced; repaired HTTP checks and all channel integrations need execution evidence. No formal deletion linearization proof is claimed."
+        "reason": "Bounded model and source-mapped HTTP regressions cover the retrieval boundary; final candidate execution and deployed/channel/provider/retention evidence remain separate obligations."
       },
       "critical": true,
       "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
-      "property": "Every returned document is freshly rendered from an existing public course, never raw private indexed content.",
-      "contract": "formal/system/bookings.md",
-      "verification": "Anonymous HTTP on a fresh synthetic PostgreSQL database with private, poisoned, updated and deleted index fixtures.",
-      "evidence": "Preserved old-backend anonymous disclosure reproduction and exact-candidate booking-conformance HTTP artifact; repaired execution remains pending."
+      "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.; NoAmbiguousRead.",
+      "contract": "formal/system/public-knowledge-retrieval.md",
+      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with six named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits. Require exact Text-normalized production collision rejection before both selection limits and during metadata rendering. Six actual Store regressions cover ASCII/Unicode whitespace, case, limit starvation, new cached-read collisions and recovery; pure generated checks cover normalization, with named embedding/read collision counterexamples in the bounded models. Multiple-row normalization and delivery-time retraction remain outside the refinement claim. Course fields, earliest session and collision inputs must share one SQL SELECT snapshot; the mixed-snapshot control must fail NoAmbiguousRead. The fixture must use the shared parsed disposable-URI guard, admitting authenticated loopback postgres/postgresql URLs and allowing the CI service hostname only in explicit CI mode, while rejecting routing overrides before connecting.",
+      "evidence": "Historical disclosure reproduction is retained separately; exact candidate model/HTTP/CI receipts are required. New coverage must not inherit a historical green result."
     },
     {
       "id": "MEDIA-PERSIST-001",
@@ -9891,6 +9906,99 @@
         "classification": "PARTIAL",
         "reason": "Storage repaired and tested; no signed HTTP or backfill-route test, and the reply worker was not changed."
       }
+    },
+    {
+      "id": "PRIV-RAG-002",
+      "title": "Public-course-only index refresh",
+      "statement": "RAG index checks and refreshes shall first remove legacy non-course derived chunks independently of freshness, embedding configuration or provider availability. Refreshes shall embed only public course fields, atomically replace the public index on success (including an empty corpus without a provider call), and preserve the previous public index on provider or persistence failure.",
+      "domain": "PRIV",
+      "actors": [
+        "Authorized RAG administrator",
+        "Automated index refresh worker",
+        "Embedding provider"
+      ],
+      "preconditions": [
+        "The configured embedding model and database vector dimensions agree.",
+        "Course fields exposed by the public course contract are approved public material."
+      ],
+      "inputs": [
+        "Up to 50 route-eligible canonical course rows ordered by updated_at descending",
+        "Chunk size and overlap",
+        "Embedding adapter results"
+      ],
+      "state": {
+        "fields": [
+          "Captured public course documents",
+          "Provider payload",
+          "Derived rag_chunk rows",
+          "Refresh outcome"
+        ],
+        "initial": "The historical index may include private sources."
+      },
+      "allowedTransitions": [
+        "Commit non-course derived-index cleanup before checking freshness or validating embedding configuration.",
+        "Collect public course fields, chunk and embed them.",
+        "Replace all derived index rows after a complete successful embedding response.",
+        "Clear the index without embedding when the captured corpus is empty.",
+        "Reject a failed refresh while retaining the previous public index; committed legacy cleanup is not undone."
+      ],
+      "forbiddenTransitions": [
+        "Include bookings, availability, campaigns, ads, services, resources, rooms or studio notes in refresh embedding payloads.",
+        "Report an empty refresh as successful while retaining old chunks.",
+        "Commit public-index deletion if replacement insertion fails.",
+        "Skip legacy cleanup because the index is fresh or an embedding provider/configuration is unavailable.",
+        "Raw rejected stored URLs or route-unreachable course identities -> embedding payload.",
+        "Disclose a captured production identity shared by multiple Text-normalized stored course rows."
+      ],
+      "effects": [
+        "The next admitted worker check or administrator refresh removes legacy non-course chunks locally without a provider call; public replacement remains a separate transaction.",
+        "Source entities are not deleted; external provider records and backups are not erased by reindexing."
+      ],
+      "authorization": "Existing administrator and worker admission remains unchanged. Index source selection is enforced in the backend, independently of retrieval guards.",
+      "privacy": "Explicit product decision on 2026-10-13: public courses only; stop indexing private material. This policy concerns index refreshes, not a claim that query embeddings or other assistant provider payloads are public.",
+      "concurrency": "One refresh captures public documents from statement snapshots before embedding and atomically replaces the index. Parallel refresh ordering/freshness is not guaranteed; all revised writers still construct only course chunks. Retrieval separately checks current course metadata. Cleanup and replacement are separate transactions. Deployment must drain old mixed-source writers; no claim covers privileged external SQL writers or rollback to the old builder. Each constructed document reads its fields, earliest session and collision inputs in one SELECT snapshot.",
+      "idempotency": "Repeated successful refreshes replace the derived index; provider requests may repeat and chunk identifiers/timestamps are not stable.",
+      "failure": "Cleanup SQL failure aborts before embedding. Model/schema mismatch and provider/count errors return Left after legacy cleanup; replacement SQL errors propagate after rollback of public replacement. A missing index table skips cleanup and fails existing schema validation.",
+      "recovery": "Retry failed public refreshes while retaining existing public chunks. Do not restore non-course chunks or roll back to a mixed-source builder. Historical backups and provider-held data require separate retention/erasure decisions.",
+      "observability": "PostgreSQL tests capture adapter payloads and persisted rows, check empty-corpus no-call behavior, provider/count refusal and SQL rollback. Existing administrator result and index statistics report refresh outcome. Aggregate source counts verify cleanup without disclosing content; tests cover a fresh index and invalid configuration before provider admission.",
+      "source": "Explicit user product decision 2026-10-13: Public courses only; stop indexing private material (Recommended).",
+      "implementation": [
+        "tdf-hq/src/TDF/RagStore.hs",
+        "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
+        "tdf-hq/src/TDF/PublicUrl.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Courses/Production.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "scripts/test-rag-index-privacy.sh",
+        ".github/workflows/ci.yml",
+        "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs",
+        "tdf-hq/test/TDF/Test/DisposablePostgres.hs"
+      ],
+      "formalModels": [
+        "formal/event-operations/PublicKnowledgeIndex.tla",
+        "formal/event-operations/PublicKnowledgeIndexCollision.cfg"
+      ],
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Historical external provider retention/erasure requires separate evidence.",
+        "Concurrent refresh ordering and index freshness are not serialized by this change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation, bounded model and PostgreSQL regression checks are mapped; exact candidate and deployed verification remain required. Historical provider retention is outside the refresh boundary."
+      },
+      "critical": true,
+      "authority": "Explicit user decision 2026-10-13; AUTHORITY-RAG-PUBLIC-INDEX-20261013",
+      "property": "NoLegacyAfterCleanup, NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex (public subset), EmptySkipsProvider NoAmbiguousEmbedding and TypeOK in PublicKnowledgeIndex.",
+      "contract": "formal/system/public-knowledge-retrieval.md",
+      "verification": "Pinned TLC positive model and five named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits. Require exact Text-normalized production collision rejection before both selection limits and during metadata rendering. Six actual Store regressions cover ASCII/Unicode whitespace, case, limit starvation, new cached-read collisions and recovery; pure generated checks cover normalization, with named embedding/read collision counterexamples in the bounded models. Multiple-row normalization and delivery-time retraction remain outside the refinement claim. The fixture must use the shared parsed disposable-URI guard, admitting authenticated loopback postgres/postgresql URLs and allowing the CI service hostname only in explicit CI mode, while rejecting routing overrides before connecting.",
+      "evidence": "Candidate-specific test and model receipts must be recorded; historical passes do not establish current conformance."
     },
     {
       "id": "MOB-FEEDBACK-001",
