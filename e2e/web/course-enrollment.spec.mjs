@@ -54,7 +54,9 @@ const signedInAccount = {
   preferences: { locale: 'es', currency: 'USD', timeZone: 'America/Guayaquil' },
 };
 
-async function fixture(page, baseURL, { registrationFailure = null, authenticated = false } = {}) {
+async function fixture(page, baseURL, {
+  registrationFailure = null, registrationResponse = leadReceived, authenticated = false,
+} = {}) {
   const origin = new URL(baseURL).origin;
   const state = { registrations: [], idempotencyKeys: [] };
   await page.route('**/*', async (route) => {
@@ -76,8 +78,10 @@ async function fixture(page, baseURL, { registrationFailure = null, authenticate
       state.registrations.push(request.postDataJSON());
       state.idempotencyKeys.push(request.headers()['idempotency-key'] ?? null);
       if (registrationFailure) return route.fulfill(registrationFailure);
-      return route.fulfill({ json: leadReceived });
+      return route.fulfill({ json: registrationResponse });
     }
+    if (path === `/public/courses/${SLUG}/registrations/${registrationResponse.registrationId}`
+        && request.method() === 'GET') return route.fulfill({ json: registrationResponse });
     return route.fulfill({ status: 404, json: { error: 'No synthetic fixture for this API' } });
   });
   return state;
@@ -155,6 +159,22 @@ test.describe('Course enrollment on a small Android phone', () => {
     await expectRenderedRoot(page);
   });
 
+  test('successful checkout leaves no dialog and focuses the order @mobile-flow @critical', async ({ page, baseURL }) => {
+    const response = { ...leadReceived, lookupToken: 'synthetic-order-lookup',
+      checkoutAvailable: true, paymentStatus: 'pending', fulfillmentStatus: 'seat_held' };
+    const state = await fixture(page, baseURL, { registrationResponse: response });
+    const dialog = await openEnrollment(page);
+    await fillEnrollment(dialog, { phone: '0988384849' });
+    await dialog.getByRole('button', { name: 'Enviar inscripción' }).click();
+    await expect(page).toHaveURL(new RegExp(`/curso/${SLUG}/orden/77$`));
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.getByText('Estado de tu inscripción', { exact: true })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => document.activeElement?.textContent ?? ''))
+      .toContain('Estado de tu inscripción');
+    expect(state.registrations).toHaveLength(1);
+    expect(await fitsViewport(page)).toBe(true);
+  });
+
   test('Server phone rejection is shown next to the field and a corrected retry succeeds @mobile-flow', async ({ page, baseURL }) => {
     const state = await fixture(page, baseURL, {
       registrationFailure: { status: 400, contentType: 'text/plain', body: 'phoneE164 inválido' },
@@ -193,7 +213,10 @@ test.describe('Course enrollment on a small Android phone', () => {
     await fixture(page, baseURL);
     await page.goto(`/curso/${SLUG}`, { waitUntil: 'domcontentloaded' });
     await expectRenderedRoot(page);
+    // The shell can render before the lazy course route. Scroll only after
+    // the course controls exist, otherwise scrolling the shell is a no-op.
     await expect(page.getByRole('heading', { name: courseMetadata.title, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Inscribirme', exact: true }).first()).toBeVisible();
     const stickyBar = page.getByRole('region', { name: 'Inscripción rápida' });
     await expect(stickyBar).toBeHidden();
 
@@ -218,9 +241,9 @@ test.describe('Course enrollment on a small Android phone', () => {
     await expectRenderedRoot(page);
     const radioBar = page.getByTestId('radio-docked-bar');
     await expect(radioBar).toBeVisible({ timeout: 15_000 });
-    // The signed-in shell and radio can mount before this lazy course route.
-    // Scroll the loaded course, not the shorter shell that precedes it.
+    // Radio belongs to the shell and does not establish course readiness.
     await expect(page.getByRole('heading', { name: courseMetadata.title, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Inscribirme', exact: true }).first()).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     const stickyBar = page.getByRole('region', { name: 'Inscripción rápida' });
     if ((page.viewportSize()?.width ?? 0) >= 900) {

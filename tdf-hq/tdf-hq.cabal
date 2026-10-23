@@ -63,6 +63,8 @@ executable tdf-hq-exe
     TDF.Contracts.Server
     TDF.Contracts.Types
     TDF.Courses.Production
+    TDF.Courses.PublicMetadata
+    TDF.PublicUrl
     TDF.API.SocialEventsAPI
     TDF.API.EventResearchAPI
     TDF.API.Types
@@ -342,11 +344,14 @@ test-suite tdf-hq-test
   main-is:           Spec.hs
   other-modules:
     TDF.MetaRedeliverySpec
+    TDF.RagIndexPrivacySpec
+    TDF.CoursePublicMetadataSpec
     TDF.LiveIntakeIdentitySpec
     TDF.OperationsInboundCaptureSpec
     TDF.ProviderIdentitySpec
     TDF.CredentialLifecycleSpec
     TDF.WhatsAppConsentSpec
+    TDF.MusicPublicationSpec
     TDF.InteractionWriteBudgetSpec
     TDF.MusicPurchaseSpec
     TDF.DriveReplaySpec
@@ -367,6 +372,7 @@ test-suite tdf-hq-test
     TDF.EventOrganizerSpec
     TDF.InvoiceDatilSpec
     TDF.TicketManualReviewSpec
+    TDF.Test.DisposablePostgres
     TDF.IndexDeclarationSpec
     TDF.InvoiceWorkerSpec
     Paths_tdf_hq
@@ -478,6 +484,8 @@ test-suite tdf-hq-test
     TDF.Cors
     TDF.Cron
     TDF.Courses.Production
+    TDF.Courses.PublicMetadata
+    TDF.PublicUrl
     TDF.DB
     TDF.DB.ReputationConsent
     TDF.DTO
@@ -691,6 +699,7 @@ test-suite tdf-hq-test
     , transformers
     , mtl
     , network
+    , network-uri
     , mime-mail
     , tagged
     , unordered-containers

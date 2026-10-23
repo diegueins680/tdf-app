@@ -671,6 +671,16 @@
       "resolution": "Instagram and Facebook messages are inserted when absent and otherwise left as stored, filling only a missing sender name or attribution, or metadata that lacked the receiving account; a repeated deletion keeps its first time. A backfill no longer returns held or failed messages to the worker; the unhold action remains. The webhooks and the backfill share the function. The unit test now expects the original text. No schema change. Erasing deleted text, handling edits and the inbound capture triggers that never fire remain open."
     },
     {
+      "id": "AUTHORITY-RAG-PUBLIC-INDEX-20261013",
+      "sources": [
+        "tdf-hq/src/TDF/RagStore.hs",
+        "formal/system/public-knowledge-retrieval.md"
+      ],
+      "conflict": "The index builder embeds private operational sources while all customer-facing retrieval callers accept only public courses. Existing behavior is not approved product intent.",
+      "authority": "Explicit user product decision 2026-10-13: Public courses only; stop indexing private material.",
+      "resolution": "Remove private source builders; permit only public course fields in refresh embedding payloads. Worker checks and refreshes first commit removal of legacy non-course chunks before freshness or embedding validation, independently of provider availability. Successful refresh replaces the public index, including clearing an empty corpus; later failures preserve the previous public subset and never restore committed legacy cleanup. A failed cleanup aborts before provider admission. Historical provider/backups retention remains explicit separate debt. Delegate replacement commit/rollback to the outer transaction; PostgreSQL tests use persistent isolated schemas so reconnects cannot masquerade as index data loss. The original manual transaction pattern was separately checked and did not lose rows."
+    },
+    {
       "id": "AUTHORITY-062",
       "sources": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -694,6 +704,226 @@
       "conflict": "Twenty-three model lines named Index… were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
       "authority": "The application's behaviour governs: conversations hold many messages and a reply is recorded beside its message. The names, the absence of any unique-key lookup or conflict clause on these keys and the plain indexes production holds on the campaign tables under the same naming show the uniqueness was never intended.",
       "resolution": "A new migration replaces the nine constraints with plain indexes of the same names and columns, and the twenty-three lines leave the models so that a development database no longer recreates them. A rollback file restores the constraints while no stored row violates them. The identity constraints (for example the WhatsApp provider message id) are unchanged."
+    },
+    {
+      "id": "AUTHORITY-065",
+      "sources": [
+        "docs/operations-control-center/architecture.md",
+        "docs/operations-control-center/runbook.md",
+        "formal/system/requirements.json OPS-AUX-WRITE-001",
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql"
+      ],
+      "conflict": "OPS-AUX-WRITE-001 allowed 'open or dead_letter -> retrying once' and the handler implemented exactly that, but no code consumed the retrying state: the dead-lettered projection stayed dead-lettered, kept blocking later events of its record, and the failure could never be retried again or resolved.",
+      "authority": "The purpose of the retry control in the Operations control center: a manager retries a failure so that the failed work runs again.",
+      "resolution": "OPS-FAILURE-REPLAY-001: the retry re-queues the dead-lettered projection in the same transaction, the failure follows the projection to resolved or back to dead_letter, and a failure with no executor is refused instead of being relabelled. Existing stranded rows are returned to dead_letter by the migration."
+    },
+    {
+      "id": "AUTHORITY-064",
+      "sources": [
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "EVT-TICKET-MANUAL-001 states that the review locks the checkout, attempt and evidence rows. The function took those locks and then committed before writing, which released them; a second concurrent reviewer read the same submitted evidence and had the write refused by the database as an error instead of being told the transfer was already decided.",
+      "authority": "The requirement governs: the review is serialized by its row locks. The database's evidence transition guard remains the last line of defence, not the means of serialization.",
+      "resolution": "The intermediate commit is removed so the locks last until the review commits. A second reviewer waits and is answered from the decided state; the buyer's concurrent writes are not covered by this. The requirement gains a direct PostgreSQL test of the review transaction, including races, and a bounded model."
+    },
+    {
+      "id": "AUTHORITY-072",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/operations-aux-write.md",
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "docs/operations-control-center/rbac.md"
+      ],
+      "conflict": "OPS-AUX-WRITE-001 had no formal model; its verification field limits formal coverage to explicitly mapped abstractions, and the four handlers' guards (current authority under locks, atomic result and audit, one retry admission, encrypted push token) were stated only in prose.",
+      "authority": "The requirement's property, allowed and forbidden transitions and concurrency fields, and the handlers as read on 2026-10-12 (runOperationsWrite, lockOperationsScope, withLockedWorkItem, replayFailureHandler, createSavedViewHandler, createPushSubscriptionHandler).",
+      "resolution": "OperationsAuxiliaryWrite.tla states the four guards as invariants under bounded checking (two commands, one actor, one scope) with one negative configuration per guard; correspondence to the Haskell is by reading, not refinement, and the PostgreSQL/HTTP conformance harness remains the execution evidence. No code change."
+    },
+    {
+      "id": "AUTHORITY-073",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/operations-read-policy.md",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "docs/operations-control-center/rbac.md"
+      ],
+      "conflict": "AUTH-OPS-READ-001 had no formal model; the read policy exists twice (the Haskell predicate for detail and writes, the SQL scope filter for list, metrics and stream) and their agreement, the Admin-only security rule and ReadOnly's write neutrality were stated in prose and three Hspec examples. The independent review found the approval handler's linked-item check calling canViewEntityType with ReadOnly still present, unlike the three other write sites: Accounting plus ReadOnly could link an approval to a work item Accounting alone cannot see.",
+      "authority": "The requirement's property and forbidden transitions, docs/operations-control-center/rbac.md, and the two evaluators as read on 2026-10-12.",
+      "resolution": "OperationsReadPolicy.tla copies the grant table and both evaluators and checks the five invariants exhaustively over the finite policy (ten roles, two assignment flags, fifteen entity types) with one negative configuration per guard. The copy is by hand: it establishes the policy's properties, not the Haskell or SQL text, which ModelSpec and the conformance harness keep covering. One code change: the approval handler strips ReadOnly before the linked-item check, as docs/operations-control-center/rbac.md requires (ReadOnly cannot enlarge another role's write scope); the conformance harness gains the Accounting-plus-ReadOnly case. ReadOnlyNoWriteGain holds by construction once every write site strips ReadOnly; it records the rule, the harness checks the sites."
+    },
+    {
+      "id": "AUTHORITY-076",
+      "sources": [
+        "formal/system/requirements.json#OPS-WORKER-001",
+        "tdf-hq/src/TDF/Operations/Worker.hs",
+        "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
+        "formal/system/operations-worker-tick.md",
+        "formal/event-operations/OperationsWorkerTick.tla"
+      ],
+      "conflict": "OPS-WORKER-001 requires a failed projection to be reported as a fixed failure and the worker to keep working, but operations_work_item_entity_reference is a deferred constraint trigger: a domain event for an entity that no longer exists raised at the tick's commit, outside operations_process_outbox_batch's per-row handling, so the whole tick (outbox, SLA, archive) rolled back, no attempt was recorded and the same failure repeated every second while every other pending row stayed blocked.",
+      "authority": "The requirement statement (fixed failure, single invocation, preserved pending/dead-letter evidence) and the batch function's own per-row attempt, backoff and dead-letter design.",
+      "resolution": "The worker runs SET CONSTRAINTS ALL IMMEDIATE at the start of the tick, so the trigger fires inside the batch and the poisoned row fails alone with its attempt, backoff and dead letter; the trigger and the function are unchanged. Checked by the bounded OperationsWorkerTick model and the mirrored-statement PostgreSQL test with the deferred tick as a negative control."
+    },
+    {
+      "id": "AUTHORITY-OPS-CAPTURE-POLICY-20261013",
+      "sources": [
+        "formal/system/operations-inbound-capture.md",
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
+        "tdf-hq/sql/2026-10-13_operations_inbound_capture_policy.sql"
+      ],
+      "conflict": "The direction repair begins capturing sender identifiers into append-only Operations records even when Operations is disabled. Historical design is not approval of unrestricted collection.",
+      "authority": "Explicit user decision 2026-10-13: Capture only when Operations is enabled; define retention before rollout.",
+      "resolution": "Use an additive migration to require enabled default Operations organization and active branch under transaction-held locks. Preserve message storage and forbid retrospective capture. Keep capture activation blocked until retention, deletion and backup handling are defined; do not edit the merged migration history or enable a flag."
+    },
+    {
+      "id": "AUTHORITY-066",
+      "sources": [
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "docs/music-releases/architecture-and-data-model.md",
+        "formal/system/music-publication.md"
+      ],
+      "conflict": "music_publish_due retired only the version a candidate was created from and ran every candidate in one transaction, so a second correction of the same source made the batch violate uq_music_release_one_published_version on every run; music_withdraw_due set music_release.withdrawn_at and nothing cleared it, so a scheduled correction of a withdrawn release never published; API-side withdrawal or re-approval left published_version_id on a version that was no longer live. The architecture document says the schedulers 'update the single public version' and does not say what happens to other live versions, to a withdrawn release, or to a failing candidate.",
+      "authority": "The requirement's forbidden transitions (one public version per release, no silent stuck state) and the scheduler-only publication rule of transitionReleaseVersion.",
+      "resolution": "Decided 2026-10-11: (1) publishing a version retires every other formerly published version of its release that is still published, replacement_pending or takedown_scheduled through the lifecycle chain, not only the one it replaces; this overrides a staff-chosen future takedown date on the superseded version (one live version per release); versions never published (e.g. parked in replacement_pending from approved) and suspended versions are left alone; when several due versions of one release are in one batch they publish in release-time order and each supersedes the previous one, with the intermediate notifications that implies; (2) publication clears withdrawn_at, so scheduling a correction of a withdrawn release (staff-only) republishes it; (3) each due candidate publishes or withdraws in its own subtransaction; a candidate that fails at publication for a transient reason (SQLSTATE class 40, 55P03) stays scheduled for the next run, any other failure makes it suspended with a publication_failed audit event; a failed withdrawal is retried and, unless transient, recorded once as withdrawal_failed; (4) published_version_id is kept by one trigger: set on published, cleared when the version leaves published, suspended, replacement_pending or takedown_scheduled; suspended keeps the pointer. Migration 2026-10-11_music_publication_isolation (manifest entry 203) and MusicPublication.tla."
+    },
+    {
+      "id": "AUTHORITY-067",
+      "sources": [
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "formal/system/music-asset-processing.md"
+      ],
+      "conflict": "MEDIA-MUSIC-ASSET-001 listed four asset states (quarantined, processing, promoted, failed) and transitions 'processing -> failed -> retried'; music_asset.processing_state allows nine values and the worker never writes 'failed' or 'promoted' (a promoted master is 'valid' and immutable, a derivative is 'ready'). Retry and dead-letter live on music_processing_job, not on the asset.",
+      "authority": "The column CHECK constraints and the worker script, which the requirement's own tests exercise.",
+      "resolution": "Decided 2026-10-12: the requirement lists the column's asset states and the job statuses; the lease guard (worker name, claimed attempt as fencing token, lease age on the job row, reclaim only after expiry) and checksum-gated promotion are the stated concurrency rules and are modelled in MusicAssetProcessing.tla. The three gaps (no purge of abandoned uploads, checksum mismatch retried until max_attempts, dead-lettered asset left 'inspecting') are recorded as ambiguities, not fixed; the defect the independent review found (a re-upload with the same declared hash is bound to the old asset row and never inspected) is recorded on the requirement for a follow-up slice."
+    },
+    {
+      "id": "AUTHORITY-068",
+      "sources": [
+        "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "formal/system/music-upload-rebind.md"
+      ],
+      "conflict": "confirmMusicUpload binds a re-upload with the same declared SHA-256 to the existing asset row (unique on version, role, sha256) but leaves the row's quarantine object, so after a checksum-mismatch dead letter the corrected bytes were never inspected; the requirement's recovery text ('failed jobs are retried') assumed a retry could succeed.",
+      "authority": "MEDIA-MUSIC-ASSET-001's statement that the worker re-downloads and recomputes the hash of the uploaded bytes, and its idempotency rule (identical input, identical result).",
+      "resolution": "Decided 2026-10-12: enqueueing a processing job for an upload session re-points the session's non-promoted asset (same version, same declared hash, different object) at the session's object, resets it to uploaded, records the previous key in provenance and cancels the asset's queued, retry, running and dead-lettered jobs (the lease guard stops a cancelled run before it writes; a running final attempt left alone would dead-letter and keep the version validation_failed); promoted assets are never re-pointed; the trigger runs AFTER INSERT so a conflicting insert that creates no job changes nothing, and locks the version row first like the worker. Migration 2026-10-12_music_upload_rebind (manifest entry 203). No handler change."
+    },
+    {
+      "id": "AUTHORITY-082",
+      "sources": [
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
+        "docs/music-releases/ddex-queued-validation.md",
+        "docs/music-releases/ddex-atomic-enqueue.md",
+        "formal/system/music-ddex-export.md"
+      ],
+      "conflict": "MEDIA-MUSIC-DDEX-001 listed export states queued, rendering, validated, failed, retired and a transition 'suspended -> retired'; music_ddex_export.status allows queued, generating, validation_failed, valid, failed and nothing is ever retired. ddex-queued-validation.md promises that export failure messages contain no object keys, SQL or secrets, but mark_failed copied the last twenty lines of the worker's stderr (truncated to 1,000 characters) into the export's validation_report for every failure that was not a gate refusal, and that report is served to every release downloader.",
+      "authority": "The column CHECK constraint and the worker script for the state set; the queued-validation ADR's privacy rule and PRIV-ERROR-001 for the report.",
+      "resolution": "Decided 2026-10-13: the requirement lists the column's export states and the job statuses with the worker's transition relation; the lease guard, the two gates, valid finality, failed finality and the queued-only replay repair are the stated rules and are modelled in MusicDdexExport.tla with five single-guard controls. The worker now stores a fixed message with the error code for non-gate failures, keeps the stderr summary on the job row, and never moves a failed export back to validation_failed when a dead-lettered job is re-queued by hand; the runtime test covers both. The absence of any recovery for a dead-lettered export is recorded as an open product decision, not changed."
+    },
+    {
+      "id": "AUTHORITY-071",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/drive-replay.md",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/test/TDF/DriveReplaySpec.hs"
+      ],
+      "conflict": "MEDIA-DRIVE-001 had no formal model. Its concurrency text accepts that the provider lookup and the multipart create are separate requests, so two requests that both miss can both create; a model stating exactly-once reuse would contradict the implementation, and a model omitting the race would overstate it.",
+      "authority": "The requirement's own concurrency and ambiguity fields (no exactly-once guarantee; concurrent creation not covered) and the drive-replay note, which classify the race as outside the repair, not as a defect.",
+      "resolution": "DriveReplay.tla states what the implementation is read to guarantee, within the model's bounds (a reuse is bound to the requester's actor and request shape, legacy entries are never adopted, a conflict performs its lookup GET but makes no subsequent provider mutation and a reuse creates no object; correspondence to the Haskell is by reading, not refinement) with three single-guard controls, and carries SingleObject as a documented non-invariant: the Race configuration is registered as an expected counterexample. No code change; the race remains an open obligation of MEDIA-DRIVE-001, closable only by a local claim before the provider create. Provider entries are partitioned by explicit folder. A sequential cross-folder configuration and reachable two-object witness capture separate creations for the same key; the concurrent race configuration is restricted to one folder. Missing-folder lookup is outside these bounds."
+    },
+    {
+      "id": "AUTHORITY-074",
+      "sources": [
+        "formal/system/requirements.json#PRIV-WHATSAPP-001",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "formal/system/whatsapp-consent.md",
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
+        "formal/system/requirements.json#DATA-INDEX-DECLARATION-001",
+        "formal/system/requirements.json#MSG-WHATSAPP-REDELIVERY-001"
+      ],
+      "conflict": "PRIV-WHATSAPP-001 requires the confirmation notice to be recorded as an outgoing message and the webhook to accept a valid confirmation. A confirming reply activated consent but the webhook then answered HTTP 500 and recorded no notice: the notice row was inserted with the handler timestamp, which the inbound reply row already holds for that number, and whats_app_message is unique on (phone_e164, created_at) because the model line IndexWhatsAppMessagePhone is a Persistent unique declaration (production constraint index_whats_app_message_phone). Reproduced against the real backend on 2026-10-12.",
+      "authority": "The requirement's effects and the 2026-10-06 double opt-in decision (AUTHORITY-052); the unique constraint is an accident of the model declaration syntax, not a rule.",
+      "resolution": "The original narrow repair sampled the notice clock separately after storing the inbound reply; while the old phone/party timestamp uniqueness remained, that was best-effort and the index/model repair was a follow-up. Current main already includes that additive index-declaration repair: both history indexes are non-unique. This integration preserves receiveWhatsAppInbound atomic receipt/confirmation and duplicate-delivery admission, then samples the outgoing notice time. The real-backend harness checks consent and redelivery plus distinct messages sharing a phone/party timestamp and both non-unique history indexes; it must not reinstate the old uniqueness assumption. Provider notice delivery and durable retry remain separate obligations."
+    },
+    {
+      "id": "AUTHORITY-078",
+      "sources": [
+        "formal/system/requirements.json#DEPLOY-READINESS-001",
+        "tdf-hq/src/TDF/App/Readiness.hs",
+        "tdf-hq/src/TDF/DB.hs",
+        "scripts/lib/readiness_conformance.py",
+        "formal/system/readiness.md"
+      ],
+      "conflict": "DEPLOY-READINESS-001 required a fresh request after database recovery to answer ready and the harness checked it with one probe. The probe made one attempt through the pool; a pooled connection whose session PostgreSQL had closed (restart, terminated backends) failed that attempt and the probe answered 503 although the database was back, once per stale connection. Reproduced on 2026-10-12: the consent section's four simultaneous public requests left the pool with more idle connections than the three degraded probes consumed one by one, and the recovery probe took the next terminated connection and failed (CI run 38316698853 on PR #559, and locally against the real backend).",
+      "authority": "The requirement's recovery clause and the operational intent of a readiness probe: it reports the database, not the pool's history. The probe now retries up to the pool size plus one (the pool bounds the stale connections; one attempt must remain for a live connection, a bound the model found) inside its unchanged two-second deadline, discarding each failed connection; a result, ready or not, is final and cancellation propagates through every attempt. The attempt budget is bound to the pool size plus one by the source-bound verifier. A connection dead without a close blocks until the deadline, one per probe; that case is outside the bound and unchanged. An unavailable database still answers 503 within the deadline, now after at most pool-size-plus-one connection attempts per probe.",
+      "decidedOn": "2026-10-12",
+      "status": "applied"
+    },
+    {
+      "id": "AUTHORITY-079",
+      "sources": [
+        "formal/system/requirements.json#AUTH-PUBLIC-001",
+        "formal/system/public-routes.json",
+        "formal/system/public-route-admission.md",
+        "scripts/lib/public_routes_conformance.py",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "conflict": "AUTH-PUBLIC-001 admits unauthenticated routes by reviewed boundary but nothing exercised the handlers: the register's handler-session rule said the handler rejects a missing session, while GET /session and POST /session/logout answer an anonymous caller 200 with the anonymous value (null, empty) and give a wrong bearer token the same answer; and POST /social-events/stripe/webhook, a public unsigned callback, answered 500 to any caller while Stripe was unconfigured, where its sibling provider callbacks answer 503. Both found by sweeping all 90 deny-boundary routes on the real backend on 2026-10-13; every other route answered both probes with a client error or 503, most before reaching the capability check.",
+      "authority": "The requirement's intent (no disclosure or action without the capability) and the sibling callbacks' behaviour. The anonymous answers disclose nothing and resolve no session, so the rule is amended to admit answering the anonymous value, and the sweep pins that a wrong token receives exactly it. The unconfigured Stripe callback answers 503 like the other provider callbacks; the signed path is unchanged. The sweep joins the booking conformance harness so a future route that succeeds, faults or discloses without its capability fails CI. The requirement's open-debt wording is corrected: no registered debt remains. Other unconfigured-Stripe 500s remain on authenticated routes outside this register.",
+      "decidedOn": "2026-10-13",
+      "status": "applied"
+    },
+    {
+      "id": "AUTHORITY-RUNTIME-FLAG-ABSENCE-001",
+      "sources": [
+        "ops/hetzner/inspect-runtime.py",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Cors.hs",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "Runtime receipts included configured suffix flags but omitted many known absent controls, privacy/SMTP controls and alternate CORS boolean names. Silence could not establish disabled state or effective defaults.",
+      "authority": "DEPLOY-OBSERVE-001 requires explicit unknowns and source-bound read-only observation.",
+      "resolution": "Expand the absence register and make conservative backend literal discovery part of the existing inspection boundary gate. Preserve raw presence, empty values and absence; do not infer effective values from candidate defaults or activate any feature."
+    },
+    {
+      "id": "AUTHORITY-075",
+      "sources": [
+        "formal/system/requirements.json#DEPLOY-MIGRATION-001",
+        "scripts/lib/production-release.mjs",
+        "scripts/lib/migration-contract.mjs",
+        "tdf-hq/production-entrypoint.sh",
+        "formal/system/migration-correspondence.md",
+        "formal/event-operations/MigrationLedger.tla",
+        "docs/automatic-production-migrations.md"
+      ],
+      "conflict": "DEPLOY-MIGRATION-001 requires immutable correspondence between applied history and the manifest, but the batch inserted each ledger row as a separate statement after the migration's own COMMIT (a crash between them left effects applied and unrecorded, re-applied by the next run) and its lock-refusal branch ended with \\quit 3, which psql ignores, so an active concurrent migration made the batch exit 0 and the entrypoint report success without applying or verifying. The batch also ignores ledger rows its manifest does not know while preparation rejects them.",
+      "authority": "The requirement statement and docs/automatic-production-migrations.md (\"A concurrent runner also exits nonzero\"); the batch's tolerance of unknown ledger rows is a code fact that image rollback relies on, recorded here as the decision, not a documented policy.",
+      "resolution": "The batch opens a transaction before the ledger row so a file's own COMMIT commits row and effects together, and raises an SQL error under ON_ERROR_STOP (exit 3) while the lock is held; every manifest file is checked to end with its COMMIT and to avoid non-transactional statements. The batch keeps tolerating unknown ledger rows (image rollback) while preparation keeps rejecting them; holes are applied after later entries and reported pending by preparation. Both recorded as ambiguities; checked by the bounded MigrationLedger model and the psql batch test."
+    },
+    {
+      "id": "AUTHORITY-077",
+      "sources": [
+        "formal/system/requirements.json#DEPLOY-STARTUP-001",
+        "scripts/lib/production-release.mjs",
+        "formal/system/startup-gates.md",
+        "formal/event-operations/StartupGates.tla",
+        "scripts/__tests__/startup-gates-postgres.mjs"
+      ],
+      "conflict": "DEPLOY-STARTUP-001 described only the six provider gates, while the startup verifier also requires the three manual-settlement gates and the two marketplace gates enabled and the service-booking and two course gates disabled; a flag change in any of those nine would pass unnoticed by the requirement and fail every later container start, as checkout.paypal.refunds did on 2026-10-07 (AUTHORITY-050).",
+      "authority": "The verifier as reviewed, read as the current policy (AUTHORITY-050 for the PayPal and Datafast gates; no separate product decision is on record for the service-booking, course and staged-provider gates, whose disabled state is taken from the code).",
+      "resolution": "The requirement is completed with the full asserted set and the rule that enabling or disabling an asserted gate is a verifier change in the same release; the code is unchanged. The policy is pinned by the exhaustive one-state model and by running the real verification for every flag in every state. The verifier also asserts data toggles outside revenue_feature_flag (artist_update interaction kind disabled, artist invitation policy and artist-profile category active, directory audit clean, catalog backfill statuses, minimum row counts); they are listed with the flag policy as restart hazards."
     },
     {
       "id": "AUTHORITY-MUSIC-PURCHASE-REPLAY",
@@ -729,17 +959,6 @@
       "conflict": "Music unit modules and a convenience runner existed, but the canonical entrypoint did not invoke them and no scripts/workflow invocation of that runner was found.",
       "authority": "formal/system/music-test-entrypoint.md",
       "resolution": "Register the same four unit groups in Spec.hs and require nonempty probes in backend quality. Module presence and unrelated green examples are insufficient execution evidence."
-    },
-    {
-      "id": "AUTHORITY-064",
-      "sources": [
-        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
-        "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql",
-        "formal/system/requirements.json"
-      ],
-      "conflict": "EVT-TICKET-MANUAL-001 states that the review locks the checkout, attempt and evidence rows. The function took those locks and then committed before writing, which released them; a second concurrent reviewer read the same submitted evidence and had the write refused by the database as an error instead of being told the transfer was already decided.",
-      "authority": "The requirement governs: the review is serialized by its row locks. The database's evidence transition guard remains the last line of defence, not the means of serialization.",
-      "resolution": "The intermediate commit is removed so the locks last until the review commits. A second reviewer waits and is answered from the decided state; the buyer's concurrent writes are not covered by this. The requirement gains a direct PostgreSQL test of the review transaction, including races, and a bounded model."
     },
     {
       "id": "AUTHORITY-MUSIC-OUTCOME-20261015",

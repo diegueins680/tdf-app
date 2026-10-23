@@ -244,11 +244,15 @@ getPaymentSession rawCheckoutId rawAttemptId rawLookupToken = do
   checkoutId <- either (throwError . badRequest) pure (validatedUuid "checkoutId" rawCheckoutId)
   attemptId <- either (throwError . badRequest) pure (validatedUuid "attemptId" rawAttemptId)
   lookupToken <- requireLookupToken rawLookupToken
+  let lookupHash = sha256Text lookupToken
+  authorized <- liftIO $ runSqlPool
+    (Store.authorizeCreateOperation checkoutId attemptId lookupHash) envPool
+  _ <- either (const (throwError err404)) pure authorized
   encryptionKey <- liftIO loadProviderOperationEncryptionKey
     >>= either (throwError . unavailableText) pure
   loaded <- liftIO $ runSqlPool
     (Store.loadAuthorizedCreateOperation checkoutId attemptId
-      (sha256Text lookupToken) encryptionKey) envPool
+      lookupHash encryptionKey) envPool
   operation <- either (const (throwError err404)) pure loaded
   pure (operationToDTO checkoutId operation)
 

@@ -36,3 +36,19 @@ material. Source inspection is scoped evidence, not a proof that every dynamic
 import, native build or provider-supplied input is safe. Primary forge report:
 https://github.com/digitalbazaar/forge/issues/1149; decoder maintainer advisory:
 https://github.com/SamVerschueren/decode-uri-component/security/advisories/GHSA-vcc3-ghjq-m6fr.
+
+
+The 22 October root-lock repair updates DOMPurify3.4.16 to3.4.17 and
+ip-address10.7.2 to10.7.4 within the existing dependency ranges. The additional
+reviewed floors reject regression below these patched versions; these packages
+are absent from the exact pinned Mobile lock. The production audit policy and
+its dated WebTorrent exception are unchanged. The older full-scan receipt above
+retains its original execution identity and unresolved exposures.
+
+Primary upstream advisories identify the affected versions and patches:
+[DOMPurify shadow-root template handling](https://github.com/cure53/DOMPurify/security/advisories/GHSA-cg2g-xh64-v4q7),
+[DOMPurify XHTML SMIL handling](https://github.com/cure53/DOMPurify/security/advisories/GHSA-c6gr-qvv4-5v3f),
+[DOMPurify detached hook subtrees](https://github.com/cure53/DOMPurify/security/advisories/GHSA-mrv2-3pqr-j5jr),
+and [ip-address zone parsing](https://github.com/beaugunderson/ip-address/security/advisories/GHSA-rxp7-6hxx-x8q5).
+An accepted version floor does not establish that every input or browser mode is
+safe, and it does not clear the separately recorded runtime/tooling exposures.

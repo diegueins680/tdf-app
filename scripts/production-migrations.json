@@ -1042,6 +1042,41 @@
       "introducedBy": "9edcb9460afd79aaa7040221ccae1c72cb14a795"
     },
     {
+      "id": "2026-10-11_operations_failure_replay",
+      "path": "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
+      "introducedBy": "17f55075cb16ea5fbf5079c7bc290896b3ecc979"
+    },
+    {
+      "id": "2026-10-13_operations_inbound_capture_policy",
+      "path": "tdf-hq/sql/2026-10-13_operations_inbound_capture_policy.sql",
+      "introducedBy": "6ac5f68cc76479ba5d19dd9243d872b341291549"
+    },
+    {
+      "id": "2026-10-11_music_publication_isolation",
+      "path": "tdf-hq/sql/2026-10-11_music_publication_isolation.sql",
+      "introducedBy": "598de30e3e1bf47b9f37cea86bd73f5b65eb5fac"
+    },
+    {
+      "id": "2026-10-12_music_upload_rebind",
+      "path": "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+      "introducedBy": "3f71add5783d9aefe818686abf4ee1c37ef6092b"
+    },
+    {
+      "id": "2026-10-13_community_search_indexes",
+      "path": "tdf-hq/sql/2026-10-13_community_search_indexes.sql",
+      "introducedBy": "08f3bcf50319983193d37ccec87d1c664c8ef21d"
+    },
+    {
+      "id": "2026-10-14_directory_event_search_alias_sync",
+      "path": "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
+      "introducedBy": "7c74b3c3e14f53870ee8a09ba6fcc80bc645e251"
+    },
+    {
+      "id": "2026-10-13_chat_message_notifications",
+      "path": "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
+      "introducedBy": "1be9d0d7dba613ced9cfe553529a5445b000ecf9"
+    },
+    {
       "id": "2026-10-15_music_payment_outcome_consistency",
       "path": "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
       "introducedBy": "8ad5722fa885c1970b20c57449eed4fc54d088eb"

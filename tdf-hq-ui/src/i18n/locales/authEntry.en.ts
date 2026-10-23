@@ -145,7 +145,6 @@ export default {
   "help": "Get help",
   "createAccount": "Create an account",
   "signInAutofill": "Sign in to autofill",
-  "generalBooking": "General booking",
   "openCommunity": "Open community",
   "skipContent": "Skip to main content",
   "goTdf": "Go to TDF",

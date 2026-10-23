@@ -119,7 +119,15 @@ test('persona browser journeys are artifacted and gate aggregate quality', async
   const workflow = await source('.github/workflows/ci.yml');
   const playwrightConfig = await source('playwright.config.mjs');
   assert.match(workflow, /^  persona-web-e2e:/m);
-  assert.match(workflow, /npx playwright install --with-deps chromium firefox webkit/);
+  const job = parseYaml(workflow).jobs['persona-web-e2e'];
+  assert.match(job.container.image, /^mcr\.microsoft\.com\/playwright:v\d+\.\d+\.\d+-noble@sha256:[a-f0-9]{64}$/);
+  assert.equal(job.container.options, '--init --ipc=host --user 1001');
+  const commands = job.steps.map(step => step.run).filter(Boolean);
+  assert.ok(commands.indexOf('node scripts/verify-playwright-image.mjs') < commands.indexOf('npm run test:e2e:web'));
+  assert.ok(commands.includes('node scripts/verify-playwright-image.mjs'));
+  assert.ok(!commands.some(command => /playwright install|apt-get/.test(command)));
+  assert.ok(commands.includes('npx playwright test e2e/web/account-deletion-rollout.spec.mjs'));
+  assert.ok(commands.includes('node node_modules/@playwright/test/cli.js test --config=playwright.discovery.config.mjs'));
   assert.match(workflow, /run: npm run test:e2e:web/);
   assert.match(workflow, /path: artifacts\/persona-playwright/);
   assert.match(workflow, /retention-days: 14/);
