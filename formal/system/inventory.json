@@ -101,6 +101,7 @@
       "package.json"
     ],
     "scripts": [
+      "scripts/__tests__/alloy-controls.test.mjs",
       "scripts/__tests__/app-routes-auth-implementation.test.mjs",
       "scripts/__tests__/app-smart-link.test.mjs",
       "scripts/__tests__/artist-claim-target-runtime.mjs",
@@ -255,6 +256,7 @@
       "scripts/instagram-openclaw-cdp.mjs",
       "scripts/install-continuous-improvement-loop-launchd.sh",
       "scripts/install-flyctl.mjs",
+      "scripts/install-proof-checkers.py",
       "scripts/install-recovery-tools.py",
       "scripts/interactions/generate-mobile-shared.mjs",
       "scripts/interactions/prepare-test-database.sh",
@@ -265,6 +267,7 @@
       "scripts/interactions/test-http.sh",
       "scripts/interactions/test-native.py",
       "scripts/interactions/test-schema.sh",
+      "scripts/lib/alloy-controls.mjs",
       "scripts/lib/compiled-api-surface.mjs",
       "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
@@ -333,6 +336,7 @@
       "scripts/quality-mobile.sh",
       "scripts/quality-repo.sh",
       "scripts/quality-ui.sh",
+      "scripts/recovery-time-boundaries.py",
       "scripts/refresh-instagram-token.mjs",
       "scripts/refresh-messaging-token.mjs",
       "scripts/rehearse-hetzner-restore.mjs",
@@ -421,6 +425,7 @@
       "scripts/test-artist-merch-runtime.sh",
       "scripts/test-artist-merch-storefronts-migration.sh",
       "scripts/test-artist-self-service.sh",
+      "scripts/test-auth-predicates.py",
       "scripts/test-auth-recovery-migration.sh",
       "scripts/test-automatic-migrations-production-schema.sh",
       "scripts/test-backend-version-rebuild.py",
@@ -507,6 +512,7 @@
       "scripts/test-physical-postgres-docker.py",
       "scripts/test-physical-postgres-recovery.py",
       "scripts/test-privacy-request-ledger.py",
+      "scripts/test-proof-certificates.py",
       "scripts/test-provider-event-operations-migration.sh",
       "scripts/test-provider-execution-runtime-migration.sh",
       "scripts/test-provider-identity.sh",
@@ -520,7 +526,9 @@
       "scripts/test-records-ingestion-runtime.sh",
       "scripts/test-records-youtube-catalog-migration.sh",
       "scripts/test-recovery-envelope.py",
+      "scripts/test-recovery-expiry-verifier.py",
       "scripts/test-recovery-files.py",
+      "scripts/test-recovery-time-postgres.sh",
       "scripts/test-recovery-tools.py",
       "scripts/test-release-journal.py",
       "scripts/test-requirement-declarations.py",
@@ -546,6 +554,7 @@
       "scripts/test-unified-checkout-migration.sh",
       "scripts/test-user-experiment-assignment-migration.sh",
       "scripts/test-user-onboarding-progress-migration.sh",
+      "scripts/test-verification-report.py",
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
       "scripts/test-whatsapp-consent.sh",
@@ -555,6 +564,9 @@
       "scripts/ui-static-audit.mjs",
       "scripts/upsert-course.mjs",
       "scripts/ux-audit-inventory.mjs",
+      "scripts/verification-report.py",
+      "scripts/verify-alloy-controls.mjs",
+      "scripts/verify-auth-predicates.py",
       "scripts/verify-checkout-money.py",
       "scripts/verify-cors-boundary.py",
       "scripts/verify-event-operations-formal.sh",
@@ -565,7 +577,9 @@
       "scripts/verify-music-money-wire.py",
       "scripts/verify-payment-arithmetic.py",
       "scripts/verify-playwright-image.mjs",
+      "scripts/verify-proof-certificates.py",
       "scripts/verify-readiness.py",
+      "scripts/verify-recovery-expiry.py",
       "scripts/verify-request-failures.py",
       "scripts/verify-simulator-health.sh",
       "scripts/verify-system-evidence.mjs",
@@ -2679,7 +2693,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "f32fd8ca6c759027da38aba527706f2187b6b54a9757079f0e2a45abae1fca5d",
+      "sha256": "01513cd705efe958bf0194a8295753d33b4e300d3bced014e37fcbffd174d6c1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3115,6 +3129,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-92421f4c198ed166",
+      "path": "scripts/__tests__/alloy-controls.test.mjs",
+      "sha256": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-0da2aa9657386c51",
       "path": "scripts/__tests__/app-routes-auth-implementation.test.mjs",
       "sha256": "8d4093ababdaf2a64240cfdb643d31b3968af96eb054352dc16f7e8344a52c19",
@@ -3261,7 +3281,7 @@
     {
       "id": "SURFACE-2207a12e65c74d0d",
       "path": "scripts/__tests__/event-raci-editor-context-runner.test.mjs",
-      "sha256": "5f415a2937bca32f151458a47b9535ec868398b9bcd70524ddbe38aec7896f8c",
+      "sha256": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3747,7 +3767,7 @@
     {
       "id": "SURFACE-7bc6beda98cc6e72",
       "path": "scripts/build-catalog-decisions.mjs",
-      "sha256": "3147e247b20cb634412d70697f91c6ea521aff4fc129e2923b0860657d7d0b6c",
+      "sha256": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3831,7 +3851,7 @@
     {
       "id": "SURFACE-e755c6a1ab398de9",
       "path": "scripts/check-state-machines.py",
-      "sha256": "911037719f679ea0242ec750c0c8a7eab19d54ce3dcc02263369cb5724125d04",
+      "sha256": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4039,6 +4059,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-37ed76fba61da70f",
+      "path": "scripts/install-proof-checkers.py",
+      "sha256": "1a14b7fa50dd6666db4a0fd5feb8e6993104a779b019b7a0dfd3562cf37736bb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b85e7ba1c3709ca8",
       "path": "scripts/install-recovery-tools.py",
       "sha256": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
@@ -4099,6 +4125,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-348e3d2bac6fc15e",
+      "path": "scripts/lib/alloy-controls.mjs",
+      "sha256": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-33d3dc767fe336d3",
       "path": "scripts/lib/compiled-api-surface.mjs",
       "sha256": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
@@ -4155,7 +4187,7 @@
     {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
-      "sha256": "3bbb53c73c74565062b2c3caaaddb3db7322b6e227dcac3276e0d10d315a8131",
+      "sha256": "a4db80638b54d44886f9a6391aae355caa875002ad13a7aa0ad7b17ec179ac9c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4497,13 +4529,19 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "b97db73c7f4dc1786a91e73d301324d20ef116748c764fdf1de53cde9cbbafb5",
+      "sha256": "40b633f9e899ffb6c226d65671c772018f2e5c5a43b29736a75f64440d127d2b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-63149d1c69a3c6a7",
       "path": "scripts/quality-ui.sh",
       "sha256": "772a4b1cf24f007f9e5bbc0830fae4ed8f2ef1e7498f0f4583690005d4f82d06",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-14ce85c394623bc5",
+      "path": "scripts/recovery-time-boundaries.py",
+      "sha256": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5035,6 +5073,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-fc4c2b80fce6f504",
+      "path": "scripts/test-auth-predicates.py",
+      "sha256": "d84c51fe21419d6dc1ad6136be88b4231c4c53177c011be084444babb939c30b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2b91f113b39e2bf6",
       "path": "scripts/test-auth-recovery-migration.sh",
       "sha256": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
@@ -5551,6 +5595,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8e3764761ce42dca",
+      "path": "scripts/test-proof-certificates.py",
+      "sha256": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3c9e2b2fae1ee373",
       "path": "scripts/test-provider-event-operations-migration.sh",
       "sha256": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
@@ -5629,9 +5679,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8cb7488112ea1390",
+      "path": "scripts/test-recovery-expiry-verifier.py",
+      "sha256": "9a192af0a5839dee66ad4b9f636e4ecbe58451d21087926893e3eaab87668d4e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-74baba1704e4a65f",
       "path": "scripts/test-recovery-files.py",
       "sha256": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4f9c68275e359475",
+      "path": "scripts/test-recovery-time-postgres.sh",
+      "sha256": "34703ff50f843b680b065aaf1538092c77ed56c8385865676cf8b8ef922f2d73",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5691,7 +5753,7 @@
     {
       "id": "SURFACE-59516e184a0cc916",
       "path": "scripts/test-state-machines.py",
-      "sha256": "a6cb7d8512743f4a4523eea953ee7e8c833e883150a8755d61e5b0ead5484ae0",
+      "sha256": "8b04bc8695f89b092627c7a9e58c83ba4a718e12d83dfad3cd07634d0c8d8f72",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5785,6 +5847,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-896ad45b385c665d",
+      "path": "scripts/test-verification-report.py",
+      "sha256": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-306ef04f302e88df",
       "path": "scripts/test-verified-experience-reviews-migration.sh",
       "sha256": "b0f35c6a469f8e3a7cc3c9db787bb73f05579eecd12219d6face386fa573e9e2",
@@ -5839,6 +5907,24 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-3383da3a4aa57dc1",
+      "path": "scripts/verification-report.py",
+      "sha256": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-877c6ee280c97050",
+      "path": "scripts/verify-alloy-controls.mjs",
+      "sha256": "3a609d6e22e004563fba4a4c58ec9e62267b1db572b073d880bd7feb19870e9c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b79d0bcd7aa10957",
+      "path": "scripts/verify-auth-predicates.py",
+      "sha256": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8b6766b7ee7590fd",
       "path": "scripts/verify-checkout-money.py",
       "sha256": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
@@ -5853,13 +5939,13 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "78575b590cc65fa38bfe4afe15f93c9c24332ec9d559e8eef73ca68039a37e8a",
+      "sha256": "37dc24cb6ec770fe89db9f071293cfebf794bad416df0eb79d2d18e5d4d0a328",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6c75a638587af83c",
       "path": "scripts/verify-event-operations-pluscal.mjs",
-      "sha256": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
+      "sha256": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5889,7 +5975,7 @@
     {
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
-      "sha256": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
+      "sha256": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5899,9 +5985,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d8f74623732a7a92",
+      "path": "scripts/verify-proof-certificates.py",
+      "sha256": "8f591e51689a84df4ecbc9af0b37adb8fafe771ddcaddf13dc65763024aeeb46",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d633e5d8beb4a8d8",
       "path": "scripts/verify-readiness.py",
       "sha256": "c1db0b9d64151547969116233c66a3160c2ab97327b51c679d0a86af8e7acaeb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bbad9cbeb80c7494",
+      "path": "scripts/verify-recovery-expiry.py",
+      "sha256": "05aaa2a08d1381939d4f48d9d25dcd0b1076d7f596dee2f07db414c2f1bf96c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5919,7 +6017,7 @@
     {
       "id": "SURFACE-df96772a4b1d23c5",
       "path": "scripts/verify-system-evidence.mjs",
-      "sha256": "09fda1a80dd1f221b5bb4521dc8d81af794bd166f67ea811a676251009a8eb1b",
+      "sha256": "01928fc197382c5a4a0e0e4107ed5311771d276217715b8bc88d42bb9f85ac17",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18260,7 +18358,7 @@
     },
     {
       "path": "FORMAL_VERIFICATION.md",
-      "sha256": "2e8b10c03f595d4e7e3c7e6c26cc9313d2a65ef8660391c0fdac78b1360973ce",
+      "sha256": "9c37150ce78c4cbd6c63699a37af51d67cf0203ddb9d8349cc87a98117911115",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24126,7 +24224,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "1a17c55ebd18c9e7bc05bb95b901a535e4a952a6deeae60b26e869666f257603",
+      "sha256": "4d1002c7d7aa0d7d1309abe48884bf3e962e6fe44671b5d067089738dad1c656",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25764,9 +25862,9 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "91061de35136fbde3c21d61395f242b3675c46daeced01c25754c90f48a83fe8",
+      "sha256": "61d7ae3c21618d7ef160f096d3708278d6356bf4a79ab559cf066b563c45e53d",
       "authority": "inferred",
-      "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
+      "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
     },
     {
@@ -25777,8 +25875,29 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/alloy-negative-controls.md",
+      "sha256": "82327d41ea9dcdd88393ae906486060648ff92b4b217e250f3394add4d6d931b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/assurance-report.md",
+      "sha256": "4349c7c347ca316e62a8068867c9d63390834b8360702f45c80200a9fb865ee1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/auth-predicates.md",
+      "sha256": "3eaab365d836f180cc851ef91b3be8afdd64c5f510900d4ef87e56defa6aaade",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "d58e58152c4739f7f37b6303cf05d652c3662ffe42418f488891c86a34985720",
+      "sha256": "1664b7002b9774258279429dd23838d5f673e1face89dc598e1ce7dcbdcba5e4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26169,6 +26288,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/proof-certificates.md",
+      "sha256": "147227e350f5b47377eb6eaa5f31b899425d43857a14eb92dc97002c32b633a3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/public-knowledge-retrieval.md",
       "sha256": "4a00570991ab6ad89525de51e2b5b2a77127116bd8743d1f6175f6d977047c4d",
       "authority": "inferred",
@@ -26190,8 +26316,22 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/receipt-admission.md",
+      "sha256": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/recovery-envelope.md",
       "sha256": "6af6d997db007dffac3bb59e306e2469285f214b184ad58f230f5f9646d1fe9d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/recovery-expiry-arithmetic.md",
+      "sha256": "077d67062d89e0e835dfb548a49a35c1cf949d6758c4a55a67a7f4031a5188a4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26219,14 +26359,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f019b439871d7a4fe4a663b74187abc7cf6291140df255809de29f9a433bc306",
+      "sha256": "509079f03c6d51efb6008656772a32519a9521f7b0b62f051638e5cbd960cd2f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "d354313f53ff27b7987f28309e599317b975503ca7868477b8301e891207b344",
+      "sha256": "67e8b2e4fc1d6d9cb1589942a30134b484c28aeb86655aa3081fd90fd9444e51",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26261,7 +26401,7 @@
     },
     {
       "path": "formal/system/state-machine-correspondence.md",
-      "sha256": "33615982db681cd6ff8d2b083d551c6b5100cae58179953b35c5cf7245263f43",
+      "sha256": "086f91891d8de4da293d03694f16682786509582f8e64972cf6df13da41de68c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
