@@ -326,6 +326,7 @@
     },
     "publicUxMainIntegration": "docs/catalog-persistence/public-ux-main-reconciliation-20261021.json",
     "runtimeMainRefresh": "docs/catalog-persistence/runtime-main-refresh-20261021.json",
+    "formalPreparedIntegration": "docs/catalog-persistence/formal-prepared-reconciliation-20261022.json",
     "ledgerReadinessIntegration": "docs/catalog-persistence/ledger-readiness-reconciliation-20261021.json",
     "ledgerSnapshotReadinessIntegration": "docs/catalog-persistence/ledger-snapshot-readiness-reconciliation-20261021.json",
     "ledgerCombinedIntegration": "docs/catalog-persistence/ledger-combined-reconciliation-20261022.json",

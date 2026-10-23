@@ -34,7 +34,9 @@ bash scripts/verify-event-operations-formal.sh
 
 The script validates JAR checksums, requires exact PlusCal regeneration and its real-translator
 regression tests, executes TLC sequentially, requires the Alloy scenarios to be satisfiable,
-and requires every Alloy assertion to have no counterexample. Node 22+ is required for the
+and requires every Alloy assertion to have no counterexample. Each assertion also
+has an assertion-preserving guard mutation that must produce a named counterexample;
+see [the control contract](../system/alloy-negative-controls.md). Node 22+ is required for the
 integrity checker/tests; CI selects Node 22 explicitly.
 
 ## Bounds and results (rechecked 2026-09-15)

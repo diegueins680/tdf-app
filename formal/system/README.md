@@ -1,11 +1,17 @@
 # TDF authoritative specification and conformance
 
-Status: active reconciliation on consolidated main, 2026-10-04. **System-wide
+Status: active reconciliation on consolidated main, 2026-10-13. **System-wide
 conformance and delivery are not yet established.** The prior audit remains in
 [history-2026-09-20.md](history-2026-09-20.md), with its original limitations.
 Historical green results are not current-candidate evidence.
 
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
+
+- [assurance-report.md](assurance-report.md): generated four-state proof matrix, replayable source-derived SMT evidence and explicit blocked release decision.
+- [receipt-admission.md](receipt-admission.md): source-bound consumer replay for every SMT suite, false-proof/refutation controls and an auditable synthetic counterexample.
+
+- [auth-predicates.md](auth-predicates.md): three conditional authorization predicate contracts, cardinality lemmas, source mutation controls and explicit endpoint/refinement exclusions.
+- [recovery-expiry-arithmetic.md](recovery-expiry-arithmetic.md): four conditional full-width recovery-time contracts, PostgreSQL correspondence, overflow refusal and finite database boundary probes.
 
 ## Executable gates
 
@@ -22,6 +28,9 @@ These checks make drift fail CI; run them before changing a mapped surface.
 | `npm run verify:formal`, `scripts/verify-system-evidence.mjs` | Bounded TLA+/PlusCal/Alloy models and their negative controls |
 
 ## Canonical package
+
+- [alloy-negative-controls.md](alloy-negative-controls.md): assertion-preserving
+  mutations, named counterexample admission and retained bounded solver evidence.
 
 - [public-knowledge-retrieval.md](public-knowledge-retrieval.md): current public
   metadata admission, colliding private index identities and bounded read/delete
@@ -128,7 +137,27 @@ Conflicts lacking an applicable decision remain `SPECIFICATION AMBIGUITY` or
 `PARTIAL`. Do not silently choose whichever source is easiest to satisfy. Full
 paths identify ADRs: the two historical ADR-0105 filenames are distinct decisions.
 
-## Verified starting baseline
+## Current audit checkpoint
+
+The October13 isolated audit starts at root
+`75f1a7ce85cdbf062b13b31e7f79d9efa62ed290`, with exact pinned Mobile gitlink
+`67ee1afac203741aac5771d130a18498c4d4835a`. Fresh read-only inspection observed
+backend `7ab344400d0878838b9b12742ca4cc5cd7f38f94` (`0.1.0.0`), 188 applied
+migrations and 14 pending in the candidate manifest. The public web entry bundle
+embeds the root baseline SHA. These observations are dated evidence, not a claim
+that later production or main remains unchanged.
+
+[The baseline package](evidence/2026-10-13-consolidated-baseline/baseline.json)
+binds source hashes, the exact Mobile revision, current branch protection, runtime
+flags and the read-only migration plan. Inventory and generated-client freshness
+checks passed. The existing register contains 116 requirements, all PARTIAL;
+discovery contains 430 candidate clauses. It lists 1,715 unmapped material surfaces,
+one untested registered requirement and 58 critical requirements without formal
+model mappings. These counts describe coverage debt, not implementation verdicts.
+The current release plan rejects execution; guarded routine deployment remains an
+open obligation. The following checkpoints are historical provenance only.
+
+## Historical reconciliation checkpoints
 
 The clean isolated branch starts at root `b07f67c3ebe2022d5f70e94578944b6401616696`
 and Mobile `ede1f2a0ccf75f3794c7892f291e1751b279d19e`. The shared dirty checkout
@@ -352,5 +381,12 @@ PRIV-ANALYTICS-001 keeps the same serializer boundary and mapped regression suit
 
 Invoice receipt authority and bounded verification scope: [invoice-receipts.md](invoice-receipts.md) (`PAY-INVOICE-001`). The additive migration rejects incompatible historical receipts; no automatic financial-evidence rewrite is permitted.
 
+Independent cross-solver and CPC certificate checking, its all fourteen formula obligations
+and their source/refinement limitations:
+[proof-certificates.md](proof-certificates.md). These results never discharge
+complete implementation or refinement obligations.
+
 The [release intent journal](release-journal.md) orders durable operations and rejects
 uncertain replay. It remains a library, not a guarded production executor.
+
+Catalog refresh must preserve historical retirement records and their original review evidence. `scripts/build-catalog-decisions.mjs` recomputes discovery counters while retaining reconciliation provenance. Source-specific decisions that require preservation use an explicit successor review method with hash-verified immutable ancestor references, so a deterministic-policy refresh cannot silently replace their priority or rationale. This is review-provenance preservation, not new product or release authority; `SYS-TRACE-001` maps its regression check.

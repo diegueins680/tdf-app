@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "reviewedSources": {
+    "tdf-hq/src/TDF/ServerAuth.hs": "ef2424821bcfa8d0cd2a8729dd9534a10c0c1ef39aab9ddc818d95f0896ac8a3",
+    "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
+    "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+    "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
+    "tdf-hq/tdf-hq.cabal": "86498fb7f0286a45c7b2876d3b2341b2ad88d4738fea8dd494899515a44c4db0",
+    "formal/system/identity-lifecycle.md": "59dbd5b2c455d62cee46ddf2a6e0d7f60b1fe6ce6b8bfabcad83ca6cc5ef1a31"
+  },
+  "obligations": [
+    {
+      "id": "window-equivalence",
+      "requirementId": "ID-SESSION-003",
+      "claim": "For all signed Int64 inputs: recoveryWindowValid iff issued >= 0, expires = exact(issued + 900), issued <= current < expires.",
+      "implementation": "tdf-hq/src/TDF/ServerAuth.hs:recoveryWindowValid",
+      "category": "source-derived-recovery-SMT",
+      "risk": "P0",
+      "specification": "formal/system/recovery-expiry-arithmetic.md",
+      "method": "Z3 QF_BV UNSAT, SAT boundary witnesses, source mutation counterexamples and serialized replay",
+      "mapping": "Signed 64-bit inputs, 65-bit exact differences/sums, PostgreSQL checked arithmetic; restricted source translation",
+      "assumptions": [
+        "Defined Int64 inputs; reviewed restricted translator correct",
+        "Haskell Int64 wraps, toInteger is exact; PostgreSQL bigint overflow rejects and NOT NULL constraints hold",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Predicate and time-constraint contracts only. No compiler/translator refinement, installed-schema, transaction/rollback, credential binding, clock freshness, HTTP, delivery or whole-system proof."
+    },
+    {
+      "id": "schema-correspondence",
+      "requirementId": "ID-SESSION-003",
+      "claim": "The non-null PostgreSQL time CHECK admits exactly metadata that recoveryWindowValid admits at current = issued.",
+      "implementation": "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql:auth_recovery_time_window; TDF.ServerAuth.recoveryWindowValid",
+      "category": "source-derived-recovery-SMT",
+      "risk": "P0",
+      "specification": "formal/system/recovery-expiry-arithmetic.md",
+      "method": "Z3 QF_BV UNSAT, SAT boundary witnesses, source mutation counterexamples and serialized replay",
+      "mapping": "Signed 64-bit inputs, 65-bit exact differences/sums, PostgreSQL checked arithmetic; restricted source translation",
+      "assumptions": [
+        "Defined Int64 inputs; reviewed restricted translator correct",
+        "Haskell Int64 wraps, toInteger is exact; PostgreSQL bigint overflow rejects and NOT NULL constraints hold",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Predicate and time-constraint contracts only. No compiler/translator refinement, installed-schema, transaction/rollback, credential binding, clock freshness, HTTP, delivery or whole-system proof."
+    },
+    {
+      "id": "issuance-admission",
+      "requirementId": "ID-SESSION-003",
+      "claim": "The time CHECK admits the generated Int64 expiry iff 0 <= issued <= maxInt64 - 900.",
+      "implementation": "tdf-hq/src/TDF/ServerAuth.hs:createPasswordResetToken; auth_recovery_time_window",
+      "category": "source-derived-recovery-SMT",
+      "risk": "P0",
+      "specification": "formal/system/recovery-expiry-arithmetic.md",
+      "method": "Z3 QF_BV UNSAT, SAT boundary witnesses, source mutation counterexamples and serialized replay",
+      "mapping": "Signed 64-bit inputs, 65-bit exact differences/sums, PostgreSQL checked arithmetic; restricted source translation",
+      "assumptions": [
+        "Defined Int64 inputs; reviewed restricted translator correct",
+        "Haskell Int64 wraps, toInteger is exact; PostgreSQL bigint overflow rejects and NOT NULL constraints hold",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Predicate and time-constraint contracts only. No compiler/translator refinement, installed-schema, transaction/rollback, credential binding, clock freshness, HTTP, delivery or whole-system proof."
+    },
+    {
+      "id": "issuance-exact",
+      "requirementId": "ID-SESSION-003",
+      "claim": "Any generated expiry admitted by the time CHECK equals the exact mathematical issued + 900; wrapped expiry is never admitted.",
+      "implementation": "tdf-hq/src/TDF/ServerAuth.hs:createPasswordResetToken; auth_recovery_time_window",
+      "category": "source-derived-recovery-SMT",
+      "risk": "P0",
+      "specification": "formal/system/recovery-expiry-arithmetic.md",
+      "method": "Z3 QF_BV UNSAT, SAT boundary witnesses, source mutation counterexamples and serialized replay",
+      "mapping": "Signed 64-bit inputs, 65-bit exact differences/sums, PostgreSQL checked arithmetic; restricted source translation",
+      "assumptions": [
+        "Defined Int64 inputs; reviewed restricted translator correct",
+        "Haskell Int64 wraps, toInteger is exact; PostgreSQL bigint overflow rejects and NOT NULL constraints hold",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Predicate and time-constraint contracts only. No compiler/translator refinement, installed-schema, transaction/rollback, credential binding, clock freshness, HTTP, delivery or whole-system proof."
+    }
+  ],
+  "sourceContextReviews": [
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "030365aabfb46c14e2962e054cf3b22192cda1a8",
+      "previousSha256": "c62b9cf69eed8fdcae2c32633690234118984c1b1ac2d5494a8ebba9efa31641",
+      "currentSha256": "86498fb7f0286a45c7b2876d3b2341b2ad88d4738fea8dd494899515a44c4db0",
+      "change": "Register TDF.LedgerPostingSpec in the test-suite other-modules only; removing the exact one line reproduces protected main Cabal bytes.",
+      "semanticReview": "The test module exports spec and uses SQL/Persistent/Hspec with the existing disposable-database guard. It defines no authorization/recovery module or import override. The entire runtime executable component, source paths, dependencies, compiler options, CPP flags, Stack/lock, authorization/RoleEnum/ingestion, ServerAuth and recovery SQL sources are unchanged from protected main. Conditional translations and assumptions are unchanged.",
+      "qualification": "Fresh solver/replay/mutation and independent CPC checks remain required. No implementation/refinement or financial release status is promoted."
+    }
+  ]
+}
