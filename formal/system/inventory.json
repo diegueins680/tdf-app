@@ -175,6 +175,7 @@
       "scripts/__tests__/payment-staging-inspection.test.mjs",
       "scripts/__tests__/persistent-uploads.test.mjs",
       "scripts/__tests__/persona-test-program.test.mjs",
+      "scripts/__tests__/playwright-image.test.mjs",
       "scripts/__tests__/production-catalog-inventory.test.mjs",
       "scripts/__tests__/production-entrypoint.test.mjs",
       "scripts/__tests__/production-release.test.mjs",
@@ -556,6 +557,7 @@
       "scripts/verify-invoice-receipt-api.mjs",
       "scripts/verify-invoice-receipts.py",
       "scripts/verify-payment-arithmetic.py",
+      "scripts/verify-playwright-image.mjs",
       "scripts/verify-readiness.py",
       "scripts/verify-request-failures.py",
       "scripts/verify-simulator-health.sh",
@@ -2646,7 +2648,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "479e7bf326566f8d78f1ef854a716866aef937aba8ed52d9a41ba80f0eacf48a",
+      "sha256": "6583bbccd04ec6419d58f83e35a0b3ccbfd669e81a78e6e8ffb2ca04e36ada02",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3162,7 +3164,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
+      "sha256": "f380d96255c0601bebdcb81beacd8543d051b65a7c5b3ef1bf9235c427035d0a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3535,6 +3537,12 @@
       "id": "SURFACE-57edc37515705dee",
       "path": "scripts/__tests__/persona-test-program.test.mjs",
       "sha256": "7f5842c21cd414c9aa541d41b71a01c3dc9347bf4ffee3c12eda88d8839f3128",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-68bd93791e9d6d28",
+      "path": "scripts/__tests__/playwright-image.test.mjs",
+      "sha256": "ed3e5b0b3571be4e4ddb2fac8ef950ea488479edff2e831aff1bf37b91e3cc88",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4458,7 +4466,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "3e65e7838c189c408c2e7a7d49412f25d6a7ebaace66ee63dfe7604ceff6173e",
+      "sha256": "b97db73c7f4dc1786a91e73d301324d20ef116748c764fdf1de53cde9cbbafb5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5821,6 +5829,12 @@
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
       "sha256": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6074376bf1c8f4b9",
+      "path": "scripts/verify-playwright-image.mjs",
+      "sha256": "c63490e8667f75c66fd0f71b0842610c0016e94132d52c08ce45087e5dbb6ab6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25448,6 +25462,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/browser-ci-image.md",
+      "sha256": "3c49deec9cfaa7246fc4fabea0649feb84474b826925c447df9d4ce55d806042",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/build-trust.md",
       "sha256": "a151c33756459b9de9133382fa93d32dec616abf063c5ac6401f6954c89aef4f",
       "authority": "inferred",
@@ -25827,7 +25848,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "1ebc967bf2b3dc200ac28edc08e817581197ccbf930cd4fe794de34eadbeec37",
+      "sha256": "59b7e384bd66bcbb65f6217afa1bd9598e35f469c3e9e99035493342590446ab",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
