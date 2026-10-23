@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-23T00:46:09.123Z",
+  "generatedAt": "2026-10-23T01:00:56.027Z",
   "repositoryRoot": ".",
   "filesScanned": 2317,
   "candidateCount": 1326,
@@ -5551,7 +5551,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "object-registry",
       "name": "types",
-      "line": 68,
+      "line": 84,
       "values": [
         "chromium",
         "firefox",
@@ -5560,7 +5560,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        68
+        84
       ],
       "consumerCount": 312,
       "backendConsumers": [
@@ -15601,7 +15601,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "packages",
-      "line": 7,
+      "line": 8,
       "values": [
         "@playwright/test",
         "playwright",
@@ -15610,7 +15610,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        7
+        8
       ],
       "consumerCount": 39,
       "backendConsumers": [
