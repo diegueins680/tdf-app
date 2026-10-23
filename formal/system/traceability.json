@@ -10757,6 +10757,80 @@
         "classification": "PARTIAL",
         "reason": "Actual native PostgreSQL lifecycle and missing/wrong-password controls pass; fresh current-head Linux Docker migration qualification remains pending."
       }
+    },
+    {
+      "id": "SYS-CI-BROWSER-001",
+      "title": "Persona CI uses aligned immutable bundled browsers",
+      "statement": "Before required persona journeys run, an immutable official Playwright image, all locked and installed Playwright packages and the bundled browser identity must agree, and Chromium, Firefox and WebKit must each launch successfully. Existing application journeys, assertions, time limits and aggregate gates remain required.",
+      "domain": "SYS",
+      "actors": [
+        "CI runner",
+        "Developer"
+      ],
+      "preconditions": [
+        "Trusted repository end-to-end tests execute in the pinned official Noble image after npm ci and the existing Node 22 setup."
+      ],
+      "inputs": [
+        "Digest-pinned container image",
+        "Package lock and installed package versions",
+        "Bundled image metadata",
+        "Bundled browser executable launches"
+      ],
+      "state": {
+        "states": [
+          "unvalidated",
+          "aligned",
+          "ready",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Unvalidated -> aligned after image, lockfile, installed versions, directory and bundled identity all match.",
+        "Aligned -> ready only after every required browser launches and closes.",
+        "Any validation or launch error -> failed."
+      ],
+      "forbiddenTransitions": [
+        "Mutable or mismatched image -> run journeys.",
+        "Missing or failed browser -> emit a complete preflight success.",
+        "Any preflight or application-stage failure -> passing aggregate quality."
+      ],
+      "effects": [
+        "Use bundled browser executables and system dependencies instead of per-job package installation."
+      ],
+      "authorization": "This test infrastructure grants no production or release authority. Root container execution addresses only trusted synthetic end-to-end tests.",
+      "privacy": "Preflight reports browser names and versions only; application test artifacts retain existing sanitization and retention.",
+      "concurrency": "Existing browser workers and fixture isolation are unchanged; the container uses the official shared-memory recommendation.",
+      "idempotency": "Preflight does not install packages or modify application data.",
+      "failure": "Fail closed on missing metadata, version drift, invalid pin, browser-path redirection or any failed launch; there is no installer fallback.",
+      "recovery": "Update the lockfile and verified official image together, then require all existing hosted browser stages and protected admission.",
+      "observability": "Emit one bundled-browser-preflight record only after all required browsers have launched and closed; retain existing application artifacts.",
+      "authority": "inferred",
+      "source": "Repeated long Playwright installation steps in hosted runs39827271101 and39873570293; official Playwright Docker/CI guidance and immutable1.59.1 image metadata.",
+      "property": "Incomplete or mismatched browser infrastructure cannot admit required persona journeys or replace their assertions.",
+      "contract": "formal/system/browser-ci-image.md",
+      "implementation": [
+        ".github/workflows/ci.yml",
+        "scripts/verify-playwright-image.mjs",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/playwright-image.test.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Finite negative controls reject mutable/foreign pins, package drift, stale metadata, redirected browser directories and partial launch success. Runtime metadata and all three actual browser launches are checked before unchanged hosted journeys; complete current-head Linux qualification remains required.",
+      "evidence": "Current-head hosted preflight and persona/deletion/discovery artifacts remain pending. Registry manifest/configuration digests were verified separately; mocks do not establish Linux executable availability.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Finite version/launch-closure controls only; fresh actual Linux image and application-test qualification is pending.",
+      "ambiguity": [
+        "Registry and image-pull availability remain external dependencies.",
+        "Successful browser launches do not establish application conformance."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Pure version checks and mocked launch failure/cleanup controls do not establish complete installed-image or application correspondence; fresh hosted execution remains required."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -10764,7 +10838,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "952e968710a1913383ffc419a2dde505a926bdf040f74ce5c63b155cabf7e80a",
+    ".github/workflows/ci.yml": "343e32ecf6ef32caf0bedadc64d559c456d4ac1cc9ea6e4a048c8d9bd5bafbbe",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -10772,7 +10846,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "8d3d9e64531b6762a3b27580faa3c0ebfe0e58e20104473203b78b0d1abef4c4",
+    "docs/catalog-persistence/catalog-list-decisions.json": "c30db6337a46b1288d09e32f150ec5d0e86e831431389bc42c053dad9fcde870",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -11058,7 +11132,7 @@
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
-    "scripts/__tests__/ci-pipeline.test.mjs": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
+    "scripts/__tests__/ci-pipeline.test.mjs": "f380d96255c0601bebdcb81beacd8543d051b65a7c5b3ef1bf9235c427035d0a",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
@@ -11093,6 +11167,7 @@
     "scripts/__tests__/operations-worker-tick-postgres.mjs": "105914e3b21f12195ae1efbb543c16909185e9b348f8c275f9da7c8bc91ca4ab",
     "scripts/__tests__/payment-readiness-helper.test.mjs": "bddad0df011362abedc3cb346688ab3beead734f4e3dc787828ffd057f204a03",
     "scripts/__tests__/persistent-uploads.test.mjs": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
+    "scripts/__tests__/playwright-image.test.mjs": "ed3e5b0b3571be4e4ddb2fac8ef950ea488479edff2e831aff1bf37b91e3cc88",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
     "scripts/__tests__/production-entrypoint.test.mjs": "33c168dcb5b4a6b3d9eaccec6683d368a90f1dd9b47c1223f949e5e1d234feac",
     "scripts/__tests__/production-release.test.mjs": "89bcde93815f17e78ec777e1a8f1c2711eacebb00a5a1b1aa99165e23d6d0233",
@@ -11164,7 +11239,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "3e65e7838c189c408c2e7a7d49412f25d6a7ebaace66ee63dfe7604ceff6173e",
+    "scripts/quality-repo.sh": "b97db73c7f4dc1786a91e73d301324d20ef116748c764fdf1de53cde9cbbafb5",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
@@ -11261,6 +11336,7 @@
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
+    "scripts/verify-playwright-image.mjs": "c63490e8667f75c66fd0f71b0842610c0016e94132d52c08ce45087e5dbb6ab6",
     "scripts/verify-readiness.py": "c1db0b9d64151547969116233c66a3160c2ab97327b51c679d0a86af8e7acaeb",
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
     "scripts/verify-system-evidence.mjs": "09fda1a80dd1f221b5bb4521dc8d81af794bd166f67ea811a676251009a8eb1b",
@@ -12526,6 +12602,10 @@
       {
         "requirement": "MSG-NOTIFY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-CI-BROWSER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/api/generated/types.ts": [
@@ -12609,6 +12689,10 @@
       },
       {
         "requirement": "SYS-CI-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-CI-BROWSER-001",
         "relationship": "tests"
       }
     ],
@@ -14018,6 +14102,10 @@
       {
         "requirement": "DEPLOY-PHYSICAL-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-CI-BROWSER-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/quality-mobile.sh": [
@@ -20685,6 +20773,18 @@
         "requirement": "SYS-CI-DB-001",
         "relationship": "implementation"
       }
+    ],
+    "scripts/verify-playwright-image.mjs": [
+      {
+        "requirement": "SYS-CI-BROWSER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/playwright-image.test.mjs": [
+      {
+        "requirement": "SYS-CI-BROWSER-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -20753,7 +20853,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "952e968710a1913383ffc419a2dde505a926bdf040f74ce5c63b155cabf7e80a",
+      "sha256": "343e32ecf6ef32caf0bedadc64d559c456d4ac1cc9ea6e4a048c8d9bd5bafbbe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20786,6 +20886,10 @@
         },
         {
           "requirement": "MSG-NOTIFY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-CI-BROWSER-001",
           "relationship": "implementation"
         }
       ]
@@ -21767,7 +21871,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
+      "sha256": "f380d96255c0601bebdcb81beacd8543d051b65a7c5b3ef1bf9235c427035d0a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21788,6 +21892,10 @@
         },
         {
           "requirement": "SYS-CI-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-CI-BROWSER-001",
           "relationship": "tests"
         }
       ]
@@ -22467,6 +22575,18 @@
       "sha256": "7f5842c21cd414c9aa541d41b71a01c3dc9347bf4ffee3c12eda88d8839f3128",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-68bd93791e9d6d28",
+      "path": "scripts/__tests__/playwright-image.test.mjs",
+      "sha256": "ed3e5b0b3571be4e4ddb2fac8ef950ea488479edff2e831aff1bf37b91e3cc88",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-CI-BROWSER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b587b9996fa32f37",
@@ -24077,7 +24197,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "3e65e7838c189c408c2e7a7d49412f25d6a7ebaace66ee63dfe7604ceff6173e",
+      "sha256": "b97db73c7f4dc1786a91e73d301324d20ef116748c764fdf1de53cde9cbbafb5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24119,6 +24239,10 @@
         {
           "requirement": "DEPLOY-PHYSICAL-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-CI-BROWSER-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -26515,6 +26639,18 @@
         {
           "requirement": "SYS-MONEY-002",
           "relationship": "formalModels"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6074376bf1c8f4b9",
+      "path": "scripts/verify-playwright-image.mjs",
+      "sha256": "c63490e8667f75c66fd0f71b0842610c0016e94132d52c08ce45087e5dbb6ab6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-CI-BROWSER-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -47946,7 +48082,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "343453170d559c8aef867c7090079a7a5c56057d7487e75dcc70523d004fe2af",
+      "sourceSha256": "79ff213ad234d1302976587354616df78975e1c7b5af7888e20b85661bb0e164",
       "definition": {
         "states": [
           "absent",
@@ -47976,7 +48112,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "343453170d559c8aef867c7090079a7a5c56057d7487e75dcc70523d004fe2af",
+      "sourceSha256": "79ff213ad234d1302976587354616df78975e1c7b5af7888e20b85661bb0e164",
       "definition": {
         "export": [
           "queued",
@@ -70200,7 +70336,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 129,
+    "PARTIAL": 130,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
