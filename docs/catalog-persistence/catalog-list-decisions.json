@@ -17864,6 +17864,38 @@
         "file": "scripts/__tests__/startup-gates-postgres.mjs",
         "line": 40
       }
+    },
+    {
+      "id": "de09a0cde54a8f757ce1",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Incomplete browser coverage or version drift could admit an invalid CI environment; this list cannot be replaced by editable business data.",
+      "justification": "These are fake browser factory keys in launch-failure and cleanup controls. They address only the fixed Chromium/Firefox/WebKit test matrix, not a selectable application catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-22",
+      "reviewBatch": "browser-ci-image-2026-10-22",
+      "evidence": {
+        "file": "scripts/__tests__/playwright-image.test.mjs",
+        "line": 68
+      }
+    },
+    {
+      "id": "5da1800a82705df02018",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Incomplete browser coverage or version drift could admit an invalid CI environment; this list cannot be replaced by editable business data.",
+      "justification": "These exact npm package identities must share the pinned image version. They are fixed dependency identifiers for CI validation, not selectable business values or application authority.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-22",
+      "reviewBatch": "browser-ci-image-2026-10-22",
+      "evidence": {
+        "file": "scripts/verify-playwright-image.mjs",
+        "line": 7
+      }
     }
   ]
 }
