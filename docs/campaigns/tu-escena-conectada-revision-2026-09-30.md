@@ -1,5 +1,15 @@
 # Tu escena, conectada — lote para aprobación, 1 de octubre de 2026
 
+**Cierre vigente 2026-10-23 20:01 Ecuador:** diez invitaciones nuevas de hoy enviadas en dos bloques de cinco y diez fichas CRM guardadas/reabiertas/verificadas. Objetivo diario del23/oct cumplido. Autorización permanente de Diego: diez nuevos seguidores cada día, sin nueva aprobación por lote. Rutina local09:00 America/Guayaquil activa y releída, primera24/oct; requiere equipo/Gateway y sesión autenticada disponibles. Ninguna invitación pendiente de hoy; la rutina continúa mañana. Detalle de envíos, registros y programación al final.
+
+**Cierre adicional 21/oct/2026:** 10/10 invitaciones nuevas enviadas y verificadas, en dos bloques de cinco; 10 fichas CRM con Instagram y texto exacto, guardadas y reabiertas para verificar persistencia. Lote solicitado expresamente por Diego y consumido. Detalle al final de este documento. Resultados separados del piloto anterior; no autoriza más invitaciones ni seguimientos.
+
+**Corte exhaustivo del lote, 21/oct/2026 11:23 Ecuador:** 19/19 hilos del lote contactado revisados individualmente; sin respuestas nuevas frente al historial reconciliado, sin nuevas bajas ni advertencias visibles en esta revisión. Lote consumido: 19 contactos con envío confirmado y un intento fallido excluido; cero invitaciones o seguimientos aprobados pendientes. Diego confirmó que el mensaje del 6/oct a Quito Bohemio fue autorizado; incorporado al documento y al CRM, con lectura posterior de verificación y notas anteriores conservadas. Bloqueo de procedencia resuelto. Propuesta pendiente de respuesta, sin colaboración ni calendario confirmados. Esta continuación: 0 envíos y 1 actualización CRM. Los cortes anteriores se conservan como historial.
+
+**Estado vigente 21/oct 11:44 Ecuador:** Diego confirmó que la cuenta activa «Carla Roman», perfil272, pertenece a @carlaromanmusica. Referencia documental añadida y verificada en las notas CRM266, conservando historial y sin fusionar fichas ni modificar permisos. **Una participante con cuenta activa identificada (artista B); perfil completo y activación todavía sin confirmar.** /artista/272 muestra «No encontramos este artista». No se verificó fecha de creación ni atribución causal de alta a la campaña. Las búsquedas administrativas de los otros cinco contactos positivos no aportaron una segunda cuenta identificada. Esta continuación: 0 envíos y 1 actualización CRM. La pregunta de identidad de Carla está resuelta; no volver a pedirla.
+
+**Última gestión 21/oct 12:17 Ecuador:** Diego aprobó el mensaje puntual de ayuda de activación a Carla; **enviado una sola vez a las12:15**, texto y enlace visibles en el hilo, compositor vacío y sin fallo de envío observado. CRM266 actualizado después del envío y reabierto para comprobar persistencia e historial conservado. Esta ejecución: 1 mensaje de apoyo y 1 actualización CRM; 0 invitaciones nuevas. No quedan mensajes aprobados pendientes. Cuenta identificada1; perfil completo y activación todavía sin confirmar. No repetir el mensaje.
+
 **Lote TDF-TEC-20261001-01 · 20 destinatarios · A10/B10 aprobados · en ejecución.** Estado al 3/oct 17:01 Ecuador: 15 contactos con envío confirmado sin fallo observado (A8/B7); un intento no entregado a Hugo (fan B), excluido sin reintento; cuatro aprobados pendientes (#16,18,19,20). Último bloque cerrado con cinco invitaciones. Hoy: ocho intentos de invitación (incluido Hugo) y dos respuestas de ayuda; diez salidas en total, cierre conservador de envíos por hoy. Cuatro respuestas escritas de tono positivo acumuladas, una neutral, sin activación verificada. Todos los enlaces vigentes usan www.tdfrecords.net. El Reel ya está publicado, no volver a publicar: https://www.instagram.com/tdf.records.label/reel/Dd71zzlt8TD/ . Documento de revisión e informe; el CRM conserva la gestión operativa.
 
 **Horario vigente desde el 3/oct/2026:** todos los días, 08:00–22:00 `America/Guayaquil`, por instrucción «Empieza automáticamente a las 8am, siempre». Permanecen máximo 10 invitaciones/día y 5 mensajes/bloque, exclusivamente dentro de lotes aprobados. **Automatización pendiente de activación:** esta sesión no tiene una herramienta de programación de tareas del chat; guardar el horario no programa una ejecución. Las referencias anteriores a 10:00 son históricas.
@@ -953,3 +963,828 @@ Campaña tu_escena_conectada_piloto; aliado B; estado escalado. Dos respuestas r
 Se transferió a Diego sin responder ni aceptar condiciones. Mantienen propuesta de publicaciones colaborativas con medición Instagram y complementos web/prensa; todavía sin calendario, materiales, cantidad por producción, métricas específicas o fecha de reporte. No se ha aceptado la prueba ni confirmado artistas. Fuera de horario de envíos08–22, sin nuevos envíos. No suma nueva persona positiva; registro/perfil/activación sin confirmar.
 
 Bandeja QuitoSka conserva reemplazo20:39 comoúltimomensaje; Joel/Francisco conservanúltimasrespuestas nuestras. No revisiónexhaustiva19hilos.0nuevosenvíos/seleccionados/excluidos; totalcampañahoy6salidas(incluyeoriginalanulado+reemplazo),0nuevasinvitaciones. NuevasrespuestaBohemio no aumentan6positivasA2/B4;2neutralesconocidosNeil/QuitoSka. Sin advertenciasInstagram/optouts nuevos visibles. Clics/registros/perfiles/activaciones no revalidados, sin métricas inventadas. Pendiente definir conDiego alcance colaboración y preparar respuesta concreta para aprobación, enviable dentro08–22. CRM278 notas añadidas/verificadas, historialpreservado.
+
+
+## Continuación solicitada — 2026-10-21 10:45 America/Guayaquil
+
+Diego pidió continuar «Tu Escena Conectada». Se revisaron las autorizaciones y el último cierre documentado, del 5/oct/2026. Horario vigente 08:00–22:00 Ecuador, máximo 5 mensajes por bloque y 10 invitaciones por día. El lote aprobado está consumido: 19 contactos con envío confirmado sin fallo observado y un intento fallido excluido; los seguimientos únicos de Joel y Quito Ska Society ya se enviaron el 5/oct. No quedan mensajes ni invitaciones aprobados pendientes. La continuación solicitada no se interpreta como aprobación de nuevos destinatarios ni como aceptación de condiciones comerciales.
+
+Bloqueo actual: el catálogo de herramientas de esta sesión no ofrece acceso al navegador adjunto autorizado. No se pudo revisar Instagram ni el CRM en vivo. Conforme a la instrucción vigente de detenerse si falta navegador/CRM, no se usaron scripts, APIs, macros, otro navegador ni otro canal para sustituirlo. Esto es una limitación del entorno, no evidencia de una restricción de Instagram.
+
+Esta ejecución: 0 envíos y 0 modificaciones CRM. Las cifras de 19 contactos, 6 respuestas positivas y 2 neutrales son históricas del cierre documentado, no métricas comprobadas hoy. No se confirmó registro, perfil completo, activación ni clic atribuible de ningún participante. La existencia pública del perfil de Juan Diego Illescas consultada en otra tarea no se atribuye a esta campaña.
+
+Para retomar: recuperar el navegador adjunto con Instagram y CRM disponibles; comprobar actividad posterior al 5/oct y envíos de otros operadores/tareas antes de actuar; revisar respuestas espontáneas y exclusiones. Prioridades históricas pendientes: condiciones de Quito Bohemio (publicaciones colaborativas, web y prensa; faltaban calendario, materiales, entregables y medición), respuesta de Quito Ska Society y vinculación del registro autorreportado de Carla. No repetir invitaciones ni seguimientos consumidos, no volver a publicar el Reel y no contactar a Hugo ni a Danna. Cualquier nueva respuesta de alianza se prepara para decisión de Diego tras revisar el hilo actual.
+
+
+## Navegador conectado — 2026-10-21 10:54 America/Guayaquil
+
+Diego indicó «Conectate con algun browser», autorizando resolver el acceso mediante un navegador disponible. Se comprobó la instalación local de OpenClaw; el perfil existing-session `user` no pudo adjuntarse a Chrome porque falta su conexión de depuración. Se inició correctamente el perfil local persistente `openclaw`: Chrome visible, running/cdpReady/pageReady=true, conexión local127.0.0.1:18800. Esto sustituye el bloqueo anterior de ausencia de acceso de control al navegador. El permiso del sistema para `openclaw browser` fue aprobado.
+
+Pestañas preparadas y leídas mediante snapshots de interfaz normal: Instagram https://www.instagram.com/ (target8FC6A56BF069C753DCC9ADAACC0B79C9) muestra «Log into Instagram»; CRM abierto en https://www.tdfrecords.net/crm/contactos (target23E65CA72315A1BECEC4FC010BAEE5B6) redirige a /login?redirect=%2Fcrm%2Fcontactos y muestra el formulario de acceso. En este perfil aún no se ha verificado ninguna sesión autenticada. Las sesiones abiertas en Brave que mostró Diego no se copiaron ni se extrajeron. Necesario que el operador inicie sesión directamente en este Chrome antes de revisar mensajes o datos privados.
+
+0envíos y0modificacionesCRM; no evaluaciones JavaScript, lectura de cookies/almacenamiento ni APIs de Instagram. Al retomar usar target explícito: el navegador puede contener otras pestañas. No interpretar una conexión técnica funcional como sesión autenticada ni como ejecución de campaña.
+
+
+## Sesiones recuperadas, dominio y diferencia de historial — 2026-10-21 11:03 America/Guayaquil
+
+El operador inició sesión en Chrome conectado. Snapshots de interfaz normal confirman CRM autenticado en www.tdfrecords.net y cuenta Instagram @tdf.records.label (enlace de perfil propio y cabecera del inbox). El bloqueo de autenticación anterior queda superado. Se descartó únicamente el aviso opcional «Turn on Notifications» con «Not Now».
+
+Por consulta del operador sobre una captura «Website offline», comprobación pública independiente: https://tdfrecords.net devuelve HTTP503 y resuelve35.204.150.5; https://www.tdfrecords.net devuelve HTTP200 y resuelve mediante CNAMEtdf-app.pages.dev a Cloudflare. El dominio sinwww está encaminado a un servidor distinto. La página genérica menciona actualizaciones de seguridad; ese texto por sí solo no permite diagnosticar un incidente. No se cambió DNS, hosting ni despliegue. Usarwww conforme a la campaña; pendiente corregir encaminamiento/redirección del dominio raíz.
+
+LecturaCRM porUI: búsqueda exactaquitobohemio devuelve un contacto Quito Bohemio, texto«Contacto: quitobohemio», sin correo y acción para completar antes de crear usuario. Perfil relacionado/perfil/278 corresponde al IDhistórico. No se obtuvo lectura actual de notas completas ni verificación del campoAPIhasUserAccount; no inferir registro desde un perfilParty. No cambiosCRM.
+
+Hilo exactoInstagram https://www.instagram.com/direct/t/111007526956883/ abierto mediante búsquedaquitobohemio y comprobada cabecera@quitobohemio. Además de respuestas5/oct21:35 ya documentadas, aparece un mensaje SALIENTE6/oct/2026,11:52AM que no consta en este registro: propone una sola producción de prueba, el live set deLlama Este Pez/TDFElectroSessions enSerenoMoreno (19agosto), grabaciónd2916b98-7be9-4f18-9e0c-28fa29aee73e, publicación colaborativa+historias, posiblesweb/prensa, entrega de video/fotos/créditos/texto y métricas a7días antes de otras dos producciones. Último mensaje visible al momento de lectura; no se observó respuesta posterior en la porción cargada. La fecha se transcribe como la muestraInstagram, sin certificar zona de ese mensaje histórico.
+
+Se detuvo la operación de campaña por diferencia de historial frente al cierre local5/oct; no atribuir el envío6/oct aDiego, otrooperador oautomatización sin aclaración. Búsqueda de su grabación/frase en los documentos de campaña y notas disponibles no encontró respaldo de aprobación. Pendiente aclarar procedencia/autorización y reconciliar historial antes de cualquier nueva respuesta o compromiso. No se abrió otro hilo ni se envió mensaje, reacción o seguimiento tras detectar la diferencia. Esta ejecución:0envíos,0CRM,1hilo leído; no revisión exhaustiva del lote ni métricas nuevas de conversión.
+
+
+## Quito Bohemio: procedencia aclarada e incorporación histórica — 21/oct/2026
+
+Ante la consulta sobre el mensaje saliente del 6/oct, Diego confirmó: «Sí, fue autorizado; incorpóralo al historial». Esto resuelve el bloqueo de procedencia registrado a las 11:03. Confirma autorización histórica, sin identificar al operador concreto y sin autorizar un nuevo envío o ampliar la negociación.
+
+Revalidación del hilo https://www.instagram.com/direct/t/111007526956883/ en la sesión autenticada @tdf.records.label: el mensaje aparece con fecha «Oct 6, 2026, 11:52 AM», sigue siendo el último visible y el compositor está vacío. No se observa respuesta posterior en la conversación cargada. La hora se conserva tal como la muestra Instagram, sin certificar zona histórica. Registro incorporado hoy; no contabilizar como envío del 21/oct ni atribuirlo al agente actual.
+
+Texto histórico verificado, sin incluir el título adicional de la previsualización del enlace:
+
+> ¡Buenísimo, amigos! Medir con las métricas de Instagram nos parece lo más claro 🤟
+> Para arrancar proponemos una sola producción como prueba: el live set de Llama Este Pez en TDF Electro Sessions, grabado el 19 de agosto en Sereno Moreno → https://www.tdfrecords.net/records?recording=d2916b98-7be9-4f18-9e0c-28fa29aee73e&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b
+> La idea sería una publicación colaborativa + historias y, si les suma, el posteo en su web o una nota de prensa. Nosotros les pasamos el video, fotos, créditos y un texto base; cuéntennos qué fecha les funciona.
+> A los 7 días nos comparten alcance, interacciones, guardados y compartidos, y con eso vemos juntos las otras dos producciones.
+> — TDF Records
+
+Estado: propuesta autorizada enviada históricamente; pendiente de respuesta, fecha y entregables acordados. El plazo de siete días se plantea para medir la publicación de prueba; no corre desde el envío del DM. No hay evidencia de publicación, entrega de materiales, aceptación o métricas recibidas. No repetir la propuesta ni enviar un recordatorio adicional por silencio.
+
+
+## Revisión completa del lote contactado — 21/oct/2026 11:23 Ecuador
+
+Cuenta @tdf.records.label y CRM autenticados en el navegador local OpenClaw autorizado. Comprobación individual de cabecera, Instagram exacto, conversación cargada y último intercambio visible de los 19 contactos. Las fechas históricas siguientes son las mostradas por Instagram. No se revisaron Hugo ni Danna ni se contactó a personas fuera del lote.
+
+| Instagram | Hilo verificado | Último intercambio de campaña visible y decisión |
+|---|---|---|
+| neilarmasmusic | [120859582637786](https://www.instagram.com/direct/t/120859582637786/) | Explicación de TDF enviada 3/oct 16:03; sin respuesta nueva. Neutral ya registrado. |
+| carlaromanmusica | [115621393161405](https://www.instagram.com/direct/t/115621393161405/) | «Super !! Gracias», 4/oct 08:20. No aporta usuario o enlace público; registro autorreportado pendiente de vinculación. No insistir. |
+| pakul_music | [117853139603480](https://www.instagram.com/direct/t/117853139603480/) | Invitación 3/oct 16:55; sin respuesta nueva. |
+| alejandrosoria_music | [110609003672279](https://www.instagram.com/direct/t/110609003672279/) | «Esta cool ya lo voy a chequear friends» y agradecimiento, 30/sept 22:53; positivo histórico, sin novedad. |
+| emmanu__music | [119363226123367](https://www.instagram.com/direct/t/119363226123367/) | Invitación 30/sept 21:37 con reacción de corazón ya documentada; sin respuesta escrita nueva. |
+| lysergicman_music | [111882310210843](https://www.instagram.com/direct/t/111882310210843/) | Invitación 3/oct 16:57; sin respuesta nueva. |
+| solcordovamusic | [119737296080282](https://www.instagram.com/direct/t/119737296080282/) | Agradecimiento escrito e intención de revisar, 30/sept; positivo histórico, sin novedad. |
+| quitoskasociety | [108272193904975](https://www.instagram.com/direct/t/108272193904975/) | Aclaración autorizada y reemplazo 5/oct 20:39; visto, sin respuesta nueva. No prometer grabación ni repetir seguimiento consumido. |
+| quitobohemio | [111007526956883](https://www.instagram.com/direct/t/111007526956883/) | Propuesta autorizada 6/oct 11:52 incorporada al historial; sin respuesta posterior visible. No aceptar condiciones adicionales ni reiterar. |
+| vdjjac | [108549543872229](https://www.instagram.com/direct/t/108549543872229/) | Invitación 3/oct 16:59; sin respuesta nueva. |
+| rommel_unda | [119181856141526](https://www.instagram.com/direct/t/119181856141526/) | «Nice!», 30/sept; positivo breve histórico, sin novedad. |
+| joelduenasc | [108906533838316](https://www.instagram.com/direct/t/108906533838316/) | Único recordatorio 5/oct 09:04; visto, sin respuesta nueva. No repetir. |
+| felipe.cornejo.bermeo | [17843942942565765](https://www.instagram.com/direct/t/17843942942565765/) | Invitación 3/oct 16:05; sin respuesta nueva. |
+| flautatraviesa | [103085801089810](https://www.instagram.com/direct/t/103085801089810/) | Invitación 3/oct 17:00; sin respuesta nueva. |
+| gura.a.music | [119803386073023](https://www.instagram.com/direct/t/119803386073023/) | Invitación 4/oct 11:47; sin respuesta nueva. |
+| raulmolina | [105372257527797](https://www.instagram.com/direct/t/105372257527797/) | Invitación 3/oct 16:06; sin respuesta nueva. |
+| losargonautas.ec | [17846261700449368](https://www.instagram.com/direct/t/17846261700449368/) | Invitación 4/oct 11:48; sin respuesta nueva. |
+| elbloque_oficial | [17845492872235622](https://www.instagram.com/direct/t/17845492872235622/) | Invitación 4/oct 11:49; sin respuesta posterior de campaña. Clip anterior de abril no se contabiliza. |
+| franlaurito | [103987857667022](https://www.instagram.com/direct/t/103987857667022/) | Explicación de TDF enviada 4/oct 19:42 tras consulta positiva; sin respuesta nueva. |
+
+CRM: búsqueda exacta quitobohemio devuelve un único contacto; formulario confirma Instagram exacto. Se añadió únicamente una entrada histórica fechada a sus notas, después de comprobar el texto saliente y la confirmación de Diego. Se guardó, reabrió el mismo formulario y verificó que la nota nueva persistió y el texto de todas las notas anteriores se conservó. No se modificaron nombre, correo, teléfono, Instagram, permisos o cuentas. El contacto corresponde al CRM278 ya vinculado por su perfil. No se realizó un censo de cuentas del lote hoy; las lecturas históricas de hasUserAccount no se presentan como actuales.
+
+Reporte de esta continuación: 19 hilos revisados, 0 nuevos seleccionados/excluidos/contactados, 0 mensajes/reacciones/publicaciones, 1 actualización CRM histórica. Sin respuestas nuevas, opt-outs ni advertencias/restricciones visibles en los hilos revisados. No constituye garantía global de ausencia de denuncias ni acceso confirmado de la tarea cloud.
+
+Acumulado del lote sin cambios: 19 contactos únicos A10/B9 más Hugo, intento fallido excluido; 6 respuestas positivas escritas A2/B4 (Alejandro, Rommel / Carla, Sol, Francisco y Quito Bohemio), 2 neutrales conocidos (Neil y Quito Ska), reacción de Emmanu separada. La propuesta del 6/oct es una salida histórica adicional del mismo aliado, no un nuevo contacto ni una nueva persona positiva. Clics atribuibles no consultados. Ningún registro vinculado, perfil completo o activación recibió confirmación nueva; Carla mantiene autorreporte sin enlace identificador. No inferir conversiones cero ni significación estadística.
+
+Decisión operativa: lote y recordatorios aprobados agotados; mantener pausa de adquisición. No proponer ampliación como lista para ejecutar sin confirmar los requisitos pendientes de al menos dos registros y una activación. Esperar respuestas espontáneas de Quito Bohemio/Quito Ska y, si Carla facilita voluntariamente usuario o enlace público, verificarlo sin pedir contraseñas/códigos. Cualquier condición de alianza vuelve a Diego. No se necesita reenviar una invitación ya consumida para continuar la atención. No se cambió la programación diaria ni se volvió a publicar el Reel.
+
+
+## Verificación de cuenta candidata de Carla — 21/oct/2026 11:34 Ecuador
+
+Diego pidió continuar después del corte anterior. No se repitió la revisión completa de los 19 hilos: se revalidaron Quito Bohemio, Quito Ska Society y Carla, sin mensajes nuevos frente al corte11:23 y con compositores vacíos. No hay texto nuevo que responder ni recordatorio aprobado pendiente.
+
+Se reabrió el adjunto que Carla envió junto a «Ya estoy aquí», el 30/sept21:42. Muestra la pantalla TDF «Tu cuenta está activa. Crea tu perfil de artista ahora, sin esperar aprobación» y el botón «Crear mi perfil de artista»; no contiene usuario, correo ni URL pública identificadora. Es la misma captura ya descrita en las notas CRM del 3/oct, no una nueva respuesta, alta o activación del 21/oct. El adjunto se cerró sin reacción ni mensaje.
+
+CRM → búsqueda exacta carlaromanmusica: una ficha «Carla Román», CRM266, sin correo y con la indicación para completar contacto antes de crear usuario. Se leyeron sus notas y se canceló el formulario sin guardar. La ficha documenta correctamente el autorreporte y la captura. Su falta de cuenta vinculada no descarta otra Party con cuenta.
+
+Usuarios admin → búsqueda «Carla»: resultado único activo «Carla Roman», enlace https://www.tdfrecords.net/perfil/272, acceso mostrado Customer/packages. Se repitió con inactivos incluidos: misma cuenta y mensaje «Sin coincidencias inactivas para esta búsqueda». El perfil272 abierto mediante el enlace de la lista muestra «Carla Roman», sin identificador Instagram o contenido que resuelva por sí solo la vinculación. El usuario de acceso observado se omite de este registro porque no hace falta difundirlo para revisar el perfil.
+
+Label → Artistas, vista cargada con59perfiles: búsquedas «Carla» y «Roman» devuelven «Sin coincidencias». Describe únicamente esos términos; no descarta un perfil con otro nombre artístico, ni prueba que la cuenta272 carezca de toda acción significativa. No se alteraron perfiles, roles, contactos ni cuentas. No se pulsó crear usuario, agregar amigo, WhatsApp o chatear.
+
+Se pidió a Diego confirmar si el perfil272 corresponde a @carlaromanmusica. Pregunta pendiente al cierre; no tratar silencio como confirmación. Hasta resolver identidad, mantener cuenta candidata sin vincular y sin sumar registro confirmado. Una confirmación de identidad permitiría documentar la cuenta existente del participante; la fecha de creación y atribución temporal a la campaña aún requieren evidencia si se pretende reportar una nueva alta causada por la invitación. No fusionar CRM266/Party272 ni cambiar permisos para resolver una métrica.
+
+Si confirma identidad y la participante vuelve a pedir ayuda, el siguiente paso del producto es que ella inicie sesión y use /artista/crear para crear/completar su propio perfil. No requiere que el operador le cree una segunda cuenta o apruebe su perfil propio. Esto es una indicación para atención de una consulta futura, sin autorizar un DM adicional por silencio. Perfil completo y primera acción siguen pendientes de evidencia.
+
+Limitación de interfaz observada: Usuarios admin mostró dos veces «La página no terminó de cargar» tras navegación completa; su botón normal Recargar recuperó la lista. No hubo elusión mediante APIs, JavaScript, cookies o lecturas de base de datos. No extrapolar ese aviso a una caída de Instagram o al estado de registro de Carla.
+
+Esta continuación: 3 hilos revalidados, 1 adjunto histórico inspeccionado, 1 ficha CRM leída y 1 cuenta candidata encontrada en Usuarios admin; 0 envíos/reacciones/publicaciones, 0 modificaciones CRM/cuentas/perfiles y ninguna conversión nueva contabilizada. El corte completo19hilos11:23permanece como la auditoría exhaustiva más reciente.
+
+
+## Identidad de Carla confirmada y seguimiento actualizado — 21/oct/2026 11:44 Ecuador
+
+Diego respondió «Si, continua» a la pregunta explícita sobre si la cuenta activa del perfil272 corresponde a @carlaromanmusica. La identidad queda confirmada por el operador y la pregunta del apartado anterior resuelta. No es necesario volver a pedir esta confirmación.
+
+Revalidación autenticada de Usuarios admin: el resultado «Carla Roman» mantiene cuenta activa y enlace /perfil/272. La cuenta identificada es de una participante del lote artista B. Se pasa de autorreporte sin identidad a **cuenta activa identificada y verificada**, sin atribuir una nueva alta al 21/oct. El DM/captura del30/sept y la confirmación de Diego apoyan la vinculación al participante; la fecha exacta de creación y causalidad de la invitación no se verificaron.
+
+CRM266, Instagram carlaromanmusica exacto: se añadió una entrada fechada que identifica /perfil/272, la confirmación de Diego, estado de cuenta, comprobación de perfil y siguiente paso de atención. Antes de guardar se comparó el texto completo con las notas previstas. Después se reabrió el mismo formulario y se verificó que la entrada persistió, el prefijo de todas las notas anteriores se conservó y el Instagram no cambió. Se canceló esa reapertura sin cambios. Es una referencia documental de seguimiento entre ficha de campaña y cuenta identificada, sin cambiar la asociación técnica de los registros. No se modificaron correo, teléfono, nombre, permisos, roles o hasUserAccount; no se fusionaron CRM266/Party272 ni se creó otra cuenta.
+
+Comprobación pública directa https://www.tdfrecords.net/artista/272: la interfaz muestra «No encontramos este artista». Complementa las búsquedas Carla/Roman sin coincidencias en el directorio. No se creó o editó un perfil en su nombre. Estado de perfil completo: no confirmado. Estado de activación o primera acción significativa: no confirmado; una cuenta activa por sí sola no satisface ese criterio.
+
+Revisión adicional de cuentas de los otros cinco contactos positivos, por interfaz de Usuarios admin con activos e inactivos:
+
+| Participante | Búsqueda | Resultado observado |
+|---|---|---|
+| Alejandro Soria | Soria | Sin coincidencias en activos e inactivos. |
+| Sol Córdova | Cordova; Sol | Cordova sin coincidencias. Sol devuelve otra identidad nominal; no se vincula por semejanza. |
+| Rommel Unda | Rommel | Sin coincidencias en activos e inactivos. |
+| Francisco Laurito | Laurito | Sin coincidencias en activos e inactivos. |
+| Quito Bohemio | Bohemio | Sin coincidencias en activos e inactivos. |
+
+Estas búsquedas no descartan cuentas bajo otro nombre o correo; no registrar a esas personas como «no registradas» ni atribuirles coincidencias dudosas. No se solicitó identidad adicional por DM. No hay segunda cuenta identificada o activación verificada a partir de esta revisión.
+
+### Estado de medición y siguiente acción
+
+| Medida | Estado verificado del lote de octubre |
+|---|---|
+| Contactados únicos sin fallo observado | 19, A10/B9; Hugo sigue excluido por intento fallido. |
+| Respuestas positivas escritas | 6, A2/B4; ninguna persona positiva nueva en esta continuación. |
+| Participantes con cuenta activa identificada | 1: Carla, artista B, Party272. |
+| Altas nuevas atribuibles a la invitación | Fecha y atribución no verificadas; no convertir la fila anterior en una cifra de altas causadas por campaña. |
+| Perfiles completos | Ningún caso confirmado en el lote. |
+| Activaciones / primera acción significativa | Ningún caso confirmado en el lote. |
+| Mensajes aprobados pendientes | 0. |
+
+Siguiente acción de producto para Carla: que ella inicie sesión y abra https://www.tdfrecords.net/artista/crear, cree o complete su perfil con biografía/enlaces y realice una primera acción significativa; cuando haya un enlace público o evidencia, verificar ambos pasos por separado. Su perfil propio no necesita aprobación administrativa. No se ejecuta esa acción desde la cuenta del operador, ni se envía un nuevo recordatorio por silencio. Se conserva esta indicación para atender una futura consulta de la participante.
+
+Mantener el lote actual y la atención de respuestas espontáneas: no se ha confirmado una segunda cuenta ni una activación para satisfacer los requisitos pendientes de ampliación. No preparar un nuevo lote como autorizado ni reutilizar invitaciones/seguimientos consumidos. No se volvió a publicar el Reel ni se cambió la programación diaria.
+
+Esta continuación: 1 confirmación de identidad del operador, 1 nota CRM añadida y comprobada tras guardar, 1 perfil público por ID comprobado y búsquedas de cuenta sobre los otros5positivos; **0 mensajes, reacciones o publicaciones**. No se repitió el barrido19hilos ya cerrado11:23. No hay otra pregunta de identidad o aprobación pendiente en este bloque.
+
+
+## Ayuda puntual de activación para Carla: texto para decisión — 21/oct/2026 12:08 Ecuador
+
+Diego pidió continuar después de confirmar identidad y actualizar el seguimiento. Se preparó una acción concreta para revisar: un solo mensaje adicional a @carlaromanmusica, artista B, CRM266, cuenta identificada Party272. **Estado: borrador, no aprobado ni enviado.** No se pegó en el compositor ni se escribió una gestión CRM por la mera preparación.
+
+Hilo exacto https://www.instagram.com/direct/t/115621393161405/ revalidado: sigue «Super !! Gracias» del4/oct08:20 como última respuesta visible; la ayuda anterior del3/oct solicitaba usuario/enlace, pero no explicaba el botón de creación de perfil. La identidad ya está confirmada por Diego; este texto no vuelve a solicitarla. La ficha CRM exacta sigue accesible y el estado de cuenta identificado no cambia.
+
+Comprobación del enlace exacto propuesto https://www.tdfrecords.net/login?redirect=%2Fartista%2Fcrear: con la sesión del operador, redirige a /artista/crear y muestra «Crea tu perfil de artista», con acción de edición porque ese operador ya es artista. No se pulsó crear/editar ni se alteró ningún perfil. La captura histórica de Carla muestra el botón «Crear mi perfil de artista» para su sesión sin perfil; no se inició sesión como ella ni se probó su activación de extremo a extremo. El enlace usa acceso existente, sin signup=1. Se prioriza un enlace breve de ayuda; no lleva UTM, y no se atribuirán clics de este mensaje a PostHog ni al ensayo A/B. Sigue asociado al segmento original artista B para gestión, sin presentarlo como nueva variante de adquisición.
+
+Texto exacto propuesto para un único envío adicional:
+
+```text
+Hola, Carla 👋 Tu cuenta de TDF ya está activa. Si quieres continuar, entra aquí con tu cuenta:
+https://www.tdfrecords.net/login?redirect=%2Fartista%2Fcrear
+Pulsa «Crear mi perfil de artista», añade tu biografía y un enlace a tu música, y guarda los cambios. Después puedes seguir a otro artista desde Comunidad.
+Si te trabas, cuéntanos en qué paso; no necesitamos contraseñas ni códigos. Si prefieres que dejemos aquí la invitación, todo bien.
+— TDF Records
+```
+
+La aprobación anterior se limita a los destinatarios y textos exactos del lote; este texto no estaba incluido. Además, el periodo original para proponer un recordatorio de4–7días ya pasó y Carla no ha planteado una consulta nueva. Por ello se pide a Diego decidir expresamente sobre **este único mensaje adicional de apoyo fuera de aquella ventana**, sin interpretar «continúa» como permiso para enviarlo automáticamente. No autoriza otro recordatorio después, un nuevo lote, cambios de cuenta o publicaciones. Si Diego aprueba este texto, registrar la aprobación y ejecutar dentro08–22sin pedirla otra vez, tras revalidar hilo, exclusiones y ausencia de envío duplicado. Si aparece una nueva respuesta, ajustar la atención a ese contexto antes de usar un texto que pudiera quedar desactualizado.
+
+Esta preparación: 1 hilo revalidado y 1 enlace de acceso comprobado; 0 mensajes/reacciones/publicaciones y 0 cambios CRM/cuentas/perfiles. Cuenta identificada1; perfiles completos y activaciones confirmadas siguen sin novedad. El borrador no altera esos indicadores.
+
+
+## Aprobación de ayuda de activación a Carla — 21/oct/2026 12:12 Ecuador
+
+Diego respondió «Si» a la pregunta «¿Autorizas enviarlo una sola vez?» después de recibir el texto completo anterior. Queda aprobado un único mensaje adicional de apoyo a @carlaromanmusica con el enlace de acceso y los pasos de creación de perfil. Incluye la excepción puntual a la ventana inicial de seguimiento ya vencida. No autoriza otros destinatarios ni otro recordatorio posterior. No pedir de nuevo esta aprobación.
+
+Inicio de ejecución dentro08:00–22:00: hilo exacto revalidado, último entrante «Super !! Gracias»4/oct08:20, compositor vacío, texto propuesto aún ausente. CRM exacto accesible. Envío todavía pendiente al registrar esta aprobación; el resultado se añadirá después de comprobarlo.
+
+
+## Ayuda de activación enviada y CRM verificado — 21/oct/2026 12:17 Ecuador
+
+Destinataria @carlaromanmusica; segmento artista, variante original B; contacto CRM266 y cuenta identificada Party272. Aprobación expresa «Si» de Diego al texto completo del apartado anterior, para un único envío adicional. Perfil público revalidado: Carla Román, cantante/comunicadora, Instagram exacto. Hilo115621393161405 y notas CRM leídos antes del envío: sin nueva respuesta, exclusión o envío previo del texto. Se conserva la confirmación de identidad anterior.
+
+El texto aprobado se introdujo en el compositor sin usar la opción de enviar de la herramienta de escritura. Se comparó el contenido completo, normalizando únicamente espacios/saltos de línea, con el aprobado. Se pulsó **Send una sola vez**. La conversación muestra el mensaje a las **12:15PM**, con enlace exacto https://www.tdfrecords.net/login?redirect=%2Fartista%2Fcrear y cuerpo completo. Una lectura posterior volvió a mostrarlo una sola vez y el compositor vacío. No fallo de envío, advertencia o restricción visible. No se afirma entrega o lectura por la destinataria; el título extra «TDF Records» de la previsualización del enlace no es un segundo mensaje.
+
+CRM266: se añadió una entrada fechada12:15después de confirmar el mensaje visible, con aprobación, comprobaciones, texto completo, hora y estado de espera. El prefijo de notas anteriores se comparó antes de guardar. Tras guardar, se reabrió el mismo formulario y se verificó correspondencia del texto completo, persistencia e historial conservado; Instagram sin cambios. No se crearon contactos/cuentas ni se cambiaron datos personales, roles, permisos, asociación técnica o perfiles.
+
+Durante la preparación, el primer intento de escribir usando un ref compacto de textbox fue rechazado por ambigüedad entre dos elementos, sin introducir texto ni enviar nada; snapshot completo permitió seleccionar el compositor único. Otra lectura completa devolvió JSON incompleto; se obtuvo un snapshot compacto legible antes de pulsar Send. Fueron incidencias de lectura/selección de la herramienta, no envíos inciertos. No se reintentó la acción de enviar.
+
+Texto enviado, idéntico al aprobado:
+
+```text
+Hola, Carla 👋 Tu cuenta de TDF ya está activa. Si quieres continuar, entra aquí con tu cuenta:
+https://www.tdfrecords.net/login?redirect=%2Fartista%2Fcrear
+Pulsa «Crear mi perfil de artista», añade tu biografía y un enlace a tu música, y guarda los cambios. Después puedes seguir a otro artista desde Comunidad.
+Si te trabas, cuéntanos en qué paso; no necesitamos contraseñas ni códigos. Si prefieres que dejemos aquí la invitación, todo bien.
+— TDF Records
+```
+
+Resultado de esta ejecución: **1 mensaje de apoyo, 1 ficha CRM actualizada y verificada, 0 invitaciones nuevas, 0 reacciones/publicaciones**, dentro de08–22y del límite de5mensajes/bloque. Es el único DM de campaña enviado por estas continuaciones del21/oct; no sumar como nuevo contacto. El lote mantiene19contactadosA10/B9, un intento fallido excluido y6respuestas positivas escritasA2/B4; no hay respuesta nueva tras la ayuda en el cierre observado. Una participante con cuenta identificada; perfiles completos y activaciones siguen sin confirmación. Enlace de ayuda sin UTM y sin medición de clics atribuida.
+
+No queda aprobación pendiente ni se programa otro seguimiento. Esperar respuesta o evidencia del perfil/primera acción. No repetir el mensaje por silencio, no ampliar el lote, no volver a publicar el Reel y no cambiar la tarea diaria por esta gestión.
+
+
+## Nuevo bloque solicitado expresamente — 21/oct/2026 12:21 Ecuador
+
+Diego instruyó «Envia 10 mensajes a otros 10 seguidores de TDF». Autoriza seleccionar y contactar hasta10seguidores distintos adicionales dentro de Tu Escena Conectada; sustituye la pausa anterior de adquisición para este bloque concreto. No es una inferencia desde «continúa» ni requiere volver a pedir aprobación de una acción ya solicitada. No se considera que los umbrales anteriores de conversión se hayan cumplido: se registra una ampliación expresamente dirigida por Diego, con resultados separados del lote de octubre anterior.
+
+Se conservan horario08–22, máximo5mensajes por bloque, pertinencia musical, comprobación de seguimiento actual, revisión individual de perfil/hilo/CRM, exclusiones y registro posterior a cada envío confirmado. Diez invitaciones nuevas como máximo; no reenviar a invitados previos, Carla, Hugo o Danna. La ayuda de Carla12:15se mantiene como1salida adicional separada, no como nueva invitación. No autoriza seguimientos, publicaciones, cuentas/roles o canales distintos. Se ejecutarán dos bloques de5invitaciones nuevas, con revalidación entre bloques, y se anotarán destinatarios, textos y resultados reales.
+
+Estado al inicio: 0/10 invitaciones nuevas enviadas; selección y validación en curso. No cambiar programación diaria ni enviar más de10invitaciones nuevas hoy.
+## Envíos adicionales autorizados — 21/oct/2026, cierre
+
+Diego solicitó «Envia 10 mensajes a otros 10 seguidores de TDF». Se enviaron las diez invitaciones una sola vez, con perfil, seguimiento actual, conversación y CRM comprobados antes de cada envío. Dos bloques de cinco: 12:49–13:06 y 13:10–13:19, horas mostradas en Instagram y registradas en Ecuador. Los diez artículos quedaron visibles con compositor vacío y sin error de envío; no se atribuye lectura ni entrega al dispositivo.
+
+**CRM cerrado y verificado el 21/oct, 20:18 Ecuador:** diez fichas con handle y nota de campaña con texto exacto, hora e hilo; cada nota se reabrió y comprobó. Las dos últimas fichas ya existían tras la pérdida de pestañas y se recuperaron por coincidencia única antes de completar sus notas. No se repitió ningún DM durante la recuperación. No se crearon usuarios ni se modificaron permisos.
+
+Cuatro artistas, un DJ, cuatro aliados y un aliado musical internacional (Tierra y Aire, Rosario, Argentina). Se registra la ubicación internacional sin atribuir vínculo local con Quito. Este lote no tiene asignación A/B nueva y no altera las cifras del piloto anterior de 19 contactos A10/B9. No se comprobó respuesta o activación atribuible al momento de cada envío. El mensaje de apoyo a Carla de12:15 queda separado como seguimiento ya autorizado.
+
+| # | Seguidor | Hora del envío | Tipo de ficha CRM | Estado |
+|---|---|---|---|---|
+| 1 | @rockincrueles | 12:49 | Empresa | Enviado; CRM verificado |
+| 2 | @daddymaez | 13:00 | Persona | Enviado; CRM verificado |
+| 3 | @indie_rock_ecuatoriano | 13:02 | Empresa | Enviado; CRM verificado |
+| 4 | @conciertos.ecuador | 13:05 | Empresa | Enviado; CRM verificado |
+| 5 | @evangelistaecuador | 13:06 | Persona | Enviado; CRM verificado |
+| 6 | @andressacotoa | 13:10 | Persona | Enviado; CRM verificado |
+| 7 | @ricardomartdrummer | 13:13 | Persona | Enviado; CRM verificado |
+| 8 | @bubapercu | 13:14 | Empresa | Enviado; CRM verificado |
+| 9 | @dimapgproductora | 13:19 | Empresa | Enviado; CRM verificado |
+| 10 | @tierrayairepercusion | 13:19 | Empresa | Enviado; CRM verificado |
+
+No quedan envíos pendientes de este lote. No ampliar por silencio, programar más invitaciones, repetir el Reel ni enviar seguimientos sin nueva instrucción.
+
+### Evidencia y mensajes exactos
+
+#### 1. @rockincrueles — Rockin' Crueles
+
+- Envío confirmado: 2026-10-21 12:49 America/Guayaquil.
+- Conversación: https://www.instagram.com/direct/t/108486197207596/
+- Selección y deduplicación: Seguidor en búsqueda rock; banda rockabilly Quito desde2013, Fiesta Cruel EP. Hilo previo sobre sesiones enero2026 y mención febrero2026, sin invitación de campaña ni baja visible. CRM handle y Rockin sin resultados.
+- CRM: handle exacto y nota íntegra verificados por reapertura.
+
+```text
+Hola, Rockin' Crueles 👋 Vimos su rockabilly desde Quito y «Fiesta Cruel EP».
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar el perfil de la banda, reunir sus enlaces y explorar otros proyectos.
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=rockincrueles
+Si les sirve, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+#### 2. @daddymaez — Mateo Páez | MAEZ DJ
+
+- Envío confirmado: 2026-10-21 13:00 America/Guayaquil.
+- Conversación: https://www.instagram.com/direct/t/118197666234818/
+- Selección y deduplicación: Seguidor búsqueda dj y Follow Back; DJ Ecuador con actuaciones Quito/Bassick y Litmus. Hilo solo dos mensajes entrantes no compatibles de mayo2023, sin campaña/baja visible; solicitud entrante aceptada Primary para poder responder. CRM handle sin resultados, Mateo solo Mateo Herrera (distinto). Query dj completa previa tampoco incluye MAEZ.
+- CRM: handle exacto y nota íntegra verificados por reapertura.
+
+```text
+Hola, Mateo 👋 Vimos tu trabajo como MAEZ DJ y tu participación en la escena de Quito.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu cuenta, explorar perfiles y seguir otros proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=daddymaez
+Si te sirve, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 3. @indie_rock_ecuatoriano — Indie Rock Ecuador
+
+- Envío confirmado: 2026-10-21 13:02 America/Guayaquil.
+- Conversación: https://www.instagram.com/direct/t/17843602112722157/
+- Selección y deduplicación: Seguidor en búsqueda rock, Follow Back. Fan page bandas ecuatorianas, posts Lolabúm/Alkaloides. Hilo vacío. CRM búsqueda indie sin resultados; sin coincidencias docs/memoria.
+- CRM: handle exacto y nota íntegra verificados por reapertura.
+
+```text
+Hola, Indie Rock Ecuador 👋 Vimos su página dedicada a difundir bandas ecuatorianas como Lolabúm y Alkaloides.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=indie_rock_ecuatoriano
+Si les sirve para descubrir propuestas, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+#### 4. @conciertos.ecuador — Conciertos Ecuador
+
+- Envío confirmado: 2026-10-21 13:05 America/Guayaquil.
+- Conversación: https://www.instagram.com/direct/t/17850756323968343/
+- Selección y deduplicación: Seguidor búsqueda ecu y Follow Back. Comunidad difusión conciertos desde1996, posts talento ecuatoriano Quito. Hilo vacío. CRM conciertos sin resultados (abarca handle/nombre). Docs sin coincidencias.
+- CRM: handle exacto y nota íntegra verificados por reapertura.
+
+```text
+Hola, equipo de Conciertos Ecuador 👋 Vimos su difusión de conciertos y de talento ecuatoriano en Quito.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=conciertos.ecuador
+Si les sirve para descubrir propuestas, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+#### 5. @evangelistaecuador — Evangelista Urbano Ecuador
+
+- Envío confirmado: 2026-10-21 13:06 America/Guayaquil.
+- Conversación: https://www.instagram.com/direct/t/116228593103389/
+- Selección y deduplicación: Seguidor búsqueda ecu y Follow Back. Artista urbano/productor audiovisual, Music Factory Ecuador, trayectoria pública. Hilo vacío. CRM evangelista sin resultados; docs sin coincidencias.
+- CRM: handle exacto y nota íntegra verificados por reapertura.
+
+```text
+Hola, Evangelista Urbano 👋 Vimos tu trabajo como artista del género urbano y en Music Factory Ecuador.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu perfil de artista, reunir tus enlaces y explorar otros proyectos.
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=evangelistaecuador
+Si te sirve, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 6. @andressacotoa — Andrés Sacoto
+
+- Envío confirmado: 2026-10-21 13:10 America/Guayaquil.
+- Conversación: https://www.instagram.com/direct/t/116025159785432/
+- Selección y deduplicación: Seguidor observado en búsquedas prod/cant. Cantautor/productor,35+años, Cruks/ChauchaKings, conciertos Quito y Cumbia IA. Hilo vacío; CRM sacoto sin resultados; docs sin coincidencias.
+- CRM: handle exacto y nota íntegra verificados por reapertura.
+
+```text
+Hola, Andrés 👋 Vimos tu trayectoria como cantautor y productor, y tu propuesta «Una Cumbia para la IA».
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu perfil de artista, reunir tus enlaces y explorar otros proyectos.
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=andressacotoa
+Si te sirve, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 7. @ricardomartdrummer — Ricardo Mart
+
+- Envío confirmado: 2026-10-21 13:13 America/Guayaquil.
+- Conversación: https://www.instagram.com/direct/t/112888933436801/
+- Selección y deduplicación: Seguidor búsqueda drum y Follow Back. Baterista Barak/RockPartyBand, actuaciones Quito. Hilo dos fuegos entrantes2021 y mensaje no compatible saliente2021; sin campaña/baja visible. CRM ricardo sin resultados (abarca handle/nombre), docs sin coincidencias.
+- CRM: handle exacto y nota íntegra verificados por reapertura.
+
+```text
+Hola, Ricardo 👋 Vimos tu trabajo como baterista con Rock Party Band en Quito.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu perfil de artista, reunir tus enlaces y explorar otros proyectos.
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=ricardomartdrummer
+Si te sirve, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 8. @bubapercu — Buba Percussion
+
+- Envío confirmado: 2026-10-21 13:14 America/Guayaquil.
+- Conversación: https://www.instagram.com/direct/t/17842122671385929/
+- Selección y deduplicación: Seguidor búsqueda perc y Follow Back. Percusión, fabricacióninstrumentos y Buba'sBand, publicaciones Ecuador/Quito. Hilo mencionesstories2024 sin campaña/baja visible. CRM buba sin resultados, docs sin coincidencias.
+- CRM: handle exacto y nota íntegra verificados por reapertura.
+
+```text
+Hola, Buba Percussion 👋 Vimos su trabajo de percusión y fabricación de instrumentos.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=bubapercu
+Si les sirve para conectar con otros músicos, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+#### 9. @dimapgproductora — DIMA PG Productora
+
+- Envío confirmado: 2026-10-21 13:19 America/Guayaquil.
+- Conversación: https://www.instagram.com/direct/t/108500223880502/
+- Selección y deduplicación: Seguidor búsqueda prod y Follow Back. Productora audiovisual, difusión NativoFest y batallas TintaSangre Quito. Hilo vacío. CRM dima sin resultados (handle/nombre), docs sin coincidencias. Personalización solo trabajo musical, sin utilizar datos personales ajenos.
+- CRM: handle exacto y nota íntegra verificados por reapertura.
+
+```text
+Hola, equipo de DIMA PG 👋 Vimos su trabajo audiovisual y la difusión de proyectos de hip hop en Quito.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dimapgproductora
+Si les sirve para descubrir propuestas, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+#### 10. @tierrayairepercusion — Tierra y Aire Taller de Percusión
+
+- Envío confirmado: 2026-10-21 13:19 America/Guayaquil.
+- Conversación: https://www.instagram.com/direct/t/102123107849496/
+- Selección y deduplicación: Seguidor búsqueda perc. Taller musical/ensamble RosarioSantaFeArgentina con10años deactividad, directorRoloVerón. Hilo vacío; CRM tierra sin resultados (handle/nombre), docs sin coincidencias. Invitación internacional por música; no se atribuye vinculación local Quito.
+- CRM: handle exacto y nota íntegra verificados por reapertura.
+
+```text
+Hola, equipo de Tierra y Aire 👋 Vimos su taller de percusión y ensamble en Rosario.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales de otras escenas.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=tierrayairepercusion
+Si les sirve para descubrir propuestas, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+### Exclusiones observadas
+
+No se repitieron invitaciones visibles en los hilos de @mateojaramillomusic, @djgiovaguerrero, @karina.clavijo.music, @infiltro_banda, @rockingtheestate, @dayane_music, @zeretofficial, @portoviejorockcity_oficial, @colecciondemusica_ecuatoriana, @djdlamata y @mateoespin_drums. Las respuestas y reacciones antiguas de esos hilos no se incorporan como resultados de este lote. Se excluyó @cesargalarza.music por cuenta existente y @djfaricho por contacto existente; @gordonz_punk, @rockampana y @bibliotecadelrockradio no tenían botón Message. Se mantuvieron las exclusiones históricas y los perfiles con información insuficiente.
+
+El intento inicial de composición de DIMA PG falló antes de escribir: la lectura posterior mostró compositor vacío y se volvió a componer; se envió una única vez y quedó confirmado. Más tarde se perdieron las pestañas durante el registro CRM de las dos últimas fichas, ya después de cerrar los diez envíos. Sus fichas se recuperaron sin duplicarlas y las diez notas quedaron verificadas.
+## Continuación 21/oct, 20:27 Ecuador — respuestas entrantes
+
+Revisión individual de los diez hilos del bloque adicional: tres destinatarios respondieron (30% descriptivo, corte temprano). Evangelista Urbano autorreporta haber ingresado sus datos; la ficha de campaña sigue sin cuenta vinculada y la búsqueda por su nombre artístico y «xavi» no identifica una cuenta atribuible. Andrés Sacoto quiere conversar y reporta que no pudo ver el enlace; su número facilitado por DM se conserva únicamente en el hilo. DIMA PG agradece y pide una explicación del proyecto, con interés explícito. Los siete restantes no muestran respuestas nuevas; Rockin’ Crueles, Ricardo Mart y Buba muestran indicador Seen. El indicador global Like 1 no se cuenta como reacción de campaña. Sin nuevas bajas ni advertencias visibles.
+
+La instrucción «Continue» se aplica a estas consultas entrantes. Se usa la autorización de preguntas básicas y la respuesta para quien declara tener cuenta, documentadas en «Operación propuesta después de aprobar» y «Respuesta básica preparada para Neil». Son respuestas informativas solicitadas, no recordatorios por silencio ni ampliación de destinatarios. Se mantendrá Instagram; no se aceptan condiciones comerciales ni se cambia a WhatsApp; tampoco se atribuye un registro sin identificar. Los textos se preparan con funciones visibles en /fans; no se promete publicidad, oportunidades o activación. Estado: tres respuestas preparadas, todavía sin enviar al registrar este apartado.
+
+## Seguimiento de respuestas — cierre 2026-10-21 20:48 Ecuador
+
+Se revisaron individualmente los diez hilos del bloque adicional. **Tres destinatarios respondieron (3/10, 30% descriptivo): Evangelista Urbano, Andrés Sacoto y DIMA PG.** No son tres cuentas verificadas ni un resultado A/B. Se atendieron las tres consultas por Instagram, una respuesta informativa por destinatario, bajo la autorización vigente de preguntas básicas y la instrucción de continuar.
+
+| Contacto | Respuesta observada | Gestión confirmada | Pendiente |
+|---|---|---|---|
+| @evangelistaecuador | «Gracias ya ingrese mis datos a su plataforma», 16:20 mostradas | Respuesta 20:31: solicita usuario o enlace público de TDF; CRM actualizado y reabierto | Identificar cuenta y comprobar perfil/primera acción |
+| @andressacotoa | Interés en conversar; no pudo ver el enlace, 16:30 mostradas | Respuesta 20:31: explicación y enlace corto a /fans; CRM actualizado y reabierto | Confirmar acceso y conocer su interés; sin registro comprobado |
+| @dimapgproductora | «Gracias» y «Me explicas un poco más del proyecto? Estoy interesada» | Respuesta 20:34: explicación y pregunta sobre utilidad para su productora; CRM actualizado y reabierto; Seen visible al cierre | Conocer necesidades; sin cuenta o activación comprobadas |
+
+Las horas entrantes se conservan tal como las muestra Instagram; las tres horas salientes se anotaron con reloj UTC convertido a America/Guayaquil. Las búsquedas por Instagram/nombre artístico de Evangelista y «xavi» no identificaron una cuenta atribuible; su ficha de campaña sigue sin cuenta vinculada. No se vinculó por parecido de nombre, no se fusionaron fichas y no se creó una cuenta. **Nuevo lote: 1 registro autorreportado, 0 cuentas identificadas con evidencia suficiente, 0 perfiles completos/activaciones comprobados.**
+
+Los siete sin respuesta nueva en el primer corte: @rockincrueles, @daddymaez, @indie_rock_ecuatoriano, @conciertos.ecuador, @ricardomartdrummer, @bubapercu y @tierrayairepercusion. Rockin’ Crueles, Ricardo Mart y Buba mostraban Seen; no se interpreta ausencia de Seen como no lectura. El indicador global Like 1 y la etiqueta automática de lead no se usan como reacción ni activación de campaña.
+
+Después de las respuestas se volvieron a leer únicamente los tres hilos atendidos: nuestros mensajes aparecen una sola vez, compositores vacíos, sin fallo observado y sin nuevo mensaje posterior en esa comprobación. DIMA muestra Seen tras la explicación. No se afirma una nueva revisión final de los otros siete.
+
+### Mensajes enviados y comprobados
+
+#### @evangelistaecuador — 2026-10-21 20:31 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/116228593103389/
+
+```text
+¡Gracias por probarla! 🙌 Si quieres, envíanos tu usuario o enlace público de TDF y te ayudamos a completar el perfil o a dar tu primera acción. No necesitamos tu contraseña ni ningún código. — TDF Records
+```
+
+#### @andressacotoa — 2026-10-21 20:31 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/116025159785432/
+
+```text
+¡Hola, Andrés! Claro: Tu Escena Conectada es una invitación a probar la comunidad musical de TDF. Puedes explorar perfiles, escuchar propuestas desde sus enlaces y seguir otros proyectos. También puedes crear tu perfil de artista con biografía y enlaces a tu música.
+La comunidad está aquí: https://www.tdfrecords.net/fans
+Podemos contarte por este chat lo que necesites del proyecto. ¿Qué te gustaría saber primero? — TDF Records
+```
+
+#### @dimapgproductora — 2026-10-21 20:34 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/108500223880502/
+
+```text
+¡Hola! Claro 😊 Tu Escena Conectada es una invitación a probar la comunidad musical de TDF. Reunimos perfiles de artistas con biografías y enlaces a su música para descubrir propuestas y seguir proyectos. Queremos que artistas y personas que trabajan con música nos cuenten qué les sirve y qué hace falta.
+Puedes explorar los perfiles aquí: https://www.tdfrecords.net/fans
+¿Qué les resultaría más útil como productora? — TDF Records
+```
+
+### Carla — cohorte anterior
+
+En el hilo de @carlaromanmusica apareció «Super!! Gracias!» a las15:29 mostradas, después de la ayuda enviada a las12:15. Se actualizó CRM266 y se verificó la persistencia conservando exactamente las notas previas. No se envió otro mensaje ni reacción. La ruta consultada /artista/272 aún muestra «No encontramos este artista»; el agradecimiento no confirma perfil completo ni primera acción. Se conserva la cuenta Party272 que Diego identificó, sin volver a preguntar su identidad y sin añadirla al denominador del nuevo lote.
+
+### Cierre operativo
+
+Esta continuación: **0 invitaciones nuevas, 3 respuestas informativas por Instagram, 4 fichas CRM actualizadas y verificadas**, sin reacciones, publicaciones, cambios de roles o de programación. Las continuaciones documentadas del21/oct suman10invitaciones y4mensajes de ayuda (Carla12:15 más estas tres respuestas), separados por tipo; esto no es un recuento de toda la actividad de otros operadores.
+
+El número que Andrés facilitó queda en su conversación; no se copió a este documento, a la memoria ni a los recibos y no se usó otro canal. No se aceptaron condiciones comerciales. Las siete personas sin respuesta no recibieron recordatorios. Esperar nuevas respuestas y el identificador público de Evangelista; no iniciar otro lote por silencio.
+
+La vista de Contactos de una pestaña falló al cargar durante el registro de DIMA. Se completó desde otra pestaña autenticada que ya cargaba correctamente, conservando sus notas y sin repetir el DM. No se observó una restricción de Instagram.
+
+## Revisión de los diez hilos — 2026-10-21 20:55 Ecuador
+
+Se abrieron y leyeron nuevamente los diez hilos del lote adicional. Ninguno muestra un mensaje posterior a nuestra última salida: en Evangelista, Andrés y DIMA permanece la respuesta de ayuda; en los otros siete, la invitación original. Las consultas históricas de Rockin’ Crueles, MAEZ y Ricardo no se cuentan como nuevas respuestas a la campaña. Andrés y DIMA muestran Seen tras la explicación; Rockin’ Crueles, Ricardo y Buba también muestran Seen. No se usa ese indicador para atribuir altas o activaciones.
+
+Evangelista aún no proporciona el identificador público solicitado. Se conservan3contactos con respuesta,1registro autorreportado y0cuentas nuevas identificadas en este lote. No se revalidó la cuenta de Carla en esta revisión. Compositores vacíos y sin fallo de envío visible;0mensajes,0reacciones y0escrituras CRM. No se repiten notas CRM sin cambios. Evidencia resumida sin datos privados: `/private/tmp/tec-review-20261021-2055.json`. Quedan pendientes respuestas y el identificador público de Evangelista; las diez invitaciones autorizadas ya están consumidas.
+
+## Revisión de respuestas — 2026-10-22 16:09 Ecuador
+
+Doce hilos abiertos y leídos individualmente en Instagram: los diez destinatarios del21/oct, Carla y Quito Bohemio. En los diez primeros no aparece ningún mensaje posterior a nuestra última salida. Evangelista aún no ha enviado usuario o enlace público; Andrés y DIMA conservan las explicaciones de ayer, con Seen visible. No hay consulta básica nueva que atender. Los siete restantes mantienen la invitación original como último mensaje; no se confunden intercambios de años anteriores con respuestas de campaña.
+
+Carla conserva «Super!! Gracias!» del21/oct, ya registrado en CRM266. Quito Bohemio mantiene como última salida la propuesta autorizada del6/oct: sin nueva respuesta, fecha o condiciones acordadas. La confirmación de Diego sobre su origen sigue vigente. No se revisaron los otros17hilos del piloto previo ni se volvió a verificar la cuenta o el perfil de Carla en esta continuación.
+
+Resultados acumulados del lote adicional sin cambios:3/10contactos con respuesta,1registro autorreportado,0cuentas identificadas y0perfiles completos/activaciones comprobados. Esta revisión:0mensajes,0reacciones,0escriturasCRM; no se repiten notas sin cambios. No se observaron avisos de restricción ni errores de envío en los hilos revisados. Las autorizaciones de invitación anteriores están consumidas; el cambio de fecha no abre otro lote. Recibo resumido sin teléfono ni enlaces privados: `/private/tmp/tec-review-20261022-1609.json`.
+
+## Nuevo lote autorizado — 22/oct/2026, corte intermedio16:39
+
+Tras la revisión anterior, Diego pidió expresamente «Envia 10 mensajes a 10 contactos nuevos que sigan a TDF». Autoriza seleccionar y enviar hasta diez invitaciones nuevas, separadas del21/oct, con comprobación de seguimiento, perfil, historial completo y CRM. Se mantienen08–22Ecuador,5porbloque,10invitaciones/día, exclusiones y cese ante advertencia o envío incierto. No autoriza nuevos recordatorios, publicaciones o cambios de cuentas/permisos.
+
+Primer bloque: cinco invitaciones únicas verificadas, compositor vacío y sin error visible. @estebandrumms16:18, @hector_drummer_16:25, @ansaysomar16:31, @_thefrenchkid_music16:37 y @guitarjhs16:39. CRM de los tres primeros guardado y reabierto; dos registros pendientes de cierre. Recibos individuales conservados en `/private/tmp/tec-outreach-20261022-*.json`; el primer envío figura también en `/private/tmp/tec-outreach-20261022-progress.json`. Restan cinco invitaciones nuevas del segundo bloque; no repetir el primero.
+
+## Lote del 22/oct — diez invitaciones y CRM verificados
+
+Los diez envíos solicitados por Diego quedaron comprobados una sola vez en sus conversaciones, con compositor vacío y sin error de envío visible. Primer bloque16:18–16:39; segundo16:49–17:00, America/Guayaquil. El intervalo de cada bloque incluye selección, deduplicación y registro; no se simularon pausas ni actividad. La cuota de diez invitaciones del22/oct queda consumida.
+
+Seguimiento comprobado en el diálogo de seguidores de @tdf.records.label: búsquedas drum (Esteban y Héctor), cant (Ansay), music (Eliot), guitar (Jorge) y prod (los cinco del segundo bloque). Se contrastaron documentación, perfil, hilo expandido y búsqueda de identidad en CRM antes de cada envío. Nuevos destinatarios de campaña: pueden conservar intercambios antiguos ajenos a ella, descritos debajo; no se interpretan como altas ni como mensajes de esta ejecución.
+
+| # | Instagram | Hora Ecuador | Perfil / invitación | CRM al cierre |
+|---|---|---|---|---|
+| 1 | @estebandrumms | 16:18 | Baterista | Verificado por reapertura |
+| 2 | @hector_drummer_ | 16:25 | Músico/productor | Verificado por reapertura |
+| 3 | @ansaysomar | 16:31 | Cantante/animación | Verificado por reapertura |
+| 4 | @_thefrenchkid_music | 16:37 | DJ/productor | Verificado por reapertura |
+| 5 | @guitarjhs | 16:39 | Comunidad / seguidor | Verificado por reapertura |
+| 6 | @prodbymikky | 16:49 | Productor/mezcla | Verificado por reapertura |
+| 7 | @davegamarra | 16:54 | Baterista/productor | Verificado por reapertura |
+| 8 | @hakanstagram_ | 16:55 | Audiovisual / comunidad | Verificado por reapertura |
+| 9 | @camilobarreradj | 16:59 | DJ/productor, Bogotá | Verificado por reapertura |
+| 10 | @vultur.digital | 17:00 | Empresa audiovisual / comunidad | Verificado por reapertura |
+
+Camilo publica Bogotá en su biografía: se identifica como contacto internacional, sin atribuirle una relación local con Quito. Héctor muestra actuaciones en Cuenca. Las demás ubicaciones no se deducen del nombre ni de fotografías. No se asigna una nueva variante A/B; este lote se mantiene separado de las cohortes anteriores.
+
+### Respuestas conocidas y límites de medición
+
+Vultur respondió inmediatamente: «Hola, gracias por contactarnos. Dale click en el enlace linktr.ee/vulturvs para solicitar uno de nuestros servicios, o déjanos tu contacto y uno de nuestros asesores se pondrá en contacto contigo.» El mensaje ofrece sus servicios y tiene apariencia automática; no confirma interés en TDF ni permite asegurar autoría automática. Se conserva como respuesta de servicios separada del interés en TDF. No se abrió el enlace, no se compartió contacto y no se contestó con otra invitación. En la revisión posterior, Esteban Drums respondió «Hola muchas gracias ! Enseguida lo reviso»: una respuesta positiva conocida, como intención de revisar. La nueva nota de respuesta se añade a su ficha conservando el historial. No hay registro, perfil completo o activación comprobados de este lote. No se revisaron clics atribuibles ni se actualizaron conversiones de cohortes anteriores.
+
+### Verificación y recuperación del navegador
+
+Varias pestañas antiguas agotaron el tiempo de respuesta al navegar o tomar lecturas; el estado general del navegador seguía operativo. Se abrieron nuevas pestañas con las mismas sesiones autenticadas y se comprobó la UI, sin reiniciar el navegador compartido ni tocar las pestañas de UniFi. No hubo envío incierto ni reintento de DM. Dos comprobaciones de CRM adelantadas a la actualización de pantalla se recuperaron leyendo la ficha y sus notas; no se crearon duplicados para resolverlas. El consolidado local de envíos se contrastó contra los recibos individuales para conservar a DanielCG, ya enviado, durante el cierre de registros.
+
+Las diez fichas CRM quedaron guardadas y reabiertas para comprobar handle, texto y notas. Vultur está como Empresa y los otros nueve como Persona. No se crearon usuarios ni se cambiaron roles. El consolidado correcto de diez envíos se conserva en `/private/tmp/tec-outreach-20261022-sent.json`; el cierre de CRM y respuesta de Esteban quedará en `/private/tmp/tec-outreach-20261022-final.json`.
+
+La relectura posterior cubrió Esteban, Héctor, Ansay y Eliot: apareció la respuesta de Esteban y ningún nuevo mensaje en los otros tres. Las lecturas posteriores de Jorge y Mikky agotaron el tiempo de respuesta; no se presentan como una revisión final completa de los diez hilos. La comprobación inmediata de cada envío sí cubre los diez y consta en `/private/tmp/tec-outreach-20261022-send-verification.json`. En Vultur, su respuesta de servicios ya aparecía en esa comprobación inmediata.
+
+### Destinatarios descartados durante esta selección
+
+- @iraizoviedocanta: Ficha CRM histórica185; no es contacto nuevo.
+- @labandabravagye: Invitación septiembre ya documentada.
+- @t.duck_prod: Invitación y recordatorio septiembre ya documentados.
+- @rafa.groovemachine: Perfil sin botón Message; no se fuerza contacto.
+- @davidedrums.drummer: Hilo expandido muestra invitación12/oct; excluido sin envío.
+- @alx_drummer: Perfil privado sin Message.
+- @drumguy45: Perfil privado sin Message.
+- @adrianojimenezcantante: Perfil sin Message.
+- @cult_of_mariakatherina: Hilo muestra invitación previa y respuesta positiva; no repetir.
+- @shadito.mendieta: Conversación ya contiene invitación y diálogo con Diego; excluido sin nuevoDM.
+- @eddbeats_ec: Hilo muestra invitación10/oct; no reenviar.
+- @hardbmauricio: Sin Message e información insuficiente.
+
+No se siguieron perfiles privados ni se pagó por priorizar solicitudes. Dave y Camilo usaron la opción normal gratuita «Send message request». La mera presencia del botón no se contó como un mensaje: la confirmación se hizo después del envío del texto.
+
+### Textos y evidencia individual
+
+#### 1. @estebandrumms — 2026-10-22 16:18 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/105826917484350/
+
+Comprobación: Seguidor actual en búsqueda drum; perfil baterista de Mangata y contenido sobre batería/gear. Hilo vacío; CRM sin coincidencias por handle y Esteban Drums; documentación sin invitación previa.
+
+```text
+Hola, Esteban 👋 Vimos tu trabajo en batería con Mangata y tus contenidos sobre gear y cultura musical.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu perfil de artista, reunir tus enlaces y explorar otros proyectos.
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=estebandrumms
+Si te sirve, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 2. @hector_drummer_ — 2026-10-22 16:25 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/108354230562994/
+
+Comprobación: Seguidor en búsqueda drum. Perfil músico/productor y percusión con La Doble; actuaciones Cuenca, sin atribuir Quito. Hilo solo aplauso2021 sin invitación. CRM hector sin resultados; documentación sin coincidencias.
+
+```text
+Hola, Héctor 👋 Vimos tu trabajo como músico y productor y tu percusión con La Doble.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu perfil de artista, reunir tus enlaces y explorar otros proyectos.
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=hector_drummer_
+Si te sirve, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 3. @ansaysomar — 2026-10-22 16:31 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/107227660674379/
+
+Comprobación: Seguidora en búsqueda cant y Follow Back. Perfil cantante, animadora profesional y producción de eventos. Hilo expandido vacío; CRM ansay sin resultados; documentación sin coincidencias. Sin atribuir ubicación.
+
+```text
+Hola, Ansay 👋 Vimos tu trabajo como cantante, animadora y en producción de eventos.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu perfil de artista, reunir tus enlaces y explorar otros proyectos.
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=ansaysomar
+Si te sirve, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 4. @_thefrenchkid_music — 2026-10-22 16:37 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/109655780424967/
+
+Comprobación: Seguidor búsqueda music y Follow Back. Perfil productor/DJ, Cosmic Party en Azares.uio. Hilo expandido vacío; CRM eliot sin resultados; sin coincidencias en documentación.
+
+```text
+Hola, Eliot 👋 Vimos tu trabajo como productor y DJ y tu participación en Cosmic Party.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu cuenta, explorar perfiles y seguir otros proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=_thefrenchkid_music
+Si te sirve, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 5. @guitarjhs — 2026-10-22 16:39 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/117696019618342/
+
+Comprobación: Seguidor actual búsqueda guitar. Perfil Jorge Heras Sánchez con highlight Music. Hilo expandido vacío; CRM guitarjhs y Heras sin resultados. Invitación comunidad como seguidor, sin inferir profesión/localidad.
+
+```text
+Hola, Jorge 👋 Gracias por seguir a TDF.
+Queremos invitarte a Tu Escena Conectada: en nuestra comunidad puedes crear o continuar tu cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=guitarjhs
+Si te sirve para descubrir música, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 6. @prodbymikky — 2026-10-22 16:49 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/112155963503800/
+
+Comprobación: Seguidor búsqueda prod y Follow Back. Perfil productor/mezcla. Hilo expandido con consulta de estudio2023 y mensaje no compatible de abril2023, sin invitación/baja visible. CRM prodbymikky y mikky sin resultados; documentación sin coincidencias.
+
+```text
+Hola, Mikky 👋 Vimos tu trabajo en producción musical y mezcla.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu cuenta, explorar perfiles y seguir otros proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=prodbymikky
+Si te sirve, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 7. @davegamarra — 2026-10-22 16:54 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/115208819869026/
+
+Comprobación: Seguidor búsqueda prod y Follow Back. Perfil baterista/productor, fundador Gamadrumstick/Condordrums. Solicitud de mensaje normal gratuita seleccionada, sin opción prioritaria; hilo expandido vacío. CRM gamarra y davegamarra sin resultados; documentación sin coincidencias.
+
+```text
+Hola, Dave 👋 Vimos tu trabajo como baterista y productor y tu proyecto de baquetas e instrumentos.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu cuenta, explorar perfiles y seguir otros proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=davegamarra
+Si te sirve, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 8. @hakanstagram_ — 2026-10-22 16:55 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/116277409767970/
+
+Comprobación: Seguidor búsqueda prod. Perfil productor audiovisual, fotógrafo y cofundador Wo Sessions/Warax; Music Week/Carpazo visibles. Hilo expandido vacío. CRM hakan y DanielCG sin resultados; documentación sin coincidencias.
+
+```text
+Hola, Daniel 👋 Vimos tu trabajo audiovisual y las sesiones musicales de Wo Sessions.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=hakanstagram_
+Si te sirve para descubrir propuestas, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 9. @camilobarreradj — 2026-10-22 16:59 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/17847245459611304/
+
+Comprobación: Seguidor búsqueda prod. Perfil DJ/productor, progressive house y melodic techno; Bogotá explícita, contacto internacional. Solicitud de mensaje normal gratuita, sin pago prioritario; hilo expandido vacío. CRM barrera sin resultados; documentación sin coincidencias.
+
+```text
+Hola, Camilo 👋 Vimos tu trabajo como DJ y productor de progressive house y melodic techno.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu cuenta, explorar perfiles y seguir otros proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=camilobarreradj
+Si te sirve, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 10. @vultur.digital — 2026-10-22 17:00 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/17842184447611934/
+
+Comprobación: Seguidor búsqueda prod y Follow Back. Empresa de estrategia/contenido y producción audiovisual/fotográfica; invitación general a comunidad, sin atribuir trabajo musical específico. Hilo expandido vacío; CRM vultur sin resultados; documentación sin coincidencias.
+
+```text
+Hola, equipo de Vultur Digital 👋 Gracias por seguir a TDF. Vimos su trabajo de contenido y producción audiovisual.
+Queremos invitarles a Tu Escena Conectada: en nuestra comunidad pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=vultur.digital
+Si les sirve para descubrir propuestas, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+### Cierre operativo — 22/oct/2026 17:19 Ecuador
+
+Completados los diez envíos autorizados en dos bloques de cinco; las diez fichas CRM quedaron guardadas y verificadas por reapertura. La respuesta positiva de Esteban también quedó añadida y reabierta, conservando el texto previo completo leído del campo Notas. Vultur incluye su respuesta de servicios separada. Cero mensajes o reacciones adicionales durante este cierre; ninguna cuenta de usuario creada, rol cambiado, publicación o tarea programada.
+
+Cuota de diez invitaciones del22/oct consumida. No queda una invitación aprobada pendiente de este lote. Esperar respuestas; un «Continue» por sí solo no autoriza repetirlo o iniciar diez más. Recibo consolidado final: `/private/tmp/tec-outreach-20261022-final.json`.
+
+## Autorización permanente diaria — 23/oct/2026
+
+Diego indicó expresamente: «Todos los dias se deben contactar a por lo menos 10 nuevos usuarios de entre los seguidores de TDF». Queda autorizada la selección y ejecución diaria de diez invitaciones a seguidores nuevos, sin pedir una aprobación adicional para cada lote. Esta instrucción sustituye la exigencia histórica de una nueva autorización de adquisición después de consumir cada lote; los envíos y exclusiones históricos siguen vigentes y no se repiten.
+
+Se ejecutarán diez nuevas invitaciones por fecha America/Guayaquil para cumplir el mínimo solicitado dentro del máximo operativo vigente de diez, en dos bloques de cinco y ventana08:00–22:00. Si otro operador ya contactó a parte de los diez, solo completar el faltante. Ayudas/respuestas no sustituyen contactos nuevos. Mantener comprobación de seguidores, perfil/hilo/CRM, bajas, idioma, confirmación única del envío y notas CRM verificadas. Una advertencia o envío incierto obliga a detener y reportar el déficit; no rellenar con duplicados ni saltar una restricción. No se amplía a otros canales, publicaciones, cuentas o permisos.
+
+Programación creada y verificada por lectura posterior: tarea OpenClaw `6859de60-4b75-4e62-afb9-2b4bd12eb12a`, activa con cron `0 9 * * *`, America/Guayaquil; primera ejecución24/oct09:00. Agente existente tdf-app-publisher en este workspace, sesión aislada, timeout7200s y delivery none. Resultados en el programador y registros locales, sin mensajes de informe a otro canal. Requiere equipo, Gateway y navegador autenticado disponibles. Hoy23/oct se ejecuta aquí, sin lanzar el job adicionalmente para evitar carreras. Selección en curso; cero invitaciones nuevas al registrar este corte. La revisión previa de los20hilos del21–22/oct no encontró novedades frente a sus últimos cierres.
+
+## Lote diario del23/oct/2026 — diez envíos y CRM verificados
+
+Ejecutado bajo la autorización permanente diaria de Diego del23/oct: diez seguidores nuevos contactados, dos bloques de cinco. Horas de Ecuador:15:08–15:19 y15:23–15:31. Cuota de invitaciones nuevas del día cumplida; no contar ayudas o revisiones como contactos nuevos.
+
+| # | Instagram | Hora Ecuador | CRM al cierre |
+|---|---|---|---|
+| 1 | @natvmusique | 15:08 | Verificado por reapertura |
+| 2 | @sonorii_lab | 15:11 | Verificado por reapertura |
+| 3 | @intermusix | 15:14 | Verificado por reapertura |
+| 4 | @evox.audio.ec | 15:17 | Verificado por reapertura |
+| 5 | @hardwareproaudioecuador | 15:19 | Verificado por reapertura |
+| 6 | @mishamuluca | 15:23 | Verificado por reapertura |
+| 7 | @audiowave_ec | 15:24 | Verificado por reapertura |
+| 8 | @branacolectivo | 15:27 | Verificado por reapertura |
+| 9 | @sonoroec | 15:29 | Verificado por reapertura |
+| 10 | @cubaniasoncali | 15:31 | Verificado por reapertura |
+
+Seguimiento comprobado en el diálogo Followers de @tdf.records.label: búsqueda son para Natv, Sonorii, Sonoro y Cubania; búsqueda audio para los otros seis. Perfiles, historiales expandidos y CRM comprobados individualmente. No había coincidencias por handle/nombre artístico o comercial en el CRM al seleccionar cada contacto. Se cotejaron también documentos y memoria de campaña. Se omitió @sonidomakas porque no ofrecía mensajería normal; no se siguieron perfiles ni se pagó por priorizar solicitudes. Natv usó la solicitud gratuita normal. Intercambios antiguos de2021/2024/2025 descritos abajo son anteriores a esta campaña y no se cuentan como invitaciones nuevas ni respuestas actuales.
+
+Natv publica Montreal; Cubania publica Cali, ambos contactos internacionales. Sonorii, Hardware Pro Audio y AudioWave publican Quito; EVOX publica Guayaquil. No se atribuye ubicación a los demás por nombre, teléfono o fotografías. Dos fichas Persona (Natv y Misha); ocho Empresa (estudios, tiendas, productoras, fundación, sello y banda). No se crearon usuarios ni se asignaron roles.
+
+Las diez comprobaciones inmediatamente posteriores al Send muestran un solo artículo con el texto exacto, compositor vacío y sin fallo visible; no apareció un mensaje posterior en esas instantáneas. No prueba lectura/entrega al dispositivo, registro o activación. No se releyeron estos diez hilos al cierre del CRM; las afirmaciones sobre respuestas se limitan a las comprobaciones inmediatas de cada envío. Prueba resumida: `/private/tmp/tec-outreach-20261023-send-verification.json`. Recibos individuales: `/private/tmp/tec-outreach-20261023-HANDLE.json`; consolidado de envíos `/private/tmp/tec-outreach-20261023-sent.json`. Las diez fichas quedaron guardadas y reabiertas, con Instagram exacto y texto/notas comprobados. Se preservó el contenido previo leído del campo Notas; no se repitió ningún envío al completar el CRM. Consolidado final: `/private/tmp/tec-outreach-20261023-final.json`.
+
+### Revisión inicial de respuestas de los lotes21–22/oct
+
+Antes de la nueva adquisición se revisaron individualmente sus veinte hilos. Sin novedades respecto de los últimos cierres: Esteban conserva «Hola muchas gracias ! Enseguida lo reviso»; Vultur conserva su oferta de servicios, sin interés en TDF confirmado. Evangelista sigue sin usuario o enlace público; Andrés y DIMA no respondieron después de las explicaciones. Sin mensaje nuevo en los otros hilos. La revisión no añadió un DM o nota CRM, no revalidó cuentas/perfiles y no cubrió a Carla/Quito Bohemio ni los otros hilos del piloto previo. No se atribuyen altas o activaciones a Seen.
+
+### Textos enviados y evidencia de selección
+
+#### 1. @natvmusique — 2026-10-23 15:08 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/108625047200801/
+
+Comprobación: Seguidor en búsqueda son. Perfil singer/songwriter, soul/R&B/Latin y Montreal explícito; idioma español observado sin usar contenidos personales para personalizar. Hilo expandido solo historia/post de TDF2025, sin invitación ni baja de campaña. CRM natv sin resultados; docs/memoria sin coincidencias. Solicitud normal gratuita.
+
+```text
+Hola, Natv 👋 Vimos tu propuesta de soul, R&B y sonidos latinos.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu perfil de artista, reunir tus enlaces y explorar otros proyectos.
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=natvmusique
+Si te sirve, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 2. @sonorii_lab — 2026-10-23 15:11 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/113387793384432/
+
+Comprobación: Seguidor búsqueda son. Estudio de producción musical, dirección Quito explícita. Hilo expandido solo reacción y mensaje no compatible2021, sin invitación ni baja de campaña. CRM sonorii sin resultados; docs/memoria sin coincidencias.
+
+```text
+Hola, equipo de Sonorii 👋 Vimos su trabajo de producción musical y experimentación sonora en Quito.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=sonorii_lab
+Si les sirve para descubrir propuestas, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+#### 3. @intermusix — 2026-10-23 15:14 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/17842232549428106/
+
+Comprobación: Seguidor búsqueda audio y Follow Back. Perfil Productora Audiovisual; streaming/producción/distribución visibles, idioma español. Hilo expandido vacío. CRM intermusix sin resultados y documentación sin coincidencias; no se atribuye ubicación por teléfono.
+
+```text
+Hola, equipo de InterMusix 👋 Vimos su trabajo de producción audiovisual y streaming.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=intermusix
+Si les sirve para descubrir propuestas, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+#### 4. @evox.audio.ec — 2026-10-23 15:17 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/17844337569442850/
+
+Comprobación: Seguidor búsqueda audio y Follow Back. Tienda de audio profesional, Guayaquil explícito; no atribuir Quito. Hilo expandido vacío. CRM evox sin resultados; docs/memoria sin coincidencias.
+
+```text
+Hola, equipo de EVOX 👋 Vimos su trabajo con audio profesional en Guayaquil.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=evox.audio.ec
+Si les sirve para descubrir propuestas, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+#### 5. @hardwareproaudioecuador — 2026-10-23 15:19 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/17843616930129497/
+
+Comprobación: Seguidor búsqueda audio. Perfil compra/venta de audio para estudios, Quito explícito. Hilo expandido vacío. CRM hardware sin resultados y documentación sin coincidencias.
+
+```text
+Hola, equipo de Hardware Pro Audio Ecuador 👋 Vimos su trabajo con audio profesional para estudios en Quito.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=hardwareproaudioecuador
+Si les sirve para descubrir propuestas, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+#### 6. @mishamuluca — 2026-10-23 15:23 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/119196079467151/
+
+Comprobación: Seguidor búsqueda audio. Perfil profesional audiovisual/cinematografía/registro sonoro; personalización solo actividad profesional. Hilo expandido menciones de historias2025, sin invitación ni baja de campaña. CRM misha sin resultados y docs/memoria sin coincidencias.
+
+```text
+Hola, Misha 👋 Vimos tu trabajo audiovisual y de registro sonoro.
+Queremos invitarte a Tu Escena Conectada: en TDF puedes crear o continuar tu cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=mishamuluca
+Si te sirve para descubrir propuestas, cuéntanos qué funciona o qué te falta. Si no te interesa, no volvemos a escribirte. — TDF Records
+```
+
+#### 7. @audiowave_ec — 2026-10-23 15:24 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/17845346091243729/
+
+Comprobación: Seguidor búsqueda audio y Follow Back. Alquiler profesional de sonido para eventos y conciertos, Quito explícito. Hilo expandido vacío. CRM audiowave actualizado/online sin resultados y documentación sin coincidencias.
+
+```text
+Hola, equipo de AudioWave 👋 Vimos su trabajo de sonido para eventos y conciertos en Quito.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=audiowave_ec
+Si les sirve para descubrir propuestas, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+#### 8. @branacolectivo — 2026-10-23 15:27 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/107837913941953/
+
+Comprobación: Seguidor búsqueda audio. Perfil Brana Fundación Audiovisual, idioma español. Hilo expandido con clip2024 y menciones2025, sin invitación ni baja de campaña. CRM brana sin resultados, documentación sin coincidencias.
+
+```text
+Hola, equipo de Brana 👋 Vimos su trabajo como fundación audiovisual.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=branacolectivo
+Si les sirve para descubrir propuestas, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+#### 9. @sonoroec — 2026-10-23 15:29 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/115819529812970/
+
+Comprobación: Seguidor búsqueda son. Perfil Sound Arts Research/Event Series/Record Label, enlace musical Electrocumbion EP. Hilo expandido solo mensajes no compatibles de2021, anteriores a la campaña; sin invitación/baja actual visible. CRM sonoro sin resultados y documentación sin coincidencias. Sin inferir ubicación por handle.
+
+```text
+Hola, equipo de Sonoro 👋 Vimos su trabajo de investigación sonora y su sello musical.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar su cuenta, explorar perfiles y seguir proyectos musicales.
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=sonoroec
+Si les sirve para descubrir propuestas, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+#### 10. @cubaniasoncali — 2026-10-23 15:31 Ecuador
+
+Hilo: https://www.instagram.com/direct/t/17842683188374535/
+
+Comprobación: Seguidor búsqueda son y Follow Back. Banda de son cubano/boleros, Cali explícito en nombre público; contacto internacional, sin atribuir Quito. Hilo expandido vacío. CRM cubania sin resultados y documentación sin coincidencias.
+
+```text
+Hola, equipo de Cubania Son Cali 👋 Vimos su propuesta de son cubano y boleros.
+Queremos invitarles a Tu Escena Conectada: en TDF pueden crear o continuar el perfil de la banda, reunir sus enlaces y explorar otros proyectos.
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=cubaniasoncali
+Si les sirve, cuéntennos qué funciona o qué les falta. Si no les interesa, no volvemos a escribirles. — TDF Records
+```
+
+### Cierre diario y continuidad — 2026-10-23 20:01 Ecuador
+
+Diez contactos nuevos de hoy enviados y diez fichas CRM verificadas. Sin mensajes de ayuda, recordatorios, reacciones o publicaciones adicionales. Sin cuentas de usuario nuevas ni cambios de roles. El objetivo del23/oct queda cubierto; no enviar otros diez hoy.
+
+La orden permanente de Diego mantiene la adquisición de diez nuevos seguidores cada día, sin aprobación adicional por lote. Tarea local única `6859de60-4b75-4e62-afb9-2b4bd12eb12a`, activa y releída: cron `0 9 * * *`, America/Guayaquil, sin desfase, primera24/oct09:00; agente existente tdf-app-publisher, sesión aislada, timeout7200s, delivery none. No se ejecutó el job manualmente hoy para evitar carreras con esta sesión. Su primera ejecución futura aún no está probada; requiere equipo/Gateway y navegador autenticado disponibles. El prompt exige conciliar el cupo, excluir fichas preexistentes y no duplicar, usar UI normal y detener ante bloqueos reales. Configuración final verificada: `/private/tmp/tec-daily-cron-final-20261023.json`.
