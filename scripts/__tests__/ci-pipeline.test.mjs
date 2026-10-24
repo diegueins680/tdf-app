@@ -119,7 +119,15 @@ test('persona browser journeys are artifacted and gate aggregate quality', async
   const workflow = await source('.github/workflows/ci.yml');
   const playwrightConfig = await source('playwright.config.mjs');
   assert.match(workflow, /^  persona-web-e2e:/m);
-  assert.match(workflow, /npx playwright install --with-deps chromium firefox webkit/);
+  const job = parseYaml(workflow).jobs['persona-web-e2e'];
+  assert.match(job.container.image, /^mcr\.microsoft\.com\/playwright:v\d+\.\d+\.\d+-noble@sha256:[a-f0-9]{64}$/);
+  assert.equal(job.container.options, '--init --ipc=host --user 1001');
+  const commands = job.steps.map(step => step.run).filter(Boolean);
+  assert.ok(commands.indexOf('node scripts/verify-playwright-image.mjs') < commands.indexOf('npm run test:e2e:web'));
+  assert.ok(commands.includes('node scripts/verify-playwright-image.mjs'));
+  assert.ok(!commands.some(command => /playwright install|apt-get/.test(command)));
+  assert.ok(commands.includes('npx playwright test e2e/web/account-deletion-rollout.spec.mjs'));
+  assert.ok(commands.includes('node node_modules/@playwright/test/cli.js test --config=playwright.discovery.config.mjs'));
   assert.match(workflow, /run: npm run test:e2e:web/);
   assert.match(workflow, /path: artifacts\/persona-playwright/);
   assert.match(workflow, /retention-days: 14/);
@@ -131,9 +139,19 @@ test('persona browser journeys are artifacted and gate aggregate quality', async
 
 test('backend quality compiles, tests and exports the binary in one Stack pass', async () => {
   const script = await source('scripts/quality-backend.sh');
-  assert.match(script, /build_args=\(--no-terminal test tdf-hq\)/);
+  assert.match(script, /build_args=\(--no-terminal test --force-dirty tdf-hq\)/);
   assert.equal((script.match(/stack "\$\{build_args\[@\]\}"/g) ?? []).length, 1);
   assert.doesNotMatch(script, /stack --no-terminal test/);
+  assert.match(script, /python3 "\$ROOT\/scripts\/test-backend-version-rebuild\.py"/);
+  const workflow = await source('.github/workflows/ci.yml');
+  assert.match(workflow, /TDF_VERSION_REBUILD_OUTPUT: \$\{\{ github\.workspace \}\}\/tmp\/specification\/backend-version-rebuild/);
+  const step = parseYaml(workflow).jobs['backend-quality'].steps.find(row => row.name === 'Retain synthetic backend version cache evidence');
+  assert.equal(step.if, 'always()');
+  assert.deepEqual(step.with.path.trim().split('\n'), [
+    'tmp/specification/backend-version-rebuild/result.json',
+    'tmp/specification/backend-version-rebuild/*/*.log',
+    'tmp/specification/backend-version-rebuild/*/*.json',
+  ]);
 });
 
 test('backend quality requires the canonical payment PostgreSQL regressions', async () => {

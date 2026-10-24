@@ -1,6 +1,8 @@
 import { del, get, post, put } from './client';
 import { IncrementalSha256 } from '../utils/incrementalSha256';
 import { parseMusicMultipartCompletion } from './musicStorageResponse';
+import { canonicalMusicMinor, musicMinorForWire, type MusicMinorUnits } from '../utils/musicMoney';
+import type { components } from './generated/types';
 
 export type MusicAssetRole = 'master_audio' | 'cover_original' | 'rights_evidence';
 export type MusicReleaseKind = 'single' | 'ep' | 'album';
@@ -118,7 +120,7 @@ export interface MusicPublicRelease {
   availability: {
     ruleId: string; trackId: string | null; territoryMode: string; territories: string[]; startsAt: string | null;
     endsAt: string | null; listeningPolicy: 'none' | 'preview' | 'full'; downloadPolicy: string;
-    purchasable: boolean; priceMinor: number | null; currency: string | null;
+    purchasable: boolean; priceMinor: MusicMinorUnits | null; currency: string | null;
   }[];
 }
 
@@ -146,16 +148,7 @@ export interface MusicAssetAccess {
   acceptRanges: boolean;
 }
 
-export interface MusicPurchase {
-  id: string;
-  releaseVersionId: string;
-  availabilityRuleId: string;
-  state: 'pending' | 'awaiting_payment' | 'paid' | 'cancelled' | 'refunded' | 'chargeback';
-  grossMinor: number;
-  currency: string;
-  checkoutId: string;
-  paidAt: string | null;
-}
+export type MusicPurchase = components['schemas']['MusicPurchaseOrder'];
 
 export interface MusicEntitlement {
   id: string;
@@ -313,7 +306,7 @@ export interface MusicReleaseContentInput {
     trackRef: string | null; territoryMode: 'include' | 'exclude'; territories: string[];
     startsAt: string | null; endsAt: string | null; listeningPolicy: 'none' | 'preview' | 'full';
     downloadPolicy: 'none' | 'free' | 'purchase'; purchasable: boolean;
-    priceMinor: number | null; currency: string | null; downloadableAssetId: string | null;
+    priceMinor: MusicMinorUnits | null; currency: string | null; downloadableAssetId: string | null;
   }[];
 }
 
@@ -544,11 +537,19 @@ export const musicReleases = {
   freeDownload: (availabilityRuleId: string, requestId: string) => post<MusicAssetAccess>(
     apiPath('/downloads/free'), { availabilityRuleId, requestId },
   ),
-  createPurchase: (availabilityRuleId: string, idempotencyKey: string) => post<MusicPurchase>(
-    apiPath('/purchases'),
-    { availabilityRuleId, territoryCode: 'ZZ', termsVersion: 'music-download-sale-2026-09-12' },
-    { headers: { 'Idempotency-Key': idempotencyKey } },
-  ),
+  createPurchase: (availabilityRuleId: string, idempotencyKey: string,
+    amountMinor: MusicMinorUnits, currency: string) => {
+    const expectedAmountMinor = canonicalMusicMinor(amountMinor);
+    if (expectedAmountMinor === null || BigInt(expectedAmountMinor) === 0n || currency !== 'USD') {
+      throw new Error('El precio no está disponible. Recarga la oferta antes de continuar.');
+    }
+    const input: components['schemas']['MusicPurchaseCreateInput'] = {
+      availabilityRuleId, territoryCode: 'ZZ', termsVersion: 'music-download-sale-2026-09-12',
+      expectedAmountMinor, expectedCurrency: currency,
+    };
+    return post<MusicPurchase>(apiPath('/purchases'), input,
+      { headers: { 'Idempotency-Key': idempotencyKey } });
+  },
   createPaypalOrder: (purchaseId: string, idempotencyKey: string) => post<{
     purchaseId: string; paypalOrderId: string; approvalUrl: string | null;
   }>(apiPath(`/purchases/${purchaseId}/paypal/create`), {}, { headers: { 'Idempotency-Key': idempotencyKey } }),
@@ -574,7 +575,12 @@ export const musicReleases = {
     apiPath(`/releases/${releaseId}/versions/${versionId}/draft`), input,
   ),
   saveContent: (releaseId: string, versionId: string, input: MusicReleaseContentInput) => put<MusicReleaseVersion>(
-    apiPath(`/releases/${releaseId}/versions/${versionId}/content`), input,
+    apiPath(`/releases/${releaseId}/versions/${versionId}/content`), {
+      ...input,
+      availability: input.availability.map((rule) => ({
+        ...rule, priceMinor: rule.priceMinor === null ? null : musicMinorForWire(rule.priceMinor),
+      })),
+    },
   ),
   acceptTerms: (releaseId: string, versionId: string, termsVersion: string) => post(
     apiPath(`/releases/${releaseId}/versions/${versionId}/terms`),

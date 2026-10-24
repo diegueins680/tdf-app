@@ -199,6 +199,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.ui == 'true' || needs.changes.outputs.repo == 'true'
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+      options: --init --ipc=host --user 1001
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -212,8 +215,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Verify bundled Playwright browsers
+        run: node scripts/verify-playwright-image.mjs
 
       - name: Run isolated persona web journeys
         run: npm run test:e2e:web
@@ -224,12 +227,23 @@ jobs:
           PLAYWRIGHT_ARTIFACT_DIR: artifacts/persona-playwright/deletion-rollout-off
         run: npx playwright test e2e/web/account-deletion-rollout.spec.mjs
 
+      - name: Verify community discovery and navigation across browser layouts
+        run: node node_modules/@playwright/test/cli.js test --config=playwright.discovery.config.mjs
+
       - name: Upload sanitized browser evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: persona-web-e2e-${{ github.run_id }}
           path: artifacts/persona-playwright
+          retention-days: 14
+
+      - name: Upload sanitized discovery evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: discovery-web-e2e-${{ github.run_id }}
+          path: artifacts/discovery-playwright
           retention-days: 14
 
   mobile-quality:
@@ -293,6 +307,7 @@ jobs:
       TDF_TEST_POSTGRES_PASSWORD: postgres
       STACK_ROOT: ${{ github.workspace }}/.stack-root
       BACKEND_BINARY_OUT: ${{ github.workspace }}/tdf-hq/.release/tdf-hq-exe
+      TDF_VERSION_REBUILD_OUTPUT: ${{ github.workspace }}/tmp/specification/backend-version-rebuild
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -300,7 +315,7 @@ jobs:
       - name: Install native build dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 pkg-config git curl ca-certificates
+          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 pkg-config git curl ca-certificates ffmpeg jq libxml2-utils perl unzip zip
 
       - name: Trust the exact container checkout for evidence Git reads
         # Container paths resolve to /__w while checkout may trust the host alias.
@@ -334,6 +349,13 @@ jobs:
 
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
+
+      - name: Verify music worker recovery, fencing and DDEX diagnostics
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test
+        run: |
+          node --test scripts/__tests__/music-test-database.test.mjs
+          npm run test:music-worker-runtime
 
       - name: Verify authenticated account deletion and auditable resolution
         env:
@@ -489,6 +511,11 @@ jobs:
           TDF_AUTOMIG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-automatic-migrations-production-schema.sh
 
+      - name: Verify community search ranking and privacy on PostgreSQL
+        env:
+          TDF_DISCOVERY_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: python3 scripts/test-community-search.py
+
       - name: Verify directory artist listings and canonical preview images
         env:
           PGPASSWORD: postgres
@@ -518,11 +545,13 @@ jobs:
           sh scripts/test-operations-inbound-capture.sh
           bash scripts/test-auth-recovery-migration.sh
           sh scripts/test-meta-redelivery.sh
+          sh scripts/test-rag-index-privacy.sh
           node scripts/__tests__/identity-http-runtime.mjs
           sh scripts/test-whatsapp-redelivery.sh
           sh scripts/test-credential-lifecycle.sh
           sh scripts/test-ticket-manual-review-concurrency.sh
           sh scripts/test-whatsapp-consent.sh
+          sh scripts/test-music-publication.sh
           sh scripts/test-index-declarations.sh
           sh scripts/test-interaction-write-budget.sh
 
@@ -530,6 +559,10 @@ jobs:
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: sh scripts/test-event-organizer.sh
+      - name: Chat recipient notifications and repeated messages
+        env:
+          TDF_CHAT_NOTIFICATION_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-chat-notifications.sh
 
       - name: Verify checkout monetary snapshots and invalid-schema controls
         env:
@@ -540,6 +573,25 @@ jobs:
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: sh scripts/test-music-purchase.sh
+
+      - name: Verify music payment outcome and closed-order reconciliation
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-music-payment-outcomes.sh
+
+      - name: Verify the production migration batch, ledger atomicity and lock refusal
+        env:
+          TDF_MIGRATION_BATCH_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: node scripts/__tests__/migration-batch-postgres.mjs
+
+      - name: Verify the startup capability-gate policy for every asserted flag state
+        env:
+          TDF_STARTUP_GATES_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: node scripts/__tests__/startup-gates-postgres.mjs
+      - name: Verify the Operations worker tick isolates a poisoned outbox row
+        env:
+          TDF_OPERATIONS_WORKER_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: node scripts/__tests__/operations-worker-tick-postgres.mjs
 
       - name: Verify artist claim preparation concurrency and privacy
         env:
@@ -583,6 +635,18 @@ jobs:
           PGPASSWORD: postgres
           TDF_INTERACTION_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/interactions/test-http.sh
+
+      - name: Retain synthetic backend version cache evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-version-rebuild-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            tmp/specification/backend-version-rebuild/result.json
+            tmp/specification/backend-version-rebuild/*/*.log
+            tmp/specification/backend-version-rebuild/*/*.json
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Retain compiler-derived API discovery evidence
         if: always()
@@ -839,6 +903,14 @@ jobs:
 
       - name: Rehearse access-request notification compatibility migration
         run: npm run test:access-request-notification-migration
+
+      - name: Rehearse complete music integration and immutable rollback recovery
+        env:
+          PGPASSWORD: postgres
+          TDF_MUSIC_REHEARSAL_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/tdf_music_rehearsal_test
+        run: |
+          createdb -h 127.0.0.1 -U postgres tdf_music_rehearsal_test
+          node scripts/test-music-integration-rehearsal.mjs
 
       - name: Rehearse notification navigation and history-preserving rollback
         env:

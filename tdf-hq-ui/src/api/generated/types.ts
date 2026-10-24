@@ -8759,6 +8759,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/music/purchases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List only the authenticated buyer's purchases */
+        get: operations["listMusicPurchases"];
+        put?: never;
+        /**
+         * Confirm an exact music offer and create or replay a purchase
+         * @description Requires music commerce enabled for the process and checkout environments. Confirm the displayed exact amount and currency. Current offer eligibility is checked again. One buyer/key binds one original request; an eligible replay with different bound inputs returns 409 without purchase effects. No payment provider is contacted by this operation. Music commerce remains experimental.
+         */
+        post: operations["createMusicPurchase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/music/releases/{releaseId}/versions/{versionId}/validate": {
         parameters: {
             query?: never;
@@ -11488,7 +11509,7 @@ export interface components {
              * @description Fixed safe classification, not raw stored exception text
              * @enum {string}
              */
-            creReason: "closed_checkout_approval" | "scheduled_query_review" | "binding_mismatch" | "unknown_provider_state" | "unrecognized";
+            creReason: "closed_checkout_approval" | "scheduled_query_review" | "binding_mismatch" | "unknown_provider_state" | "music_paid_closed_order" | "unrecognized";
             /** Format: uuid */
             creCheckoutId: string | null;
             /** Format: uuid */
@@ -15096,6 +15117,48 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        /** @description Canonical decimal minor units in 0..9223372036854775807. No sign, leading zeros, fractional part or exponent. */
+        MusicMinorUnitsDecimal: string;
+        /** @description Canonical positive decimal minor units in 1..9223372036854775807. */
+        MusicPositiveMinorUnitsDecimal: string;
+        /** @description Exact nonnegative minor units. Legacy numeric values are emitted only in the interoperable integer range. Larger values are canonical decimal text; clients must not convert the whole amount to a binary64 number. */
+        MusicMinorUnits: number | components["schemas"]["MusicMinorUnitsDecimal"];
+        MusicPurchaseCreateInput: {
+            /** Format: uuid */
+            availabilityRuleId: string;
+            /** @description Declared country is trimmed and uppercased, then must contain two ASCII letters. It does not establish trusted territory eligibility. */
+            territoryCode: string;
+            /** @description Trimmed, nonempty accepted terms identifier, limited to 160 characters after trimming. */
+            termsVersion: string;
+            expectedAmountMinor: components["schemas"]["MusicPositiveMinorUnitsDecimal"];
+            /** @description Canonical ISO currency of the displayed offer; current music sales support USD only. */
+            expectedCurrency: string;
+        };
+        MusicPurchaseOrder: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            releaseVersionId: string;
+            /** Format: uuid */
+            availabilityRuleId: string;
+            /** @enum {string} */
+            state: "pending" | "awaiting_payment" | "paid" | "cancelled" | "refunded" | "chargeback";
+            grossMinor: components["schemas"]["MusicMinorUnits"];
+            discountMinor: components["schemas"]["MusicMinorUnits"];
+            taxMinor: components["schemas"]["MusicMinorUnits"];
+            feeMinor: components["schemas"]["MusicMinorUnits"];
+            netMinor: components["schemas"]["MusicMinorUnits"];
+            currency: string;
+            /** Format: uuid */
+            checkoutId: string | null;
+            providerReference: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            paidAt: string | null;
+            /** @description Included by the list operation. */
+            releaseTitle?: string;
+        };
         MusicPlaybackConflict: {
             /** @enum {string} */
             code: "playback_identity_conflict";
@@ -15287,6 +15350,9 @@ export interface components {
             title: string;
             subtitle?: string | null;
             summary?: string | null;
+            profileKind?: string | null;
+            /** @description Same-origin canonical profile path */
+            canonicalPath?: string | null;
             /** Format: uri */
             imageUrl?: string | null;
             location: components["schemas"]["PublicLocation"];
@@ -31128,7 +31194,8 @@ export interface operations {
         parameters: {
             query?: {
                 q?: components["parameters"]["SearchQuery"];
-                entityType?: components["schemas"]["DirectoryEntityType"];
+                entityType?: "profile" | "artist" | "classified" | "event" | "venue";
+                profileKind?: "person" | "artist" | "band" | "project";
                 cityId?: string;
                 /** @description Consented ephemeral search latitude */
                 latitude?: number;
@@ -36206,6 +36273,104 @@ export interface operations {
                 };
             };
             /** @description Music playback telemetry disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMusicPurchases: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Purchases, newest first; monetary values retain exact minor units */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicPurchaseOrder"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Music commerce is disabled in the applicable environment */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMusicPurchase: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Trimmed key of 8–160 visible ASCII characters, scoped to this buyer. */
+                "Idempotency-Key": string;
+                /** @description Effective country is trusted only with the protected edge control enabled; otherwise it is unknown. */
+                "CF-IPCountry"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MusicPurchaseCreateInput"];
+            };
+        };
+        responses: {
+            /** @description Original or matching replayed purchase in its current state */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicPurchaseOrder"];
+                };
+            };
+            /** @description Invalid key */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No currently eligible offer or buyer billing identity */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Confirmed price or replay binding conflicts; no purchase effects */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Music commerce is disabled in the applicable environment */
             503: {
                 headers: {
                     [name: string]: unknown;

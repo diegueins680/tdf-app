@@ -7,6 +7,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
+import SearchIcon from '@mui/icons-material/Search';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -31,7 +32,6 @@ const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.shop', to: '/marketplace' },
   { label: 'Domo', to: '/domo-del-pululahua' },
   { label: 'authEntry.book', to: '/reservar' },
-  { label: 'DJ Booth', to: '/dj-booth' },
   { label: 'authEntry.releases', to: '/records' },
 ] as const;
 
@@ -79,7 +79,6 @@ export default function PublicBranding({
   const footerPrimaryAction = useMemo<FooterAction>(() => {
     if (
       location.pathname.startsWith('/reservar') ||
-      location.pathname.startsWith('/dj-booth') ||
       location.pathname.startsWith('/domo-del-pululahua')
     ) {
       return { label: t('authEntry.whatsappBookings'), kind: 'external', value: STUDIO_WHATSAPP_URL };
@@ -98,9 +97,6 @@ export default function PublicBranding({
   const footerSecondaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
       return { label: t('authEntry.signInAutofill'), kind: 'route', value: contextualLoginPath };
-    }
-    if (location.pathname.startsWith('/dj-booth')) {
-      return { label: t('authEntry.generalBooking'), kind: 'route', value: '/reservar' };
     }
     if (location.pathname.startsWith('/domo-del-pululahua')) {
       return { label: t('authEntry.bookStudio'), kind: 'route', value: '/reservar' };
@@ -161,6 +157,7 @@ export default function PublicBranding({
       {showHeader && (
         <Box
           component="header"
+          data-navigation-sticky-header={stickyHeader ? 'true' : undefined}
           sx={{
             borderBottom: '1px solid',
             borderColor: 'divider',
@@ -223,6 +220,7 @@ export default function PublicBranding({
               </Stack>
               <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5 }} sx={{ maxWidth: '100%', minWidth: 0 }}>
                 <MarketplaceCartButton />
+                <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44, display: { md: 'none' } }}><SearchIcon /></IconButton>
                 {session ? (
                   <SessionMenu />
                 ) : showLoginButton && (

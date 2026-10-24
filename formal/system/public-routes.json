@@ -39,7 +39,7 @@
     "Authorization",
     "Cookie"
    ],
-   "rule": "Handler resolves the session from the Authorization or Cookie header itself and rejects missing, expired or revoked sessions."
+   "rule": "Handler resolves the session from the Authorization or Cookie header itself and rejects missing, expired or revoked sessions, or answers the anonymous value without resolving any session (GET /session, POST /session/logout)."
   },
   "credential-intake": {
    "mutating": true,
