@@ -40,7 +40,7 @@ it('shows the server instructions, exact amount and reference before evidence', 
 
   const button = screen.getByRole('button', { name: 'Ya transferí' });
   expect((button as HTMLButtonElement).disabled).toBe(true);
-  fireEvent.change(screen.getByLabelText(/comprobante/i), { target: { value: '  COMP-77 ' } });
+  fireEvent.change(screen.getByLabelText(/Número de comprobante/i), { target: { value: '  COMP-77 ' } });
   fireEvent.click(button);
   expect(onSubmit).toHaveBeenCalledWith('COMP-77');
 });
@@ -55,4 +55,32 @@ it('lets the buyer resubmit after a rejection and shows the staff reason', () =>
   mount(transfer({ evidenceStatus: 'rejected', reviewNotes: 'No encontramos el depósito.' }));
   expect(screen.getByText(/No encontramos el depósito/)).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Ya transferí' })).toBeTruthy();
+});
+
+it('includes the selected receipt when reporting the transfer', () => {
+  const submit = mount(transfer());
+  const file = new File(['%PDF-1.7'], 'transferencia.pdf', { type: 'application/pdf' });
+  fireEvent.change(screen.getByLabelText(/Adjuntar comprobante/), { target: { files: [file] } });
+  fireEvent.change(screen.getByLabelText(/Número de comprobante/), { target: { value: 'COMP-77' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Ya transferí' }));
+  expect(submit).toHaveBeenCalledWith('COMP-77', file);
+});
+
+it('blocks invalid attachments and allows the buyer to correct the selection', () => {
+  const submit = mount(transfer());
+  fireEvent.change(screen.getByLabelText(/Número de comprobante/), { target: { value: 'COMP-77' } });
+  const field = screen.getByLabelText(/Adjuntar comprobante/);
+  fireEvent.change(field, { target: { files: [new File(['<svg/>'], 'receipt.svg', { type: 'image/svg+xml' })] } });
+  expect(screen.getByText('Selecciona un JPG, PNG o PDF de hasta 5 MB.')).toBeTruthy();
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Ya transferí' }).disabled).toBe(true);
+  expect(submit).not.toHaveBeenCalled();
+  fireEvent.change(field, { target: { files: [] } });
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Ya transferí' }).disabled).toBe(false);
+});
+
+it('blocks oversized receipts', () => {
+  mount(transfer());
+  const file = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'receipt.png', { type: 'image/png' });
+  fireEvent.change(screen.getByLabelText(/Adjuntar comprobante/), { target: { files: [file] } });
+  expect(screen.getByText('Selecciona un JPG, PNG o PDF de hasta 5 MB.')).toBeTruthy();
 });

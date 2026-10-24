@@ -26,6 +26,8 @@ import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
 import           Servant
 
+import TDF.Server.TicketPaymentReceipt (TicketPaymentReceipt)
+
 import qualified TDF.API.Types as APITypes
 import           TDF.API.Types (rejectNullOptionalFields)
 
@@ -157,6 +159,7 @@ data PublicEventTicketBankTransferDTO = PublicEventTicketBankTransferDTO
   , currency          :: Text
   , evidenceStatus    :: Text
   , customerReference :: Maybe Text
+  , receiptAttached   :: Bool
   , reviewNotes       :: Maybe Text
   } deriving (Eq, Show, Generic)
 
@@ -164,6 +167,7 @@ instance ToJSON PublicEventTicketBankTransferDTO
 
 data PublicEventTicketBankTransferEvidenceRequest = PublicEventTicketBankTransferEvidenceRequest
   { customerReference :: Text
+  , receipt           :: Maybe TicketPaymentReceipt
   } deriving (Eq, Show, Generic)
 
 instance ToJSON PublicEventTicketBankTransferEvidenceRequest

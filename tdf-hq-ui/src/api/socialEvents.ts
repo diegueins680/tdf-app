@@ -424,6 +424,7 @@ export interface TicketManualPaymentDTO {
   tmpCurrency: string;
   tmpEvidenceStatus: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';
   tmpCustomerReference?: string | null;
+  tmpHasReceipt?: boolean;
   tmpSubmittedAt?: string | null;
   tmpReviewedAt?: string | null;
   tmpReviewNotes?: string | null;
@@ -773,6 +774,8 @@ export const SocialEventsAPI = {
   // Manual bank transfer review
   listManualPayments: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/manual-payments`) as TicketManualPaymentDTO[],
+  getManualPaymentReceipt: async (eventId: string, orderId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders/${encodeURIComponent(orderId)}/manual-payment/receipt`) as { contentType: string; base64: string },
   reviewManualPayment: async (eventId: string, orderId: string, data: TicketManualPaymentReviewDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders/${encodeURIComponent(orderId)}/manual-payment/review`, data) as TicketManualPaymentDTO,
   completeBankTransferRefund: async (eventId: string, refundId: string, reference: string) =>

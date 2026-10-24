@@ -7467,7 +7467,8 @@
       "inputs": [
         "Order lookup token",
         "Buyer transfer reference",
-        "Staff review action and notes"
+        "Staff review action and notes",
+        "Optional private JPG, PNG or PDF receipt up to 5 MiB"
       ],
       "state": {
         "boundary": "event_ticket_checkout_runtime.manual_hold_expires_at and canonical manual payment evidence",
@@ -7492,7 +7493,7 @@
         "Idempotent ticket issuance"
       ],
       "authorization": "Lookup token for buyer actions; strict administrator or event organizer for review, checked inside the review transaction.",
-      "privacy": "Guests become new unverified contact parties with name and email only; account details are server configuration shown after selection; approval notes stay internal.",
+      "privacy": "Guests become new unverified contact parties with name and email only; account details are server configuration shown after selection; approval notes stay internal. Receipt files stay outside public assets and are returned only to the managing organizer or strict administrator, with no-store responses.",
       "concurrency": "Review locks checkout, attempt and evidence rows FOR UPDATE and keeps the locks through the decision (savepoint, not commit); a concurrent reviewer waits and then sees the decided state. The hold guard and expiry run in the database.",
       "idempotency": "Repeated selection replays the same attempt; repeated approval of a paid order returns success and issuance is idempotent.",
       "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail. A failed ticket issuance rolls the approval back (409) and leaves the evidence reviewable.",
@@ -7517,7 +7518,9 @@
         "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq-ui/src/api/generated/types.ts",
-        "formal/system/compiled-api-surface.json"
+        "formal/system/compiled-api-surface.json",
+        "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs",
+        "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx"
       ],
       "tests": [
         "tdf-hq/test/integration/ticket_manual_bank_transfer.sql",
@@ -7531,7 +7534,10 @@
         "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
         "scripts/test-ticket-manual-review-concurrency.sh",
         "scripts/verify-event-operations-formal.sh",
-        "tdf-hq/test/TDF/Test/DisposablePostgres.hs"
+        "tdf-hq/test/TDF/Test/DisposablePostgres.hs",
+        "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs",
+        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
+        "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx"
       ],
       "formalModels": [
         "formal/event-operations/ManualBankTransfer.tla",
