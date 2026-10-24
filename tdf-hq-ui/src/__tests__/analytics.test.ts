@@ -38,6 +38,7 @@ const {
   redactSensitiveQueryValues,
   sanitizeAnalyticsProperties,
 } = await import('../analytics/posthog');
+const { reportClientError, __resetClientErrorReportsForTests } = await import('../analytics/errorReporting');
 
 type AnalyticsFixtureIds = Readonly<{
   noKeyEventId: string;
@@ -64,6 +65,7 @@ describe('analytics/posthog (web)', () => {
   beforeEach(() => {
     delete testWindow.__ENV__;
     __resetAnalyticsForTests();
+    __resetClientErrorReportsForTests();
     initMock.mockReset();
     captureMock.mockReset();
     identifyMock.mockReset();
@@ -92,6 +94,49 @@ describe('analytics/posthog (web)', () => {
     expect(loggerLogMock).toHaveBeenCalledWith(
       '[analytics] PostHog disabled: VITE_POSTHOG_KEY is unset. Events will not be sent.',
     );
+  });
+
+  test('filters routed failures through the real reporter, analytics client and SDK envelope', async () => {
+    testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
+    const { default: RouteErrorBoundary } = await import('../components/RouteErrorBoundary');
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const captureException = jest.fn();
+    const previous = Object.getOwnPropertyDescriptor(window, 'posthog');
+    Object.defineProperty(window, 'posthog', { configurable: true, value: { captureException } });
+    window.history.replaceState({}, '', '/eventos/141/orden/private-order?lookupToken=private-query#private-fragment');
+    try {
+      const error = new Error('ana@example.com password="private alpha beta" token=private-token https://tdf.test/reset?code=private-code');
+      error.name = 'Failure ana@example.com';
+      error.stack = 'private-stack';
+      Object.assign(error, { cause: 'private-cause', account: 'private-account' });
+      new RouteErrorBoundary({ children: null }).componentDidCatch(error, { componentStack: 'private-component-stack' });
+      reportClientError('auth_flow', new Error('benign'), {
+        kind: 'private-kind', route: 'private-route', error_name: 'private-name',
+        error_message: 'private-message', commit: 'private-commit',
+        online: 'private-online', visibility: 'private-visibility', account: 'private-account',
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(captureException).not.toHaveBeenCalled();
+      expect(captureMock).toHaveBeenCalledTimes(2);
+      const beforeSend = (initMock.mock.calls[0]?.[1] as {
+        before_send: (event: { properties: Record<string, unknown> }) => unknown;
+      }).before_send;
+      const outbound = captureMock.mock.calls.map(([event, properties]) => beforeSend({ properties: {
+        ...properties as Record<string, unknown>, event,
+        $current_url: window.location.href, token: 'phc_unit_test',
+      } }));
+      const output = JSON.stringify([consoleError.mock.calls, outbound]);
+      for (const sentinel of ['private-', 'alpha', 'beta', 'ana@example.com']) expect(output).not.toContain(sentinel);
+      expect(outbound).toEqual(expect.arrayContaining([
+        expect.objectContaining({ properties: expect.objectContaining({ kind: 'app_render', boundary: 'route', token: 'phc_unit_test' }) }),
+        expect.objectContaining({ properties: expect.objectContaining({ kind: 'auth_flow', error_message: 'benign', online: navigator.onLine }) }),
+      ]));
+    } finally {
+      consoleError.mockRestore();
+      window.history.replaceState({}, '', '/');
+      if (previous) Object.defineProperty(window, 'posthog', previous);
+      else Reflect.deleteProperty(window, 'posthog');
+    }
   });
 
   test('forwards calls to PostHog when a key is configured', () => {

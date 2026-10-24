@@ -8,9 +8,10 @@
  * "white screen after Google/signup" reports can be diagnosed from telemetry.
  *
  * Messages are redacted before leaving the browser: emails, JWT/bearer-like
- * tokens and long opaque identifiers are masked, and the event passes through
- * the analytics client's own property sanitizer. Never pass passwords, tokens
- * or form values in `context`.
+ * tokens, embedded URLs and long opaque identifiers are masked, and the event
+ * passes through the analytics client's own property sanitizer. Only selected
+ * diagnostic context fields are retained. Never pass passwords, tokens or form
+ * values in `context`; pattern redaction cannot recognize arbitrary personal text.
  */
 
 export type ClientErrorKind =
@@ -32,27 +33,65 @@ let reportCount = 0;
 
 const EMAIL_PATTERN = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 const JWT_PATTERN = /\beyJ[\w-]+\.[\w-]+\.[\w-]+/g;
-const BEARER_PATTERN = /\b(bearer|token|password|secret|credential)\b(\s*[:=]\s*|\s+)\S+/gi;
+// Include common credential label variants and quoted values with whitespace.
+// An unterminated quoted value is conservatively masked through the end.
+const CREDENTIAL_PATTERN = /\b(authorization|bearer|(?:access|refresh|id)[_-]?token|(?:current|new)[_-]?password|(?:client[_-]?)?secret|api[_-]?key|token|password|credential)\b(["']?\s*[:=]\s*|\s+)(?:bearer\s+)?(?:"(?:\\.|[^"\\])*(?:"|$)|'(?:\\.|[^'\\])*(?:'|$)|\S+)/gi;
+// Error strings can embed URLs rather than start with one; SDK URL-property
+// sanitizers cannot identify short query values inside those free-text fields.
+const DIAGNOSTIC_URL_PATTERN = /(?:\b(?:https?|tdf):\/\/|\/)[^\s<>"']+/gi;
 const OPAQUE_PATTERN = /\b[A-Za-z0-9_-]{32,}\b/g;
 
 export function redactErrorText(value: string): string {
   return value
     .replace(JWT_PATTERN, '[jwt]')
-    .replace(BEARER_PATTERN, '$1$2[redacted]')
+    .replace(DIAGNOSTIC_URL_PATTERN, '[url]')
+    .replace(CREDENTIAL_PATTERN, '$1$2[redacted]')
     .replace(EMAIL_PATTERN, '[email]')
     .replace(OPAQUE_PATTERN, '[id]')
     .slice(0, MAX_MESSAGE_LENGTH);
 }
 
 function describeError(error: unknown): { name: string; message: string } {
-  if (error instanceof Error) {
-    return { name: error.name || 'Error', message: redactErrorText(error.message || '') };
+  try {
+    if (error instanceof Error) {
+      const name = error.name;
+      const message = error.message;
+      return {
+        name: typeof name === 'string' ? redactErrorText(name || 'Error').slice(0, 80) : 'Error',
+        message: typeof message === 'string' ? redactErrorText(message) : '',
+      };
+    }
+    if (typeof error === 'string') return { name: 'string', message: redactErrorText(error) };
+    if (error && typeof error === 'object' && 'message' in error) {
+      return { name: 'object', message: redactErrorText(String((error as { message: unknown }).message)) };
+    }
+    return { name: typeof error, message: '' };
+  } catch {
+    // Unknown errors can expose throwing getters. Reporting must stay usable.
+    return { name: 'Error', message: '[unavailable]' };
   }
-  if (typeof error === 'string') return { name: 'string', message: redactErrorText(error) };
-  if (error && typeof error === 'object' && 'message' in error) {
-    return { name: 'object', message: redactErrorText(String((error as { message: unknown }).message)) };
+}
+
+function diagnosticContext(context: ClientErrorContext): ClientErrorContext {
+  const text = (value: unknown) => typeof value === 'string' ? redactErrorText(value) : undefined;
+  const flag = (value: unknown) => typeof value === 'boolean' ? value : undefined;
+  try {
+    // Deliberately select the diagnostic fields used by our call sites. A new
+    // caller cannot export arbitrary account data or replace the core envelope.
+    return {
+      boundary: text(context['boundary']),
+      component_stack: text(context['component_stack']),
+      source: text(context['source']),
+      watchdog_route: text(context['watchdog_route']),
+      method: text(context['method']),
+      timed_out: flag(context['timed_out']),
+      had_stored_session: flag(context['had_stored_session']),
+      creating_account: flag(context['creating_account']),
+      linking: flag(context['linking']),
+    };
+  } catch {
+    return {};
   }
-  return { name: typeof error, message: '' };
 }
 
 function currentRoute(): string {
@@ -75,10 +114,13 @@ export function reportClientError(kind: ClientErrorKind, error: unknown, context
   reported.add(dedupeKey);
   reportCount += 1;
 
-  // Keep the failure visible in devtools/remote debugging too.
-  console.error(`[tdf] ${kind}`, error);
+  // Do not give console collectors the original Error, stack, cause or custom
+  // fields. Third-party/browser-owned logging remains outside this boundary.
+  try { console.error(`[tdf] ${kind}`, { name, message }); }
+  catch { /* Diagnostics must never turn a recoverable failure into a crash. */ }
 
   const properties = {
+    ...diagnosticContext(context),
     kind,
     error_name: name,
     error_message: message,
@@ -86,7 +128,6 @@ export function reportClientError(kind: ClientErrorKind, error: unknown, context
     commit: typeof __APP_COMMIT__ === 'string' ? __APP_COMMIT__ : 'dev',
     online: typeof navigator === 'undefined' ? null : navigator.onLine,
     visibility: typeof document === 'undefined' ? null : document.visibilityState,
-    ...context,
   };
 
   // Analytics stays out of the initial bundle; failures to report are ignored
