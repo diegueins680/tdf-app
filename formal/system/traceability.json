@@ -8999,7 +8999,9 @@
       "forbiddenTransitions": [
         "cart reachable only by scrolling past listings",
         "badge stale after a cart change",
-        "login/logout clearing the cart"
+        "login/logout clearing the cart",
+        "failed or offline-paused cart read -> empty-cart claim",
+        "unconfirmed cart read -> checkout"
       ],
       "effects": [
         "Shared summary store drives header badge, drawer and sticky mobile bar."
@@ -9008,8 +9010,8 @@
       "privacy": "Only cart id, count and preview are stored locally.",
       "concurrency": "Repeat taps are ignored while an add is pending; server upsert sets quantity.",
       "idempotency": "Server sets, not increments, quantities.",
-      "failure": "Failed cart reads keep the last known count until a successful fetch.",
-      "recovery": "Restore saved cart or browse catalog from the empty state.",
+      "failure": "Failed cart reads keep the last known count and cart id, show an explicit retry state, and never claim the cart is empty. Offline-paused initial reads and cached refreshes show a waiting-for-connection state. Checkout waits for a confirmed idle successful read.",
+      "recovery": "Retry the same saved cart without creating a replacement; successful authoritative reads restore its contents and count.",
       "observability": "Existing marketplace analytics; jest and browser evidence.",
       "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
       "implementation": [
@@ -9038,7 +9040,7 @@
       "critical": false,
       "property": "CartAlwaysReachable and BadgeMatchesCart",
       "contract": "formal/system/mobile-entry-ux.md",
-      "verification": "Cart summary store tests, header button tests at 360px, MarketplacePage add/remove tests and a browser cart journey with reload.",
+      "verification": "Cart summary/header/component regressions, failed-read recovery, cached-error checkout blocking, offline-paused read and synthetic browser recovery journey.",
       "evidence": "cartSummary, MarketplaceCartButton and MarketplacePage tests; e2e marketplace-cart.",
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
@@ -11457,7 +11459,7 @@
     "e2e/web/directory-entry.spec.mjs": "17d56aaa082a13e71c2442b6f09ee29b158413e9a41eb7b07969e3bee61c8c97",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
-    "e2e/web/marketplace-cart.spec.mjs": "5b00ebfd4d2e2a4bcd3cb5ada9c06e6442c7d5e25fef286792e214e1dff8bdfa",
+    "e2e/web/marketplace-cart.spec.mjs": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385",
     "e2e/web/mobile-layout-regressions.spec.mjs": "db3505fa7e16300fac202d80cca9957d8208eb067b8f2c6c53f0e08f547411fc",
     "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
@@ -11995,7 +11997,7 @@
     "tdf-hq-ui/public/robots.txt": "082606e607e29733ad0e44ad1efd702079008d9bf867b97638b289d9a18cfb76",
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
     "tdf-hq-ui/src/App.tsx": "a43e646790f5293655dc06d92c1f8ce242e18932ec3241bf302e9a866b1237b9",
-    "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
+    "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "e9b604b8d0c83c918608e020e2c4e8e1ba38658387c3d81fa8fa39650ccbbdb5",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "99f56aa4ca5dd09cd6db8fd88535673f1b8418983ec461c591a9998b65fbcd71",
@@ -12158,7 +12160,7 @@
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": "b3d9afb2fcef5772f8397011443b084abf8d65e47b9ff4ac2187bca2a027c14a",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "c79edb524886802dfbedd61fbc97614a0fe4ba4414708c2482ffa1856d2bad0c",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "a4fa1f33977e120b61299d94f3b9853e220f25ddc0c854e9329fa288d120f443",
-    "tdf-hq-ui/src/pages/MarketplacePage.tsx": "6b77c1ba4e9236b280e90664ed22590ffa8fef6b2b1e89b2dc224059be44a4ed",
+    "tdf-hq-ui/src/pages/MarketplacePage.tsx": "b129902039b0dca4eba1ed7077c2a61d7909da0a02bcb4eca2c35650c07cd102",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
     "tdf-hq-ui/src/pages/MobileAppPage.tsx": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
@@ -22483,7 +22485,7 @@
     {
       "id": "SURFACE-c5e7e7710b072a8d",
       "path": "e2e/web/marketplace-cart.spec.mjs",
-      "sha256": "5b00ebfd4d2e2a4bcd3cb5ada9c06e6442c7d5e25fef286792e214e1dff8bdfa",
+      "sha256": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28585,7 +28587,7 @@
     {
       "id": "SURFACE-35d1e3a8fc77c9a6",
       "path": "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
-      "sha256": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
+      "sha256": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33259,7 +33261,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "6b77c1ba4e9236b280e90664ed22590ffa8fef6b2b1e89b2dc224059be44a4ed",
+      "sha256": "b129902039b0dca4eba1ed7077c2a61d7909da0a02bcb4eca2c35650c07cd102",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49980,7 +49982,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7bb3c0f1072f64c5c4de16d55633966246c002f6cbb4060ba4e935353269c495",
+      "sourceSha256": "87127987109aef6c6ecb8c656eb3439cb2862c70a387c0b74305a4a7fd58ccaa",
       "definition": {
         "states": [
           "absent",
@@ -50010,7 +50012,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7bb3c0f1072f64c5c4de16d55633966246c002f6cbb4060ba4e935353269c495",
+      "sourceSha256": "87127987109aef6c6ecb8c656eb3439cb2862c70a387c0b74305a4a7fd58ccaa",
       "definition": {
         "export": [
           "queued",

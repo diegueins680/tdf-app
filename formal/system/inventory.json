@@ -2874,7 +2874,7 @@
     {
       "id": "SURFACE-c5e7e7710b072a8d",
       "path": "e2e/web/marketplace-cart.spec.mjs",
-      "sha256": "5b00ebfd4d2e2a4bcd3cb5ada9c06e6442c7d5e25fef286792e214e1dff8bdfa",
+      "sha256": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6216,7 +6216,7 @@
     {
       "id": "SURFACE-35d1e3a8fc77c9a6",
       "path": "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
-      "sha256": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
+      "sha256": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9246,7 +9246,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "6b77c1ba4e9236b280e90664ed22590ffa8fef6b2b1e89b2dc224059be44a4ed",
+      "sha256": "b129902039b0dca4eba1ed7077c2a61d7909da0a02bcb4eca2c35650c07cd102",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26156,7 +26156,7 @@
     },
     {
       "path": "formal/system/mobile-entry-ux.md",
-      "sha256": "554ece8a8f8e6cd33acebe8c37d43c5cd6b8cc4bdab1510cd4eb9977eb44d218",
+      "sha256": "e3474a676d51bac581db88721626644c13f925f8b138d46dfdabbc5255c767c1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26387,7 +26387,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7bb3c0f1072f64c5c4de16d55633966246c002f6cbb4060ba4e935353269c495",
+      "sha256": "87127987109aef6c6ecb8c656eb3439cb2862c70a387c0b74305a4a7fd58ccaa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
