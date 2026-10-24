@@ -11651,7 +11651,7 @@
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
-    "package-lock.json": "b675c3564962de5d8fb5319c3bba57ababb2bba6efb36f40b867593f18947507",
+    "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
     "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
     "playwright.config.mjs": "016429e964027bd196982efabee711e56df08b51664f51f8e5298e3cdd7b5f93",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
@@ -22830,7 +22830,7 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "b675c3564962de5d8fb5319c3bba57ababb2bba6efb36f40b867593f18947507",
+      "sha256": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28184,7 +28184,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "67fe7dbccbbab30a4855578d42d3c5928282357aee37952e4d7d4ea72c3ee34c",
+      "sha256": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -29691,7 +29691,7 @@
     {
       "id": "SURFACE-241686c2bc3e55cd",
       "path": "tdf-hq-ui/src/api/socialV2.test.ts",
-      "sha256": "aec77eeda690babf03255a61e7b08b9b1d70343a1a58f7ca6461aedf4a9e2db1",
+      "sha256": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },

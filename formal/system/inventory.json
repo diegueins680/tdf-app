@@ -3119,7 +3119,7 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "b675c3564962de5d8fb5319c3bba57ababb2bba6efb36f40b867593f18947507",
+      "sha256": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6065,7 +6065,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "67fe7dbccbbab30a4855578d42d3c5928282357aee37952e4d7d4ea72c3ee34c",
+      "sha256": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7061,7 +7061,7 @@
     {
       "id": "SURFACE-241686c2bc3e55cd",
       "path": "tdf-hq-ui/src/api/socialV2.test.ts",
-      "sha256": "aec77eeda690babf03255a61e7b08b9b1d70343a1a58f7ca6461aedf4a9e2db1",
+      "sha256": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
       "semanticConformance": "not-established-by-discovery"
     },
     {

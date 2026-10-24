@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-23T20:08:07.005Z",
+  "generatedAt": "2026-10-24T00:56:09.291Z",
   "repositoryRoot": ".",
   "filesScanned": 2345,
   "candidateCount": 1326,
@@ -51503,7 +51503,7 @@
       "lines": [
         31
       ],
-      "consumerCount": 53,
+      "consumerCount": 54,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_dry_run.sql",
@@ -51544,6 +51544,7 @@
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
         "tdf-hq-ui/src/api/interactions.ts",
         "tdf-hq-ui/src/api/reviews.ts",
+        "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx",
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
@@ -51569,6 +51570,7 @@
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
         "tdf-hq-ui/src/api/interactions.ts",
         "tdf-hq-ui/src/api/reviews.ts",
+        "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq/src/TDF/API/Catalog.hs",
         "tdf-hq/src/TDF/API/Marketplace.hs",
         "tdf-hq/src/TDF/API/Merch.hs",
@@ -76660,7 +76662,7 @@
       "lines": [
         10673
       ],
-      "consumerCount": 914,
+      "consumerCount": 915,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -84838,7 +84840,7 @@
       "lines": [
         18242
       ],
-      "consumerCount": 909,
+      "consumerCount": 910,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
