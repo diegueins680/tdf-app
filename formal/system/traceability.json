@@ -11710,7 +11710,7 @@
     "formal/system/public-routes.json": "8454edc5d8bd137e4bfc0caa1cffd3d6f6a569a6ef1ae5c0d9f1c27fe91f3243",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
-    "formal/system/recovery-expiry-arithmetic.json": "0aec608d03599bae4cd9805cdea1a8bfd91ebf9ac56d4e97561686a62ce6ca8a",
+    "formal/system/recovery-expiry-arithmetic.json": "a64520427b618f4af230e7aa49f535db2f2580da29d93f0532c5006b8736b612",
     "formal/system/state-machine-bindings.json": "33e8142fe2cbd5bcca0f9298d55821330fe6214d6ea2d4f6d47bff4884a842c3",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
