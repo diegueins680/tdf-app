@@ -1,4 +1,5 @@
 import { AuthRequestError } from '../utils/authErrorMessage';
+import { fetchWithDeadline, RequestTimeoutError } from './requestDeadline';
 import type { components } from './generated/types';
 import { extractErrorDetails } from './errorMessage';
 import { resolveApiBase } from '../config/apiBase';
@@ -9,7 +10,6 @@ const API_BASE = resolveApiBase();
 const SERVICE_STARTING_MESSAGE = 'El servicio está arrancando. Intenta de nuevo en unos segundos.';
 const AUTH_NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servicio. Revisa tu conexión e inténtalo de nuevo.';
 const AUTH_TIMEOUT_ERROR_MESSAGE = 'La solicitud tardó demasiado. Revisa tu conexión e inténtalo de nuevo.';
-const AUTH_REQUEST_TIMEOUT_MS = 30_000;
 const RETRYABLE_UNAVAILABLE_STATUS = 503;
 const LOGIN_RETRY_DELAYS_MS = [1000, 2000, 5000];
 const MAX_RETRY_DELAY_MS = 15_000;
@@ -47,7 +47,7 @@ const isStartupFallbackCandidate = (message: string): boolean => {
 
 const readErrorMessage = async (res: Response, fallback: string): Promise<string> => {
   const contentType = res.headers.get('content-type') ?? '';
-  const text = await res.text().catch(() => '');
+  const text = await res.text();
   const extracted = extractErrorDetails(text, contentType);
   if (res.status === RETRYABLE_UNAVAILABLE_STATUS && isStartupFallbackCandidate(extracted)) {
     return SERVICE_STARTING_MESSAGE;
@@ -60,51 +60,55 @@ const parseJson = <T>(res: Response) => res.json() as Promise<T>;
 const readConfiguredRetryDelayMs = (retryDelaysMs: readonly number[], attempt: number): number =>
   retryDelaysMs[attempt] ?? retryDelaysMs[retryDelaysMs.length - 1] ?? 0;
 
-const authFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  const controller = new AbortController();
-  const callerSignal = init?.signal;
-  const abortForCaller = () => controller.abort();
-  if (callerSignal?.aborted) {
-    controller.abort();
-  } else {
-    callerSignal?.addEventListener('abort', abortForCaller, { once: true });
-  }
-  const timeoutId = setTimeout(() => controller.abort(), AUTH_REQUEST_TIMEOUT_MS);
-
+const authFetch = async <T>(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  readResponse: (response: Response) => Promise<T>,
+): Promise<T> => {
   try {
-    return await fetch(input, { ...init, signal: controller.signal });
+    return await fetchWithDeadline(input, init, readResponse);
   } catch (err) {
-    const timeout = controller.signal.aborted && !callerSignal?.aborted;
+    if (init.signal?.aborted) throw err;
+    const timeout = err instanceof RequestTimeoutError;
     const wrapped = new AuthRequestError(timeout ? 'timeout' : 'network', timeout ? AUTH_TIMEOUT_ERROR_MESSAGE : AUTH_NETWORK_ERROR_MESSAGE);
     (wrapped as Error & { cause?: unknown }).cause = err;
     throw wrapped;
-  } finally {
-    clearTimeout(timeoutId);
-    callerSignal?.removeEventListener('abort', abortForCaller);
   }
 };
+
+type AuthResult<T> = { ok: true; data: T } | { ok: false; response: Response; message: string };
+
+const readAuthResult = async <T>(res: Response, fallback: string): Promise<AuthResult<T>> =>
+  res.ok
+    ? { ok: true, data: await parseJson<T>(res) }
+    : { ok: false, response: res, message: await readErrorMessage(res, fallback) };
 
 async function postAuthJson<T>(
   path: string,
   body: unknown,
   fallback: string,
-  options?: { retryDelaysMs?: readonly number[] },
+  options?: { retryDelaysMs?: readonly number[]; credentialsError?: boolean },
 ): Promise<T> {
   const retryDelaysMs = options?.retryDelaysMs ?? [];
   const maxAttempts = retryDelaysMs.length + 1;
 
   let attempt = 0;
   while (attempt < maxAttempts) {
-    let res: Response;
+    let result: AuthResult<T>;
+    let responseReceived = false;
     try {
-      res = await authFetch(`${API_BASE}${path}`, {
+      result = await authFetch(`${API_BASE}${path}`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+      }, (res) => {
+        responseReceived = true;
+        return readAuthResult<T>(res, fallback);
       });
     } catch (error) {
-      if (attempt < retryDelaysMs.length) {
+      // A body failure can follow an effective login/account creation. Do not replay it.
+      if (!responseReceived && attempt < retryDelaysMs.length) {
         const fallbackDelayMs = readConfiguredRetryDelayMs(retryDelaysMs, attempt);
         attempt += 1;
         await wait(fallbackDelayMs);
@@ -113,9 +117,8 @@ async function postAuthJson<T>(
       throw error;
     }
 
-    if (res.ok) {
-      return parseJson<T>(res);
-    }
+    if (result.ok) return result.data;
+    const res = result.response;
 
     if (res.status === RETRYABLE_UNAVAILABLE_STATUS && attempt < retryDelaysMs.length) {
       const fallbackDelayMs = readConfiguredRetryDelayMs(retryDelaysMs, attempt);
@@ -124,8 +127,8 @@ async function postAuthJson<T>(
       continue;
     }
 
-    const message = await readErrorMessage(res, fallback);
-    const code = res.status === 401 ? 'credentials' : message === SERVICE_STARTING_MESSAGE ? 'starting' : 'response';
+    const message = result.message;
+    const code = res.status === 401 && options?.credentialsError ? 'credentials' : message === SERVICE_STARTING_MESSAGE ? 'starting' : 'response';
     throw new AuthRequestError(code, message);
   }
 
@@ -135,12 +138,14 @@ async function postAuthJson<T>(
 export async function loginRequest(payload: LoginRequestDTO): Promise<LoginResponseDTO> {
   return postAuthJson<LoginResponseDTO>('/login', payload, 'Credenciales inválidas', {
     retryDelaysMs: LOGIN_RETRY_DELAYS_MS,
+    credentialsError: true,
   });
 }
 
 export async function googleLoginRequest(payload: GoogleLoginRequestDTO): Promise<LoginResponseDTO> {
   return postAuthJson<LoginResponseDTO>('/login/google', payload, 'No pudimos iniciar sesión con Google.', {
     retryDelaysMs: LOGIN_RETRY_DELAYS_MS,
+    credentialsError: true,
   });
 }
 
@@ -150,15 +155,13 @@ export async function requestPasswordReset(email: string, redirect?: string | nu
   if (destination) params.set('redirect', destination);
   if (locale) params.set('locale', locale.toLowerCase().startsWith('es') ? 'es' : 'en');
   const query = params.size ? `?${params.toString()}` : '';
-  const res = await authFetch(`${API_BASE}/v1/password-reset${query}`, {
+  const message = await authFetch(`${API_BASE}/v1/password-reset${query}`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
-  });
-  if (!res.ok) {
-    throw new Error(await readErrorMessage(res, 'No pudimos iniciar el reset. Verifica el correo.'));
-  }
+  }, async (res) => res.ok ? null : readErrorMessage(res, 'No pudimos iniciar el reset. Verifica el correo.'));
+  if (message !== null) throw new Error(message);
 }
 
 export interface PasswordResetConfirmPayload {
@@ -169,16 +172,9 @@ export interface PasswordResetConfirmPayload {
 export async function confirmPasswordReset(
   payload: PasswordResetConfirmPayload,
 ): Promise<LoginResponseDTO> {
-  const res = await authFetch(`${API_BASE}/v1/password-reset/confirm`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    throw new Error(await readErrorMessage(res, 'No pudimos restablecer la contraseña.'));
-  }
-  return parseJson<LoginResponseDTO>(res);
+  return postAuthJson<LoginResponseDTO>(
+    '/v1/password-reset/confirm', payload, 'No pudimos restablecer la contraseña.',
+  );
 }
 
 export interface SignupPayload {
@@ -196,14 +192,7 @@ export interface SignupPayload {
 }
 
 export async function signupRequest(payload: SignupPayload): Promise<LoginResponseDTO> {
-  const res = await authFetch(`${API_BASE}/signup`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    throw new Error(await readErrorMessage(res, 'No pudimos crear la cuenta. Revisa los campos.'));
-  }
-  return parseJson<LoginResponseDTO>(res);
+  return postAuthJson<LoginResponseDTO>(
+    '/signup', payload, 'No pudimos crear la cuenta. Revisa los campos.',
+  );
 }
