@@ -14,7 +14,7 @@ jest.unstable_mockModule('../../api/socialEvents', () => ({
 const { default: EventManualPaymentsPanel } = await import('./EventManualPaymentsPanel');
 const payment: TicketManualPaymentDTO = {
   tmpOrderId: '3', tmpPaymentReference: 'TDF-3', tmpAmountMinor: 2000, tmpQuantity: 1,
-  tmpCurrency: 'USD', tmpEvidenceStatus: 'submitted', tmpCustomerReference: '76481851',
+  tmpCurrency: 'USD', tmpEvidenceStatus: 'submitted', tmpCustomerReference: 'TEST-RECEIPT-123',
   tmpHasReceipt: true, tmpCheckoutStatus: 'awaiting_payment', tmpHoldExpiresAt: '2026-10-25T12:00:00Z',
 };
 const createObjectURL = jest.fn(() => 'blob:receipt-preview');
@@ -25,7 +25,7 @@ const mount = async (overrides: Partial<TicketManualPaymentDTO> = {}) => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   clients.push(client);
   render(<QueryClientProvider client={client}><EventManualPaymentsPanel eventId="141" formatDate={(date) => date} formatMoney={() => '$20.00'} /></QueryClientProvider>);
-  fireEvent.click(await screen.findByRole('button', { name: 'Comprobante: 76481851' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Comprobante: TEST-RECEIPT-123' }));
 };
 beforeEach(() => {
   jest.clearAllMocks();
@@ -37,7 +37,7 @@ afterEach(() => { cleanup(); clients.splice(0).forEach((client) => client.clear(
 
 it('opens the attached receipt from its number and releases the preview on close', async () => {
   await mount();
-  const image = await screen.findByAltText('Comprobante de transferencia 76481851');
+  const image = await screen.findByAltText('Comprobante de transferencia TEST-RECEIPT-123');
   expect(image.getAttribute('src')).toBe('blob:receipt-preview');
   expect(getReceipt).toHaveBeenCalledWith('141', '3');
   expect(screen.getByRole('link', { name: 'Descargar comprobante' }).getAttribute('download')).toBe('comprobante-TDF-3.png');

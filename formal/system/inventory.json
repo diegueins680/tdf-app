@@ -7624,7 +7624,7 @@
     {
       "id": "SURFACE-6d375a8bdcbe5d7c",
       "path": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
-      "sha256": "7cbf15472bbf339d8bc1e266128cd1e21c73b2b0eb4a190983d29564b22a1a33",
+      "sha256": "ae568db76856197e7ba6b9d6b4a7f735e992e709c98ebc4b2b67e07b72be4c24",
       "semanticConformance": "not-established-by-discovery"
     },
     {

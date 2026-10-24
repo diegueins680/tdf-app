@@ -11446,7 +11446,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+    "docs/catalog-persistence/catalog-list-decisions.json": "1c7ab5d110e1b234d38a317ddd5db52aa6f6b4d9b3eeeaf4d25c729b98916b94",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -12075,7 +12075,7 @@
     "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx": "4c21e2d3dee57873cc9951240625a5f036ad6c45a9d46c4b8e4251dc5a0a3ad9",
     "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx": "55bda163a94847cea6c1b62eda88974f2a31f47be0a149e0d569b67a84f2f1dc",
     "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx": "f342a2bad3450c04bcb599119ff0bbc4bf57a35ebbc3f55b92f36f54882d6aea",
-    "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx": "7cbf15472bbf339d8bc1e266128cd1e21c73b2b0eb4a190983d29564b22a1a33",
+    "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx": "ae568db76856197e7ba6b9d6b4a7f735e992e709c98ebc4b2b67e07b72be4c24",
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx": "203eedfc586f7f845e59cfd8afc5103f62aa2d3d63183fe55a1fb25f801e1769",
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
@@ -30756,7 +30756,7 @@
     {
       "id": "SURFACE-6d375a8bdcbe5d7c",
       "path": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
-      "sha256": "7cbf15472bbf339d8bc1e266128cd1e21c73b2b0eb4a190983d29564b22a1a33",
+      "sha256": "ae568db76856197e7ba6b9d6b4a7f735e992e709c98ebc4b2b67e07b72be4c24",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
