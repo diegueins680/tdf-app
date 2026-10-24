@@ -34,7 +34,9 @@ bash scripts/verify-event-operations-formal.sh
 
 The script validates JAR checksums, requires exact PlusCal regeneration and its real-translator
 regression tests, executes TLC sequentially, requires the Alloy scenarios to be satisfiable,
-and requires every Alloy assertion to have no counterexample. Node 22+ is required for the
+and requires every Alloy assertion to have no counterexample. Each assertion also
+has an assertion-preserving guard mutation that must produce a named counterexample;
+see [the control contract](../system/alloy-negative-controls.md). Node 22+ is required for the
 integrity checker/tests; CI selects Node 22 explicitly.
 
 ## Bounds and results (rechecked 2026-09-15)
@@ -114,6 +116,11 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `MusicDdexExportUnfenced/Reopen/NoCommitGate/ReplayFailed/SplitDeadLetter.cfg` | Negative controls: no attempt token, valid regenerated, no rule check at commit, replay re-enqueues a failed export, dead letter split from the export's failed status | Expected exit 12 with `CurrentWriter`, `ValidForever`, `ValidOnlyUnderRules`, `FailedIsFinal`, `PendingHasLiveJob` |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `MigrationLedger.cfg` (2026-10-12) | 3 manifest entries, 2 source versions, 3 batch runs; source changes with or without a declared compatible checksum, image rollback, preparation | PASS; 1,282,056 generated, 334,720 distinct states, depth 26; `EffectsRecorded`, `SingleApplication`, `NoRunPastDrift`, `PreparationSound` (`LedgerImpliesEffects` as a sanity invariant) |
+| `MigrationLedgerRecordAfterCommit.cfg`, `MigrationLedgerBatchUnchecked.cfg`, `MigrationLedgerPrepareUnchecked.cfg`, `MigrationLedgerUnknownAccepted.cfg` | Negative controls: ledger row written after the migration's commit, batch checksum check removed, preparation checksum check removed, unknown ledger rows accepted by preparation | Expected non-zero exit with `EffectsRecorded`, `NoRunPastDrift`, `PreparationSound`, `PreparationSound` violated |
+
+| `StartupGates.cfg` (2026-10-12) | One state; the fourteen production flags the startup verifier asserts, each over {missing, disabled, enabled} (4,782,969 configurations per invariant) | PASS; `ApprovedStarts`, `StartImpliesApproved` |
+| `StartupGatesStagedAccepted.cfg`, `StartupGatesMissingAccepted.cfg`, `StartupGatesEitherRejected.cfg`, `StartupGatesRequiredUnchecked.cfg` | Negative controls: an enabled staged provider accepted, a missing gate accepted, PayPal/Datafast gates required disabled (a coarser stand-in for the pre-AUTHORITY-050 verifier), required states unchecked | Expected non-zero exit with "The invariant of ... is equal to FALSE" for `StartImpliesApproved`, `StartImpliesApproved`, `ApprovedStarts`, `StartImpliesApproved` |
 | `DriveReplay.cfg` (revised 2026-10-14) | One idempotency key, two explicit folder namespaces, two requests from two actors with two content/name/MIME shapes, entries initially absent, legacy or bound; lookup, create, reuse (no new object; sharing still runs), conflict (lookup GET only; no subsequent provider mutation) | PASS; 33,168 generated, 21,648 distinct states; `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `ConflictNoMutation` |
 | `DriveReplayUnchecked.cfg`, `DriveReplayActorIgnored.cfg`, `DriveReplayLegacyAdopted.cfg`, `DriveReplayRace.cfg` | Three negative controls (fingerprint not checked, actor not bound, legacy entry adopted) and one documented non-guarantee (`SingleObject`: two concurrent misses both create) | Expected exit 12 with `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `SingleObject` |
 | `OperationsAuxiliaryWrite.cfg` (2026-10-12) | Two auxiliary Operations commands (note, retry, view or push) of one actor; session, grant, membership, assignment-dependent visibility, failure state and push key as the environment; lock, commit with audit, reject | PASS; 34,172 generated, 13,744 distinct states, depth 10; `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
@@ -564,6 +571,17 @@ render, A→B→A, cache races, and persisted timestamps. The model abstracts pr
 exchange/persistence, selected-calendar identities and query-library scheduling; those
 require HTTP and component/browser conformance tests. It does not prove Google OAuth
 consent, token revocation, server authorization or arbitrary calendar handlers.
+## Music purchase replay
+
+`MusicPurchaseReplay.tla` separates lookup from reservation for two buyers, one
+key and two payloads. The intended finite graph has 4,096 distinct states and
+checks single creation and buyer/payload preservation under arbitrary retries.
+Three controls must violate `ReplayPayloadMatches`, `ReplayOwnerMatches` and
+`OneOrderPerBuyerKey` respectively. The canonical runner requires each named
+counterexample. See [music-purchase-replay.md](../system/music-purchase-replay.md)
+for the SQL/handler mapping, abstraction boundary and exclusions. These are
+safety checks without a liveness/fairness claim or universal refinement proof.
+
 ## Meta redelivery
 
 `MetaRedelivery.tla` and four configurations check the rule in
@@ -589,6 +607,12 @@ verified evidence, one entitlement per order, the download limit, replay of a re
 identifier only inside its URL lifetime, a replayed URL that ends with the original one,
 and no URL without an active entitlement. The positive model and six negative controls
 are mandatory in the formal runner.
+
+`MusicPaymentOutcome.tla` complements that download model with failed attempts,
+closed-order money and locked retry admission with durable failure quarantine. Its intended configuration and six
+named negative controls are mandatory. See
+[music-payment-outcome.md](../system/music-payment-outcome.md) for bounds, SQL and
+concurrency evidence, abstraction assumptions and provider/recovery exclusions.
 
 ## Marketplace optional storage boundary (2026-09-18)
 
@@ -705,6 +729,29 @@ single-guard negative controls are mandatory in the formal runner. Bounds, provi
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
 
+## Public route admission
+
+`PublicRouteAdmission.tla` states the admission gate of
+[public-route-admission.md](../system/public-route-admission.md) over every
+situation of three abstract routes (served unauthenticated or not, registered or
+not, boundary read/mutating/debt, mutating or not): an admitted register has no
+unregistered served route, no stale entry and no mutating route on a read
+boundary, and a known-debt entry is never conformant. Four single-guard
+controls (`Unregistered`, `Stale`, `UnreviewedMutation`, `DebtConformant`) each
+fail the named invariant at the constant level. Handler enforcement is not in
+the model; the booking conformance harness checks it against the real backend.
+## Database readiness probe
+
+`ReadinessProbe.tla` checks one `GET /health` probe over a pool of `PoolSize`
+connections, any number of which PostgreSQL has already closed, against
+[readiness.md](../system/readiness.md): with an attempt budget of the pool size
+plus one the probe answers "ready" exactly when the database is up, and never
+spends more attempts than its budget. `ReadinessProbeSingleAttempt.cfg` (the
+previous code: one attempt) and `ReadinessProbePoolSizeAttempts.cfg` (a budget
+of exactly the pool size, which every connection being stale defeats) each fail
+`ProbeReportsDatabase`; the model found the second bound. Deadline expiry, the
+response fields and cancellation are covered by the Haskell boundary tests.
+
 ## Drive upload replay (2026-10-12)
 
 `DriveReplay.tla` models the reuse of a Google Drive upload by idempotency
@@ -750,6 +797,19 @@ persisted submission mark, lease-fenced results and administrator resend. The po
 model and four negative controls are mandatory in the formal runner. Bounds, provider
 assumptions and the recovery gaps found are stated there.
 
+## Public knowledge retrieval
+
+`PublicKnowledgeRead.tla` models PRIV-RAG-001 with one course, two metadata values
+and course/private source classes, with a Boolean abstraction of normalized
+production identity collisions. The shared runner requires the positive model
+and all six named negative controls; the collision control retains ranking
+checks and removes only the metadata recheck. The mixed-snapshot control keeps
+both admission checks but reads fields separately from their collision inputs.
+`PublicKnowledgeIndex.tla` also
+rejects an ambiguous captured corpus, with its own named guard-removal control.
+Neither model proves the multi-row normalization classifier. See
+[the canonical retrieval contract](../system/public-knowledge-retrieval.md) for
+statement-snapshot assumptions, source/HTTP mappings and delivery exclusions.
 `ChatNotificationAuthorization.tla` models one notification target with stale cached membership/messages. Fresh success is required before display/read effects; failure and retry remain fail-closed. `ChatNotificationCachedDisplay.cfg` and `ChatNotificationEarlyRead.cfg` remove that guard and require named counterexamples. This finite client-admission model does not prove ordinary polling or backend authorization (MSG-NOTIFY-001).
 
 `ChatNotificationNavigation.tla` extends the notification boundary to two same-route navigations and an earlier pending poll. Each target needs its own response; request-scope confusion cannot authorize display or read bookkeeping. Three controls admit cached authorization, early read bookkeeping, or an older response under the current navigation marker. This finite model complements the actual React Query regressions; it does not establish backend authorization, ordinary polling correctness or liveness (MSG-NOTIFY-001).
@@ -763,6 +823,31 @@ mandatory in the formal runner. Bounds, abstractions and the recovery gap found 
 stated there.
 
 
+
+`MigrationLedger.tla` checks the production migration correspondence of
+DEPLOY-MIGRATION-001: a batch run walks the manifest in order, halts on an
+applied entry whose recorded checksum the candidate does not allow, skips other
+applied entries and applies pending ones, recording each in the ledger in the
+same transaction; release preparation reconciles the ledger with the candidate
+manifest and rejects unknown or changed history, while the batch tolerates a
+ledger row an older image does not know (image rollback). Four controls each
+remove one guard (`RecordAfterCommit`, `BatchUnchecked`, `PrepareUnchecked`,
+`UnknownAccepted`) and must violate the named invariant. The advisory lock is
+below the model; `scripts/__tests__/migration-batch-postgres.mjs` runs the
+rendered batch through psql. Bounds and exclusions are in
+`formal/system/migration-correspondence.md`.
+
+
+`StartupGates.tla` is not a state machine: it copies the capability-gate policy
+of the startup schema verification (DEPLOY-STARTUP-001) for the fourteen
+production flags it asserts and checks, over every assignment of those flags
+to missing, disabled or enabled, that every approved configuration starts and
+that a configuration that starts has every flag in an approved state. Four
+controls each remove one guard and must violate the named invariant (these are
+constant-level failures, reported by TLC as "The invariant of X is equal to
+FALSE"). `scripts/__tests__/startup-gates-postgres.mjs` runs the real
+verification SQL for each flag in each state. Bounds are in
+`formal/system/startup-gates.md`.
 ## Operations auxiliary writes (2026-10-12)
 
 `OperationsAuxiliaryWrite.tla` models the four auxiliary Operations

@@ -19,7 +19,8 @@ import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
 import Crypto.Hash (Digest, SHA256, hash)
-import Data.Aeson (Value, object, (.=))
+import Data.Aeson (Value(..), object, (.=))
+import Data.Aeson.Types (parseEither)
 import qualified Data.ByteString.Lazy as BL
 import Data.Int (Int64)
 import Data.Maybe (fromMaybe, listToMaybe)
@@ -41,6 +42,7 @@ import TDF.Auth (AuthedUser(..))
 import qualified TDF.CMS.Models as CMS
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import TDF.DB (Env(..))
+import TDF.MusicRelease.Money (musicMinorUnitsJSON, parseMusicMinorUnits)
 import qualified TDF.Server.ServiceStorefront as Provider
 
 type AppM = ReaderT Env Handler
@@ -116,8 +118,16 @@ createMusicPurchase user idempotencyHeader edgeCountry MusicPurchaseCreateReques
     throwError (badRequest "territoryCode must be an ISO 3166-1 alpha-2 code")
   unless (not (T.null termsVersion) && T.length termsVersion <= 160) $
     throwError (badRequest "termsVersion is required and limited to 160 characters")
+  expectedAmount <- either (const (throwError (badRequest
+    "expectedAmountMinor must be a positive canonical Int64 decimal string"))) pure
+    (parseEither parseMusicMinorUnits (String musicPurchaseExpectedAmountMinor))
+  unless (expectedAmount > 0) $
+    throwError (badRequest "expectedAmountMinor must be positive")
+  let expectedCurrency = musicPurchaseExpectedCurrency
+  unless (T.length expectedCurrency == 3 && T.all isAsciiUpper expectedCurrency) $
+    throwError (badRequest "expectedCurrency must be an ISO 4217 currency code")
   offerRows <- runDB (rawSql
-    "SELECT public.release_version_id,rule.price_minor,rule.currency,rule.downloadable_asset_id,public.title,party.display_name,party.primary_email FROM music_availability_rule rule JOIN music_public_release public ON public.release_version_id=rule.release_version_id JOIN party ON party.id=? WHERE rule.id=?::uuid AND rule.purchasable=TRUE AND rule.download_policy='purchase' AND rule.price_minor>0 AND rule.currency IS NOT NULL AND rule.downloadable_asset_id IS NOT NULL AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW()) AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories))) OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories))))"
+    "SELECT public.release_version_id,rule.price_minor,rule.currency,rule.downloadable_asset_id,public.title,party.display_name,party.primary_email FROM music_availability_rule rule JOIN music_public_release public ON public.release_version_id=rule.release_version_id JOIN party ON party.id=? WHERE rule.id=?::uuid AND rule.purchasable=TRUE AND rule.download_policy='purchase' AND rule.price_minor>0 AND rule.currency='USD' AND rule.downloadable_asset_id IS NOT NULL AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW()) AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories))) OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories))))"
     [ PersistInt64 actor, toPersistValue musicPurchaseAvailabilityRuleId
     , optionalText trustedTerritory, optionalText trustedTerritory, optionalText trustedTerritory
     ]
@@ -128,17 +138,32 @@ createMusicPurchase user idempotencyHeader edgeCountry MusicPurchaseCreateReques
     [(Single _, Single _, Single _, Single _, Single _, Single _, Single Nothing)] ->
       throwError (badRequest "Your account needs a verified billing email before purchase")
     _ -> throwError err404
+  unless (expectedAmount == amountMinor && expectedCurrency == currency) $
+    throwError err409 {errBody = "The confirmed price does not match the current music offer"}
   configuredEnvironment <- liftIO (lookupEnv "COMMERCE_CHECKOUT_ENV")
   checkoutEnvironment <- either (throwError . badRequest) pure
     (Checkout.resolveCheckoutEnvironment configuredEnvironment)
   now <- liftIO getCurrentTime
   candidateOrderId <- liftIO nextRandom
   createdOrderId <- runDB $ do
+    -- PAY-MUSIC-PURCHASE-REPLAY-001: the unique buyer/key reservation is
+    -- also bound to the original request, including after ON CONFLICT waits
+    -- for another transaction. Never silently answer a different purchase.
+    let reuseOrder existingId = do
+          matching <- rawSql
+            "SELECT EXISTS (SELECT 1 FROM music_purchase_order purchase JOIN commerce_checkout_session checkout ON checkout.id=purchase.checkout_id JOIN commerce_checkout_line_item item ON item.checkout_id=checkout.id AND item.line_number=1 WHERE purchase.id=?::uuid AND purchase.buyer_party_id=? AND purchase.availability_rule_id=?::uuid AND checkout.domain_type='music_download' AND checkout.environment=? AND item.snapshot->>'availabilityRuleId'=? AND item.snapshot->>'declaredTerritoryCode'=? AND item.snapshot->>'territoryCode'=? AND item.snapshot->>'termsVersion'=?)"
+            [ toPersistValue existingId, PersistInt64 actor
+            , toPersistValue musicPurchaseAvailabilityRuleId
+            , PersistText (Checkout.checkoutEnvironmentText checkoutEnvironment)
+            , PersistText (UUID.toText musicPurchaseAvailabilityRuleId)
+            , PersistText declaredTerritory, PersistText territory, PersistText termsVersion
+            ] :: SqlPersistT IO [Single Bool]
+          pure $ if matching == [Single True] then Just existingId else Nothing
     existing <- rawSql
       "SELECT id FROM music_purchase_order WHERE buyer_party_id=? AND idempotency_key=?"
       [PersistInt64 actor, PersistText idempotencyKey] :: SqlPersistT IO [Single UUID]
     case existing of
-      [Single existingId] -> pure existingId
+      [Single existingId] -> reuseOrder existingId
       [] -> do
         inserted <- rawSql
           "INSERT INTO music_purchase_order(id,buyer_party_id,release_version_id,availability_rule_id,state,gross_minor,net_minor,currency,idempotency_key) VALUES(?::uuid,?,?,?::uuid,'awaiting_payment',?,?,?,?) ON CONFLICT(buyer_party_id,idempotency_key) DO NOTHING RETURNING id"
@@ -181,17 +206,20 @@ createMusicPurchase user idempotencyHeader edgeCountry MusicPurchaseCreateReques
             rawExecute
               "INSERT INTO music_terms_acceptance(release_version_id,terms_kind,terms_version,accepted_by,evidence) VALUES(?::uuid,'download_sale',?,?,jsonb_build_object('purchase_order_id',?::text,'territory_code',?::text)) ON CONFLICT DO NOTHING"
               [toPersistValue releaseVersionId, PersistText termsVersion, PersistInt64 actor, PersistText orderReference, PersistText territory]
-            pure newOrderId
+            pure (Just newOrderId)
           [] -> do
             raced <- rawSql
               "SELECT id FROM music_purchase_order WHERE buyer_party_id=? AND idempotency_key=?"
               [PersistInt64 actor, PersistText idempotencyKey] :: SqlPersistT IO [Single UUID]
             case raced of
-              [Single racedId] -> pure racedId
+              [Single racedId] -> reuseOrder racedId
               _ -> fail "music purchase idempotency conflict could not be resolved"
           _ -> fail "music purchase insert returned an ambiguous result"
       _ -> fail "music purchase idempotency lookup was ambiguous"
-  purchaseJson actor createdOrderId
+  matchedOrderId <- maybe (throwError err409
+    {errBody = "Idempotency-Key is already bound to a different music purchase request"})
+    pure createdOrderId
+  purchaseJson actor matchedOrderId
 
 -- Purchase availability is authorization input. A browser-declared country
 -- is never trusted; without a protected edge header only Worldwide offers are
@@ -214,7 +242,7 @@ listMusicPurchases :: AuthedUser -> AppM [Value]
 listMusicPurchases user = do
   requireCommerceFeature
   jsonRows
-    "SELECT jsonb_build_object('id',purchase.id,'releaseVersionId',purchase.release_version_id,'availabilityRuleId',purchase.availability_rule_id,'state',purchase.state,'grossMinor',purchase.gross_minor,'discountMinor',purchase.discount_minor,'taxMinor',purchase.tax_minor,'feeMinor',purchase.fee_minor,'netMinor',purchase.net_minor,'currency',purchase.currency,'checkoutId',purchase.checkout_id,'providerReference',purchase.provider_reference,'createdAt',purchase.created_at,'paidAt',purchase.paid_at,'releaseTitle',version.title) FROM music_purchase_order purchase JOIN music_release_version version ON version.id=purchase.release_version_id WHERE purchase.buyer_party_id=? ORDER BY purchase.created_at DESC"
+    "SELECT jsonb_build_object('id',purchase.id,'releaseVersionId',purchase.release_version_id,'availabilityRuleId',purchase.availability_rule_id,'state',purchase.state,'grossMinor',music_minor_units_json(purchase.gross_minor),'discountMinor',music_minor_units_json(purchase.discount_minor),'taxMinor',music_minor_units_json(purchase.tax_minor),'feeMinor',music_minor_units_json(purchase.fee_minor),'netMinor',music_minor_units_json(purchase.net_minor),'currency',purchase.currency,'checkoutId',purchase.checkout_id,'providerReference',purchase.provider_reference,'createdAt',purchase.created_at,'paidAt',purchase.paid_at,'releaseTitle',version.title) FROM music_purchase_order purchase JOIN music_release_version version ON version.id=purchase.release_version_id WHERE purchase.buyer_party_id=? ORDER BY purchase.created_at DESC"
     [PersistInt64 (currentPartyId user)]
 
 listMusicEntitlements :: AuthedUser -> AppM [Value]
@@ -264,7 +292,7 @@ createMusicDatafastCheckout user orderId idempotencyHeader = do
       pure (object
         [ "purchaseId" .= orderId, "checkoutId" .= purchaseCheckoutId context
         , "providerCheckoutId" .= providerId, "widgetUrl" .= T.pack widgetUrl
-        , "amountMinor" .= purchaseAmountMinor context, "currency" .= purchaseCurrency context
+        , "amountMinor" .= musicMinorUnitsJSON (purchaseAmountMinor context), "currency" .= purchaseCurrency context
         ])
 
 confirmMusicDatafastPayment :: AuthedUser -> UUID -> Maybe Text -> MusicDatafastStatusRequest -> AppM Value
@@ -416,14 +444,35 @@ beginAttempt
   -> UTCTime
   -> AppM Checkout.PaymentAttemptReference
 beginAttempt context checkout provider environment merchantRef operation idempotencyKey now = do
-  result <- runDB $ Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
-    { Checkout.pacCheckout = checkout, Checkout.pacProvider = provider, Checkout.pacEnvironment = environment
-    , Checkout.pacOperation = operation, Checkout.pacAmountMinor = purchaseAmountMinor context
-    , Checkout.pacCurrency = purchaseCurrency context, Checkout.pacMerchantRef = merchantRef
-    , Checkout.pacIdempotencyKey = idempotencyKey, Checkout.pacCreatedAt = now
-    , Checkout.pacCorrelationId = "music-payment-attempt:" <> UUID.toText (purchaseId context)
-    }
-  either (throwError . providerError) pure result
+  result <- runDB $ do
+    admitted <- musicCheckoutAttemptAllowed checkout
+    if not admitted
+      then pure (Left musicAttemptAdmissionError)
+      else Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+        { Checkout.pacCheckout = checkout, Checkout.pacProvider = provider, Checkout.pacEnvironment = environment
+        , Checkout.pacOperation = operation, Checkout.pacAmountMinor = purchaseAmountMinor context
+        , Checkout.pacCurrency = purchaseCurrency context, Checkout.pacMerchantRef = merchantRef
+        , Checkout.pacIdempotencyKey = idempotencyKey, Checkout.pacCreatedAt = now
+        , Checkout.pacCorrelationId = "music-payment-attempt:" <> UUID.toText (purchaseId context)
+        }
+  either (\message -> throwError $
+    if message == musicAttemptAdmissionError
+      then musicAttemptAdmissionDenied
+      else providerError message) pure result
+
+musicAttemptAdmissionError :: Text
+musicAttemptAdmissionError =
+  "Music payment outcome requires reconciliation before another payment attempt"
+
+musicAttemptAdmissionDenied :: ServerError
+musicAttemptAdmissionDenied = err409
+  { errBody = BL.fromStrict (TE.encodeUtf8 musicAttemptAdmissionError) }
+
+musicCheckoutAttemptAllowed :: Checkout.CheckoutReference -> SqlPersistT IO Bool
+musicCheckoutAttemptAllowed checkout = do
+  admitted <- rawSql "SELECT music_checkout_payment_attempt_allowed(?::uuid)"
+    [PersistText (Checkout.checkoutReferenceId checkout)]
+  pure (admitted == [Single True])
 
 failAttempt
   :: Checkout.CheckoutReference
@@ -468,10 +517,15 @@ requirePayable context = unless (purchaseState context `elem` ["pending","awaiti
 
 providerBinding :: UUID -> Text -> Text -> AppM (Maybe (Text, Maybe Text))
 providerBinding checkoutId provider resourceType = do
-  rows <- runDB (rawSql
-    "SELECT binding.provider_resource_id,binding.provider_resource_path FROM commerce_provider_binding binding JOIN commerce_payment_attempt attempt ON attempt.id=binding.payment_attempt_id WHERE attempt.checkout_id=?::uuid AND binding.provider=? AND binding.resource_type=? ORDER BY binding.created_at DESC LIMIT 1"
-    [toPersistValue checkoutId, PersistText provider, PersistText resourceType]
-    :: SqlPersistT IO [(Single Text, Single (Maybe Text))])
+  result <- runDB $ do
+    admitted <- musicCheckoutAttemptAllowed (Checkout.CheckoutReference (UUID.toText checkoutId))
+    if not admitted
+      then pure Nothing
+      else Just <$> (rawSql
+        "SELECT binding.provider_resource_id,binding.provider_resource_path FROM commerce_provider_binding binding JOIN commerce_payment_attempt attempt ON attempt.id=binding.payment_attempt_id WHERE attempt.checkout_id=?::uuid AND binding.provider=? AND binding.resource_type=? ORDER BY binding.created_at DESC LIMIT 1"
+        [toPersistValue checkoutId, PersistText provider, PersistText resourceType]
+        :: SqlPersistT IO [(Single Text, Single (Maybe Text))])
+  rows <- maybe (throwError musicAttemptAdmissionDenied) pure result
   pure $ case rows of
     [(Single resourceId, Single resourcePath)] -> Just (resourceId, resourcePath)
     _ -> Nothing
@@ -479,7 +533,7 @@ providerBinding checkoutId provider resourceType = do
 purchaseJson :: Int64 -> UUID -> AppM Value
 purchaseJson actor orderId = do
   values <- jsonRows
-    "SELECT jsonb_build_object('id',purchase.id,'releaseVersionId',purchase.release_version_id,'availabilityRuleId',purchase.availability_rule_id,'state',purchase.state,'grossMinor',purchase.gross_minor,'discountMinor',purchase.discount_minor,'taxMinor',purchase.tax_minor,'feeMinor',purchase.fee_minor,'netMinor',purchase.net_minor,'currency',purchase.currency,'checkoutId',purchase.checkout_id,'providerReference',purchase.provider_reference,'createdAt',purchase.created_at,'paidAt',purchase.paid_at) FROM music_purchase_order purchase WHERE purchase.id=?::uuid AND purchase.buyer_party_id=?"
+    "SELECT jsonb_build_object('id',purchase.id,'releaseVersionId',purchase.release_version_id,'availabilityRuleId',purchase.availability_rule_id,'state',purchase.state,'grossMinor',music_minor_units_json(purchase.gross_minor),'discountMinor',music_minor_units_json(purchase.discount_minor),'taxMinor',music_minor_units_json(purchase.tax_minor),'feeMinor',music_minor_units_json(purchase.fee_minor),'netMinor',music_minor_units_json(purchase.net_minor),'currency',purchase.currency,'checkoutId',purchase.checkout_id,'providerReference',purchase.provider_reference,'createdAt',purchase.created_at,'paidAt',purchase.paid_at) FROM music_purchase_order purchase WHERE purchase.id=?::uuid AND purchase.buyer_party_id=?"
     [toPersistValue orderId, PersistInt64 actor]
   maybe (throwError err404) pure (listToMaybe values)
 
@@ -488,7 +542,7 @@ datafastCheckoutJson context environment providerId = pure (object
   [ "purchaseId" .= purchaseId context, "checkoutId" .= purchaseCheckoutId context
   , "providerCheckoutId" .= providerId
   , "widgetUrl" .= T.pack (stripSlash (Provider.sdfBaseUrl environment) <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack providerId)
-  , "amountMinor" .= purchaseAmountMinor context, "currency" .= purchaseCurrency context
+  , "amountMinor" .= musicMinorUnitsJSON (purchaseAmountMinor context), "currency" .= purchaseCurrency context
   ])
 
 jsonRows :: Text -> [PersistValue] -> AppM [Value]

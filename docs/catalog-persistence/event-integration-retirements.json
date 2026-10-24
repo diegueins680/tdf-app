@@ -678,13 +678,13 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "e60cbdb9121493f47fa6",
-      "reason": "Ordered 211-entry manifest retains protected main 0a37123ea1d9d6b7c6b44d73c9342e18515c06c9 as its exact 208-entry prefix. Community search indexes, genre-alias event resynchronization and chat recipient notifications follow in original public UX order. All introduction SHAs, SQL bytes and immutable parent reviews are preserved. Apply/replay, alias rollback/reapply and chat notification controls remain required. This is migration authority, not editable business data or production rollout approval.",
+      "replacementId": "3f336173e03f10fc023c",
+      "reason": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
-        "id": "e60cbdb9121493f47fa6",
-        "valueCount": 211,
-        "sourceRevision": "public-ux-main-integration-20261021"
+        "id": "3f336173e03f10fc023c",
+        "valueCount": 213,
+        "sourceRevision": "music-current-main-integration-20261023"
       },
       "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
       "sourceReviewReferences": [
@@ -749,7 +749,31 @@
           },
           "sourceEntryCanonicalSha256": "07d43c0d24691bc37cc34dcdd5206a25551b44e82ad83b1838877455ba6c2142",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "762752f98f5506a7260f2ab917a9ea9adedae7a03bbdaae3ed000e4495f9bbb0",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "c2faa82202c221af84dcea4d0d6c9e55e5d4054a2c528ab6fffc5529c368a3d5",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "28d940cae7e14d91afb8da50751b40ad577a52740fb97e0ded3f13da48ec8f59",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "936fc7eab64e14f0c6e54724e055f02e8d7b1ef1ec06436b735b473b48317fbf",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
+      ],
+      "previousReplacementIds": [
+        "e60cbdb9121493f47fa6",
+        "a8128668e1b74b7c0ae4"
       ]
     }
   ]

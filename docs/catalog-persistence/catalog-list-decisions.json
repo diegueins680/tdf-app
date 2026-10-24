@@ -324,7 +324,17 @@
         }
       ]
     },
-    "publicUxMainIntegration": "docs/catalog-persistence/public-ux-main-reconciliation-20261021.json"
+    "publicUxMainIntegration": "docs/catalog-persistence/public-ux-main-reconciliation-20261021.json",
+    "runtimeMainRefresh": "docs/catalog-persistence/runtime-main-refresh-20261021.json",
+    "formalPreparedIntegration": "docs/catalog-persistence/formal-prepared-reconciliation-20261022.json",
+    "musicCurrentMainIntegration": {
+      "document": "docs/catalog-persistence/music-current-main-reconciliation-20261023.json",
+      "currentManifestDecisionId": "3f336173e03f10fc023c",
+      "retiredManifestIds": [
+        "e60cbdb9121493f47fa6",
+        "a8128668e1b74b7c0ae4"
+      ]
+    }
   },
   "decisions": [
     {
@@ -1012,47 +1022,6 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
-    },
-    {
-      "id": "e60cbdb9121493f47fa6",
-      "classification": "genuine-technical-constant",
-      "disposition": "explicit-allowlist",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Changing migration order, SQL bytes or introduction ancestry can corrupt immutable deployment history.",
-      "justification": "Ordered 211-entry manifest retains protected main 0a37123ea1d9d6b7c6b44d73c9342e18515c06c9 as its exact 208-entry prefix. Community search indexes, genre-alias event resynchronization and chat recipient notifications follow in original public UX order. All introduction SHAs, SQL bytes and immutable parent reviews are preserved. Apply/replay, alias rollback/reapply and chat notification controls remain required. This is migration authority, not editable business data or production rollout approval.",
-      "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "music-main-integration-20261020",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 211
-      },
-      "supersededReviews": [
-        {
-          "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "57cc1dc5ad5cf2e72c71e24c39339bc7c87c88cf41508577b573baebc695577e",
-          "sourceEntry": {
-            "id": "4ce5568ab136c5201a90"
-          },
-          "sourceEntryCanonicalSha256": "aa38dcf69c2f350375440989888ec69ca9f1188a7d0ed1b60a3e89318ef552ec",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        },
-        {
-          "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "059040e077ba3ea12323d8bdb81275a72abace64c5ba22b13ae6456c4b5e2e7d",
-          "sourceEntry": {
-            "id": "f95bc53ef5e33e741588"
-          },
-          "sourceEntryCanonicalSha256": "c7cbf12b7e812a87c9199e0d13f2b853d21ca6791b5e0bca1a79dd3875fc46b6",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        }
-      ]
     },
     {
       "id": "3391a96825357d78f794",
@@ -7731,16 +7700,6 @@
       "priority": "P0-security",
       "risk": "Returning arbitrary historical provider text could disclose private data. Treating the response list as available payment methods could bypass contracted capability gates.",
       "justification": "Reviewed the seven creProvider response tokens against loadReconciliationEntries.safeProvider and the generated OpenAPI consumers. This is a fixed output redaction boundary with an unrecognized fallback, not provider onboarding, routing or an editable merchant catalog. The canonical account/capability tables retain availability authority. Contract parity and synthetic private-provider database tests cover the projection; changing it requires coordinated security/API review under ADR 0125.",
-      "reviewed": true
-    },
-    {
-      "id": "2b2fe601e00052bd7a21",
-      "classification": "security-system-registry",
-      "disposition": "retain-as-versioned-redaction-projection",
-      "specializedModel": "commerce_reconciliation_exception",
-      "priority": "P0-security",
-      "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
-      "justification": "Reviewed the five creReason response tokens against loadReconciliationEntries.safeReason, actual exception emitters and the generated contract. Only four known stored exception types are mapped; every other value becomes unrecognized. This output-only redaction vocabulary cannot mutate workflow, post money or release a hold. Contract parity, legacy-private-reason and closed-approval regressions cover this boundary; ADR 0125 records its limits.",
       "reviewed": true
     },
     {
@@ -17847,6 +17806,95 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "3b552ac5c12256abe0b4",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing this sweep domain without changing the startup verifier and its policy note can leave a production capability-gate state unverified, so a later container start fails without a test having said so.",
+      "justification": "The three states (missing, disabled, enabled) are the exhaustive domain of one revenue_feature_flag row that the startup-gates sweep varies per asserted flag. It is a finite test domain copied from the verifier's rule shape, not a selectable catalog or a production source of authority.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-12",
+      "reviewBatch": "startup-gates-2026-10-12",
+      "evidence": {
+        "file": "scripts/__tests__/startup-gates-postgres.mjs",
+        "line": 40
+      }
+    },
+    {
+      "id": "de09a0cde54a8f757ce1",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Incomplete browser coverage or version drift could admit an invalid CI environment; this list cannot be replaced by editable business data.",
+      "justification": "These are fake browser factory keys in launch-failure and cleanup controls. They address only the fixed Chromium/Firefox/WebKit test matrix, not a selectable application catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-22",
+      "reviewBatch": "browser-ci-image-2026-10-22",
+      "evidence": {
+        "file": "scripts/__tests__/playwright-image.test.mjs",
+        "line": 68
+      }
+    },
+    {
+      "id": "5da1800a82705df02018",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Incomplete browser coverage or version drift could admit an invalid CI environment; this list cannot be replaced by editable business data.",
+      "justification": "These exact npm package identities must share the pinned image version. They are fixed dependency identifiers for CI validation, not selectable business values or application authority.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-22",
+      "reviewBatch": "browser-ci-image-2026-10-22",
+      "evidence": {
+        "file": "scripts/verify-playwright-image.mjs",
+        "line": 7
+      }
+    },
+    {
+      "id": "c03b7e29a37c1a410589",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-versioned-redaction-projection",
+      "specializedModel": "commerce_reconciliation_exception",
+      "priority": "P0-security",
+      "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
+      "justification": "Reviewed all six creReason response tokens against loadReconciliationEntries.safeReason and actual exception emitters. The new server-authored music_paid_closed_order marks verified money with closed fulfillment for review, without granting an entitlement or financial-release authority. Five known stored reasons map to allowlisted outputs; unknown values remain unrecognized. The OpenAPI, generated web/mobile clients and Spanish/English administrative label agree. SQL, HTTP and panel regressions cover the new case; ADR0125 compatibility addendum preserves all privacy and read-only boundaries.",
+      "reviewed": true,
+      "reviewBatch": "music-payment-outcome-2026-10-15",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "2b2fe601e00052bd7a21",
+        "classification": "security-system-registry",
+        "disposition": "retain-as-versioned-redaction-projection",
+        "specializedModel": "commerce_reconciliation_exception",
+        "priority": "P0-security",
+        "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
+        "justification": "Reviewed the five creReason response tokens against loadReconciliationEntries.safeReason, actual exception emitters and the generated contract. Only four known stored exception types are mapped; every other value becomes unrecognized. This output-only redaction vocabulary cannot mutate workflow, post money or release a hold. Contract parity, legacy-private-reason and closed-approval regressions cover this boundary; ADR 0125 records its limits.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "3f336173e03f10fc023c",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P0-cutover",
+      "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+      "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "music-current-main-integration-20261023",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 213
+      }
     }
   ]
 }

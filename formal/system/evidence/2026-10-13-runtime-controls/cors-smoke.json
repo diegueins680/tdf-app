@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "backendRevision": "7ab344400d0878838b9b12742ca4cc5cd7f38f94",
+  "method": "GET",
+  "endpoint": "https://api.tdfrecords.net/health",
+  "credentialsSent": false,
+  "observations": [
+    {
+      "origin": "https://www.tdfrecords.net",
+      "status": 200,
+      "serverDate": "Tue, 13 Oct 2026 18:18:33 GMT",
+      "allowOrigin": "https://www.tdfrecords.net",
+      "allowCredentials": "true",
+      "headersSha256": "3990271ec8464e7553ec31f324b405611a1d7a2058dbf8328f8b7ba180d13574",
+      "bodySha256": "d996479d94f900ef9b33b173ef75ebe94be72be324576712f15e9d460bb36017"
+    },
+    {
+      "origin": "https://untrusted.invalid",
+      "status": 400,
+      "serverDate": "Tue, 13 Oct 2026 18:18:33 GMT",
+      "allowOrigin": null,
+      "allowCredentials": null,
+      "headersSha256": "956191f6764bf235bbe263dfbd1ab6f4d88abce76473285a62d876d8497706d3",
+      "bodySha256": "38939f4651182d460a2c04e73e0c92092fe2ff54f229146a5383c886e0660f43"
+    }
+  ],
+  "limitations": [
+    "Two safe unauthenticated requests, not complete CORS, CSRF or authorization conformance.",
+    "Backend /version checked alongside observations; requests are sequential, not an atomic snapshot."
+  ]
+}

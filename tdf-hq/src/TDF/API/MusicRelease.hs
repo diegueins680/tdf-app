@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
 module TDF.API.MusicRelease
@@ -43,19 +44,22 @@ import Data.Aeson
   ( FromJSON(..)
   , Options
   , ToJSON(..)
-  , Value
+  , Value(..)
   , defaultOptions
   , fieldLabelModifier
   , genericParseJSON
   , genericToJSON
   , rejectUnknownFields
+  , withObject
   )
+import qualified Data.Aeson.KeyMap as KeyMap
 import Data.Int (Int64)
 import Data.Text (Text)
 import Data.Time (Day, UTCTime)
 import Data.UUID (UUID)
 import GHC.Generics (Generic)
 import Servant
+import TDF.MusicRelease.Money (musicMinorUnitsJSON, normalizeMusicMinorField)
 import TDF.UUIDInstances ()
 
 type MusicReleasePublicAPI = "music" :>
@@ -320,9 +324,14 @@ data MusicAvailabilityDraft = MusicAvailabilityDraft
   } deriving (Eq, Show, Generic)
 
 instance FromJSON MusicAvailabilityDraft where
-  parseJSON = genericParseJSON (musicOptions 17)
+  parseJSON = withObject "MusicAvailabilityDraft" $ \fields -> do
+    normalized <- normalizeMusicMinorField "priceMinor" fields
+    genericParseJSON (musicOptions 17) (Object normalized)
 instance ToJSON MusicAvailabilityDraft where
-  toJSON = genericToJSON (musicOptions 17)
+  toJSON draft = case genericToJSON (musicOptions 17) draft of
+    Object fields -> Object (KeyMap.insert "priceMinor"
+      (maybe Null musicMinorUnitsJSON (musicAvailabilityPriceMinor draft)) fields)
+    other -> other
 
 data MusicTermsAcceptanceRequest = MusicTermsAcceptanceRequest
   { musicTermsKind :: Text
@@ -451,6 +460,8 @@ data MusicPurchaseCreateRequest = MusicPurchaseCreateRequest
   { musicPurchaseAvailabilityRuleId :: UUID
   , musicPurchaseTerritoryCode :: Text
   , musicPurchaseTermsVersion :: Text
+  , musicPurchaseExpectedAmountMinor :: Text
+  , musicPurchaseExpectedCurrency :: Text
   } deriving (Eq, Show, Generic)
 
 instance FromJSON MusicPurchaseCreateRequest where
