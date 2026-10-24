@@ -11427,6 +11427,75 @@
       "verification": "Deterministic fake-clock tests on body stalls, cancellation, shared deadline and replay boundaries; existing session isolation regressions.",
       "evidence": "Current-candidate local transport and session tests; full web and hosted results must be qualified separately.",
       "historicalStatus": "new"
+    },
+    {
+      "id": "MEDIA-DRIVE-002",
+      "title": "Preserve cookie-only sessions in artist cover uploads",
+      "statement": "Drive XHR uploads use the shared API resolver and include browser cookie credentials, preserving optional application bearer authentication and multipart file/folder/name/provider-token inputs. A cookie-only authenticated artist must not lose authentication solely because the API has a different trusted origin.",
+      "property": "Cookie-only authenticated session -> credentialed Drive XHR; bearer and multipart routing remain compatible.",
+      "domain": "MEDIA",
+      "authority": "User-authorized activation sprint; reproduced native cross-origin cookie omission against isolated actual API session, reusing the existing inventory upload pattern.",
+      "source": "Artist activation journey A4; existing inventory upload session transport.",
+      "contract": "formal/system/drive-upload-session.md",
+      "actors": [
+        "Authenticated artist",
+        "Browser"
+      ],
+      "preconditions": [
+        "Valid server session and explicitly trusted configured API origin; provider permissions remain independently required."
+      ],
+      "inputs": [
+        "File",
+        "Optional folder/name/provider access token",
+        "Current cookie and optional readable application bearer"
+      ],
+      "state": {
+        "upload": [
+          "selected",
+          "pending",
+          "resolved",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Selected -> credentialed upload to shared resolved API",
+        "Successful Drive DTO -> existing media result",
+        "Failed upload -> rejected promise -> explicit retry"
+      ],
+      "forbiddenTransitions": [
+        "Cookie-only session -> silently omit cross-origin credentials",
+        "HttpOnly cookie -> readable bearer or diagnostics",
+        "Client credential option -> bypass server authorization"
+      ],
+      "effects": [
+        "One selected multipart upload; no automatic retry."
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/api/drive.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/drive.upload.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Cookie/bearer/resolver tests, cookie-omission negative control and native cross-origin browser using an actual disposable API session with a non-production Drive adapter.",
+      "evidence": "Source-bound activation sprint receipts. No production upload or Google OAuth certification inferred.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for scoped XHR transport; external provider and production acceptance remain unverified.",
+      "ambiguity": [
+        "Google OAuth, provider storage, upload deadlines, production cross-site cookie policy and physical devices are not certified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and regressions correspond; protected review, hosted checks and deployed/provider acceptance remain required."
+      },
+      "authorization": "Existing server origin, session, role, ownership and provider checks remain authoritative. Cookie inclusion grants no role.",
+      "privacy": "Do not extract or log HttpOnly cookies or provider tokens.",
+      "concurrency": "Each selected upload owns its XHR; server and provider retain concurrent-upload behavior.",
+      "idempotency": "No new exactly-once guarantee or automatic retry; repeated user uploads may create multiple blobs.",
+      "failure": "Existing non-success response and DTO parsing failures reject; no false success is added.",
+      "recovery": "Explicit user retry under a valid session; no change to provider permissions.",
+      "observability": "Native browser receipts record credential-presence booleans only, never cookie or token values."
     }
   ],
   "sourceFingerprints": {
@@ -12017,6 +12086,8 @@
     "tdf-hq-ui/src/api/courses.ts": "bd43900434c1133d46a41ad0270c6e14c5ff1183f238e360a287d797853c87e6",
     "tdf-hq-ui/src/api/directory.test.ts": "ee9c96a31856a1945af7e3f238974a43533d8ebf7f32f0cdadea2dcf834fa9ed",
     "tdf-hq-ui/src/api/directory.ts": "6d1b860759bb5841d85ff693ddfe7580cb56561eb9614f8eaef01f07c424fdc3",
+    "tdf-hq-ui/src/api/drive.ts": "27e9d44e0bfa36c763b79e57731b118168b77bf0ac051790903693208fe0d2a3",
+    "tdf-hq-ui/src/api/drive.upload.test.ts": "7ae7828b0917f8ee4f03f630a5932bff0098b498b0f5ff7fde96b90f7682f033",
     "tdf-hq-ui/src/api/eventTickets.test.ts": "a2f12da2f608410ce851d0327a3311bf5a04a8b32295a487ec6ddfed718f89dd",
     "tdf-hq-ui/src/api/eventTickets.ts": "9fa9ad85d2c14ebedd4186f7777c34c8a411a7a2adcadcfdaa7c41a7bfcc5f32",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
@@ -22017,6 +22088,18 @@
         "requirement": "SYS-WEB-REQUEST-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq-ui/src/api/drive.ts": [
+      {
+        "requirement": "MEDIA-DRIVE-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/drive.upload.test.ts": [
+      {
+        "requirement": "MEDIA-DRIVE-002",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -29119,9 +29202,26 @@
     {
       "id": "SURFACE-10856a58d8da5733",
       "path": "tdf-hq-ui/src/api/drive.ts",
-      "sha256": "a21bef68d52898ce95de38a0cd341e0ff7278dd81c4a988baa46a77b93145bcd",
+      "sha256": "27e9d44e0bfa36c763b79e57731b118168b77bf0ac051790903693208fe0d2a3",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-DRIVE-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-12933aa6755d74a9",
+      "path": "tdf-hq-ui/src/api/drive.upload.test.ts",
+      "sha256": "7ae7828b0917f8ee4f03f630a5932bff0098b498b0f5ff7fde96b90f7682f033",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-DRIVE-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c752a0b8e0697571",
@@ -47430,7 +47530,6 @@
     "SURFACE-bfa0dfbbd8ff9bfc",
     "SURFACE-d87ef23be735ae46",
     "SURFACE-2f2b0036b97be1b2",
-    "SURFACE-10856a58d8da5733",
     "SURFACE-c752a0b8e0697571",
     "SURFACE-813e2cb331206edf",
     "SURFACE-7b04c2b9c9106a38",
@@ -48824,7 +48923,8 @@
     "MEDIA-MUSIC-PLAYER-001",
     "SYS-WEB-SHELL-001",
     "AUTH-ENTRY-002",
-    "DEPLOY-VERSION-001"
+    "DEPLOY-VERSION-001",
+    "MEDIA-DRIVE-002"
   ],
   "stateMachines": [
     {
@@ -49943,7 +50043,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7ce699423d187ce225e6dd80da709e31524c3d015fd109a8b5754212b1985683",
+      "sourceSha256": "10491f3939d41d21f355130e4d9054d8eaadf8bfec767aad52449a11eca7be1e",
       "definition": {
         "states": [
           "absent",
@@ -49973,7 +50073,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7ce699423d187ce225e6dd80da709e31524c3d015fd109a8b5754212b1985683",
+      "sourceSha256": "10491f3939d41d21f355130e4d9054d8eaadf8bfec767aad52449a11eca7be1e",
       "definition": {
         "export": [
           "queued",
@@ -72232,7 +72332,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 136,
+    "PARTIAL": 137,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

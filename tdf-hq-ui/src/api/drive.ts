@@ -1,6 +1,7 @@
 import type { DriveUploadDTO } from './types';
 import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
 import { buildAuthorizationHeader } from './authHeader';
+import { resolveApiBase } from '../config/apiBase';
 
 export interface DriveUploadOptions {
   folderId?: string;
@@ -10,7 +11,7 @@ export interface DriveUploadOptions {
 }
 
 export async function uploadToDrive(file: File, options: DriveUploadOptions = {}): Promise<DriveFileInfo> {
-  const base = import.meta.env.VITE_API_BASE ?? '';
+  const base = resolveApiBase();
   const authHeader = buildAuthorizationHeader();
 
   const form = new FormData();
@@ -22,6 +23,7 @@ export async function uploadToDrive(file: File, options: DriveUploadOptions = {}
   const dto = await new Promise<DriveUploadDTO>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${base}/drive/upload`);
+    xhr.withCredentials = true;
     if (authHeader) xhr.setRequestHeader('Authorization', authHeader);
     xhr.onreadystatechange = () => {
       if (xhr.readyState !== XMLHttpRequest.DONE) return;
