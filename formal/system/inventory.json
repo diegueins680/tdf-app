@@ -743,6 +743,7 @@
       "tdf-hq-ui/src/api/records.ts",
       "tdf-hq-ui/src/api/reputation.test.ts",
       "tdf-hq-ui/src/api/reputation.ts",
+      "tdf-hq-ui/src/api/requestDeadline.ts",
       "tdf-hq-ui/src/api/reviews.test.ts",
       "tdf-hq-ui/src/api/reviews.ts",
       "tdf-hq-ui/src/api/rooms.ts",
@@ -6401,13 +6402,13 @@
     {
       "id": "SURFACE-aecace78aa4aecae",
       "path": "tdf-hq-ui/src/api/auth.test.ts",
-      "sha256": "2e09d1e26916c517b32d614d935332ce3ac7c90807afaa1ef31d7597a403c4a2",
+      "sha256": "ae5de69adf0ca516180ce0078770eb6654bfa2ca617b1c8c2a9762108f7b8bf7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2a14b72d994c2399",
       "path": "tdf-hq-ui/src/api/auth.ts",
-      "sha256": "3f12812795bfb3a4e38c544e0bf5cbfc5cbd47ca9773979f29a67f28f681dd2e",
+      "sha256": "6ad0e27b011ff0d4293a1af6c7dfa6c038cd6829c947837d492a26e89734ca0f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6479,13 +6480,13 @@
     {
       "id": "SURFACE-d70122a61e623064",
       "path": "tdf-hq-ui/src/api/client.test.ts",
-      "sha256": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
+      "sha256": "e926290d808f7fed23fe6c52cf24ced83ebdfb77212787ce44b3a85860558d84",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2e3549439fba7b8e",
       "path": "tdf-hq-ui/src/api/client.ts",
-      "sha256": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
+      "sha256": "6b0d3de4ec299b7f44e4c2ef295efe97b0977f81288379c9aa4af4c0fac5cd92",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6954,6 +6955,12 @@
       "id": "SURFACE-7accc7ad1a31e5c3",
       "path": "tdf-hq-ui/src/api/reputation.ts",
       "sha256": "1f49e0c1b031d2095f8426ec3c5f6179ea5929761920f872f1e1f8270586b9de",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-84285fb8782fb34e",
+      "path": "tdf-hq-ui/src/api/requestDeadline.ts",
+      "sha256": "f8294c115c2638bb82dc0f61ad5f2e4a63018b3d17490d1a7ee1f64d56080a99",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19169,6 +19176,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/engineering/user-value-priorities-2026-10-16.md",
+      "sha256": "77980d52a49745f432a2dec92d0362fd93e12c56d702fab07844f256222644a3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/event-operations/README.md",
       "sha256": "c0737f40fe41f6e386f58a83bef09a3fb2453075716912df6d08571aa108694b",
       "authority": "inferred",
@@ -26022,6 +26036,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/http-request-deadline.md",
+      "sha256": "e8b09edd05aaf92227e1acdd7269801315d2a1dd919314ecaebae2bbf70df8fb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/identity-lifecycle.md",
       "sha256": "59dbd5b2c455d62cee46ddf2a6e0d7f60b1fe6ce6b8bfabcad83ca6cc5ef1a31",
       "authority": "inferred",
@@ -26359,7 +26380,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d36131bdbfc792f6e2a7b095043a6a9660b2792ce05be80b3d71d4c5eba00fcf",
+      "sha256": "e137a2ea32bf38ad8ab25d2f31df3a78ed4e77b85d534e7af3ee45163d1149f4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
