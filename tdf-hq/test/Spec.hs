@@ -631,6 +631,7 @@ import qualified TDF.CoursePublicMetadataSpec as CoursePublicMetadataSpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
 import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
+import qualified TDF.LedgerPostingSpec as LedgerPostingSpec
 import qualified TDF.MusicPublicationSpec as MusicPublicationSpec
 import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
 import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
@@ -1367,6 +1368,29 @@ main = hspec $ do
                   `shouldSatisfy` isLeft
                 ServiceStorefront.validatePaypalSuccessfulCapture "ticket-order" 2000 "USD" "OTHER" outcome
                   `shouldSatisfy` isLeft
+
+        it "retains capture uncertainty when an approved order has no capture" $ do
+            let payload = A.object
+                  [ "id" .= ("PAYPAL-ORDER" :: Text), "status" .= ("APPROVED" :: Text)
+                  , "purchase_units" .= [A.object ["custom_id" .= ("ticket-order" :: Text)]]
+                  ]
+            case ServiceStorefront.parsePaypalBoundCaptureOutcome "PAYPAL-ORDER" payload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "UNKNOWN"
+                EventTicketCheckoutServer.paypalCaptureFailureCode
+                  (Just (ServiceStorefront.spcoStatus outcome))
+                  `shouldBe` "paypal_capture_unverified"
+
+        it "requires affirmative no-charge capture evidence before allowing another rail" $ do
+            forM_ ["DECLINED", "FAILED"] $ \status ->
+              EventTicketCheckoutServer.paypalCaptureFailureCode (Just status)
+                `shouldBe` "paypal_capture_request"
+            forM_ [Nothing, Just "", Just "UNKNOWN", Just "PENDING", Just "APPROVED",
+                   Just "VOIDED", Just "PARTIALLY_REFUNDED", Just "REFUNDED",
+                   Just "FUTURE_PROVIDER_STATUS"] $ \status ->
+              EventTicketCheckoutServer.paypalCaptureFailureCode status
+                `shouldBe` "paypal_capture_unverified"
 
         it "rejects ambiguous multi-capture PayPal responses" $ do
             let capture captureId = A.object
@@ -17903,6 +17927,7 @@ main = hspec $ do
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
     WhatsAppConsentSpec.spec
+    LedgerPostingSpec.spec
     MusicPublicationSpec.spec
     InteractionWriteBudgetSpec.spec
     MusicPurchaseSpec.spec

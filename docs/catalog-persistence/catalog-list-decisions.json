@@ -334,6 +334,18 @@
         "e60cbdb9121493f47fa6",
         "a8128668e1b74b7c0ae4"
       ]
+    },
+    "ledgerReadinessIntegration": "docs/catalog-persistence/ledger-readiness-reconciliation-20261021.json",
+    "ledgerSnapshotReadinessIntegration": "docs/catalog-persistence/ledger-snapshot-readiness-reconciliation-20261021.json",
+    "ledgerCombinedIntegration": "docs/catalog-persistence/ledger-combined-reconciliation-20261022.json",
+    "termsHistoryAppendOnly": "docs/catalog-persistence/terms-history-append-only-reconciliation-20261022.json",
+    "ledgerMusicMainIntegration": {
+      "document": "docs/catalog-persistence/ledger-music-main-reconciliation-20261023.json",
+      "currentManifestDecisionId": "a1eb1e750e7543b88fe1",
+      "retiredManifestIds": [
+        "3f336173e03f10fc023c",
+        "2b073f20afd2f3798b1e"
+      ]
     }
   },
   "decisions": [
@@ -17878,22 +17890,58 @@
       }
     },
     {
-      "id": "3f336173e03f10fc023c",
+      "id": "cf264a325e5b4853ecac",
       "classification": "genuine-technical-constant",
-      "disposition": "explicit-allowlist",
+      "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
-      "priority": "P0-cutover",
-      "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-      "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+      "priority": "P3-retain",
+      "risk": "Changing the synthetic child command can invalidate the bounded readiness-wait regression.",
+      "justification": "Node CLI arguments deliberately start a stalled synthetic child to verify timeout and process cleanup. This is test-process plumbing, not a selectable service catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/__tests__/test-process-session.test.mjs",
+        "line": 33
+      },
+      "reviewBatch": "checkout-session-readiness-2026-10-14"
+    },
+    {
+      "id": "a1eb1e750e7543b88fe1",
+      "classification": "security-system-registry",
+      "disposition": "retain-reviewed-deployment-manifest",
+      "specializedModel": "production migration manifest and applied migration ledger",
+      "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+      "justification": "The ordered 219-entry execution registry preserves protected main 4dac175d42616b5b2f4a3e8faebb83692cd2e6b0 as its exact 213-entry prefix and appends the six unchanged financial migrations from a44876c73d391c622eebcc2f25b8f98a2c61d2ba in their original relative order. Every parent entry object, introduction ancestor and SQL body is preserved. Prior 213/217 fingerprints remain immutable history. Fresh combined SQL and application qualification is separate; this review authorizes no production execution, feature activation, recovery or retention-policy decision.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "music-current-main-integration-20261023",
+      "reviewBatch": "ledger-music-main-integration-20261023",
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+          "sourceEntry": {
+            "id": "3f336173e03f10fc023c"
+          },
+          "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+          "sourceEntry": {
+            "id": "2b073f20afd2f3798b1e"
+          },
+          "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 213
+        "valueCount": 219
       }
     }
   ]

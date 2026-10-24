@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "c2242ebae6256d64325bbe38c157f6d616710f65ee4f6fc1addd26ae0803bac1"
+    "tdf-hq/tdf-hq.cabal": "e4cf4c1626e449ef68438c548bd98fb2abea824ef89e3036be3e87233267ee05"
   },
   "obligations": [
     {
@@ -73,6 +73,24 @@
       "change": "Add TDF.MusicRelease.Money to the executable and test other-modules lists only; removing those exact two lines reproduces the protected Cabal manifest byte for byte.",
       "semanticReview": "No source search paths, module aliases, compiler options, CPP flags, dependencies, extensions or toolchain changes. The new module uses Data.Aeson, Data.Int, Data.Text and Text.Read and introduces no authorization or recovery binding. Entire authorization/RoleEnum/ingestion and ServerAuth/expiry SQL sources plus Stack/lock remain byte-identical to protected main. Conditional predicate translations and their assumptions are unchanged.",
       "qualification": "Requires fresh source-bound SMT, serialized replay, mutation controls and independent CPC validation; full implementation/refinement remains UNPROVEN."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "030365aabfb46c14e2962e054cf3b22192cda1a8",
+      "previousSha256": "c62b9cf69eed8fdcae2c32633690234118984c1b1ac2d5494a8ebba9efa31641",
+      "currentSha256": "86498fb7f0286a45c7b2876d3b2341b2ad88d4738fea8dd494899515a44c4db0",
+      "change": "Register TDF.LedgerPostingSpec in the test-suite other-modules only; removing the exact one line reproduces protected main Cabal bytes.",
+      "semanticReview": "The test module exports spec and uses SQL/Persistent/Hspec with the existing disposable-database guard. It defines no authorization/recovery module or import override. The entire runtime executable component, source paths, dependencies, compiler options, CPP flags, Stack/lock, authorization/RoleEnum/ingestion, ServerAuth and recovery SQL sources are unchanged from protected main. Conditional translations and assumptions are unchanged.",
+      "qualification": "Fresh solver/replay/mutation and independent CPC checks remain required. No implementation/refinement or financial release status is promoted."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+      "previousSha256": "c2242ebae6256d64325bbe38c157f6d616710f65ee4f6fc1addd26ae0803bac1",
+      "currentSha256": "e4cf4c1626e449ef68438c548bd98fb2abea824ef89e3036be3e87233267ee05",
+      "change": "Add only TDF.LedgerPostingSpec to the protected-main test module list. Removing that exact line reproduces protected main; both existing MusicRelease.Money registrations are retained.",
+      "semanticReview": "The new test module exports spec and uses existing SQL/Persistent/Hspec and disposable database guards. Runtime component bindings, source paths, dependencies, compiler/CPP options, Stack/lock, authorization/RoleEnum/ingestion, ServerAuth and recovery SQL are byte-identical to protected main. Conditional translators, assumptions and obligation claims are unchanged.",
+      "qualification": "Requires fresh scoped solver, replay/mutation and independent CPC qualification. No full implementation/refinement or financial release status is promoted."
     }
   ]
 }
