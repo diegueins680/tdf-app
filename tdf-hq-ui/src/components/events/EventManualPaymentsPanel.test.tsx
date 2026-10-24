@@ -48,7 +48,7 @@ it('opens the attached receipt from its number and releases the preview on close
 it('previews a PDF in the same dialog and offers a download', async () => {
   getReceipt.mockResolvedValue({ contentType: 'application/pdf', base64: 'JVBERi0xLjc=' });
   await mount();
-  expect((await screen.findByTitle('Comprobante de transferencia')).getAttribute('src')).toBe('blob:receipt-preview');
+  expect((await screen.findByTitle('Comprobante de transferencia')).getAttribute('src')).toBe('blob:receipt-preview#view=FitH');
   expect(screen.getByRole('link', { name: 'Descargar comprobante' }).getAttribute('download')).toBe('comprobante-TDF-3.pdf');
 });
 it('explains legacy references without pretending a receipt file exists', async () => {

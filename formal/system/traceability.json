@@ -12075,11 +12075,11 @@
     "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx": "4c21e2d3dee57873cc9951240625a5f036ad6c45a9d46c4b8e4251dc5a0a3ad9",
     "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx": "55bda163a94847cea6c1b62eda88974f2a31f47be0a149e0d569b67a84f2f1dc",
     "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx": "f342a2bad3450c04bcb599119ff0bbc4bf57a35ebbc3f55b92f36f54882d6aea",
-    "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx": "ae568db76856197e7ba6b9d6b4a7f735e992e709c98ebc4b2b67e07b72be4c24",
+    "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx": "8dd7b161d48cb42ad908c110619321011fd66354cd81796413f63be2b3cd1953",
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx": "203eedfc586f7f845e59cfd8afc5103f62aa2d3d63183fe55a1fb25f801e1769",
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
-    "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx": "5b71961516497b9fec77b2c71374211026eac1dbe0083566004e2a3655fa94f4",
+    "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx": "e2e493ac45bdff3c02d9ecf97d71c43f879984079009bda1cdc9582542022ee7",
     "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "f970f18ff3ca6992f619ef997b8903edc01ee737fafce75a32affb5f012f2cfd",
     "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "94d9680fdcad3b85b257cedfb6dcb296a2c7bac96330d86ff9834d2475986cac",
     "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts": "86da5182e76873a793d6c6637948d169c7b21b6ee989cc521e5600001cd11811",
@@ -30756,7 +30756,7 @@
     {
       "id": "SURFACE-6d375a8bdcbe5d7c",
       "path": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
-      "sha256": "ae568db76856197e7ba6b9d6b4a7f735e992e709c98ebc4b2b67e07b72be4c24",
+      "sha256": "8dd7b161d48cb42ad908c110619321011fd66354cd81796413f63be2b3cd1953",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30832,7 +30832,7 @@
     {
       "id": "SURFACE-bd86c3cf4fc0c63b",
       "path": "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx",
-      "sha256": "5b71961516497b9fec77b2c71374211026eac1dbe0083566004e2a3655fa94f4",
+      "sha256": "e2e493ac45bdff3c02d9ecf97d71c43f879984079009bda1cdc9582542022ee7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

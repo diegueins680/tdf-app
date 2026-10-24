@@ -33,7 +33,7 @@ export default function TicketPaymentReceiptDialog({ eventId, payment, onClose }
     }
     return () => { if (url) URL.revokeObjectURL(url); };
   }, [receipt.data]);
-
+  // Chrome blocks native PDF viewers in sandboxed frames; src is a MIME-checked Blob URL.
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="md" aria-labelledby="payment-receipt-title">
       <DialogTitle id="payment-receipt-title">Comprobante · {payment.tmpPaymentReference}</DialogTitle>
@@ -44,7 +44,7 @@ export default function TicketPaymentReceiptDialog({ eventId, payment, onClose }
           {payment.tmpHasReceipt && receipt.isPending && <Typography role="status">Cargando comprobante...</Typography>}
           {(receipt.isError || previewError) && <Alert severity="error">No se pudo abrir el comprobante. Cierra esta ventana e inténtalo de nuevo.</Alert>}
           {preview && (preview.mime === 'application/pdf'
-            ? <Box component="iframe" title="Comprobante de transferencia" src={preview.url} sandbox="allow-same-origin" sx={{ width: '100%', height: '65vh', border: 0 }} />
+            ? <Box component="iframe" title="Comprobante de transferencia" src={`${preview.url}#view=FitH`} referrerPolicy="no-referrer" sx={{ width: '100%', height: '65vh', border: 0 }} />
             : <Box component="img" src={preview.url} alt={`Comprobante de transferencia ${payment.tmpCustomerReference ?? payment.tmpPaymentReference}`} sx={{ width: '100%', maxHeight: '70vh', objectFit: 'contain' }} />)}
           {preview && <Button component="a" href={preview.url} download={`comprobante-${payment.tmpPaymentReference}.${preview.mime === 'application/pdf' ? 'pdf' : preview.mime === 'image/png' ? 'png' : 'jpg'}`}>Descargar comprobante</Button>}
         </Stack>
