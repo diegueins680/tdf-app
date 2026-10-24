@@ -27,3 +27,41 @@ ajenos ni alterar su estado, no activar funciones cerradas y no tratar una
 validación local como prueba de despliegue. Cada PR debe indicar validación
 completada, limitaciones y su base exacta. La revisión no equivale a una auditoría
 exhaustiva de todos los módulos ni a conformidad matemática del sistema completo.
+
+## Revisión del sprint de activación — 24 de octubre de 2026
+
+La base protegida observada es `4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`.
+Ya incorpora reserva, búsqueda de Comunidad y avisos internos; no corresponde
+reconstruir #552/#576/#578. La reparación de lectura HTTP continúa en #594.
+Su reconciliación conserva las 213 migraciones, el backend, las dependencias y
+Mobile `8adefc5e8b0377b7a07cee99ff1ddd14c3ebb3d0` de esa base. Conserva también
+todos los requisitos de main y añade únicamente `SYS-WEB-REQUEST-001`.
+
+La inspección de producción, de solo lectura, observó el backend `7ab3444` y
+188 migraciones. La web pública incorpora `4dac175`; esto no demuestra que sus
+operaciones estén disponibles en el backend anterior. El catálogo público
+devuelve Verde 70 mientras la búsqueda del directorio usada por Comunidad no lo
+devuelve. El plan local de release enumera 25 migraciones pendientes y mantiene
+`executionAllowed: false`: siguen pendientes el ejecutor protegido, recuperación
+coordinada y la decisión de retención de captura de Operations. No se desplegó.
+
+Criterio de aceptación del incremento #594: una lectura detenida después de
+recibir cabeceras termina dentro del presupuesto original de 30 segundos,
+libera la actividad pendiente y permite la recuperación existente; una lectura
+interrumpida no se presenta como éxito vacío ni provoca repetir autenticación.
+Las regresiones seleccionadas fallan sobre el transporte original y pasan sobre
+la reparación. Una comprobación adicional con Fetch nativo y HTTP loopback
+confirma el vencimiento después de cabeceras sin repetir la solicitud.
+
+Estas verificaciones de transporte no certifican publicación de un perfil,
+seguimiento persistido, retención ni una relación activada en producción. El
+primer valor registrado por onboarding, un favorito del directorio y un follow
+del sistema social de eventos son métricas distintas del follow canónico de
+`/fans/me/follows`. Tampoco una repetición de `artist_followed` demuestra una
+relación nueva. La medición VAR requiere identidad válida y deduplicación por
+pareja, además de separar cuentas sintéticas, personal y evidencia incompleta.
+
+Para un piloto humano siguen vigentes el protocolo de Quito y sus consentimientos.
+La meta 3/5 en 15 minutos es una hipótesis; no hay resultados de participantes en
+este incremento. CI, revisión independiente del nuevo head, admisión FIFO, merge
+y verificación del despliegue se registran separadamente de la validación local.
