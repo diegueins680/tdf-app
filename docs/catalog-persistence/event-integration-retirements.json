@@ -678,11 +678,15 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "2b073f20afd2f3798b1e",
-      "reason": "The 217-entry registry preserves all 216 prior financial migration entries and SQL bodies, then adds an append-only history guard. Prior review remains immutable source history; production execution and retention are separately gated.",
+      "replacementId": "a1eb1e750e7543b88fe1",
+      "reason": "The ordered 219-entry execution registry preserves protected main 4dac175d42616b5b2f4a3e8faebb83692cd2e6b0 as its exact 213-entry prefix and appends the six unchanged financial migrations from a44876c73d391c622eebcc2f25b8f98a2c61d2ba in their original relative order. Every parent entry object, introduction ancestor and SQL body is preserved. Prior 213/217 fingerprints remain immutable history. Fresh combined SQL and application qualification is separate; this review authorizes no production execution, feature activation, recovery or retention-policy decision.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
-      "currentResolution": "The 217-entry registry preserves all 216 prior financial migration entries and SQL bodies, then adds an append-only history guard. Prior review remains immutable source history; production execution and retention are separately gated.",
-      "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
+      "currentResolution": {
+        "id": "a1eb1e750e7543b88fe1",
+        "valueCount": 219,
+        "sourceRevision": "ledger-music-main-integration-20261023"
+      },
+      "change": "The ordered 219-entry execution registry preserves protected main 4dac175d42616b5b2f4a3e8faebb83692cd2e6b0 as its exact 213-entry prefix and appends the six unchanged financial migrations from a44876c73d391c622eebcc2f25b8f98a2c61d2ba in their original relative order. Every parent entry object, introduction ancestor and SQL body is preserved. Prior 213/217 fingerprints remain immutable history. Fresh combined SQL and application qualification is separate; this review authorizes no production execution, feature activation, recovery or retention-policy decision.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -747,6 +751,26 @@
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         },
         {
+          "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "762752f98f5506a7260f2ab917a9ea9adedae7a03bbdaae3ed000e4495f9bbb0",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "c2faa82202c221af84dcea4d0d6c9e55e5d4054a2c528ab6fffc5529c368a3d5",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "28d940cae7e14d91afb8da50751b40ad577a52740fb97e0ded3f13da48ec8f59",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "936fc7eab64e14f0c6e54724e055f02e8d7b1ef1ec06436b735b473b48317fbf",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
           "sourceRevision": "f58f6ac1859d3cc294a3ed3cee23cb3da6fac487",
           "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
           "sourceFileSha256": "8cd50101858e26b398b6ff7d21595e29499df94d7b5da5493708d25342ac624b",
@@ -795,7 +819,33 @@
           },
           "sourceEntryCanonicalSha256": "3a556dbf4a14187d51c05fffd34d55d31b87f3b287dbaa21b5fc4640d0a9c58f",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+          "sourceEntry": {
+            "id": "3f336173e03f10fc023c"
+          },
+          "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+          "sourceEntry": {
+            "id": "2b073f20afd2f3798b1e"
+          },
+          "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
+      ],
+      "previousReplacementIds": [
+        "e60cbdb9121493f47fa6",
+        "a8128668e1b74b7c0ae4",
+        "3f336173e03f10fc023c",
+        "2b073f20afd2f3798b1e"
       ]
     }
   ]

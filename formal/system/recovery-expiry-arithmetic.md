@@ -176,6 +176,20 @@ remain byte-identical. The Cabal hash is refreshed after that review; recovery
 claims, translation and negative controls remain unchanged and require fresh
 execution. This preparation is not independent approval or protected admission.
 
+## Music integration context review — 2026-10-23
+
+Against protected main `030365aabfb46c14e2962e054cf3b22192cda1a8`, the Cabal
+manifest adds only `TDF.MusicRelease.Money` to the executable and test
+`other-modules` lists. Removing those two lines reproduces the protected file
+byte for byte. Source paths, dependency versions, compiler options, CPP flags
+and Stack/lock are unchanged. The new module imports Aeson, Int64, Text and
+Text.Read and supplies no authorization or recovery binding. The complete
+authorization, RoleEnum, ingestion, ServerAuth and expiry SQL source files remain
+byte-identical to protected main. The contract records both manifest hashes and
+this dependency review; its updated context pin still requires fresh solver,
+serialized replay, mutation and independent certificate checks. No predicate,
+assumption or full implementation/refinement status is strengthened by the pin.
+
 ## Financial integration context review — 2026-10-23
 
 Relative to protected main `030365aabfb46c14e2962e054cf3b22192cda1a8`, Cabal
@@ -187,3 +201,15 @@ Stack/lock, authorization/RoleEnum/ingestion and recovery source/SQL are unchang
 The contract records both manifest hashes and this dependency review. Its new
 context pin requires fresh solver, replay, mutation and independent certificate
 checks; full implementation/refinement and financial release remain unproven.
+
+## Combined Ledger/Music manifest context review — 2026-10-23
+
+The current comparison uses protected main `4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`.
+The merged Cabal file retains its two MusicRelease.Money registrations and adds
+only TDF.LedgerPostingSpec to the test module list. Removing that single line
+reproduces the protected manifest byte for byte. Runtime bindings, dependencies,
+compiler/CPP options, Stack/lock, authorization/RoleEnum/ingestion, ServerAuth
+and recovery SQL are unchanged. Earlier context reviews above retain their
+original baselines; the JSON records the current manifest hashes and review.
+Fresh scoped solver/replay/mutation and independent certificate checks are
+required. This review does not promote full refinement or release readiness.

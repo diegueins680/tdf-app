@@ -29,6 +29,14 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 ## Canonical package
 
+- [music-money-wire.md](music-money-wire.md): exact Int64 transport, confirmed
+  purchase price, source-bound numeric SMT obligation and compatible clients.
+- [music-test-entrypoint.md](music-test-entrypoint.md): canonical execution of
+  four music unit groups, with required nonempty probes.
+
+- [music-purchase-replay.md](music-purchase-replay.md): buyer/request-bound purchase
+  replay, concurrent reservation, conflict semantics and bounded negative controls.
+- [backend-version.md](backend-version.md): fresh compiled metadata through restored Stack/GHC caches, actual two-build regression and independent cache-layer controls.
 - [alloy-negative-controls.md](alloy-negative-controls.md): assertion-preserving
   mutations, named counterexample admission and retained bounded solver evidence.
 
@@ -102,7 +110,8 @@ These checks make drift fail CI; run them before changing a mapped surface.
   them instead of maintaining another handwritten copy of their transitions.
 - [worker-completion.md](worker-completion.md): artist worker failure evidence, canonical target and scoped bounded completion checks.
 - [interaction-write-budget.md](interaction-write-budget.md): the per-account interaction write charge survives every outcome of the write, including database errors; bounded model, four negative controls and PostgreSQL tests.
-- [music-purchase-entitlement.md](music-purchase-entitlement.md): music order payment record, single entitlement, download limit and request replay window; bounded model, five negative controls, PostgreSQL tests and the open failed-attempt cancellation defect.
+- [music-purchase-entitlement.md](music-purchase-entitlement.md): music order payment record, single entitlement, download limit and request replay window; bounded model, six negative controls and PostgreSQL tests.
+- [music-payment-outcome.md](music-payment-outcome.md): separate money and fulfillment outcomes, locked failed-retry quarantine, closed-order reconciliation, SQL mutations and a bounded outcome model; provider recovery and activation remain open.
 - [manual-bank-transfer.md](manual-bank-transfer.md): staff-verified ticket transfer review on the production schema, approval and ticket issuance in one transaction, bounded model with eight mutation controls and explicit bank exclusions.
 - [payment-retry.md](payment-retry.md): serialized retry admission, immutable evidence, bounded mutation controls and retirement of the conflicting non-runtime checkout table.
 - [operations-failure-replay.md](operations-failure-replay.md): a manager's retry of a dead-lettered Operations projection re-queues it; the failure follows the projection to resolved or back to dead letter.

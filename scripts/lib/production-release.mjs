@@ -699,11 +699,13 @@ ROLLBACK;
 // from source and fails if a newly called function is missing here.
 export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
   'music_can(bigint,bigint,text)',
+  'music_checkout_payment_attempt_allowed(uuid)',
   'music_check_ddex_export(uuid)',
   'music_check_ddex_operation(uuid,uuid,uuid,text)',
   'music_check_submission(uuid)',
   'music_create_release_correction(uuid,uuid,bigint)',
   'music_merge_party_identifiers(jsonb,jsonb)',
+  'music_minor_units_json(bigint)',
   'music_preview_matches(uuid)',
   'music_preview_spec(bigint,bigint,bigint)',
   'music_public_asset_accessible(uuid,text)',

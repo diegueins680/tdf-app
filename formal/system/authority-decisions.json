@@ -968,6 +968,53 @@
       "status": "applied"
     },
     {
+      "id": "AUTHORITY-MUSIC-PURCHASE-REPLAY",
+      "sources": [
+        "formal/system/music-purchase-entitlement.md",
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "formal/system/music-purchase-replay.md"
+      ],
+      "conflict": "Purchase creation returned the original order for any eligible body sharing its buyer/key, including different terms or another offer. Uniqueness alone did not bind replay semantics.",
+      "authority": "formal/system/music-purchase-replay.md",
+      "resolution": "Retain buyer/key uniqueness and immutable original snapshots; reject changed or incomplete bound inputs with 409 on both existing and raced reservation paths. This is a correction under the user audit, not provider activation."
+    },
+    {
+      "id": "AUTHORITY-MUSIC-MONEY-WIRE",
+      "sources": [
+        "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "formal/system/music-money-wire.md"
+      ],
+      "conflict": "BIGINT/Int64 prices and the form promise of integer amounts competed with JSON-number encoding and Number input/display conversion, which changed valid large amounts. Purchase creation did not confirm the displayed price.",
+      "authority": "formal/system/music-money-wire.md",
+      "resolution": "Preserve the full Int64 domain with safe numeric compatibility and canonical decimal text, exact display and validated positive quote; enforce the existing USD-only sale intent at backend admission. No arbitrary price cap or provider activation."
+    },
+    {
+      "id": "AUTHORITY-MUSIC-TEST-ENTRY",
+      "sources": [
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/test/MusicReleaseSpecMain.hs",
+        "tdf-hq/test/Spec.hs",
+        "formal/system/music-test-entrypoint.md"
+      ],
+      "conflict": "Music unit modules and a convenience runner existed, but the canonical entrypoint did not invoke them and no scripts/workflow invocation of that runner was found.",
+      "authority": "formal/system/music-test-entrypoint.md",
+      "resolution": "Register the same four unit groups in Spec.hs and require nonempty probes in backend quality. Module presence and unrelated green examples are insufficient execution evidence."
+    },
+    {
+      "id": "AUTHORITY-MUSIC-OUTCOME-20261015",
+      "sources": [
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server/CommerceOperations.hs",
+        "formal/system/music-purchase-entitlement.md"
+      ],
+      "conflict": "The paid projection grants an active entitlement even when its purchase update leaves a terminal order unchanged. Attempt failure also cancels the purchase despite the checkout adapter permitting subsequent verified payment. The old model omits these failed/closed histories.",
+      "authority": "Existing separate payment-attempt, money and fulfillment states, the paid-order entitlement rule and the explicit user mandate to repair financial inconsistency. This is an integrity repair, not approval to activate music commerce or contact a provider.",
+      "resolution": "Add a compatibility migration: failed attempts no longer cancel the purchase; verified money for closed fulfillment is retained with a checkout-linked reconciliation exception and audit, without an entitlement. Refuse contradictory pre-existing grants for explicit review rather than deleting history. Extend scoped SQL/model/concurrency/HTTP controls. Keep missing provider admission, uncertain transport and closed-checkout recovery explicit and commerce disabled. Preserve failed-payment retry quarantine with a checkout-locked admission function called before creation/replay in the music handler. Awaiting fulfillment is not permission to start another payment. Independent review also identified existing-binding replay and late binding/pending status reopening. Gate both attempt admission and existing binding lookup; persist the quarantine through attempt failure_code/status rather than trusting checkout status alone. Rolling back to application code that bypasses the helper requires commerce disabled; retaining the migration alone does not enforce handler admission."
+    },
+    {
       "id": "AUTHORITY-069",
       "sources": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
