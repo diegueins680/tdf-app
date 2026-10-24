@@ -9,6 +9,22 @@ export type PublicEventTicketQuote = components['schemas']['PublicEventTicketQuo
 export type PublicEventTicket = components['schemas']['PublicEventTicket'];
 export type PublicEventTicketCheckout = components['schemas']['PublicEventTicketCheckout'];
 export type PublicEventTicketBankTransfer = components['schemas']['PublicEventTicketBankTransfer'];
+export type TicketPaymentReceipt = components['schemas']['TicketPaymentReceipt'];
+
+const readReceipt = (file: File): Promise<TicketPaymentReceipt> => new Promise((resolve, reject) => {
+  const mime = file.type;
+  if ((mime !== 'image/jpeg' && mime !== 'image/png' && mime !== 'application/pdf') || file.size === 0 || file.size > 5 * 1024 * 1024) {
+    reject(new Error('Adjunta un comprobante JPG, PNG o PDF de hasta 5 MB.'));
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    if (typeof reader.result !== 'string') { reject(new Error('No se pudo leer el comprobante.')); return; }
+    resolve({ contentType: mime, base64: reader.result.split(',')[1] ?? '' });
+  };
+  reader.onerror = () => reject(new Error('No se pudo leer el comprobante.'));
+  reader.readAsDataURL(file);
+});
 
 const requirePositiveInteger = (value: number, field: string): number => {
   if (!Number.isSafeInteger(value) || value <= 0) {
@@ -81,14 +97,15 @@ export const EventTickets = {
       {},
       lookupHeaders(lookupToken),
     ),
-  submitBankTransferEvidence: (
+  submitBankTransferEvidence: async (
     eventId: number,
     orderId: number,
     customerReference: string,
     lookupToken: string,
+    receipt?: File,
   ) => post<PublicEventTicketCheckout>(
     `${orderBase(eventId, orderId)}/bank-transfer/evidence`,
-    { customerReference },
+    { customerReference, ...(receipt ? { receipt: await readReceipt(receipt) } : {}) },
     lookupHeaders(lookupToken),
   ),
 };
