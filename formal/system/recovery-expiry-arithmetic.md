@@ -175,3 +175,17 @@ are unchanged. `ServerAuth.hs`, the recovery migration and the identity contract
 remain byte-identical. The Cabal hash is refreshed after that review; recovery
 claims, translation and negative controls remain unchanged and require fresh
 execution. This preparation is not independent approval or protected admission.
+
+## Music integration context review — 2026-10-23
+
+Against protected main `030365aabfb46c14e2962e054cf3b22192cda1a8`, the Cabal
+manifest adds only `TDF.MusicRelease.Money` to the executable and test
+`other-modules` lists. Removing those two lines reproduces the protected file
+byte for byte. Source paths, dependency versions, compiler options, CPP flags
+and Stack/lock are unchanged. The new module imports Aeson, Int64, Text and
+Text.Read and supplies no authorization or recovery binding. The complete
+authorization, RoleEnum, ingestion, ServerAuth and expiry SQL source files remain
+byte-identical to protected main. The contract records both manifest hashes and
+this dependency review; its updated context pin still requires fresh solver,
+serialized replay, mutation and independent certificate checks. No predicate,
+assumption or full implementation/refinement status is strengthened by the pin.

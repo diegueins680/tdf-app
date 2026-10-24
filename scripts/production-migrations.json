@@ -1075,6 +1075,16 @@
       "id": "2026-10-13_chat_message_notifications",
       "path": "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
       "introducedBy": "1be9d0d7dba613ced9cfe553529a5445b000ecf9"
+    },
+    {
+      "id": "2026-10-15_music_payment_outcome_consistency",
+      "path": "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
+      "introducedBy": "8ad5722fa885c1970b20c57449eed4fc54d088eb"
+    },
+    {
+      "id": "2026-10-15_music_exact_minor_units",
+      "path": "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql",
+      "introducedBy": "4fc88645f511d4c70aca2b969ec412081664978d"
     }
   ]
 }

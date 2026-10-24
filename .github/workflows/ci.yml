@@ -199,6 +199,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.ui == 'true' || needs.changes.outputs.repo == 'true'
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+      options: --init --ipc=host --user 1001
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -212,8 +215,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Verify bundled Playwright browsers
+        run: node scripts/verify-playwright-image.mjs
 
       - name: Run isolated persona web journeys
         run: npm run test:e2e:web
@@ -304,6 +307,7 @@ jobs:
       TDF_TEST_POSTGRES_PASSWORD: postgres
       STACK_ROOT: ${{ github.workspace }}/.stack-root
       BACKEND_BINARY_OUT: ${{ github.workspace }}/tdf-hq/.release/tdf-hq-exe
+      TDF_VERSION_REBUILD_OUTPUT: ${{ github.workspace }}/tmp/specification/backend-version-rebuild
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -570,6 +574,11 @@ jobs:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: sh scripts/test-music-purchase.sh
 
+      - name: Verify music payment outcome and closed-order reconciliation
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-music-payment-outcomes.sh
+
       - name: Verify the production migration batch, ledger atomicity and lock refusal
         env:
           TDF_MIGRATION_BATCH_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
@@ -626,6 +635,18 @@ jobs:
           PGPASSWORD: postgres
           TDF_INTERACTION_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/interactions/test-http.sh
+
+      - name: Retain synthetic backend version cache evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-version-rebuild-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            tmp/specification/backend-version-rebuild/result.json
+            tmp/specification/backend-version-rebuild/*/*.log
+            tmp/specification/backend-version-rebuild/*/*.json
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Retain compiler-derived API discovery evidence
         if: always()

@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "e60cbdb9121493f47fa6",
+      "currentId": "3f336173e03f10fc023c",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 211,
-      "change": "Ordered 211-entry manifest retains protected main 0a37123ea1d9d6b7c6b44d73c9342e18515c06c9 as its exact 208-entry prefix. Community search indexes, genre-alias event resynchronization and chat recipient notifications follow in original public UX order. All introduction SHAs, SQL bytes and immutable parent reviews are preserved. Apply/replay, alias rollback/reapply and chat notification controls remain required. This is migration authority, not editable business data or production rollout approval.",
+      "valueCount": 213,
+      "change": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -411,7 +411,31 @@
           },
           "sourceEntryCanonicalSha256": "2c38a806a6b1b6150d94ab831bd323c9bb5944e9c65924dcdfdb5dc3c0fdb576",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "50369165341a735c5b6800cb19fae9f5698f8dae9e1592883b4491ab080e081f",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "6c94c901f843bb75f67806b3ede3745fb956f116b5a30d73dc346b433ab783cb",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
+      ],
+      "previousCurrentIds": [
+        "e60cbdb9121493f47fa6",
+        "a8128668e1b74b7c0ae4"
       ]
     }
   ]

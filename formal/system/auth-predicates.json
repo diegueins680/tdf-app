@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "c62b9cf69eed8fdcae2c32633690234118984c1b1ac2d5494a8ebba9efa31641"
+    "tdf-hq/tdf-hq.cabal": "c2242ebae6256d64325bbe38c157f6d616710f65ee4f6fc1addd26ae0803bac1"
   },
   "obligations": [
     {
@@ -62,6 +62,17 @@
       ],
       "limitations": "Conditional predicate proof only. No machine-checked translation, compiler, session, canonical database grant, revocation, endpoint dispatch/effects or full refinement proof.",
       "specification": "formal/system/auth-predicates.md"
+    }
+  ],
+  "sourceContextReviews": [
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "030365aabfb46c14e2962e054cf3b22192cda1a8",
+      "previousSha256": "c62b9cf69eed8fdcae2c32633690234118984c1b1ac2d5494a8ebba9efa31641",
+      "currentSha256": "c2242ebae6256d64325bbe38c157f6d616710f65ee4f6fc1addd26ae0803bac1",
+      "change": "Add TDF.MusicRelease.Money to the executable and test other-modules lists only; removing those exact two lines reproduces the protected Cabal manifest byte for byte.",
+      "semanticReview": "No source search paths, module aliases, compiler options, CPP flags, dependencies, extensions or toolchain changes. The new module uses Data.Aeson, Data.Int, Data.Text and Text.Read and introduces no authorization or recovery binding. Entire authorization/RoleEnum/ingestion and ServerAuth/expiry SQL sources plus Stack/lock remain byte-identical to protected main. Conditional predicate translations and their assumptions are unchanged.",
+      "qualification": "Requires fresh source-bound SMT, serialized replay, mutation controls and independent CPC validation; full implementation/refinement remains UNPROVEN."
     }
   ]
 }

@@ -46,6 +46,7 @@ jobs:
         run: |
           mkdir "${{ runner.temp }}/payment-proof"
           printf '%s\n' '{"status":"not-executed","reason":"Prerequisite checks or installation have not completed"}' > "${{ runner.temp }}/payment-proof/result.json"
+          printf '%s\n' '{"status":"not-executed","reason":"Money wire obligations have not executed"}' > "${{ runner.temp }}/payment-proof/music-money-wire.json"
           printf '%s\n' '{"execution":{"passed":false},"release":{"decision":"BLOCKED","executionAllowed":false},"reason":"Fallback only when report.json is unavailable; inspect failed/timed-out prerequisite and generation steps"}' > "${{ runner.temp }}/assurance-fallback.json"
       - name: Check specification inventory and evidence admission
         timeout-minutes: 5
@@ -67,6 +68,11 @@ jobs:
           python scripts/verify-payment-arithmetic.py > "${{ runner.temp }}/payment-proof/solver-output.json"
           mv "${{ runner.temp }}/payment-proof/solver-output.json" "${{ runner.temp }}/payment-proof/result.json"
           python scripts/test-payment-arithmetic-verifier.py
+      - name: Verify exact music money encoding and negative controls
+        run: |
+          python scripts/verify-music-money-wire.py > "${{ runner.temp }}/payment-proof/music-money-wire-output.json"
+          mv "${{ runner.temp }}/payment-proof/music-money-wire-output.json" "${{ runner.temp }}/payment-proof/music-money-wire.json"
+          python scripts/test-music-money-wire-verifier.py
       - name: Generate formal assurance and release decision
         if: ${{ !cancelled() }}
         timeout-minutes: 15
