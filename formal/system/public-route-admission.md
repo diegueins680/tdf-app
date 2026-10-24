@@ -88,3 +88,72 @@ mutation, not about database reads: verifiers that compare against the stored
 record, such as the storefront one, load the row by its identifier first and
 reject before anything is returned or written. This is a point-in-time review, not a
 mechanical gate; a route-to-handler correspondence check remains future work.
+
+## Handler denial sweep (2026-10-13, AUTHORITY-079)
+
+`scripts/lib/public_routes_conformance.py`, a section of
+`scripts/test-booking-conformance.py` (real backend, PostgreSQL fixture), requests
+every route registered under `capability-header`, `capability-path`,
+`handler-session`, `operator-secret`, `signed-provider-callback` and
+`provider-verification-challenge` (90 routes) twice: without the capability and
+with a wrong one (random lookup token, random bearer token, zero signature, wrong
+verify token). Sequential identifiers probe the first record; UUID-typed
+identifiers, capability paths and slugs get values no record carries. No answer
+may succeed (every one is 400, 401, 403, 404, 405, 415 or 422; provider callbacks
+and challenges, and the provider-gated storefront Stripe payment-intent route,
+may also answer 503 while the provider is unconfigured), none may be a server
+fault, none may carry fixture-private content, a wrong verify token must not echo
+the challenge, and a wrong bearer token must receive the anonymous status on every
+session route and, on the two anonymous-answer routes, exactly the anonymous body. The marketplace cart (`capability-path`) is created and then read with its
+own identifier (200), another random UUID (404) and a sequential one (400), and the
+identifier is checked to be a random version-4 UUID.
+
+Two findings. `GET /session` and `POST /session/logout` answer an anonymous caller
+200 with the anonymous value (`null`, empty); a wrong bearer token receives the same
+(the handler resolves no session for it).
+The `handler-session` rule said "rejects missing sessions"; the rule now reads:
+rejects, or answers the anonymous value without resolving any session (AUTHORITY-079).
+`POST /social-events/stripe/webhook` answered 500 "Stripe is not configured" to an
+unsigned caller when the provider was unconfigured, a server fault for a public
+unauthenticated POST where its sibling callbacks answer 503; it now answers 503.
+
+Bounds. The sweep shows that no deny-boundary route answers these two requests
+with success, a server fault or fixture-private content. It observes the
+capability comparison itself only where the request reaches it: the four
+Meta/WhatsApp signatures, the session routes, the random-identifier paths and the
+merch cart header. Every other route denies earlier (body, path or query parsing,
+absent record, unconfigured provider or disabled endpoint), so for those the
+sweep bounds the outcome, not the check; for records that exist only after a
+provider-backed intake (orders, registrations, quotes, storefront orders) the
+wrong-token path is exercised by their own suites. Sessions are probed with a
+bearer token only, not a cookie. Other "Stripe is not configured" 500s remain on
+authenticated routes (artist tips, ticket checkout reuse, admin), outside this
+register. The OpenAPI document does not list the social-events Stripe webhook. Query-back callbacks (Datafast, Payphone,
+PlaceToPay) answer 503 unconfigured; their body authentication is AUTH-WEBHOOK-001.
+
+### Denial-sweep server faults
+
+An HTTP 503 is tolerated only for provider callback/challenge boundaries and the
+explicitly named provider-gated Stripe intent route, where the synthetic backend
+has no provider configured. An ordinary session, capability or operator route
+returning 503 fails the server-fault assertion. Other 5xx statuses also fail on
+provider routes. `scripts/test-public-route-denial.py` exercises the entire sweep
+against local HTTP fixtures, including both anonymous and wrong-capability
+responses; restoring the former global 503 exemption fails the regression. These
+fixtures test the checker, not real handler authorization.
+
+## Payment-status polling and unavailable encryption configuration
+
+The checkout/attempt/lookup-token binding is authorized before consulting the
+provider-operation encryption key. Missing or invalid capabilities, unknown
+checkouts and unrelated attempts receive 404 even when that key is unavailable.
+An authorized caller still receives 503 if the key is missing or invalid; a
+configured authorized caller retains access to an expired or closed checkout's
+existing outcome. This read does not authorize a new charge. The data load
+rechecks the same binding after the preliminary authorization, and polling
+changes no payment or audit state. The ordinary-route 503 rejection in the
+public denial sweep remains unchanged.
+
+ProviderRetrySpec's closed-checkout cases exercise these branches for both
+PlaceToPay and PayPhone, with absent and invalid configuration. Fresh compiled
+PostgreSQL qualification is required; source reconciliation is not a test pass.

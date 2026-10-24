@@ -1,3 +1,4 @@
+import { canonicalMusicMinor, formatMusicMinor, type MusicMinorUnits } from '../utils/musicMoney';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import DownloadIcon from '@mui/icons-material/Download';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -51,9 +52,9 @@ const openAuthorizedDownload = (accessUrl: string) => {
   anchor.remove();
 };
 
-const formatMinorMoney = (minor: number, currency: string) => {
-  try { return new Intl.NumberFormat('es-EC', { style: 'currency', currency }).format(minor / 100); }
-  catch { return `${currency} ${(minor / 100).toFixed(2)}`; }
+const formatMinorMoney = (minor: MusicMinorUnits, currency: string) => {
+  try { return formatMusicMinor(minor, currency); }
+  catch { return 'Precio no disponible'; }
 };
 
 const installSocialMetadata = (release: MusicPublicRelease, artworkUrl: string | null) => {
@@ -244,12 +245,13 @@ export default function MusicReleasePublicPage() {
   };
 
   const startPurchase = async () => {
-    if (!selectedOffer || !purchaseTermsAccepted) return;
+    if (!selectedOffer || !purchaseTermsAccepted || selectedOffer.priceMinor === null || !selectedOffer.currency) return;
     if (!session) { navigate(buildLoginRedirectPath(location.pathname)); return; }
     if (!paypalClientId) { setPlayError('PayPal no está configurado en este navegador.'); return; }
     setPurchaseBusy(true); setPlayError(null);
     try {
-      const purchase = await musicReleases.createPurchase(selectedOffer.ruleId, crypto.randomUUID());
+      const purchase = await musicReleases.createPurchase(selectedOffer.ruleId, crypto.randomUUID(),
+        selectedOffer.priceMinor, selectedOffer.currency);
       const provider = await musicReleases.createPaypalOrder(purchase.id, crypto.randomUUID());
       setPaypalPurchase({ purchaseId: purchase.id, orderId: provider.paypalOrderId });
     } catch (reason) {
@@ -306,7 +308,7 @@ export default function MusicReleasePublicPage() {
           }}><PlaylistAddIcon /></IconButton>
           <Button startIcon={loadingTrack === track.trackId ? <CircularProgress size={16} /> : <QueueMusicIcon />} onClick={() => void play(track.trackId)} disabled={loadingTrack !== null}>Reproducir</Button>
           {offer?.downloadPolicy === 'free' && <Button startIcon={<DownloadIcon />} onClick={() => void freeDownload(offer)} disabled={purchaseBusy}>Descargar</Button>}
-          {offer?.downloadPolicy === 'purchase' && offer.priceMinor !== null && offer.currency && <Button startIcon={<ShoppingCartIcon />} onClick={() => { setSelectedOffer(offer); setPaypalPurchase(null); setPurchaseTermsAccepted(false); }} disabled={purchaseBusy}>Comprar {formatMinorMoney(offer.priceMinor, offer.currency)}</Button>}
+          {offer?.downloadPolicy === 'purchase' && offer.priceMinor !== null && offer.currency && <Button startIcon={<ShoppingCartIcon />} onClick={() => { setSelectedOffer(offer); setPaypalPurchase(null); setPurchaseTermsAccepted(false); }} disabled={purchaseBusy || canonicalMusicMinor(offer.priceMinor) === null || offer.currency !== 'USD'}>Comprar {formatMinorMoney(offer.priceMinor, offer.currency)}</Button>}
         </Stack>;
       })}
     </Stack></CardContent></Card>

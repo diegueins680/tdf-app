@@ -4,6 +4,7 @@
 
 module TDF.RagStore
   ( refreshRagIndex
+  , refreshRagIndexWith
   , ensureRagIndex
   , retrieveRagContext
   , getRagIndexStats
@@ -15,11 +16,11 @@ module TDF.RagStore
   , validateEmbeddingResponseDimensions
   ) where
 
-import           Control.Monad          (forM, forM_)
+import           Control.Monad          (forM, forM_, when)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Exception.Safe (catchAny, throwM)
+import           Control.Exception.Safe (catchAny)
 import           Data.Aeson             (Value, ToJSON(..), FromJSON(..), object, (.=), encode, eitherDecode, withObject, (.:))
-import           Data.ByteString.Lazy   (ByteString, toStrict)
+import           Data.ByteString.Lazy   (ByteString, fromStrict, toStrict)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
@@ -29,36 +30,38 @@ import           Data.Char
   , toLower
   )
 import           Data.Int               (Int64)
-import           Data.List              (foldl', sortOn)
+import           Data.List              (foldl')
 import qualified Data.IntMap.Strict     as IntMap
 import qualified Data.Map.Strict        as Map
-import           Data.Maybe             (catMaybes, fromMaybe)
+import           Data.Maybe             (catMaybes)
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
-import           Data.Time              (UTCTime, addUTCTime, diffUTCTime, getCurrentTime)
-import           Data.Time.Format       (defaultTimeLocale, formatTime)
-import           Database.Persist       (Entity(..), Key, SelectOpt(..), getEntity, selectList, entityKey, entityVal, (==.), (!=.), (<-.), (>=.), (<=.))
-import           Database.Persist.Sql   (PersistValue(..), Single(..), SqlPersistT, fromSqlKey, toSqlKey, rawExecute, rawSql, runSqlPool, transactionSave, transactionUndo)
+import           Data.Time              (Day, UTCTime, diffUTCTime, getCurrentTime, utctDay)
+import           Database.Persist       (Entity(..), Key)
+import           Database.Persist.Sql
+  ( PersistValue(..), Single(..), SqlPersistT, toSqlKey, fromSqlKey
+  , rawExecute, rawSql, runSqlPool
+  )
 import           GHC.Generics           (Generic)
 import           Network.HTTP.Client    (Request(..), Response, httpLbs, parseRequest, responseBody, responseStatus, RequestBody(..))
 import           Network.HTTP.Types.Status (statusCode)
 import           Numeric                (showFFloat)
 import           System.IO              (hPutStrLn, stderr)
 import           Text.Read              (readMaybe)
-import           Web.PathPieces         (toPathPiece)
 
-import           TDF.Config             (AppConfig(..), openAiEmbedDimensions, ragEmbeddingDim)
+import           TDF.Config
+  (AppConfig(..), courseSlugFallback, openAiEmbedDimensions, ragEmbeddingDim)
+import qualified TDF.Courses.Production as ProductionCourse
 import           TDF.DB                 (ConnectionPool, sharedTlsManager)
-import qualified TDF.Models             as M
-import qualified TDF.ModelsExtra        as ME
+import qualified TDF.Courses.PublicMetadata as CoursePublic
 import qualified TDF.Trials.Models      as Trials
 
-data RagDocument = RagDocument
-  { rdSource   :: Text
-  , rdSourceId :: Maybe Text
-  , rdContent  :: Text
-  , rdMetadata :: Value
+-- Only a course can become a document for the customer-facing embedding index.
+-- There is no generic source/content constructor for private operational data.
+data PublicCourseDocument = PublicCourseDocument
+  { courseDocumentSlug :: Text
+  , courseDocumentContent :: Text
   } deriving (Show)
 
 data RagChunk = RagChunk
@@ -113,17 +116,28 @@ instance FromJSON OpenAIErrorResp where
     OpenAIErrorResp <$> o .: "error"
 
 refreshRagIndex :: AppConfig -> ConnectionPool -> IO (Either Text Int)
-refreshRagIndex cfg pool = do
+refreshRagIndex cfg = refreshRagIndexWith (embedTexts cfg) cfg
+
+-- The injected embedding adapter permits payload/failure checks without a
+-- provider request. Production always supplies the same embedTexts adapter.
+refreshRagIndexWith
+  :: ([Text] -> IO (Either Text [[Double]]))
+  -> AppConfig -> ConnectionPool -> IO (Either Text Int)
+refreshRagIndexWith embed cfg pool = do
+  runSqlPool purgeLegacyRagChunks pool
   dimCheck <- validateRagEmbeddingDim cfg pool
   case dimCheck of
     Left err -> pure (Left err)
     Right () -> do
-      docs <- runSqlPool (buildRagDocuments cfg) pool
+      today <- utctDay <$> getCurrentTime
+      docs <- runSqlPool (buildPublicCourseDocuments cfg today) pool
       let chunks = concatMap (docToChunks cfg) docs
       if null chunks
-        then pure (Right 0)
+        then do
+          runSqlPool (replaceRagChunks [] []) pool
+          pure (Right 0)
         else do
-          embedResult <- embedTexts cfg (map rcContent chunks)
+          embedResult <- embed (map rcContent chunks)
           case embedResult of
             Left err -> pure (Left err)
             Right embeddings -> do
@@ -135,6 +149,8 @@ refreshRagIndex cfg pool = do
 
 ensureRagIndex :: AppConfig -> ConnectionPool -> IO (Either Text Bool)
 ensureRagIndex cfg pool = do
+  -- Privacy cleanup must not depend on index age or provider availability.
+  runSqlPool purgeLegacyRagChunks pool
   stats <- runSqlPool loadRagIndexStats pool
   now <- getCurrentTime
   let stale = case risUpdatedAt stats of
@@ -152,6 +168,14 @@ ensureRagIndex cfg pool = do
   where
     diffSeconds :: UTCTime -> UTCTime -> Double
     diffSeconds a b = realToFrac (diffUTCTime a b)
+
+-- Commit removal of obsolete derived sources independently of public refresh.
+-- A failed replacement preserves the previous public index, never legacy data.
+purgeLegacyRagChunks :: SqlPersistT IO ()
+purgeLegacyRagChunks = do
+  exists <- ragTableExists
+  when exists $
+    rawExecute "DELETE FROM rag_chunk WHERE source IS DISTINCT FROM 'course'" []
 
 retrieveRagContext :: AppConfig -> ConnectionPool -> Text -> IO [Text]
 retrieveRagContext cfg pool query = do
@@ -171,34 +195,73 @@ getRagIndexStats pool = do
   RagIndexStats{..} <- runSqlPool loadRagIndexStats pool
   pure (risCount, risUpdatedAt)
 
-buildRagDocuments :: AppConfig -> SqlPersistT IO [RagDocument]
-buildRagDocuments cfg = do
-  now <- liftIO getCurrentTime
-  courses <- selectList [] [Desc Trials.CourseUpdatedAt, LimitTo 50]
-  services <- selectList [M.ServiceCatalogActive ==. True] [Asc M.ServiceCatalogName]
-  campaigns <- selectList [] [Desc ME.CampaignUpdatedAt, LimitTo 200]
-  ads <- selectList [] [Desc ME.AdCreativeUpdatedAt, LimitTo 200]
-  rooms <- selectList [] [Asc ME.RoomName]
-  brainEntries <- selectList
-    [ME.StudioBrainEntryActive ==. True]
-    [Desc ME.StudioBrainEntryUpdatedAt, LimitTo 200]
-  resources <- selectList [M.ResourceActive ==. True] [Asc M.ResourceName]
-  let courseDocs = map courseToDoc courses
-      serviceDocs = map serviceToDoc services
-      campaignDocs = map campaignToDoc campaigns
-      adDocs = map adToDoc ads
-      roomDocs = map roomToDoc rooms
-      brainDocs = map brainEntryToDoc brainEntries
-      resourceDocs = map resourceToDoc resources
-  availabilityDocs <- buildAvailabilityDocs cfg now resources
-  pure (courseDocs ++ serviceDocs ++ campaignDocs ++ adDocs ++ roomDocs ++ brainDocs ++ resourceDocs ++ availabilityDocs)
+buildPublicCourseDocuments :: AppConfig -> Day -> SqlPersistT IO [PublicCourseDocument]
+buildPublicCourseDocuments cfg today = do
+  -- Filter before the limit: unreachable legacy rows must neither be disclosed
+  -- nor crowd eligible courses out of the newest public corpus.
+  ambiguous <- loadAmbiguousProductionSlugs
+  courses <- rawSql
+    ("SELECT course.id FROM course WHERE " <> publicCourseEligibilitySql
+      <> " ORDER BY updated_at DESC LIMIT 50") (publicCourseEligibilityParams cfg today ambiguous)
+    :: SqlPersistT IO [Single Int64]
+  catMaybes <$> traverse
+    (\(Single courseId) -> loadPublicCourseDocument cfg today (toSqlKey courseId)) courses
 
-courseToDoc :: Entity Trials.Course -> RagDocument
-courseToDoc (Entity _ c) =
-  RagDocument
-    { rdSource = "course"
-    , rdSourceId = Just (Trials.courseSlug c)
-    , rdContent = T.intercalate " · " (catMaybes
+loadAmbiguousProductionSlugs :: SqlPersistT IO [Text]
+loadAmbiguousProductionSlugs = do
+  rows <- rawSql "SELECT slug FROM course" [] :: SqlPersistT IO [Single Text]
+  pure (CoursePublic.ambiguousProductionCourseSlugs [slug | Single slug <- rows])
+
+-- Mirror the shared HTTP identity/lead policy before either selection limit.
+-- Rendering rechecks the current earliest session after the ranking query.
+publicCourseEligibilitySql :: Text
+publicCourseEligibilitySql =
+  "course.slug COLLATE \"C\" ~ '^[a-z0-9-]{1,96}$'\
+  \ AND course.slug COLLATE \"C\" ~ '[a-z0-9]' AND (\
+  \ (course.slug LIKE 'produccion-musical-%' AND\
+  \ (SELECT min(session.date) FROM course_session_model session\
+  \ WHERE session.course_id = course.id) >= ?) OR\
+  \ (course.slug NOT LIKE 'produccion-musical-%'\
+  \ AND course.slug <> 'produccion-musical' AND course.slug <> ?))\
+  \ AND NOT (course.slug = ANY (?::text[]))"
+
+publicCourseEligibilityParams :: AppConfig -> Day -> [Text] -> [PersistValue]
+publicCourseEligibilityParams cfg today ambiguous =
+  [ PersistDay (ProductionCourse.minimumProductionStartDate today)
+  , PersistText (courseSlugFallback cfg)
+  , PersistArray (map PersistText ambiguous)
+  ]
+
+loadPublicCourseDocument
+  :: AppConfig -> Day -> Key Trials.Course -> SqlPersistT IO (Maybe PublicCourseDocument)
+loadPublicCourseDocument cfg today courseId = do
+  -- One SELECT snapshot binds fields, lead time and identity classification.
+  -- A later collision removal must not authorize fields read while ambiguous.
+  rows <- rawSql
+    "SELECT ??,\
+    \ (SELECT min(session.date) FROM course_session_model session\
+    \ WHERE session.course_id = course.id),\
+    \ CASE WHEN course.slug LIKE 'produccion-musical-%' THEN\
+    \ (SELECT COALESCE(jsonb_agg(identity.slug),'[]'::jsonb)::text FROM course identity)\
+    \ ELSE '[]' END FROM course WHERE course.id = ?"
+    [PersistInt64 (fromSqlKey courseId)]
+    :: SqlPersistT IO [(Entity Trials.Course, Single (Maybe Day), Single Text)]
+  pure $ case rows of
+    [(entity@(Entity _ course), Single firstSession, Single identities)] ->
+      case eitherDecode (fromStrict (TE.encodeUtf8 identities)) of
+        Right slugs
+          | Trials.courseSlug course `notElem` CoursePublic.ambiguousProductionCourseSlugs slugs ->
+              courseToDoc cfg today firstSession entity
+        _ -> Nothing
+    _ -> Nothing
+
+courseToDoc :: AppConfig -> Day -> Maybe Day -> Entity Trials.Course -> Maybe PublicCourseDocument
+courseToDoc cfg today firstSession (Entity _ c)
+  | not (CoursePublic.isCurrentPublicCourseIdentity
+      (courseSlugFallback cfg) today (Trials.courseSlug c) firstSession) = Nothing
+  | otherwise = Just PublicCourseDocument
+    { courseDocumentSlug = Trials.courseSlug c
+    , courseDocumentContent = T.intercalate " · " (catMaybes
         [ Just ("Curso: " <> Trials.courseTitle c)
         , ("Subtítulo: " <>) <$> nonEmpty (Trials.courseSubtitle c)
         , ("Formato: " <>) <$> nonEmpty (Trials.courseFormat c)
@@ -208,357 +271,40 @@ courseToDoc (Entity _ c) =
         , ("Inicio: " <>) <$> (formatStartHour <$> Trials.courseSessionStartHour c)
         , ("Duración sesión: " <>) <$> (formatHours <$> Trials.courseSessionDurationHours c)
         , ("Ubicación: " <>) <$> nonEmpty (Trials.courseLocationLabel c)
-        , ("Mapa: " <>) <$> nonEmpty (Trials.courseLocationMapUrl c)
-        , ("WhatsApp: " <>) <$> nonEmpty (Trials.courseWhatsappCtaUrl c)
-        , ("Landing: " <>) <$> nonEmpty (Trials.courseLandingUrl c)
+        , ("Mapa: " <>) <$> CoursePublic.sanitizeStoredCoursePublicUrl
+            "locationMapUrl" (Trials.courseLocationMapUrl c)
+        , ("WhatsApp: " <>) <$> CoursePublic.sanitizeStoredCoursePublicUrl
+            "whatsappCtaUrl" (Trials.courseWhatsappCtaUrl c)
+        , ("Landing: " <>) <$> CoursePublic.sanitizeStoredCoursePublicUrl
+            "landingUrl" (Trials.courseLandingUrl c)
         , ("DAWs: " <>) <$> nonEmptyList (Trials.courseDaws c)
         , ("Incluye: " <>) <$> nonEmptyList (Trials.courseIncludes c)
         , ("Instructor: " <>) <$> nonEmpty (Trials.courseInstructorName c)
         , ("Bio instructor: " <>) <$> nonEmpty (Trials.courseInstructorBio c)
-        , ("Avatar instructor: " <>) <$> nonEmpty (Trials.courseInstructorAvatarUrl c)
+        , ("Avatar instructor: " <>) <$> CoursePublic.sanitizeStoredCoursePublicUrl
+            "instructorAvatarUrl" (Trials.courseInstructorAvatarUrl c)
         ])
-    , rdMetadata = object ["slug" .= Trials.courseSlug c]
     }
   where
     formatStartHour hour = T.pack (show hour) <> ":00"
     formatHours hours = T.pack (show hours) <> "h"
 
-serviceToDoc :: Entity M.ServiceCatalog -> RagDocument
-serviceToDoc (Entity sid s) =
-  RagDocument
-    { rdSource = "service"
-    , rdSourceId = Just (T.pack (show (fromSqlKey sid)))
-    , rdContent = T.intercalate " · " (catMaybes
-        [ Just ("Servicio: " <> M.serviceCatalogName s)
-        , Just ("Tipo: " <> T.pack (show (M.serviceCatalogKind s)))
-        , Just ("Modelo: " <> T.pack (show (M.serviceCatalogPricingModel s)))
-        , ("Tarifa base: " <>) <$> (formatCents <$> M.serviceCatalogDefaultRateCents s <*> pure (M.serviceCatalogCurrency s))
-        , ("Unidad: " <>) <$> nonEmpty (M.serviceCatalogBillingUnit s)
-        , ("Impuestos: " <>) <$> fmap formatTax (M.serviceCatalogTaxBps s)
-        , Just ("Activo: " <> boolLabel (M.serviceCatalogActive s))
-        ])
-    , rdMetadata = object ["serviceId" .= fromSqlKey sid]
-    }
-  where
-    formatCents cents currency = formatMoney cents currency
-    formatTax bps = T.pack (show bps) <> " bps"
-
-campaignToDoc :: Entity ME.Campaign -> RagDocument
-campaignToDoc (Entity cid c) =
-  RagDocument
-    { rdSource = "campaign"
-    , rdSourceId = Just (T.pack (show (fromSqlKey cid)))
-    , rdContent = T.intercalate " · " (catMaybes
-        [ Just ("Campaña: " <> ME.campaignName c)
-        , ("Objetivo: " <>) <$> nonEmpty (ME.campaignObjective c)
-        , ("Plataforma: " <>) <$> nonEmpty (ME.campaignPlatform c)
-        , Just ("Estado: " <> ME.campaignStatus c)
-        , ("Presupuesto: " <>) <$> fmap (\cents -> formatMoney cents "USD") (ME.campaignBudgetCents c)
-        , ("Inicio: " <>) <$> (formatDay <$> ME.campaignStartDate c)
-        , ("Fin: " <>) <$> (formatDay <$> ME.campaignEndDate c)
-        ])
-    , rdMetadata = object ["campaignId" .= fromSqlKey cid]
-    }
-  where
-    formatDay day = T.pack (formatTime defaultTimeLocale "%Y-%m-%d" day)
-
-adToDoc :: Entity ME.AdCreative -> RagDocument
-adToDoc (Entity aid a) =
-  RagDocument
-    { rdSource = "ad"
-    , rdSourceId = Just (T.pack (show (fromSqlKey aid)))
-    , rdContent = T.intercalate " · " (catMaybes
-        [ Just ("Anuncio: " <> ME.adCreativeName a)
-        , ("Canal: " <>) <$> nonEmpty (ME.adCreativeChannel a)
-        , ("Audiencia: " <>) <$> nonEmpty (ME.adCreativeAudience a)
-        , ("Landing: " <>) <$> nonEmpty (ME.adCreativeLandingUrl a)
-        , ("CTA: " <>) <$> nonEmpty (ME.adCreativeCta a)
-        , ("Estado: " <>) <$> nonEmpty (Just (ME.adCreativeStatus a))
-        , ("Notas: " <>) <$> nonEmpty (ME.adCreativeNotes a)
-        ])
-    , rdMetadata = object
-        [ "adId" .= fromSqlKey aid
-        , "campaignId" .= fmap fromSqlKey (ME.adCreativeCampaignId a)
-        ]
-    }
-
-roomToDoc :: Entity ME.Room -> RagDocument
-roomToDoc (Entity rid r) =
-  RagDocument
-    { rdSource = "room"
-    , rdSourceId = Just (toPathPiece rid)
-    , rdContent = T.intercalate " · " (catMaybes
-        [ Just ("Sala: " <> ME.roomName r)
-        , Just ("Reservable: " <> boolLabel (ME.roomIsBookable r))
-        , ("Capacidad: " <>) <$> fmap (T.pack . show) (ME.roomCapacity r)
-        , ("Canales: " <>) <$> fmap (T.pack . show) (ME.roomChannelCount r)
-        , ("Sample rate: " <>) <$> fmap (T.pack . show) (ME.roomDefaultSampleRate r)
-        , ("Patchbay: " <>) <$> nonEmpty (ME.roomPatchbayNotes r)
-        ])
-    , rdMetadata = object ["roomId" .= toPathPiece rid]
-    }
-
-brainEntryToDoc :: Entity ME.StudioBrainEntry -> RagDocument
-brainEntryToDoc (Entity bid entry) =
-  RagDocument
-    { rdSource = "studio_brain"
-    , rdSourceId = Just (T.pack (show (fromSqlKey bid)))
-    , rdContent = T.intercalate " · " (catMaybes
-        [ Just ("Tema: " <> ME.studioBrainEntryTitle entry)
-        , ("Categoría: " <>) <$> nonEmpty (ME.studioBrainEntryCategory entry)
-        , ("Tags: " <>) <$> nonEmptyList (ME.studioBrainEntryTags entry)
-        , Just ("Detalle: " <> ME.studioBrainEntryBody entry)
-        ])
-    , rdMetadata = object
-        [ "brainEntryId" .= fromSqlKey bid
-        , "category" .= ME.studioBrainEntryCategory entry
-        , "tags" .= fromMaybe [] (ME.studioBrainEntryTags entry)
-        ]
-    }
-
-resourceToDoc :: Entity M.Resource -> RagDocument
-resourceToDoc (Entity rid r) =
-  RagDocument
-    { rdSource = "resource"
-    , rdSourceId = Just (T.pack (show (fromSqlKey rid)))
-    , rdContent = T.intercalate " · " (catMaybes
-        [ Just ("Recurso: " <> M.resourceName r)
-        , Just ("Tipo: " <> T.pack (show (M.resourceResourceType r)))
-        , ("Capacidad: " <>) <$> fmap (T.pack . show) (M.resourceCapacity r)
-        , Just ("Activo: " <> boolLabel (M.resourceActive r))
-        , Just ("Slug: " <> M.resourceSlug r)
-        ])
-    , rdMetadata = object ["resourceId" .= fromSqlKey rid]
-    }
-
-buildAvailabilityDocs :: AppConfig -> UTCTime -> [Entity M.Resource] -> SqlPersistT IO [RagDocument]
-buildAvailabilityDocs cfg now resources = do
-  let windowSeconds = fromIntegral (ragAvailabilityDays cfg) * 86400
-      windowEnd = addUTCTime windowSeconds now
-      resourceMap = Map.fromList [(entityKey r, entityVal r) | r <- resources]
-      resourceName rid = M.resourceName <$> Map.lookup rid resourceMap
-      resourceType rid = M.resourceResourceType <$> Map.lookup rid resourceMap
-  bookings <- selectList
-    [ M.BookingStartsAt <=. windowEnd
-    , M.BookingEndsAt >=. now
-    , M.BookingStatus !=. M.Cancelled
-    ]
-    [Asc M.BookingStartsAt]
-  let bookingIds = map entityKey bookings
-      bookingMap = Map.fromList [(entityKey b, entityVal b) | b <- bookings]
-  bookingResources <- if null bookingIds
-    then pure []
-    else selectList [M.BookingResourceBookingId <-. bookingIds] []
-
-  classSessions <- selectList
-    [ Trials.ClassSessionStartAt <=. windowEnd
-    , Trials.ClassSessionEndAt >=. now
-    ]
-    [Asc Trials.ClassSessionStartAt]
-  trialAssignments <- selectList
-    [ Trials.TrialAssignmentStartAt <=. windowEnd
-    , Trials.TrialAssignmentEndAt >=. now
-    ]
-    [Asc Trials.TrialAssignmentStartAt]
-  teacherAvailability <- selectList
-    [ Trials.TeacherAvailabilityStartAt <=. windowEnd
-    , Trials.TeacherAvailabilityEndAt >=. now
-    ]
-    [Asc Trials.TeacherAvailabilityStartAt]
-
-  let subjectIds =
-        foldr (\sid acc -> Map.insert sid () acc) Map.empty
-          [ Trials.classSessionSubjectId (entityVal cs)
-          | cs <- classSessions
-          ] <> foldr (\sid acc -> Map.insert sid () acc) Map.empty
-          [ Trials.teacherAvailabilitySubjectId (entityVal ta)
-          | ta <- teacherAvailability
-          ]
-      teacherIds =
-        foldr (\tid acc -> Map.insert tid () acc) Map.empty
-          [ Trials.classSessionTeacherId (entityVal cs)
-          | cs <- classSessions
-          ] <> foldr (\tid acc -> Map.insert tid () acc) Map.empty
-          [ Trials.teacherAvailabilityTeacherId (entityVal ta)
-          | ta <- teacherAvailability
-          ]
-  subjects <- if Map.null subjectIds
-    then pure []
-    else selectList [Trials.SubjectId <-. Map.keys subjectIds] []
-  teachers <- if Map.null teacherIds
-    then pure []
-    else selectList [M.PartyId <-. Map.keys teacherIds] []
-  let subjectMap = Map.fromList [(entityKey s, entityVal s) | s <- subjects]
-      teacherMap = Map.fromList [(entityKey t, entityVal t) | t <- teachers]
-      bookingEvents =
-        [ mkAvailabilityEvent
-            rid
-            (M.bookingStartsAt booking)
-            (M.bookingEndsAt booking)
-            "booking"
-            (formatBookingDoc resName resType booking)
-        | Entity _ br <- bookingResources
-        , let rid = M.bookingResourceResourceId br
-        , Just booking <- [Map.lookup (M.bookingResourceBookingId br) bookingMap]
-        , let resName = resourceName rid
-        , let resType = resourceType rid
-        ]
-      classEvents =
-        [ mkAvailabilityEvent
-            rid
-            (Trials.classSessionStartAt sess)
-            (Trials.classSessionEndAt sess)
-            "class_session"
-            (formatClassSessionDoc resName resType sess subjectMap teacherMap)
-        | Entity _ sess <- classSessions
-        , let rid = Trials.classSessionRoomId sess
-        , let resName = resourceName rid
-        , let resType = resourceType rid
-        ]
-      trialEvents =
-        [ mkAvailabilityEvent
-            rid
-            (Trials.trialAssignmentStartAt ta)
-            (Trials.trialAssignmentEndAt ta)
-            "trial_assignment"
-            (formatTrialAssignmentDoc resName resType ta)
-        | Entity _ ta <- trialAssignments
-        , let rid = Trials.trialAssignmentRoomId ta
-        , let resName = resourceName rid
-        , let resType = resourceType rid
-        ]
-      availabilityEvents =
-        [ mkAvailabilityEvent
-            rid
-            (Trials.teacherAvailabilityStartAt ta)
-            (Trials.teacherAvailabilityEndAt ta)
-            "availability"
-            (formatTeacherAvailabilityDoc resName resType ta subjectMap teacherMap)
-        | Entity _ ta <- teacherAvailability
-        , let rid = Trials.teacherAvailabilityRoomId ta
-        , let resName = resourceName rid
-        , let resType = resourceType rid
-        ]
-      allEvents = bookingEvents ++ classEvents ++ trialEvents ++ availabilityEvents
-      overlapping = filter (\ev -> availabilityOverlaps now windowEnd (aeStart ev) (aeEnd ev)) allEvents
-      grouped = Map.fromListWith (++)
-        [ (aeResourceId ev, [ev]) | ev <- overlapping ]
-      limited = concatMap (take (ragAvailabilityPerResource cfg) . sortOn aeStart) (Map.elems grouped)
-  pure (map aeDoc limited)
-
-formatBookingDoc
-  :: Maybe Text
-  -> Maybe M.ResourceType
-  -> M.Booking
-  -> Text
-formatBookingDoc resName resType booking =
-  T.intercalate " · " (catMaybes
-    [ Just ("Recurso ocupado: " <> fromMaybe "Recurso" resName)
-    , ("Tipo: " <>) <$> fmap (T.pack . show) resType
-    , Just ("Título: " <> M.bookingTitle booking)
-    , ("Servicio: " <>) <$> nonEmpty (M.bookingServiceType booking)
-    , Just ("Estado: " <> T.pack (show (M.bookingStatus booking)))
-    , Just ("Desde: " <> formatUtc (M.bookingStartsAt booking))
-    , Just ("Hasta: " <> formatUtc (M.bookingEndsAt booking))
-    ])
-
-formatClassSessionDoc
-  :: Maybe Text
-  -> Maybe M.ResourceType
-  -> Trials.ClassSession
-  -> Map.Map Trials.SubjectId Trials.Subject
-  -> Map.Map M.PartyId M.Party
-  -> Text
-formatClassSessionDoc resName resType sess subjectMap teacherMap =
-  T.intercalate " · " (catMaybes
-    [ Just ("Sala ocupada: " <> fromMaybe "Sala" resName)
-    , ("Tipo: " <>) <$> fmap (T.pack . show) resType
-    , ("Materia: " <>) <$> (Trials.subjectName <$> Map.lookup (Trials.classSessionSubjectId sess) subjectMap)
-    , ("Profesor: " <>) <$> (partyName <$> Map.lookup (Trials.classSessionTeacherId sess) teacherMap)
-    , Just ("Desde: " <> formatUtc (Trials.classSessionStartAt sess))
-    , Just ("Hasta: " <> formatUtc (Trials.classSessionEndAt sess))
-    ])
-
-formatTrialAssignmentDoc
-  :: Maybe Text
-  -> Maybe M.ResourceType
-  -> Trials.TrialAssignment
-  -> Text
-formatTrialAssignmentDoc resName resType ta =
-  T.intercalate " · " (catMaybes
-    [ Just ("Sala ocupada (trial): " <> fromMaybe "Sala" resName)
-    , ("Tipo: " <>) <$> fmap (T.pack . show) resType
-    , Just ("Desde: " <> formatUtc (Trials.trialAssignmentStartAt ta))
-    , Just ("Hasta: " <> formatUtc (Trials.trialAssignmentEndAt ta))
-    ])
-
-formatTeacherAvailabilityDoc
-  :: Maybe Text
-  -> Maybe M.ResourceType
-  -> Trials.TeacherAvailability
-  -> Map.Map Trials.SubjectId Trials.Subject
-  -> Map.Map M.PartyId M.Party
-  -> Text
-formatTeacherAvailabilityDoc resName resType ta subjectMap teacherMap =
-  T.intercalate " · " (catMaybes
-    [ Just ("Sala disponible: " <> fromMaybe "Sala" resName)
-    , ("Tipo: " <>) <$> fmap (T.pack . show) resType
-    , ("Materia: " <>) <$> (Trials.subjectName <$> Map.lookup (Trials.teacherAvailabilitySubjectId ta) subjectMap)
-    , ("Profesor: " <>) <$> (partyName <$> Map.lookup (Trials.teacherAvailabilityTeacherId ta) teacherMap)
-    , Just ("Desde: " <> formatUtc (Trials.teacherAvailabilityStartAt ta))
-    , Just ("Hasta: " <> formatUtc (Trials.teacherAvailabilityEndAt ta))
-    ])
-
-data AvailabilityEvent = AvailabilityEvent
-  { aeResourceId :: M.ResourceId
-  , aeStart      :: UTCTime
-  , aeEnd        :: UTCTime
-  , aeDoc        :: RagDocument
-  }
-
+-- Retained pure compatibility helper; availability is no longer indexed.
 availabilityOverlaps :: UTCTime -> UTCTime -> UTCTime -> UTCTime -> Bool
 availabilityOverlaps windowStart windowEnd eventStart eventEnd =
   eventStart <= windowEnd && eventEnd >= windowStart
 
-mkAvailabilityEvent :: M.ResourceId -> UTCTime -> UTCTime -> Text -> Text -> AvailabilityEvent
-mkAvailabilityEvent rid start end kind content =
-  let sourceId =
-        T.intercalate
-          "|"
-          [ T.pack (show (fromSqlKey rid))
-          , kind
-          , formatUtcKey start
-          , formatUtcKey end
-          ]
-  in
-  AvailabilityEvent
-    { aeResourceId = rid
-    , aeStart = start
-    , aeEnd = end
-    , aeDoc = RagDocument
-        { rdSource = "availability"
-        , rdSourceId = Just sourceId
-        , rdContent = content
-        , rdMetadata = object
-            [ "kind" .= kind
-            , "resourceId" .= fromSqlKey rid
-            , "startsAt" .= formatUtc start
-            , "endsAt" .= formatUtc end
-            ]
-        }
-    }
-
-docToChunks :: AppConfig -> RagDocument -> [RagChunk]
-docToChunks cfg RagDocument{..} =
-  let chunks = chunkWords (ragChunkWords cfg) (ragChunkOverlap cfg) rdContent
+docToChunks :: AppConfig -> PublicCourseDocument -> [RagChunk]
+docToChunks cfg PublicCourseDocument{..} =
+  let chunks = chunkWords (ragChunkWords cfg) (ragChunkOverlap cfg) courseDocumentContent
   in zipWith
       (\idx content ->
         RagChunk
-          { rcSource = rdSource
-          , rcSourceId = rdSourceId
+          { rcSource = "course"
+          , rcSourceId = Just courseDocumentSlug
           , rcChunkIndex = idx
           , rcContent = content
-          , rcMetadata = rdMetadata
+          , rcMetadata = object ["slug" .= courseDocumentSlug]
           })
       [0..]
       chunks
@@ -575,26 +321,22 @@ chunkWords maxWords overlap txt =
   in filter (not . T.null) (map chunkAt starts)
 
 replaceRagChunks :: [RagChunk] -> [[Double]] -> SqlPersistT IO ()
+-- runSqlPool owns the transaction; do not commit before deleting old rows.
 replaceRagChunks chunks embeddings = do
-  transactionSave
-  let doReplace = do
-        rawExecute "DELETE FROM rag_chunk" []
-        forM_ (zip chunks embeddings) $ \(RagChunk{..}, emb) -> do
-          let values =
-                [ PersistText rcSource
-                , maybe PersistNull PersistText rcSourceId
-                , PersistInt64 (fromIntegral rcChunkIndex)
-                , PersistText rcContent
-                , PersistText (jsonText rcMetadata)
-                , PersistText (vectorText emb)
-                ]
-          rawExecute
-            "INSERT INTO rag_chunk (source, source_id, chunk_index, content, metadata, embedding, updated_at) \
-            \VALUES (?, ?, ?, ?, ?::jsonb, ?::vector, now())"
-            values
-  doReplace `catchAny` \err -> do
-    transactionUndo
-    throwM err
+  rawExecute "DELETE FROM rag_chunk" []
+  forM_ (zip chunks embeddings) $ \(RagChunk{..}, emb) -> do
+    let values =
+          [ PersistText rcSource
+          , maybe PersistNull PersistText rcSourceId
+          , PersistInt64 (fromIntegral rcChunkIndex)
+          , PersistText rcContent
+          , PersistText (jsonText rcMetadata)
+          , PersistText (vectorText emb)
+          ]
+    rawExecute
+      "INSERT INTO rag_chunk (source, source_id, chunk_index, content, metadata, embedding, updated_at) \
+      \VALUES (?, ?, ?, ?, ?::jsonb, ?::vector, now())"
+      values
 
 loadRagEmbeddingType :: SqlPersistT IO (Maybe Text)
 loadRagEmbeddingType = do
@@ -749,17 +491,21 @@ selectRagChunks cfg embedding =
     if not exists
       then pure []
       else do
+        today <- utctDay <$> liftIO getCurrentTime
+        ambiguous <- loadAmbiguousProductionSlugs
         rows <- rawSql
           -- Current callers produce customer-facing replies. Internal chunks
           -- have no object authority here. Use the index only to rank public
           -- course IDs; render current public fields, never cached raw content.
-          "SELECT c.id FROM rag_chunk chunk JOIN course c ON c.slug = chunk.source_id\
-          \ WHERE chunk.source = 'course'\
-          \ ORDER BY embedding <=> ?::vector LIMIT ?"
-          [PersistText vector, PersistInt64 limitVal] :: SqlPersistT IO [Single Int64]
+          ("SELECT course.id FROM rag_chunk chunk JOIN course ON course.slug = chunk.source_id\
+          \ WHERE chunk.source = 'course' AND " <> publicCourseEligibilitySql
+          <> " ORDER BY embedding <=> ?::vector LIMIT ?")
+          (publicCourseEligibilityParams cfg today ambiguous
+            <> [PersistText vector, PersistInt64 limitVal])
+          :: SqlPersistT IO [Single Int64]
         docs <- forM rows $ \(Single courseId) -> do
-          course <- getEntity (toSqlKey courseId :: Key Trials.Course)
-          pure (rdContent . courseToDoc <$> course)
+          doc <- loadPublicCourseDocument cfg today (toSqlKey courseId)
+          pure (courseDocumentContent <$> doc)
         pure (catMaybes docs)
 
 embedTexts :: AppConfig -> [Text] -> IO (Either Text [[Double]])
@@ -1086,12 +832,6 @@ isUnquotedOpenAIEmbeddingSecretValueEnd :: Char -> Bool
 isUnquotedOpenAIEmbeddingSecretValueEnd ch =
   isSpace ch || ch `elem` ("&,;}]" :: String)
 
-formatUtc :: UTCTime -> Text
-formatUtc ts = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" ts)
-
-formatUtcKey :: UTCTime -> Text
-formatUtcKey ts = T.pack (formatTime defaultTimeLocale "%Y%m%dT%H%M%S" ts)
-
 formatMoney :: Int -> Text -> Text
 formatMoney cents currency =
   let amount = fromIntegral cents / 100 :: Double
@@ -1125,17 +865,6 @@ nonEmptyList Nothing = Nothing
 nonEmptyList (Just xs) =
   let cleaned = map T.strip (filter (not . T.null) xs)
   in if null cleaned then Nothing else Just (T.intercalate ", " cleaned)
-
-boolLabel :: Bool -> Text
-boolLabel True = "sí"
-boolLabel False = "no"
-
-partyName :: M.Party -> Text
-partyName party =
-  let display = T.strip (M.partyDisplayName party)
-  in if T.null display
-       then fromMaybe "Sin nombre" (M.partyLegalName party)
-       else display
 
 ragTableExists :: SqlPersistT IO Bool
 ragTableExists = do

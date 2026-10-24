@@ -128,17 +128,26 @@
       "id": "SYS-VERIFY-002",
       "statement": "A failed, incomplete or source-stale formal execution must never be admitted as passing evidence; relevant changes must trigger fresh checks.",
       "authority": "approved",
-      "source": "User audit instruction 2026-09-18 section 8",
+      "source": "User audit instruction 2026-09-18 section 8; user consolidated audit 2026-10-13 sections 8, 9, 24",
       "property": "admit iff successful exit, no signal/error, completed suite, unchanged source digest",
-      "contract": "scripts/__tests__/verification-evidence.test.mjs",
+      "contract": "formal/system/alloy-negative-controls.md",
       "implementation": [
         "scripts/lib/verification-evidence.mjs",
         "scripts/verify-system-evidence.mjs",
         ".github/workflows/event-operations-formal.yml",
-        "scripts/lib/formal-result-summary.mjs"
+        "scripts/lib/formal-result-summary.mjs",
+        "scripts/verification-report.py",
+        "formal/system/receipt-admission.md",
+        "scripts/install-proof-checkers.py",
+        "scripts/verify-proof-certificates.py",
+        "formal/system/certificate-tools.json",
+        "formal/system/proof-certificates.md",
+        "scripts/lib/alloy-controls.mjs",
+        "scripts/verify-alloy-controls.mjs",
+        "scripts/quality-repo.sh"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof.",
-      "evidence": "formal CI source/result manifests and regression output",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs.",
+      "evidence": "formal CI source/result manifests and regression output; independent CPC result.json, exact SMT/proof/signature hashes, reference-binding and incompleteness controls",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -172,15 +181,21 @@
       "idempotency": "No additional runtime retry permission; repeat checks must bind to their actual inputs.",
       "failure": "Reject the invalid operation or verification result as defined by the mapped contract.",
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
-      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label.",
+      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label. The exact-candidate assurance report keeps PROVEN/REFUTED/UNPROVEN/NOT_APPLICABLE separate by evidence category; replayable arithmetic inputs cannot promote whole requirements or refinement. Release remains blocked with all critical gaps enumerated. Retain original/mutated Alloy source hashes, exact command scopes, named results, solver receipts and counterexample instances.",
       "tests": [
         "scripts/__tests__/verification-evidence.test.mjs",
-        "scripts/__tests__/formal-result-summary.test.mjs"
+        "scripts/__tests__/formal-result-summary.test.mjs",
+        "scripts/test-verification-report.py",
+        "formal/system/receipt-admission-counterexample.json",
+        "scripts/test-proof-certificates.py",
+        "scripts/__tests__/alloy-controls.test.mjs",
+        "scripts/__tests__/event-raci-editor-context-runner.test.mjs"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
       "ambiguity": [
-        "Full cross-system refinement and current deployed correspondence remain unverified."
+        "Full cross-system refinement and current deployed correspondence remain unverified.",
+        "Alloy mutation sensitivity is not a proof that the modeled facts correspond to every implementation guard. Other formal suites retain their separate verification obligations."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -922,7 +937,7 @@
       "observability": "Exact source fingerprint, Mobile pin, command, result and negative-control log.",
       "authority": "approved",
       "source": "User specification-conformance instruction 2026-10-04, sections 3, 9, 10, 19 and 24",
-      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions.",
+      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions. Catalog refresh preserves historical review provenance while recomputing discovery counters.",
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/specification-conformance.py",
@@ -938,7 +953,7 @@
         "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [],
-      "verification": "Executable conformance and mutation tests; not a whole-program proof.",
+      "verification": "Executable conformance and mutation tests; not a whole-program proof. Catalog reconciliation retains historical retirement/provenance sections while recalculating current counters; an original-generator negative control demonstrates the regression.",
       "evidence": "Fresh candidate test receipts under formal/system/evidence or externally retained run directory.",
       "status": "specified and implemented",
       "critical": true,
@@ -955,7 +970,7 @@
     {
       "id": "SYS-STATE-001",
       "title": "Declared lifecycle machines correspond to the migrated schema",
-      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision. Where a backend validator's allowedTransitions list enforces a machine and is bound, its transitions (rendered to stored state names) must equal the declared transitions under the same exact-deviation rule.",
+      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision. Where a backend validator's allowedTransitions list, targets function or membership relation enforces a machine and is bound, its transitions (rendered to stored state names) must equal the declared transitions under the same exact-deviation rule.",
       "domain": "SYS",
       "actors": [
         "Reviewer",
@@ -991,7 +1006,9 @@
       "effects": [
         "Domo quote model corrected to ADR-0114 (AUTHORITY-047).",
         "Distribution and royalty statement divergences recorded as SPECIFICATION AMBIGUITY (AUTHORITY-048).",
-        "Marketplace rental model gains returned_pending_inspection -> disputed and deposit_refund_due -> disputed, matching the validator and the ADR-0110 database table (AUTHORITY-053)."
+        "Marketplace rental model gains returned_pending_inspection -> disputed and deposit_refund_due -> disputed, matching the validator and the ADR-0110 database table (AUTHORITY-053).",
+        "Operations work item bound through its targets function; twenty transitions equal the declared machine (AUTHORITY-080).",
+        "Directory profile, claim, classified, application and invitation bound through their membership relations; each equals the declared machine (AUTHORITY-081)."
       ],
       "authorization": "Not applicable; schema and declaration check only.",
       "privacy": "Uses schema catalog only; no row data.",
@@ -1008,7 +1025,11 @@
         "scripts/check-state-machines.py",
         "formal/system/state-machine-bindings.json",
         "docs/revenue-platform/formal-model.yaml",
-        "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs"
+        "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Types.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs"
       ],
       "tests": [
         "scripts/test-state-machines.py",
@@ -1016,18 +1037,18 @@
         ".github/workflows/event-operations-formal.yml"
       ],
       "formalModels": [],
-      "verification": "Catalog comparison, plus static comparison of four bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals); guards and effects are not covered",
-      "evidence": "Gate output on the migrated CI database, twelve database negative controls and seven database-free validator controls",
+      "verification": "Catalog comparison, plus static comparison of ten bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals, operations work items, directory profiles, claims, classifieds, applications and invitations); guards, actors and effects are not covered",
+      "evidence": "Gate output on the migrated CI database, twelve database negative controls and fifty-five database-free validator controls",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the four bound validators' transition lists; no claim about guards, effects or unbound application code.",
+      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the ten bound validators' transition relations; no claim about guards, actors, effects or unbound application code.",
       "ambiguity": [
         "Distribution and royalty statement vocabularies need a product decision before runtime is built.",
-        "Ten machines still enforce transitions only in unbound application code; distribution renders states with show and awaits the AUTHORITY-048 vocabulary decision."
+        "Two machines still enforce a transition relation only in unbound application code (marketplace sale fulfillment, whose validator is method-specific; distribution, which renders states with show and awaits the AUTHORITY-048 vocabulary decision); provider event has only a terminal-status guard, and no validator was found for refund, moderation case, review or royalty statement."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Gate and controls pass on local PG16 and CI PG17 migration-tests; application-level transition evidence remains."
+        "reason": "Gate and controls pass on local PG16 and CI PG17 migration-tests; ten validators compared; application-level evidence for the remaining machines remains."
       }
     },
     {
@@ -1096,7 +1117,7 @@
       "formalModels": [],
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for finite middleware cases and observed configuration; deployed correction pending.",
+      "confidence": "High for finite middleware cases; October13 configuration and two health-origin requests observed. Full deployed contract remains unverified.",
       "ambiguity": [
         "Endpoint CSRF defenses and every alternate deployment environment are not established by these CORS tests."
       ],
@@ -1108,7 +1129,7 @@
       "property": "Production credentialed origin admission requires an explicitly trusted origin; arbitrary origins cannot reach the handler.",
       "contract": "formal/system/cors-boundary.md",
       "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins.",
-      "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts."
+      "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts. October13 runtime configuration and two health-origin smoke observations are retained in formal/system/evidence/2026-10-13-runtime-controls/; they supersede the October4 allow-all observation for that instant."
     },
     {
       "id": "AUTH-REGISTRY-001",
@@ -1158,11 +1179,15 @@
       "implementation": [
         "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
         "tdf-hq/assets/feature-registry.json",
-        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "scripts/verify-auth-predicates.py"
       ],
       "tests": [
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
-        "scripts/audit-feature-registry.mjs"
+        "scripts/audit-feature-registry.mjs",
+        "scripts/test-auth-predicates.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -1178,7 +1203,7 @@
       "authority": "Existing RecordsIngestion backend strict-administrator and ModuleAdmin boundary",
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
-      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation.",
+      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation. Conditional source-derived authorization predicate equivalences and supporting cardinality lemmas: formal/system/auth-predicates.md. Full endpoint and refinement obligations remain UNPROVEN.",
       "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
     },
     {
@@ -1520,7 +1545,7 @@
         "reason": "Candidate repair and executable checks exist; exact final candidate runtime, full gates, review and deployment remain pending."
       },
       "source": "formal/system/identity-lifecycle.md; OWASP Forgot Password Cheat Sheet; source-derived absence of baseline expiry",
-      "verification": "Int64 properties, actual HTTP/PostgreSQL post-lock clock checks and injection failures, bounded model with four controls",
+      "verification": "Int64 properties, actual HTTP/PostgreSQL post-lock clock checks and injection failures, bounded model with four controls; four conditional source-derived SMT time contracts with serialized replay (full transaction/refinement UNPROVEN), finite PostgreSQL boundary probes",
       "evidence": "Exact-candidate gate receipts, bounded checker logs and HTTP runner output",
       "domain": "ID",
       "privacy": "Fixtures are synthetic and local; never log production tokens, hashes or customer details.",
@@ -1533,7 +1558,10 @@
         "tdf-hq/test/TDF/ServerSpec.hs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/provider-rollback.test.mjs",
-        "scripts/test-auth-recovery-migration.sh"
+        "scripts/test-auth-recovery-migration.sh",
+        "scripts/test-recovery-expiry-verifier.py",
+        "scripts/recovery-time-boundaries.py",
+        "scripts/test-recovery-time-postgres.sh"
       ],
       "id": "ID-SESSION-003",
       "title": "Recovery challenges expire and bind the exact credential",
@@ -1578,7 +1606,9 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
         "scripts/production-release.mjs",
-        "scripts/production-migrations.json"
+        "scripts/production-migrations.json",
+        "scripts/verify-recovery-expiry.py",
+        "formal/system/recovery-expiry-arithmetic.json"
       ]
     },
     {
@@ -2220,9 +2250,9 @@
       "idempotency": "Read-only repeat observations do not mutate application state. Exclusive receipt creation rejects accidental overwrite.",
       "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider.",
       "recovery": "Retry observation after authorized configuration correction; retain previous receipts. No database restoration or image rollback is performed.",
-      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata.",
+      "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata. Known backend boolean controls must be represented even when absent; record CORS boolean aliases and preserve absent/empty/false distinctions. Conservative source discovery must reject newly introduced literal controls missing from the collector register.",
       "formalModels": [],
-      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established.",
+      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established. Boolean discovery includes literal parser-wrapped lookups and association-list lookups compared with all-boolean Just membership lists, without requiring a naming suffix; preparation accepts collector-valid raw spellings while requiring explicitly false destructive flags. Synthetic regressions only; this does not evaluate per-handler defaults or whitespace semantics.",
       "evidence": "Exact-revision inspection receipt and repository quality-gate logs.",
       "status": "specified and implemented",
       "confidence": "High within read-only target/disclosure guard scope; routine guarded release remains unimplemented.",
@@ -2230,7 +2260,8 @@
         "Absent environment variables need effective-default analysis.",
         "Container image/public version observations require artifact metadata correspondence before release.",
         "Optional event-operations flag-table absence and missing merchandise flag rows remain explicit unknowns; observed flag state alone is not authorization to enable or mount features.",
-        "The catalog-role SQL requires separately authorized provisioning; read-only monitoring does not authorize sending mail, suppressing recipients or modifying application records."
+        "The catalog-role SQL requires separately authorized provisioning; read-only monitoring does not authorize sending mail, suppressing recipients or modifying application records.",
+        "Lexical boolean discovery excludes computed environment names and does not resolve effective defaults or CORS alias precedence; that analysis must use the observed backend revision."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2246,14 +2277,16 @@
         "scripts/production_access.py",
         "scripts/production-catalog-inventory.mjs",
         "ops/hetzner/catalog-readonly-role.sql",
-        "scripts/mail-deliverability-monitor.py"
+        "scripts/mail-deliverability-monitor.py",
+        "scripts/lib/hetzner-preparation.mjs"
       ],
       "tests": [
         "scripts/test-hetzner-inspection.py",
         "scripts/__tests__/hetzner-inspection.test.mjs",
         "scripts/test_production_access.py",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
-        "scripts/test_mail_deliverability_monitor.py"
+        "scripts/test_mail_deliverability_monitor.py",
+        "scripts/__tests__/hetzner-preparation.test.mjs"
       ],
       "critical": false
     },
@@ -2326,7 +2359,7 @@
     {
       "authority": "inferred",
       "source": "ops/hetzner/README.md; formal/system/authority-decisions.json",
-      "contract": "ops/hetzner/README.md",
+      "contract": "formal/system/migration-correspondence.md",
       "domain": "DEPLOY",
       "actors": [
         "Release operator",
@@ -2358,19 +2391,29 @@
       ],
       "authorization": "Preparation is local inspection. Deployment requires independent exact-head review, merge, post-merge gates and a guarded executor.",
       "privacy": "Plans contain migration hashes and allowlisted identities, never SQL data, credentials or raw child-process diagnostics.",
-      "concurrency": "Source is immutable and the CLI checks checkout cleanliness/head before and after. A future executor must re-observe live state under its release lock; a recent observation does not prevent runtime races.",
+      "concurrency": "Source is immutable and the CLI checks checkout cleanliness/head before and after. The batch runs under one advisory lock and exits 3 while another migration holds it. Each ledger row commits in the transaction of its migration (a file's own COMMIT commits both), so a crash leaves effects and ledger row together or neither. A future executor must re-observe live state under its release lock; a recent observation does not prevent runtime races.",
       "idempotency": "Repeated preparation is observational; exclusive output creation prevents receipt overwrite.",
-      "failure": "Reject malformed, stale, future-dated, wrong-target, dirty-source or checksum-incompatible inputs without remote action.",
+      "failure": "Reject malformed, stale, future-dated, wrong-target, dirty-source or checksum-incompatible inputs without remote action. A failing migration leaves no effects and no ledger row; a held lock ends the batch with status 3 before touching anything (before 2026-10-12 the refusal exited 0 and the entrypoint reported success).",
       "recovery": "Preserve prior receipts and applied migration history. Correct source/input under review; never alter applied SQL to make the comparison pass.",
       "observability": "Record source revision, raw manifest hash, expanded migration checksums, applied source/checksum, input receipt hash, preparation source hash, timestamps, pending count and outstanding release gates.",
-      "formalModels": [],
-      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags. No model-to-whole-system proof.",
-      "evidence": "Exact-candidate test logs and preparation receipt; preparation is not a deployment receipt.",
+      "formalModels": [
+        "formal/event-operations/MigrationLedger.tla",
+        "formal/event-operations/MigrationLedger.cfg",
+        "formal/event-operations/MigrationLedgerRecordAfterCommit.cfg",
+        "formal/event-operations/MigrationLedgerBatchUnchecked.cfg",
+        "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg",
+        "formal/event-operations/MigrationLedgerUnknownAccepted.cfg"
+      ],
+      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags; bounded TLC check of MigrationLedger.tla (1,282,056 states, 334,720 distinct, depth 26) with four single-guard negative controls; the rendered batch run through psql against the migrated fixture (migration-batch-postgres.mjs): atomic ledger rows for files with and without their own transaction, the previous layout as a negative control, checksum drift, compatible checksums, unknown rows, holes, unrecorded effects, lock refusal status. No model-to-whole-system proof.",
+      "evidence": "Exact-candidate test logs and preparation receipt; preparation is not a deployment receipt. TLC runs registered in scripts/verify-event-operations-formal.sh; migration-batch-postgres.mjs in CI; the lock refusal exiting 0 reproduced with psql 16 on 2026-10-12.",
       "status": "specified and implemented",
-      "confidence": "High for tested source/ledger comparison boundary; live migration application and guarded recovery remain open.",
+      "confidence": "High for the tested source/ledger comparison and the batch semantics on the migrated fixture; live migration application and guarded recovery remain open.",
       "ambiguity": [
         "Runtime receipt trust is local and unsigned; a deployment executor must acquire fresh observations itself.",
-        "Provider flag changes caused by pending migrations still require restored-database rehearsal and comparison."
+        "Provider flag changes caused by pending migrations still require restored-database rehearsal and comparison.",
+        "The batch tolerates ledger rows its manifest does not know so an older image can start after a rollback; release preparation rejects them. A hole (a pending entry before an applied one) is applied after the later entry by the next batch; independence of such migrations is assumed (AUTHORITY-075).",
+        "Effects applied without a ledger row under the previous batch layout (or by hand) are re-applied by the next batch and need a forward repair when the SQL is not idempotent; the atomic row prevents new occurrences only.",
+        "The atomic ledger row requires every manifest entry (expanded SQL) to open at most one transaction, end with its COMMIT, never roll back and use no statement that refuses a transaction block; production-release.test.mjs checks every registered entry."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2378,18 +2421,24 @@
       },
       "id": "DEPLOY-MIGRATION-001",
       "title": "Immutable production migration correspondence before release",
-      "statement": "Release preparation must bind the exact candidate revision and every included SQL blob to the manifest, reject unrecognized or changed applied history, and retain every pending migration in manifest order. Preparation must not authorize production execution.",
+      "statement": "Release preparation must bind the exact candidate revision and every included SQL blob to the manifest, reject unrecognized or changed applied history, and retain every pending migration in manifest order. Preparation must not authorize production execution. The batch that applies pending migrations records each ledger row in the same transaction as the migration it describes, and refuses to proceed with a non-zero status while another migration holds the lock.",
       "property": "Every applied ledger entry occurs once in the manifest and matches its expanded checksum or an explicitly registered compatible checksum; every introduction commit is a candidate ancestor.",
       "implementation": [
         "scripts/lib/migration-contract.mjs",
         "scripts/lib/hetzner-preparation.mjs",
         "scripts/prepare-hetzner-release.mjs",
-        "scripts/production-release.mjs"
+        "scripts/production-release.mjs",
+        "scripts/lib/production-release.mjs",
+        "scripts/render-production-migration-batch.mjs",
+        "tdf-hq/production-entrypoint.sh"
       ],
       "tests": [
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
-        "scripts/__tests__/provider-rollback.test.mjs"
+        "scripts/__tests__/provider-rollback.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
+        "scripts/__tests__/production-entrypoint.test.mjs",
+        "scripts/test-automatic-migrations-production-schema.sh"
       ],
       "critical": true
     },
@@ -2599,10 +2648,12 @@
         "package-lock.json",
         "tdf-mobile/package-lock.json",
         "package.json",
-        "tdf-mobile/package.json"
+        "tdf-mobile/package.json",
+        "tdf-hq-ui/package.json"
       ],
       "tests": [
-        "scripts/__tests__/dependency-security.test.mjs"
+        "scripts/__tests__/dependency-security.test.mjs",
+        "tdf-hq-ui/src/api/socialV2.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -2717,7 +2768,7 @@
     {
       "authority": "reconciled",
       "source": "Production outage 2026-10-07 (restart rejected by the verifier after checkout.paypal.refunds was enabled); AUTHORITY-050",
-      "contract": "docs/automatic-production-migrations.md",
+      "contract": "formal/system/startup-gates.md",
       "domain": "DEPLOY",
       "actors": [
         "Production entrypoint",
@@ -2754,15 +2805,25 @@
       "concurrency": "Runs once per container start before the server accepts traffic.",
       "idempotency": "Repeated verification of an unchanged database is equivalent.",
       "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
-      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips verification only when the ledger is complete.",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and fly.toml set it true; the precheck requires it).",
       "observability": "Fixed exception text names the violated gate class.",
-      "formalModels": [],
-      "verification": "Executable SQL verification against a fully migrated PostgreSQL database",
-      "evidence": "Automatic-migration test accept/reject assertions and a failing run against the previous verifier",
+      "formalModels": [
+        "formal/event-operations/StartupGates.tla",
+        "formal/event-operations/StartupGates.cfg",
+        "formal/event-operations/StartupGatesStagedAccepted.cfg",
+        "formal/event-operations/StartupGatesMissingAccepted.cfg",
+        "formal/event-operations/StartupGatesEitherRejected.cfg",
+        "formal/event-operations/StartupGatesRequiredUnchecked.cfg"
+      ],
+      "verification": "Executable SQL verification against a fully migrated PostgreSQL database; every asserted production flag run through the real verification in each of its three states (42 runs, startup-gates-postgres.mjs) plus the approved baseline and both joint extremes of the either-state gates; one-state exhaustive TLC check of StartupGates.tla over all 4,782,969 flag assignments with four single-guard negative controls.",
+      "evidence": "Automatic-migrations rehearsal; startup-gates-postgres.mjs in CI; TLC runs registered in scripts/verify-event-operations-formal.sh.",
       "status": "specified and implemented",
-      "confidence": "High for the provider gate rule under the tested schema; other verifier checks are unchanged.",
+      "confidence": "High for the provider gate rule and the other asserted flags on the tested schema; production flag states unobserved.",
       "ambiguity": [
-        "Other startup assertions may encode states that later become approved; each needs the same review."
+        "The fourteen asserted flags and their accepted states are the complete startup gate policy as of 2026-10-12 (formal/system/startup-gates.md); enabling a staged, service-booking or course gate, or disabling a manual-settlement or marketplace gate, fails every later container start until the verifier changes (the 2026-10-07 incident class).",
+        "Production flag states are not observable from the repository; the policy is a precondition for flag changes.",
+        "The verifier also blocks startup on data toggles outside revenue_feature_flag: interaction_entity_kind artist_update must be disabled, security_role_assignment_policy artist.invitation.artist and classified_category artist-profile must be active, the directory artist-listing audit must report nothing, no suppressed imported directory event, catalog backfill run statuses and minimum active-row counts; each is a restart hazard of the same class and needs the same release discipline.",
+        "The startup verification runs only when AUTO_APPLY_PRODUCTION_MIGRATIONS is true (the shipped default); with it false the container starts with no verification at all."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2770,7 +2831,7 @@
       },
       "id": "DEPLOY-STARTUP-001",
       "title": "Startup schema verification accepts approved production state",
-      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate.",
+      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate. The verifier also requires the manual-settlement gates (checkout.bank_transfer, checkout.cash, checkout.pos) and the marketplace sales and rentals gates to exist enabled, and the service-booking and course checkout and recurring-billing gates to exist disabled; enabling or disabling any of these in production is a verifier change in the same release.",
       "property": "Every approved provider gate state passes startup verification; staged providers and missing gates fail",
       "implementation": [
         "scripts/lib/production-release.mjs",
@@ -2778,7 +2839,8 @@
       ],
       "tests": [
         "scripts/test-automatic-migrations-production-schema.sh",
-        "scripts/__tests__/production-release.test.mjs"
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/startup-gates-postgres.mjs"
       ],
       "critical": true
     },
@@ -3030,42 +3092,57 @@
       "forbiddenTransitions": [
         "Return a private availability/studio/campaign chunk.",
         "Return poisoned cached raw content for an otherwise valid public course.",
-        "Return deleted-course content from a stale index."
+        "Return deleted-course content from a stale index.",
+        "Return production metadata for an identity classified as ambiguous at metadata read."
       ],
       "effects": [
         "Only current public course documents reach the calling assistant adapter."
       ],
       "authorization": "The assistant requires authentication and Social Inbox access (AUTHORITY-049); customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
-      "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
-      "concurrency": "Candidate course identities and metadata are read during one retrieval transaction; deletion committed after a read may precede response delivery and is not linearized here.",
+      "privacy": "Private historical index contents stay excluded even before reindexing. PRIV-RAG-002 prohibits private material in future refresh payloads; historical provider retention remains a separate obligation.",
+      "concurrency": "Ranking and per-course metadata reads share one transaction but separate statement snapshots under the modeled Read Committed assumption. A deletion committed after metadata read may precede delivery; no delivery-time linearization is claimed. Current document construction reads course fields, earliest session and collision inputs in one SELECT snapshot; ranking and earlier pre-limit classification remain separate statements.",
       "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
       "failure": "Missing course rows and unsupported source kinds yield no eligible document. Existing database/provider failures retain adapter error handling.",
       "recovery": "Public metadata changes take effect on the next read; stale raw text need not be purged to enforce this retrieval boundary.",
-      "observability": "Synthetic anonymous HTTP checks observe private-source exclusion, poisoned-cache rejection, metadata freshness and deleted-course exclusion.",
+      "observability": "Synthetic staff-authenticated HTTP checks observe private-source exclusion including colliding course slugs, poisoned-cache rejection, metadata freshness and deleted-course exclusion. Anonymous and unprivileged assistant calls are denied.",
       "source": "Observed anonymous private-booking-content disclosure; formal/system/bookings.md customer-facing retrieval boundary.",
       "implementation": [
-        "tdf-hq/src/TDF/RagStore.hs"
+        "tdf-hq/src/TDF/RagStore.hs",
+        "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
+        "tdf-hq/src/TDF/PublicUrl.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Courses/Production.hs"
       ],
       "tests": [
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs",
+        "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/test/TDF/Test/DisposablePostgres.hs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/PublicKnowledgeRead.tla",
+        "formal/event-operations/PublicKnowledgeReadCollision.cfg",
+        "formal/event-operations/PublicKnowledgeReadMixedSnapshot.cfg"
+      ],
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
-        "Embedding-provider sharing, internal retention and curated conversation examples need separate privacy reconciliation.",
-        "Channel-specific provider delivery is not exercised by the anonymous HTTP fixture."
+        "Historical embedding-provider retention and curated conversation examples need separate privacy reconciliation.",
+        "Channel-specific provider delivery is not exercised by the staff-authenticated HTTP fixture."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Old-binary disclosure was reproduced; repaired HTTP checks and all channel integrations need execution evidence. No formal deletion linearization proof is claimed."
+        "reason": "Bounded model and source-mapped HTTP regressions cover the retrieval boundary; final candidate execution and deployed/channel/provider/retention evidence remain separate obligations."
       },
       "critical": true,
       "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
-      "property": "Every returned document is freshly rendered from an existing public course, never raw private indexed content.",
-      "contract": "formal/system/bookings.md",
-      "verification": "Anonymous HTTP on a fresh synthetic PostgreSQL database with private, poisoned, updated and deleted index fixtures.",
-      "evidence": "Preserved old-backend anonymous disclosure reproduction and exact-candidate booking-conformance HTTP artifact; repaired execution remains pending."
+      "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.; NoAmbiguousRead.",
+      "contract": "formal/system/public-knowledge-retrieval.md",
+      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with six named negative controls. Neither is a whole-program refinement proof. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits. Require exact Text-normalized production collision rejection before both selection limits and during metadata rendering. Six actual Store regressions cover ASCII/Unicode whitespace, case, limit starvation, new cached-read collisions and recovery; pure generated checks cover normalization, with named embedding/read collision counterexamples in the bounded models. Multiple-row normalization and delivery-time retraction remain outside the refinement claim. Course fields, earliest session and collision inputs must share one SQL SELECT snapshot; the mixed-snapshot control must fail NoAmbiguousRead. The fixture must use the shared parsed disposable-URI guard, admitting authenticated loopback postgres/postgresql URLs and allowing the CI service hostname only in explicit CI mode, while rejecting routing overrides before connecting.",
+      "evidence": "Historical disclosure reproduction is retained separately; exact candidate model/HTTP/CI receipts are required. New coverage must not inherit a historical green result."
     },
     {
       "id": "MEDIA-PERSIST-001",
@@ -3143,7 +3220,7 @@
       "critical": true,
       "ambiguity": [
         "Full upload lifecycle, DB/file atomicity, retries, retention, quotas and deletion require separate reconciliation.",
-        "Production storage rollout and coordinated backup/restore remain unimplemented and unverified."
+        "Canonical writable production bind observed October13; legacy file preservation, deployed startup admission and coordinated backup/restore remain unverified."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3153,7 +3230,7 @@
       "property": "Production starts only after private upload storage admission, and replacement preserves accepted legacy files.",
       "contract": "formal/system/private-upload-persistence.md",
       "verification": "Actual shell negative controls, digest-pinned synthetic Linux container replacement, redacted production mount inspection and guarded coordinated recovery verification.",
-      "evidence": "Exact-revision CI logs and private runtime receipts; current production observation is nonconforming, not repaired by source edits."
+      "evidence": "The October13 source-bound runtime receipt at formal/system/evidence/2026-10-13-runtime-controls/runtime.json observes the canonical writable private bind. It supersedes the October5 missing-mount observation, not the remaining preservation, startup, file-access and recovery obligations."
     },
     {
       "id": "SYS-API-003",
@@ -4060,7 +4137,7 @@
       "id": "MEDIA-DRIVE-001",
       "title": "Bind Drive upload retries to actor and exact request",
       "statement": "An existing Drive idempotency entry may be reused only when its stored versioned fingerprint matches the authenticated Party and effective filename, MIME, destination and file bytes; missing or conflicting binding rejects before provider mutation.",
-      "authority": "implementation safety repair under authorized conformance audit",
+      "authority": "implementation safety repair under authorized conformance audit; AUTHORITY-071",
       "domain": "MEDIA",
       "actors": [
         "Authorized operations actor",
@@ -4103,7 +4180,7 @@
       "failure": "Conflicts409 before create/permission; provider failures502; missing configuration503. Successful file create can precede a failed permission operation.",
       "recovery": "Preserve legacy and conflicting objects. Reconcile their provenance explicitly or choose a new intentional upload; never silently attach actor ownership. No production provider mutation during verification.",
       "observability": "Retain exact test revision, synthetic wire trace, command and result; never log credentials or uploaded user content.",
-      "source": "Server.uploadToDrive and findDriveUploadByIdempotencyKey; scripts/artist-enrichment.mjs caller; AUTHORITY-031",
+      "source": "Server.uploadToDrive and findDriveUploadByIdempotencyKey; scripts/artist-enrichment.mjs caller; AUTHORITY-031; formal/system/drive-replay.md",
       "property": "reuse implies stored fingerprint equals current actor-and-request fingerprint; conflict implies no subsequent provider mutation",
       "contract": "formal/system/drive-replay.md",
       "implementation": [
@@ -4111,15 +4188,25 @@
         "tdf-hq/src/TDF/API/Drive.hs",
         "tdf-hq/tdf-hq.cabal"
       ],
-      "verification": "In-memory HTTP transport tests inspect real multipart metadata and provider-effect order without sockets, DNS or credential refresh.",
-      "evidence": "tdf-hq/test/TDF/DriveReplaySpec.hs; current execution evidence pending",
+      "verification": "In-memory HTTP transport tests inspect real multipart metadata and provider-effect order without sockets, DNS or credential refresh. 2026-10-12: DriveReplay.tla states the reuse rule (ReuseBinds, NoForeignReuse, NoLegacyAdoption, ConflictNoMutation) with three single-guard controls; the Race configuration checks SingleObject and is an expected counterexample, recording that lookup-then-create gives no exactly-once guarantee. DriveReplaySpec: 9 examples pass on a local test binary built on 2026-10-12 from 86b6611fc, whose uploadToDrive, Drive API module and spec are byte-identical to main 7d4375550; a CI receipt on the merged SHA is still the required current evidence. The updated finite model partitions provider entries across two explicit folders, retains a same-folder race counterexample, and checks sequential cross-folder creation with a reachable two-object witness. A global-lookup mutation fails that cross-folder property; missing-folder lookup and mutable credential visibility are excluded.",
+      "evidence": "formal/system/drive-replay.md; DriveReplaySpec 9/9 on the 2026-10-12 local test binary (helper and spec byte-identical to main); a CI receipt on the merged SHA remains pending.",
       "status": "specified and implemented",
       "historicalStatus": "implementation-repair-awaiting-current-execution",
       "tests": [
         "tdf-hq/test/TDF/DriveReplaySpec.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/DriveReplay.tla",
+        "formal/event-operations/DriveReplay.cfg",
+        "formal/event-operations/DriveReplayUnchecked.cfg",
+        "formal/event-operations/DriveReplayActorIgnored.cfg",
+        "formal/event-operations/DriveReplayLegacyAdopted.cfg",
+        "formal/event-operations/DriveReplayRace.cfg",
+        "formal/event-operations/DriveReplayCrossFolder.cfg",
+        "formal/event-operations/DriveReplayCrossFolderObjects.cfg"
+      ],
       "confidence": "source-reviewed request binding; execution and deployment still pending",
       "ambiguity": [
         "Current production usage/legacy entry count unobserved.",
@@ -5124,15 +5211,15 @@
       "critical": true,
       "source": "formal/system/public-route-admission.md; audit of main 1f99d143900a67aa9b82f4138630684afbd7db2f on 2026-10-06; OWASP API Security Top 10 2023 API1 and API5",
       "status": "specified and implemented",
-      "confidence": "High for structural admission; handler enforcement verified only for repaired routes.",
+      "confidence": "High for structural admission; handler behaviour bounded by the denial sweep, with the capability comparison observed only where the probe reaches it.",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Admission gate, negative controls and served HTTP denial checks exist; two registered debts remain open."
+        "reason": "Admission gate, its controls and model, and the served denial sweep over every deny-boundary route pass; handler enforcement on records that only provider-backed intakes create rests on their own suites; no registered debt remains."
       },
-      "evidence": "Gate output, fourteen negative controls, served-application HTTP status checks and the PostgreSQL-backed booking conformance assistant checks",
+      "evidence": "Gate output, fourteen negative controls, four model controls, the served denial sweep (90 routes, two probes each) and the PostgreSQL-backed booking conformance checks",
       "observability": "Gate output names each offending method and path.",
       "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
-      "verification": "Deterministic declaration comparison plus scoped HTTP tests; no handler-level proof for unrepaired routes",
+      "verification": "Deterministic declaration comparison with fourteen gate controls; PublicRouteAdmission.tla states three of the gate's rules (unregistered, stale, mutating boundary) over every situation of three routes with four single-guard controls (header, query, body-shape, raw-mount, duplicate and debt-reference rules are not modelled); the PostgreSQL-backed booking conformance harness requests every registered deny-boundary route (90) without and with a wrong capability on the real backend and requires no success, no server fault, no fixture-private content (denial for most routes arises before the capability check: parsing, absent record, unconfigured provider), the anonymous status for a wrong bearer token on session routes and the anonymous value on the two anonymous-answer routes, and the marketplace cart readable only through its random UUIDv4 identifier. Records behind provider-backed intakes are not created by the sweep; their token checks rest on their own suites. Local HTTP fault fixtures require ordinary session/capability/operator 503 responses to fail the sweep; only the registered provider boundaries and named provider-gated route may return 503. Other provider 5xx responses remain faults. Payment-status polling authorizes the checkout/attempt/token binding before consulting its encryption key; actual handler regressions cover missing and invalid configuration, wrong tokens and identifiers, and authorized recovery of closed checkouts.",
       "id": "AUTH-PUBLIC-001",
       "title": "Reviewed admission of every unauthenticated route",
       "domain": "AUTH",
@@ -5180,7 +5267,7 @@
       "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
       "concurrency": "Static declaration check; no runtime concurrency assumption.",
       "idempotency": "Deterministic over the committed snapshot and register.",
-      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI.",
+      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI. A deny-boundary route that answers a caller without its capability with success, a server fault or private content fails the booking conformance harness.",
       "property": "Unauthenticated compiled surface equals the reviewed register and each entry satisfies its boundary's structural rule",
       "implementation": [
         "tdf-hq/src/TDF/API.hs",
@@ -5190,18 +5277,26 @@
         "scripts/check-public-routes.py",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
         "tdf-hq/src/TDF/Services/Stripe.hs",
-        "tdf-hq/src/TDF/Routes/Academy.hs"
+        "tdf-hq/src/TDF/Routes/Academy.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "scripts/test-public-routes.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/lib/public_routes_conformance.py",
+        "scripts/test-public-route-denial.py",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/PublicRouteAdmission.tla"
+      ],
       "ambiguity": [
-        "Handler enforcement of each registered capability is not mechanically verified.",
-        "Raw mounts may serve paths beyond their prefix."
+        "Raw mounts may serve paths beyond their prefix.",
+        "The sweep bounds every deny-boundary route to denial without success, fault or disclosure for a fixed probe; it observes the capability comparison only on routes the probe reaches (signatures, sessions, random identifiers, one header); enforcement on provider-created records rests on their suites."
       ]
     },
     {
@@ -5951,7 +6046,7 @@
     {
       "id": "DEPLOY-READINESS-001",
       "title": "Fresh database readiness without private failure detail",
-      "statement": "A ready HTTP response requires a successful fresh SELECT 1 through the application database pool. Pool or query failure and expiry of the two-second cooperative deadline return503 with fixed non-private fields; every readiness response forbids caching.",
+      "statement": "A ready HTTP response requires a successful fresh SELECT 1 through the application database pool. A probe discards pooled connections PostgreSQL has closed, retrying up to the pool size plus one inside its deadline, so one request answers ready once the database is back. Pool or query failure of every attempt and expiry of the two-second cooperative deadline return 503 with fixed non-private fields; every readiness response forbids caching.",
       "domain": "DEPLOY",
       "authority": "User deployment verification and failed-worker success requirements; existing documented health intent",
       "source": "tdf-hq/docs/openapi/api.yaml; formal/system/readiness.md",
@@ -5982,6 +6077,7 @@
       "allowedTransitions": [
         "starting -> probing after boot succeeds",
         "probing -> ready only after fresh successful query",
+        "probing -> probing on a synchronous failure while attempts (the pool size plus one) remain: the failed pooled connection is destroyed",
         "probing -> unavailable on synchronous error, false result or deadline",
         "A subsequent request independently probes current state"
       ],
@@ -5997,10 +6093,10 @@
       ],
       "authorization": "Public non-mutating fixed SELECT1; no caller SQL or chosen database target.",
       "privacy": "Fixed JSON fields exclude database errors, credentials and hostnames; no probe exception rendering.",
-      "concurrency": "Each request includes pool acquisition in its deadline; runtime cancellation must propagate. System.Timeout is cooperative and cannot bound uninterruptible native operations or prove release writer exclusion.",
+      "concurrency": "Each request includes pool acquisition in its deadline; runtime cancellation must propagate. System.Timeout is cooperative and cannot bound uninterruptible native operations or prove release writer exclusion. The attempt budget is the pool size of TDF.DB.makePool plus one (source-bound check): a pool cannot hold more stale connections than its size, and one attempt must remain for a live connection.",
       "idempotency": "Read-only independent observations; retry cannot reuse a cached positive observation.",
-      "failure": "Synchronous exception, negative probe or expired deadline yields503. Runtime cancellation propagates.",
-      "recovery": "Retry a fresh request after database/pool recovery; health does not establish migration, worker, provider, backup or whole-system readiness.",
+      "failure": "Synchronous exception on every attempt (at most the pool size plus one), negative probe or expired deadline yields 503. Runtime cancellation propagates through every attempt.",
+      "recovery": "A fresh request after database/pool recovery answers ready at once: stale pooled connections are consumed by that request's own attempts. Health does not establish migration, worker, provider, backup or whole-system readiness.",
       "observability": "Exact handler HTTP checks, source-bound verifier output and deployed read-only probes; record source and time.",
       "implementation": [
         "tdf-hq/src/TDF/App/Readiness.hs",
@@ -6021,17 +6117,19 @@
         "scripts/lib/readiness_conformance.py",
         "scripts/test-booking-conformance.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/ReadinessProbe.tla"
+      ],
       "status": "specified and implemented",
       "confidence": "Source-derived narrow boundary; exact full-handler and deployed validation outstanding.",
       "ambiguity": [],
-      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery.",
+      "verification": "Actual Haskell boundary tests and six detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery. Attempt retry: Haskell probe tests (stale-then-live, budget exhaustion, final negative result, cancellation through retry) (the mutations include single attempt, no retry and cancellation swallowed in the retry; the attempt budget is bound to the pool size plus one); the PostgreSQL harness first leaves more idle pooled connections than it makes degraded probes, so the probes must discard the terminated connections within their own attempts (with one attempt per probe the recovery probe took the next terminated connection and failed, 2026-10-12). ReadinessProbe.tla: ProbeReportsDatabase over every stale count and database state for PoolSize 4; the one-attempt and pool-size budgets fail it (the model found that a budget of the pool size is one short).",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Full handler build, PostgreSQL failure/recovery and final deployed validation remain outstanding."
+        "reason": "Deployed validation of the handler remains outstanding; the stale-connection recovery is fixed and checked at the Haskell, PostgreSQL-harness and model levels (AUTHORITY-078)."
       },
       "property": "HTTP200 implies a fresh successful application-pool database round trip; failure details remain fixed and responses uncacheable.",
-      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation."
+      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, the deadline, cancellation propagation (in the deadline and in the retry), the retry and all but one attempt."
     },
     {
       "id": "DEPLOY-CANARY-001",
@@ -7738,7 +7836,7 @@
         "scripts/test-whatsapp-consent.sh"
       ],
       "verification": "Bounded TLA+ model with eight negative controls; unit tests; PostgreSQL concurrency tests on the migrated fixture in CI",
-      "evidence": "Keyword unit test, SQLite window/withdrawal/undelivered tests, PostgreSQL simultaneous-claim, duplicate-reply and withdrawal-lock tests, served-app check that the public lookup is gone",
+      "evidence": "formal/system/whatsapp-consent.md; keyword, SQLite and PostgreSQL consent checks; real-backend harness for simultaneous requests, signed confirmation, one notice, redelivery and migrated non-unique history indexes. The historical constraint collision was reproduced before the additive index repair; fresh combined-candidate execution remains required.",
       "status": "specified and implemented",
       "historicalStatus": null,
       "critical": true,
@@ -7786,20 +7884,22 @@
         "superseded attempt failure -> any change to a newer request, consent or withdrawal"
       ],
       "effects": [
-        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages."
+        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages; the confirmation notice samples its own timestamp after the atomic inbound receipt. Current main permits distinct messages at one phone/party timestamp through the index-declaration migration."
       ],
       "authorization": "Only the number's own reply (verified Meta webhook signature) or an Admin can activate consent.",
       "privacy": "Public responses are identical regardless of prior state; display names are not returned publicly.",
       "concurrency": "Claim, confirmation and the undelivered mark are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits. Row creation uses ON CONFLICT DO NOTHING. A withdrawal raises revoked_at to the request instant inside its own transaction, so a clock read before the row lock cannot predate the request.",
       "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours of a request send nothing unless they retry an undelivered request inside its hour; a send failure is bound to its own request instant.",
-      "failure": "A WhatsApp send failure is recorded on the outgoing message and marks only its own request undelivered; consent is unaffected.",
+      "failure": "A WhatsApp send failure is recorded on the outgoing message and marks only its own request undelivered; consent is unaffected. The signed confirmation fixture requires HTTP200, consent activation and one recorded notice. The historical phone/timestamp collision is removed by the existing index-declaration migration; a separate notice clock sample alone was only best-effort on the old schema.",
       "recovery": "A number can request again 24 hours after its last request instant, or retry an undelivered, unwithdrawn request within 1 hour.",
       "observability": "whats_app_consent note (pending_confirmation, pending_unsent, confirmed_by_reply), confirmation_requested_at, revoked_at, outgoing message sources.",
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "scripts/test-whatsapp-consent.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/lib/whatsapp_consent_conformance.py",
+        "scripts/test-booking-conformance.py"
       ],
       "formalModels": [
         "formal/event-operations/WhatsAppConsent.tla",
@@ -7821,7 +7921,8 @@
         "The 1-hour window for an undelivered request is an engineering default chosen because the number never saw a prompt; the product owner has not confirmed the duration.",
         "A provider failure that hides an actual delivery (ambiguous timeout) is treated as undelivered and could allow a second request inside the interval.",
         "A withdrawn request cannot be replaced until 24 hours after its request instant. Because opting out needs no proof of control, a third party can impose that wait on someone else's pending request; this is accepted so that the unauthenticated opt-out cannot be used to message a number repeatedly. Staff capture remains available.",
-        "An undelivered request that is neither confirmed nor retried within 1 hour waits for the 24-hour interval even though nothing was delivered."
+        "An undelivered request that is neither confirmed nor retried within 1 hour waits for the 24-hour interval even though nothing was delivered.",
+        "Provider notice delivery and durable retry after an accepted inbound receipt are separate obligations; the existing index-declaration migration supersedes the historical same-timestamp uniqueness hazards without establishing exactly-once provider delivery."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -7830,14 +7931,24 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicPublication.tla",
+        "formal/event-operations/MusicPublication.cfg",
+        "formal/event-operations/MusicPublicationBatch.cfg",
+        "formal/event-operations/MusicPublicationReplacedOnly.cfg",
+        "formal/event-operations/MusicPublicationStayWithdrawn.cfg",
+        "formal/event-operations/MusicPublicationPointerStale.cfg",
+        "formal/event-operations/MusicWithdrawalFairness.tla",
+        "formal/event-operations/MusicWithdrawalFairness.cfg",
+        "formal/event-operations/MusicWithdrawalStarvation.cfg"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-RELEASE-001",
       "title": "Canonical music releases with immutable approved versions",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "Music releases are authored as versions owned by a verified artist or authorized team. Each version moves only through music_valid_transition; approval freezes an immutable snapshot and SHA-256; correcting a published release creates a related version that references the same immutable asset bytes. Publication and withdrawal are applied by locked database functions and only a published, in-embargo-window, territory-allowed version is public.",
-      "authority": "Unreviewed recovered local implementation (2026-09-11..16); accepted ADR-001/ADR-003 in docs/music-releases/architecture-and-data-model.md; not yet independently reviewed or deployed",
+      "statement": "Music releases are authored as versions owned by a verified artist or authorized team. Each version moves only through music_valid_transition; approval freezes an immutable snapshot and SHA-256; correcting a published release creates a related version that references the same immutable asset bytes. Publication and withdrawal are applied by locked database functions that handle each due candidate on its own: a candidate that fails at publication is suspended with its error and the other candidates still publish; publishing a version retires every other formerly published version of its release that is still published, replacement_pending or takedown_scheduled, and reopens a withdrawn release; a failure that is transient (deadlock, serialization failure, lock timeout) leaves the candidate scheduled for the next run; the release points at the version it last published only while that version is published, suspended, replacement_pending or takedown_scheduled. Only a published, in-embargo-window, territory-allowed version is public.",
+      "authority": "Unreviewed recovered local implementation (2026-09-11..16); accepted ADR-001/ADR-003 in docs/music-releases/architecture-and-data-model.md; not yet independently reviewed or deployed; AUTHORITY-066 (scheduler isolation, retirement, reopening, pointer)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
       "contract": "docs/music-releases/architecture-and-data-model.md",
       "property": "No public projection exists for a version that is not published, approved by snapshot hash and allowed in the trusted territory.",
@@ -7860,24 +7971,40 @@
       "state": {
         "version": [
           "draft",
+          "uploading",
+          "processing",
+          "validation_failed",
           "ready_for_review",
+          "in_review",
+          "changes_requested",
           "approved",
           "scheduled",
           "published",
-          "withdrawn",
-          "superseded"
+          "suspended",
+          "cancelled",
+          "replacement_pending",
+          "takedown_scheduled",
+          "withdrawn"
         ],
-        "authority": "PostgreSQL triggers and music_valid_transition"
+        "release": "published_version_id points at the version last published while it stays published, suspended, replacement_pending or takedown_scheduled, otherwise null; withdrawn_at is set while the release points at nothing after it pointed at something",
+        "authority": "PostgreSQL triggers, music_valid_transition, music_publish_due, music_withdraw_due, trg_music_release_live_version"
       },
       "allowedTransitions": [
-        "draft -> ready_for_review -> approved -> published/scheduled",
+        "draft -> ready_for_review -> in_review -> approved -> scheduled -> published (scheduler only)",
         "published -> correction version (new draft linked by correction_of_version_id)",
-        "published -> withdrawn by locked withdraw function"
+        "published -> takedown_scheduled -> withdrawn (takedown scheduler)",
+        "published/scheduled -> suspended -> approved (re-approval re-validates)",
+        "scheduled -> suspended with publication_failed audit when publication fails",
+        "publication of a version retires every other formerly published version still published, replacement_pending or takedown_scheduled through replacement_pending -> takedown_scheduled -> withdrawn; never-published and suspended versions stay",
+        "scheduled stays scheduled after a transient publication failure (SQLSTATE class 40, 55P03)"
       ],
       "forbiddenTransitions": [
         "Editing an approved snapshot in place",
         "Two simultaneously public versions of one release",
-        "Public exposure before embargo or outside allowed territory"
+        "Public exposure before embargo or outside allowed territory",
+        "One failed candidate aborting the publication or withdrawal of other candidates",
+        "A release pointing at a version that is not live",
+        "A scheduled correction of a withdrawn release that never publishes"
       ],
       "effects": [
         "Single public version per release",
@@ -7885,10 +8012,10 @@
       ],
       "authorization": "music_can(actor, artist, permission) re-checked by backend for every mutation; public reads require the public flag and territory rule.",
       "privacy": "Masters and quarantined uploads are never public; collaborator identifiers are only shown to authorized editors.",
-      "concurrency": "Correction and transition requests serialize on version rows with optimistic revision checks (correction-concurrency.md).",
+      "concurrency": "Correction and transition requests serialize on version rows with optimistic revision checks (correction-concurrency.md). The schedulers lock candidate and release FOR UPDATE SKIP LOCKED and run each candidate in its own subtransaction. The API handler locks the version row before the release row and the scheduler the other way round, so a handler move of a pointed sibling during the same release's publication can deadlock: the victim's candidate stays scheduled and publishes on the next run.",
       "idempotency": "Correction creation and publication are idempotent per request key and locked rows.",
-      "failure": "Invalid transitions raise database errors surfaced as actionable API errors.",
-      "recovery": "Rollback SQL exists for each migration; corrections never rewrite history.",
+      "failure": "Invalid transitions raise database errors surfaced as actionable API errors. A publication that raises a transient error (class 40, 55P03) leaves the candidate scheduled with a warning; any other failure suspends only that version and records publication_failed (SQLSTATE, message); a withdrawal that raises stays takedown_scheduled, is recorded once as withdrawal_failed unless transient, and moves behind other eligible withdrawals by updating its last-attempt priority, including with a one-row batch.",
+      "recovery": "Rollback SQL exists for each migration; corrections never rewrite history. 2026-10-11_music_publication_isolation repairs release rows pointing at non-live versions and releases marked withdrawn while a version is published.",
       "observability": "Editorial notifications and audit rows per transition.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
@@ -7913,7 +8040,9 @@
         "tdf-hq/sql/2026-09-16_music_correction_concurrency.sql",
         "tdf-hq/sql/2026-09-16_music_correction_concurrency_rollback.sql",
         "tdf-hq/sql/2026-09-16_music_resource_graph_validation.sql",
-        "tdf-hq/sql/2026-09-16_music_resource_graph_validation_rollback.sql"
+        "tdf-hq/sql/2026-09-16_music_resource_graph_validation_rollback.sql",
+        "tdf-hq/sql/2026-10-11_music_publication_isolation.sql",
+        "tdf-hq/sql/2026-10-11_music_publication_isolation_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
@@ -7929,30 +8058,39 @@
         "scripts/__tests__/music-test-database.test.mjs",
         "scripts/lib/music-test-database.mjs",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts",
-        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx"
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
+        "tdf-hq/test/TDF/MusicPublicationSpec.hs",
+        "scripts/test-music-publication.sh",
+        "scripts/test-music-integration-rehearsal.mjs"
       ],
-      "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script",
-      "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); no CI or production evidence on current main",
-      "confidence": "Medium: extensive local evidence on a 2026-09-10 base; not re-verified against current main.",
+      "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script; PostgreSQL spec of the schedulers (scripts/test-music-publication.sh); bounded TLC model of scheduled publication with four negative controls (formal/system/music-publication.md); bounded one-row withdrawal fairness model with a permanent failure and a starvation mutation control",
+      "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); scheduler reproduction, spec and model results in formal/system/music-publication.md (2026-10-11); no production evidence (migrations not applied in production)",
+      "confidence": "Medium: scheduler isolation, retirement, reopening and pointer rules are exercised on the migrated schema and model-checked in a bounded scope; authoring and public reads keep the 2026-09-16 local evidence only.",
       "ambiguity": [
-        "Migrations are not registered in scripts/production-migrations.json; deployment order is only documented in prose.",
         "Feature flags are created disabled; production enablement has no approved decision."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Recovered implementation and tests exist; CI on current main and deployment are pending."
+        "reason": "Scheduler isolation, retirement, reopening and release pointer are verified on the migrated schema (2026-10-11); authoring and public reads keep local 2026-09-16 evidence; not deployed."
       }
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicAssetProcessing.tla",
+        "formal/event-operations/MusicAssetProcessing.cfg",
+        "formal/event-operations/MusicAssetProcessingUnfenced.cfg",
+        "formal/event-operations/MusicAssetProcessingPreempt.cfg",
+        "formal/event-operations/MusicAssetProcessingUnverified.cfg",
+        "formal/event-operations/MusicAssetProcessingOverLimit.cfg"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-ASSET-001",
       "title": "Quarantined uploads, reproducible processing and signed asset access",
       "domain": "MEDIA",
       "critical": true,
       "statement": "Audio and artwork uploads go by scoped SigV4 multipart to a quarantine bucket under a UUID key. The worker re-downloads, recomputes SHA-256, inspects the real type, produces reproducible derivatives (AAC/FLAC/preview/artwork) with a versioned manifest, and only then promotes the original bytes as immutable. Public asset URLs are signed for five minutes only after music_public_asset_accessible re-resolves version, embargo, territory and policy; masters are never publicly signed.",
-      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md",
+      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md; AUTHORITY-067 (state sets and lease guard recorded); AUTHORITY-068 (re-upload rebinding)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/worker-multipart.md",
       "contract": "docs/music-releases/api-and-configuration.md",
       "property": "Every served derivative is traceable to a checksum-verified, promoted original; no master is signable for public access.",
@@ -7973,20 +8111,38 @@
       "state": {
         "asset": [
           "quarantined",
+          "uploaded",
+          "inspecting",
+          "valid",
+          "invalid",
           "processing",
-          "promoted",
-          "failed"
+          "ready",
+          "failed",
+          "deleted"
         ],
-        "authority": "Database job rows and worker"
+        "job": [
+          "queued",
+          "running",
+          "retry",
+          "succeeded",
+          "failed",
+          "dead_letter",
+          "cancelled"
+        ],
+        "authority": "music_asset.processing_state and music_processing_job.status; the worker's lease guard (pg_temp.music_worker_guard) fences every write of a run on worker name, claimed attempt and lease age"
       },
       "allowedTransitions": [
-        "uploaded -> quarantined -> processing -> promoted",
-        "processing -> failed -> retried"
+        "upload session initiated -> uploading -> completed; confirmation creates the asset as uploaded and one job per session",
+        "asset uploaded -> inspecting -> valid (master, immutable, master bucket) with derivatives inserted ready and immutable",
+        "job queued/retry -> running (claim, attempt+1) -> succeeded | retry (run_after delayed) | dead_letter at or beyond max_attempts (an expired last attempt is reclaimed once more)",
+        "running -> reclaimed by another run only after the lease expired"
       ],
       "forbiddenTransitions": [
         "Promotion without matching recomputed SHA-256",
         "Public signature for a master asset",
-        "Mutation of promoted bytes"
+        "Mutation of promoted bytes",
+        "A completion written by a run whose job was reclaimed (attempt token mismatch)",
+        "Reclaiming a job whose lease is still live"
       ],
       "effects": [
         "Immutable original location and checksum",
@@ -7994,10 +8150,10 @@
       ],
       "authorization": "Upload sessions require authoring permission; signatures are scoped to one key and short-lived.",
       "privacy": "Quarantine and master buckets are private; territory comes from CF-IPCountry only behind Cloudflare, otherwise specific rules fail closed.",
-      "concurrency": "Worker claims jobs with row locks; multipart completion is idempotent per upload.",
-      "idempotency": "Re-running a job reproduces identical derivatives for identical input.",
-      "failure": "Type, size or checksum mismatch fails the job without promotion.",
-      "recovery": "Failed jobs are retried; orphan multipart uploads are aborted per worker-multipart.md.",
+      "concurrency": "Worker claims one due job FOR UPDATE SKIP LOCKED; every later statement of the run is prefixed by the lease guard (version row FOR NO KEY UPDATE, job row FOR UPDATE, status running, same worker name, same attempt, lease younger than the ttl); multipart completion is idempotent per upload; derivatives are unique per (version, role, sha256).",
+      "idempotency": "Re-running a job reproduces identical derivatives for identical input. A re-upload with the same declared SHA-256 binds to the existing non-promoted asset row and re-points it at the new object before inspection (trg_music_rebind_upload_asset); the asset's queued, retry, running and dead-lettered attempts are cancelled (a cancelled run is stopped by the lease guard).",
+      "failure": "Type, size or checksum mismatch fails the attempt without promotion; the job retries with a growing delay until max_attempts, then dead_letter, and the version becomes validation_failed. A lost or expired lease stops the run (lease-lost marker, USR1) and the job is reclaimed.",
+      "recovery": "Failed jobs are retried with a growing delay; an expired lease lets another run reclaim the job. Orphan multipart uploads created by the worker's own PUTs are aborted per worker-multipart.md; client upload sessions have no purge (ambiguity). After a checksum-mismatch dead letter, uploading the correct bytes under the same declared hash is inspected and the earlier attempts, running ones included, are cancelled (2026-10-12_music_upload_rebind).",
       "observability": "Worker logs and job status rows; worker-regression-diagnostics.md.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
@@ -8012,7 +8168,9 @@
         "scripts/run-music-release-worker.sh",
         "scripts/run-music-release-worker-once.sh",
         "tdf-hq-ui/src/api/musicStorageResponse.ts",
-        "tdf-hq-ui/src/utils/incrementalSha256.ts"
+        "tdf-hq-ui/src/utils/incrementalSha256.ts",
+        "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+        "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
@@ -8037,29 +8195,41 @@
         "test/fixtures/music-worker/upload-curl.mjs",
         "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
-        "tdf-hq-ui/src/utils/incrementalSha256.test.ts"
+        "tdf-hq-ui/src/utils/incrementalSha256.test.ts",
+        "scripts/test-music-integration-rehearsal.mjs"
       ],
-      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3",
-      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16)",
-      "confidence": "Medium: local-only evidence; no deployed worker or real buckets.",
+      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md)",
+      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12); re-upload runtime scenario and migration apply/rollback in formal/system/music-upload-rebind.md (2026-10-12, historical local evidence)",
+      "confidence": "Medium: lease guard, claim and promotion rules read from source and model-checked in a bounded scope; local-only runtime evidence; no deployed worker or real buckets.",
       "ambiguity": [
-        "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only)."
+        "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only).",
+        "Abandoned upload sessions are never marked expired and purge_abandoned_upload is never enqueued (formal/system/music-asset-processing.md).",
+        "A checksum mismatch is retried up to max_attempts before dead_letter although it cannot succeed.",
+        "A dead-lettered source asset keeps processing_state = 'inspecting'."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local integration evidence only; no deployment."
+        "reason": "Lease guard, claim and checksum-gated promotion read from source and bounded-model checked; re-upload recovery implemented by AUTHORITY-068. Remaining upload lifecycle gaps and local-only evidence; not deployed."
       }
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicDdexExport.tla",
+        "formal/event-operations/MusicDdexExport.cfg",
+        "formal/event-operations/MusicDdexExportUnfenced.cfg",
+        "formal/event-operations/MusicDdexExportReopen.cfg",
+        "formal/event-operations/MusicDdexExportNoCommitGate.cfg",
+        "formal/event-operations/MusicDdexExportReplayFailed.cfg",
+        "formal/event-operations/MusicDdexExportSplitDeadLetter.cfg"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-DDEX-001",
       "title": "Private reproducible DDEX ERN 4.3.2 export of approved versions",
       "domain": "MEDIA",
       "critical": true,
       "statement": "A DDEX ERN 4.3.2 message is a projection of one approved version snapshot hash. The API commits export and job atomically, serializes per actor/key and version, revalidates queued exports against the same rules used by API, renderer and worker, and produces a private, reproducible package with message-bound file names. No delivery to partners is performed.",
-      "authority": "Unreviewed recovered local implementation; docs/music-releases/ddex-*.md",
+      "authority": "Unreviewed recovered local implementation; docs/music-releases/ddex-*.md; AUTHORITY-082 (state sets, lifecycle guards and failure-report privacy recorded)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/ddex-operation-lifecycle.md",
       "contract": "docs/music-releases/ddex-offline-bundle.md",
       "property": "Every exported package is reproducible from, and bound to, exactly one approved snapshot hash.",
@@ -8080,33 +8250,80 @@
       "state": {
         "export": [
           "queued",
-          "rendering",
-          "validated",
-          "failed",
-          "retired"
+          "generating",
+          "validation_failed",
+          "valid",
+          "failed"
         ],
-        "authority": "ddex export/job rows"
+        "job": [
+          "queued",
+          "running",
+          "retry",
+          "succeeded",
+          "failed",
+          "dead_letter",
+          "cancelled"
+        ],
+        "states": [
+          "queued",
+          "generating",
+          "validation_failed",
+          "valid",
+          "failed"
+        ],
+        "initial": "queued",
+        "terminal": [
+          "valid",
+          "failed"
+        ],
+        "transitions": {
+          "queued": [
+            "generating",
+            "validation_failed",
+            "failed"
+          ],
+          "generating": [
+            "generating",
+            "valid",
+            "validation_failed",
+            "failed"
+          ],
+          "validation_failed": [
+            "generating",
+            "validation_failed",
+            "failed"
+          ],
+          "valid": [],
+          "failed": []
+        },
+        "authority": "music_ddex_export.status and music_processing_job.status; transitions are enforced by the worker's conditional UPDATEs under the lease guard, not by a trigger"
       },
       "allowedTransitions": [
-        "queued -> rendering -> validated",
-        "queued -> failed on revalidation",
-        "suspended -> retired"
+        "API: request -> export queued + generate_ddex job queued in one transaction (actor/key advisory lock, version row lock)",
+        "Worker gate 1 (rules re-checked under the lease guard): queued | validation_failed | generating -> generating",
+        "Worker gate 2 (rules re-checked, same snapshot hash): generating -> valid with xml/manifest/package assets, then job succeeded",
+        "Any failure of an attempt: not-valid export -> validation_failed and job retry; on the last attempt -> failed and job dead_letter, in one write",
+        "A valid export whose job did not close is recovered as is: job succeeded, nothing regenerated",
+        "Authorized replay of the original request: a queued export without a job gets its job; otherwise the existing export is returned unchanged"
       ],
       "forbiddenTransitions": [
         "Export of a non-approved version",
         "Export job committed without its export row",
+        "valid -> any other status; a valid package is never regenerated or re-pointed",
+        "failed -> any other status; no replay re-enqueues a failed export",
+        "A write by a process whose claimed attempt is no longer the job's attempt",
         "Partner delivery"
       ],
       "effects": [
         "Private package with credits, parties and identifiers of that version"
       ],
-      "authorization": "Export requires DDEX export permission re-checked by backend.",
+      "authorization": "Creating an export requires strict administrator access (and the music_releases.ddex_export flag); listing and downloading require release.downloads on the release or strict administrator access, re-checked by the backend.",
       "privacy": "Packages are private and contain collaborator identifiers; never public.",
-      "concurrency": "Per actor/key/version serialization; orphaned queued exports recovered by replay.",
-      "idempotency": "Replaying an export request returns the existing operation.",
-      "failure": "Validation errors fail the export with actionable messages.",
-      "recovery": "Queued revalidation and replay per ddex-queued-validation.md and ddex-atomic-enqueue.md.",
-      "observability": "Export and job status rows.",
+      "concurrency": "API: pg_advisory_xact_lock(music-ddex:<actor>:<key>) then the version row FOR UPDATE; export and job commit together. Worker: FOR UPDATE SKIP LOCKED claim; every later statement runs under pg_temp.music_worker_guard (version FOR NO KEY UPDATE, job FOR UPDATE, status running, same worker name, claimed attempt as fencing token, lease younger than the ttl); a running job is reclaimed only after its lease expired. Gate 1 and gate 2 lock both registry rows FOR SHARE in UUID order and share their transaction with the status write. Bounded model: MusicDdexExport.tla.",
+      "idempotency": "Replaying the request with the same actor, key, version, operation, sender and recipient returns the existing export; a different body under the same key is 409; the natural key (version, recipient, operation, snapshot) is unique, so a second request for the same package is 409 whatever its key. The replay recreates only a missing job of a queued export and never resets attempts.",
+      "failure": "A gate refusal stores the field-level report (valid=false, code ddex_preconditions_failed, errors[]). Any other failure of an attempt (renderer, transfer, checksum, crash handler) stores a fixed message with its error code; the worker's stderr summary is kept on the job row until the next claim clears it, and permanently once dead-lettered. The export becomes validation_failed while attempts remain and failed with the dead letter; a valid or failed export is never changed by a later attempt.",
+      "recovery": "Queued revalidation and replay per ddex-queued-validation.md and ddex-atomic-enqueue.md; a valid export is recovered without regeneration after a crash between gate 2 and job closure. A failed (dead-lettered) export has no recovery path: see ambiguity.",
+      "observability": "Export status and validation report (release downloaders); job status, attempts, error code and stderr summary (operators).",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
@@ -8114,7 +8331,8 @@
         "scripts/build-ddex-ern432-package.sh",
         "scripts/fetch-ddex-ern432-schema.sh",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
-        "tdf-hq/sql/2026-09-16_music_ddex_operations_rollback.sql"
+        "tdf-hq/sql/2026-09-16_music_ddex_operations_rollback.sql",
+        "scripts/run-music-release-worker-once.sh"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
@@ -8124,17 +8342,22 @@
         "scripts/test-music-ddex-credits.sh",
         "scripts/lib/music-ddex-enqueue-probe.mjs",
         "test/fixtures/music-worker/ddex-package.mjs",
-        "test/fixtures/music-worker/ddex-render.mjs"
+        "test/fixtures/music-worker/ddex-render.mjs",
+        "scripts/test-music-release-worker-runtime.mjs",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "verification": "ERN spec against fixture and schema, package builder tests, enqueue fault-injection probe",
-      "evidence": "Local results in docs/music-releases/ddex-atomic-enqueue.md (2026-09-16)",
+      "verification": "ERN spec against fixture and schema, package builder tests, enqueue fault-injection probe. Bounded TLA+ model of the export/job lifecycle under two leased processes with five single-guard negative controls (formal/system/music-ddex-export.md). Worker runtime test (PostgreSQL, substitute renderer/packager/transport): commit gate, revocation during rendering, valid recovery, queued revalidation, and the processing-failure report that excludes worker stderr and recovers to valid on retry.",
+      "evidence": "Local results in docs/music-releases/ddex-atomic-enqueue.md (2026-09-16); TLC 1.7.2 and the worker runtime test on PostgreSQL 16, 2026-10-13 (formal/system/music-ddex-export.md).",
       "confidence": "Medium for schema conformance; partner acceptance unknown.",
       "ambiguity": [
-        "Partner-specific profiles and delivery are out of scope; compatibility matrix is a 2026-09-12 snapshot."
+        "Partner-specific profiles and delivery are out of scope; compatibility matrix is a 2026-09-12 snapshot.",
+        "A dead-lettered export (status failed) has no recovery path: the natural unique key (version, recipient, operation, snapshot) rejects a new request for the same package and the replay never re-enqueues a failed export, so a transient outage lasting the five attempts (about 15 minutes) blocks that operation for that version and recipient until an operator edits the rows. The same holds for any non-queued export whose job was cancelled by hand. ADR-018 chose no blind retry; an audited operator retry is an open product decision.",
+        "The job's stderr summary is served to the uploader through the upload status endpoint (MusicReleaseUpload.hs); that surface belongs to MEDIA-MUSIC-ASSET-001 and is not changed here.",
+        "The export's validation_failed status is also used for processing failures that are not validation refusals; the report's code distinguishes them."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local evidence only; not deployed."
+        "reason": "Lifecycle, fencing, finality and failure-report privacy are modelled within bounds and exercised by the worker runtime test locally; the export feature flag is off in production, and dead-letter recovery is undecided."
       }
     },
     {
@@ -8154,7 +8377,7 @@
       "title": "Music downloads only through verified purchase entitlements",
       "domain": "PAY",
       "critical": true,
-      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; triggers then grant exactly one entitlement and end it on refund or chargeback. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request.",
+      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; the projection settles a payable purchase and grants exactly one entitlement, ending it on refund or chargeback. Verified money for a closed purchase follows PAY-MUSIC-OUTCOME-001 and grants no entitlement. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request.",
       "authority": "Unreviewed recovered local implementation; ADR-005 in docs/music-releases/architecture-and-data-model.md",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
       "contract": "formal/system/music-purchase-entitlement.md",
@@ -8207,7 +8430,7 @@
       "privacy": "Purchase and download audit is visible only to the buyer and authorized staff.",
       "concurrency": "One order per buyer and idempotency key by unique constraint; entitlement creation is trigger-enforced and unique per order; download authorization holds the entitlement row lock while it counts and inserts.",
       "idempotency": "Repeated order creation and repeated recording of the same verified payment change nothing; a repeated download request identifier is answered without counting for 300 seconds and refused afterwards.",
-      "failure": "Unverified payment leaves no entitlement. A recorded provider failure cancels the order permanently and a later verified payment can still grant an entitlement on it (open defects, see contract).",
+      "failure": "Unverified payment leaves no entitlement. Payment-attempt failure does not cancel the purchase. Verified money received for a closed purchase is retained for reconciliation without reopening fulfillment under PAY-MUSIC-OUTCOME-001. Ambiguous provider transport and recovery remain open.",
       "recovery": "Refund revokes entitlement; no royalties, subscriptions or settlement.",
       "observability": "Download audit rows and checkout session events.",
       "implementation": [
@@ -8223,16 +8446,15 @@
         "scripts/test-music-purchase.sh",
         "scripts/verify-event-operations-formal.sh"
       ],
-      "verification": "Bounded TLA+ model with five negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
+      "verification": "Bounded TLA+ model with six negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
       "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
       "confidence": "Medium for the payment record, entitlement and download rules, which run on PostgreSQL in tests; low for the provider calls and failure handling, which are untested and have open defects.",
       "ambiguity": [
         "No live payment provider wiring for music_download has been verified.",
         "Music payments bypass the shared payment runtime and the production provider switches; only the commerce flag for the checkout environment gates them.",
-        "A recorded provider failure cancels the order irreversibly while the payment may still complete, and an entitlement can end up active on a cancelled order; repair needs a trigger migration and a product decision.",
         "A failure after the provider charged leaves no reconciliation record; no webhook or reconciliation path exists for this domain.",
         "Partial refunds keep the entitlement and disputes revoke it permanently; both need a product decision.",
-        "Download limits count authorizations, not transferred bytes; one counted download gives access for just under 600 seconds."
+        "Download limits count authorizations, not transferred bytes; a replay retains the original 300-second expiry. Cross-provider admission and ambiguous transport recovery are not established."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9421,7 +9643,8 @@
       "effects": [
         "Search document upsert/delete",
         "Venue city_id resolution",
-        "Lineup genres mapped to catalog genre ids and lineup names added to the event search text"
+        "Lineup genres mapped to catalog genre ids and lineup names added to the event search text",
+        "A genre search alias edit resyncs the events whose lineup legacy genre words name its old or new term, or whose document carries its genre id"
       ],
       "authorization": "Derived data only; written by database triggers on source changes.",
       "privacy": "Projection from the privacy-reviewed public views; reads still re-check the views.",
@@ -9434,6 +9657,8 @@
       "implementation": [
         "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
+        "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
+        "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync_rollback.sql",
         "scripts/production-migrations.json",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
@@ -9441,14 +9666,15 @@
       ],
       "tests": [
         "tdf-hq/test/integration/directory_event_search_sync.sql",
+        "tdf-hq/test/integration/directory_event_search_alias_sync.sql",
         "tdf-hq/test/integration/directory_event_search_http_seed.sql",
         "scripts/__tests__/directory-event-search-http.mjs",
         "scripts/test-music-directory-migration.sh",
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
       ],
       "formalModels": [],
-      "verification": "PostgreSQL integration checks for create, edit, unsafe image, same-origin image, lineup genres, bounded expiry, private, republish, suppression, venue rename, delete, city resolution, kind words, reindex metrics and full-refresh agreement; rollback and reapply; HTTP checks of /directory/search (Eventos + city, Todo, tab counts, people-only filters, lineup genre, card fields) against the real API; web page tests for the deep link, tab counts, event date and history back.",
-      "evidence": "Local PostgreSQL 16 run on a fully migrated schema on 2026-10-09; CI directory migration test.",
+      "verification": "PostgreSQL integration checks for create, edit, unsafe image, same-origin image, lineup genres, bounded expiry, private, republish, suppression, venue rename, delete, city resolution, kind words, reindex metrics and full-refresh agreement; genre alias add, move to another genre, change away and back, profession alias ignored, unrelated events untouched, and the migration repairing a document left stale by an alias added before the trigger existed without alerting saved searches; rollback and reapply; HTTP checks of /directory/search (Eventos + city, Todo, tab counts, people-only filters, lineup genre, card fields) against the real API; web page tests for the deep link, tab counts, event date and history back.",
+      "evidence": "Local PostgreSQL 16 run on a fully migrated schema on 2026-10-09; CI directory migration test. Alias resync: local PostgreSQL 16 on a fully migrated schema on 2026-10-14 (fails without the trigger, passes with it; apply twice, rollback twice, reapply).",
       "status": "specified and implemented",
       "critical": false,
       "confidence": "Exercised directly in the database; production effect verified after release.",
@@ -9713,6 +9939,99 @@
       }
     },
     {
+      "id": "PRIV-RAG-002",
+      "title": "Public-course-only index refresh",
+      "statement": "RAG index checks and refreshes shall first remove legacy non-course derived chunks independently of freshness, embedding configuration or provider availability. Refreshes shall embed only public course fields, atomically replace the public index on success (including an empty corpus without a provider call), and preserve the previous public index on provider or persistence failure.",
+      "domain": "PRIV",
+      "actors": [
+        "Authorized RAG administrator",
+        "Automated index refresh worker",
+        "Embedding provider"
+      ],
+      "preconditions": [
+        "The configured embedding model and database vector dimensions agree.",
+        "Course fields exposed by the public course contract are approved public material."
+      ],
+      "inputs": [
+        "Up to 50 route-eligible canonical course rows ordered by updated_at descending",
+        "Chunk size and overlap",
+        "Embedding adapter results"
+      ],
+      "state": {
+        "fields": [
+          "Captured public course documents",
+          "Provider payload",
+          "Derived rag_chunk rows",
+          "Refresh outcome"
+        ],
+        "initial": "The historical index may include private sources."
+      },
+      "allowedTransitions": [
+        "Commit non-course derived-index cleanup before checking freshness or validating embedding configuration.",
+        "Collect public course fields, chunk and embed them.",
+        "Replace all derived index rows after a complete successful embedding response.",
+        "Clear the index without embedding when the captured corpus is empty.",
+        "Reject a failed refresh while retaining the previous public index; committed legacy cleanup is not undone."
+      ],
+      "forbiddenTransitions": [
+        "Include bookings, availability, campaigns, ads, services, resources, rooms or studio notes in refresh embedding payloads.",
+        "Report an empty refresh as successful while retaining old chunks.",
+        "Commit public-index deletion if replacement insertion fails.",
+        "Skip legacy cleanup because the index is fresh or an embedding provider/configuration is unavailable.",
+        "Raw rejected stored URLs or route-unreachable course identities -> embedding payload.",
+        "Disclose a captured production identity shared by multiple Text-normalized stored course rows."
+      ],
+      "effects": [
+        "The next admitted worker check or administrator refresh removes legacy non-course chunks locally without a provider call; public replacement remains a separate transaction.",
+        "Source entities are not deleted; external provider records and backups are not erased by reindexing."
+      ],
+      "authorization": "Existing administrator and worker admission remains unchanged. Index source selection is enforced in the backend, independently of retrieval guards.",
+      "privacy": "Explicit product decision on 2026-10-13: public courses only; stop indexing private material. This policy concerns index refreshes, not a claim that query embeddings or other assistant provider payloads are public.",
+      "concurrency": "One refresh captures public documents from statement snapshots before embedding and atomically replaces the index. Parallel refresh ordering/freshness is not guaranteed; all revised writers still construct only course chunks. Retrieval separately checks current course metadata. Cleanup and replacement are separate transactions. Deployment must drain old mixed-source writers; no claim covers privileged external SQL writers or rollback to the old builder. Each constructed document reads its fields, earliest session and collision inputs in one SELECT snapshot.",
+      "idempotency": "Repeated successful refreshes replace the derived index; provider requests may repeat and chunk identifiers/timestamps are not stable.",
+      "failure": "Cleanup SQL failure aborts before embedding. Model/schema mismatch and provider/count errors return Left after legacy cleanup; replacement SQL errors propagate after rollback of public replacement. A missing index table skips cleanup and fails existing schema validation.",
+      "recovery": "Retry failed public refreshes while retaining existing public chunks. Do not restore non-course chunks or roll back to a mixed-source builder. Historical backups and provider-held data require separate retention/erasure decisions.",
+      "observability": "PostgreSQL tests capture adapter payloads and persisted rows, check empty-corpus no-call behavior, provider/count refusal and SQL rollback. Existing administrator result and index statistics report refresh outcome. Aggregate source counts verify cleanup without disclosing content; tests cover a fresh index and invalid configuration before provider admission.",
+      "source": "Explicit user product decision 2026-10-13: Public courses only; stop indexing private material (Recommended).",
+      "implementation": [
+        "tdf-hq/src/TDF/RagStore.hs",
+        "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
+        "tdf-hq/src/TDF/PublicUrl.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Courses/Production.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "scripts/test-rag-index-privacy.sh",
+        ".github/workflows/ci.yml",
+        "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs",
+        "tdf-hq/test/TDF/Test/DisposablePostgres.hs"
+      ],
+      "formalModels": [
+        "formal/event-operations/PublicKnowledgeIndex.tla",
+        "formal/event-operations/PublicKnowledgeIndexCollision.cfg"
+      ],
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Historical external provider retention/erasure requires separate evidence.",
+        "Concurrent refresh ordering and index freshness are not serialized by this change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation, bounded model and PostgreSQL regression checks are mapped; exact candidate and deployed verification remain required. Historical provider retention is outside the refresh boundary."
+      },
+      "critical": true,
+      "authority": "Explicit user decision 2026-10-13; AUTHORITY-RAG-PUBLIC-INDEX-20261013",
+      "property": "NoLegacyAfterCleanup, NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex (public subset), EmptySkipsProvider NoAmbiguousEmbedding and TypeOK in PublicKnowledgeIndex.",
+      "contract": "formal/system/public-knowledge-retrieval.md",
+      "verification": "Pinned TLC positive model and five named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls. Stored course identities must already satisfy the public route slug contract; shared public URL sanitization precedes provider payload construction and current-metadata retrieval. Actual PostgreSQL payload/read regressions and pure normalization properties cover legacy invalid fields and unreachable identities. Production cohorts must resolve to their own stored row under the shared first-session lead rule; stored aliases, missing-session cohorts and retired cohorts are excluded before both SQL limits and rechecked during rendering. Four added actual PostgreSQL regressions reproduce the old Store leaks and cover boundary-day admission, a later future session not overriding the earliest date, alias-only no-call, cached alias exclusion and post-index session edits. Require exact Text-normalized production collision rejection before both selection limits and during metadata rendering. Six actual Store regressions cover ASCII/Unicode whitespace, case, limit starvation, new cached-read collisions and recovery; pure generated checks cover normalization, with named embedding/read collision counterexamples in the bounded models. Multiple-row normalization and delivery-time retraction remain outside the refinement claim. The fixture must use the shared parsed disposable-URI guard, admitting authenticated loopback postgres/postgresql URLs and allowing the CI service hostname only in explicit CI mode, while rejecting routing overrides before connecting.",
+      "evidence": "Candidate-specific test and model receipts must be recorded; historical passes do not establish current conformance."
+    },
+    {
       "id": "MOB-FEEDBACK-001",
       "title": "Consented mobile tester feedback with minimized diagnostics",
       "statement": "The mobile tester feedback form enables submission only with consent, nonempty text and published catalog choices. Optional diagnostics use an explicit field allowlist and coarse device class; full device model, tokens and arbitrary input fields are not spread into metadata. Prompt eligibility honors opt-out and dismissal.",
@@ -9936,7 +10255,8 @@
       "tests": [
         "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
         "scripts/test-index-declarations.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/lib/whatsapp_consent_conformance.py"
       ],
       "formalModels": [
         "formal/event-operations/IndexDeclaration.tla",
@@ -9958,6 +10278,92 @@
         "classification": "PARTIAL",
         "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
       }
+    },
+    {
+      "id": "BOOK-SERVICE-PICKER-001",
+      "title": "Every published service is selectable from the first step of the public booking form",
+      "domain": "BOOK",
+      "statement": "The public booking form at /reservar shows the service selector on its first step (contact) as well as on the schedule step, listing every active offering returned by the public service catalog (recording, voice, podcast, mixing, mastering, rehearsal, DJ booth practice, classes, event production, ...). DJ booth practice is an ordinary offering: there is no dedicated booking page, header entry, Instagram entry link, platform or commerce card for it. The legacy /dj-booth and /reservar/dj-booth URLs redirect to /reservar with the DJ booth service preselected and tracking parameters preserved; a ?servicio= or ?service= query preselects a service without locking the selector. The legacy DJ booth feature remains addressable for compatibility but is absent from feature search on web and Mobile. Legacy DJ URLs remove conflicting service parameters before selecting DJ booth.",
+      "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link.",
+      "source": "tdf-hq-ui public booking form, public navigation and landing links",
+      "contract": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+      "actors": [
+        "Visitor",
+        "Signed-in user"
+      ],
+      "preconditions": [
+        "Public service catalog reachable (GET /services/catalog/public)"
+      ],
+      "inputs": [
+        "GET /services/catalog/public",
+        "?servicio= / ?service= query parameter",
+        "legacy /dj-booth and /reservar/dj-booth URLs"
+      ],
+      "state": {
+        "serviceSelector": [
+          "catalog loading",
+          "first active offering selected",
+          "visitor-selected offering",
+          "catalog unavailable"
+        ]
+      },
+      "allowedTransitions": [
+        "catalog loading -> first active offering selected",
+        "first active offering selected -> visitor-selected offering (any step before confirmation)",
+        "/dj-booth -> /reservar?servicio=dj-booth-practice (replace navigation, query and hash preserved)"
+      ],
+      "forbiddenTransitions": [
+        "Service selector hidden until the schedule step",
+        "Service selector locked by a route preset",
+        "A second booking entry point dedicated to one service in public navigation or landing cards",
+        "Showing or accepting the previous service quote after changing offerings; applying an obsolete availability response to the current form."
+      ],
+      "effects": [
+        "Estimate banner and quote follow the selected offering",
+        "Booking submissions carry the selected canonical offering id"
+      ],
+      "authorization": "Not applicable: the public catalog endpoint is anonymous; booking authorization is unchanged.",
+      "privacy": "No personal data in the redirect beyond the tracking parameters already present in the inbound URL.",
+      "concurrency": "Catalog refetches keep the visitor's selection when the offering is still active and fall back to the first active offering otherwise. Changing the service synchronously clears the previous quote and terms acceptance. New availability requests clear stale pricing; aborted responses and cancellations cannot overwrite a newer quote.",
+      "idempotency": "Re-selecting the same offering is a no-op; the redirect is replace-navigation.",
+      "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps.",
+      "recovery": "Reloading the page refetches the catalog.",
+      "observability": "Existing booking and API telemetry; no new events.",
+      "property": "AllActiveOfferingsSelectableOnContactStep and LegacyDjBoothUrlRedirects",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/pages/CommerceHubPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq/assets/feature-registry.json"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-mobile/__tests__/featureRegistry.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression.",
+      "evidence": "Local Jest execution (PublicBookingPage, publicRoutes, PublicBranding suites)",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Medium: unit tests with a mocked catalog; production catalog verified to return 11 active offerings on 2026-10-12, deployed behaviour not yet re-verified.",
+      "ambiguity": [
+        "Whether the DJ booth marketing copy should reappear as a generic service highlight is a product decision outside this requirement."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with unit evidence; not deployed."
+      },
+      "historicalStatus": null
     },
     {
       "authority": "AUTHORITY-065",
@@ -10118,6 +10524,829 @@
       "tests": [],
       "formalModels": [],
       "ambiguity": []
+    },
+    {
+      "id": "DISCOVERY-NAV-001",
+      "title": "Shared community artist discovery and history-aware navigation",
+      "statement": "Community and Global Search discover publicly eligible artists, bands, projects and profiles through shared normalized bounded server queries. New pages start at the top; history, refresh, anchors and inline actions preserve their appropriate context.",
+      "authority": "Explicit product owner implementation and deployment request, 2026-10-13",
+      "domain": "UX",
+      "source": "docs/discovery/community-search-navigation.md",
+      "contract": "docs/discovery/community-search-navigation.md",
+      "actors": [
+        "Public visitor",
+        "Authenticated community member"
+      ],
+      "preconditions": [
+        "Existing directory schema and public artist profiles",
+        "Browser supports History, ResizeObserver and MutationObserver"
+      ],
+      "inputs": [
+        "Search query and supported taxonomy filters",
+        "Router location and navigation type"
+      ],
+      "state": {
+        "boundary": "Public search projection, query cache and history-entry scroll positions",
+        "authority": "Database visibility and identity links; React Router history keys"
+      },
+      "allowedTransitions": [
+        "Query edit -> debounced bounded search",
+        "New route -> top",
+        "History POP -> prior scroll",
+        "Valid fragment -> rendered anchor"
+      ],
+      "forbiddenTransitions": [
+        "Private directory identity exposed through legacy artist fallback",
+        "Obsolete query response replacing current results",
+        "Inline filter change resetting page scroll"
+      ],
+      "effects": [
+        "Read-only profile projection",
+        "Abort obsolete search requests",
+        "URL filter updates",
+        "Scroll restoration"
+      ],
+      "authorization": "Existing public directory visibility and artist public-read surfaces; no new private account lookup.",
+      "privacy": "Any directory identity or legacy link suppresses the legacy fallback; private fields are absent from results.",
+      "concurrency": "Query keys and AbortSignal isolate concurrent requests. Observers retry pending restoration until content renders or the visitor interacts.",
+      "idempotency": "Read-only projection and same-position scrolling are repeatable.",
+      "failure": "Recoverable search alerts; optional session storage failure does not block navigation.",
+      "recovery": "Retry failed search, clear filters or use browser history.",
+      "observability": "Search result and API errors through existing UI; isolated SQL, component and browser regression evidence.",
+      "property": "Textual exact matches outrank other textual tiers; private fallback remains absent; route changes never deliberately retain the old page offset.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/sql/2026-10-13_community_search_indexes.sql",
+        "scripts/production-migrations.json",
+        "tdf-hq-ui/src/App.tsx",
+        "tdf-hq-ui/src/main.tsx",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/features/discovery/useDirectorySearch.ts",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "tdf-hq-ui/src/routes/NavigationScrollRestoration.tsx",
+        "tdf-hq-ui/src/routes/AppShell.tsx",
+        "tdf-hq-ui/src/routes/RouteLoadingFallback.tsx",
+        "tdf-hq-ui/src/styles/navigation.css",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/components/TopBar.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        "scripts/test-community-search.py",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/utils/loginRouting.test.ts",
+        "e2e/web/community-discovery.spec.mjs",
+        "e2e/web/directory-entry.spec.mjs",
+        "e2e/web/persona-public.spec.mjs",
+        "e2e/web/auth-landing.spec.mjs",
+        "e2e/web/records-thumbnails.spec.mjs",
+        "tdf-mobile/src/navigation/notificationResponses.test.ts",
+        "playwright.discovery.config.mjs",
+        "tdf-hq-ui/src/api/directory.test.ts",
+        "scripts/test-music-directory-migration.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/DiscoveryFallbackPrivacy.tla",
+        "formal/event-operations/DiscoveryFallbackPrivacy.cfg",
+        "formal/event-operations/DiscoveryFallbackPrivacyPrivateSubject.cfg",
+        "formal/event-operations/DiscoveryFallbackPrivacyIgnoredLink.cfg"
+      ],
+      "verification": "Real PostgreSQL SQL cases, Jest component regressions, Playwright browser integration; no formal proof claimed. Finite fallback-privacy model plus two expected counterexamples; actual SQL subject/link suppression negative controls. No general SQL refinement or cache revocation proof.",
+      "evidence": "Local validation recorded in delivery report; hosted and production verification pending.",
+      "status": "specified and implemented",
+      "openQuestions": [
+        "Legacy typo-only matches are outside the indexed candidate prefilter.",
+        "Physical mobile/PWA and production evidence remain separate from browser emulation."
+      ],
+      "confidence": "Runtime regressions and local compiler validation; no proof or production claim.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and local validation; hosted checks, review, merge, production and physical-device evidence are separate gates."
+      }
+    },
+    {
+      "domain": "MSG",
+      "actors": [
+        "Authenticated direct-message participant",
+        "Other participant controlling their own consent/block",
+        "Administrator subject to canonical participant/consent policy"
+      ],
+      "authority": "explicit operator requirement",
+      "source": "Operator confirmation on 2026-10-13; docs/notifications/chat-delivery-2026-10-13.md",
+      "contract": "docs/notifications/chat-delivery-2026-10-13.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "privacy": "In-app notice has generic content; canonical chat read authority gates list/detail/count.",
+      "idempotency": "Normalized direct-message open returns one unique pair thread. Send has no idempotency key: an uncertain accepted response can cause a duplicate on retry; no exactly-once guarantee.",
+      "recovery": "Preserve notices, mappings, visibility policy and non-unique history index across application rollback; never reintroduce one-message uniqueness.",
+      "observability": "Synthetic regression evidence and aggregate read-only incident facts only.",
+      "confidence": "SQL runtime and web regression evidence; external delivery and production rollout remain unverified.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "In-app implementation has local SQL/web evidence; required CI, production rollout and recipient-side verification remain pending."
+      },
+      "id": "MSG-NOTIFY-001",
+      "title": "Atomic recipient inbox notifications and multi-message conversations",
+      "statement": "Every newly committed direct message must have one minimized notice for the other participant, and a conversation must support subsequent messages and replies. Inbox reads apply current chat visibility and links select only an authorized existing thread.",
+      "property": "Accepted message and recipient notice commit together; a rejected or rolled-back send leaves neither. Current chat read authority (including canonical block, revoked consent and inactive-account rules) and message deletion govern notice visibility.",
+      "preconditions": [
+        "Governed production migration installed; existing chat session/consent authority remains in force."
+      ],
+      "inputs": [
+        "Authorized message insert",
+        "Recipient notification reads and typed thread links"
+      ],
+      "state": {
+        "variables": [
+          "Persisted messages, recipient notices and one-to-one mappings",
+          "Current consent, block and account lifecycle"
+        ],
+        "bounds": "Synthetic PostgreSQL assertions and web tests; no universal proof. Notification model: one cached target, Boolean display/read history, no ordinary background-polling or backend-policy refinement proof. Navigation model: two same-route navigations, one prior pending poll, Boolean membership and display/read history; no backend refinement or liveness claim."
+      },
+      "allowedTransitions": [
+        "Authorized send atomically stores a message, notice and mapping.",
+        "Recipient follows a notice to an already authorized thread.",
+        "Current policy denial hides an old notice."
+      ],
+      "forbiddenTransitions": [
+        "A second message is rejected solely because a thread already has one message.",
+        "Notification text contains private message contents.",
+        "A failed send leaves a notice or a notice-storage failure leaves a message."
+      ],
+      "effects": [
+        "Durable recipient notice; repeatable migration; no historical replay or external sends."
+      ],
+      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights. A notification target cannot use cached previews, message bodies or read bookkeeping while its fresh thread-list authorization is pending. Each navigation key requires its own successful list request; old cache writes, an earlier poll, or a previous notification response cannot authorize the new target.",
+      "concurrency": "Existing Party and credential locks serialize send/block. Message and notice share the database transaction; read visibility uses statement snapshot semantics.",
+      "failure": "Notification insert failure aborts the send; transient list errors retain the notification target for recovery; unavailable/foreign links show a generic unavailable state and never auto-select or mark another thread read.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-hq-ui/src/pages/ChatPage.tsx",
+        "scripts/production-migrations.json",
+        ".github/workflows/ci.yml",
+        "tdf-mobile/src/navigation/notificationTarget.ts",
+        "tdf-hq-ui/src/components/NotificationBell.tsx"
+      ],
+      "tests": [
+        "scripts/test-chat-notifications.sh",
+        "scripts/social/chat-notifications.sql",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
+        "tdf-mobile/src/navigation/notificationResponses.test.ts",
+        "tdf-hq/test/integration/interactions/notification-properties.sql",
+        "e2e/web/chat-notification-navigation.spec.mjs"
+      ],
+      "formalModels": [
+        "formal/event-operations/ChatNotificationAuthorization.tla",
+        "formal/event-operations/ChatNotificationNavigation.tla"
+      ],
+      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response. An offline-paused, cache-success regression requires an actual authorization response for the current navigation and preserves the link until reconnection. Same-route allowed/revoked tests and delayed ordinary-poll/previous-notification responses exercise a separate navigation-scoped query. The navigation model checks both display/read safety and three cache/response-scope counterexamples. Late-response fixtures hold the distinct subsequent ordinary poll, cover both old/current completion orders, and verify fresh sidebar recovery without selecting, fetching or marking the denied target read.",
+      "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
+      "ambiguity": [
+        "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."
+      ]
+    },
+    {
+      "id": "SYS-CI-DB-001",
+      "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
+      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
+      "domain": "SYS",
+      "actors": [
+        "CI fixture runner",
+        "Developer"
+      ],
+      "preconditions": [
+        "The runner has started its own disposable PostgreSQL 16 container with a fixed synthetic test database and SCRAM host authentication."
+      ],
+      "inputs": [
+        "Owned container identity",
+        "Fixed test database",
+        "Bounded final-listener readiness query",
+        "Explicit synthetic client password for the TCP probe"
+      ],
+      "state": {
+        "states": [
+          "container starting",
+          "initialization server only",
+          "final server ready",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Starting or initialization-only -> final server ready after the authenticated loopback TCP query succeeds.",
+        "Readiness deadline exceeded -> failed with container diagnostics."
+      ],
+      "forbiddenTransitions": [
+        "A socket-only initialization query succeeds -> apply fixtures.",
+        "Readiness deadline exceeded -> continue SQL tests.",
+        "A missing or incorrect client password -> ready on the SCRAM host listener."
+      ],
+      "effects": [
+        "Wait for the final database process before fixture and migration SQL."
+      ],
+      "authorization": "Only the existing owned disposable test container is addressed; this runner grants no production authority.",
+      "privacy": "The database and its password are fixed synthetic test values.",
+      "concurrency": "The temporary initialization process can stop after accepting socket connections; authenticated TCP readiness excludes that process and requires the synthetic client credential.",
+      "idempotency": "Readiness SELECT has no fixture or migration side effect.",
+      "failure": "Retain the existing 30-attempt bound, print container logs and fail when the final listener is unavailable.",
+      "recovery": "Repair fixture startup and rerun the complete Linux migration job; no SQL assertion or audit policy is waived.",
+      "observability": "Actual PostgreSQL controls: the original socket probe accepts initialization; the authenticated TCP probe rejects initialization/stopped phases and missing/wrong client credentials, then accepts the final SCRAM listener and permits the first real fixture.",
+      "authority": "inferred",
+      "source": "Failed hosted postgres-api run 39712279548; official postgres image initialization lifecycle; local PostgreSQL 16 socket/TCP reproduction on 2026-10-21. PostgreSQL 16 libpq environment-variable and initdb authentication documentation; password-authenticated protocol controls on 2026-10-22.",
+      "property": "Initialization-only PostgreSQL cannot admit the API fixture SQL.",
+      "contract": "formal/system/test-database-readiness.md",
+      "implementation": [
+        "scripts/test-event-operations-api-migration.sh"
+      ],
+      "tests": [
+        ".github/workflows/event-operations-formal.yml"
+      ],
+      "formalModels": [],
+      "verification": "Actual PostgreSQL 16 socket-only, stopped and SCRAM TCP phases exercise the extracted readiness command, including missing/wrong-password negative controls. The full current-head owned-container migration job and independent review remain required.",
+      "evidence": "formal/system/test-database-readiness-protocol-2026-10-22.json; original 2026-10-21 socket/TCP protocol receipt. Current-head hosted Docker migration qualification remains pending; the original failed run is retained.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "High for these finite readiness/authentication controls; no general fixture-readiness or full Docker execution claim.",
+      "ambiguity": [
+        "Other disposable PostgreSQL runners have separate readiness and ownership obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Actual native PostgreSQL lifecycle and missing/wrong-password controls pass; fresh current-head Linux Docker migration qualification remains pending."
+      }
+    },
+    {
+      "id": "SYS-CI-BROWSER-001",
+      "title": "Persona CI uses aligned immutable bundled browsers",
+      "statement": "Before required persona journeys run, an immutable official Playwright image, all locked and installed Playwright packages and the bundled browser identity must agree, the browser process must own its home directory, and Chromium, Firefox and WebKit must each launch successfully. Existing application journeys, assertions, time limits and aggregate gates remain required.",
+      "domain": "SYS",
+      "actors": [
+        "CI runner",
+        "Developer"
+      ],
+      "preconditions": [
+        "Trusted repository end-to-end tests execute in the pinned official Noble image after npm ci and the existing Node 22 setup."
+      ],
+      "inputs": [
+        "Digest-pinned container image",
+        "Package lock and installed package versions",
+        "Bundled image metadata",
+        "Bundled browser executable launches",
+        "Process identity and actual home-directory owner"
+      ],
+      "state": {
+        "states": [
+          "unvalidated",
+          "aligned",
+          "ready",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Unvalidated -> aligned after image, lockfile, installed versions, directory and bundled identity all match and the process owns its home.",
+        "Aligned -> ready only after every required browser launches and closes.",
+        "Any validation or launch error -> failed."
+      ],
+      "forbiddenTransitions": [
+        "Mutable or mismatched image -> run journeys.",
+        "Missing or failed browser -> emit a complete preflight success.",
+        "Any preflight or application-stage failure -> passing aggregate quality.",
+        "Browser process and home have different owners -> launch browsers."
+      ],
+      "effects": [
+        "Use bundled browser executables and system dependencies instead of per-job package installation."
+      ],
+      "authorization": "The job runs as user 1001 to match GitHub workspace/home ownership; this test infrastructure grants no production or release authority.",
+      "privacy": "Preflight reports browser names and versions only; application test artifacts retain existing sanitization and retention.",
+      "concurrency": "Existing browser workers and fixture isolation are unchanged; the container uses the official shared-memory recommendation.",
+      "idempotency": "Preflight does not install packages or modify application data.",
+      "failure": "Fail closed on missing metadata, version drift, invalid pin, browser-path redirection or any failed launch; there is no installer fallback.",
+      "recovery": "Update the lockfile and verified official image together, then require all existing hosted browser stages and protected admission.",
+      "observability": "Emit one bundled-browser-preflight record only after all required browsers have launched and closed; retain existing application artifacts.",
+      "authority": "inferred",
+      "source": "Repeated long Playwright installation steps in hosted runs39827271101 and39873570293; official Playwright Docker/CI guidance and immutable1.59.1 image metadata.",
+      "property": "Incomplete or mismatched browser infrastructure cannot admit required persona journeys or replace their assertions.",
+      "contract": "formal/system/browser-ci-image.md",
+      "implementation": [
+        ".github/workflows/ci.yml",
+        "scripts/verify-playwright-image.mjs",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/playwright-image.test.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Finite negative controls reject mutable/foreign pins, package drift, stale metadata, redirected browser directories partial launch success and the root/regular-user home mismatch observed in the first Linux preflight. Runtime metadata and all three actual browser launches are checked before unchanged hosted journeys; complete current-head Linux qualification remains required.",
+      "evidence": "The initial hosted Linux preflight at fb66f5189e2484b90d6dbb825a0d2a00cebe7022 fails before application tests because root does not own GitHub's mounted home. Preserve that result. Corrected current-head preflight and all three browser stages remain required; registry metadata and mocks alone do not qualify the image.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Finite version/launch-closure controls only; fresh actual Linux image and application-test qualification is pending.",
+      "ambiguity": [
+        "Registry and image-pull availability remain external dependencies.",
+        "Successful browser launches do not establish application conformance."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Pure version checks and mocked launch failure/cleanup controls do not establish complete installed-image or application correspondence; fresh hosted execution remains required."
+      }
+    },
+    {
+      "id": "PAY-MUSIC-PURCHASE-REPLAY-001",
+      "title": "Bind music purchase replay to its buyer and original request",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "A music purchase key is scoped to its authenticated buyer and bound to the original offer, normalized declared/effective country, terms version and checkout environment. Current admission is rechecked. Identical requests reuse the order; conflicting or incomplete binding evidence returns 409 without purchase effects, including after concurrent reservation.",
+      "authority": "User audit sections 14–15 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
+      "source": "User audit request; formal/system/music-purchase-replay.md; recovered createMusicPurchase implementation",
+      "contract": "formal/system/music-purchase-replay.md",
+      "property": "Single order per buyer/key; every accepted replay preserves original buyer and bound payload.",
+      "actors": [
+        "Authenticated buyer",
+        "Concurrent request from the same or another buyer"
+      ],
+      "preconditions": [
+        "Current feature enablement, valid input and currently eligible public offer; HTTP boundary authenticates the session."
+      ],
+      "inputs": [
+        "Buyer Party ID",
+        "Idempotency-Key",
+        "Availability rule UUID",
+        "Declared country",
+        "Trusted effective country or ZZ",
+        "Terms version",
+        "Checkout environment"
+      ],
+      "state": {
+        "request": [
+          "new",
+          "looked",
+          "accepted",
+          "conflict",
+          "failed"
+        ],
+        "binding": "Immutable checkout line-item snapshot; unique purchase buyer/key"
+      },
+      "allowedTransitions": [
+        "Absent buyer/key -> one committed order/checkout/terms snapshot",
+        "Matching replay -> original order in its current state",
+        "Conflicting or incomplete evidence -> 409 without purchase effects"
+      ],
+      "forbiddenTransitions": [
+        "Changed offer, terms, country or environment -> accepted old order",
+        "Another buyer -> original buyer order",
+        "Concurrent absent-key observations -> two orders for one buyer/key"
+      ],
+      "effects": [
+        "One initial purchase transaction; no additional purchase effects on replay or conflict"
+      ],
+      "authorization": "Authenticated buyer scopes every lookup; current feature and offer admission precede receipt reuse. Session revocation is delegated to the existing HTTP boundary and is outside this model.",
+      "privacy": "No new customer data class; existing private checkout snapshot remains authoritative. Fixed conflict text does not disclose stored terms or another buyer.",
+      "concurrency": "Default PostgreSQL READ COMMITTED; unique buyer/key INSERT ON CONFLICT, then a fresh statement compares the committed winner snapshot. Higher isolation serialization failures require retry.",
+      "idempotency": "Same buyer/key and bound normalized inputs reuse one order. Missing evidence or changed bound inputs conflict. Different buyers and keys are independent.",
+      "failure": "Validation/feature/eligibility may fail before replay; binding mismatch returns 409. Database errors fail and roll back; no provider call occurs at creation.",
+      "recovery": "Retry lost responses with identical inputs/key; new requests require a new key. Preserve immutable financial and terms records. No migration or destructive rollback.",
+      "observability": "HTTP status and original purchase identity; existing checkout/terms audit only for initial creation. Exact-revision test and bounded-model receipts remain separate execution outputs.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
+        "scripts/test-music-purchase.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/MusicPurchaseReplay.tla",
+        "formal/event-operations/MusicPurchaseReplay.cfg",
+        "formal/event-operations/MusicPurchaseReplayUnbound.cfg",
+        "formal/event-operations/MusicPurchaseReplayGlobalKey.cfg",
+        "formal/event-operations/MusicPurchaseReplayStaleLookup.cfg"
+      ],
+      "status": "specified and implemented",
+      "historicalStatus": "implemented but unspecified",
+      "verification": "Real-handler PostgreSQL regressions and concurrent barrier schedule; unchanged-main regression is a negative control. Bounded lookup/commit/retry model with three named invariant controls.",
+      "evidence": "Exact source-revision execution receipts are generated by validation; no historical green result certifies a later tree.",
+      "confidence": "Medium for this creation boundary; bounded model plus PostgreSQL conformance, not a global payment or session proof.",
+      "ambiguity": [
+        "Provider attempt keys still have a separate global collision domain; this repair does not change them.",
+        "Music provider recovery, partial refunds and activation remain separately unresolved.",
+        "Undocumented OpenAPI music operations remain an explicit API coverage obligation."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Creation replay has executable conformance checks and bounded properties; full HTTP/session and provider lifecycle coverage remains separate and incomplete."
+      }
+    },
+    {
+      "id": "PAY-MUSIC-MONEY-WIRE-001",
+      "title": "Preserve exact music amounts through authoring, JSON, display and purchase confirmation",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "Music monetary JSON uses exact safe integers or canonical Int64 decimal text, never lossy numeric conversion. Price authoring and display retain exact minor units. Purchase creation requires a positive canonical amount and canonical currency matching the currently eligible USD offer before creating effects.",
+      "authority": "Technical correctness under the user audit; existing USD-only content validation; RFC8259 integer interoperability",
+      "source": "User audit sections9–15 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
+      "contract": "formal/system/music-money-wire.md",
+      "property": "Every admitted numeric encoding round trips through binary64 without losing its Int64 value; larger values retain exact decimal text. A conflicting confirmed quote produces no purchase.",
+      "actors": [
+        "Artist authoring an offer",
+        "Authenticated buyer",
+        "Public reader",
+        "Web and generated API clients"
+      ],
+      "preconditions": [
+        "Existing public/commerce features and authorization apply independently; no experimental activation is authorized.",
+        "Published music sale currency is USD."
+      ],
+      "inputs": [
+        "Signed Int64 wire values; nonnegative prices and positive purchase confirmation",
+        "Canonical expectedAmountMinor and expectedCurrency",
+        "Immutable published availability rule and checkout snapshot"
+      ],
+      "state": {
+        "wire": [
+          "safe numeric JSON",
+          "canonical decimal text",
+          "invalid"
+        ],
+        "purchase": [
+          "new",
+          "validated quote",
+          "eligible offer",
+          "accepted",
+          "conflict",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Safe integer -> exact numeric JSON -> unchanged minor units",
+        "Larger Int64 -> decimal text -> unchanged minor units",
+        "Matching positive quote -> existing purchase transaction",
+        "Invalid or mismatching quote -> rejection without purchase effects"
+      ],
+      "forbiddenTransitions": [
+        "Unsafe JSON number -> silently rounded price",
+        "Whole monetary value -> binary64 division for display",
+        "Mismatched amount/currency -> created order or provider action",
+        "Missing confirmation -> accepted legacy purchase"
+      ],
+      "effects": [
+        "Pure new SQL JSON function; no financial-row or historical-snapshot rewrite",
+        "Exact client input, compatible safe scalar serialization and confirmed purchase request"
+      ],
+      "authorization": "Existing buyer, feature and offer admission still apply; client price is evidence of agreement, not a pricing or authorization authority.",
+      "privacy": "Purchase data remains buyer-scoped; fixed conflicts do not echo stored or submitted monetary/customer payloads.",
+      "concurrency": "Published price and checkout financial evidence remain immutable; existing buyer/key unique reservation persists. Concurrent withdrawal eligibility and provider uncertainty are not proven by this wire obligation.",
+      "idempotency": "Purchase creation retains PAY-MUSIC-PURCHASE-REPLAY-001; unchanged confirmed inputs replay, conflicting confirmed prices fail before mutation.",
+      "failure": "Malformed/nonpositive confirmation or missing fields return400; eligible mismatching quote returns409. Unsafe legacy numeric values are refused before UI/provider effects.",
+      "recovery": "Keep additive function on rollback; preserve financial data and historical migrations. Commerce remains off across incompatible frontend/backend pairing and older-application rollback.",
+      "observability": "Exact-revision SMT, property-test, real-handler/SQL, generated-client and UI receipts; no real provider charge used for verification.",
+      "implementation": [
+        "tdf-hq/src/TDF/MusicRelease/Money.hs",
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/utils/musicMoney.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/verify-music-money-wire.py",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
+        "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
+        "tdf-hq-ui/src/utils/musicMoney.test.ts",
+        "tdf-hq-ui/src/api/musicReleases.money.test.ts",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
+        "scripts/test-music-money-wire-verifier.py",
+        "scripts/lib/music_money_conformance.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/test-music-release-api-e2e.sh",
+        "scripts/test-music-release-api-e2e.mjs"
+      ],
+      "formalModels": [
+        "scripts/verify-music-money-wire.py",
+        "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs"
+      ],
+      "verification": "Source-recognized SMT for the full signed64 numeric branch with three SAT negative controls; full-range sampled real-codec QuickCheck, explicit boundaries, PostgreSQL projection/quote and actual web adapter/form tests.",
+      "evidence": "Current execution receipts are separate artifacts, not handwritten PASS assertions.",
+      "confidence": "Medium: numeric branch mechanically verified under its stated translation; real wire/display/admission checks are empirical and property based.",
+      "ambiguity": [
+        "No whole-library, JSON-parser or whole-program refinement proof is claimed.",
+        "Provider limits/transport recovery, concurrent withdrawal, shared payment routing and activation remain separate obligations.",
+        "Other undocumented music API operations and historical-export consumers are not covered."
+      ],
+      "status": "specified and implemented",
+      "historicalStatus": "implemented but unspecified",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped codec, quote, API and property obligations have executable checks; complete provider, session, export, concurrency and deployed conformance remains separate."
+      }
+    },
+    {
+      "id": "SYS-MUSIC-TEST-ENTRY-001",
+      "title": "Execute every canonical music unit group and reject a missing group",
+      "domain": "SYS",
+      "critical": false,
+      "statement": "The canonical Hspec entrypoint must execute the music domain, content, ERN432 and S3 specifications. Backend quality must fail if any required named group is absent even when other tests pass.",
+      "authority": "User audit validation and traceability requirements",
+      "source": "User audit sections9,24–25; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
+      "contract": "formal/system/music-test-entrypoint.md",
+      "property": "Each of four named unit groups has executable examples in the test binary used by canonical backend quality.",
+      "actors": [
+        "Developer",
+        "CI backend quality job"
+      ],
+      "preconditions": [
+        "Stack builds the canonical test executable using the selected backend toolchain."
+      ],
+      "inputs": [
+        "Compiled Hspec test tree",
+        "Four required music-unit group names"
+      ],
+      "state": {
+        "groups": [
+          "registered",
+          "missing"
+        ],
+        "gate": [
+          "not executed",
+          "passed",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "All four nonempty groups -> successful presence probes",
+        "Any missing group -> failed backend gate"
+      ],
+      "forbiddenTransitions": [
+        "Cabal module listing alone -> test-execution claim",
+        "Green unrelated examples -> missing music group accepted"
+      ],
+      "effects": [
+        "Canonical suite executes existing specification modules; presence probes reuse the built binary."
+      ],
+      "authorization": "Local/CI verification only; no deployment or provider authorization.",
+      "privacy": "Unit fixtures and logs are synthetic; no production/customer data is required.",
+      "concurrency": "Group probes are sequential and do not start external services.",
+      "idempotency": "Repeated probes execute pure unit tests; no production state mutation.",
+      "failure": "--fail-on=empty rejects missing groups; ordinary assertion failures remain fatal.",
+      "recovery": "Restore the required registrations and rerun affected canonical tests; do not substitute standalone-runner existence.",
+      "observability": "Hspec per-group results and original-executable empty-group negative-control receipts.",
+      "implementation": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/MusicReleaseSpecMain.hs",
+        "scripts/quality-backend.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
+        "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
+        "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
+        "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
+        "scripts/quality-backend.sh"
+      ],
+      "formalModels": [],
+      "verification": "Four real executable nonempty probes; the previous executable fails all four as empty. This is execution coverage, not a proof of test adequacy.",
+      "evidence": "Current executable logs and explicit negative-control receipts.",
+      "confidence": "High for scoped entrypoint presence; no claim of universal test reachability.",
+      "ambiguity": [
+        "Other standalone test runners require their own execution audit.",
+        "Group presence does not establish adequate assertions, providers or external integration coverage."
+      ],
+      "status": "specified and implemented",
+      "historicalStatus": "specified but missing",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Four scoped groups are executed and absence is fatal; complete repository-wide test reachability and quality evidence remain broader obligations."
+      }
+    },
+    {
+      "id": "PAY-MUSIC-OUTCOME-001",
+      "title": "Project verified music money without reopening closed fulfillment",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "At the music_download checkout-to-purchase projection, a failed payment attempt must not cancel a pending or awaiting-payment purchase. A verified paid transition settles and grants one entitlement only for an eligible purchase. If the purchase is already cancelled, refunded or in chargeback, retain verified money, leave fulfillment closed, grant no entitlement and atomically open one provider/account/environment-bound reconciliation exception linked by checkout ID plus an idempotent audit event. A paid replay creates no additional effect. Failed or closed checkouts must deny subsequent music payment-attempt creation or replay under the checkout lock before a new provider create/capture call. Persisted attempt failure/status markers must continue denying admission and existing binding replay when a late pending or binding response reopens checkout/attempt status.",
+      "authority": "AUTHORITY-MUSIC-OUTCOME-20261015; existing distinct checkout-attempt/purchase states, ADR-005 purchase entitlement and the user mandate to repair financial contradictions rather than preserve bugs.",
+      "source": "formal/system/music-payment-outcome.md; reproduced current-main trigger counterexample on synthetic PostgreSQL17.",
+      "contract": "formal/system/music-payment-outcome.md",
+      "property": "A committed canonical music checkout projection never grants an active entitlement to a closed purchase; failed attempts leave payable fulfillment intact; verified money for closed fulfillment has a linked reconciliation record. Failed-checkout retry admission remains blocked under the same row lock.",
+      "actors": [
+        "Verified-payment recorder",
+        "Canonical checkout projection",
+        "Strict administrator reading reconciliation"
+      ],
+      "preconditions": [
+        "music_download checkout linked to its canonical purchase",
+        "Existing before-trigger validates succeeded attempt and immutable provider binding before paid",
+        "Migration refuses existing active purchase entitlements whose order is not paid",
+        "Music commerce remains disabled until separate provider runtime/recovery obligations are satisfied",
+        "Release schema verifier requires music_checkout_payment_attempt_allowed(uuid) before candidate admission"
+      ],
+      "inputs": [
+        "Checkout status transition",
+        "Bound verified provider/account/environment/resource/merchant reference",
+        "Purchase state and fixed amount/currency"
+      ],
+      "state": {
+        "purchase": [
+          "pending",
+          "awaiting_payment",
+          "paid",
+          "cancelled",
+          "refunded",
+          "chargeback"
+        ],
+        "projection": [
+          "payable",
+          "settled",
+          "closed-needs-reconciliation"
+        ],
+        "reconciliation": [
+          "open",
+          "assigned",
+          "resolved",
+          "ignored"
+        ]
+      },
+      "allowedTransitions": [
+        "Payment attempt failure -> failed checkout while purchase remains payable",
+        "Verified paid checkout + payable purchase -> paid purchase and one entitlement",
+        "Verified paid checkout + closed purchase -> unchanged closed fulfillment plus reconciliation",
+        "Refund/dispute -> end active fulfillment"
+      ],
+      "forbiddenTransitions": [
+        "Attempt failure alone -> cancelled purchase",
+        "Verified money for a closed purchase -> active entitlement",
+        "Paid replay -> duplicate entitlement or case",
+        "Unverified payment -> paid fulfillment",
+        "Failed checkout -> another provider create/capture operation via new or replayed music attempt",
+        "Late binding/pending status -> new payment or existing widget replay despite persisted failure marker"
+      ],
+      "effects": [
+        "Canonical settlement and unique entitlement when payable",
+        "Existing reconciliation exception with checkout-scoped internal reference and exact provider/resource metadata when closed",
+        "Idempotent purchase_payment_requires_review audit event",
+        "Safe known music_paid_closed_order administrative reason represented in OpenAPI and generated web/mobile clients"
+      ],
+      "authorization": "Existing verified-payment admission and immutable binding checks remain prerequisites. Reconciliation report remains strict-administrator-only; this migration grants no new privilege.",
+      "privacy": "Existing financial reconciliation/audit boundaries; no message payload, credential or new public data. The report omits merchant/provider references. Retention policy and operational resolution are separate obligations.",
+      "concurrency": "Checkout update serializes before the trigger locks the canonical purchase FOR UPDATE; exception and audit uniqueness deduplicate. Executable projection races use explicit Read Committed and witnessed PostgreSQL locks. Other isolation modes and whole provider-handler locking/recovery are not inferred.",
+      "idempotency": "Unchanged paid status returns before projection; existing entitlement, open-case fingerprint and audit idempotency indexes enforce their scoped uniqueness.",
+      "failure": "Statement or trigger error rolls back its projection transaction. Contradictory historical grants block migration for explicit review. Transport uncertainty and failed/cancelled checkout recovery remain separate unresolved P1 obligations. Fulfillment awaiting payment does not mean payment retry is admitted; failed checkout admission returns HTTP409.",
+      "recovery": "Keep the additive migration on application rollback; restoring the old function reopens the defect. Closed-order money requires authorized reconciliation; no automatic refund, reopening or provider request is introduced. Any rollback to older application code requires music commerce disabled because older handlers bypass the admission function.",
+      "observability": "commerce_reconciliation_exception, checkout-filtered administrative reconciliation report and purchase_payment_requires_review audit event.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server/CommerceOperations.hs",
+        "scripts/production-migrations.json",
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/sql/music_payment_outcomes.sql",
+        "tdf-hq/test/sql/music_payment_state_fixture.sql",
+        "scripts/test-music-payment-outcomes.sh",
+        "scripts/lib/music_payment_conformance.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/verify-event-operations-formal.sh",
+        "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx"
+      ],
+      "formalModels": [
+        "formal/event-operations/MusicPaymentOutcome.tla",
+        "formal/event-operations/MusicPaymentOutcome.cfg",
+        "formal/event-operations/MusicPaymentOutcomeFailure.cfg",
+        "formal/event-operations/MusicPaymentOutcomeClosed.cfg",
+        "formal/event-operations/MusicPaymentOutcomeReview.cfg",
+        "formal/event-operations/MusicPaymentOutcomeReplay.cfg",
+        "formal/event-operations/MusicPaymentOutcomeRetry.cfg",
+        "formal/event-operations/MusicPaymentOutcomeFence.cfg"
+      ],
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "verification": "Eighteen PostgreSQL assertions; intended SQL function plus six controlled mutations; seven witnessed row-lock schedules; administrative HTTP linkage/denial and existing-binding replay checks; bounded TLA+ intended model and six named negative controls. Full exact-candidate gates and deployment pending.",
+      "evidence": "Working-source baseline and repair evidence recorded 2026-10-15; exact candidate receipts must be rerun and retained after final commit.",
+      "confidence": "High for the reproduced projection defect and scoped working-source SQL/model checks; production, provider transport and whole-program refinement not established.",
+      "ambiguity": [
+        "Provider runtime admission, ambiguous response reconciliation and recovery of closed checkouts remain open; feature must stay disabled.",
+        "Partial-refund entitlement and dispute-restoration product decisions remain open.",
+        "Trusted direct SQL bypassing canonical projection is outside this requirement; this is not a global database constraint on every entitlement write.",
+        "Existing music routes lack current OpenAPI/client coverage; this repair introduces no endpoint or DTO."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Canonical projection repair, executable controls and bounded model are implemented; final exact-candidate gates, combined-main delivery and provider/recovery obligations remain outstanding."
+      }
+    },
+    {
+      "id": "DEPLOY-VERSION-001",
+      "title": "Refresh backend identity through restored build caches",
+      "domain": "DEPLOY",
+      "critical": true,
+      "statement": "The canonical backend quality build must regenerate compiled Git identity for the checked-out HEAD despite restored incremental objects and unchanged Haskell source; runtime overrides cannot substitute for refreshed compiled metadata.",
+      "authority": "Derived technical requirement from observed cached metadata failure; no product activation authorization.",
+      "source": "Hosted backend job116275638317 at candidate849b and synthetic checkoutf3f5b873; formal/system/backend-version.md",
+      "contract": "formal/system/backend-version.md",
+      "property": "After Git HEAD changes without Haskell edits, canonical cached build reports the new HEAD; independently removing either required cache-layer refresh must reproduce stale identity.",
+      "actors": [
+        "Backend CI",
+        "Operator of the canonical local quality gate"
+      ],
+      "preconditions": [
+        "Repository Stack/GHC toolchain; controlled build checkout and trusted unchanged runtime fixture.",
+        "No runtime commit environment or /app/COMMIT override in the identity probe.",
+        "Canonical build has a trusted accessible Git checkout; independently bound image-packaging metadata remains a separate path."
+      ],
+      "inputs": [
+        "Git HEAD",
+        "Incremental Stack/GHC objects",
+        "Actual TDF.Version source",
+        "Repository Stack snapshot/lock"
+      ],
+      "state": {
+        "states": [
+          "cached",
+          "building",
+          "metadata_checked",
+          "failed"
+        ],
+        "initial": "cached",
+        "terminal": [
+          "metadata_checked",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "cached -> building -> metadata_checked after executable reports current HEAD",
+        "building -> failed on build, identity, cache-control or deadline failure"
+      ],
+      "forbiddenTransitions": [
+        "cached -> metadata_checked solely by runtime metadata override",
+        "Accepting stale identity after a source-identical Git HEAD change"
+      ],
+      "effects": [
+        "Refresh Git/time Template Haskell inputs during canonical build",
+        "Retain private source-bound logs and executable identity evidence"
+      ],
+      "authorization": "This gate grants no production or provider permission.",
+      "privacy": "Synthetic Git identities and private test directories only; no application data or credentials in output.",
+      "concurrency": "Probe packages and process groups are isolated; ordinary Stack dependency-cache locking is trusted. Concurrent privileged source/cache replacement is outside the fixture boundary.",
+      "idempotency": "Each test run uses a new evidence directory; existing evidence is never overwritten.",
+      "failure": "Any failed build or mismatched identity fails the gate. Negative controls require the known stale identity, not an arbitrary process failure.",
+      "recovery": "Preserve failed receipts; retry in a new directory after repair. No production rollback or schema changes.",
+      "observability": "Per-build logs, Git HEADs, returned identities, executable hash and unchanged unrelated object witness.",
+      "implementation": [
+        "tdf-hq/src/TDF/Version.hs",
+        "scripts/quality-backend.sh",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        "scripts/test-backend-version-rebuild.py",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-hq/test/Spec.hs",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "verification": "Actual repository module compiled through Stack in a cached minimal package; README-only HEAD advance; independent Stack/GHC cache controls; final backend/HTTP gates still required.",
+      "evidence": "Current candidate receipts and hosted logs must be retained; older849b failed CI is diagnosis only.",
+      "confidence": "High for selected cache layers after actual regression; no whole-binary source attestation or universal build-system proof.",
+      "ambiguity": [
+        "Direct arbitrary developer Stack invocations without the canonical dirty flag may skip an unchanged package.",
+        "Runtime metadata can be overridden by trusted deployment configuration; those paths do not prove compiled identity."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Cache repair and executable controls implemented; exact final-candidate full backend/HTTP validation, merge and deployed identity remain required."
+      }
     },
     {
       "id": "SYS-WEB-REQUEST-001",

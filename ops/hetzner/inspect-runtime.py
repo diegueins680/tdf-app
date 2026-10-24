@@ -26,10 +26,22 @@ MERCH_REPUTATION_FLAGS = {
     'store_reviews', 'product_reviews', 'seller_responses', 'review_images', 'badges',
     'search_influence', 'comparison_cards', 'moderation', 'notifications',
 }
-BOOLEAN_KEYS = {
+CORS_BOOLEAN_KEYS = {
+    'ALLOW_ALL_ORIGINS', 'CORS_ALLOW_ALL_ORIGINS', 'CORS_DISABLE_DEFAULTS',
+    'DISABLE_DEFAULT_CORS',
+}
+BOOLEAN_KEYS = CORS_BOOLEAN_KEYS | {
     'RUN_MIGRATIONS', 'AUTO_APPLY_PRODUCTION_MIGRATIONS', 'RESET_DB', 'SEED_DB',
-    'ALLOW_ALL_ORIGINS', 'CORS_DISABLE_DEFAULTS', 'SESSION_COOKIE_SECURE',
+    'SESSION_COOKIE_SECURE', 'SMTP_TLS', 'ENABLE_GDPR_COMPLIANCE',
     'SOCIAL_V2_ENABLED', 'EVENT_LOGISTICS_RECHECK_ENABLED', 'OPERATIONS_WORKER_ENABLED',
+    'CONTEXTUAL_REPUTATION_ENABLED', 'PUBLIC_REPUTATION_PROJECTION_ENABLED',
+    'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED',
+    'EVENT_DISCOVERY_ENABLED', 'EVENT_DISCOVERY_AUTO_PUBLISH',
+    'ARTIST_ENRICHMENT_ENABLED', 'ARTIST_ENRICHMENT_AUTO_PUBLISH',
+    'REPUTATION_AGGREGATION_WORKER_ENABLED', 'TAX_INVOICE_WORKER_ENABLED',
+    'TICKET_CONFIRMATION_EMAIL_ENABLED', 'PAYPAL_REFUND_RECONCILIATION_ENABLED',
+    'COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED', 'MUSIC_TRUST_CF_IPCOUNTRY',
+    'TDF_ENABLE_SYNTHETIC_PERSONAS',
 }
 
 
@@ -51,10 +63,11 @@ def token(value):
     return value
 
 
-def boolean(value):
-    require(isinstance(value, str))
-    v = value.lower()
-    require(v in {'true', 'false', '1', '0', 'yes', 'no', 'on', 'off', ''})
+def boolean(value, *, cors=False):
+    require(isinstance(value, str) and len(value) <= 256)
+    v = value.strip().lower()
+    require(v in {'true', 'false', '1', '0', 'yes', 'no', 'on', 'off', ''}
+            or (cors and v == '*'))
     # Preserve absence/empty distinction; this is configuration, not default resolution.
     return value
 
@@ -104,7 +117,7 @@ def summarize_container(service, container):
             key, sep, value = entry.partition('=')
             require(bool(sep) and key not in env)
             env[key] = value
-        flags = {k: boolean(v) for k, v in env.items()
+        flags = {k: boolean(v, cors=k in CORS_BOOLEAN_KEYS) for k, v in env.items()
                  if k in BOOLEAN_KEYS or k.endswith(('_ENABLED', '_AUTO_PUBLISH'))}
         result['booleanConfiguration'] = flags
         result['missingBooleanConfiguration'] = sorted(BOOLEAN_KEYS - set(flags))

@@ -9466,6 +9466,27 @@
               "module": "GHC.Types",
               "name": "Int"
             }
+          },
+          {
+            "in": "query",
+            "name": "profileKind",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
           }
         ],
         "bodies": [],

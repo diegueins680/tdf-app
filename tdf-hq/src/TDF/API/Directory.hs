@@ -278,6 +278,7 @@ type DirectoryPublicAPI = "directory" :>
            :> QueryParam "dateTo" UTCTime
            :> QueryParam "cursor" Text
            :> QueryParam "limit" Int
+           :> QueryParam "profileKind" Text
            :> Get '[JSON] DirectorySearchResponse
     :<|> "suggestions" :> QueryParam "q" Text :> QueryParam "cityId" UUID :> Get '[JSON] [DirectorySuggestion]
     :<|> "taxonomies" :> QueryParam "locale" Text :> Get '[JSON] Value

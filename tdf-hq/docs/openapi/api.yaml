@@ -9681,6 +9681,59 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/MusicPlaybackConflict' }
         '503': { description: Music playback telemetry disabled }
+  /music/purchases:
+    post:
+      tags: [Music releases]
+      operationId: createMusicPurchase
+      summary: Confirm an exact music offer and create or replay a purchase
+      description: >-
+        Requires music commerce enabled for the process and checkout environments.
+        Confirm the displayed exact amount and currency. Current offer eligibility is
+        checked again. One buyer/key binds one original request; an eligible replay
+        with different bound inputs returns 409 without purchase effects. No payment
+        provider is contacted by this operation. Music commerce remains experimental.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string }
+          description: Trimmed key of 8–160 visible ASCII characters, scoped to this buyer.
+        - name: CF-IPCountry
+          in: header
+          schema: { type: string }
+          description: Effective country is trusted only with the protected edge control enabled; otherwise it is unknown.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MusicPurchaseCreateInput' }
+      responses:
+        '201':
+          description: Original or matching replayed purchase in its current state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MusicPurchaseOrder' }
+        '400': { description: Invalid key, missing exact price confirmation or malformed input }
+        '401': { description: Authentication required }
+        '404': { description: No currently eligible offer or buyer billing identity }
+        '409': { description: Confirmed price or replay binding conflicts; no purchase effects }
+        '503': { description: Music commerce is disabled in the applicable environment }
+    get:
+      tags: [Music releases]
+      operationId: listMusicPurchases
+      summary: List only the authenticated buyer's purchases
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Purchases, newest first; monetary values retain exact minor units
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MusicPurchaseOrder' }
+        '401': { description: Authentication required }
+        '503': { description: Music commerce is disabled in the applicable environment }
   /music/releases/{releaseId}/versions/{versionId}/validate:
     post:
       tags: [Music releases]
@@ -12675,7 +12728,7 @@ components:
         creStatus: { type: string, enum: [open, assigned, resolved, ignored, unrecognized] }
         creReason:
           type: string
-          enum: [closed_checkout_approval, scheduled_query_review, binding_mismatch, unknown_provider_state, unrecognized]
+          enum: [closed_checkout_approval, scheduled_query_review, binding_mismatch, unknown_provider_state, music_paid_closed_order, unrecognized]
           description: Fixed safe classification, not raw stored exception text
         creCheckoutId: { type: string, format: uuid, nullable: true }
         crePaymentAttemptId: { type: string, format: uuid, nullable: true }
@@ -18087,6 +18140,60 @@ components:
         platform: { type: string }
         active: { type: boolean }
         updatedAt: { type: string, format: date-time }
+    MusicMinorUnitsDecimal:
+      type: string
+      maxLength: 19
+      pattern: '^(0|[1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807)(?![\s\S])'
+      description: Canonical decimal minor units in 0..9223372036854775807. No sign, leading zeros, fractional part or exponent.
+    MusicPositiveMinorUnitsDecimal:
+      type: string
+      maxLength: 19
+      pattern: '^([1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807)(?![\s\S])'
+      description: Canonical positive decimal minor units in 1..9223372036854775807.
+    MusicMinorUnits:
+      description: >-
+        Exact nonnegative minor units. Legacy numeric values are emitted only in
+        the interoperable integer range. Larger values are canonical decimal text;
+        clients must not convert the whole amount to a binary64 number.
+      oneOf:
+        - { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        - { $ref: '#/components/schemas/MusicMinorUnitsDecimal' }
+    MusicPurchaseCreateInput:
+      type: object
+      additionalProperties: false
+      required: [availabilityRuleId, territoryCode, termsVersion, expectedAmountMinor, expectedCurrency]
+      properties:
+        availabilityRuleId: { type: string, format: uuid }
+        territoryCode:
+          type: string
+          description: Declared country is trimmed and uppercased, then must contain two ASCII letters. It does not establish trusted territory eligibility.
+        termsVersion:
+          type: string
+          description: Trimmed, nonempty accepted terms identifier, limited to 160 characters after trimming.
+        expectedAmountMinor: { $ref: '#/components/schemas/MusicPositiveMinorUnitsDecimal' }
+        expectedCurrency:
+          type: string
+          pattern: '^[A-Z]{3}(?![\s\S])'
+          description: Canonical ISO currency of the displayed offer; current music sales support USD only.
+    MusicPurchaseOrder:
+      type: object
+      required: [id, releaseVersionId, availabilityRuleId, state, grossMinor, discountMinor, taxMinor, feeMinor, netMinor, currency, checkoutId, providerReference, createdAt, paidAt]
+      properties:
+        id: { type: string, format: uuid }
+        releaseVersionId: { type: string, format: uuid }
+        availabilityRuleId: { type: string, format: uuid }
+        state: { type: string, enum: [pending, awaiting_payment, paid, cancelled, refunded, chargeback] }
+        grossMinor: { $ref: '#/components/schemas/MusicMinorUnits' }
+        discountMinor: { $ref: '#/components/schemas/MusicMinorUnits' }
+        taxMinor: { $ref: '#/components/schemas/MusicMinorUnits' }
+        feeMinor: { $ref: '#/components/schemas/MusicMinorUnits' }
+        netMinor: { $ref: '#/components/schemas/MusicMinorUnits' }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        checkoutId: { type: string, format: uuid, nullable: true }
+        providerReference: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        paidAt: { type: string, format: date-time, nullable: true }
+        releaseTitle: { type: string, description: Included by the list operation. }
     MusicPlaybackConflict:
       type: object
       required: [code, message]

@@ -32,6 +32,26 @@ it('rejects an unknown explanation instead of displaying arbitrary server text',
   get.mockResolvedValue({ personalized: true, items: [{ partyId: 2, displayName: 'A', reason: 'private_purchase', relationship: state }] });
   await expect(SocialV2.discover()).rejects.toThrow();
 });
+it('rejects an oversized discovery page before validating its elements', async () => {
+  // The wire contract allows at most 50 entries. Reading even the first
+  // element of an oversized page regresses the Zod collection-size fix.
+  const readPartyId = jest.fn(() => 2);
+  const item = { get partyId() { return readPartyId(); }, displayName: 'A',
+    reason: 'public_profile', relationship: state };
+  get.mockResolvedValue({ personalized: true, items: Array(51).fill(item) });
+  await expect(SocialV2.discover()).rejects.toMatchObject({
+    issues: [expect.objectContaining({ code: 'too_big', path: ['items'], maximum: 50 })],
+  });
+  expect(readPartyId).not.toHaveBeenCalled();
+});
+it('still validates every element of a discovery page at the size limit', async () => {
+  const item = { partyId: 2, displayName: 'A', reason: 'public_profile', relationship: state };
+  const page = { personalized: true, items: Array(50).fill(item) };
+  get.mockResolvedValue(page);
+  await expect(SocialV2.discover()).resolves.toEqual(page);
+  get.mockResolvedValue({ ...page, items: [...page.items.slice(1), { ...item, partyId: 0 }] });
+  await expect(SocialV2.discover()).rejects.toThrow();
+});
 it('sends opt-out independently of profile discoverability', async () => {
   put.mockResolvedValue({ discoverable: true, personalized: false, revision: 3 });
   await SocialV2.preferences({ discoverable: true, personalized: false }, 2);

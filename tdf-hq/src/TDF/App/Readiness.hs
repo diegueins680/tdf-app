@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module TDF.App.Readiness (databaseReady, withinReadinessDeadline) where
+module TDF.App.Readiness (databaseReady, databaseReadyAttempts, probeUntil, readinessAttempts, withinReadinessDeadline) where
 
 import qualified Control.Exception.Safe as Safe
 import Database.Persist.Sql (ConnectionPool, Single(..), rawSql, runSqlPool)
@@ -14,7 +14,34 @@ withinReadinessDeadline microseconds check = do
     Just (Right True) -> True
     _ -> False
 
+-- | Attempts one probe may make: the pool size of TDF.DB.makePool plus one.
+-- The pool can hold up to pool-size idle connections whose sessions
+-- PostgreSQL has closed (restart, terminated backends); their first use fails
+-- at once and every failed attempt destroys the connection it took, so one
+-- probe discards every such connection and still has an attempt left to
+-- answer from a live one once PostgreSQL is back. An unavailable database
+-- fails every attempt inside the same deadline. A connection dead without a
+-- close (host gone, partition) blocks until the deadline instead, one per
+-- probe: outside this bound.
+readinessAttempts :: Int
+readinessAttempts = 11
+
 databaseReady :: ConnectionPool -> IO Bool
-databaseReady pool = withinReadinessDeadline 2000000 $ do
+databaseReady = databaseReadyAttempts readinessAttempts
+
+databaseReadyAttempts :: Int -> ConnectionPool -> IO Bool
+databaseReadyAttempts attempts pool = withinReadinessDeadline 2000000 $ probeUntil attempts $ do
   rows <- runSqlPool (rawSql "SELECT 1" []) pool
   pure (rows == [Single (1 :: Int)])
+
+-- | Runs the probe until it returns without a synchronous exception or the
+-- attempts are spent. A probe result, true or false, is final; asynchronous
+-- cancellation propagates through every attempt.
+probeUntil :: Int -> IO Bool -> IO Bool
+probeUntil attempts probe
+  | attempts <= 0 = pure False
+  | otherwise = do
+      result <- Safe.tryAny probe
+      case result of
+        Right ready -> pure ready
+        Left _ -> probeUntil (attempts - 1) probe

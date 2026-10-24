@@ -145,7 +145,6 @@ export default {
   "help": "Necesito ayuda",
   "createAccount": "Crear cuenta",
   "signInAutofill": "Ingresar y autocompletar",
-  "generalBooking": "Reserva general",
   "openCommunity": "Abrir comunidad",
   "skipContent": "Saltar al contenido principal",
   "goTdf": "Ir a TDF",
