@@ -49980,11 +49980,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-<<<<<<< HEAD
-      "sourceSha256": "4c1321544fda465ec14570c6b5a531e2daa86d722ee0e3821dd7dac40e164b83",
-=======
-      "sourceSha256": "e137a2ea32bf38ad8ab25d2f31df3a78ed4e77b85d534e7af3ee45163d1149f4",
->>>>>>> add7032e8932c060565f978ee68149e46b7a8c84
+      "sourceSha256": "7bb3c0f1072f64c5c4de16d55633966246c002f6cbb4060ba4e935353269c495",
       "definition": {
         "states": [
           "absent",
@@ -50014,11 +50010,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-<<<<<<< HEAD
-      "sourceSha256": "4c1321544fda465ec14570c6b5a531e2daa86d722ee0e3821dd7dac40e164b83",
-=======
-      "sourceSha256": "e137a2ea32bf38ad8ab25d2f31df3a78ed4e77b85d534e7af3ee45163d1149f4",
->>>>>>> add7032e8932c060565f978ee68149e46b7a8c84
+      "sourceSha256": "7bb3c0f1072f64c5c4de16d55633966246c002f6cbb4060ba4e935353269c495",
       "definition": {
         "export": [
           "queued",
