@@ -80,3 +80,8 @@ administrator can fetch receipt bytes, through the event/order scoped endpoint
 `GET /social-events/events/{eventId}/ticket-orders/{orderId}/manual-payment/receipt`.
 Responses use `Cache-Control: no-store`; the browser releases its temporary
 preview URL when the dialog closes. No schema migration is needed.
+
+For web/API rollout compatibility, the buyer form offers file attachments only
+when the checkout response includes the `receiptAttached` Boolean. The previous
+API omits that field and continues to accept reference-only submissions. This
+keeps those transfers usable if the web release arrives before the API release.

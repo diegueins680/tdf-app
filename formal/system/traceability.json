@@ -12093,8 +12093,8 @@
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx": "6d374f89848428dc6636951465e899c9488ac588f958152982f46b75444aa75f",
     "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx": "f65734eaafb845063f509d9a51a46815496669d75821658d35a6f7ae88f91316",
-    "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "99f9f391437f5bbff45c047a34f908a9dde295fee1c6a8b8c9496533def8eb6a",
-    "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx": "ac2fc6e396cc3dbbc438d5da376a4418682d4c8c3ff503c35d447724666c786e",
+    "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "a3d9a2016da97b49a8d6ec1158faefd1d312aff248310e2bcac0100b166dddb2",
+    "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx": "7f8853cfc34b5e070864812552dcb9233dbadbd105a61ebabed1253df6157938",
     "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": "a32b108366282c451878b0a95dd4c9efb1cdfba44ea779d0069cd03f3b5c913f",
     "tdf-hq-ui/src/config/accountDeletionRollout.ts": "c55e82bd8e87288e48b3ac05b86a9fe1335e4400be3e105d2f4fee71534af911",
     "tdf-hq-ui/src/config/appConfig.ts": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
@@ -31071,7 +31071,7 @@
     {
       "id": "SURFACE-4fbcad3f047cdd71",
       "path": "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
-      "sha256": "99f9f391437f5bbff45c047a34f908a9dde295fee1c6a8b8c9496533def8eb6a",
+      "sha256": "a3d9a2016da97b49a8d6ec1158faefd1d312aff248310e2bcac0100b166dddb2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31083,7 +31083,7 @@
     {
       "id": "SURFACE-a00fb37fdda810d3",
       "path": "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
-      "sha256": "ac2fc6e396cc3dbbc438d5da376a4418682d4c8c3ff503c35d447724666c786e",
+      "sha256": "7f8853cfc34b5e070864812552dcb9233dbadbd105a61ebabed1253df6157938",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

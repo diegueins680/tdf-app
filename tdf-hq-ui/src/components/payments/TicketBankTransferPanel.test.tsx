@@ -12,6 +12,7 @@ const transfer = (overrides: Partial<PublicEventTicketBankTransfer> = {}): Publi
   currency: 'USD',
   evidenceStatus: 'awaiting_evidence',
   customerReference: null,
+  receiptAttached: false,
   reviewNotes: null,
   ...overrides,
 });
@@ -83,4 +84,12 @@ it('blocks oversized receipts', () => {
   const file = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'receipt.png', { type: 'image/png' });
   fireEvent.change(screen.getByLabelText(/Adjuntar comprobante/), { target: { files: [file] } });
   expect(screen.getByText('Selecciona un JPG, PNG o PDF de hasta 5 MB.')).toBeTruthy();
+});
+
+it('keeps reference-only transfers working until the API advertises receipt support', () => {
+  const submit = mount(transfer({ receiptAttached: undefined }));
+  expect(screen.queryByLabelText(/Adjuntar comprobante/)).toBeNull();
+  fireEvent.change(screen.getByLabelText(/Número de comprobante/), { target: { value: 'COMP-77' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Ya transferí' }));
+  expect(submit).toHaveBeenCalledWith('COMP-77');
 });

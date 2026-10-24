@@ -24,6 +24,7 @@ export default function TicketBankTransferPanel({
   const [reference, setReference] = useState('');
   const [receipt, setReceipt] = useState<File>();
   const [fileError, setFileError] = useState<string | null>(null);
+  const supportsReceiptUpload = typeof transfer.receiptAttached === 'boolean';
   const canSubmit = transfer.evidenceStatus === 'awaiting_evidence' || transfer.evidenceStatus === 'rejected';
   const trimmed = reference.trim();
 
@@ -74,7 +75,7 @@ export default function TicketBankTransferPanel({
           onSubmit={(event) => {
             event.preventDefault();
             if (trimmed.length >= 3 && !fileError && !busy) {
-              if (receipt) onSubmitReference(trimmed, receipt);
+              if (receipt && supportsReceiptUpload) onSubmitReference(trimmed, receipt);
               else onSubmitReference(trimmed);
             }
           }}
@@ -91,7 +92,7 @@ export default function TicketBankTransferPanel({
               ? 'Send it after making the transfer so we can match your deposit.'
               : 'Envíalo después de transferir para que podamos identificar tu depósito.'}
           />
-          <Stack spacing={0.5}>
+          {supportsReceiptUpload && <Stack spacing={0.5}>
             <Typography component="label" variant="body2" htmlFor="ticket-transfer-receipt">
               {english ? 'Attach receipt (optional)' : 'Adjuntar comprobante (opcional)'}
             </Typography>
@@ -111,7 +112,7 @@ export default function TicketBankTransferPanel({
               {english ? 'JPG, PNG or PDF, up to 5 MB. Only event staff can view it.' : 'JPG, PNG o PDF, hasta 5 MB. Solo el personal del evento podrá verlo.'}
             </Typography>
             {fileError && <Alert severity="error">{fileError}</Alert>}
-          </Stack>
+          </Stack>}
           <Button type="submit" variant="contained" disabled={busy || trimmed.length < 3 || !!fileError} sx={{ alignSelf: 'flex-start', minHeight: 56 }}>
             {english ? 'I made the transfer' : 'Ya transferí'}
           </Button>
