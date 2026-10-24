@@ -52,3 +52,17 @@ Primary upstream advisories identify the affected versions and patches:
 and [ip-address zone parsing](https://github.com/beaugunderson/ip-address/security/advisories/GHSA-rxp7-6hxx-x8q5).
 An accepted version floor does not establish that every input or browser mode is
 safe, and it does not clear the separately recorded runtime/tooling exposures.
+
+
+The 23 October root web repair replaces Zod3.25.76 with4.6.7 and upgrades
+its form resolver to5.9.2; the resolver requires the declared React Hook Form
+minimum7.55.0, while the actual locked version remains7.66.0. This addresses
+[GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
+The existing SocialV2 client regression suite now verifies that an oversized
+discovery page rejects before inspecting elements, and that a page at the
+limit still validates its elements. The former control fails against the
+original Zod3 library, which reads all51 elements. These tests cover the
+compatible client update; they do not prove the version-floor checker or
+unrestricted collection/input safety. The existing deterministic floor policy
+and production-only audit configuration are unchanged. The pinned Mobile
+dependency tree and the older full-scan findings retain their separate scope.

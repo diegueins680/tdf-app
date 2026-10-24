@@ -2648,10 +2648,12 @@
         "package-lock.json",
         "tdf-mobile/package-lock.json",
         "package.json",
-        "tdf-mobile/package.json"
+        "tdf-mobile/package.json",
+        "tdf-hq-ui/package.json"
       ],
       "tests": [
-        "scripts/__tests__/dependency-security.test.mjs"
+        "scripts/__tests__/dependency-security.test.mjs",
+        "tdf-hq-ui/src/api/socialV2.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",

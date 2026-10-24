@@ -25988,7 +25988,7 @@
     },
     {
       "path": "formal/system/dependency-security.md",
-      "sha256": "c9aaca48001536914a40e650b28ff16a04a00bee14aa9f98c5945298f017ceb0",
+      "sha256": "2b19aaf4ae97231ce6ecdd6e41115be72047dece08592b5a4044a4b56f2e1450",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26359,7 +26359,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "509079f03c6d51efb6008656772a32519a9521f7b0b62f051638e5cbd960cd2f",
+      "sha256": "d36131bdbfc792f6e2a7b095043a6a9660b2792ce05be80b3d71d4c5eba00fcf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

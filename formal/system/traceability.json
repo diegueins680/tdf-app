@@ -2649,10 +2649,12 @@
         "package-lock.json",
         "tdf-mobile/package-lock.json",
         "package.json",
-        "tdf-mobile/package.json"
+        "tdf-mobile/package.json",
+        "tdf-hq-ui/package.json"
       ],
       "tests": [
-        "scripts/__tests__/dependency-security.test.mjs"
+        "scripts/__tests__/dependency-security.test.mjs",
+        "tdf-hq-ui/src/api/socialV2.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -11897,6 +11899,7 @@
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/index.html": "30abaf9a346ef67f932c51cadeb5d1db5fcb36a420f7d04207821ef72f727b5c",
+    "tdf-hq-ui/package.json": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d",
     "tdf-hq-ui/public/account/privacy-es.html": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
     "tdf-hq-ui/public/account/privacy.html": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
     "tdf-hq-ui/public/account/terms-es.html": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
@@ -11952,6 +11955,7 @@
     "tdf-hq-ui/src/api/session.test.ts": "b00e52d37736c2f913029b4ebd6d327b488b4fb00515e7be468f4788c0bf775e",
     "tdf-hq-ui/src/api/session.ts": "f9c1e71ee476a7551fb6a5dd093c8c9776e525d113af0451bde93aebaf910e90",
     "tdf-hq-ui/src/api/socialEvents.ts": "f93e1bc80e68a3be0534c12141d2745a2e0f1bb2613f7a0b7a3114052d3e068f",
+    "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
     "tdf-hq-ui/src/api/whatsappConsentPublic.ts": "5c41328394ff76400c1fbcd32b95555bec11455ad923acd96e922b5aadbccfda",
     "tdf-hq-ui/src/bootSafety.tsx": "d86542845ea039c65a5135d5d94e1c2331cadb6f4866ba309a4973c9cc10cbdc",
@@ -14986,7 +14990,19 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/package.json": [
+      {
+        "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/dependency-security.test.mjs": [
+      {
+        "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/socialV2.test.ts": [
       {
         "requirement": "SYS-DEPENDENCY-001",
         "relationship": "tests"
@@ -28186,7 +28202,12 @@
       "path": "tdf-hq-ui/package.json",
       "sha256": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-03e3d269984814cc",
@@ -29693,7 +29714,12 @@
       "path": "tdf-hq-ui/src/api/socialV2.test.ts",
       "sha256": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-9e922e0be55cb4d9",
@@ -47205,7 +47231,6 @@
     "SURFACE-4d91a2ae6d7c7367",
     "SURFACE-4573385494ace809",
     "SURFACE-dfe8096f81b40bd5",
-    "SURFACE-52eaee55a9a4d661",
     "SURFACE-16fd6a7d303023ea",
     "SURFACE-a2ada5ea1a6d219a",
     "SURFACE-c13a12d2ea792bdf",
@@ -47318,7 +47343,6 @@
     "SURFACE-f2b48a740f534a82",
     "SURFACE-5658ebb431d6a53d",
     "SURFACE-44b36f2b091d43e1",
-    "SURFACE-241686c2bc3e55cd",
     "SURFACE-9e922e0be55cb4d9",
     "SURFACE-4db04fec7552683c",
     "SURFACE-356a0fb82dec0531",
@@ -49767,7 +49791,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "509079f03c6d51efb6008656772a32519a9521f7b0b62f051638e5cbd960cd2f",
+      "sourceSha256": "d36131bdbfc792f6e2a7b095043a6a9660b2792ce05be80b3d71d4c5eba00fcf",
       "definition": {
         "states": [
           "absent",
@@ -49797,7 +49821,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "509079f03c6d51efb6008656772a32519a9521f7b0b62f051638e5cbd960cd2f",
+      "sourceSha256": "d36131bdbfc792f6e2a7b095043a6a9660b2792ce05be80b3d71d4c5eba00fcf",
       "definition": {
         "export": [
           "queued",
