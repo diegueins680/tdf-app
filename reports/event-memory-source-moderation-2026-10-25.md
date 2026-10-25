@@ -124,3 +124,59 @@ corrección autorizada del ciclo de vida; comprobación de preferencias reales; 
 solo cuando todos los requisitos de elegibilidad, consentimiento y entrega se cumplan.
 Las métricas disponibles siguen siendo entregas internas persistidas, aperturas atribuidas y
 publicaciones posteriores. No hay evidencia de mejora de conversión ni retorno a 7/30 días.
+
+
+## Continuación, 25/oct 21:40 UTC
+
+Los runs iniciales 40227718934 (#608) y 40228461354 (#615) fallaron en el único
+caso WebKit desktop: el test iniciaba otra navegación mientras seguía entrando
+al login desde el evento. Se conserva el fallo; no se presenta como aprobado.
+El recorrido ahora pulsa «Crear cuenta general» en la pantalla renderizada y
+comprueba el contexto al abrir el registro. Además, GET /session se representa
+como 200/null para visitantes anónimos, conforme al contrato y handler reales,
+manteniendo 401 como caso separado de sesión caducada. Ambas variantes conservan
+publicación, error/reintento, recarga y auditoría de accesibilidad. No se añadieron
+skips ni retries. Las dos variantes pasaron en ocho casos Chrome de cuatro tamaños
+y dos casos Firefox; previamente pasaron los 28 recorridos de acceso/publicación.
+WebKit Linux sigue siendo obligación del CI del nuevo head.
+
+Se incorporó normalmente el main protegido 000cf8ad3 (#609) y el padre #608
+baa1f8cc5. Los 141 requisitos del padre se preservan íntegros; hay 142 con moderación.
+El registro mantiene sus 215 entradas y las dos migraciones originales de recuerdos
+sin cambiar sus bytes ni introducedBy. La revisión independiente aprobó 7b16d44
+antes de esta actualización; esa aprobación no autoriza los nuevos heads.
+
+La compilación canónica Stack/GHC 9.10.3 sobre la composición financiera pasó;
+Hspec volvió a ejecutar 4.037 ejemplos, cero fallos y 20 pendientes. Se ejecutaron
+además los cuatro grupos musicales obligatorios, todos no vacíos: 25/10/22/4 casos
+sin fallos. El runner financiero ejecutó el store real, detectó los tres mutantes
+de reloj y pasó los 308 casos de proveedor. Es evidencia sintética e independiente
+de la publicación de recuerdos; no son operaciones o pagos productivos.
+
+Los dos runners SQL de recuerdos volvieron a pasar. El [HTTP actual](event-memory-source-evidence-20261025/http-current-main-results.json)
+y el [navegador actual](event-memory-source-evidence-20261025/browser-current-main-results.json)
+pasaron con 113 solicitudes y 16 grupos, incluida la respuesta real de sesión
+anónima 200/null. El ejecutable tiene SHA256
+830082822b64ef620152d1e5632cd9a2fd0c4a06f92cb7197bb682fefcbf3d1c.
+Los recibos conservan 98ddfb6a como revisión base y el árbol local modificado;
+no se les atribuye retrospectivamente el head limpio de publicación. La captura
+compilada de API y la admisión de fuente se verifican aparte con sus herramientas.
+
+Los intentos iniciales de verificación local fallaron por invocación de Stack
+desde un directorio sin proyecto, puerto de arranque PostgreSQL omitido y ruta
+relativa del binario. Esos logs se conservan como fallos de preparación. Se corrigió
+el contexto explícito tdf-hq/stack.yaml, se reinició solo el clúster propio en
+127.0.0.1:55526 y se ejecutó el test desde tdf-hq; únicamente las ejecuciones
+posteriores satisfactorias sustentan las cifras anteriores.
+
+La consulta productiva de solo lectura de las 21:36 UTC sigue mostrando siete
+cuentas relacionadas, cinco activas, cinco profesionales y tres RSVP, con un
+solapamiento; 141 continúa on_sale, sin esquema de campaña ni completed público.
+Envíos intentados/enviados/entregados/fallidos: 0/0/0/0. No hay consentimiento
+recogido para esta campaña. La confirmación de Diego sobre lo ocurrido se mantiene.
+
+El defecto real de restauración de sesión tras un logout fallido, detectado por
+el flujo de activación, bloquea una aceptación con personas reales hasta que su
+reparación separada esté integrada y verificada. Esta rama no modifica la sesión
+ni despliega esa reparación. CI, revisión independiente y FIFO siguen vigentes;
+no hubo escritura de datos productivos, despliegue ni comunicaciones reales.

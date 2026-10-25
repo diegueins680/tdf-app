@@ -12424,7 +12424,7 @@
     "scripts/test-community-search.py": "62fc49fb26bc0eb3e986d25e001c686eb196ab29a5d275221ce44203ae3b7cb7",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
-    "scripts/test-event-memories-http.py": "4af1194f178ad44fa553b7aa84216836fc4eee6fd1a92fd32539b5aad0b5291e",
+    "scripts/test-event-memories-http.py": "583ddd9da672c7eb460b7b7612e1e130462cfdd615d0f3876301b1b4a50472dd",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
     "scripts/test-event-memory-source-browser.mjs": "983062c3d286d0f76c428b95e9684c79071ba9ba3aba7f44a7b0d00ad59e9817",
     "scripts/test-event-memory-source-moderation.sh": "df0f32fcd351a360e6cf942e8b90a2d17d91976336b5b532528a96420a191354",
@@ -27661,7 +27661,7 @@
     {
       "id": "SURFACE-92e34e327b523dc8",
       "path": "scripts/test-event-memories-http.py",
-      "sha256": "4af1194f178ad44fa553b7aa84216836fc4eee6fd1a92fd32539b5aad0b5291e",
+      "sha256": "583ddd9da672c7eb460b7b7612e1e130462cfdd615d0f3876301b1b4a50472dd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
