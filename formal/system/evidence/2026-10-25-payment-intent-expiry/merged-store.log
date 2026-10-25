@@ -1,0 +1,12 @@
+
+payment-intent expiry admission
+  rejects a stale request timestamp for ProviderPlaceToPay [✔]
+  rejects a stale request timestamp for ProviderPayPhone [✔]
+  rejects a stale request timestamp for ProviderPayPal [✔]
+  rejects a stale request timestamp for ProviderBankTransfer [✔]
+  uses admission time rather than a future audit timestamp [✔]
+  checks time after a witnessed checkout lock wait at READ COMMITTED [✔]
+  checks time after a witnessed checkout lock wait at REPEATABLE READ [✔]
+
+Finished in 10.0521 seconds
+7 examples, 0 failures
