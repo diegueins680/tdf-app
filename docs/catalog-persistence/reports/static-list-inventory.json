@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-25T21:50:08.583Z",
+  "generatedAt": "2026-10-25T22:11:02.389Z",
   "repositoryRoot": ".",
   "filesScanned": 2378,
   "candidateCount": 1328,
@@ -25027,7 +25027,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 369,
+      "consumerCount": 371,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2026-04-23_inventory_checkout_amounts.sql",
@@ -25147,6 +25147,7 @@
         ".github/workflows/event-operations-formal.yml",
         "scripts/__tests__/checkout-amount-postgres.mjs",
         "scripts/__tests__/checkout-money-http.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/disposable-postgres-url.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
@@ -25165,6 +25166,7 @@
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/ci-change-scope.mjs",
         "scripts/fixtures/artist-merch-mobile.mjs",
         "scripts/inspect-payment-staging.mjs",
         "scripts/inspect-ticketing-event-access.mjs",
@@ -25190,9 +25192,7 @@
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
-        "scripts/test-marketplace-contact-identity.sh",
-        "scripts/test-marketplace-operations-migration.sh",
-        "scripts/test-marketplace-rental-checkout-runtime-migration.sh"
+        "scripts/test-marketplace-contact-identity.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/test-stripe-integration.sh",
@@ -30800,7 +30800,7 @@
       "lines": [
         105
       ],
-      "consumerCount": 457,
+      "consumerCount": 459,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -30962,6 +30962,7 @@
         ".github/workflows/ci.yml",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/checkout-money-http.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
@@ -30986,6 +30987,7 @@
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/check-public-routes.py",
+        "scripts/ci-change-scope.mjs",
         "scripts/diagnose-instagram.mjs",
         "scripts/diagnose-social.mjs",
         "scripts/get-instagram-token.mjs",
@@ -31005,9 +31007,7 @@
         "scripts/lib/public_routes_conformance.py",
         "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/mail-deliverability-monitor.py",
-        "scripts/music-s3-upload.pl",
-        "scripts/order-catalog-foundation-seed.mjs",
-        "scripts/persona-test-program.mjs"
+        "scripts/music-s3-upload.pl"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -38310,7 +38310,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 364,
+      "consumerCount": 365,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -38435,6 +38435,7 @@
         ".github/workflows/social-verification.yml",
         "scripts/__pycache__/sync-artist-shows-to-social-events.cpython-313.pyc",
         "scripts/__tests__/checkout-amount-postgres.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/dependency-security.test.mjs",
@@ -38475,8 +38476,7 @@
         "scripts/install-proof-checkers.py",
         "scripts/install-recovery-tools.py",
         "scripts/interactions/test-api.py",
-        "scripts/interactions/test-concurrency.py",
-        "scripts/lib/hetzner-migration-rehearsal.mjs"
+        "scripts/interactions/test-concurrency.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -38593,7 +38593,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 370,
+      "consumerCount": 371,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -38718,6 +38718,7 @@
         ".github/workflows/social-verification.yml",
         "scripts/__pycache__/sync-artist-shows-to-social-events.cpython-313.pyc",
         "scripts/__tests__/checkout-amount-postgres.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/dependency-security.test.mjs",
@@ -38758,8 +38759,7 @@
         "scripts/identity-reconciliation.mjs",
         "scripts/inspect-hetzner-production.mjs",
         "scripts/install-flyctl.mjs",
-        "scripts/install-proof-checkers.py",
-        "scripts/install-recovery-tools.py"
+        "scripts/install-proof-checkers.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -74896,7 +74896,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 382,
+      "consumerCount": 384,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -75051,6 +75051,7 @@
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/calendar-http-runtime.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/fixtures/production-ticketing-base.sql",
@@ -75062,6 +75063,7 @@
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
+        "scripts/ci-change-scope.mjs",
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/inspect-ticketing-event-access.mjs",
@@ -75095,9 +75097,7 @@
         "scripts/test-provider-execution-runtime-migration.sh",
         "scripts/test-provider-retry-runtime.sh",
         "scripts/test-public-route-denial.py",
-        "scripts/test-public-routes.py",
-        "scripts/test-release-journal.py",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-public-routes.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/test-stripe-integration.sh",
@@ -76001,7 +76001,7 @@
         2954,
         3056
       ],
-      "consumerCount": 335,
+      "consumerCount": 336,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -76177,11 +76177,11 @@
         "scripts/build-ddex-ern432-package.sh",
         "scripts/catalog-list-audit.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/ci-change-scope.mjs",
         "scripts/fetch-ddex-ern432-schema.sh",
         "scripts/inspect-compiled-api.mjs",
         "scripts/inspect-payment-staging.mjs",
-        "scripts/interactions/prepare-test-database.sh",
-        "scripts/interactions/test-schema.sh"
+        "scripts/interactions/prepare-test-database.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -76514,7 +76514,7 @@
       "lines": [
         7723
       ],
-      "consumerCount": 427,
+      "consumerCount": 428,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -76694,9 +76694,9 @@
         "scripts/build-ddex-ern432-package.sh",
         "scripts/catalog-list-audit.mjs",
         "scripts/check-dependency-security.mjs",
+        "scripts/ci-change-scope.mjs",
         "scripts/fetch-ddex-ern432-schema.sh",
-        "scripts/inspect-compiled-api.mjs",
-        "scripts/inspect-payment-staging.mjs"
+        "scripts/inspect-compiled-api.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -157601,7 +157601,7 @@
       "lines": [
         409
       ],
-      "consumerCount": 382,
+      "consumerCount": 384,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -157755,6 +157755,7 @@
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/calendar-http-runtime.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/fixtures/production-ticketing-base.sql",
@@ -157766,6 +157767,7 @@
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
+        "scripts/ci-change-scope.mjs",
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/inspect-ticketing-event-access.mjs",
@@ -157799,9 +157801,7 @@
         "scripts/test-provider-execution-runtime-migration.sh",
         "scripts/test-provider-retry-runtime.sh",
         "scripts/test-public-route-denial.py",
-        "scripts/test-public-routes.py",
-        "scripts/test-release-journal.py",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-public-routes.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/test-stripe-integration.sh",
