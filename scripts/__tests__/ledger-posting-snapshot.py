@@ -199,6 +199,13 @@ def upgrade_preflight(function):
     for _ in range(2):
         result = subprocess.run(BASE + ['-f', str(migration)], text=True, capture_output=True, timeout=20)
         require(result.returncode == 0, result.stderr)
+        # CREATE OR REPLACE resets function settings. Replaying the write-fence
+        # predecessor must not leave the trusted-lookup successor uninstalled.
+        successor = ROOT / 'tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql'
+        result = subprocess.run(BASE + ['-f', str(successor)], text=True, capture_output=True, timeout=20)
+        require(result.returncode == 0, result.stderr)
+    require(value("SELECT pg_get_functiondef('commerce_protect_posted_ledger()'::regprocedure)") == function,
+            'predecessor replay did not restore the namespace successor')
     record('additive-migration-replay', applications=2, outcome='accepted clean history')
 
 
@@ -237,6 +244,7 @@ def run(controls):
                'tdf-hq/sql/2026-08-13_unified_checkout_core.sql',
                'tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql',
                'tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql',
+               'tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql',
                'scripts/production-migrations.json',
                'scripts/__tests__/fixtures/production-schema-20260814.sql',
                'scripts/__tests__/fixtures/catalog-production-source-fixture.sql',

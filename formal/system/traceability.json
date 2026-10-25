@@ -11817,7 +11817,7 @@
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/instagram-token-workflows.test.mjs": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
     "scripts/__tests__/ledger-posting-namespace.py": "f9c0d0e287f182f2d888f89dad4f5c105446f3ac6b197334d39ddbe2c01f1db2",
-    "scripts/__tests__/ledger-posting-snapshot.py": "1747f740dce3ad5acd357fc5f63050ed99d72ea4ee6cdbde815dd39f654a42c3",
+    "scripts/__tests__/ledger-posting-snapshot.py": "5e7ac570a965b6b9370fd53936851212a2c45108e2a7d670a96494c813360751",
     "scripts/__tests__/ledger-posting-upgrade.py": "edbf00b9749ad0c784181e984df58becbfa009f3934f55413b11801628d1a6bb",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
@@ -23954,7 +23954,7 @@
     {
       "id": "SURFACE-34836c82b296d0b6",
       "path": "scripts/__tests__/ledger-posting-snapshot.py",
-      "sha256": "1747f740dce3ad5acd357fc5f63050ed99d72ea4ee6cdbde815dd39f654a42c3",
+      "sha256": "5e7ac570a965b6b9370fd53936851212a2c45108e2a7d670a96494c813360751",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
