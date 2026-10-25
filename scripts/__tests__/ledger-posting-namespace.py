@@ -53,6 +53,9 @@ CREATE ROLE {role} NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOB
 GRANT USAGE ON SCHEMA public TO {role};
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.commerce_ledger_transaction,
   public.commerce_ledger_entry TO {role};
+-- The existing identity-reference trigger reads this synthetic fixture table
+-- before the ledger trigger. Preserve that guard and grant only its needed read.
+GRANT SELECT ON public.identity_party_archive TO {role};
 """
     if control:
         setup += f'ALTER FUNCTION public.{control}() RESET search_path;\n'

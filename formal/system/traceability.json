@@ -11457,7 +11457,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+    "docs/catalog-persistence/catalog-list-decisions.json": "96d8e9fb37ed24e23811dc1f0dcf430e7e367a875cb857fa607e24071614961e",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -11816,7 +11816,7 @@
     "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/instagram-token-workflows.test.mjs": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
-    "scripts/__tests__/ledger-posting-namespace.py": "f9c0d0e287f182f2d888f89dad4f5c105446f3ac6b197334d39ddbe2c01f1db2",
+    "scripts/__tests__/ledger-posting-namespace.py": "e2cf1845e5c4d31de06a9f4065969365ff2098bb31e93a1943bb2d7dbb89e490",
     "scripts/__tests__/ledger-posting-snapshot.py": "5e7ac570a965b6b9370fd53936851212a2c45108e2a7d670a96494c813360751",
     "scripts/__tests__/ledger-posting-upgrade.py": "edbf00b9749ad0c784181e984df58becbfa009f3934f55413b11801628d1a6bb",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
@@ -23942,7 +23942,7 @@
     {
       "id": "SURFACE-07cf326c41f76882",
       "path": "scripts/__tests__/ledger-posting-namespace.py",
-      "sha256": "f9c0d0e287f182f2d888f89dad4f5c105446f3ac6b197334d39ddbe2c01f1db2",
+      "sha256": "e2cf1845e5c4d31de06a9f4065969365ff2098bb31e93a1943bb2d7dbb89e490",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

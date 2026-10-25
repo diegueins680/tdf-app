@@ -52,6 +52,8 @@ integrity checker/tests; CI selects Node 22 explicitly.
 | `CheckoutSnapshotLateLines.cfg`, `CheckoutSnapshotUnvalidated.cfg`, `CheckoutSnapshotMutableTerms.cfg` | Negative controls: lines appended to a committed checkout, commit without the sum check, a committed total changed | Expected exit 12 with `SnapshotFixed`, `CommittedSum`, `TermsFixed` |
 | `LedgerPosting.cfg` (2026-10-12) | One commerce ledger transaction, two currencies, entries of -2..2, at most four entries, a reversing transaction with its own lifecycle; create, add entry, post, reopen, reverse | PASS; 4,444 generated, 995 distinct states; `PostedBalanced`, `PostedImmutable`, `PostedHistory`, `ReversedByPosted` |
 | `LedgerPostingAppend.cfg`, `LedgerPostingUnvalidated.cfg`, `LedgerPostingReopen.cfg`, `LedgerPostingInsertPosted.cfg`, `LedgerPostingReverserMutable.cfg` | Negative controls: entries added after posting, posting without validation, a posted transaction reopened, a transaction created already posted, a referenced reversing transaction leaving posted | Expected exit 12 with `PostedImmutable`, `PostedBalanced`, `PostedHistory`, `PostedBalanced`, `ReversedByPosted` |
+| `LedgerNamespace.cfg` | One nonempty currency with zero/nonzero balance; an ordinary actor can shadow entries or parent relations; trusted public-schema/DDL assumptions | PASS; 22 generated, 12 distinct states; `PostedBalanced`; no SQL refinement or liveness claim |
+| `LedgerNamespacePosting.cfg`, `LedgerNamespaceEntry.cfg` | Negative controls remove trusted relation lookup separately for posting and entry writes | Expected exit 12 with `PostedBalanced` |
 
 ### PlusCal regeneration integrity
 

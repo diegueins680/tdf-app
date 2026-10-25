@@ -19,7 +19,7 @@ functions' search path to `pg_catalog, public, pg_temp`. The existing function
 bodies, physical-write fences, SECURITY INVOKER behavior and historical SQL are
 preserved. PostgreSQL searches temporary tables implicitly first unless
 `pg_temp` is explicitly placed later; see the official
-[CREATE FUNCTION security guidance](https://www.postgresql.org/docs/16/sql-createfunction.html#SQL-CREATEFUNCTION-SECURITY).
+[CREATE FUNCTION security guidance](https://www.postgresql.org/docs/17/sql-createfunction.html#SQL-CREATEFUNCTION-SECURITY).
 Keep this guard through application rollback. Do not repair historical money
 silently or grant runtime CREATE privileges on the trusted public schema.
 
@@ -31,7 +31,10 @@ entries. Two controls remove one function's lookup setting at a time and must
 reproduce the original failures. Each session rolls back roles, schemas, rows
 and function changes; exact function definitions are compared afterward.
 The canonical ledger runner invokes it after legacy-upgrade and MVCC coverage;
-the legacy replay restores the additive namespace successor too.
+the legacy and snapshot replays restore the additive namespace successor too.
+The full-schema fixture grants the synthetic actor the archive-table read needed
+by the existing identity-reference trigger; that trigger remains enabled.
+Explicit verification failures remain active under Python optimization.
 
 `LedgerNamespace.tla` separately abstracts one non-empty currency to zero/nonzero
 balance and an actor capable of supplying entry/parent shadows. The positive

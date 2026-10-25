@@ -3440,7 +3440,7 @@
     {
       "id": "SURFACE-07cf326c41f76882",
       "path": "scripts/__tests__/ledger-posting-namespace.py",
-      "sha256": "f9c0d0e287f182f2d888f89dad4f5c105446f3ac6b197334d39ddbe2c01f1db2",
+      "sha256": "e2cf1845e5c4d31de06a9f4065969365ff2098bb31e93a1943bb2d7dbb89e490",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24532,7 +24532,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "e7cfb81e2cae8b4941142c0bd041e7374b7b4cc214951db5577af27136a0c984",
+      "sha256": "dbd4cbca014e39e6c2d8fb80db76f1a17d57c2d3269ba48974be7440b43938c8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26310,7 +26310,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "3513d84badb40ae6c0b8edc0073b488d4f951797d0324e2463526c01fe35755a",
+      "sha256": "4883144fc0321ae538f2155171b0da108c5af1a86ed9cac87e32cfa96830ff15",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -26520,7 +26520,7 @@
     },
     {
       "path": "formal/system/ledger-namespace.md",
-      "sha256": "35c33f8a2d8c22f800cb1062246c45f12cf5f50bc7351d0deb22d1c4aa076fbf",
+      "sha256": "b407a79f91650015222e692e116667a5e4e84c9d642e274555731eaf1286381c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

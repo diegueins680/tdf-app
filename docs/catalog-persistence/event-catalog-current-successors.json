@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "a1eb1e750e7543b88fe1",
+      "currentId": "b7cc47848f3f9882770f",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 219,
-      "change": "The ordered 219-entry execution registry preserves protected main 4dac175d42616b5b2f4a3e8faebb83692cd2e6b0 as its exact 213-entry prefix and appends the six unchanged financial migrations from a44876c73d391c622eebcc2f25b8f98a2c61d2ba in their original relative order. Every parent entry object, introduction ancestor and SQL body is preserved. Prior 213/217 fingerprints remain immutable history. Fresh combined SQL and application qualification is separate; this review authorizes no production execution, feature activation, recovery or retention-policy decision.",
+      "valueCount": 220,
+      "change": "The 220-entry deployment execution registry preserves all 219 migration objects and historical SQL bytes from financial parent 59df1dd2a17952b906cf89d1c5502725d51239e1 as its exact ordered prefix, then adds only the ledger relation-lookup guard introduced by ancestor 9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391. This technical review preserves earlier immutable catalog provenance and authorizes no production execution, provider activation or runtime privilege change. Full-schema controls and independent PR review remain separate obligations.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -501,13 +501,24 @@
           },
           "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "1402ca0b572fee685b0f274c8babe057e2a63f65cae7542ebf70f04814d938fa",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "ddcb71c2b853a84719e1fffe73b7cc872aa94901f30f8b26a28e3a139fcb6c85",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "previousCurrentIds": [
         "e60cbdb9121493f47fa6",
         "a8128668e1b74b7c0ae4",
         "3f336173e03f10fc023c",
-        "2b073f20afd2f3798b1e"
+        "2b073f20afd2f3798b1e",
+        "a1eb1e750e7543b88fe1"
       ]
     }
   ]
