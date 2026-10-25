@@ -11586,6 +11586,87 @@
       "evidence": "Current candidate logs and delivery report; historical local or passing unit tests do not establish deployment."
     },
     {
+      "id": "PAY-INTENT-EXPIRY-001",
+      "title": "Fresh payment intents use database time after checkout locking",
+      "statement": "A fresh canonical payment intent may be admitted only if the locked checkout expires strictly after database wall time sampled after acquiring its row lock. Caller audit timestamps and transaction/statement start time do not authorize admission. A live, otherwise eligible checkout is not refused solely because its audit timestamp is in the future.",
+      "domain": "PAY",
+      "authority": "Existing createPaymentIntent expiry rejection; PAY-RETRY-001 closed-checkout denial; explicit financial correctness and concurrency mandate.",
+      "source": "formal/system/payment-intent-expiry.md; formal/system/payment-retry.md",
+      "property": "At the admission sample, admitted implies databaseTime < lockedExpiry; refused-for-expiry implies databaseTime >= lockedExpiry.",
+      "contract": "formal/system/payment-intent-expiry.md",
+      "actors": [
+        "Checkout customer",
+        "Payment runtime"
+      ],
+      "preconditions": [
+        "Canonical checkout and economic binding exist; ordinary PostgreSQL row locks remain enabled.",
+        "Database wall clock and timestamp ordering are authoritative for expiry; privilege/DDL bypass is excluded."
+      ],
+      "inputs": [
+        "Locked checkout expiry",
+        "Database wall time after row lock",
+        "Caller audit timestamp"
+      ],
+      "state": {
+        "admission": [
+          "waiting for checkout lock",
+          "locked",
+          "admitted",
+          "refused"
+        ]
+      },
+      "allowedTransitions": [
+        "Waiting -> locked -> sample database clock -> admitted only before expiry.",
+        "Exact authorized runtime attempt replay remains on its separate existing read-only path."
+      ],
+      "forbiddenTransitions": [
+        "Stale request time admits a fresh intent after expiry.",
+        "Transaction-start time or a clock sampled before the row-lock wait admits an expired checkout.",
+        "Equality with expiry admits a fresh intent."
+      ],
+      "effects": [
+        "Rejected expiry inserts no intent or amount component.",
+        "Accepted creation retains the supplied audit timestamp without using it as admission authority."
+      ],
+      "authorization": "Current caller/session, economic binding and provider qualification remain independent preconditions; no authorization control is relaxed.",
+      "privacy": "Synthetic owned database and fixed test identities; no real payment provider or customer data.",
+      "concurrency": "First lock the checkout row; then sample clock_timestamp() in a separate database statement. Test actual pg_blocking_pids witnesses at READ COMMITTED and REPEATABLE READ.",
+      "idempotency": "No change to existing attempt/intent key binding or authenticated replay semantics.",
+      "failure": "Expiry rejection returns Left and creates no intent/components; SQL errors remain caller-owned rollback failures.",
+      "recovery": "A refused fresh intent requires current valid checkout authority; already-contacted operations require their existing reconciliation/replay flow.",
+      "observability": "Retain exact source hashes, Git revision, tool versions, observed lock waits, named mutation failures and TLC counterexamples.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/PaymentIntentExpiryProbe.hs",
+        "scripts/verify-payment-intent-expiry.py",
+        "scripts/test-provider-retry-runtime.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/PaymentIntentExpiry.tla",
+        "formal/event-operations/PaymentIntentExpiry.cfg",
+        "formal/event-operations/PaymentIntentExpiryRequest.cfg",
+        "formal/event-operations/PaymentIntentExpiryTransaction.cfg",
+        "formal/event-operations/PaymentIntentExpiryBeforeLock.cfg",
+        "formal/event-operations/PaymentIntentExpiryInclusive.cfg"
+      ],
+      "verification": "Seven actual-store PostgreSQL examples; three independently compiled clock mutants must reach assertion failures; finite TLC model and four named negative configurations. Existing backend-quality and event-operations-formal CI lanes enforce execution.",
+      "evidence": "formal/system/evidence/2026-10-25-payment-intent-expiry/receipt.json; replay commands and limits in formal/system/payment-intent-expiry.md. Evidence is valid only for its recorded source hashes.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "TESTED store boundary and BOUNDED_VERIFIED finite abstraction; whole implementation equivalence is UNKNOWN.",
+      "ambiguity": [
+        "Admission is the post-lock time sample, not transaction commit or provider HTTP completion.",
+        "Clock rollback, arbitrary schedules, whole-program refinement and finality of external money remain unverified.",
+        "This does not retrofit every legacy payment writer or activate providers."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped implementation tests and finite model controls; hosted candidate CI and independent review remain required. No whole-program refinement or provider-completion proof."
+      }
+    },
+    {
       "id": "NAV-MENU-COVERAGE-001",
       "title": "Complete permission-aware menus for available feature destinations",
       "statement": "Every usable standalone registered web feature has one concrete sidebar destination in an appropriate existing group. Public reputation rights remain reachable through the Security page menu. Visibility obeys current session roles, modules and feature flags. Signed-in public pages expose the same menu in a lazy drawer.",
