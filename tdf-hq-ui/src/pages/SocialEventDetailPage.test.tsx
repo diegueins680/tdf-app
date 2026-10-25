@@ -7,6 +7,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { SocialEventDTO, SocialEventMomentDTO, SocialTicketTierDTO } from '../api/socialEvents';
 
 const preferenceMock = jest.fn(async () => ({ inApp: false, supportsExtendedMoments: true }));
+const uploadMomentMediaMock = jest.fn<(eventId: string, file: File) => Promise<{ eiuPublicUrl: string }>>();
 const createMomentMock = jest.fn<(eventId: string, body: unknown) => Promise<SocialEventMomentDTO>>();
 let activeSession: { partyId: number } | null = null;
 jest.unstable_mockModule('../api/eventMemoryInvitations', () => ({ EventMemoryInvitations: { preferences: preferenceMock } }));
@@ -22,6 +23,7 @@ jest.unstable_mockModule('../api/socialEvents', () => ({
     listTicketTiers: (eventId: string) => listTicketTiersMock(eventId),
     createMoment: createMomentMock,
     uploadMomentImage: jest.fn(),
+    uploadMomentMedia: uploadMomentMediaMock,
     createTicketTier: jest.fn(),
   },
 }));
@@ -107,6 +109,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     activeSession = null;
     preferenceMock.mockClear();
     createMomentMock.mockReset();
+    uploadMomentMediaMock.mockReset();
     getEventMock.mockReset().mockResolvedValue(eventFixture);
     listMomentsMock.mockReset().mockResolvedValue([]);
     listTicketTiersMock.mockReset().mockResolvedValue([tierFixture]);
@@ -147,6 +150,23 @@ describe('SocialEventDetailPage ticket sharing', () => {
     const view = renderPage();
     expect((await screen.findByRole('link', { name: 'Synthetic Artist' })).getAttribute('href')).toBe('/artista/55');
     expect(screen.queryByRole('link', { name: 'Unlinked Artist' })).toBeNull();
+    view.unmount();
+  });
+
+  it('does not publish an uploaded draft after the authentication epoch changes', async () => {
+    activeSession = { partyId: 9 };
+    let finishUpload!: (value: { eiuPublicUrl: string }) => void;
+    uploadMomentMediaMock.mockImplementation(() => new Promise((resolve) => { finishUpload = resolve; }));
+    const view = renderPage();
+    await screen.findByRole('combobox', { name: 'Tipo de recuerdo' });
+    fireEvent.change(view.container.querySelector('input[type="file"]')!, { target: { files: [new File(['synthetic'], 'memory.png', { type: 'image/png' })] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
+    await waitFor(() => expect(uploadMomentMediaMock).toHaveBeenCalledTimes(1));
+    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    advanceAuthSessionEpoch();
+    finishUpload({ eiuPublicUrl: 'https://assets.persona.test/previous-account.png' });
+    await screen.findByText('Tu sesión cambió. Vuelve al evento antes de publicar.');
+    expect(createMomentMock).not.toHaveBeenCalled();
     view.unmount();
   });
 

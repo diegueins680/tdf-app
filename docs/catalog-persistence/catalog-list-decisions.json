@@ -1917,19 +1917,19 @@
       "reviewed": true
     },
     {
-      "id": "620eb81ffe787eca6636",
+      "id": "561cffe910e93eef6dca",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
+      "justification": "Typed API-client methods add author memory edits/deletion and public media upload; method names are transport mechanics and no selectable business catalog.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "ticket-credit-notes-2026-10-06",
+      "reviewBatch": "event-memories-2026-10-25",
       "evidence": {
         "file": "tdf-hq-ui/src/api/socialEvents.ts",
-        "line": 577
+        "line": 581
       },
       "mergedDecision": {
         "id": "c69afb90768a2e78770a",
@@ -1945,6 +1945,38 @@
         "evidence": {
           "file": "tdf-hq-ui/src/api/socialEvents.ts",
           "line": 576
+        }
+      },
+      "previousDecision": {
+        "id": "620eb81ffe787eca6636",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+        "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
+        "reviewed": true,
+        "reviewMethod": "successor-of-reviewed-decision",
+        "reviewBatch": "ticket-credit-notes-2026-10-06",
+        "evidence": {
+          "file": "tdf-hq-ui/src/api/socialEvents.ts",
+          "line": 577
+        },
+        "mergedDecision": {
+          "id": "c69afb90768a2e78770a",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+          "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decision",
+          "reviewBatch": "ticket-tax-invoices-2026-10-06",
+          "evidence": {
+            "file": "tdf-hq-ui/src/api/socialEvents.ts",
+            "line": 576
+          }
         }
       }
     },
@@ -2312,49 +2344,97 @@
       }
     },
     {
-      "id": "2a0d6d57a51e35d91376",
+      "id": "da4f880a8da74120e456",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Canonical typed notification destination registry; chat_thread uses a validated positive safe thread identity, selects only an authorized existing conversation and never accepts an arbitrary URL. Generated into Mobile.",
+      "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/components/notificationTarget.ts",
         "line": 14
       },
-      "reviewBatch": "chat-notification-destination-2026-10-13",
+      "reviewBatch": "event-memories-2026-10-25",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
-        "id": "1a20aae8bb74a6df248f",
+        "id": "2a0d6d57a51e35d91376",
         "classification": "security-system-registry",
         "disposition": "canonical-contract",
         "specializedModel": "notification_destination_registry",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
+        "justification": "Canonical typed notification destination registry; chat_thread uses a validated positive safe thread identity, selects only an authorized existing conversation and never accepts an arbitrary URL. Generated into Mobile.",
         "reviewed": true,
         "evidence": {
           "file": "tdf-hq-ui/src/components/notificationTarget.ts",
           "line": 14
         },
-        "reviewBatch": "music-release-platform-sync-2026-10-07",
+        "reviewBatch": "chat-notification-destination-2026-10-13",
         "reviewMethod": "successor-of-reviewed-decision",
         "previousDecision": {
-          "id": "d8058e9fe53556cbf690",
+          "id": "1a20aae8bb74a6df248f",
           "classification": "security-system-registry",
           "disposition": "canonical-contract",
           "specializedModel": "notification_destination_registry",
           "priority": "P1-integrity",
           "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+          "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
           "reviewed": true,
           "evidence": {
             "file": "tdf-hq-ui/src/components/notificationTarget.ts",
             "line": 14
           },
-          "reviewBatch": "universal-interactions-2026-09-28"
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "d8058e9fe53556cbf690",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+              "line": 14
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          }
+        },
+        "mergedSourceDecision": {
+          "id": "2a0d6d57a51e35d91376",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+            "line": 14
+          },
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "d8058e9fe53556cbf690",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+              "line": 14
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          },
+          "previousFingerprint": "1a20aae8bb74a6df248f"
         }
       },
       "mergedSourceDecision": {
@@ -16650,25 +16730,44 @@
       "reviewed": true
     },
     {
-      "id": "a7561a719beb23884345",
+      "id": "4a5404a4a008a8f296dd",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+      "justification": "Typed Mobile API methods add uploadMomentMedia using the existing authenticated API client and canonical event-scoped image/media routes. This is transport dispatch, never a selectable business catalog.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "event-memories-2026-10-25",
       "evidence": {
         "file": "tdf-mobile/src/api/events.ts",
-        "line": 435,
+        "line": 436,
         "kind": "object-registry",
         "name": "Events",
-        "valueCount": 30,
-        "consumerCount": 213,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
+        "valueCount": 31
+      },
+      "previousDecision": {
+        "id": "a7561a719beb23884345",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+        "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+        "reviewed": true,
+        "reviewMethod": "deterministic-policy-v3",
+        "reviewBatch": "deterministic-policy-v3",
+        "evidence": {
+          "file": "tdf-mobile/src/api/events.ts",
+          "line": 435,
+          "kind": "object-registry",
+          "name": "Events",
+          "valueCount": 30,
+          "consumerCount": 213,
+          "exactDuplicateIds": [],
+          "similarCandidateIds": []
+        }
       }
     },
     {
@@ -17620,34 +17719,137 @@
       "reviewed": true
     },
     {
-      "id": "4beaac5c476079656a0a",
+      "id": "92f5d2006375f7fb9757",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Generated Mobile notification destination registry adds chat_thread with the same validated numeric identity and canonical web route as the web resolver; arbitrary URL navigation remains rejected.",
+      "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-mobile/src/navigation/notificationTarget.ts",
         "line": 15
       },
-      "reviewBatch": "chat-notifications-2026-10-13",
+      "reviewBatch": "event-memories-2026-10-25",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
-        "id": "2c23d0fa2bac40b01a98",
+        "id": "4beaac5c476079656a0a",
         "classification": "security-system-registry",
         "disposition": "canonical-contract",
         "specializedModel": "notification_destination_registry",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+        "justification": "Generated Mobile notification destination registry adds chat_thread with the same validated numeric identity and canonical web route as the web resolver; arbitrary URL navigation remains rejected.",
         "reviewed": true,
         "evidence": {
           "file": "tdf-mobile/src/navigation/notificationTarget.ts",
           "line": 15
         },
-        "reviewBatch": "universal-interactions-2026-09-28"
+        "reviewBatch": "chat-notifications-2026-10-13",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "2c23d0fa2bac40b01a98",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+            "line": 15
+          },
+          "reviewBatch": "universal-interactions-2026-09-28"
+        },
+        "supersededReviews": [
+          {
+            "sourceRevision": "cf723a45e24c7f9a8dd8300d4b7f199b261b5363",
+            "sourceDecisionId": "9de842d0529aa06faf6b",
+            "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
+            "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
+          }
+        ],
+        "mergedSourceDecision": {
+          "id": "4beaac5c476079656a0a",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Pinned Mobile retains the reviewed notification destination allowlist and adds chat_thread with a positive-safe-integer threadId and /chat fallback. These client routes grant no thread access; recipient and thread membership remain backend authorities. Arbitrary URL navigation remains excluded.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+            "line": 15
+          },
+          "reviewBatch": "booking-mobile-pin-consolidation-2026-10-15",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "9de842d0529aa06faf6b",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+              "line": 15
+            },
+            "reviewBatch": "music-release-platform-sync-2026-10-07",
+            "reviewMethod": "successor-of-reviewed-decision",
+            "previousDecision": {
+              "id": "2c23d0fa2bac40b01a98",
+              "classification": "security-system-registry",
+              "disposition": "canonical-contract",
+              "specializedModel": "notification_destination_registry",
+              "priority": "P1-integrity",
+              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+              "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+              "reviewed": true,
+              "evidence": {
+                "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+                "line": 15
+              },
+              "reviewBatch": "universal-interactions-2026-09-28"
+            }
+          },
+          "mergedSourceDecision": {
+            "id": "4beaac5c476079656a0a",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Mobile main adds chat_thread to the existing notification destination allowlist, resolving to the canonical same-origin thread path. Existing destinations are preserved; the six notification response regressions pass. This is routing authority, not an editable business catalog.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+              "line": 15
+            },
+            "reviewBatch": "music-release-platform-sync-2026-10-07",
+            "reviewMethod": "successor-of-reviewed-decision",
+            "previousDecision": {
+              "id": "2c23d0fa2bac40b01a98",
+              "classification": "security-system-registry",
+              "disposition": "canonical-contract",
+              "specializedModel": "notification_destination_registry",
+              "priority": "P1-integrity",
+              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+              "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+              "reviewed": true,
+              "evidence": {
+                "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+                "line": 15
+              },
+              "reviewBatch": "universal-interactions-2026-09-28"
+            },
+            "previousFingerprint": "9de842d0529aa06faf6b"
+          }
+        }
       },
       "supersededReviews": [
         {
@@ -17878,22 +18080,105 @@
       }
     },
     {
-      "id": "3f336173e03f10fc023c",
+      "id": "c28667c70e40dcc18a55",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P0-cutover",
       "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-      "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+      "justification": "The 214-entry execution registry preserves all 213 protected-main entry objects/order/introduction commits and historical SQL bytes, then appends one event-memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. The migration installs no campaigns or consent and sends nothing. Full-schema replay, rollback/refusal, concurrent-worker and actual API tests are separate execution evidence; no production activation is authorized by this registry review.",
       "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "music-current-main-integration-20261023",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "event-memories-2026-10-25",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 213
+        "valueCount": 214
+      },
+      "previousDecision": {
+        "id": "3f336173e03f10fc023c",
+        "classification": "genuine-technical-constant",
+        "disposition": "explicit-allowlist",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P0-cutover",
+        "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+        "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+        "reviewed": true,
+        "reviewMethod": "successor-of-reviewed-decisions",
+        "reviewBatch": "music-current-main-integration-20261023",
+        "evidence": {
+          "file": "scripts/production-migrations.json",
+          "line": 3,
+          "kind": "json-array",
+          "name": "migrations",
+          "valueCount": 213
+        }
+      }
+    },
+    {
+      "id": "c2b1e70be97928cfe257",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Unreviewed changes can alter wire compatibility, identity binding or attendance claims.",
+      "justification": "Typed methods for preferences, campaign aggregates, enable/disable and recipient-bound opening attribution are transport dispatch names, not editable business values.",
+      "reviewed": true,
+      "reviewMethod": "scoped-implementation-review",
+      "reviewBatch": "event-memories-2026-10-25",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
+        "line": 7
+      }
+    },
+    {
+      "id": "800925060279b33a0669",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "artist_profile, social_artist_profile",
+      "priority": "P1-integrity",
+      "risk": "Unreviewed changes can alter wire compatibility, identity binding or attendance claims.",
+      "justification": "Synthetic fixture distinguishes a canonical Party ID from a social Artist ID; unlinked artists must not receive an inferred profile link. No real participant list or production identity is created.",
+      "reviewed": true,
+      "reviewMethod": "scoped-implementation-review",
+      "reviewBatch": "event-memories-2026-10-25",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "line": 143
+      }
+    },
+    {
+      "id": "e97287ce4f5d0bdc892c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Unreviewed changes can alter wire compatibility, identity binding or attendance claims.",
+      "justification": "Composer groups correspond to existing and extended media wire discriminants. Administrator edits cannot extend codecs; these values require a versioned code/contract change.",
+      "reviewed": true,
+      "reviewMethod": "scoped-implementation-review",
+      "reviewBatch": "event-memories-2026-10-25",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "line": 232
+      }
+    },
+    {
+      "id": "6531f2e4e5717a8c713b",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "event_memory_candidates evidence policy",
+      "priority": "P1-integrity",
+      "risk": "Unreviewed changes can alter wire compatibility, identity binding or attendance claims.",
+      "justification": "Fixed authorization evidence classes govern attendance claims and invitation copy. Audited admission, professional participation and RSVP intent must not be conflated or extended through arbitrary catalog labels.",
+      "reviewed": true,
+      "reviewMethod": "scoped-implementation-review",
+      "reviewBatch": "event-memories-2026-10-25",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-25_event_memory_invitations.sql",
+        "line": 21
       }
     }
   ]

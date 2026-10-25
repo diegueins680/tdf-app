@@ -1085,6 +1085,11 @@
       "id": "2026-10-15_music_exact_minor_units",
       "path": "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql",
       "introducedBy": "4fc88645f511d4c70aca2b969ec412081664978d"
+    },
+    {
+      "id": "2026-10-25_event_memory_invitations",
+      "path": "tdf-hq/sql/2026-10-25_event_memory_invitations.sql",
+      "introducedBy": "18690e78a9ce97255529bade31c5ce2250b7ce22"
     }
   ]
 }

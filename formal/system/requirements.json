@@ -11436,7 +11436,7 @@
       "authority": "Explicit product owner request 2026-10-25: Event Memories, Community Engagement & Post-Event Activation",
       "source": "formal/system/event-memories.md",
       "contract": "formal/system/event-memories.md",
-      "status": "specified and implemented; qualification in progress",
+      "status": "specified and implemented",
       "critical": true,
       "conformance": {
         "classification": "PARTIAL",
@@ -11516,7 +11516,9 @@
         "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
         "tdf-mobile/__tests__/eventMomentWirePayload.test.ts",
         "tdf-mobile/__tests__/eventMomentsRepository.test.ts",
-        "e2e/web/event-memories.spec.mjs"
+        "e2e/web/event-memories.spec.mjs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+        "scripts/test-event-memories-http.py"
       ],
       "formalModels": [],
       "verification": "Parser/signature/author-boundary tests, HTTP and browser journeys must be independently executed; no blanket completion claim."
@@ -11526,7 +11528,7 @@
       "authority": "Explicit product owner request 2026-10-25: Event Memories, Community Engagement & Post-Event Activation",
       "source": "formal/system/event-memories.md",
       "contract": "formal/system/event-memories.md",
-      "status": "specified and implemented; qualification in progress",
+      "status": "specified and implemented",
       "critical": true,
       "conformance": {
         "classification": "PARTIAL",
@@ -11613,7 +11615,9 @@
         "scripts/test-event-memories.sh",
         "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
-        "tdf-mobile/src/navigation/notificationResponses.test.ts"
+        "tdf-mobile/src/navigation/notificationResponses.test.ts",
+        "scripts/test-event-memories-http.py",
+        ".github/workflows/ci.yml"
       ],
       "formalModels": [
         "formal/event-memories/check.py"

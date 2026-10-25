@@ -19,6 +19,7 @@ import ExperienceReviews from '../components/reviews/ExperienceReviews';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventMemoryInvitationControls from '../components/events/EventMemoryInvitations';
 import { EventMemoryInvitations } from '../api/eventMemoryInvitations';
+import { getAuthSessionEpoch } from '../session/authEvents';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 
 const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
@@ -55,7 +56,7 @@ export default function SocialEventDetailPage() {
   const [file, setFile] = useState<File | null>(null);
   const uploadedFile = useRef<{ file: File; url: string } | null>(null);
   const [publishingPhase, setPublishingPhase] = useState('');
-  useEffect(() => { setCaption(''); setMediaUrl(''); setFile(null); uploadedFile.current = null; }, [eventId, session?.partyId]);
+  useEffect(() => { setCaption(''); setMediaUrl(''); setFile(null); uploadedFile.current = null; if (fileInputRef.current) fileInputRef.current.value = ''; }, [eventId, session?.partyId]);
   const [ticketName, setTicketName] = useState('General');
   const [ticketPrice, setTicketPrice] = useState('');
   const [ticketQuantity, setTicketQuantity] = useState('100');
@@ -113,6 +114,7 @@ export default function SocialEventDetailPage() {
   const postMutation = useMutation({
     mutationFn: async () => {
       if (!session) throw new Error('Inicia sesión para publicar en el evento.');
+      const publicationEpoch = getAuthSessionEpoch();
       let url = mediaUrl.trim();
       if (file) {
         const maxBytes = file.type.startsWith('image/') ? 10 * 1024 * 1024 : 25 * 1024 * 1024;
@@ -122,6 +124,7 @@ export default function SocialEventDetailPage() {
         if (uploadedFile.current?.file === file) url = uploadedFile.current.url;
         else {
           const uploaded = await (supportsExtended ? SocialEventsAPI.uploadMomentMedia(eventId, file) : SocialEventsAPI.uploadMomentImage(eventId, file));
+          if (getAuthSessionEpoch() !== publicationEpoch) throw new Error('Tu sesión cambió. Vuelve al evento antes de publicar.');
           url = uploaded.eiuPublicUrl;
           uploadedFile.current = { file, url };
         }
@@ -134,6 +137,7 @@ export default function SocialEventDetailPage() {
         emCreateMediaUrl: mediaKind === 'text' ? '' : url,
         emCreateMediaType: mediaKind === 'text' ? 'text' : mediaKind === 'audio' ? 'audio' : inferredMediaType(url),
       };
+      if (getAuthSessionEpoch() !== publicationEpoch) throw new Error('Tu sesión cambió. Vuelve al evento antes de publicar.');
       setPublishingPhase('Publicando recuerdo…');
       return SocialEventsAPI.createMoment(eventId, payload);
     },
@@ -235,7 +239,7 @@ export default function SocialEventDetailPage() {
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
                     <Button disabled={postMutation.isPending} sx={{ display: mediaKind === 'text' ? 'none' : undefined }} component="label" variant="outlined" startIcon={<ImageIcon />}>
                       {supportsExtended ? 'Seleccionar archivo' : 'Seleccionar imagen'}
-                      <input ref={fileInputRef} hidden type="file" accept={supportsExtended ? "image/jpeg,image/png,image/webp,image/gif,image/bmp,video/mp4,video/webm,audio/mpeg,audio/mp4,audio/wav,audio/x-wav,audio/ogg,audio/flac" : "image/jpeg,image/png,image/webp,image/gif,image/bmp"} onChange={(event) => { const next = event.target.files?.[0] ?? null; setFile(next); uploadedFile.current = null; if (next) setMediaKind(next.type.startsWith('audio/') ? 'audio' : 'media'); }} />
+                      <input ref={fileInputRef} hidden type="file" accept={supportsExtended ? "image/jpeg,image/png,image/webp,image/gif,image/bmp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/wav,audio/x-wav,audio/ogg,audio/flac" : "image/jpeg,image/png,image/webp,image/gif,image/bmp"} onChange={(event) => { const next = event.target.files?.[0] ?? null; setFile(next); uploadedFile.current = null; if (next) setMediaKind(next.type.startsWith('audio/') ? 'audio' : 'media'); }} />
                     </Button>
                     <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>{file ? file.name : supportsExtended ? 'Fotos: hasta 10 MB. Video y audio: hasta 25 MB.' : 'Imágenes de hasta 10 MB. Para video, pega un enlace público.'}</Typography>
                     <Button variant="contained" onClick={() => postMutation.mutate()} disabled={postMutation.isPending || (mediaKind === 'text' ? !caption.trim() : !file && !mediaUrl.trim())}>

@@ -9258,6 +9258,7 @@ validMomentMediaSignature mime bytes = case normalizeUploadMimeType mime of
     "image/webp" -> riff && BS.take 4 (BS.drop 8 bytes) == "WEBP"
     "image/bmp" -> "BM" `BS.isPrefixOf` bytes
     "video/mp4" -> mp4
+    "video/quicktime" -> mp4
     "audio/mp4" -> mp4
     "video/webm" -> BS.pack [26,69,223,163] `BS.isPrefixOf` bytes
     "audio/mpeg" -> "ID3" `BS.isPrefixOf` bytes || (BS.length bytes >= 2 && BS.head bytes == 255 && BS.index bytes 1 >= 224)

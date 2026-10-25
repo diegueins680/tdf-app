@@ -158,6 +158,7 @@ validateEventMemoryMediaUploadForm form@(EventImageUploadForm file rawName) = do
         extensions = filter (not . T.null) (imageExtension (fdFileName file) : maybe [] (pure . imageExtension) mName)
         allowed = case mime of
             "video/mp4" -> Just [".mp4"]
+            "video/quicktime" -> Just [".mov"]
             "video/webm" -> Just [".webm"]
             "audio/mpeg" -> Just [".mp3"]
             "audio/mp4" -> Just [".m4a"]
