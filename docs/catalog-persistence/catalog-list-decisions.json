@@ -335,6 +335,16 @@
         "a8128668e1b74b7c0ae4"
       ]
     },
+    "ticketReceiptPreview": {
+      "sourceRevision": "2f8235008c1d9a23b0fe4143e469082cdff285c6",
+      "retiredId": "620eb81ffe787eca6636",
+      "replacementId": "48cbf22770303d844cdc",
+      "previousMethodCount": 71,
+      "currentMethodCount": 72,
+      "preservedPreviousDecision": true,
+      "newSyntheticFixtureId": "134cf0fa5a9bb176f981",
+      "scope": "Technical API method names and synthetic test DTO only; no product, payment or release approval."
+    },
     "ledgerReadinessIntegration": "docs/catalog-persistence/ledger-readiness-reconciliation-20261021.json",
     "ledgerSnapshotReadinessIntegration": "docs/catalog-persistence/ledger-snapshot-readiness-reconciliation-20261021.json",
     "ledgerCombinedIntegration": "docs/catalog-persistence/ledger-combined-reconciliation-20261022.json",
@@ -1929,19 +1939,19 @@
       "reviewed": true
     },
     {
-      "id": "620eb81ffe787eca6636",
+      "id": "48cbf22770303d844cdc",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
+      "risk": "Changing authenticated method dispatch can redirect commands or expose private transfer evidence; server event ownership and authorization remain authoritative.",
+      "justification": "SocialEventsAPI contains 72 typed transport methods after adding getManualPaymentReceipt for the existing event/order-scoped authenticated receipt read. The 71 previously reviewed method names are preserved. These keys dispatch implementation endpoints; they are not editable product choices, payment states or a persisted business catalog.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "ticket-credit-notes-2026-10-06",
+      "reviewBatch": "ticket-receipt-preview-2026-10-24",
       "evidence": {
         "file": "tdf-hq-ui/src/api/socialEvents.ts",
-        "line": 577
+        "line": 580
       },
       "mergedDecision": {
         "id": "c69afb90768a2e78770a",
@@ -1957,6 +1967,38 @@
         "evidence": {
           "file": "tdf-hq-ui/src/api/socialEvents.ts",
           "line": 576
+        }
+      },
+      "previousDecision": {
+        "id": "620eb81ffe787eca6636",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+        "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
+        "reviewed": true,
+        "reviewMethod": "successor-of-reviewed-decision",
+        "reviewBatch": "ticket-credit-notes-2026-10-06",
+        "evidence": {
+          "file": "tdf-hq-ui/src/api/socialEvents.ts",
+          "line": 577
+        },
+        "mergedDecision": {
+          "id": "c69afb90768a2e78770a",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+          "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decision",
+          "reviewBatch": "ticket-tax-invoices-2026-10-06",
+          "evidence": {
+            "file": "tdf-hq-ui/src/api/socialEvents.ts",
+            "line": 576
+          }
         }
       }
     },
@@ -17887,6 +17929,21 @@
         "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
         "justification": "Reviewed the five creReason response tokens against loadReconciliationEntries.safeReason, actual exception emitters and the generated contract. Only four known stored exception types are mapped; every other value becomes unrecognized. This output-only redaction vocabulary cannot mutate workflow, post money or release a hold. Contract parity, legacy-private-reason and closed-approval regressions cover this boundary; ADR 0125 records its limits.",
         "reviewed": true
+      }
+    },
+    {
+      "id": "134cf0fa5a9bb176f981",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Treating this synthetic DTO fixture as production authority could weaken private-receipt and payment-review regressions.",
+      "justification": "The payment object is a synthetic TicketManualPaymentDTO fixture used only by EventManualPaymentsPanel tests. Its field keys represent the existing transport contract and exercise private receipt viewing, legacy records, errors and preview cleanup. They are not selectable customer values, a persisted catalog or payment authority.",
+      "reviewed": true,
+      "reviewBatch": "ticket-receipt-preview-2026-10-24",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
+        "line": 15
       }
     },
     {

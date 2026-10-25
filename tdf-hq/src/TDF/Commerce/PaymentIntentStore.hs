@@ -70,19 +70,21 @@ createPaymentIntent creation@PaymentIntentCreation{..}
       pure (Left "Payment intent correlation ID is invalid")
   | otherwise = do
       checkoutRows <- rawSql
-        "SELECT status, environment, total_minor, currency, expires_at > ?\
+        "SELECT status, environment, total_minor, currency, expires_at\
         \ FROM commerce_checkout_session WHERE id = ?::uuid FOR UPDATE"
-        [ PersistUTCTime picOccurredAt
-        , PersistText (checkoutReferenceId picCheckout)
-        ] :: SqlPersistT IO
-          [(Single Text, Single Text, Single Int64, Single Text, Single Bool)]
-      case checkoutRows of
-        [] -> pure (Left "Canonical checkout was not found")
-        [(Single checkoutStatus, Single environment, Single amountMinor,
-          Single currency, Single unexpired)]
+        [PersistText (checkoutReferenceId picCheckout)] :: SqlPersistT IO
+          [(Single Text, Single Text, Single Int64, Single Text, Single UTCTime)]
+      -- Sample the database clock in a separate statement AFTER acquiring the
+      -- checkout lock. Request time, now(), and even clock_timestamp() inside
+      -- the locking SELECT can predate a lock wait. Keep picOccurredAt for audit.
+      admissionTimes <- rawSql "SELECT clock_timestamp()" [] :: SqlPersistT IO [Single UTCTime]
+      case (checkoutRows, admissionTimes) of
+        ([], _) -> pure (Left "Canonical checkout was not found")
+        ([(Single checkoutStatus, Single environment, Single amountMinor,
+          Single currency, Single expiresAt)], [Single admissionTime])
           | checkoutStatus `notElem` ["awaiting_payment", "processing", "failed"] ->
               pure (Left "Canonical checkout cannot accept a payment intent")
-          | not unexpired -> pure (Left "Canonical checkout has expired")
+          | expiresAt <= admissionTime -> pure (Left "Canonical checkout has expired")
           | environment /= checkoutEnvironmentText picEnvironment ->
               pure (Left "Payment intent environment does not match the checkout")
           | amountMinor /= picAmountMinor ->

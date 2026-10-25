@@ -21,6 +21,7 @@ This contract covers web (`tdf-hq-ui`) behavior only. Backend authorization and 
 ## MKT-CART-001: discoverable Marketplace cart
 - A header cart control with a count badge is visible at every width on Marketplace pages, and on other pages while the cart has items. It opens the cart in one interaction.
 - Add, update and remove change the badge immediately. Adds keep the visitor on the product, show a confirmation and ignore repeated taps while pending.
+- A failed cart read is an explicit recoverable error, not an empty cart. The saved id and count survive; retry targets the same cart without creating another one. Initial and cached offline-paused reads show a waiting-for-connection status; reconnecting resumes the read and restores checkout only after success. Cached products may remain visible after a failed refresh, but checkout is blocked until the current read succeeds and is idle.
 - The cart survives refresh and login/logout in the same browser. Cross-device carts for signed-in users need a backend `cart.party_id` model.
 
 ## COURSE-ENROLL-001: immediate course enrollment

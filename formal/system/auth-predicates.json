@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "e4cf4c1626e449ef68438c548bd98fb2abea824ef89e3036be3e87233267ee05"
+    "tdf-hq/tdf-hq.cabal": "1427f603a60bed8c4d0a9bd70d51e9e65bddb7785f50ba798e24d87bc012fafb"
   },
   "obligations": [
     {
@@ -91,6 +91,26 @@
       "change": "Add only TDF.LedgerPostingSpec to the protected-main test module list. Removing that exact line reproduces protected main; both existing MusicRelease.Money registrations are retained.",
       "semanticReview": "The new test module exports spec and uses existing SQL/Persistent/Hspec and disposable database guards. Runtime component bindings, source paths, dependencies, compiler/CPP options, Stack/lock, authorization/RoleEnum/ingestion, ServerAuth and recovery SQL are byte-identical to protected main. Conditional translators, assumptions and obligation claims are unchanged.",
       "qualification": "Requires fresh scoped solver, replay/mutation and independent CPC qualification. No full implementation/refinement or financial release status is promoted."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "add7032e8932c060565f978ee68149e46b7a8c84",
+      "reviewedTarget": "8e4eaa8d45f6385751e93f8f8a54b4fbdf73db3f",
+      "previousSha256": "c2242ebae6256d64325bbe38c157f6d616710f65ee4f6fc1addd26ae0803bac1",
+      "currentSha256": "ee5e6128c1fc85318d3ebc98d224e2b3a25fc269f390c8d1eb3d17d896e16cbb",
+      "change": "Register TDF.Server.TicketPaymentReceipt in the executable and test other-modules lists and TDF.TicketPaymentReceiptSpec in the test list. Removing exactly those three lines reproduces the protected main Cabal manifest byte for byte.",
+      "semanticReview": "No source search paths, module aliases, dependencies, compiler options, CPP flags, extensions or toolchain changes. The two added files declare their unique listed modules, without Template Haskell, CPP, OPTIONS_GHC, foreign imports or unsafePerformIO. The receipt helper defines its own JSON type and explicit request-local storage functions; it does not redefine authorization predicates, RoleEnum, ingestion admission or recovery arithmetic. Auth, Models, RecordsIngestion, ServerAuth, recovery SQL and Stack/lock are byte-identical to protected main. Existing conditional translations, claims, assumptions and limitations remain unchanged.",
+      "qualification": "Requires fresh source-bound SMT execution, serialized replay, mutation controls and independent CPC checking. Full implementation/refinement obligations remain UNPROVEN; this technical context review grants no production or GitHub merge authority."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "000cf8ad3b9dabbd612695c3c107ddde6896c96a",
+      "combinedWith": "5b4843c13d108f3274da8a25e260eb50d7a35c48",
+      "previousSha256": "ee5e6128c1fc85318d3ebc98d224e2b3a25fc269f390c8d1eb3d17d896e16cbb",
+      "currentSha256": "1427f603a60bed8c4d0a9bd70d51e9e65bddb7785f50ba798e24d87bc012fafb",
+      "change": "Add only the existing TDF.LedgerPostingSpec test registration to protected main. Removing that one exact line reproduces the main manifest byte for byte; all three protected TicketPaymentReceipt registrations remain intact.",
+      "semanticReview": "Source search paths, runtime module bindings, dependencies, compiler/CPP options and Stack/lock match protected main. The existing ledger test defines no authorization/recovery module or import override. Auth, Models, RecordsIngestion, ServerAuth and recovery SQL match both parents exactly. Both parent context-review histories and unchanged obligation claims/assumptions are preserved.",
+      "qualification": "Fresh source-bound solver/replay, mutation and independent certificate checks remain required. Full implementation/refinement and release obligations remain UNPROVEN."
     }
   ]
 }

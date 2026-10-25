@@ -131,6 +131,10 @@ psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
 cd "$TDF_PROVIDER_RETRY_ROOT/tdf-hq"
 TDF_PROVIDER_RETRY_DATABASE_URL="$TDF_PROVIDER_RETRY_URL" \
 PGOPTIONS='-c statement_timeout=15000 -c lock_timeout=10000' \
+  python3 "$TDF_PROVIDER_RETRY_ROOT/scripts/verify-payment-intent-expiry.py"
+
+TDF_PROVIDER_RETRY_DATABASE_URL="$TDF_PROVIDER_RETRY_URL" \
+PGOPTIONS='-c statement_timeout=15000 -c lock_timeout=10000' \
   stack test --test-arguments='--match=provider-retry-runtime +RTS -N2 -RTS'
 
 # Nonempty rollback must fail and leave all history readable.

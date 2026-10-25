@@ -213,6 +213,7 @@ executable tdf-hq-exe
     TDF.Server.ServiceStorefront
     TDF.Server.ProviderTransport
     TDF.Server.TicketManualPayments
+    TDF.Server.TicketPaymentReceipt
     TDF.Server.TicketTaxDocuments
     TDF.Server.TicketRefunds
     TDF.ServerLiveSessions
@@ -373,6 +374,7 @@ test-suite tdf-hq-test
     TDF.EventOrganizerSpec
     TDF.InvoiceDatilSpec
     TDF.TicketManualReviewSpec
+    TDF.TicketPaymentReceiptSpec
     TDF.Test.DisposablePostgres
     TDF.IndexDeclarationSpec
     TDF.InvoiceWorkerSpec
@@ -582,6 +584,7 @@ test-suite tdf-hq-test
     TDF.Server.ServiceStorefront
     TDF.Server.ProviderTransport
     TDF.Server.TicketManualPayments
+    TDF.Server.TicketPaymentReceipt
     TDF.Server.TicketTaxDocuments
     TDF.Server.TicketRefunds
     TDF.ServerAuth

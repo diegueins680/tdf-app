@@ -29,6 +29,10 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 ## Canonical package
 
+- [payment-intent-expiry.md](payment-intent-expiry.md): database-time admission
+  after checkout locking, actual PostgreSQL lock-wait counterexamples, three
+  compiled source controls and a bounded model with four negative configurations.
+
 - [music-money-wire.md](music-money-wire.md): exact Int64 transport, confirmed
   purchase price, source-bound numeric SMT obligation and compatible clients.
 - [music-test-entrypoint.md](music-test-entrypoint.md): canonical execution of
@@ -124,6 +128,8 @@ These checks make drift fail CI; run them before changing a mapped surface.
   and [identity-recovery.md](identity-recovery.md) define narrow verification
   boundaries. `formal/event-operations` and `formal/social` retain scoped
   TLA+/PlusCal/Alloy models and negative controls.
+
+- [profile-editing-baseline.md](profile-editing-baseline.md): fan and artist edits require an owned successful profile read, isolate account generations and preserve dirty drafts through background reads.
 
 ## Authority and conflict resolution
 
