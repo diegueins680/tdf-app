@@ -1,3 +1,4 @@
+import { getLogoutRevision, ownsLogoutRevision } from '../session/logoutIntent';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
@@ -83,7 +84,7 @@ export default function ResetPasswordPage() {
     [],
   );
 
-  const completeLogin = async (response: LoginResponseDTO) => {
+  const completeLogin = async (response: LoginResponseDTO, authRevision: string) => {
     const fallbackSession: SessionUser = {
       username: 'usuario',
       displayName: t('authEntry.tdfAccount'),
@@ -96,6 +97,7 @@ export default function ResetPasswordPage() {
     try {
       const snapshot = await loadSessionSnapshot();
       if (!snapshot) {
+        if (!ownsLogoutRevision(authRevision)) return;
         login(fallbackSession);
         navigate(resolvePostAuthPath(null, fallbackSession.roles, fallbackSession.modules, redirectPath), {
           replace: true,
@@ -112,11 +114,13 @@ export default function ResetPasswordPage() {
         partyId: snapshot.partyId,
       };
 
+      if (!ownsLogoutRevision(authRevision)) return;
       login(resolvedSession);
       navigate(resolvePostAuthPath(null, resolvedSession.roles, resolvedSession.modules, redirectPath), {
         replace: true,
       });
     } catch {
+      if (!ownsLogoutRevision(authRevision)) return;
       login(fallbackSession);
       navigate(resolvePostAuthPath(null, fallbackSession.roles, fallbackSession.modules, redirectPath), {
         replace: true,
@@ -147,9 +151,10 @@ export default function ResetPasswordPage() {
     }
 
     setFeedback(null);
+    const authRevision = getLogoutRevision();
     try {
       const response = await resetMutation.mutateAsync({ token, newPassword: trimmedPassword });
-      await completeLogin(response);
+      await completeLogin(response, authRevision);
     } catch (error) {
       setFeedback({
         type: 'error',

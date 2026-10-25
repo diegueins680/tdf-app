@@ -1,3 +1,5 @@
+import { hasLogoutIntent } from '../session/logoutIntent';
+import { fetchWithDeadline } from './requestDeadline';
 import type { components } from './generated/types';
 import { resolveApiBase } from '../config/apiBase';
 
@@ -20,6 +22,7 @@ const sessionUrl = (path: string) => `${API_BASE}${path}`;
 // Accepts an options object so it also works directly as a react-query
 // queryFn (whose context carries an AbortSignal).
 export async function loadSessionSnapshot(options: { signal?: AbortSignal } = {}): Promise<SessionResponseDTO | null> {
+  if (hasLogoutIntent()) return null;
   const response = await fetch(sessionUrl('/session'), {
     credentials: 'include',
     ...(options.signal ? { signal: options.signal } : {}),
@@ -36,19 +39,14 @@ export async function loadSessionSnapshot(options: { signal?: AbortSignal } = {}
   return response.json() as Promise<SessionResponseDTO>;
 }
 
-export async function logoutSessionRequest(): Promise<void> {
-  const response = await fetch(sessionUrl('/session/logout'), {
+export async function logoutSessionRequest(apiToken?: string): Promise<void> {
+  await fetchWithDeadline(sessionUrl('/session/logout'), {
     method: 'POST',
     credentials: 'include',
-  });
-
-  if (response.status === 401 || response.status === 403) {
-    return;
-  }
-
-  if (!response.ok) {
-    throw new Error(await readErrorText(response));
-  }
+    ...(apiToken ? { headers: { Authorization: `Bearer ${apiToken}` } } : {}),
+  }, (response) => response.ok
+    ? Promise.resolve()
+    : Promise.reject(new Error('Server sign-out is unconfirmed')));
 }
 
 export async function completeOnboardingProgress(

@@ -1,5 +1,8 @@
 // Public arrival, authentication and recovery copy.
 export default {
+  logoutPending: 'You signed out of this app. We are confirming sign-out with the server.',
+  logoutUnconfirmed: 'You signed out of this app, but server sign-out is unconfirmed. Retry when connected.',
+  retryLogout: 'Retry sign-out',
   claimReviewAfterSignup: 'Create your own account. You can then submit an access claim for the selected profile for review; signing up does not grant ownership.',
   "googleLinkTitle": "Connect your TDF account",
   "googleLinkExplanation": "Use your existing TDF credentials to connect Google. If you previously used only Google, reset your TDF password first. Create an account only if you do not already have one.",

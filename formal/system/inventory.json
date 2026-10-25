@@ -711,6 +711,7 @@
       "tdf-hq-ui/src/api/label.ts",
       "tdf-hq-ui/src/api/liveSessions.test.ts",
       "tdf-hq-ui/src/api/liveSessions.ts",
+      "tdf-hq-ui/src/api/logoutIntent.test.ts",
       "tdf-hq-ui/src/api/marketplace.test.ts",
       "tdf-hq-ui/src/api/marketplace.ts",
       "tdf-hq-ui/src/api/merch.test.ts",
@@ -1279,12 +1280,15 @@
       "tdf-hq-ui/src/session/SessionContext.test.ts",
       "tdf-hq-ui/src/session/SessionContext.tsx",
       "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx",
+      "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
       "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
       "tdf-hq-ui/src/session/SessionProviders.test.tsx",
       "tdf-hq-ui/src/session/SessionProviders.tsx",
       "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx",
       "tdf-hq-ui/src/session/SessionQueryProvider.tsx",
       "tdf-hq-ui/src/session/authEvents.ts",
+      "tdf-hq-ui/src/session/logoutIntent.test.ts",
+      "tdf-hq-ui/src/session/logoutIntent.ts",
       "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts",
       "tdf-hq-ui/src/session/onboardingIntentRecovery.ts",
       "tdf-hq-ui/src/test/accessibility.ts",
@@ -6424,7 +6428,7 @@
     {
       "id": "SURFACE-2a14b72d994c2399",
       "path": "tdf-hq-ui/src/api/auth.ts",
-      "sha256": "6ad0e27b011ff0d4293a1af6c7dfa6c038cd6829c947837d492a26e89734ca0f",
+      "sha256": "3e38f12a64f452d58b80fc365fd72f1fa543fa4c9090198388dfd172bdf41551",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6502,7 +6506,7 @@
     {
       "id": "SURFACE-2e3549439fba7b8e",
       "path": "tdf-hq-ui/src/api/client.ts",
-      "sha256": "6b0d3de4ec299b7f44e4c2ef295efe97b0977f81288379c9aa4af4c0fac5cd92",
+      "sha256": "c1a35d37d170cdf684226758a5fb024b1040545d8404c0f6d77e58e644e165fc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6574,7 +6578,7 @@
     {
       "id": "SURFACE-10856a58d8da5733",
       "path": "tdf-hq-ui/src/api/drive.ts",
-      "sha256": "27e9d44e0bfa36c763b79e57731b118168b77bf0ac051790903693208fe0d2a3",
+      "sha256": "58ddf0aba81ae1ca1cf67d400b6826cca57aab890a7120dd48efe28aa49c8e7c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6742,7 +6746,7 @@
     {
       "id": "SURFACE-4f584dc31d92ebd7",
       "path": "tdf-hq-ui/src/api/inventory.ts",
-      "sha256": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
+      "sha256": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6773,6 +6777,12 @@
       "id": "SURFACE-cbf077a3da6bbf4a",
       "path": "tdf-hq-ui/src/api/liveSessions.ts",
       "sha256": "5774b06d8592a7c392959bfb888cd359520cd5a7232f3ccde10de5e6c1f4be2f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c7a9306039571e52",
+      "path": "tdf-hq-ui/src/api/logoutIntent.test.ts",
+      "sha256": "6a8c6893ba50142eff841848f6d0d4cf0a06178e9353919a1d56151336c5f158",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7036,7 +7046,7 @@
     {
       "id": "SURFACE-e999a12d43def7e6",
       "path": "tdf-hq-ui/src/api/session.ts",
-      "sha256": "f9c1e71ee476a7551fb6a5dd093c8c9776e525d113af0451bde93aebaf910e90",
+      "sha256": "c06a1e7a1602f3dbc81f611c9dc66d0a9e13028cb14b8e9734bf98a1f018e8b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8410,13 +8420,13 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "1b31939d6d1fcc0eb9b62ff6a53773934a458990464be84c1d8ed4fa729bcfb1",
+      "sha256": "929f4ef3a4713fac085a041803fd20c576def14970cf95874bdf6bac155ce527",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "3260bcde29c6fc5ce2e623c7f66f50b3c763c0239985b0f928982e03c61d05a0",
+      "sha256": "4f9d8d74914c71649f3d4939341788c0188009a360954e451313e9599b71efb9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9250,13 +9260,13 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "c79edb524886802dfbedd61fbc97614a0fe4ba4414708c2482ffa1856d2bad0c",
+      "sha256": "29cbe90efd800dfa0b84334f8e40d1df1c3019d9230311eda67577db67bccaad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "a4fa1f33977e120b61299d94f3b9853e220f25ddc0c854e9329fa288d120f443",
+      "sha256": "a1340613739e33ac690a2f9ec0cb21033fe3e27fafa7e71329815e4aa1636e3c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9664,7 +9674,7 @@
     {
       "id": "SURFACE-e9006bbb523fee68",
       "path": "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
-      "sha256": "9bec5512454b24b594edcc260416d843a4dec5ec36597c0628fc740a9aeed1c1",
+      "sha256": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10174,13 +10184,19 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "8cb425bcd28933e0482bee404607a6ed275d75b3810a42b207e8edd930037037",
+      "sha256": "66027b6f797cc4ad32413d1e4a2a57674ba25a55ae37d303c0006a2b80590daf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f149aecd66c7e328",
       "path": "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx",
       "sha256": "d73f62bb5fd41d238f3b9b894dc9e935a525e51885dfd75b6c0efe1b7fd2a2f4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6996ecfbe844e690",
+      "path": "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
+      "sha256": "6fd94b62815f2481b1d749f421177974590ae50a1f58dd46d55b6465b78af6ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10217,6 +10233,18 @@
       "id": "SURFACE-3acc1be5abd0e8e7",
       "path": "tdf-hq-ui/src/session/authEvents.ts",
       "sha256": "7eb5599167ba8a097912f600c0b88a472c9d56e98b0115bba05aa3734249e977",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7f18c38ef360a0ae",
+      "path": "tdf-hq-ui/src/session/logoutIntent.test.ts",
+      "sha256": "e6d15a80229ee6728882d44e717d955160a597d1f9f3a3ca6ebb0fef2509f1e1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-319cda255d94c59c",
+      "path": "tdf-hq-ui/src/session/logoutIntent.ts",
+      "sha256": "abad265a1a074073f4785ddc134df91fe7e1ab5774c49d171690f2e60eeff733",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26232,6 +26260,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/logout-intent.md",
+      "sha256": "f70050c89f76fe3c66aa1109da4981b96f34cb43c8f532b9f7504b30665d4f06",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/manual-bank-transfer.md",
       "sha256": "daf3d55dcd3b4939203d8052aa518901830cad64e68525e7dc471600884578a1",
       "authority": "inferred",
@@ -26527,7 +26562,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "482039c44288087746e71c0c4df024bcd0d1b813056ea7f79640ad673cb4945a",
+      "sha256": "4feecbf050e242e92a054db3592a6f80dfc428883d1fcead0c97a4ad8a2b939d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
