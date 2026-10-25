@@ -1,5 +1,5 @@
-import { Box, Card, CardContent, Divider, Link, Stack, Typography } from '@mui/material';
-import { useLocation } from 'react-router-dom';
+import { Box, Card, CardContent, Divider, Link, MenuItem, MenuList, Stack, Typography } from '@mui/material';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
@@ -20,6 +20,17 @@ export default function SecurityPage() {
           reportar incidentes o solicitar eliminación de datos.
         </Typography>
       </Stack>
+
+      <Card>
+        <CardContent>
+          <Typography variant="h6" id="reputation-rights-menu">Derechos y reputación</Typography>
+          <MenuList aria-labelledby="reputation-rights-menu">
+            <MenuItem component={RouterLink} to="/privacidad">Privacidad de reputación</MenuItem>
+            <MenuItem component={RouterLink} to="/apelaciones">Apelaciones de reputación</MenuItem>
+            <MenuItem component={RouterLink} to="/reputacion/como-se-calcula">Cómo se calcula la reputación</MenuItem>
+          </MenuList>
+        </CardContent>
+      </Card>
 
       <Stack spacing={1.5}>
         <Box id="privacidad" sx={{ scrollMarginTop: 80 }}>
