@@ -200,6 +200,8 @@ try:
  if sql("SELECT to_regprocedure('event_memory_dispatch_batch(integer)') IS NULL")=='t':apply(root/'tdf-hq/sql/2026-10-25_event_memory_invitations.sql')
  if a.source_moderation:apply(root/'tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql')
  start();report['actualVersion']=request('/version')[0]
+ assert request('/session')[0] is None
+ record('Actual anonymous session follows the nullable HTTP 200 response contract')
  accounts=[]
  for label in ('owner','participant'):
   account=request('/signup',body={'firstName':'Synthetic','lastName':label,'email':'memory.'+label+'@persona.test','password':'synthetic-memory-password-141','termsAccepted':True,'termsVersion':'tdf-account-terms-v1'},method='POST')[0]
