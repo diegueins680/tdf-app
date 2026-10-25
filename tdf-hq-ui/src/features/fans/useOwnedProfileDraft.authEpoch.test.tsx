@@ -64,11 +64,12 @@ beforeEach(() => {
   profileWrites.length = 0;
   profileReads.length = 0;
   fetchMock.mockReset().mockImplementation(async (url, init) => {
-    if (!String(url).endsWith('/fans/me/profile')) throw new Error(`Unexpected test request: ${String(url)}`);
+    if (typeof url !== 'string' || !url.endsWith('/fans/me/profile')) throw new Error('Unexpected test request URL');
     const bearer = new Headers(init?.headers).get('Authorization');
     const partyId = bearer === 'Bearer synthetic-B' ? 84 : 42;
     if (init?.method === 'PUT') {
-      profileWrites.push({ bearer, body: JSON.parse(String(init.body)) as FanProfileUpdate });
+      if (typeof init.body !== 'string') throw new Error('Expected a JSON string profile body');
+      profileWrites.push({ bearer, body: JSON.parse(init.body) as FanProfileUpdate });
     } else {
       profileReads.push(bearer);
     }

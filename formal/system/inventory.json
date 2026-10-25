@@ -8047,7 +8047,7 @@
     {
       "id": "SURFACE-f4587eada3ec2988",
       "path": "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
-      "sha256": "3995cfb38d4a5e817f1b12a1e82043c30ddeaf95b1f44326c0ed398b8e7ac86b",
+      "sha256": "216e700c59010f6b583573b7322031a1b56be7b7f087289b6ceff6121f641261",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19226,7 +19226,7 @@
     },
     {
       "path": "docs/engineering/user-value-backlog-2026-10-25.md",
-      "sha256": "f952133c529b1d991360a9ee30aaeafdf46d03a01c38e80d1d2533c44f35d7be",
+      "sha256": "26f04c57bd309b3cc3bbd3c2159a68fafdab049ed3c76fae8aeab7a602ed3bf1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

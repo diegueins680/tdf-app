@@ -55,17 +55,18 @@ tras controles negativos y ejecución descartable (85→91).
 
 | Orden | Trabajo existente o nuevo | Categoría | A/G/V/J/E/C/R/T | P | Estado y acción |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Preservar términos aceptados, ledger y capturas inciertas | S0 | 3/5/5/5/5/3/2/2 | 86 | BLOCKED. Reutilizar consolidación #551; no promover #555/#569 individualmente. Requiere reconciliación, gates y resolver restricciones formales/operativas. |
-| 2, seleccionado | Evitar guardar borradores sin lectura propia y aislar cambios de cuenta | S0 | 4/5/4/5/5/4/4/4 | 91 | DEFECTIVE en la base; reparación local implementada, 13 regresiones y navegador/API/PostgreSQL descartables pasan. Pendiente CI/revisión/merge/despliegue. Comparte causa entre perfiles fan y artista, sin cambiar API ni SQL. |
-| 3 | Subir portada con sesión HttpOnly válida | S1 | 3/4/4/5/5/5/4/3 | 83 | PARTIAL. Reutilizar #605; reconciliar con `main`, renovar CI/revisión y respetar admisión. No duplicar uploader. |
-| 4 | Reflejar foto guardada en Comunidad | S1 | 4/3/4/5/5/5/4/3 | 81 | PARTIAL. Reutilizar #604; conservar invalidación compartida y verificar persistencia e imagen cargada. |
-| 5 | Abrir comprobantes privados desde gestión de entradas | S1 | 3/4/4/5/5/3/2/3 | 79 | PARTIAL. #603 está en la cola y otra tarea mantiene su integración; no tocar su rama. CI y despliegue de almacenamiento privado siguen siendo hitos separados. |
-| 6 | Correo/push de chat controlado por destinatario | S1 | 3/3/4/4/3/1/1/1 | 60 | BLOCKED para entrega; UNIMPLEMENTED en el alcance descrito por #577; depende de consentimiento, adaptadores y observación de entrega. Avisos internos y respuestas ya existen. |
-| 7 | Alertas guardadas respetan todos los filtros | S1 | 2/3/3/4/3/3/3/2 | 59 | DEFECTIVE confirmado por comparación de fuentes actuales y contraejemplos booleanos; pendiente de prueba SQL/HTTP. No confundir con #586 ya fusionado sobre aliases de géneros. |
-| 8 | Ciclo completo de recuperación, expiración y vuelta al intento | S1 | 4/4/3/3/2/1/1/0 | 58 | PARTIAL: prioridad de investigación, sin defecto nuevo reproducido. ST-001 exige inbox local y estado del servidor; no inventar otro login. |
+| 1, seleccionado | Evitar guardar borradores ajenos/sin lectura propia y revocar callbacks al cambiar credenciales | S0 | 4/5/4/5/5/4/4/4 | 91 | DEFECTIVE en la base; #607 añade protección compartida, ahora también epoch síncrono. 68 pruebas dirigidas pasan; falta CI/revisión del código nuevo, admisión y despliegue. |
+| 2 | Preservar términos aceptados, ledger y capturas inciertas | S0 | 3/5/5/5/5/3/2/2 | 86 | BLOCKED. Reutilizar #551, sin promover #555/#569 por separado ni activar proveedores. |
+| 3 | Subir portada con sesión HttpOnly válida | S1 | 3/4/4/5/5/5/4/3 | 83 | PARTIAL. #605 ya actualizado por su operador sobre main `512d590e`; aprobación reciente, CI en curso. No duplicar su rama. |
+| Entregado | Reflejar foto guardada en Comunidad | S1 | 4/3/4/5/5/5/4/3 | 81 | COMPLETE en el alcance de invalidación web: #604 integrado como `512d590e` y assets publicados verificados. Browser real con API sintética; no afirma upload ni escritura productiva real. |
+| 4 | Abrir comprobantes privados desde gestión de entradas | S1 | 3/4/4/5/5/3/2/3 | 79 | PARTIAL. #603 integrado como089; backend productivo sigue en `4dac175d`. Verificar gates de release/almacenamiento antes de publicación del backend. |
+| 5 | Alertas guardadas respetan filtros no geográficos | S1 | 2/3/3/4/5/2/3/2 | 64 | DEFECTIVE confirmado en 27 casos PostgreSQL,10 discrepancias válidas. Reparación compartida en curso; radio sigue BLOCKED por centro/privacidad. |
+| 6 | Correo/push de chat controlado por destinatario | S1 | 3/3/4/4/3/1/1/1 | 60 | BLOCKED para entrega; UNIMPLEMENTED el alcance externo #577, pendiente consentimiento, adaptadores y dispositivos. |
+| 7 | Habilitación explícita del club de un artista nuevo | S1 | 2/2/4/4/5/1/2/1 | 59 | UNIMPLEMENTED en #606; falta ese camino de contenido. El follow funciona y existen enlaces públicos alternativos. Nunca provisionar por GET ni crear miembros/contactos sin consentimiento. |
+| 8 | Ciclo completo de recuperación, expiración y vuelta al intento | S1 | 4/4/3/3/2/1/1/0 | 58 | PARTIAL, sin defecto adicional reproducido. Conservar ST-001 y el transporte existente. |
 
-La selección no cambia la cola FIFO de integración: actualmente #603 precede a
-#604 y #605. El controlador `scripts/merge-admission.py` admite un único PR no
+La selección no cambia la cola FIFO de integración: #604 está integrado;
+#605 precede a #607. No tocar drafts financieros ni #608 para alterar la admisión. El controlador `scripts/merge-admission.py` admite un único PR no
 draft de menor número. Protección observada: 20 contextos, checks estrictos,
 aprobación independiente, descarte de revisiones obsoletas, administradores
 sujetos a protección y resolución de conversaciones. Nunca convertir esta
@@ -184,21 +185,13 @@ actualice `main`, repetir la comparación de contenido antes de reabrir trabajo.
 
 ## Cinco siguientes después del incremento seleccionado
 
-1. Resolver la entrega protegida de la consolidación financiera #551, respetando
-   sus bloqueos; no duplicar #555/#569 ni activar proveedores.
-2. Reconciliar y entregar #605; validar cookie-only y persistencia con proveedor
-   falso, sin Drive productivo ni credenciales reales.
-3. Integrar #604 y verificar en escritorio/móvil que guardar, quitar y recargar
-   una foto actualiza perfil y Comunidad desde la misma fuente persistida.
-4. Completar #603 en su tarea propietaria y verificar almacenamiento/recuperación
-   privada y acceso autorizado antes de desplegar el backend.
-5. Reproducir #534 contra todos los filtros guardados, reutilizar la búsqueda
-   canónica y corregir el primer filtro discrepante con regresión de selección
-   y notificación local deduplicada.
+1. Resolver los bloqueos de la consolidación financiera #551, conservando sus revisiones, modelos y límites de release.
+2. Completar CI/integración protegida de #605 y verificar el upload cookie-only; su operador mantiene la rama.
+3. Verificar el lanzamiento elegible del backend de comprobantes #603, ya integrado, sin ejecutar una release no autorizada.
+4. Completar el matcher no geográfico compartido de #534; datos nuevos o modificados, dedup y ninguna entrega externa. Radio sigue pendiente de definición compatible con privacidad.
+5. Resolver prerrequisitos de entrega de chat #577; no prometer entrega de email/push antes de evidencia real.
 
-Ninguno de estos pasos autoriza cobros, mensajes, publicación social, migraciones
-productivas o eludir revisión. Un gate externo conserva el trabajo como bloqueado
-y permite avanzar al siguiente candidato seguro.
+El nuevo candidato #606 se conserva en el ranking, detrás del matcher reproducido; la habilitación de club debe ser explícita del propietario, idempotente y con permisos probados. Las puntuaciones siguen siendo hipótesis ordinales; no hay uplift observado ni una cifra de usuarios afectados validada.
 
 ## Evidencia del arreglo seleccionado
 
@@ -276,3 +269,31 @@ y comprobantes PASS; 13 comprobaciones de clientes API PASS; build/tipos PASS
 (334202 bytes gzip, 5 preloads), inventario/trazabilidad y admisión de superficies
 PASS. Estos recibos actualizan la integración sin atribuir al nuevo head la
 ejecución histórica de 3350 pruebas. CI hospedado y revisión siguen pendientes.
+
+## Continuación — 18:00 UTC — fuente y evidencia actuales
+
+#604 fue integrado por otro operador como `512d590e`d590e; nuestra precondición rechazó
+el intento duplicado antes de modificar GitHub. El árbol coincide con el head
+`314ae256c` aprobado a las 16:27 UTC. La web canónica `512d590e` pasó actualización de tarjeta en
+Chromium escritorio/Pixel7 con API/sesión sintéticas y cero llamadas productivas
+reenviadas; backend saludable en `4dac175d`. Recibo: `/private/tmp/tdf-user-value-604-deployed-20261025.json`.
+
+La composición local607+604 conserva las tres invalidaciones públicas antes del guard
+de propietario. 64 pruebas / 4 suites y navegador/API/PostgreSQL descartables pasan;
+un control sobre `7f0e7d951` falla por caché pública obsoleta.
+
+La revisión encontró además una ventana anterior al render: tras iniciar sesión como B, un
+callback de A admitía un PUT real del transporte con bearer de B y campos de A. Se reprodujo
+con proveedores/cliente/cabecera reales y Fetch interceptado, nunca en producción.
+Cuatro controles fallan en e715; el hook ahora captura y verifica el epoch de
+autenticación síncronamente, incluyendo setters/ack. Los4 casos de transporte y
+68 regresiones / 5 suites pasan después del arreglo. La revisión de las 16:27 UTC sobre `7f0e7d951` es
+histórica y no se presenta como aprobación de este código nuevo. Las peticiones
+ya enviadas y los conflictos de edición entre dispositivos siguen fuera del
+contrato. El detalle de recibos vigentes está en el informe JSON.
+
+#534 pasa de sospecha de fuente a27casos PostgreSQL:6 falsos positivos y4 falsos
+negativos en consultas válidas;3 JSON históricos malformados y controles de
+privacidad/expiry/dedup. No hay evidencia HTTP todavía. El nuevo alcance comparte
+helpers tipados entre búsqueda y trigger; evita inventar centros geográficos o
+guardar coordenadas precisas, y no reescribe JSON/hashes históricos.

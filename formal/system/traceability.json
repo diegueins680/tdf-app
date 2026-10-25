@@ -12190,7 +12190,7 @@
     "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx": "c12556996684edd36b7dc736ae88cbc2153a3b7b47a095078dbcce9d025e3dba",
     "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx": "9d09b7acdcb9bd3c0d83e5115bd01eac89b32b0f2d133e884c0797f4a5ca9b5d",
     "tdf-hq-ui/src/features/fans/useFanProfile.ts": "5d5117b2bc97d999546a3ea417cb38ee797883744f4329c113b791e6bde0b53f",
-    "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx": "3995cfb38d4a5e817f1b12a1e82043c30ddeaf95b1f44326c0ed398b8e7ac86b",
+    "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx": "216e700c59010f6b583573b7322031a1b56be7b7f087289b6ceff6121f641261",
     "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts": "16d2be464c3d56a4ea77017c13c90628e31d483afa256b25da6f869586802ce8",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "7f091bdd2722c7eeea2a7003f098a6a265c6f2d1f8f6b7fc15288d009cebec33",
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
@@ -31570,7 +31570,7 @@
     {
       "id": "SURFACE-f4587eada3ec2988",
       "path": "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
-      "sha256": "3995cfb38d4a5e817f1b12a1e82043c30ddeaf95b1f44326c0ed398b8e7ac86b",
+      "sha256": "216e700c59010f6b583573b7322031a1b56be7b7f087289b6ceff6121f641261",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

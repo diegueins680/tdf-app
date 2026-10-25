@@ -28,17 +28,17 @@
     ],
     "expectedBenefit": "Prevent unintended field erasure and copying profile drafts across accounts; allow recovery after a failed read.",
     "observedBenefit": "En escritorio y Pixel7, las lecturas pendientes/fallidas no producen PUT ni alteran los perfiles; el reintento permite guardar solo la ciudad y conserva todos los demás campos. Beneficio productivo aún no observado.",
-    "implementationStatus": "PR_PUBLISHED",
-    "validationStatus": "LOCAL_BASELINE_AND_REFRESH_CHECKS_PASS_HOSTED_AND_REVIEW_PENDING",
+    "implementationStatus": "LOCAL_COMPOSED_PHOTO_AND_SYNCHRONOUS_AUTH_REPAIR",
+    "validationStatus": "68_TARGETED_PASS_BUILD_PASS_FINAL_LINT_PENDING",
     "pullRequest": "https://github.com/diegueins680/tdf-app/pull/607",
     "mergeStatus": "NOT_MERGED_REQUIRED_REVIEW_CI_AND_FIFO",
     "productionStatus": "NOT_DEPLOYED",
     "scope": "Web form ownership and load-state guard; preserve API/server authorization and historical migrations.",
     "risksAndDependencies": [
-      "Independent exact-head review, required CI and FIFO admission remain required.",
-      "Existing photo upload/cache fixes remain separately maintained in PRs605 and604.",
-      "No universal transaction-fenced session revocation or cross-device optimistic edit fence is claimed.",
-      "Production benefit and conversion uplift remain unobserved."
+      "New authentication-epoch guard and composed photo invalidation require final-head CI and independent review.",
+      "605 is being reconciled/qualified by its existing operator; do not create a parallel refresh.",
+      "Already-dispatched requests and cross-device write versioning remain outside this client boundary.",
+      "Production benefit from607 is not yet observed."
     ],
     "branch": "fix/artist-profile-load-safety-20261025",
     "codeChanges": [
@@ -64,23 +64,23 @@
     {
       "item": "Cookie-only artist image uploads",
       "existingPullRequest": 605,
-      "status": "PARTIAL"
+      "status": "CURRENT_HEAD_APPROVED_CI_PENDING",
+      "ownership": "Existing operator; no duplicate refresh"
     },
     {
-      "item": "Artist photo consistency with Community",
-      "existingPullRequest": 604,
-      "status": "PARTIAL"
-    },
-    {
-      "item": "Private bank-transfer receipt review",
+      "item": "Private bank-transfer receipt backend delivery",
       "existingPullRequest": 603,
-      "status": "PARTIAL",
-      "ownership": "Separate active integration task"
+      "status": "MERGED_BACKEND_DEPLOYMENT_NOT_VERIFIED"
     },
     {
-      "item": "Saved alerts preserve all search filters",
+      "item": "Saved alerts use shared non-geo search predicates",
       "existingIssue": 534,
-      "status": "NEEDS_FRESH_REPRODUCTION"
+      "status": "REAL_POSTGRES_REPRODUCED_IMPLEMENTATION_IN_PROGRESS"
+    },
+    {
+      "item": "Recipient-controlled chat offline email/push",
+      "existingIssue": 577,
+      "status": "BLOCKED_ON_CONSENT_ADAPTER_AND_DEVICE_QUALIFICATION"
     }
   ],
   "limits": [
@@ -127,7 +127,8 @@
       "suites": 297,
       "elapsedSeconds": 507.685,
       "exitCode": 0,
-      "log": "/private/tmp/tdf-profile-safety-full-web-20261025.log"
+      "log": "/private/tmp/tdf-profile-safety-full-web-20261025.log",
+      "qualification": "Historical pre603 source run; later composition/auth-epoch code requires its own targeted and hosted checks. Not a full-current-head execution."
     },
     "uiSourceHashes": {
       "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts": "d42a10a9261ef745e9b5930c9641f2be5c72b275b4bc106b78e91b9aacb5109d",
@@ -165,9 +166,54 @@
     "sourceAdmission": {
       "status": "PASS",
       "receipt": "/private/tmp/tdf-profile-safety-source-admission-20261025.json"
+    },
+    "photoComposition": {
+      "source": "e7157d6bfb01ee7de346833396333b13fe29877a",
+      "focusedTests": 64,
+      "suites": 4,
+      "log": "/private/tmp/tdf-profile-safety-photo-compose-tests-20261025.log",
+      "negativeControl": {
+        "source": "7f0e7d9512557cf94a056695c5a5d79581fb4fc3",
+        "expectedFailures": 1,
+        "log": "/private/tmp/tdf-profile-safety-photo-compose-negative-20261025.log"
+      },
+      "disposableRuntime": "/private/tmp/tdf-profile-safety-photo-runtime-20261025/qualification.json",
+      "scope": "Successful current-source native browser/API/PostgreSQL desktop/Pixel7 safety, city saves, Community replacement/removal and reload; qualified E407 backend compatibility only. This runtime precedes the further authentication-epoch guard."
+    },
+    "authenticationEpoch": {
+      "negativeControl": {
+        "source": "e7157d6bfb01ee7de346833396333b13fe29877a",
+        "expectedFailures": 4,
+        "log": "/private/tmp/tdf-profile-auth-epoch-production-scope-negative-20261025.log",
+        "observed": "Real session/query providers, fan endpoint, API client and header dispatch oldAfields with newBbearer during batched login. Fetch intercepted; no server/provider contacted."
+      },
+      "positive": {
+        "cases": 4,
+        "log": "/private/tmp/tdf-profile-auth-epoch-final-positive-20261025.log"
+      },
+      "relatedRegressions": {
+        "tests": 68,
+        "suites": 5,
+        "log": "/private/tmp/tdf-profile-auth-epoch-positive-20261025.log"
+      },
+      "build": {
+        "status": "PASS",
+        "initialGzipBytes": 334206,
+        "preloads": 5,
+        "log": "/private/tmp/tdf-profile-auth-epoch-build-20261025.log"
+      },
+      "sourceAdmission": {
+        "status": "PASS",
+        "receipt": "/private/tmp/tdf-profile-auth-epoch-admission-20261025.json"
+      },
+      "lint": {
+        "status": "RUNNING",
+        "log": "/private/tmp/tdf-profile-auth-epoch-final-lint-20261025.log"
+      },
+      "scope": "Revoke all captured draft/setter/save/ack guards at the synchronous authentication epoch before React renders. Existing real SessionQueryProvider supplies new-login baseline/cache remount."
     }
   },
-  "updatedAt": "2026-10-25T08:35:35.764722+00:00",
+  "updatedAt": "2026-10-25T18:35:44.406850+00:00",
   "publicObservation": {
     "observedAt": "2026-10-25T08:25:38.806824+00:00",
     "readOnly": true,
@@ -197,7 +243,7 @@
   },
   "nextItemInvestigation": {
     "issue": 534,
-    "status": "SOURCE_CONFIRMED_DEFECT_SQL_HTTP_REPRODUCTION_PENDING",
+    "status": "REAL_POSTGRES_REPRODUCED_BOUNDED_REPAIR_IN_PROGRESS",
     "findings": [
       "Trigger omits canonical non-geo filters and full-text parity.",
       "Mobile entityType all sentinel incorrectly excludes all document kinds."
@@ -208,7 +254,12 @@
       "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql:940",
       "tdf-hq/src/TDF/Server/Directory.hs:193",
       "tdf-mobile/app/(tabs)/directory.tsx:157"
-    ]
+    ],
+    "receipt": "/private/tmp/tdf-alert-parity-repro-20261025/summary.json",
+    "cases": 27,
+    "validQueryMismatches": 10,
+    "externalChannels": 0,
+    "scope": "Real full213 PostgreSQL trigger and notification/delivery rows; public SQL clauses extracted from source. HTTP verification remains pending."
   },
   "evidenceSha256": {
     "/private/tmp/tdf-profile-safety-full-web-20261025.log": "a480244a2aaa47f8136cff81c766814e6abc2925d212c5995df89cd2ab89717d",
@@ -218,7 +269,11 @@
     "/private/tmp/tdf-profile-safety-repo-quality-20261025.log": "1b3c4dfad289b38de4e342c8a69b4ef77122e87688487c2acb9218b3ae3213a0",
     "/private/tmp/tdf-profile-safety-review-20261025.json": "0637879abe9dc4a2537324b1f724f70a924f2bac45b703e9d80f79d406357309",
     "/private/tmp/tdf-profile-safety-build-20261025.log": "d4a551a977572bb3232aac20cadb674705425d4cf7d887105c0ba713d2f8ad0c",
-    "/private/tmp/tdf-profile-safety-lint-20261025.log": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5"
+    "/private/tmp/tdf-profile-safety-lint-20261025.log": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+    "/private/tmp/tdf-profile-auth-epoch-production-scope-negative-20261025.log": "17cb5f1b47f285e5fc45b83e28dcf7d6d3e6c3721da459616bcae53263f1297d",
+    "/private/tmp/tdf-profile-auth-epoch-positive-20261025.log": "930ca448b15ef6cf7baa96c6c13c33576a7cee6f7fc931fac83497029b44f10f",
+    "/private/tmp/tdf-profile-auth-epoch-final-positive-20261025.log": "d8bcba0c984905934a9d31780c58d55a062f58810fd661c64f57d2d1a203fce5",
+    "/private/tmp/tdf-user-value-604-deployed-20261025.json": "10198156d09f4d016d0db586c57676f39988ef96445dc51db4b707bfb3ef0a1d"
   },
   "integrationRefresh": {
     "protectedMain": "089dce6ba410e5a76bee024c0d4be2ae3df0011d",
@@ -255,5 +310,14 @@
       },
       "inventoryAndTraceability": "PASS"
     }
+  },
+  "currentProtectedMain": "512d590e902760130f54ca2927620c001a754b85",
+  "photoDelivery": {
+    "pullRequest": 604,
+    "state": "MERGED_AND_DEPLOYED_WEB_VERIFIED",
+    "mergeCommit": "512d590e902760130f54ca2927620c001a754b85",
+    "receipt": "/private/tmp/tdf-user-value-604-deployed-20261025.json",
+    "scope": "Canonical deployed assets in desktop/Pixel7 with synthetic session/API/image fixtures; no productive write or actual customer persistence claim.",
+    "backendCommit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0"
   }
 }
