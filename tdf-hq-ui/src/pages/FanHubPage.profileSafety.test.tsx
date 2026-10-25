@@ -225,6 +225,8 @@ describe('artist profile writes require the current account baseline', () => {
     updateArtistProfile.mockReturnValue(saveA.promise);
     getArtistProfile.mockResolvedValueOnce(artist()).mockResolvedValue(artist(84));
     const view = renderPage();
+    view.client.setQueryDefaults(['public-artist'], { gcTime: Infinity });
+    view.client.setQueryData(['public-artist', 'artist-42'], artist());
     await waitFor(() => expect(artistName().value).toBe('Artist 42'));
     fireEvent.click(artistSave());
     await waitFor(() => expect(updateArtistProfile).toHaveBeenCalledTimes(1));
@@ -233,7 +235,10 @@ describe('artist profile writes require the current account baseline', () => {
     view.rerenderPage();
     await waitFor(() => expect(artistName().value).toBe('Artist 84'));
     fireEvent.change(screen.getByLabelText('Ciudad'), { target: { value: 'B unsaved city' } });
+    const readsBeforeSaveReceipt = getArtistProfile.mock.calls.length;
     await act(async () => { saveA.resolve(artist()); });
+    await waitFor(() => expect(view.client.getQueryState(['public-artist', 'artist-42'])?.isInvalidated).toBe(true));
+    expect(getArtistProfile).toHaveBeenCalledTimes(readsBeforeSaveReceipt);
     expect(artistName().value).toBe('Artist 84');
     expect(screen.getByLabelText<HTMLInputElement>('Ciudad').value).toBe('B unsaved city');
     expect(screen.queryByText('Perfil de artista actualizado.')).toBeNull();

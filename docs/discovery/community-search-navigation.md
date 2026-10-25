@@ -68,6 +68,22 @@ profile publication state and creates no external service or parallel index
 store. When pg_trgm is unavailable, the existing normalization/matching remains
 functional without those indexes. All SQL parameters remain Persistent-bound.
 
+## Artist profile photos
+
+All artists use their persisted `artist_profile.hero_image_url` in legacy search
+results. Linked public directory profiles resolve the same media through the
+canonical directory preview resolver and refresh when artist media changes.
+This does not depend on a particular artist name, ID or frontend fallback map.
+Saving an artist profile invalidates Community/Global Search results, the artist
+catalog and public artist detail caches so an already open view shows updated
+artwork. Artists without valid media retain the generic placeholder; changing a
+photo does not publish a private or draft directory profile.
+
+`scripts/test-community-search.py` checks arbitrary new artists, replacement and
+removal, linked media refresh and private profile suppression against the shipped
+SQL. `FanHubPage.onboarding.test.tsx` checks that saving an arbitrary artist's photo
+refreshes an already open Community card and cached public profile destinations.
+
 ## Navigation contract
 
 A single `NavigationScrollRestoration` lives above route Suspense boundaries.

@@ -30,7 +30,10 @@ read must therefore never be interpreted as permission to save an empty profile.
 5. Capture the submitting account generation in asynchronous upload and save
    callbacks. An old generation must not change the active draft, invoke its
    saved callback or display its success/error message. Cache invalidation uses
-   the submitting Party, not the Party active when the response arrives.
+   the submitting Party, not the Party active when the response arrives. Successful
+   saves also refresh shared public discovery/catalog/profile caches, even if the
+   submitting account is no longer active; that must not refetch another account's
+   private editor or display the old account's receipt.
 
 The shared `useOwnedProfileDraft` hook implements draft ownership and hydration;
 the fan hook and artist editor admit their own DTOs and retain their domain

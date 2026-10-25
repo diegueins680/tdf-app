@@ -402,6 +402,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     },
     onSuccess: (_profile, request) => {
       void qc.invalidateQueries({ queryKey: ['artist-profile', request.payload.apuArtistId] });
+      void qc.invalidateQueries({ queryKey: ['directory', 'search'] });
+      void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+      void qc.invalidateQueries({ queryKey: ['public-artist'] });
       if (!request.isCurrentOwner()) return;
       request.acknowledgeSave(request.submittedDraft);
       setArtistToast('Perfil de artista actualizado.');
