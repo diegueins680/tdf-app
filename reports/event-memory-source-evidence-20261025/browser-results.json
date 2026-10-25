@@ -1,0 +1,100 @@
+{
+  "status": "PASS",
+  "api": "http://127.0.0.1:18886",
+  "sourceRevision": "recorded by the owning HTTP runner",
+  "sourceApiResponses": [
+    {
+      "method": "POST",
+      "path": "/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/b502ab90-2a57-4f7a-9580-b6374329f34c/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/b502ab90-2a57-4f7a-9580-b6374329f34c/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/b502ab90-2a57-4f7a-9580-b6374329f34c/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/b502ab90-2a57-4f7a-9580-b6374329f34c/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    }
+  ],
+  "blockedExternalRequests": 26,
+  "assertions": [
+    "Two real isolated sessions sign in and retain event/composer context",
+    "Desktop text publication persists and a phone reader reports it without automatically hiding it",
+    "Organizer closes the actual source report without removing the publication",
+    "Keyboard hide denies both sessions after reload; scoped restoration restores the persisted source"
+  ],
+  "frontendStopped": true
+}

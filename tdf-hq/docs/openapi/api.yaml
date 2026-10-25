@@ -10697,6 +10697,12 @@ components:
       $ref: './interactions.yaml#/components/schemas/InteractionPreferences'
     InteractionCommand:
       $ref: './interactions.yaml#/components/schemas/InteractionCommand'
+    EventMemorySourceControls:
+      $ref: './interactions.yaml#/components/schemas/EventMemorySourceControls'
+    EventMemorySourceReport:
+      $ref: './interactions.yaml#/components/schemas/EventMemorySourceReport'
+    EventMemorySourceReportPage:
+      $ref: './interactions.yaml#/components/schemas/EventMemorySourceReportPage'
     InteractionCommandRequest:
       $ref: './interactions.yaml#/components/schemas/InteractionCommandRequest'
     InteractionCommandResult:

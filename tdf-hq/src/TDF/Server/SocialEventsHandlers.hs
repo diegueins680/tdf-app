@@ -4060,7 +4060,10 @@ socialEventsServer user =
     editMoment rawEvent rawMoment EventMomentEditDTO{..} = do
         caption <- either throwError pure (normalizeMomentCaption (Just emeCaption))
         momentKey <- changeOwnMoment rawEvent rawMoment $ \key row ->
-            if eventMomentUpdatedAt row /= emeExpectedUpdatedAt then pure (Left err409{errBody="The memory changed; refresh before editing"})
+          do
+            visible <- Interactions.visible (auPartyId user) "event_moment" (renderKeyText key)
+            if not visible then pure (Left err404{errBody="Memory not found"})
+            else if eventMomentUpdatedAt row /= emeExpectedUpdatedAt then pure (Left err409{errBody="The memory changed; refresh before editing"})
             else if eventMomentMediaType row == "text" && isNothing caption then pure (Left err400{errBody="A text memory requires a caption"})
             else do
                 now <- liftIO getCurrentTime

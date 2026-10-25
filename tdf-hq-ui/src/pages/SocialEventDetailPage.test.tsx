@@ -170,6 +170,31 @@ describe('SocialEventDetailPage ticket sharing', () => {
     view.unmount();
   });
 
+  it('removes the previous account memories while the new account feed is pending', async () => {
+    activeSession = { partyId: 9 };
+    listMomentsMock.mockResolvedValueOnce([
+      { emId: '987', emAuthorName: 'Ana', emCaption: 'Recuerdo privado de la cuenta anterior', emMediaUrl: '', emMediaType: 'text' },
+    ]);
+    const view = renderPage();
+    await screen.findByText('Recuerdo privado de la cuenta anterior');
+    let finishFeed!: (moments: SocialEventMomentDTO[]) => void;
+    listMomentsMock.mockImplementation(() => new Promise((resolve) => { finishFeed = resolve; }));
+    activeSession = { partyId: 10 };
+    view.rerender(
+      <QueryClientProvider client={view.queryClient}>
+        <MemoryRouter initialEntries={['/social/eventos/121']}>
+          <Routes><Route path="/social/eventos/:eventId" element={<SocialEventDetailPage />} /></Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    await waitFor(() => expect(listMomentsMock).toHaveBeenCalledTimes(2));
+    expect(screen.queryByText('Recuerdo privado de la cuenta anterior')).toBeNull();
+    finishFeed([]);
+    await screen.findByText('Todavía no hay publicaciones');
+    expect(screen.queryByText('Recuerdo privado de la cuenta anterior')).toBeNull();
+    view.unmount();
+  });
+
   it('loads, displays and focuses the exact deep-linked moment after the list arrives', async () => {
     const scroll = jest.fn();
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scroll });

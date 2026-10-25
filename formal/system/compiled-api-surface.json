@@ -51932,6 +51932,27 @@
               "module": "GHC.Types",
               "name": "Int"
             }
+          },
+          {
+            "in": "query",
+            "name": "sourceEvent",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
           }
         ],
         "bodies": [],

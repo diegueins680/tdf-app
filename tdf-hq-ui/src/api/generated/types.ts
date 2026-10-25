@@ -9260,6 +9260,7 @@ export interface components {
             /** @enum {string} */
             defaultSort: "newest" | "oldest" | "relevant";
             mentionedPeople?: components["schemas"]["InteractionAuthor"][];
+            sourceModeration?: components["schemas"]["EventMemorySourceControls"];
         };
         InteractionPage: {
             items: components["schemas"]["InteractionComment"][];
@@ -9388,6 +9389,67 @@ export interface components {
             reason: string;
             /** @enum {string} */
             decision: "reviewed" | "dismissed";
+        } | {
+            /** @enum {string} */
+            operation: "source.report";
+            reason: string;
+            expectedSourceRevision: string;
+        } | {
+            /** @enum {string} */
+            operation: "source.hide" | "source.remove" | "source.restore";
+            reason: string;
+            expectedVersion: number;
+            expectedSourceRevision: string;
+        } | {
+            /** @enum {string} */
+            operation: "source.report.resolve";
+            reason: string;
+            expectedVersion: number;
+            expectedSourceRevision: string;
+            /** @enum {string} */
+            decision: "reviewed" | "dismissed";
+        };
+        EventMemorySourceControls: {
+            supported: boolean;
+            eventId: string;
+            /** @enum {string} */
+            state: "visible" | "hidden" | "removed";
+            /** @description Opaque source revision; preserve exactly when submitting a command. */
+            sourceRevision: string;
+            canReport: boolean;
+            canHide: boolean;
+            canRestore: boolean;
+            canRemove: boolean;
+        };
+        EventMemorySourceReport: {
+            /** Format: uuid */
+            id: string;
+            entityKey: string;
+            eventId: string;
+            version: number;
+            source: components["schemas"]["EventMemorySourceControls"];
+            caption: string | null;
+            mediaType: string;
+            mediaUrl: string;
+            author: components["schemas"]["InteractionAuthor"] | null;
+            openReports: number;
+            reportsReferToEarlierContent: boolean;
+            reasons: string[];
+            audit: {
+                operation: string;
+                reason: string;
+                previousState: string | null;
+                newState: string;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+        };
+        EventMemorySourceReportPage: {
+            supported: boolean;
+            canReview: boolean;
+            items: components["schemas"]["EventMemorySourceReport"][];
+            /** Format: uuid */
+            nextCursor: string | null;
         };
         InteractionCommandRequest: {
             /** Format: uuid */
@@ -9400,6 +9462,8 @@ export interface components {
             /** Format: uuid */
             reactionTypeId?: string | null;
             version?: number;
+            /** @enum {string} */
+            state?: "visible" | "hidden" | "removed";
             replay?: boolean;
             reported?: boolean;
             mode?: string;
@@ -18332,6 +18396,8 @@ export interface operations {
             query?: {
                 cursor?: string;
                 limit?: number;
+                /** @description Opt into source-memory reports for one authorized event; absent preserves the comment inbox. */
+                sourceEvent?: string;
             };
             header?: never;
             path?: never;
@@ -18345,7 +18411,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["InteractionPage"];
+                    "application/json": components["schemas"]["InteractionPage"] | components["schemas"]["EventMemorySourceReportPage"];
                 };
             };
             /** @description Invalid input */

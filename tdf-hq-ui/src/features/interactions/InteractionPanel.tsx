@@ -13,6 +13,7 @@ import { getAnalyticsClient } from '../../analytics/posthog';
 import { AccountControls } from './AccountControls';
 import { DiscussionControls } from './DiscussionControls';
 import { CommentComposer } from './CommentComposer';
+import { EventMemorySourceActions } from '../../components/events/EventMemoryModeration';
 import { createDiscussionCursorHistory, discussionWindowPages, commandAnalyticsEvents, discussionLink, getDisclosure, optimisticReaction, setDisclosure } from './model';
 
 const unavailable = (error: unknown) => error instanceof ApiError && [401, 403, 404].includes(error.status);
@@ -239,6 +240,7 @@ function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExp
         variant={data.myReactionTypeId === item.id ? 'outlined' : 'text'} disabled={!data.canReact || reaction.isPending || (!item.selectable && data.myReactionTypeId !== item.id)}
         onClick={() => reaction.mutate(data.myReactionTypeId === item.id ? null : item.id)}>{item.emoji}{item.count > 0 ? ` ${item.count}` : ''}</Button>)}
       {authenticated && totalReactions > 0 && <Button onClick={() => setReactorsOpen(true)}>Ver reacciones</Button>}
+      {authenticated && kind === 'event_moment' && data.sourceModeration && <EventMemorySourceActions targetId={data.id} version={data.version} controls={data.sourceModeration} />}
       {data.commentable && <Button ref={discussionToggle} aria-expanded={expanded} aria-controls={sectionId} onClick={() => {
         setExpanded(!expanded); setDisclosure(disclosureKey, !expanded); track(expanded ? 'thread_collapsed' : 'thread_expanded', kind);
       }}>{expanded ? 'Ocultar comentarios' : data.commentCount > 0 ? `Ver los ${data.commentCount} comentarios` : 'Comentar'}</Button>}

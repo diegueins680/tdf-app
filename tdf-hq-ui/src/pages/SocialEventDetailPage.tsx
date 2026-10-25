@@ -1,4 +1,5 @@
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
+import { EventMemoryModerationPanel } from '../components/events/EventMemoryModeration';
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -46,6 +47,7 @@ export default function SocialEventDetailPage() {
   const focusedMomentRef = useRef<HTMLDivElement>(null);
   const lastFocusedMoment = useRef<string | null>(null);
   const { session } = useSession();
+  const accountScope = session ? `account:${session.partyId ?? session.username}` : 'anonymous';
   const { currency: preferredCurrency, locale, timezone } = useLocalePreferences();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -56,13 +58,13 @@ export default function SocialEventDetailPage() {
   const [file, setFile] = useState<File | null>(null);
   const uploadedFile = useRef<{ file: File; url: string } | null>(null);
   const [publishingPhase, setPublishingPhase] = useState('');
-  useEffect(() => { setCaption(''); setMediaUrl(''); setFile(null); uploadedFile.current = null; if (fileInputRef.current) fileInputRef.current.value = ''; }, [eventId, session?.partyId]);
+  useEffect(() => { setCaption(''); setMediaUrl(''); setFile(null); setOwnAction(null); uploadedFile.current = null; if (fileInputRef.current) fileInputRef.current.value = ''; }, [eventId, accountScope]);
   const [ticketName, setTicketName] = useState('General');
   const [ticketPrice, setTicketPrice] = useState('');
   const [ticketQuantity, setTicketQuantity] = useState('100');
   const [shareFeedback, setShareFeedback] = useState<{ severity: 'success' | 'error'; message: string } | null>(null);
   const eventQuery = useQuery({
-    queryKey: ['social-event', eventId],
+    queryKey: ['social-event', eventId, accountScope],
     queryFn: () => SocialEventsAPI.getEvent(eventId),
     enabled: Boolean(eventId),
   });
@@ -72,7 +74,7 @@ export default function SocialEventDetailPage() {
     enabled: Boolean(eventQuery.data?.eventTypeId),
   });
   const momentsQuery = useQuery({
-    queryKey: ['social-event-moments', eventId],
+    queryKey: ['social-event-moments', eventId, accountScope],
     queryFn: () => SocialEventsAPI.listMoments(eventId),
     enabled: Boolean(eventId),
   });
@@ -417,6 +419,7 @@ export default function SocialEventDetailPage() {
 
         {!eventEnded && memories}
         <EventMemoryInvitationControls eventId={eventId} organizer={isOrganizer} />
+        <EventMemoryModerationPanel eventId={eventId} organizer={isOrganizer} />
         <Dialog open={ownAction !== null} onClose={() => { if (!ownMutation.isPending) setOwnAction(null); }} aria-labelledby="own-memory-action">
           <DialogTitle id="own-memory-action">{ownAction?.mode === 'delete' ? 'Eliminar mi publicación' : 'Editar mi recuerdo'}</DialogTitle>
           <DialogContent>

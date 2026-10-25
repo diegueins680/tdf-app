@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Actual API and durable media checks; only an owned disposable PostgreSQL DB."""
-import argparse, base64, hashlib, io, json, os, pathlib, signal, subprocess, time, urllib.error, urllib.request, wave
-p=argparse.ArgumentParser();p.add_argument('--binary',required=True);p.add_argument('--output',required=True);a=p.parse_args()
+import argparse, base64, concurrent.futures, hashlib, io, json, os, pathlib, signal, subprocess, time, urllib.error, urllib.request, uuid, wave
+p=argparse.ArgumentParser();p.add_argument('--binary',required=True);p.add_argument('--output',required=True);p.add_argument('--source-moderation',action='store_true');p.add_argument('--browser',action='store_true');a=p.parse_args()
+assert not a.browser or a.source_moderation,'The integrated browser lane requires source moderation'
 root=pathlib.Path(__file__).resolve().parent.parent
 binary=pathlib.Path(a.binary).resolve();assert binary.is_file()
 out=pathlib.Path(a.output).resolve();out.mkdir(mode=0o700,parents=False,exist_ok=False)
@@ -19,6 +20,8 @@ opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
 runtime_paths=['tdf-hq/src/TDF/API/SocialEventsAPI.hs','tdf-hq/src/TDF/DTO/SocialEventsDTO.hs',
  'tdf-hq/src/TDF/Server/SocialEventsHandlers.hs','tdf-hq/src/TDF/Interactions/Notifications.hs',
  'tdf-hq/sql/2026-10-25_event_memory_invitations.sql','scripts/test-event-memories-http.py']
+if a.source_moderation:runtime_paths+=['tdf-hq/src/TDF/Interactions/API.hs','tdf-hq/src/TDF/Interactions/Server.hs','tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql']
+if a.browser:runtime_paths+=['scripts/test-event-memory-source-browser.mjs','tdf-hq-ui/src/components/events/EventMemoryModeration.tsx','tdf-hq-ui/src/api/eventMemoryModeration.ts','tdf-hq-ui/src/pages/SocialEventDetailPage.tsx']
 def runtime_sources():return {path:hashlib.sha256((root/path).read_bytes()).hexdigest() for path in runtime_paths}
 report={'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),
  'sourceWorktreeDirty':bool(subprocess.check_output(['git','status','--porcelain'],cwd=root,text=True).strip()),
@@ -42,7 +45,7 @@ def request(path,token=None,body=None,method='GET',expected=200,raw=None,content
  try:r=opener.open(req,timeout=20)
  except urllib.error.HTTPError as error:r=error
  data=r.read();report['requests'].append({'method':method,'path':path,'status':r.status})
- assert r.status==expected,(method,path,r.status,data[:300])
+ assert r.status in expected if isinstance(expected,tuple) else r.status==expected,(method,path,r.status,data[:300])
  result=json.loads(data) if 'json' in r.headers.get('Content-Type','') and data else data
  return result,r.headers
 
@@ -51,7 +54,7 @@ def start():
  assets=out/'assets';assets.mkdir(exist_ok=True)
  variables={**env,'APP_ENV':'test','DATABASE_URL':f'postgresql://{role}@{host}:{port}/{db}','APP_PORT':api_port,
   'RESET_DB':'false','RUN_MIGRATIONS':'false','AUTO_APPLY_PRODUCTION_MIGRATIONS':'false','SEED_DB':'false','DEFAULT_LOCALE':'es',
-  'ALLOWED_ORIGINS':'http://127.0.0.1:5197','HQ_APP_URL':'http://127.0.0.1:5197','HQ_ASSETS_DIR':str(assets),
+  'ALLOWED_ORIGINS':'http://127.0.0.1:5197,http://127.0.0.1:5206','HQ_APP_URL':'http://127.0.0.1:5206' if a.browser else 'http://127.0.0.1:5197','HQ_ASSETS_DIR':str(assets),
   'HQ_ASSETS_BASE_URL':'https://assets.persona.test/assets/serve','EVENT_DISCOVERY_ENABLED':'false','ARTIST_ENRICHMENT_ENABLED':'false',
   'EVENT_LOGISTICS_RECHECK_ENABLED':'false','OPERATIONS_WORKER_ENABLED':'false'}
  log=(out/('backend-'+str(len(report['requests']))+'.log')).open('wb')
@@ -78,12 +81,124 @@ def upload(event,token,name,mime,data,expected=200):
  raw=(f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{name}"\r\nContent-Type: {mime}\r\n\r\n'.encode()+data+f'\r\n--{boundary}--\r\n'.encode())
  return request(f'/social-events/events/{event}/moments/media',token,method='POST',expected=expected,raw=raw,content_type='multipart/form-data; boundary='+boundary)[0]
 
+def source_checks(owner,owner_token,participant,participant_token,source_moment):
+ ident=source_moment['emId'];event=919143001;moment_path=f'/social-events/events/{event}/moments/{ident}'
+ def summary(token):return request(f'/interactions/targets/event_moment/{ident}',token)[0]
+ def command(token,payload,key=None,expected=200):
+  return request(f'/interactions/targets/{target}/commands',token,body={'requestKey':key or str(uuid.uuid4()),'command':payload},method='POST',expected=expected)[0]
+ def action(op,token,reason='Synthetic source review'):
+  current=summary(token);return {'operation':op,'reason':reason,'expectedVersion':current['version'],'expectedSourceRevision':current['sourceModeration']['sourceRevision']}
+ current=summary(participant_token);target=current['id'];controls=current['sourceModeration']
+ request(f'/interactions/reports?sourceEvent={event}',expected=401)
+ request('/interactions/reports?sourceEvent=0919143001',owner_token,expected=400)
+ request('/interactions/reports?sourceEvent=919143002',participant_token,expected=404)
+ ordinary,headers=request(f'/interactions/reports?sourceEvent={event}',participant_token)
+ assert ordinary=={'supported':True,'canReview':False,'items':[],'nextCursor':None} and 'no-store' in headers.get('Cache-Control','')
+ post={'operation':'source.report','reason':'SOURCE_SYNTHETIC_PRIVACY_CONCERN','expectedSourceRevision':controls['sourceRevision']};key=str(uuid.uuid4())
+ command(None,post,expected=401);command(owner_token,post,expected=403)
+ assert command(participant_token,post,key)['reported'] is True
+ assert command(participant_token,post,key)['reported'] is True
+ command(participant_token,post)
+ command(participant_token,{**post,'reason':'Different key payload'},key,409)
+ assert sql(f"SELECT count(*) FROM interaction_report WHERE target_id='{target}' AND comment_id IS NULL")=='1'
+ assert sql(f"SELECT count(*) FROM interaction_audit WHERE target_id='{target}' AND operation='source.report'")=='1'
+ # Preserve the default comment inbox, using an actual canonical comment/report.
+ discussion=command(participant_token,{'operation':'comment.create','body':'Synthetic discussion for compatibility'})
+ command(owner_token,{'operation':'comment.report','commentId':discussion['id'],'reason':'COMMENT_SYNTHETIC_CONCERN'})
+ inbox,_=request('/interactions/reports',owner_token)
+ assert 'COMMENT_SYNTHETIC_CONCERN' in json.dumps(inbox) and 'SOURCE_SYNTHETIC_PRIVACY_CONCERN' not in json.dumps(inbox)
+ review,_=request(f'/interactions/reports?sourceEvent={event}',owner_token)
+ assert review['items'][0]['id']==target and review['items'][0]['reasons']==['SOURCE_SYNTHETIC_PRIVACY_CONCERN']
+ assert 'reporter' not in json.dumps(review).lower()
+ record('Authenticated source reports deduplicate; default comment inbox and reporter privacy remain intact')
+ hide=action('source.hide',owner_token)
+ command(participant_token,hide,expected=403)
+ original=request(f'/social-events/events/{event}/moments?extended',owner_token)[0]
+ source=next(m for m in original if m['emId']==ident)
+ request(moment_path,owner_token,body={'emeCaption':'Changed after source review','emeExpectedUpdatedAt':source['emUpdatedAt']},method='PUT')
+ command(owner_token,hide,expected=409)
+ review,_=request(f'/interactions/reports?sourceEvent={event}',owner_token)
+ assert review['items'][0]['reportsReferToEarlierContent'] is True
+ hide=action('source.hide',owner_token);hide_key=str(uuid.uuid4())
+ command(owner_token,hide,hide_key);command(owner_token,hide,hide_key)
+ for suffix in ('?extended',''):
+  assert ident not in {m['emId'] for m in request(f'/social-events/events/{event}/moments'+suffix,participant_token)[0]}
+ request(f'/public/interactions/targets/event_moment/{ident}',expected=404)
+ request(f'/interactions/targets/event_moment/{ident}',participant_token,expected=404)
+ request(moment_path+'/comments',participant_token,body={'emccBody':'Forbidden hidden comment'},method='POST',expected=404)
+ request(moment_path,owner_token,body={'emeCaption':'Cannot bypass hidden state','emeExpectedUpdatedAt':source['emUpdatedAt']},method='PUT',expected=404)
+ assert sql(f"SELECT interaction_notification_allowed('{target}',{owner},{participant},'comment')")=='f'
+ assert request('/assets/serve/'+image['eiuPath'])[0]==png,'Hiding is not public-asset revocation'
+ sql('UPDATE interaction_runtime SET enabled=false WHERE singleton')
+ assert ident not in {m['emId'] for m in request(f'/social-events/events/{event}/moments?extended',participant_token)[0]}
+ paused,_=request(f'/interactions/reports?sourceEvent={event}',owner_token);assert paused['items'][0]['source']['state']=='hidden'
+ restore={'operation':'source.restore','reason':'Synthetic resolved concern','expectedVersion':paused['items'][0]['version'],
+  'expectedSourceRevision':paused['items'][0]['source']['sourceRevision']}
+ command(owner_token,restore,expected=404)
+ sql('UPDATE interaction_runtime SET enabled=true WHERE singleton')
+ restore_key=str(uuid.uuid4());command(owner_token,restore,restore_key);command(owner_token,restore,restore_key)
+ command(owner_token,hide,hide_key,409)
+ assert ident in {m['emId'] for m in request(f'/social-events/events/{event}/moments?extended',participant_token)[0]}
+ record('Source hiding gates actual legacy/extended reads, comments, author edits and notification authority; pause cannot bypass it')
+ # Reviewed reports reopen for real content changes, never restoration/no-op edits.
+ source=next(m for m in request(f'/social-events/events/{event}/moments?extended',owner_token)[0] if m['emId']==ident)
+ request(moment_path,owner_token,body={'emeCaption':source['emCaption'],'emeExpectedUpdatedAt':source['emUpdatedAt']},method='PUT')
+ post={**post,'expectedSourceRevision':summary(participant_token)['sourceModeration']['sourceRevision']};command(participant_token,post)
+ assert request(f'/interactions/reports?sourceEvent={event}',owner_token)[0]['items']==[]
+ source=next(m for m in request(f'/social-events/events/{event}/moments?extended',owner_token)[0] if m['emId']==ident)
+ request(moment_path,owner_token,body={'emeCaption':'New content after completed review','emeExpectedUpdatedAt':source['emUpdatedAt']},method='PUT')
+ post={**post,'expectedSourceRevision':summary(participant_token)['sourceModeration']['sourceRevision']};command(participant_token,post)
+ assert len(request(f'/interactions/reports?sourceEvent={event}',owner_token)[0]['items'])==1
+ close={**action('source.report.resolve',owner_token),'decision':'dismissed'};close_key=str(uuid.uuid4())
+ command(owner_token,close,close_key);command(owner_token,close,close_key)
+ assert request(f'/interactions/reports?sourceEvent={event}',owner_token)[0]['items']==[]
+ assert summary(participant_token)['sourceModeration']['state']=='visible'
+ record('Content-version reports reopen only after real changes and can be closed without hiding; resolution replays are idempotent')
+ # Two actual simultaneous requests with distinct keys and the same revisions.
+ hide=action('source.hide',owner_token)
+ audit_before=int(sql(f"SELECT count(*) FROM interaction_audit WHERE target_id='{target}' AND operation='source.hide'"))
+ def competing_hide():
+  local=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+  req=urllib.request.Request(origin+f'/interactions/targets/{target}/commands',data=json.dumps({'requestKey':str(uuid.uuid4()),'command':hide}).encode(),
+   headers={'Content-Type':'application/json','Authorization':'Bearer '+owner_token},method='POST')
+  try:r=local.open(req,timeout=20)
+  except urllib.error.HTTPError as error:r=error
+  r.read();return r.status
+ with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:statuses=list(pool.map(lambda _:competing_hide(),range(2)))
+ for status in statuses:report['requests'].append({'method':'POST','path':f'/interactions/targets/{target}/commands','status':status})
+ assert sorted(statuses)==[200,409],statuses
+ assert int(sql(f"SELECT count(*) FROM interaction_audit WHERE target_id='{target}' AND operation='source.hide'"))==audit_before+1
+ review=request(f'/interactions/reports?sourceEvent={event}',owner_token)[0]['items'][0]
+ restore={'operation':'source.restore','reason':'Synthetic concurrent review resolved','expectedVersion':review['version'],'expectedSourceRevision':review['source']['sourceRevision']}
+ command(owner_token,restore)
+ record('Competing real HTTP moderation requests serialize to one effect and one revision conflict')
+ remove=action('source.remove',owner_token);command(participant_token,remove,expected=403);command(owner_token,remove)
+ review=request(f'/interactions/reports?sourceEvent={event}',owner_token)[0]['items'][0]
+ command(owner_token,{'operation':'source.restore','reason':'Synthetic platform restoration','expectedVersion':review['version'],'expectedSourceRevision':review['source']['sourceRevision']})
+ # Real third identity owns a private parent; platform scope cannot invent membership.
+ third=request('/signup',body={'firstName':'Synthetic','lastName':'private-owner','email':'memory.private@persona.test','password':'synthetic-private-password-141','termsAccepted':True,'termsVersion':'tdf-account-terms-v1'},method='POST')[0]
+ third_id=third['partyId'];assert isinstance(third_id,int) and third_id>0
+ sql(f"INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version) SELECT {third_id},id,'bootstrap',true,now(),1 FROM security_role WHERE code='customer' ON CONFLICT DO NOTHING")
+ sql(f"UPDATE social_event SET organizer_party_id='{third_id}' WHERE id=919143002")
+ private=request('/social-events/events/919143002/moments',third['token'],body={'emCreateMediaType':'text','emCreateCaption':'Synthetic private source'},method='POST')[0]
+ private_summary=request('/interactions/targets/event_moment/'+private['emId'],third['token'])[0]
+ request('/interactions/reports?sourceEvent=919143002',owner_token,expected=404)
+ request(f"/interactions/targets/{private_summary['id']}/commands",owner_token,body={'requestKey':str(uuid.uuid4()),'command':{'operation':'source.remove','reason':'Forbidden private scope','expectedVersion':private_summary['version'],'expectedSourceRevision':private_summary['sourceModeration']['sourceRevision']}},method='POST',expected=404)
+ remove=action('source.remove',owner_token)
+ sql(f"UPDATE party_security_role p SET active=false FROM security_role r WHERE p.role_id=r.id AND p.party_id={owner} AND r.code='admin'")
+ command(owner_token,remove,expected=(401,403))
+ assert sql(f"SELECT source_moderation_state FROM event_moment WHERE id={ident}")=='visible'
+ request(moment_path,owner_token,method='DELETE',expected=204)
+ assert sql(f"SELECT retired_at IS NOT NULL FROM interaction_target WHERE id='{target}'")=='t'
+ record('Actual private-parent denial, live moderator-role revocation and author deletion preserve scoped enforcement')
+
 try:
  run(['createdb',*routing,db]);owned=True
  apply(root/'scripts/__tests__/fixtures/production-schema-20260814.sql')
  apply(root/'scripts/__tests__/fixtures/catalog-production-source-fixture.sql')
  batch=run(['node','scripts/render-production-migration-batch.mjs']);(out/'migrations.sql').write_bytes(batch);apply(out/'migrations.sql')
  if sql("SELECT to_regprocedure('event_memory_dispatch_batch(integer)') IS NULL")=='t':apply(root/'tdf-hq/sql/2026-10-25_event_memory_invitations.sql')
+ if a.source_moderation:apply(root/'tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql')
  start();report['actualVersion']=request('/version')[0]
  accounts=[]
  for label in ('owner','participant'):
@@ -168,6 +283,27 @@ try:
  assert len(request('/social-events/events/919143001/moments?extended',participant_token)[0])==4
  assert request('/assets/serve/'+image['eiuPath'])[0]==png
  record('Source deletion persists; surviving moments and media remain after a real API restart')
+ if a.source_moderation:source_checks(owner,owner_token,participant,participant_token,created[0])
+ if a.source_moderation:
+  refused=subprocess.run(['psql',*routing,'-d',db,'-Xq','-v','ON_ERROR_STOP=1','-f',str(root/'tdf-hq/sql/2026-10-25_event_memory_source_moderation_rollback.sql')],cwd=root,env=env,capture_output=True,timeout=30)
+  assert refused.returncode!=0 and b'Retain source moderation authority after evidence' in refused.stderr
+  assert sql('SELECT bool_and(md5(pg_get_functiondef(signature::regprocedure))=installed_digest) FROM event_memory_moderation_authority')=='t'
+  record('Source rollback refuses after actual committed evidence and retains all installed privacy authorities')
+ if a.browser:
+  # Explicit synthetic fan grants for the actual product UI, never production.
+  sql(f"INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version) SELECT actor,id,'bootstrap',true,now(),1 FROM security_role CROSS JOIN (VALUES({owner}::bigint),({participant}::bigint)) a(actor) WHERE code='fan' ON CONFLICT DO NOTHING")
+  browser_config=out/'browser-input.json';browser_config.write_text(json.dumps({'api':origin,'eventId':'919143001','output':str(out),'accounts':[{'email':'memory.owner@persona.test','password':'synthetic-memory-password-141'},{'email':'memory.participant@persona.test','password':'synthetic-memory-password-141'}]}));browser_config.chmod(0o600)
+  driver=subprocess.Popen(['node','scripts/test-event-memory-source-browser.mjs',str(browser_config)],cwd=root,env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True)
+  try:stdout,stderr=driver.communicate(timeout=240)
+  except subprocess.TimeoutExpired:
+   os.killpg(driver.pid,signal.SIGTERM)
+   try:stdout,stderr=driver.communicate(timeout=10)
+   except subprocess.TimeoutExpired:os.killpg(driver.pid,signal.SIGKILL);stdout,stderr=driver.communicate(timeout=10)
+   raise AssertionError('Owned integrated browser deadline')
+  (out/'browser-driver.log').write_bytes(stdout+stderr)
+  assert driver.returncode==0,'Integrated browser failed; see its private evidence/log'
+  report['browser']=json.loads((out/'browser-results.json').read_text());assert report['browser']['status']=='PASS'
+  record('Actual desktop/phone product UI signs in, publishes, reports, hides and restores against this PostgreSQL/API instance')
  assert report['runtimeSources']==runtime_sources(),'Runtime sources changed during the HTTP execution'
  assert report['binarySha256']==hashlib.sha256(binary.read_bytes()).hexdigest(),'Candidate binary changed during the HTTP execution'
  report['status']='PASS'
