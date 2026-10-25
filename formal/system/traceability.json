@@ -11439,6 +11439,7 @@
       "historicalStatus": "new"
     },
     {
+<<<<<<< HEAD
       "domain": "SOCIAL",
       "authority": "Explicit product owner request 2026-10-25: Event Memories, Community Engagement & Post-Event Activation",
       "source": "formal/system/event-memories.md",
@@ -11630,6 +11631,154 @@
         "formal/event-memories/check.py"
       ],
       "verification": "160 bounded policy states and three negative controls; actual full-schema SQL, replay/rollback, HTTP and concurrent-worker checks retain separate receipts."
+=======
+      "id": "MEDIA-DRIVE-002",
+      "title": "Preserve cookie-only sessions in artist cover uploads",
+      "statement": "Drive XHR uploads use the shared API resolver and include browser cookie credentials, preserving optional application bearer authentication and multipart file/folder/name/provider-token inputs. A cookie-only authenticated artist must not lose authentication solely because the API has a different trusted origin.",
+      "property": "Cookie-only authenticated session -> credentialed Drive XHR; bearer and multipart routing remain compatible.",
+      "domain": "MEDIA",
+      "authority": "User-authorized activation sprint; reproduced native cross-origin cookie omission against isolated actual API session, reusing the existing inventory upload pattern.",
+      "source": "Artist activation journey A4; existing inventory upload session transport.",
+      "contract": "formal/system/drive-upload-session.md",
+      "actors": [
+        "Authenticated artist",
+        "Browser"
+      ],
+      "preconditions": [
+        "Valid server session and explicitly trusted configured API origin; provider permissions remain independently required."
+      ],
+      "inputs": [
+        "File",
+        "Optional folder/name/provider access token",
+        "Current cookie and optional readable application bearer"
+      ],
+      "state": {
+        "upload": [
+          "selected",
+          "pending",
+          "resolved",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Selected -> credentialed upload to shared resolved API",
+        "Successful Drive DTO -> existing media result",
+        "Failed upload -> rejected promise -> explicit retry"
+      ],
+      "forbiddenTransitions": [
+        "Cookie-only session -> silently omit cross-origin credentials",
+        "HttpOnly cookie -> readable bearer or diagnostics",
+        "Client credential option -> bypass server authorization"
+      ],
+      "effects": [
+        "One selected multipart upload; no automatic retry."
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/api/drive.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/drive.upload.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Cookie/bearer/resolver tests, cookie-omission negative control and native cross-origin browser using an actual disposable API session with a non-production Drive adapter.",
+      "evidence": "Source-bound activation sprint receipts. No production upload or Google OAuth certification inferred.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for scoped XHR transport; external provider and production acceptance remain unverified.",
+      "ambiguity": [
+        "Google OAuth, provider storage, upload deadlines, production cross-site cookie policy and physical devices are not certified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and regressions correspond; protected review, hosted checks and deployed/provider acceptance remain required."
+      },
+      "authorization": "Existing server origin, session, role, ownership and provider checks remain authoritative. Cookie inclusion grants no role.",
+      "privacy": "Do not extract or log HttpOnly cookies or provider tokens.",
+      "concurrency": "Each selected upload owns its XHR; server and provider retain concurrent-upload behavior.",
+      "idempotency": "No new exactly-once guarantee or automatic retry; repeated user uploads may create multiple blobs.",
+      "failure": "Existing non-success response and DTO parsing failures reject; no false success is added.",
+      "recovery": "Explicit user retry under a valid session; no change to provider permissions.",
+      "observability": "Native browser receipts record credential-presence booleans only, never cookie or token values."
+    },
+    {
+      "id": "COMMUNITY-PROFILE-001",
+      "title": "Require an owned successful read before profile replacement",
+      "statement": "Fan and artist editors must bind drafts and asynchronous callbacks to the active account generation and synchronous authentication epoch, reject replacement writes before an authoritative profile read, revoke callbacks immediately on credential changes, and retain unsaved edits through background reads.",
+      "domain": "COMMUNITY",
+      "authority": "Product owner user-value completion instruction 2026-10-25: prioritize verified data-loss blockers and complete existing profile journeys.",
+      "source": "docs/persona-testing/journey-specifications.md ST-004; formal/system/profile-editing-baseline.md",
+      "property": "Save implies successful current-Party baseline; an old account generation cannot alter the current draft.",
+      "contract": "formal/system/profile-editing-baseline.md",
+      "actors": [
+        "Authenticated artist",
+        "Authenticated fan"
+      ],
+      "preconditions": [
+        "The session is available and the server returns its authoritative profile DTO."
+      ],
+      "inputs": [
+        "Session Party and lifecycle",
+        "Profile GET response or failure",
+        "Editor changes",
+        "Save and upload completion"
+      ],
+      "state": {
+        "editor": [
+          "unloaded",
+          "loaded",
+          "dirty",
+          "saving",
+          "read-error"
+        ],
+        "owner": "Party plus synchronous authentication epoch and in-memory account generation"
+      },
+      "allowedTransitions": [
+        "Successful matching baseline -> editable draft",
+        "Read error -> explicit retry",
+        "Loaded draft -> edited draft -> guarded save",
+        "Account change -> unloaded fresh generation"
+      ],
+      "forbiddenTransitions": [
+        "Pending or failed initial GET -> profile replacement",
+        "Old account fields -> current account replacement",
+        "Background read -> overwrite unsaved edits",
+        "Old generation response -> current draft or success/error message",
+        "Authentication epoch changed before React render -> old callback dispatches profile fields with new credentials"
+      ],
+      "effects": [
+        "Artist and fan profiles share draft ownership and hydration logic.",
+        "Retry recovers the editor without writing blank fields."
+      ],
+      "authorization": "Existing server session and profile ownership checks remain authoritative; current-Party DTO matching and account-generation guards prevent accidental client replacement.",
+      "privacy": "Drafts stay in component memory; no profile values or credentials added to persistent storage or logs.",
+      "concurrency": "Auth-epoch checks revoke captured callbacks before React rescoping and again at mutation dispatch; background reads retain dirty fields. Already dispatched requests, cross-device concurrent writes and universal server session revocation remain outside this client boundary.",
+      "idempotency": "No automatic mutation retry or new idempotency guarantee; manual retry reloads the baseline only.",
+      "failure": "Pending/error/mismatched reads disable fields and save controls; the save handler also refuses; late account callbacks are discarded.",
+      "recovery": "Explicit profile retry loads the current account and restores guarded editing. A reviewed web revert needs no migration.",
+      "observability": "Synthetic editor regressions, negative-control logs, disposable API/PostgreSQL/browser receipts and scoped hosted checks.",
+      "implementation": [
+        "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts",
+        "tdf-hq-ui/src/features/fans/useFanProfile.ts",
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx",
+        "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Source-confirmed destructive-write hazard with rendered regression controls; no complete implementation correctness proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local repair and regression evidence; hosted CI, independent review, protected merge and deployed availability must be recorded separately."
+      },
+      "verification": "Real session and query providers, endpoints, API client/header with intercepted native Fetch validate pre-render/same-Party credential transitions; rendered editor regressions and original-source negative controls; disposable API/PostgreSQL/browser verification. No mathematical proof claimed.",
+      "evidence": "Current candidate logs and delivery report; historical local or passing unit tests do not establish deployment."
+>>>>>>> origin/main
     }
   ],
   "sourceFingerprints": {
@@ -12090,7 +12239,7 @@
     "scripts/test-backend-version-rebuild.py": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
     "scripts/test-booking-conformance.py": "2d51aa2f20c498e3c00990c27a5b972d8dfe28593fb668ebd292587131e259dc",
     "scripts/test-chat-notifications.sh": "d01a8cbf2c0852222f53b36bd813a7f2dc8875ae6f3b53ea0ab108fba1f2b552",
-    "scripts/test-community-search.py": "c6be90dbc19bfd6fc6c06e72c300f77f75729e94e518d5132560e94cd1b58c24",
+    "scripts/test-community-search.py": "62fc49fb26bc0eb3e986d25e001c686eb196ab29a5d275221ce44203ae3b7cb7",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-memories-http.py": "8d2f174ffa1f58a939fbedba21e80b29f0029fbbd21633efd2b74fa4911d2784",
@@ -12224,7 +12373,12 @@
     "tdf-hq-ui/src/api/courses.ts": "bd43900434c1133d46a41ad0270c6e14c5ff1183f238e360a287d797853c87e6",
     "tdf-hq-ui/src/api/directory.test.ts": "ee9c96a31856a1945af7e3f238974a43533d8ebf7f32f0cdadea2dcf834fa9ed",
     "tdf-hq-ui/src/api/directory.ts": "6d1b860759bb5841d85ff693ddfe7580cb56561eb9614f8eaef01f07c424fdc3",
+<<<<<<< HEAD
     "tdf-hq-ui/src/api/eventMemoryInvitations.ts": "ee585be840bbb614675ae3e8e5248c4a7e2e2dc94d1f3a3d758005e08f130179",
+=======
+    "tdf-hq-ui/src/api/drive.ts": "27e9d44e0bfa36c763b79e57731b118168b77bf0ac051790903693208fe0d2a3",
+    "tdf-hq-ui/src/api/drive.upload.test.ts": "7ae7828b0917f8ee4f03f630a5932bff0098b498b0f5ff7fde96b90f7682f033",
+>>>>>>> origin/main
     "tdf-hq-ui/src/api/eventTickets.test.ts": "a411fe9ca5267672db4db1ec3481aecd3fda6d8a19bc913c0885db2eb65ea541",
     "tdf-hq-ui/src/api/eventTickets.ts": "9ed3528a555397f16261758e2fe98aa6b57348ffbda8ed45b6ac629daeaeb736",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
@@ -12309,6 +12463,11 @@
     "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx": "f3a51d5be321a6539137c208f42aeea6146b48d90aef3e1a9ee048c6ebac836c",
     "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx": "60dd8735a17d6e977fd57d2639fc14341956ad8e9f6d2352b024c87e5433e580",
     "tdf-hq-ui/src/features/discovery/useDirectorySearch.ts": "0f4409994400c7190c601c87d8306189974bada850687b4b25bb21459313ecd4",
+    "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx": "c12556996684edd36b7dc736ae88cbc2153a3b7b47a095078dbcce9d025e3dba",
+    "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx": "9d09b7acdcb9bd3c0d83e5115bd01eac89b32b0f2d133e884c0797f4a5ca9b5d",
+    "tdf-hq-ui/src/features/fans/useFanProfile.ts": "5d5117b2bc97d999546a3ea417cb38ee797883744f4329c113b791e6bde0b53f",
+    "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx": "216e700c59010f6b583573b7322031a1b56be7b7f087289b6ceff6121f641261",
+    "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts": "16d2be464c3d56a4ea77017c13c90628e31d483afa256b25da6f869586802ce8",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "7f091bdd2722c7eeea2a7003f098a6a265c6f2d1f8f6b7fc15288d009cebec33",
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
@@ -12357,8 +12516,9 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "01b3b5cf78791e627b85188e4bd211b37b7f1f88389d6b81bc5526110cd65ebd",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "d2554fe091549fbb6f64a905279e676cec7d67949f20116c11b95fa726945c35",
-    "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "8716d76cbe189178dfce6a5b86b6ffdc7908b744e09d688b3da4a45c48641c5e",
-    "tdf-hq-ui/src/pages/FanHubPage.tsx": "3d29dae418526427ffad44cdf6eff755a460ff00fc330480ce7a1d15a17312d2",
+    "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "8cdf4c124dc5e37d6234c602bbc323db537d87b6248c470ceaa1a442dae4c1c9",
+    "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "62e418948e9c10013e0a147810cfabc2055a67e3658ee414a4cb2c92c38f3a0c",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "cb9e20aee2a63bc385ae3339045a0409133cd86c16f5e82313ebc4eb47d5ae19",
     "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
     "tdf-hq-ui/src/pages/InventoryPage.tsx": "524cdce972c0eeaa93a803ed7b2d2fc38e2c1d9128a170a08fa0705acc2e6d1b",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
@@ -20477,6 +20637,10 @@
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-PROFILE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": [
@@ -22361,6 +22525,7 @@
         "relationship": "tests"
       }
     ],
+<<<<<<< HEAD
     "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": [
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
@@ -22466,6 +22631,55 @@
         "requirement": "SOCIAL-EVENT-INVITATION-001",
         "relationship": "formalModels"
       }
+=======
+    "tdf-hq-ui/src/api/drive.ts": [
+      {
+        "requirement": "MEDIA-DRIVE-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/drive.upload.test.ts": [
+      {
+        "requirement": "MEDIA-DRIVE-002",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts": [
+      {
+        "requirement": "COMMUNITY-PROFILE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/fans/useFanProfile.ts": [
+      {
+        "requirement": "COMMUNITY-PROFILE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx": [
+      {
+        "requirement": "COMMUNITY-PROFILE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": [
+      {
+        "requirement": "COMMUNITY-PROFILE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx": [
+      {
+        "requirement": "COMMUNITY-PROFILE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx": [
+      {
+        "requirement": "COMMUNITY-PROFILE-001",
+        "relationship": "tests"
+      }
+>>>>>>> origin/main
     ]
   },
   "surfaces": [
@@ -26997,7 +27211,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "c6be90dbc19bfd6fc6c06e72c300f77f75729e94e518d5132560e94cd1b58c24",
+      "sha256": "62fc49fb26bc0eb3e986d25e001c686eb196ab29a5d275221ce44203ae3b7cb7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29620,9 +29834,26 @@
     {
       "id": "SURFACE-10856a58d8da5733",
       "path": "tdf-hq-ui/src/api/drive.ts",
-      "sha256": "a21bef68d52898ce95de38a0cd341e0ff7278dd81c4a988baa46a77b93145bcd",
+      "sha256": "27e9d44e0bfa36c763b79e57731b118168b77bf0ac051790903693208fe0d2a3",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-DRIVE-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-12933aa6755d74a9",
+      "path": "tdf-hq-ui/src/api/drive.upload.test.ts",
+      "sha256": "7ae7828b0917f8ee4f03f630a5932bff0098b498b0f5ff7fde96b90f7682f033",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-DRIVE-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c752a0b8e0697571",
@@ -31873,16 +32104,26 @@
     {
       "id": "SURFACE-bc1fb58e7180fec5",
       "path": "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx",
-      "sha256": "89906d88b8f07d21a9a31510f721ecb06728881b15913e4589bb155025d2206e",
+      "sha256": "c12556996684edd36b7dc736ae88cbc2153a3b7b47a095078dbcce9d025e3dba",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-PROFILE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-31c68c4911bce31c",
       "path": "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
-      "sha256": "770552620b1104588777a91bc64ed870b54b7f337379d8fd07bad3dc16dbeff3",
+      "sha256": "9d09b7acdcb9bd3c0d83e5115bd01eac89b32b0f2d133e884c0797f4a5ca9b5d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-PROFILE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2a073b8f5ad461e7",
@@ -31908,9 +32149,38 @@
     {
       "id": "SURFACE-4614c5927901f0ee",
       "path": "tdf-hq-ui/src/features/fans/useFanProfile.ts",
-      "sha256": "b55f4d65e46b42919badf42a10a32186fb35ee2b62b06a0263950589f7a2e444",
+      "sha256": "5d5117b2bc97d999546a3ea417cb38ee797883744f4329c113b791e6bde0b53f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-PROFILE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f4587eada3ec2988",
+      "path": "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
+      "sha256": "216e700c59010f6b583573b7322031a1b56be7b7f087289b6ceff6121f641261",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-PROFILE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8cc679456c0f48cb",
+      "path": "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts",
+      "sha256": "16d2be464c3d56a4ea77017c13c90628e31d483afa256b25da6f869586802ce8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-PROFILE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2ee656af772bf719",
@@ -33376,7 +33646,7 @@
     {
       "id": "SURFACE-8e582de4b6234f44",
       "path": "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-      "sha256": "8716d76cbe189178dfce6a5b86b6ffdc7908b744e09d688b3da4a45c48641c5e",
+      "sha256": "8cdf4c124dc5e37d6234c602bbc323db537d87b6248c470ceaa1a442dae4c1c9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33390,9 +33660,21 @@
       ]
     },
     {
+      "id": "SURFACE-2bbd93102a783ed1",
+      "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+      "sha256": "62e418948e9c10013e0a147810cfabc2055a67e3658ee414a4cb2c92c38f3a0c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-PROFILE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "3d29dae418526427ffad44cdf6eff755a460ff00fc330480ce7a1d15a17312d2",
+      "sha256": "cb9e20aee2a63bc385ae3339045a0409133cd86c16f5e82313ebc4eb47d5ae19",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33409,6 +33691,10 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-PROFILE-001",
           "relationship": "implementation"
         }
       ]
@@ -48181,7 +48467,6 @@
     "SURFACE-bfa0dfbbd8ff9bfc",
     "SURFACE-d87ef23be735ae46",
     "SURFACE-2f2b0036b97be1b2",
-    "SURFACE-10856a58d8da5733",
     "SURFACE-c752a0b8e0697571",
     "SURFACE-813e2cb331206edf",
     "SURFACE-7b04c2b9c9106a38",
@@ -48340,12 +48625,9 @@
     "SURFACE-10d683e3558c7c8e",
     "SURFACE-eb7bcfe002ea638f",
     "SURFACE-aafae2b28717530f",
-    "SURFACE-bc1fb58e7180fec5",
-    "SURFACE-31c68c4911bce31c",
     "SURFACE-2a073b8f5ad461e7",
     "SURFACE-682703a388e35ed4",
     "SURFACE-7c87c5ab9df1f3ac",
-    "SURFACE-4614c5927901f0ee",
     "SURFACE-d1ac87354eb95a4d",
     "SURFACE-f0b1d4c69d524f12",
     "SURFACE-32ac407e77c4e6e8",
@@ -49570,7 +49852,12 @@
     "SYS-WEB-SHELL-001",
     "AUTH-ENTRY-002",
     "DEPLOY-VERSION-001",
+<<<<<<< HEAD
     "SOCIAL-EVENT-MEMORY-001"
+=======
+    "MEDIA-DRIVE-002",
+    "COMMUNITY-PROFILE-001"
+>>>>>>> origin/main
   ],
   "stateMachines": [
     {
@@ -50689,7 +50976,11 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
+<<<<<<< HEAD
       "sourceSha256": "26ab2e786892e3c506b64e7c33cd05eb4ebc215cec61a413185828d5340d3d1a",
+=======
+      "sourceSha256": "fe6160c166d171470b9005eaff2dc29bd9249f82189f81c601dfcc36bb0243de",
+>>>>>>> origin/main
       "definition": {
         "states": [
           "absent",
@@ -50719,7 +51010,11 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
+<<<<<<< HEAD
       "sourceSha256": "26ab2e786892e3c506b64e7c33cd05eb4ebc215cec61a413185828d5340d3d1a",
+=======
+      "sourceSha256": "fe6160c166d171470b9005eaff2dc29bd9249f82189f81c601dfcc36bb0243de",
+>>>>>>> origin/main
       "definition": {
         "export": [
           "queued",
