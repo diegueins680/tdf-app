@@ -11917,7 +11917,7 @@
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
-    "scripts/__tests__/directory-saved-search-http.mjs": "09fae35e5dd8c2ab9fe66b1d3b435d706fa3ad5bc058396fb7adc8c5bad13bc6",
+    "scripts/__tests__/directory-saved-search-http.mjs": "60c34a12560dd84c7dec70daad14a4d2843d3b9f3ced59cbff4b78da2ff439d5",
     "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "bc05c24381154b962eef119fd96d55728543f0dcc25cba55aa4f441eafc3ab3e",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
@@ -23506,7 +23506,7 @@
     {
       "id": "SURFACE-420f7b30c17196ae",
       "path": "scripts/__tests__/directory-saved-search-http.mjs",
-      "sha256": "09fae35e5dd8c2ab9fe66b1d3b435d706fa3ad5bc058396fb7adc8c5bad13bc6",
+      "sha256": "60c34a12560dd84c7dec70daad14a4d2843d3b9f3ced59cbff4b78da2ff439d5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

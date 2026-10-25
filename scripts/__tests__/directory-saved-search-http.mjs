@@ -20,8 +20,13 @@ await new Promise((resolve) => socket.close(resolve));
 const api = `http://127.0.0.1:${port}`;
 const work = mkdtempSync(join(tmpdir(), 'tdf-directory-alert-http-'));
 const log = openSync(join(work, 'api.log'), 'w', 0o600);
+// Assert compiled provenance, rather than permitting deployment metadata to
+// relabel an unrelated cached binary as this candidate.
+const nativeEnvironment = { ...process.env };
+for (const name of ['GIT_SHA', 'GIT_COMMIT', 'GIT_COMMIT_SHA', 'COMMIT_SHA', 'SOURCE_COMMIT', 'SOURCE_VERSION', 'SOURCE_SHA', 'GITHUB_SHA', 'RENDER_GIT_COMMIT', 'RENDER_GIT_COMMIT_SHA', 'VERCEL_GIT_COMMIT_SHA', 'FLY_GIT_SHA']) delete nativeEnvironment[name];
+const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const server = spawn(binary, [], { env: {
-  ...process.env, DATABASE_URL: database, APP_ENV: 'test', APP_PORT: String(port),
+  ...nativeEnvironment, DATABASE_URL: database, APP_ENV: 'test', APP_PORT: String(port),
   RUN_MIGRATIONS: 'false', AUTO_APPLY_PRODUCTION_MIGRATIONS: 'false',
   RESET_DB: 'false', SEED_DB: 'false', DEFAULT_LOCALE: 'es',
   EVENT_DISCOVERY_ENABLED: 'false', ARTIST_ENRICHMENT_ENABLED: 'false',
@@ -53,6 +58,9 @@ try {
   }
   const listener = execFileSync('lsof', ['-tiTCP:' + port, '-sTCP:LISTEN'], { encoding: 'utf8' }).trim().split(/\s+/);
   assert.deepEqual(listener, [String(server.pid)], 'Refuse to mutate a listener owned by another process');
+  const version = await request('/version', { actor: null });
+  assert.equal(version.status, 200);
+  assert.equal(version.value.commit, sourceCommit, 'The native binary must identify this exact committed candidate');
   sql(`INSERT INTO party(id,display_name,is_org,created_at) VALUES
    (900055,'HTTP alert owner',false,now()),(900056,'HTTP alert outsider',false,now());
    INSERT INTO api_token(token,party_id,label,active) VALUES
