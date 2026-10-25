@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-25T22:36:01.023Z",
+  "generatedAt": "2026-10-25T23:16:40.840Z",
   "repositoryRoot": ".",
-  "filesScanned": 2377,
+  "filesScanned": 2378,
   "candidateCount": 1333,
   "byClassification": {
     "dynamic-business-catalog": 859,
@@ -5843,7 +5843,7 @@
       "lines": [
         40
       ],
-      "consumerCount": 191,
+      "consumerCount": 192,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
@@ -5901,6 +5901,7 @@
         "tdf-hq-ui/src/api/catalogs.test.ts",
         "tdf-hq-ui/src/api/catalogs.ts",
         "tdf-hq-ui/src/api/cms.ts",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.logic.test.ts",
@@ -6013,6 +6014,7 @@
         "tdf-hq-ui/src/api/catalogs.test.ts",
         "tdf-hq-ui/src/api/catalogs.ts",
         "tdf-hq-ui/src/api/cms.ts",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.logic.test.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
@@ -18448,7 +18450,7 @@
       "domain": "events-ticketing",
       "kind": "object-registry",
       "name": "EventMemoryInvitations",
-      "line": 7,
+      "line": 22,
       "values": [
         "preferences",
         "setPreference",
@@ -18459,9 +18461,9 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        7
+        22
       ],
-      "consumerCount": 38,
+      "consumerCount": 39,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/src/TDF/API.hs",
@@ -18474,6 +18476,7 @@
         "tdf-hq/test/Spec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts",
         "tdf-hq-ui/src/api/interactions.test.ts",
         "tdf-hq-ui/src/api/interactions.ts",
         "tdf-hq-ui/src/api/reviews.ts",
@@ -18509,6 +18512,7 @@
         "scripts/test-event-memories-http.py"
       ],
       "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts",
         "tdf-hq-ui/src/api/interactions.test.ts",
         "tdf-hq-ui/src/api/interactions.ts",
         "tdf-hq-ui/src/api/reviews.ts",
@@ -22082,7 +22086,7 @@
       "domain": "events-ticketing",
       "kind": "literal-union",
       "name": "SocialRsvpStatus",
-      "line": 121,
+      "line": 136,
       "values": [
         "accepted",
         "maybe",
@@ -22091,7 +22095,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        121
+        136
       ],
       "consumerCount": 73,
       "backendConsumers": [
@@ -22205,7 +22209,7 @@
       "domain": "security-authorization",
       "kind": "literal-union",
       "name": "LogisticsAccessRole",
-      "line": 280,
+      "line": 295,
       "values": [
         "owner",
         "editor",
@@ -22214,7 +22218,7 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        280
+        295
       ],
       "consumerCount": 31,
       "backendConsumers": [
@@ -22278,7 +22282,7 @@
       "domain": "events-ticketing",
       "kind": "literal-union",
       "name": "LogisticsActivityType",
-      "line": 281,
+      "line": 296,
       "values": [
         "task",
         "milestone",
@@ -22288,7 +22292,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        281
+        296
       ],
       "consumerCount": 6,
       "backendConsumers": [
@@ -22326,7 +22330,7 @@
       "domain": "events-ticketing",
       "kind": "literal-union",
       "name": "LogisticsTravelMode",
-      "line": 282,
+      "line": 297,
       "values": [
         "drive",
         "walk",
@@ -22337,7 +22341,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        282
+        297
       ],
       "consumerCount": 9,
       "backendConsumers": [
@@ -22380,7 +22384,7 @@
       "domain": "events-ticketing",
       "kind": "object-registry",
       "name": "SocialEventsAPI",
-      "line": 582,
+      "line": 597,
       "values": [
         "listPublicUpcomingEvents",
         "listEvents",
@@ -22461,7 +22465,7 @@
       "valueCount": 75,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        582
+        597
       ],
       "consumerCount": 37,
       "backendConsumers": [
@@ -53198,7 +53202,7 @@
       "lines": [
         380
       ],
-      "consumerCount": 1061,
+      "consumerCount": 1062,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -53287,6 +53291,7 @@
         "tdf-hq-ui/src/api/domoQuotes.ts",
         "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
         "tdf-hq-ui/src/api/eventMemoryModeration.test.ts",
         "tdf-hq-ui/src/api/eventMemoryModeration.ts",
         "tdf-hq-ui/src/api/eventOperations.test.ts",
@@ -53300,8 +53305,7 @@
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
         "tdf-hq-ui/src/api/generated/client.test.ts",
-        "tdf-hq-ui/src/api/generated/client.ts",
-        "tdf-hq-ui/src/api/generated/types.ts"
+        "tdf-hq-ui/src/api/generated/client.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/about.tsx",
@@ -53446,6 +53450,7 @@
         "tdf-hq-ui/src/api/domoQuotes.ts",
         "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
         "tdf-hq-ui/src/api/eventMemoryModeration.test.ts",
         "tdf-hq-ui/src/api/eventMemoryModeration.ts",
         "tdf-hq-ui/src/api/eventOperations.test.ts",
@@ -53456,8 +53461,7 @@
         "tdf-hq-ui/src/api/eventTickets.ts",
         "tdf-hq-ui/src/api/fans.test.ts",
         "tdf-hq-ui/src/api/fans.ts",
-        "tdf-hq-ui/src/api/feedback.test.ts",
-        "tdf-hq-ui/src/api/feedback.ts"
+        "tdf-hq-ui/src/api/feedback.test.ts"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -65756,7 +65760,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 254,
+      "line": 257,
       "values": [
         "media",
         "audio",
@@ -65765,7 +65769,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        254
+        257
       ],
       "consumerCount": 33,
       "backendConsumers": [
@@ -145835,7 +145839,7 @@
       "lines": [
         1741
       ],
-      "consumerCount": 52,
+      "consumerCount": 53,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-29_campaign_automation.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -145876,6 +145880,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/campaignAutomations.ts",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
@@ -145898,6 +145903,7 @@
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/campaignAutomations.ts",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/reputation.ts"
@@ -150170,7 +150176,7 @@
       "lines": [
         89
       ],
-      "consumerCount": 18,
+      "consumerCount": 19,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
@@ -150186,6 +150192,7 @@
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/MerchReputationModerationPage.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.tsx"
@@ -150198,6 +150205,7 @@
         "scripts/continuous-improvement-loop-supervisor.sh"
       ],
       "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs"
       ],
       "decision": "genuine-technical-constant",

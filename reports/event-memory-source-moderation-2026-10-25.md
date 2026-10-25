@@ -243,3 +243,22 @@ CI obligatorio, revisión independiente, FIFO, recuperación y ensayo canónico,
 despliegue y comprobación productiva. Siguen pendientes medios privados/revocables,
 galerías combinadas, audio/texto nativo, previsualizaciones públicas específicas,
 idempotencia de creación y retención D7/D30. No se afirma cumplimiento total.
+
+
+Última validación de la fuente congelada: 69 pruebas en siete suites pasan,
+incluyendo selección de archivo sin confirmación, conservación/reintento del
+archivo, sesión real y DTOs; tipos y lint pasan. La auditoría de repositorio termina
+satisfactoriamente. Las cifras anteriores conservan sus ámbitos y no se suman.
+El [recibo definitivo de API/DB](event-memory-source-evidence-20261025/http-release-candidate-results.json)
+y el [recibo definitivo de navegador](event-memory-source-evidence-20261025/browser-release-candidate-results.json)
+repiten 113 solicitudes/16 grupos después de esos cambios; retienen ad56c1896 y
+el árbol local modificado, con hashes de los SDKs, cliente HTTP y autoridad de sesión.
+Una carga con respuesta incompleta no se guarda como URL confirmada ni bloquea el
+reintento del archivo. No hay nuevas migraciones ni cambios en el ejecutable backend.
+
+#608 2c3b0017a obtuvo aprobación independiente posterior a su publicación, a las
+22:39:34 UTC, y sus 19 controles técnicos requeridos pasaron. El único control
+pendiente era main-integration-admission, en espera de #611 sobre main b732efd65.
+Ese permiso no autoriza el nuevo head de #615. Ambos se mantienen en borrador:
+la entrega base debe incorporar la corrección P0 revisada antes de una publicación
+con usuarios. No se usa una revisión de otro commit ni se cambia el orden de cola.
