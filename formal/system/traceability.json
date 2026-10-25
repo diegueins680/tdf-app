@@ -345,9 +345,10 @@
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
         "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
         "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
-        "scripts/lib/production-release.mjs"
+        "scripts/lib/production-release.mjs",
+        "scripts/ci-change-scope.mjs"
       ],
-      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control. Bounded TLC model of ledger posting with five negative controls and the ledger-posting-postgresql spec against the fully migrated schema (formal/system/ledger-posting.md). Legacy-upgrade fixtures and witnessed two-session reversal races under READ COMMITTED and REPEATABLE READ run in scripts/__tests__/ledger-posting-upgrade.py. The canonical provider retry/refund harness applies both the ledger integrity and fixed-line snapshot migrations before its store integration cases; its reduced domain fixture does not establish every production-domain guard (docs/payments/consolidation-2026-10-15.md). Snapshot schedules in ledger-posting-snapshot.py test entry INSERT/UPDATE/DELETE before posting (blocked and already committed), post-first and writer rollback, across READ COMMITTED, REPEATABLE READ and SERIALIZABLE. Six lock-only mutation controls reproduce posted balance 1; these finite PostgreSQL tests do not discharge complete implementation/refinement obligations. Non-owner TEMP and caller-schema shadowing checks plus two lookup-removal controls exercise the installed guards; the finite LedgerNamespace model abstracts these lookup choices (formal/system/ledger-namespace.md). The startup schema verifier rejects missing, reordered or caller-controlled lookup settings, missing expected function signatures and SECURITY DEFINER drift for both installed ledger guards. Transaction-scoped full-schema mutations and a compatible extra-GUC case run through the actual rendered verifier; migration receipts remain unchanged.",
+      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control. Bounded TLC model of ledger posting with five negative controls and the ledger-posting-postgresql spec against the fully migrated schema (formal/system/ledger-posting.md). Legacy-upgrade fixtures and witnessed two-session reversal races under READ COMMITTED and REPEATABLE READ run in scripts/__tests__/ledger-posting-upgrade.py. The canonical provider retry/refund harness applies both the ledger integrity and fixed-line snapshot migrations before its store integration cases; its reduced domain fixture does not establish every production-domain guard (docs/payments/consolidation-2026-10-15.md). Snapshot schedules in ledger-posting-snapshot.py test entry INSERT/UPDATE/DELETE before posting (blocked and already committed), post-first and writer rollback, across READ COMMITTED, REPEATABLE READ and SERIALIZABLE. Six lock-only mutation controls reproduce posted balance 1; these finite PostgreSQL tests do not discharge complete implementation/refinement obligations. Non-owner TEMP and caller-schema shadowing checks plus two lookup-removal controls exercise the installed guards; the finite LedgerNamespace model abstracts these lookup choices (formal/system/ledger-namespace.md). The startup schema verifier rejects missing, reordered or caller-controlled lookup settings, missing expected function signatures and SECURITY DEFINER drift for both installed ledger guards. Transaction-scoped full-schema mutations and a compatible extra-GUC case run through the actual rendered verifier; migration receipts remain unchanged. Changes to the installed schema verifier, ledger/provider/expiry runners and ledger regression harnesses must select backend=true, so the full-schema PostgreSQL controls are executed rather than silently skipped. The path-classifier regression checks nine affected paths against the real selector.",
       "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output; 2026-10-09 local PG16 run of ledger_posting_balance.sql via scripts/test-ticket-manual-review.sh.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -411,7 +412,8 @@
         "tdf-hq/test/TDF/Test/DisposablePostgres.hs",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-namespace.py",
-        "scripts/__tests__/ledger-startup-namespace.mjs"
+        "scripts/__tests__/ledger-startup-namespace.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs"
       ],
       "formalModels": [
         "formal/event-operations/LedgerPosting.tla",
@@ -12124,7 +12126,7 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": "7d3fd93e543c62399aa573908553998cc70c6606edc39b31c2120bc24d2f196d",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
-    "scripts/__tests__/ci-change-scope.test.mjs": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
+    "scripts/__tests__/ci-change-scope.test.mjs": "c95c36e8dd5bd2e15c38999f86f05e33c2a5cee096141db132b855be6a713ae7",
     "scripts/__tests__/ci-pipeline.test.mjs": "76ec02976468affc43319d2d77b4461ac6304a89065f9fe3ce483ca819b49760",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
@@ -12188,7 +12190,7 @@
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
-    "scripts/ci-change-scope.mjs": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
+    "scripts/ci-change-scope.mjs": "84da33d7f0b87eba2a126db681bb0127abe666871de48f05a0b14746f1d967ae",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
@@ -13575,6 +13577,16 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/ci-change-scope.mjs": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-API-002",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/integration/ledger_posting_balance.sql": [
       {
         "requirement": "SYS-MONEY-003",
@@ -13642,6 +13654,20 @@
     "scripts/__tests__/ledger-startup-namespace.mjs": [
       {
         "requirement": "SYS-MONEY-003",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/ci-change-scope.test.mjs": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-API-002",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-STATE-001",
         "relationship": "tests"
       }
     ],
@@ -14080,22 +14106,6 @@
     "scripts/__tests__/generated-api-conformance.test.mjs": [
       {
         "requirement": "SYS-API-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/ci-change-scope.mjs": [
-      {
-        "requirement": "SYS-API-002",
-        "relationship": "implementation"
-      }
-    ],
-    "scripts/__tests__/ci-change-scope.test.mjs": [
-      {
-        "requirement": "SYS-API-002",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "SYS-STATE-001",
         "relationship": "tests"
       }
     ],
@@ -24052,9 +24062,13 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
+      "sha256": "c95c36e8dd5bd2e15c38999f86f05e33c2a5cee096141db132b855be6a713ae7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "tests"
+        },
         {
           "requirement": "SYS-API-002",
           "relationship": "tests"
@@ -25305,9 +25319,13 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
+      "sha256": "84da33d7f0b87eba2a126db681bb0127abe666871de48f05a0b14746f1d967ae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "implementation"
+        },
         {
           "requirement": "SYS-API-002",
           "relationship": "implementation"
@@ -51348,7 +51366,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "874c7f7b75b21da972373cf4077363592fca692c7edff6bfc3689ed40244df3d",
+      "sourceSha256": "148f117f94dc3c0fe2359e0afa52b7a0fbc532dd177939af11ae5158f4a161e9",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -51376,7 +51394,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "874c7f7b75b21da972373cf4077363592fca692c7edff6bfc3689ed40244df3d",
+      "sourceSha256": "148f117f94dc3c0fe2359e0afa52b7a0fbc532dd177939af11ae5158f4a161e9",
       "definition": {
         "states": [
           "absent",
@@ -51406,7 +51424,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "874c7f7b75b21da972373cf4077363592fca692c7edff6bfc3689ed40244df3d",
+      "sourceSha256": "148f117f94dc3c0fe2359e0afa52b7a0fbc532dd177939af11ae5158f4a161e9",
       "definition": {
         "export": [
           "queued",

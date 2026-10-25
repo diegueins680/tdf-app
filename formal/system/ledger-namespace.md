@@ -55,3 +55,9 @@ mutations for each function, and permits an unrelated function timeout setting.
 It compares exact definitions and migration receipts afterward. These controls
 establish detection of the named configuration drift; they do not verify arbitrary
 function bodies, trigger bindings or privileged-owner behavior.
+
+CI path classification must select the backend PostgreSQL lane when the schema
+verifier, ledger/provider/expiry runner or ledger regression harness changes.
+The path-selector regression checks nine affected paths; the original selector
+skipped backend validation for all nine. Repository-only tests cannot replace
+execution of the installed PostgreSQL guards.
