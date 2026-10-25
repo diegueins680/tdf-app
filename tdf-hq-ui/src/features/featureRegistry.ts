@@ -157,6 +157,16 @@ export const featureGroups: readonly FeatureGroup[] = [...registrySource.groups]
   (left, right) => left.order - right.order,
 );
 
+// Record-specific pages need a selected record. Every other usable feature
+// destination participates in navigation, including important submodules.
+export const standaloneMenuFeatures = featureRegistry.filter((feature) => (
+  feature.webRoute?.startsWith('/')
+  && !/[:*]/.test(feature.webRoute)
+  && !feature.technical
+  && feature.maturity !== 'incomplete'
+  && feature.maturity !== 'broken'
+));
+
 const featureById = new Map(featureRegistry.map((feature) => [feature.id, feature]));
 
 for (const feature of featureRegistry) {

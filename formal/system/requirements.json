@@ -11436,6 +11436,79 @@
       "verification": "Deterministic fake-clock tests on body stalls, cancellation, shared deadline and replay boundaries; existing session isolation regressions.",
       "evidence": "Current-candidate local transport and session tests; full web and hosted results must be qualified separately.",
       "historicalStatus": "new"
+    },
+    {
+      "id": "NAV-MENU-COVERAGE-001",
+      "title": "Complete permission-aware menus for available feature destinations",
+      "statement": "Every usable standalone registered web feature has one concrete sidebar destination in an appropriate existing group. Public reputation rights remain reachable through the Security page menu. Visibility obeys current session roles, modules and feature flags.",
+      "authority": "Explicit product owner implementation request, 2026-10-25",
+      "domain": "UX",
+      "source": "docs/discovery/community-search-navigation.md",
+      "contract": "docs/discovery/community-search-navigation.md",
+      "actors": [
+        "Authenticated platform user",
+        "Administrator"
+      ],
+      "preconditions": [
+        "Mounted web routes and canonical feature registry",
+        "Current session permissions and feature flags"
+      ],
+      "inputs": [
+        "Registered feature destinations and groups",
+        "Current session roles, modules and feature flags",
+        "Sidebar search query"
+      ],
+      "state": {
+        "boundary": "Web navigation destinations and per-viewer visibility",
+        "authority": "Canonical feature registry and existing access decisions"
+      },
+      "allowedTransitions": [
+        "Register usable standalone destination -> corresponding grouped menu item",
+        "Change session permissions or flags -> update visible menu",
+        "Select menu item -> concrete existing route"
+      ],
+      "forbiddenTransitions": [
+        "Parameterized placeholder in a global menu URL",
+        "Duplicate sidebar path",
+        "Disabled or unauthorized feature rendered as an accessible link",
+        "Menu click grants permissions or mutates business data"
+      ],
+      "effects": [
+        "Render grouped navigation links",
+        "Filter navigation by existing access policy"
+      ],
+      "authorization": "Existing feature access decisions; pass session flags without changing permissions, roles, modules or rollout configuration.",
+      "privacy": "Admin-only and disabled feature links are withheld from unauthorized viewers. Public rights links expose informational pages only.",
+      "concurrency": "Menu access is recomputed when session roles, modules or flags change. Backend authorization remains authoritative for route actions.",
+      "idempotency": "Module initialization supplements each existing path once; navigation does not perform approvals or other business writes.",
+      "failure": "Unknown group metadata fails explicitly; record-dependent and unavailable routes are excluded.",
+      "recovery": "Correct invalid registry metadata; existing sidebar error boundary remains in place.",
+      "observability": "Sidebar, feature and access regressions; route registry audit and browser navigation checks.",
+      "property": "Standalone destination coverage, unique concrete paths and per-session access filtering.",
+      "implementation": [
+        "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/utils/accessControl.ts",
+        "tdf-hq-ui/src/pages/SecurityPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/SidebarNav.test.tsx",
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/accessControl.test.ts",
+        "tdf-hq-ui/src/pages/SecurityPage.test.tsx",
+        "scripts/audit-feature-registry.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Deterministic registry coverage, rendered sidebar/access controls and browser navigation; no formal proof claimed.",
+      "evidence": "Validation recorded in the feature menu delivery report; hosted and production receipts are separate.",
+      "status": "specified and implemented",
+      "openQuestions": [],
+      "confidence": "Local tests and browser evidence; does not establish backend or system-wide conformance.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Navigation implementation and local validation; independent review, hosted checks and production publication remain separate gates."
+      }
     }
   ]
 }

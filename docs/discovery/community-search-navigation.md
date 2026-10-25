@@ -279,3 +279,30 @@ allocates an available loopback port, and applies the existing current-handler
 schema prerequisites after its historical migration tests. Its public backfill
 control is isolated from subsequent exact HTTP facet fixtures. Earlier fixture
 failures are retained as regression evidence; assertions were not weakened.
+
+
+## Complete feature menus
+
+Product authority: explicit owner request of October 25, 2026 to provide menu
+items for available features that lacked them. The sidebar retains the existing
+curated labels and groups and supplements them with all registered, usable,
+nontechnical routes that have a concrete destination. Each path appears once.
+Newly registered standalone features receive a menu destination automatically.
+Contextual pages requiring a record ID remain reachable through their list pages;
+OAuth/payment returns, authentication callbacks, incomplete and broken features
+are excluded. The two additional concrete editor destinations are Mi perfil de
+artista and Nuevo lanzamiento. Crear perfil de artista and Nuevo evento are placed
+in Crear; personal access requests are labelled Mis solicitudes de acceso in Ayuda.
+
+The existing access registry continues to decide visibility for each viewer.
+The sidebar passes the current session feature flags to that decision together
+with roles and modules. Disabled pilots remain concealed. A menu entry does not
+grant a role, module, feature flag or backend capability. No rollout flags change.
+
+Public reputation privacy, appeals and calculation pages retain their existing
+shareable public-route metadata and are linked by a Derechos y reputación menu
+inside Seguridad. These informational routes do not become internal admin tools.
+
+Regression coverage checks every standalone feature against the actual sidebar,
+unique concrete destinations, searchable artist and directory review entries,
+feature flag changes, denied-role/module combinations and the public rights menu.

@@ -344,6 +344,32 @@
       "preservedPreviousDecision": true,
       "newSyntheticFixtureId": "134cf0fa5a9bb176f981",
       "scope": "Technical API method names and synthetic test DTO only; no product, payment or release approval."
+    },
+    "featureMenuCoverage20261025": {
+      "sourceMain": "512d590e902760130f54ca2927620c001a754b85",
+      "successors": [
+        [
+          "e4c7ffe2a8fc0a5752d0",
+          "e1630a13682bf0fee90d"
+        ],
+        [
+          "b180210a3602cfc0bf52",
+          "300853c537ba6401822a"
+        ],
+        [
+          "9fca63dce34f8900c6a4",
+          "a00fcee87036af5dfa95"
+        ],
+        [
+          "ef8764c4421158cb1be7",
+          "ce1e609baf902df58b08"
+        ],
+        [
+          "d98b80c87ee6f14c72ec",
+          "dfea445b31325dad4cf6"
+        ]
+      ],
+      "reason": "Only five reviewed source fingerprints changed: four additive navigation groups and a session featureFlags fixture. All classifications, persistence obligations and audit policies are preserved."
     }
   },
   "decisions": [
@@ -2755,14 +2781,30 @@
       "reviewed": true
     },
     {
-      "id": "e4c7ffe2a8fc0a5752d0",
+      "id": "e1630a13682bf0fee90d",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P3-consumer",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.test.tsx",
+        "line": 10
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "e4c7ffe2a8fc0a5752d0",
+        "classification": "security-system-registry",
+        "disposition": "consumer-update",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-consumer",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+        "reviewed": true
+      }
     },
     {
       "id": "d0b457848a6b6c374e45",
@@ -2775,32 +2817,22 @@
       "reviewed": true
     },
     {
-      "id": "b180210a3602cfc0bf52",
+      "id": "300853c537ba6401822a",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "9fca63dce34f8900c6a4",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "line": 163
+        "line": 142
       },
-      "reviewBatch": "events-nav-carousel-2026-10-08",
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
-        "id": "daaade88abcc60232974",
+        "id": "b180210a3602cfc0bf52",
         "classification": "dynamic-business-catalog",
         "disposition": "migrate-and-remove-authority-from-code",
         "specializedModel": "navigation_item, navigation_item_permission",
@@ -2811,14 +2843,72 @@
       }
     },
     {
-      "id": "ef8764c4421158cb1be7",
+      "id": "a00fcee87036af5dfa95",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 166
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "9fca63dce34f8900c6a4",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+          "line": 163
+        },
+        "reviewBatch": "events-nav-carousel-2026-10-08",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "daaade88abcc60232974",
+          "classification": "dynamic-business-catalog",
+          "disposition": "migrate-and-remove-authority-from-code",
+          "specializedModel": "navigation_item, navigation_item_permission",
+          "priority": "P1-cross-platform",
+          "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+          "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+          "reviewed": true
+        }
+      }
+    },
+    {
+      "id": "ce1e609baf902df58b08",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 190
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "ef8764c4421158cb1be7",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
       "id": "3a83c9975e291400c7d5",
@@ -2876,14 +2966,30 @@
       "reviewed": true
     },
     {
-      "id": "d98b80c87ee6f14c72ec",
+      "id": "dfea445b31325dad4cf6",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 251
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "d98b80c87ee6f14c72ec",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
       "id": "61e76da1f53c6a0f9414",
