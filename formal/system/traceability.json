@@ -344,9 +344,10 @@
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
         "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
-        "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql"
+        "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
+        "scripts/lib/production-release.mjs"
       ],
-      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control. Bounded TLC model of ledger posting with five negative controls and the ledger-posting-postgresql spec against the fully migrated schema (formal/system/ledger-posting.md). Legacy-upgrade fixtures and witnessed two-session reversal races under READ COMMITTED and REPEATABLE READ run in scripts/__tests__/ledger-posting-upgrade.py. The canonical provider retry/refund harness applies both the ledger integrity and fixed-line snapshot migrations before its store integration cases; its reduced domain fixture does not establish every production-domain guard (docs/payments/consolidation-2026-10-15.md). Snapshot schedules in ledger-posting-snapshot.py test entry INSERT/UPDATE/DELETE before posting (blocked and already committed), post-first and writer rollback, across READ COMMITTED, REPEATABLE READ and SERIALIZABLE. Six lock-only mutation controls reproduce posted balance 1; these finite PostgreSQL tests do not discharge complete implementation/refinement obligations. Non-owner TEMP and caller-schema shadowing checks plus two lookup-removal controls exercise the installed guards; the finite LedgerNamespace model abstracts these lookup choices (formal/system/ledger-namespace.md).",
+      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control. Bounded TLC model of ledger posting with five negative controls and the ledger-posting-postgresql spec against the fully migrated schema (formal/system/ledger-posting.md). Legacy-upgrade fixtures and witnessed two-session reversal races under READ COMMITTED and REPEATABLE READ run in scripts/__tests__/ledger-posting-upgrade.py. The canonical provider retry/refund harness applies both the ledger integrity and fixed-line snapshot migrations before its store integration cases; its reduced domain fixture does not establish every production-domain guard (docs/payments/consolidation-2026-10-15.md). Snapshot schedules in ledger-posting-snapshot.py test entry INSERT/UPDATE/DELETE before posting (blocked and already committed), post-first and writer rollback, across READ COMMITTED, REPEATABLE READ and SERIALIZABLE. Six lock-only mutation controls reproduce posted balance 1; these finite PostgreSQL tests do not discharge complete implementation/refinement obligations. Non-owner TEMP and caller-schema shadowing checks plus two lookup-removal controls exercise the installed guards; the finite LedgerNamespace model abstracts these lookup choices (formal/system/ledger-namespace.md). The startup schema verifier rejects missing, reordered or caller-controlled lookup settings, missing expected function signatures and SECURITY DEFINER drift for both installed ledger guards. Transaction-scoped full-schema mutations and a compatible extra-GUC case run through the actual rendered verifier; migration receipts remain unchanged.",
       "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output; 2026-10-09 local PG16 run of ledger_posting_balance.sql via scripts/test-ticket-manual-review.sh.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -409,7 +410,8 @@
         "scripts/__tests__/ledger-posting-upgrade.py",
         "tdf-hq/test/TDF/Test/DisposablePostgres.hs",
         "scripts/__tests__/ledger-posting-snapshot.py",
-        "scripts/__tests__/ledger-posting-namespace.py"
+        "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-startup-namespace.mjs"
       ],
       "formalModels": [
         "formal/event-operations/LedgerPosting.tla",
@@ -432,7 +434,8 @@
         "validateLedgerBalance (Haskell) has no runtime caller; the database rule is the enforced one.",
         "Before 2026-10-12 the database validated balance only on draft -> posted, so a transaction inserted as posted or an entry appended after posting was not rejected; the ledger posting integrity migration closes both.",
         "The #551 lock-only entry guard admitted stale-snapshot unbalanced postings under REPEATABLE READ. The additive 2026-10-16 write fence repairs the reproduced schedules; unbounded SQL/MVCC refinement, caller retry policy and deployed correspondence remain open.",
-        "Unqualified trigger lookup admitted non-owner TEMP shadowing on source 59df1dd2a17952b906cf89d1c5502725d51239e1. The additive namespace migration pins both functions; runtime trusted-schema privileges, owner/DDL bypass and deployed correspondence remain unverified."
+        "Unqualified trigger lookup admitted non-owner TEMP shadowing on source 59df1dd2a17952b906cf89d1c5502725d51239e1. The additive namespace migration pins both functions; runtime trusted-schema privileges, owner/DDL bypass and deployed correspondence remain unverified.",
+        "Startup verification checks the installed trusted lookup settings and invoker boundary, not arbitrary trigger bodies or privileged DDL equivalence; a table owner can still disable or replace triggers."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -12143,6 +12146,7 @@
     "scripts/__tests__/ledger-posting-namespace.py": "e2cf1845e5c4d31de06a9f4065969365ff2098bb31e93a1943bb2d7dbb89e490",
     "scripts/__tests__/ledger-posting-snapshot.py": "5e7ac570a965b6b9370fd53936851212a2c45108e2a7d670a96494c813360751",
     "scripts/__tests__/ledger-posting-upgrade.py": "edbf00b9749ad0c784181e984df58becbfa009f3934f55413b11801628d1a6bb",
+    "scripts/__tests__/ledger-startup-namespace.mjs": "8ba0f924ee1c45acd330928e019784cbcd4c8ebea81e3e8a543f5c162157e76c",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
     "scripts/__tests__/merch-runtime-safety.test.mjs": "f6bb3266949645d3e7f8db366503e2d7104bbc2017da86837a9f6a7363246f02",
@@ -12218,7 +12222,7 @@
     "scripts/lib/music_payment_conformance.py": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
     "scripts/lib/operations_conformance.py": "1978873ba86472cc29198bf14fcc428102d69db29e6816a197a1140118ef2654",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "6c838849bdc165b38bcdb12d8ce51ba6b9ed07ccc55db4b6c09c664d12d3c23c",
+    "scripts/lib/production-release.mjs": "7e3dc3b8c40d68aa9ff4331ed2094196822617a9498be1f5da10449f286b4a47",
     "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
@@ -12280,7 +12284,7 @@
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
     "scripts/test-isolated-application-canary.py": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
-    "scripts/test-ledger-posting.sh": "316d81545ce5bcf27c314743b669dd0a7f167e76378e3a538118aa1a6a69eb26",
+    "scripts/test-ledger-posting.sh": "b838a96f759e1d0650cd67180a1847649965f5aff5b17c57896a4988096d3cd9",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
     "scripts/test-meta-redelivery.sh": "ede4ee564fb1ff86e4d4da13342ab56eca7b382e411abc41eea4d7bce247616a",
@@ -12311,7 +12315,7 @@
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-proof-certificates.py": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
-    "scripts/test-provider-retry-runtime.sh": "c041bf4d07b5de6aecf223b3801a6428294559243b8165dad5b46c9d9f45c237",
+    "scripts/test-provider-retry-runtime.sh": "cc1cc8675a93f9c674ab943f1282afa040f9be50d6e9e4a0775a46b8069377a7",
     "scripts/test-public-route-denial.py": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
@@ -13525,6 +13529,52 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/lib/production-release.mjs": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-CHECKOUT-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-RESTORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MUSIC-OUTCOME-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/integration/ledger_posting_balance.sql": [
       {
         "requirement": "SYS-MONEY-003",
@@ -13584,6 +13634,12 @@
       }
     ],
     "scripts/__tests__/ledger-posting-namespace.py": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/ledger-startup-namespace.mjs": [
       {
         "requirement": "SYS-MONEY-003",
         "relationship": "tests"
@@ -14876,48 +14932,6 @@
     "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql": [
       {
         "requirement": "PAY-CHECKOUT-002",
-        "relationship": "implementation"
-      }
-    ],
-    "scripts/lib/production-release.mjs": [
-      {
-        "requirement": "PAY-CHECKOUT-002",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-CHECKOUT-003",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-MIGRATION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-RESTORE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-STARTUP-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "REC-DDEX-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-MUSIC-MONEY-WIRE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-MUSIC-OUTCOME-001",
         "relationship": "implementation"
       }
     ],
@@ -24506,6 +24520,18 @@
       ]
     },
     {
+      "id": "SURFACE-c4f7d8b67539027d",
+      "path": "scripts/__tests__/ledger-startup-namespace.mjs",
+      "sha256": "8ba0f924ee1c45acd330928e019784cbcd4c8ebea81e3e8a543f5c162157e76c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-aaf6250f3ecffcca",
       "path": "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
       "sha256": "2f8375b3ac15053831872c35662a6c170703c1c7f87cb15cc77c479ecc42b0f4",
@@ -26044,9 +26070,13 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "6c838849bdc165b38bcdb12d8ce51ba6b9ed07ccc55db4b6c09c664d12d3c23c",
+      "sha256": "7e3dc3b8c40d68aa9ff4331ed2094196822617a9498be1f5da10449f286b4a47",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "implementation"
+        },
         {
           "requirement": "PAY-CHECKOUT-002",
           "relationship": "implementation"
@@ -27924,7 +27954,7 @@
     {
       "id": "SURFACE-c3dd26e569b5cb41",
       "path": "scripts/test-ledger-posting.sh",
-      "sha256": "316d81545ce5bcf27c314743b669dd0a7f167e76378e3a538118aa1a6a69eb26",
+      "sha256": "b838a96f759e1d0650cd67180a1847649965f5aff5b17c57896a4988096d3cd9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28419,7 +28449,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "c041bf4d07b5de6aecf223b3801a6428294559243b8165dad5b46c9d9f45c237",
+      "sha256": "cc1cc8675a93f9c674ab943f1282afa040f9be50d6e9e4a0775a46b8069377a7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51318,7 +51348,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7c88b964f3eb4ae7e2631db62a794637321a9fbba65e472d7378a3461698e609",
+      "sourceSha256": "874c7f7b75b21da972373cf4077363592fca692c7edff6bfc3689ed40244df3d",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -51346,7 +51376,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7c88b964f3eb4ae7e2631db62a794637321a9fbba65e472d7378a3461698e609",
+      "sourceSha256": "874c7f7b75b21da972373cf4077363592fca692c7edff6bfc3689ed40244df3d",
       "definition": {
         "states": [
           "absent",
@@ -51376,7 +51406,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7c88b964f3eb4ae7e2631db62a794637321a9fbba65e472d7378a3461698e609",
+      "sourceSha256": "874c7f7b75b21da972373cf4077363592fca692c7edff6bfc3689ed40244df3d",
       "definition": {
         "export": [
           "queued",

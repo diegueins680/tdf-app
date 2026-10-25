@@ -152,6 +152,7 @@
       "scripts/__tests__/ledger-posting-namespace.py",
       "scripts/__tests__/ledger-posting-snapshot.py",
       "scripts/__tests__/ledger-posting-upgrade.py",
+      "scripts/__tests__/ledger-startup-namespace.mjs",
       "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
       "scripts/__tests__/legacy-escrow-contract.test.mjs",
       "scripts/__tests__/local-api-fixture.test.mjs",
@@ -3467,6 +3468,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c4f7d8b67539027d",
+      "path": "scripts/__tests__/ledger-startup-namespace.mjs",
+      "sha256": "8ba0f924ee1c45acd330928e019784cbcd4c8ebea81e3e8a543f5c162157e76c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-aaf6250f3ecffcca",
       "path": "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
       "sha256": "2f8375b3ac15053831872c35662a6c170703c1c7f87cb15cc77c479ecc42b0f4",
@@ -4375,7 +4382,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "6c838849bdc165b38bcdb12d8ce51ba6b9ed07ccc55db4b6c09c664d12d3c23c",
+      "sha256": "7e3dc3b8c40d68aa9ff4331ed2094196822617a9498be1f5da10449f286b4a47",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5443,7 +5450,7 @@
     {
       "id": "SURFACE-c3dd26e569b5cb41",
       "path": "scripts/test-ledger-posting.sh",
-      "sha256": "316d81545ce5bcf27c314743b669dd0a7f167e76378e3a538118aa1a6a69eb26",
+      "sha256": "b838a96f759e1d0650cd67180a1847649965f5aff5b17c57896a4988096d3cd9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5707,7 +5714,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "c041bf4d07b5de6aecf223b3801a6428294559243b8165dad5b46c9d9f45c237",
+      "sha256": "cc1cc8675a93f9c674ab943f1282afa040f9be50d6e9e4a0775a46b8069377a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26674,7 +26681,7 @@
     },
     {
       "path": "formal/system/ledger-namespace.md",
-      "sha256": "b407a79f91650015222e692e116667a5e4e84c9d642e274555731eaf1286381c",
+      "sha256": "0b1389ee3a1ca4291ec81c0927eff93c0faea0645244ec5d2e2e4865210ca969",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27003,7 +27010,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7c88b964f3eb4ae7e2631db62a794637321a9fbba65e472d7378a3461698e609",
+      "sha256": "874c7f7b75b21da972373cf4077363592fca692c7edff6bfc3689ed40244df3d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
