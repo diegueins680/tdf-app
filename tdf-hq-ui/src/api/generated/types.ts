@@ -6823,6 +6823,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social-events/events/{eventId}/ticket-orders/{orderId}/manual-payment/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a private transfer receipt as the event organizer or an administrator */
+        get: operations["getTicketManualPaymentReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/events/{eventId}/tickets": {
         parameters: {
             query?: never;
@@ -10557,11 +10574,23 @@ export interface components {
             /** @enum {string} */
             evidenceStatus: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected";
             customerReference?: string | null;
+            /** @description Whether the buyer attached a private receipt file. */
+            receiptAttached?: boolean;
             /** @description Staff reason, shown only after a rejection. */
             reviewNotes?: string | null;
         };
         PublicEventTicketBankTransferEvidenceRequest: {
             customerReference: string;
+            receipt?: components["schemas"]["TicketPaymentReceipt"];
+        };
+        TicketPaymentReceipt: {
+            /** @enum {string} */
+            contentType: "image/jpeg" | "image/png" | "application/pdf";
+            /**
+             * Format: byte
+             * @description Private receipt file
+             */
+            base64: string;
         };
         PublicEventTicketPaypalCaptureRequest: {
             paypalOrderId: string;
@@ -32614,6 +32643,52 @@ export interface operations {
             };
             /** @description Daily review limit exceeded */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getTicketManualPaymentReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private JPG, PNG or PDF receipt */
+            200: {
+                headers: {
+                    /** @description Always no-store. */
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketPaymentReceipt"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event management permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order does not belong to this event or no receipt was attached */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
