@@ -923,6 +923,7 @@
       "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx",
       "tdf-hq-ui/src/features/fans/useFanHubOnboarding.ts",
       "tdf-hq-ui/src/features/fans/useFanProfile.ts",
+      "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
       "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts",
       "tdf-hq-ui/src/features/featureRegistry.test.ts",
       "tdf-hq-ui/src/features/featureRegistry.ts",
@@ -8044,9 +8045,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f4587eada3ec2988",
+      "path": "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
+      "sha256": "3995cfb38d4a5e817f1b12a1e82043c30ddeaf95b1f44326c0ed398b8e7ac86b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8cc679456c0f48cb",
       "path": "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts",
-      "sha256": "d42a10a9261ef745e9b5930c9641f2be5c72b275b4bc106b78e91b9aacb5109d",
+      "sha256": "16d2be464c3d56a4ea77017c13c90628e31d483afa256b25da6f869586802ce8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26366,7 +26373,7 @@
     },
     {
       "path": "formal/system/profile-editing-baseline.md",
-      "sha256": "3fcc9f60a08ae2b7d2082a1904f6538ccd8b0b143f7ff42f66c28aa70ad88927",
+      "sha256": "ca8c2cc1327965cf627b17063f6c29a6a7609200285f92822f195dd8d3070b67",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26443,7 +26450,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "91d09de6a396c32f0c2bfcbd8035bf39e60eadd6fe3848a733aa26036f98d092",
+      "sha256": "0c100d44ad48dc7b8f0f461c5dc6d84e0e07bb78e6cbb94fcd415fc002a05a0e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

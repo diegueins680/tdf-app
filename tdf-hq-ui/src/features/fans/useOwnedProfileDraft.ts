@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { getAuthSessionEpoch } from '../../session/authEvents';
 
 // A blank form is not evidence that an account has an empty persisted profile.
 // Keep the successful read and every asynchronous editor callback with its owner.
@@ -11,9 +12,16 @@ export function useOwnedProfileDraft<T>({
   baseline: T | undefined;
   empty: T;
 }) {
-  const identityRef = useRef({ ownerId });
-  if (identityRef.current.ownerId !== ownerId) identityRef.current = { ownerId };
+  const authEpoch = getAuthSessionEpoch();
+  const identityRef = useRef({ ownerId, authEpoch });
+  if (identityRef.current.ownerId !== ownerId || identityRef.current.authEpoch !== authEpoch) {
+    identityRef.current = { ownerId, authEpoch };
+  }
   const identity = identityRef.current;
+  // Login/logout can replace imperative credentials before React commits the
+  // new session scope. A captured callback must revoke authority immediately.
+  const isCurrentOwner = () => identityRef.current === identity
+    && getAuthSessionEpoch() === identity.authEpoch;
   const [state, setState] = useState(() => ({
     identity,
     draft: baseline ?? empty,
@@ -33,12 +41,12 @@ export function useOwnedProfileDraft<T>({
   }, [baseline, empty, identity]);
 
   const ready = ownerId !== null && state.identity === identity
-    && state.baseline !== undefined && baseline !== undefined;
+    && state.baseline !== undefined && baseline !== undefined && isCurrentOwner();
   const draft = state.identity === identity ? state.draft : empty;
   const setDraft: Dispatch<SetStateAction<T>> = (update) => {
-    if (!ready || identityRef.current !== identity) return;
+    if (!ready || !isCurrentOwner()) return;
     setState((previous) => {
-      if (previous.identity !== identity || identityRef.current !== identity) return previous;
+      if (previous.identity !== identity || !isCurrentOwner()) return previous;
       return {
         ...previous,
         draft: typeof update === 'function' ? (update as (value: T) => T)(previous.draft) : update,
@@ -48,10 +56,10 @@ export function useOwnedProfileDraft<T>({
   };
 
   const acknowledgeSave = (submitted: T) => {
-    if (identityRef.current !== identity) return;
-    setState((previous) => previous.identity === identity && previous.draft === submitted
+    if (!isCurrentOwner()) return;
+    setState((previous) => isCurrentOwner() && previous.identity === identity && previous.draft === submitted
       ? { ...previous, dirty: false } : previous);
   };
 
-  return { draft, setDraft, ready, acknowledgeSave, isCurrentOwner: () => identityRef.current === identity };
+  return { draft, setDraft, ready, acknowledgeSave, isCurrentOwner };
 }

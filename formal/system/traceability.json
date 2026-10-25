@@ -11441,7 +11441,7 @@
     {
       "id": "COMMUNITY-PROFILE-001",
       "title": "Require an owned successful read before profile replacement",
-      "statement": "Fan and artist editors must bind drafts and asynchronous callbacks to the active account generation, reject replacement writes before an authoritative profile read, and retain unsaved edits through background reads.",
+      "statement": "Fan and artist editors must bind drafts and asynchronous callbacks to the active account generation and synchronous authentication epoch, reject replacement writes before an authoritative profile read, revoke callbacks immediately on credential changes, and retain unsaved edits through background reads.",
       "domain": "COMMUNITY",
       "authority": "Product owner user-value completion instruction 2026-10-25: prioritize verified data-loss blockers and complete existing profile journeys.",
       "source": "docs/persona-testing/journey-specifications.md ST-004; formal/system/profile-editing-baseline.md",
@@ -11468,7 +11468,7 @@
           "saving",
           "read-error"
         ],
-        "owner": "Party plus in-memory account generation"
+        "owner": "Party plus synchronous authentication epoch and in-memory account generation"
       },
       "allowedTransitions": [
         "Successful matching baseline -> editable draft",
@@ -11480,7 +11480,8 @@
         "Pending or failed initial GET -> profile replacement",
         "Old account fields -> current account replacement",
         "Background read -> overwrite unsaved edits",
-        "Old generation response -> current draft or success/error message"
+        "Old generation response -> current draft or success/error message",
+        "Authentication epoch changed before React render -> old callback dispatches profile fields with new credentials"
       ],
       "effects": [
         "Artist and fan profiles share draft ownership and hydration logic.",
@@ -11488,7 +11489,7 @@
       ],
       "authorization": "Existing server session and profile ownership checks remain authoritative; current-Party DTO matching and account-generation guards prevent accidental client replacement.",
       "privacy": "Drafts stay in component memory; no profile values or credentials added to persistent storage or logs.",
-      "concurrency": "Background reads retain dirty fields; save/upload callbacks capture their submitting generation; cross-device concurrent writes and universal session revocation are outside this client boundary.",
+      "concurrency": "Auth-epoch checks revoke captured callbacks before React rescoping and again at mutation dispatch; background reads retain dirty fields. Already dispatched requests, cross-device concurrent writes and universal server session revocation remain outside this client boundary.",
       "idempotency": "No automatic mutation retry or new idempotency guarantee; manual retry reloads the baseline only.",
       "failure": "Pending/error/mismatched reads disable fields and save controls; the save handler also refuses; late account callbacks are discarded.",
       "recovery": "Explicit profile retry loads the current account and restores guarded editing. A reviewed web revert needs no migration.",
@@ -11501,7 +11502,8 @@
       ],
       "tests": [
         "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
-        "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx"
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx",
+        "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -11512,7 +11514,7 @@
         "classification": "PARTIAL",
         "reason": "Local repair and regression evidence; hosted CI, independent review, protected merge and deployed availability must be recorded separately."
       },
-      "verification": "Real QueryClient and rendered-editor regressions with negative controls; disposable HTTP/PostgreSQL/browser verification; no mathematical proof claimed.",
+      "verification": "Real session and query providers, endpoints, API client/header with intercepted native Fetch validate pre-render/same-Party credential transitions; rendered editor regressions and original-source negative controls; disposable API/PostgreSQL/browser verification. No mathematical proof claimed.",
       "evidence": "Current candidate logs and delivery report; historical local or passing unit tests do not establish deployment."
     }
   ],
@@ -12188,7 +12190,8 @@
     "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx": "c12556996684edd36b7dc736ae88cbc2153a3b7b47a095078dbcce9d025e3dba",
     "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx": "9d09b7acdcb9bd3c0d83e5115bd01eac89b32b0f2d133e884c0797f4a5ca9b5d",
     "tdf-hq-ui/src/features/fans/useFanProfile.ts": "5d5117b2bc97d999546a3ea417cb38ee797883744f4329c113b791e6bde0b53f",
-    "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts": "d42a10a9261ef745e9b5930c9641f2be5c72b275b4bc106b78e91b9aacb5109d",
+    "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx": "3995cfb38d4a5e817f1b12a1e82043c30ddeaf95b1f44326c0ed398b8e7ac86b",
+    "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts": "16d2be464c3d56a4ea77017c13c90628e31d483afa256b25da6f869586802ce8",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "7f091bdd2722c7eeea2a7003f098a6a265c6f2d1f8f6b7fc15288d009cebec33",
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
@@ -22194,6 +22197,12 @@
         "requirement": "COMMUNITY-PROFILE-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx": [
+      {
+        "requirement": "COMMUNITY-PROFILE-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -31559,9 +31568,21 @@
       ]
     },
     {
+      "id": "SURFACE-f4587eada3ec2988",
+      "path": "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
+      "sha256": "3995cfb38d4a5e817f1b12a1e82043c30ddeaf95b1f44326c0ed398b8e7ac86b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-PROFILE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-8cc679456c0f48cb",
       "path": "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts",
-      "sha256": "d42a10a9261ef745e9b5930c9641f2be5c72b275b4bc106b78e91b9aacb5109d",
+      "sha256": "16d2be464c3d56a4ea77017c13c90628e31d483afa256b25da6f869586802ce8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50229,7 +50250,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "91d09de6a396c32f0c2bfcbd8035bf39e60eadd6fe3848a733aa26036f98d092",
+      "sourceSha256": "0c100d44ad48dc7b8f0f461c5dc6d84e0e07bb78e6cbb94fcd415fc002a05a0e",
       "definition": {
         "states": [
           "absent",
@@ -50259,7 +50280,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "91d09de6a396c32f0c2bfcbd8035bf39e60eadd6fe3848a733aa26036f98d092",
+      "sourceSha256": "0c100d44ad48dc7b8f0f461c5dc6d84e0e07bb78e6cbb94fcd415fc002a05a0e",
       "definition": {
         "export": [
           "queued",

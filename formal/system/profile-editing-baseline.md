@@ -21,7 +21,10 @@ read must therefore never be interpreted as permission to save an empty profile.
 2. Keep artist and fan drafts in memory with an account generation. On account
    change, synchronously hide the old fields and block saves until the new
    account's baseline has been initialized. Returning to the same account must
-   not revive callbacks from an earlier generation.
+   not revive callbacks from an earlier generation. Each generation captures the
+   synchronous authentication epoch: login, logout or credential replacement
+   revokes old callbacks immediately, before React commits a new session scope
+   or unmounts the previous editor.
 3. Guard the save handler as well as its buttons and inputs. Failed reads offer
    an explicit retry; retry reads must not create a profile write.
 4. Do not replace locally edited fields when a background read settles. On save
@@ -44,7 +47,11 @@ persisted profile formats retain their existing contracts.
 
 Rendered editor and real QueryClient regressions cover pending/error reads,
 explicit retry, one-field edits preserving all other values, account changes,
-late reads/saves/uploads and background-read conflicts. Negative controls run
+late reads/saves/uploads and background-read conflicts. Real `SessionProvider`,
+`SessionQueryProvider`, fan endpoints, API client and authorization-header
+regressions intercept Fetch to verify zero old-profile dispatches with a new
+principal's bearer during a batched login and after same-Party reauthentication.
+These checks include recovery through the new login's successful baseline. Negative controls run
 the new assertions against protected main before the repair. A disposable
 API/PostgreSQL/browser run checks that failed-read actions cause zero writes and
 that recovered saves persist the intended edit while retaining the other fields.
