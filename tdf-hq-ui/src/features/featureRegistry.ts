@@ -157,12 +157,14 @@ export const featureGroups: readonly FeatureGroup[] = [...registrySource.groups]
   (left, right) => left.order - right.order,
 );
 
-// Record-specific pages need a selected record. Every other usable feature
-// destination participates in navigation, including important submodules.
+// Record-specific pages need a selected record. Access-request creation also
+// requires a feature query parameter supplied by the contextual request action.
+// Other usable destinations participate, including important submodules.
 export const standaloneMenuFeatures = featureRegistry.filter((feature) => (
   feature.webRoute?.startsWith('/')
   && !/[:*]/.test(feature.webRoute)
   && !feature.technical
+  && feature.id !== 'access-requests.create'
   && feature.maturity !== 'incomplete'
   && feature.maturity !== 'broken'
 ));

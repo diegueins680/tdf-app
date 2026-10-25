@@ -151,6 +151,10 @@ test('loaded feature menu stays dismissible from the public header @critical', a
   await trigger.click();
   const menu = page.getByRole('dialog', { name: 'Menú de funciones', exact: true });
   await expect(menu.getByLabel('Buscar sección')).toBeVisible();
+  await menu.getByLabel('Buscar sección').fill('solicitudes');
+  await expect(menu.locator('a[href="/solicitudes-acceso"]')).toBeVisible();
+  await expect(menu.locator('a[href="/solicitudes-acceso/nueva"]')).toHaveCount(0);
+  await menu.getByLabel('Buscar sección').fill('');
   const close = menu.getByRole('button', { name: 'Cerrar menú de funciones', exact: true });
   await expect(close).toBeInViewport({ ratio: 1 });
   await close.click();

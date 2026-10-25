@@ -2807,7 +2807,7 @@
     {
       "id": "SURFACE-e304a20b61d5c193",
       "path": "e2e/web/community-discovery.spec.mjs",
-      "sha256": "029a2425d43d6f816f1f6a9b39d68a08a23a8bde8443bb077dd3b41115c9bbf7",
+      "sha256": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7493,7 +7493,7 @@
     {
       "id": "SURFACE-52ded61d23ac18e9",
       "path": "tdf-hq-ui/src/components/SidebarNav.test.tsx",
-      "sha256": "ca52a0b7951d62fd0189a04b955465e249d2b3029041f8a88ce53cd232bf3de5",
+      "sha256": "e3256af3ef5a49bb099438a71f1106c9338c186faa26c22b2464da659a0c1728",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8057,7 +8057,7 @@
     {
       "id": "SURFACE-d1ac87354eb95a4d",
       "path": "tdf-hq-ui/src/features/featureRegistry.ts",
-      "sha256": "9357272e5c32bc696723d92dda9dd6475c305a619c938fe4146f914de1f8cbd5",
+      "sha256": "d709057904f96995ef7f5b734952b3c588b93dece56ed510f56e409ad035c955",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19191,7 +19191,7 @@
     },
     {
       "path": "docs/discovery/community-search-navigation.md",
-      "sha256": "1950faeed69abe0c2194c33fdfb20b04d3765185711aabd9c5a765e9818e7023",
+      "sha256": "eb0eaa096b2e75f0d5fa7c5c2fc4d748d3e173113a031d17dbe802b23246011d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26429,7 +26429,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "46d0f029a5927e4eef2c5527d308bdfd5377060a6fe796d01e876210416a4469",
+      "sha256": "7186563543687ad22c57cab6ca0979f390b279891b9b9e3a8c4f493f97dbea93",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

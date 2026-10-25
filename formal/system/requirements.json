@@ -11554,7 +11554,7 @@
       "failure": "Unknown group metadata fails explicitly; record-dependent and unavailable routes are excluded.",
       "recovery": "Correct invalid registry metadata; existing sidebar error boundary remains in place.",
       "observability": "Sidebar, feature and access regressions; route registry audit and browser navigation checks.",
-      "property": "Standalone destination coverage, unique concrete paths and per-session access filtering. A fully loaded mobile menu keeps its close control inside the viewport and restores focus after dismissal.",
+      "property": "Standalone destination coverage, unique concrete paths and per-session access filtering. A fully loaded mobile menu keeps its close control inside the viewport and restores focus after dismissal. Access-request creation without a selected target is excluded; personal request history remains discoverable.",
       "implementation": [
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/features/featureRegistry.ts",

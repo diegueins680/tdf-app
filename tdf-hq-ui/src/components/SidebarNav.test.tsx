@@ -119,7 +119,7 @@ describe('SidebarNav', () => {
     expect(items.every(item => !/[:*]/.test(item.path))).toBe(true);
     for (const feature of featureRegistry) {
       const route = feature.webRoute;
-      if (!route || /[:*]/.test(route) || feature.technical || ['incomplete', 'broken'].includes(feature.maturity)) continue;
+      if (!route || /[:*]/.test(route) || feature.technical || feature.id === 'access-requests.create' || ['incomplete', 'broken'].includes(feature.maturity)) continue;
       expect(items.filter(item => item.path === route)).toHaveLength(1);
     }
     for (const route of ['/admin/directorio', '/admin/artistas-enriquecimiento', '/admin/merch', '/label/ddex', '/musica/biblioteca']) {
@@ -129,6 +129,8 @@ describe('SidebarNav', () => {
     expect(items.some(item => item.path === '/label/releases/nuevo')).toBe(true);
     expect(items.some(item => item.path === '/oauth/google-drive/callback')).toBe(false);
     expect(items.some(item => item.path === '/pagos/retorno')).toBe(false);
+    expect(items.some(item => item.path === '/solicitudes-acceso/nueva')).toBe(false);
+    expect(items.some(item => item.path === '/solicitudes-acceso')).toBe(true);
   });
 
   it('makes artist enrichment and directory review discoverable in the rendered admin menu', async () => {

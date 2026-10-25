@@ -288,7 +288,9 @@ items for available features that lacked them. The sidebar retains the existing
 curated labels and groups and supplements them with all registered, usable,
 nontechnical routes that have a concrete destination. Each path appears once.
 Newly registered standalone features receive a menu destination automatically.
-Contextual pages requiring a record ID remain reachable through their list pages;
+Contextual pages requiring a record ID remain reachable through their list pages.
+Access-request creation requires a selected feature query parameter and stays in
+its contextual request action; Mis solicitudes de acceso remains in the menu.
 OAuth/payment returns, authentication callbacks, incomplete and broken features
 are excluded. The two additional concrete editor destinations are Mi perfil de
 artista and Nuevo lanzamiento. Crear perfil de artista and Nuevo evento are placed
