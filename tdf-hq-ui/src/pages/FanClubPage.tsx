@@ -134,7 +134,7 @@ export default function FanClubPage() {
           description={clubLoadFailed
             ? 'No pudimos comprobar su disponibilidad. Revisa tu conexión e inténtalo de nuevo.'
             : validArtistId
-              ? 'Puedes visitar el perfil público del artista para conocer su música y sus enlaces.'
+              ? 'Consulta el perfil público del artista o sigue explorando en Comunidad.'
               : 'El enlace no identifica un club válido.'}
           actionLabel={clubLoadFailed ? 'Reintentar' : validArtistId ? 'Ver perfil del artista' : 'Volver a la comunidad'}
           actionHref={clubLoadFailed ? undefined : validArtistId ? `/artista/${artistIdNum}` : '/fans'}
