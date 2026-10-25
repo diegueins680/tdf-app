@@ -1934,6 +1934,22 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
   END IF;
+  -- Replaying an older CREATE OR REPLACE FUNCTION can discard proconfig while
+  -- leaving its migration receipt and trigger binding intact. Inspect both
+  -- installed lookup boundaries instead of trusting those receipts.
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid=to_regprocedure('public.commerce_validate_ledger_posting()')
+      AND proconfig @> ARRAY['search_path=pg_catalog, public, pg_temp']::text[]
+      AND NOT prosecdef AND prorettype='trigger'::regtype
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid=to_regprocedure('public.commerce_protect_posted_ledger()')
+      AND proconfig @> ARRAY['search_path=pg_catalog, public, pg_temp']::text[]
+      AND NOT prosecdef AND prorettype='trigger'::regtype
+  ) THEN
+    RAISE EXCEPTION 'Ledger trigger trusted lookup settings are missing or changed';
+  END IF;
   FOREACH commerce_table IN ARRAY ARRAY[
     'commerce_checkout_session',
     'commerce_checkout_line_item',

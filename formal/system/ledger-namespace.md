@@ -44,3 +44,20 @@ not establish PostgreSQL name-resolution refinement, arbitrary SQL/MVCC behavior
 caller retries, missing-history repair, a production privilege policy or deployed
 correspondence. Table owners/superusers can still change DDL or disable guards.
 Existing complete implementation/refinement and release holds remain open.
+
+The startup schema gate independently checks both installed trigger functions for
+`search_path=pg_catalog, public, pg_temp`, trigger return type and SECURITY INVOKER.
+A matching migration receipt alone is insufficient: replaying a predecessor can
+remove a function setting while retaining its receipt. The full-schema
+`ledger-startup-namespace.mjs` regression runs the actual rendered startup verifier
+with rollback-scoped removal, reordering, caller-path, signature and definer
+mutations for each function, and permits an unrelated function timeout setting.
+It compares exact definitions and migration receipts afterward. These controls
+establish detection of the named configuration drift; they do not verify arbitrary
+function bodies, trigger bindings or privileged-owner behavior.
+
+CI path classification must select the backend PostgreSQL lane when the schema
+verifier, ledger/provider/expiry runner or ledger regression harness changes.
+The path-selector regression checks nine affected paths; the original selector
+skipped backend validation for all nine. Repository-only tests cannot replace
+execution of the installed PostgreSQL guards.

@@ -152,6 +152,7 @@
       "scripts/__tests__/ledger-posting-namespace.py",
       "scripts/__tests__/ledger-posting-snapshot.py",
       "scripts/__tests__/ledger-posting-upgrade.py",
+      "scripts/__tests__/ledger-startup-namespace.mjs",
       "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
       "scripts/__tests__/legacy-escrow-contract.test.mjs",
       "scripts/__tests__/local-api-fixture.test.mjs",
@@ -3229,7 +3230,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
+      "sha256": "c95c36e8dd5bd2e15c38999f86f05e33c2a5cee096141db132b855be6a713ae7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3464,6 +3465,12 @@
       "id": "SURFACE-f4cef1242676dea7",
       "path": "scripts/__tests__/ledger-posting-upgrade.py",
       "sha256": "edbf00b9749ad0c784181e984df58becbfa009f3934f55413b11801628d1a6bb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c4f7d8b67539027d",
+      "path": "scripts/__tests__/ledger-startup-namespace.mjs",
+      "sha256": "8ba0f924ee1c45acd330928e019784cbcd4c8ebea81e3e8a543f5c162157e76c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3913,7 +3920,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
+      "sha256": "84da33d7f0b87eba2a126db681bb0127abe666871de48f05a0b14746f1d967ae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4375,7 +4382,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "6c838849bdc165b38bcdb12d8ce51ba6b9ed07ccc55db4b6c09c664d12d3c23c",
+      "sha256": "7e3dc3b8c40d68aa9ff4331ed2094196822617a9498be1f5da10449f286b4a47",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5443,7 +5450,7 @@
     {
       "id": "SURFACE-c3dd26e569b5cb41",
       "path": "scripts/test-ledger-posting.sh",
-      "sha256": "316d81545ce5bcf27c314743b669dd0a7f167e76378e3a538118aa1a6a69eb26",
+      "sha256": "b838a96f759e1d0650cd67180a1847649965f5aff5b17c57896a4988096d3cd9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5707,7 +5714,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "c041bf4d07b5de6aecf223b3801a6428294559243b8165dad5b46c9d9f45c237",
+      "sha256": "cc1cc8675a93f9c674ab943f1282afa040f9be50d6e9e4a0775a46b8069377a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26674,7 +26681,7 @@
     },
     {
       "path": "formal/system/ledger-namespace.md",
-      "sha256": "b407a79f91650015222e692e116667a5e4e84c9d642e274555731eaf1286381c",
+      "sha256": "3c3e778f4db95f9c4dcb8a89cac81c8f057563c46353384333770899e6c70f9a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27003,7 +27010,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7c88b964f3eb4ae7e2631db62a794637321a9fbba65e472d7378a3461698e609",
+      "sha256": "148f117f94dc3c0fe2359e0afa52b7a0fbc532dd177939af11ae5158f4a161e9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

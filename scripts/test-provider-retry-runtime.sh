@@ -92,6 +92,7 @@ for migration in \
   2026-10-06_ticket_refund_request_binding \
   2026-10-12_ledger_posting_integrity \
   2026-10-16_ledger_entry_write_fence \
+  2026-10-24_ledger_guard_namespace \
   2026-10-12_checkout_line_snapshot_fixed; do
   psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
     -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/$migration.sql" >/dev/null
