@@ -1115,6 +1115,11 @@
       "id": "2026-10-22_checkout_terms_history_append_only",
       "path": "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql",
       "introducedBy": "5f32d4054a35bc76e7505ed4f83f1b6480130d25"
+    },
+    {
+      "id": "2026-10-24_ledger_guard_namespace",
+      "path": "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
+      "introducedBy": "9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391"
     }
   ]
 }

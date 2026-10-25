@@ -111,6 +111,10 @@ run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant Re
 run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
 run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
 
+run_tlc LedgerNamespace.tla LedgerNamespace.cfg ledger-namespace
+run_negative_tlc LedgerNamespacePosting.cfg ledger-namespace-posting 'Invariant PostedBalanced is violated' LedgerNamespace.tla
+run_negative_tlc LedgerNamespaceEntry.cfg ledger-namespace-entry 'Invariant PostedBalanced is violated' LedgerNamespace.tla
+
 run_tlc MigrationLedger.tla MigrationLedger.cfg migration-ledger
 run_negative_tlc MigrationLedgerRecordAfterCommit.cfg migration-ledger-record-after-commit 'Invariant EffectsRecorded is violated' MigrationLedger.tla
 run_negative_tlc MigrationLedgerBatchUnchecked.cfg migration-ledger-batch-unchecked 'Invariant NoRunPastDrift is violated' MigrationLedger.tla
