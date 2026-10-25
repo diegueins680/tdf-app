@@ -222,6 +222,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const [loading, setLoading] = useState(true);
   const [persistScope, setPersistScope] = useState<SessionStorageScope>(initialStoredState.scope);
   const sessionVersionRef = useRef(0);
+  const pendingLogoutTarget = useRef<{ revision: string; token: string | null } | null>(null);
 
   const updateSessionState = useCallback((next: SessionUser | null) => {
     reconcileSessionPersonalData(currentSession?.partyId, next?.partyId);
@@ -235,6 +236,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
     setLoading(false);
     updateSessionState(null);
     transientApiToken = null;
+    pendingLogoutTarget.current = null;
   }, [updateSessionState]);
 
   useEffect(() => {
@@ -339,11 +341,14 @@ export function SessionProvider({ children }: SessionProviderProps) {
   }, [updateSessionState]);
 
   const logout = useCallback(() => {
-    const apiToken = getStoredSessionToken();
+    const apiToken = getStoredSessionToken() ?? pendingLogoutTarget.current?.token ?? null;
     const revision = beginLogoutIntent();
     clearLocalSessionState();
+    // Retain only in memory and only for revocation; never restore it as login.
+    pendingLogoutTarget.current = { revision, token: apiToken };
     const request = logoutSessionRequest(apiToken ?? undefined).then(() => {
       finishLogoutIntent(revision, true);
+      if (pendingLogoutTarget.current?.revision === revision) pendingLogoutTarget.current = null;
     }, () => {
       finishLogoutIntent(revision, false);
       logger.warn('Server sign-out is unconfirmed');

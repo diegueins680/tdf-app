@@ -24,7 +24,8 @@ function Probe() {
   queryClient = useQueryClient();
   const { session, loading, login, logout } = useSession();
   return <><output>{loading ? 'loading' : session?.username ?? 'anonymous'}</output>
-    <button onClick={logout}>logout</button><button onClick={() => login(snapshot)}>fresh login</button></>;
+    <button onClick={logout}>logout</button><button onClick={() => login(snapshot)}>fresh login</button>
+    <button onClick={() => login({ ...snapshot, apiToken: 'fictional-revocation-target' })}>fresh bearer login</button></>;
 }
 let root: ReturnType<typeof createRoot>;
 let container: HTMLDivElement;
@@ -100,4 +101,18 @@ it.each([true, false])('invalidates A when remote login is already cleared befor
   expect(queryClient).not.toBe(oldClient);
   expect(oldClient.getQueryData(['synthetic-private-A'])).toBeUndefined();
   expect(queryClient.getQueryData(['synthetic-private-A'])).toBeUndefined();
+});
+
+
+it('retains a bearer only for explicit revocation retry and discards it after confirmation', async () => {
+  await act(async () => fireEvent.click(container.querySelectorAll('button')[2]!));
+  await act(async () => fireEvent.click(container.querySelector('button')!));
+  expect(logoutRequest).toHaveBeenLastCalledWith('fictional-revocation-target');
+  expect(getLogoutStatus()).toBe('unconfirmed');
+  logoutRequest.mockResolvedValueOnce();
+  await act(async () => fireEvent.click(container.querySelector('button')!));
+  expect(logoutRequest.mock.calls[1]).toEqual(['fictional-revocation-target']);
+  expect(getLogoutStatus()).toBe('confirmed');
+  await act(async () => fireEvent.click(container.querySelector('button')!));
+  expect(logoutRequest.mock.calls[2]).toEqual([undefined]);
 });

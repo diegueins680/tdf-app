@@ -14,7 +14,13 @@ uploads remain available when no explicit logout intent exists.
 The existing response deadline bounds the single revocation request; include an
 available application bearer and the HttpOnly browser cookie without extracting
 or logging the cookie. Only a successful response confirms server revocation.
-Network, timeout and authorization errors remain unconfirmed. Display that
+Network, timeout and authorization errors remain unconfirmed. Retain an available
+bearer in memory only for explicit revocation retries, discard it on confirmation
+or another authentication occurrence, and never expose it through session getters
+or persistent storage. With no readable bearer, verify a valid cookie target
+before POST: an empty-target 204 cannot certify revocation. A lost target after
+reload remains unconfirmed. One total 30-second deadline covers both lookup and
+POST; the lookup never adopts a session. Display that
 uncertainty and offer explicit retry. Reloading a pending intent without its
 original request treats confirmation as unavailable. No automatic revocation
 retry may accidentally target a later user's cookie.

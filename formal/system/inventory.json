@@ -6782,7 +6782,7 @@
     {
       "id": "SURFACE-c7a9306039571e52",
       "path": "tdf-hq-ui/src/api/logoutIntent.test.ts",
-      "sha256": "687073169404cc8f167fb3e231f7c364016ec6799f5c4db5a382400a54eb4edb",
+      "sha256": "5366999e451b40e12be270e6db4ec4142761877b23aacf111733b5babbc5c66c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7046,7 +7046,7 @@
     {
       "id": "SURFACE-e999a12d43def7e6",
       "path": "tdf-hq-ui/src/api/session.ts",
-      "sha256": "c06a1e7a1602f3dbc81f611c9dc66d0a9e13028cb14b8e9734bf98a1f018e8b9",
+      "sha256": "4b3fccc0019fa402a84982b83b569fc47e4342f71dd70e2ddaaee7f327f3c372",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10184,7 +10184,7 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "525d6f5f348aa91c6a7786c00a77f4daab8cc9f225b09709fdacf24f3f2ac337",
+      "sha256": "068c587bd7473f82b1a0661541643b9aeb701b75308933c0eee679f18fdc0c7b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10196,7 +10196,7 @@
     {
       "id": "SURFACE-6996ecfbe844e690",
       "path": "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-      "sha256": "53de5077dfe4a225331a5d30960ebbbeb102aff92d9b1128f2b8c778df8427a3",
+      "sha256": "6d28d26c28078996f37d16bb00ea2e12f9af21e2583ed52cd9f1c6f5c9368777",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26261,7 +26261,7 @@
     },
     {
       "path": "formal/system/logout-intent.md",
-      "sha256": "ca0f40f6eb8cdf2b1801710bfbb6b429b85d3a7f4ece5586c81d052bdacccf06",
+      "sha256": "040b1c15637cf21fe9b489b8af6648b79b7d605c46ca813f10f954391b089bd4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -1,5 +1,5 @@
 import { hasLogoutIntent } from '../session/logoutIntent';
-import { fetchWithDeadline } from './requestDeadline';
+import { fetchWithDeadline, RequestTimeoutError } from './requestDeadline';
 import type { components } from './generated/types';
 import { resolveApiBase } from '../config/apiBase';
 
@@ -40,13 +40,35 @@ export async function loadSessionSnapshot(options: { signal?: AbortSignal } = {}
 }
 
 export async function logoutSessionRequest(apiToken?: string): Promise<void> {
-  await fetchWithDeadline(sessionUrl('/session/logout'), {
-    method: 'POST',
-    credentials: 'include',
-    ...(apiToken ? { headers: { Authorization: `Bearer ${apiToken}` } } : {}),
-  }, (response) => response.ok
-    ? Promise.resolve()
-    : Promise.reject(new Error('Server sign-out is unconfirmed')));
+  const controller = new AbortController();
+  const deadline = setTimeout(() => controller.abort(new RequestTimeoutError()), 30_000);
+  try {
+    if (!apiToken) {
+      // An empty logout POST also returns 204. Verify an available cookie target
+      // before treating that response as revocation. Never adopt this snapshot.
+      const hasCookieTarget = await fetchWithDeadline(sessionUrl('/session'), {
+        credentials: 'include', cache: 'no-store', signal: controller.signal,
+      }, async (response) => {
+        if (!response.ok) throw new Error('Server sign-out is unconfirmed');
+        const snapshot = await response.json() as SessionResponseDTO | null;
+        return snapshot !== null && Number.isSafeInteger(snapshot.partyId) && snapshot.partyId > 0;
+      });
+      if (!hasCookieTarget) throw new Error('Server sign-out is unconfirmed');
+    }
+    await fetchWithDeadline(sessionUrl('/session/logout'), {
+      method: 'POST',
+      credentials: 'include',
+      signal: controller.signal,
+      ...(apiToken ? { headers: { Authorization: `Bearer ${apiToken}` } } : {}),
+    }, (response) => response.ok
+      ? Promise.resolve()
+      : Promise.reject(new Error('Server sign-out is unconfirmed')));
+  } catch (error) {
+    if (controller.signal.aborted) throw controller.signal.reason;
+    throw error;
+  } finally {
+    clearTimeout(deadline);
+  }
 }
 
 export async function completeOnboardingProgress(

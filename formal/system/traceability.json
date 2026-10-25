@@ -12443,7 +12443,7 @@
     "tdf-hq-ui/src/api/inventory.ts": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
     "tdf-hq-ui/src/api/invoices.ts": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
-    "tdf-hq-ui/src/api/logoutIntent.test.ts": "687073169404cc8f167fb3e231f7c364016ec6799f5c4db5a382400a54eb4edb",
+    "tdf-hq-ui/src/api/logoutIntent.test.ts": "5366999e451b40e12be270e6db4ec4142761877b23aacf111733b5babbc5c66c",
     "tdf-hq-ui/src/api/musicReleases.money.test.ts": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
     "tdf-hq-ui/src/api/musicReleases.ts": "150f499252556c86539bbbd5ec5aed68ff2c7031e5e2a6540d59fc87ecb9b917",
     "tdf-hq-ui/src/api/musicReleases.upload.test.ts": "e5a48b23eb9974f54078b4095084a8f2419d193742aba76aee3f798fa85ed695",
@@ -12453,7 +12453,7 @@
     "tdf-hq-ui/src/api/parties.ts": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
     "tdf-hq-ui/src/api/requestDeadline.ts": "f8294c115c2638bb82dc0f61ad5f2e4a63018b3d17490d1a7ee1f64d56080a99",
     "tdf-hq-ui/src/api/session.test.ts": "b00e52d37736c2f913029b4ebd6d327b488b4fb00515e7be468f4788c0bf775e",
-    "tdf-hq-ui/src/api/session.ts": "c06a1e7a1602f3dbc81f611c9dc66d0a9e13028cb14b8e9734bf98a1f018e8b9",
+    "tdf-hq-ui/src/api/session.ts": "4b3fccc0019fa402a84982b83b569fc47e4342f71dd70e2ddaaee7f327f3c372",
     "tdf-hq-ui/src/api/socialEvents.ts": "3824f428b65edc40080c73f42638cd328470c9f390f4ebf732a2dbfe23fe3b42",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
@@ -12632,9 +12632,9 @@
     "tdf-hq-ui/src/routes/protectedRoutes.tsx": "7b30fe9684172ea1ce741dfa17b650a75e30d7f04bfbfa1a6e6b8134db4f1761",
     "tdf-hq-ui/src/routes/publicRoutes.test.tsx": "b1d51f44ec9320845ae9fe0027eec9f45e088ae3b3d15b991f986e31448bbb5c",
     "tdf-hq-ui/src/routes/publicRoutes.tsx": "0f6ffdb7a973c5e0f419dd9dce384e326d82a4e8615a61deb4e713bc39e84629",
-    "tdf-hq-ui/src/session/SessionContext.tsx": "525d6f5f348aa91c6a7786c00a77f4daab8cc9f225b09709fdacf24f3f2ac337",
+    "tdf-hq-ui/src/session/SessionContext.tsx": "068c587bd7473f82b1a0661541643b9aeb701b75308933c0eee679f18fdc0c7b",
     "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx": "d73f62bb5fd41d238f3b9b894dc9e935a525e51885dfd75b6c0efe1b7fd2a2f4",
-    "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx": "53de5077dfe4a225331a5d30960ebbbeb102aff92d9b1128f2b8c778df8427a3",
+    "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx": "6d28d26c28078996f37d16bb00ea2e12f9af21e2583ed52cd9f1c6f5c9368777",
     "tdf-hq-ui/src/session/SessionProviders.test.tsx": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
     "tdf-hq-ui/src/session/SessionProviders.tsx": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
     "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx": "5109459ac552aec840246f08366bf65ec95a0fe26579b7664cee39dcfdae6250",
@@ -30225,7 +30225,7 @@
     {
       "id": "SURFACE-c7a9306039571e52",
       "path": "tdf-hq-ui/src/api/logoutIntent.test.ts",
-      "sha256": "687073169404cc8f167fb3e231f7c364016ec6799f5c4db5a382400a54eb4edb",
+      "sha256": "5366999e451b40e12be270e6db4ec4142761877b23aacf111733b5babbc5c66c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30587,7 +30587,7 @@
     {
       "id": "SURFACE-e999a12d43def7e6",
       "path": "tdf-hq-ui/src/api/session.ts",
-      "sha256": "c06a1e7a1602f3dbc81f611c9dc66d0a9e13028cb14b8e9734bf98a1f018e8b9",
+      "sha256": "4b3fccc0019fa402a84982b83b569fc47e4342f71dd70e2ddaaee7f327f3c372",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35511,7 +35511,7 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "525d6f5f348aa91c6a7786c00a77f4daab8cc9f225b09709fdacf24f3f2ac337",
+      "sha256": "068c587bd7473f82b1a0661541643b9aeb701b75308933c0eee679f18fdc0c7b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35543,7 +35543,7 @@
     {
       "id": "SURFACE-6996ecfbe844e690",
       "path": "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-      "sha256": "53de5077dfe4a225331a5d30960ebbbeb102aff92d9b1128f2b8c778df8427a3",
+      "sha256": "6d28d26c28078996f37d16bb00ea2e12f9af21e2583ed52cd9f1c6f5c9368777",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

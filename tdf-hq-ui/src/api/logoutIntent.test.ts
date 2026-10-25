@@ -58,3 +58,36 @@ it('does not submit a queued fresh login after a newer logout', async () => {
   finish(); await rejection;
   expect(fetchMock).not.toHaveBeenCalled();
 });
+
+
+it('does not confirm an empty revocation request when neither bearer nor valid cookie is available', async () => {
+  fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => null } as Response);
+  await expect(logoutSessionRequest()).rejects.toThrow('unconfirmed');
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  expect(fetchMock.mock.calls[0]?.[0]).toEqual(expect.stringContaining('/session'));
+  expect(fetchMock.mock.calls[0]?.[1]?.method).toBeUndefined();
+});
+
+it('verifies a cookie-only target before revocation, without adopting the snapshot', async () => {
+  fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ partyId: 42 }) } as Response);
+  fetchMock.mockResolvedValueOnce({ ok: true, status: 204 } as Response);
+  await logoutSessionRequest();
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+  expect(fetchMock.mock.calls[1]?.[1]).toEqual(expect.objectContaining({ method: 'POST', credentials: 'include' }));
+});
+
+it('keeps one total deadline through cookie lookup and the revocation response', async () => {
+  jest.useFakeTimers();
+  fetchMock.mockImplementationOnce(async () => {
+    await new Promise(resolve => setTimeout(resolve, 20000));
+    return { ok: true, status: 200, json: async () => ({ partyId: 42 }) } as Response;
+  });
+  fetchMock.mockImplementationOnce((_, init) => new Promise((_, reject) => {
+    init?.signal?.addEventListener('abort', () => {
+      const reason: unknown = init.signal?.reason;
+      reject(reason instanceof Error ? reason : new Error('aborted'));
+    });
+  }));
+  const result = expect(logoutSessionRequest()).rejects.toThrow('deadline');
+  await jest.advanceTimersByTimeAsync(30000); await result;
+});
