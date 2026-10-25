@@ -255,3 +255,21 @@ forma suficiente. No hay evidencia para atribuir mejoras de conversión o retenc
 Los requisitos nuevos conservan clasificación formal **PARTIAL**. Esta entrega no
 satisface todavía toda la lista de aceptación del encargo, ni se presenta como
 integrada, desplegada o verificada en producción.
+
+## Continuación y conciliación de main — 25/oct, después de 19:40 UTC
+
+Diego confirmó que el evento 141 se celebró y ya finalizó. Esto resuelve la duda
+sobre lo ocurrido; no acredita presencia de los RSVP ni consentimiento de campaña.
+La lectura productiva de las 19:03 UTC conservaba on_sale, sin migración de
+recuerdos ni acceso público habilitado para completed. La corrección de estado
+espera ese soporte desplegado para no ocultar la página. Envíos reales: cero.
+
+Se fusionó normalmente main protegido cfe75b187 después de la integración de #607.
+Los 138 requisitos de ese main se conservaron íntegros junto con nuestros dos.
+Los conflictos se limitaron a los índices y requisitos generados; la traceabilidad
+se regeneró con su herramienta específica. El backend, SQL, contratos y gitlink
+móvil de esta entrega permanecen byte a byte iguales al head previamente aprobado
+dc9fb129. Se repiten pruebas de composición web y controles de repositorio; CI y
+revisión independiente deben vincularse al nuevo head, sin reutilizar la aprobación
+anterior. La moderación fuente avanza en una rama sucesora separada, con su propia
+evidencia PostgreSQL/HTTP/navegador; no se presenta como parte de este PR ni desplegada.
