@@ -18,9 +18,10 @@ jest.unstable_mockModule('../features/interactions/InteractionPanel', () => ({ I
 jest.unstable_mockModule('@mui/icons-material', () => Object.fromEntries(['PushPinOutlined', 'VisibilityOff', 'HowToVote', 'CalendarMonth', 'Forum', 'Groups', 'Add', 'PhotoLibrary', 'Report', 'Person', 'LockOutlined', 'MailOutline', 'Whatshot', 'TrendingUp', 'FiberNew'].map(name => [name, () => null])));
 const { default: FanClubPage } = await import('./FanClubPage');
 const clients: QueryClient[] = [];
-function mount(route = '/fans/clubs/9') {
+function mount(route = '/fans/clubs/9', cachedClub = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   clients.push(client);
+  if (cachedClub) client.setQueryData(['fan-club', 9, 'auth'], club);
   render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[route]}><Routes><Route path="/fans/clubs/:artistId" element={<FanClubPage />} /></Routes></MemoryRouter></QueryClientProvider>);
   return client;
 }
@@ -94,7 +95,7 @@ it('keeps a readable cached club when a background refresh fails', async () => {
   expect(screen.queryByText('Club no disponible', { exact: true })).toBeNull();
 });
 
-it.each(['0', '-1', '9invalid', '9007199254740992'])('does not query a different club for invalid identifier%s', async identifier => {
+it.each(['0', '-1', '9invalid', '9007199254740992', '1e2', '0x9', '1.0', '+9', '9%20'])('does not query a different club for invalid identifier%s', async identifier => {
   mount(`/fans/clubs/${identifier}`);
   await screen.findByRole('link', { name: 'Volver a la comunidad' });
   expect(screen.queryByRole('link', { name: 'Ver perfil del artista' })).toBeNull();
@@ -115,4 +116,12 @@ it('does not claim absence while the initial request is paused offline', async (
   expect(getMyClub).not.toHaveBeenCalled();
   await act(async () => { onlineManager.setOnline(true); });
   await screen.findByRole('heading', { name: 'Club Sintético', level: 3 });
+});
+
+it('rejects an invalid alias even when the numeric club is cached', async () => {
+  mount('/fans/clubs/0x9', true);
+  await screen.findByText('Club no disponible', { exact: true });
+  expect(screen.queryByRole('heading', { name: 'Club Sintético', level: 3 })).toBeNull();
+  expect(screen.queryByRole('link', { name: 'Ver perfil del artista' })).toBeNull();
+  expect(getMyClub).not.toHaveBeenCalled();
 });

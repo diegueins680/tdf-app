@@ -12302,8 +12302,8 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "0d88f1cb2a534ca742147e821578b297c0c12f37ad66569cc5cad9da6f26408f",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "01b3b5cf78791e627b85188e4bd211b37b7f1f88389d6b81bc5526110cd65ebd",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
-    "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": "6bd20c390108e75d63b00d74693fae4de31ef398b6a80d9fb28c85c90387a5b6",
-    "tdf-hq-ui/src/pages/FanClubPage.tsx": "72631656d1a288baec43aff43e523d0bb573629d43db642259ba7d9a33c35b86",
+    "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
+    "tdf-hq-ui/src/pages/FanClubPage.tsx": "3cf4ad2e75a4c1450078dcde293184ef38e69f4daeacee81261baabdab064750",
     "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "d2554fe091549fbb6f64a905279e676cec7d67949f20116c11b95fa726945c35",
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "8cdf4c124dc5e37d6234c602bbc323db537d87b6248c470ceaa1a442dae4c1c9",
     "tdf-hq-ui/src/pages/FanHubPage.tsx": "305d86768d2c3ce6adc5ff4144aef835aac7d0521788141a2ef6487b04a84127",
@@ -33050,7 +33050,7 @@
     {
       "id": "SURFACE-adbe6d097447b912",
       "path": "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
-      "sha256": "6bd20c390108e75d63b00d74693fae4de31ef398b6a80d9fb28c85c90387a5b6",
+      "sha256": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33062,7 +33062,7 @@
     {
       "id": "SURFACE-60cd6659a77e2df2",
       "path": "tdf-hq-ui/src/pages/FanClubPage.tsx",
-      "sha256": "72631656d1a288baec43aff43e523d0bb573629d43db642259ba7d9a33c35b86",
+      "sha256": "3cf4ad2e75a4c1450078dcde293184ef38e69f4daeacee81261baabdab064750",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

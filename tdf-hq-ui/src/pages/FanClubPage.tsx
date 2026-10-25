@@ -45,7 +45,7 @@ const optionalImageSource = (value: string | null | undefined): string | undefin
 export default function FanClubPage() {
   const { artistId } = useParams();
   const artistIdNum = Number(firstNonEmptyString(artistId, '0'));
-  const validArtistId = Number.isSafeInteger(artistIdNum) && artistIdNum > 0;
+  const validArtistId = /^\d+$/.test(artistId ?? '') && Number.isSafeInteger(artistIdNum) && artistIdNum > 0;
   const { session } = useSession();
   const isAuthenticated = Boolean(session);
   const [tab, setTab] = useLocalValue(0);
@@ -61,7 +61,7 @@ export default function FanClubPage() {
   const loginPath = useMemo(() => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`), [location]);
 
   const clubQuery = useQuery({
-    queryKey: ['fan-club', artistIdNum, isAuthenticated ? 'auth' : 'public'],
+    queryKey: ['fan-club', validArtistId ? artistIdNum : 'invalid', isAuthenticated ? 'auth' : 'public'],
     queryFn: () => isAuthenticated ? Fans.getMyClub(artistIdNum) : Fans.getClub(artistIdNum),
     enabled: validArtistId,
   });
