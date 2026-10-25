@@ -45,9 +45,14 @@ test('new participant preserves event intent, recovers a failed text publication
   await expect(page).toHaveURL(/\/login\?/);
   const login = new URL(page.url());
   expect(login.searchParams.get('redirect')).toBe(destination);
-  login.searchParams.set('signup', '1');
-  await page.goto(login.toString());
+  // The URL can change before the protected-route redirect finishes. Wait
+  // for the usable login screen, then follow the same account action as a user.
+  await page.getByRole('button', { name: 'Crear cuenta general', exact: true }).click();
   const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  const signup = new URL(page.url());
+  expect(signup.searchParams.get('redirect')).toBe(destination);
+  expect(signup.searchParams.get('signup')).toBe('1');
   await dialog.getByLabel('Correo').fill('memory.new@persona.test');
   await dialog.getByLabel('Contraseña', { exact: false }).first().fill('synthetic-long-password-141');
   await dialog.getByRole('button', { name: 'Crear e ingresar' }).click();

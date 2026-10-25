@@ -29,6 +29,10 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 ## Canonical package
 
+- [payment-intent-expiry.md](payment-intent-expiry.md): database-time admission
+  after checkout locking, actual PostgreSQL lock-wait counterexamples, three
+  compiled source controls and a bounded model with four negative configurations.
+
 - [music-money-wire.md](music-money-wire.md): exact Int64 transport, confirmed
   purchase price, source-bound numeric SMT obligation and compatible clients.
 - [music-test-entrypoint.md](music-test-entrypoint.md): canonical execution of
