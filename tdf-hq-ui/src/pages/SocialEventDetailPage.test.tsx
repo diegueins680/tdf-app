@@ -188,6 +188,23 @@ describe('SocialEventDetailPage ticket sharing', () => {
     view.unmount();
   });
 
+  it('retains the selected file after a malformed upload reply and permits a confirmed retry', async () => {
+    activeSession = { partyId: 9 };
+    uploadMomentMediaMock.mockResolvedValueOnce({} as { eiuPublicUrl: string }).mockResolvedValueOnce({ eiuPublicUrl: 'https://assets.persona.test/confirmed.png' });
+    createMomentMock.mockResolvedValue({ emId: '993', emAuthorName: 'Synthetic', emMediaUrl: 'https://assets.persona.test/confirmed.png', emMediaType: 'image' });
+    const view = renderPage();
+    await screen.findByRole('combobox', { name: 'Tipo de recuerdo' });
+    fireEvent.change(view.container.querySelector('input[type="file"]')!, { target: { files: [new File(['synthetic'], 'retry.png', { type: 'image/png' })] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
+    await screen.findByText('No se pudo confirmar la carga. Conservamos el archivo para reintentar.');
+    expect(createMomentMock).not.toHaveBeenCalled();
+    expect(screen.getByText('retry.png')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
+    await waitFor(() => expect(createMomentMock).toHaveBeenCalledTimes(1));
+    expect(uploadMomentMediaMock).toHaveBeenCalledTimes(2);
+    view.unmount();
+  });
+
   it('does not publish an uploaded draft after the authentication epoch changes', async () => {
     activeSession = { partyId: 9 };
     let finishUpload!: (value: { eiuPublicUrl: string }) => void;

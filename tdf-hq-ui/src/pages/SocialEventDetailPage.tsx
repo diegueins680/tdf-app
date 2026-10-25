@@ -142,6 +142,9 @@ export default function SocialEventDetailPage() {
         else {
           const uploaded = await (attempt.extended ? SocialEventsAPI.uploadMomentMedia(attempt.eventId, submittedFile) : SocialEventsAPI.uploadMomentImage(attempt.eventId, submittedFile));
           if (!attempt.isCurrentOwner()) throw sessionChanged();
+          if (!uploaded || typeof uploaded.eiuPublicUrl !== 'string' || !uploaded.eiuPublicUrl.trim()) {
+            throw new Error('No se pudo confirmar la carga. Conservamos el archivo para reintentar.');
+          }
           url = uploaded.eiuPublicUrl;
           uploadedFile.current = { scope: attempt.scope, file: submittedFile, url };
         }
