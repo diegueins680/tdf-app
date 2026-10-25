@@ -127,11 +127,12 @@ original. Base protegida integrada: `089dce6ba` (PR #603 de comprobantes).
 - `468de7907`: cargas móviles propias del evento y procedencia de migración.
 - `aa92ce034`: inventarios y trazabilidad.
 - `9b6512125`: integración normal de main protegido, sin descartar comprobantes.
-- PR principal: pendiente de publicación al cerrar la evidencia local.
+- `8facd40f2`: evidencia final, accesibilidad y sucesores revisados tras integrar main.
+- [PR principal #608](https://github.com/diegueins680/tdf-app/pull/608), borrador publicado. CI del PR iniciado; sus resultados deben comprobarse en el último SHA, separados de la validación local.
 - [PR móvil #168](https://github.com/diegueins680/TDF-mobile/pull/168), borrador
   apilado sobre #163; pin `6b8f4fe6d3efc290587163a5d63b8c4ed401fcd9`.
 
-`main` exige 20 contextos, base actualizada, una aprobación independiente vigente
+La entrega todavía no está fusionada. `main` exige 20 contextos, base actualizada, una aprobación independiente vigente
 y administración sujeta a protecciones. No se activó auto-merge ni se alteraron
 protecciones, aprobaciones, FIFO o políticas de despliegue.
 
