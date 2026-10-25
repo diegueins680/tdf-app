@@ -3440,7 +3440,7 @@
     {
       "id": "SURFACE-07cf326c41f76882",
       "path": "scripts/__tests__/ledger-posting-namespace.py",
-      "sha256": "f788fe9e4b8b973be6602c3c1d88e16fc6481f0367d3c43a6c41e47090d7cdf2",
+      "sha256": "f9c0d0e287f182f2d888f89dad4f5c105446f3ac6b197334d39ddbe2c01f1db2",
       "semanticConformance": "not-established-by-discovery"
     },
     {

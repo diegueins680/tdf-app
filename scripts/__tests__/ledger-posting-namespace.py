@@ -19,13 +19,19 @@ subprocess.run(['node', '--input-type=module', '-e',
 BASE = ['psql', '-XqAt', '-v', 'ON_ERROR_STOP=1', '-d', URL]
 
 
+def require(condition, problem):
+    # Verification must remain fail-closed under python -O / PYTHONOPTIMIZE.
+    if not condition:
+        raise AssertionError(problem)
+
+
 def sql(statement):
     return subprocess.run(BASE, input=statement, text=True, capture_output=True, timeout=30)
 
 
 def value(statement):
     result = sql(statement)
-    assert result.returncode == 0, result.stderr
+    require(result.returncode == 0, result.stderr)
     return result.stdout.strip()
 
 
@@ -156,13 +162,14 @@ for function, expected in controls:
     statement, role, prefix = fixture(function)
     result = sql(statement)
     if function:
-        assert result.returncode != 0 and expected in result.stderr, (function, result.stderr)
+        require(result.returncode != 0 and expected in result.stderr, (function, result.stderr))
     else:
-        assert result.returncode == 0, result.stderr
-    assert definitions() == before, 'Fixture did not restore exact function definitions'
-    assert value(f"SELECT count(*) FROM pg_roles WHERE rolname='{role}'") == '0'
-    assert value(f"SELECT count(*) FROM pg_namespace WHERE nspname='{role}'") == '0'
-    assert value(f"SELECT count(*) FROM public.commerce_ledger_transaction WHERE source_type='{prefix}'") == '0'
+        require(result.returncode == 0, result.stderr)
+    require(definitions() == before, 'Fixture did not restore exact function definitions')
+    require(value(f"SELECT count(*) FROM pg_roles WHERE rolname='{role}'") == '0', 'Role leaked')
+    require(value(f"SELECT count(*) FROM pg_namespace WHERE nspname='{role}'") == '0', 'Schema leaked')
+    require(value(f"SELECT count(*) FROM public.commerce_ledger_transaction WHERE source_type='{prefix}'") == '0',
+            'Ledger fixture leaked')
     print(json.dumps({'case': function or 'trusted-ledger-namespace',
                       'result': 'expected-counterexample' if function else 'passed',
                       'guardsRestoredExactly': True, 'fixtureRolledBack': True}), flush=True)
