@@ -21,6 +21,7 @@ import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventMemoryInvitationControls from '../components/events/EventMemoryInvitations';
 import { EventMemoryInvitations } from '../api/eventMemoryInvitations';
 import { getAuthSessionEpoch } from '../session/authEvents';
+import { useOwnedSessionDraft } from '../session/useOwnedSessionDraft';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 
 const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
@@ -39,6 +40,13 @@ const ticketFee = (faceValueCents: number) => {
   return { buyer, organizer: total - buyer, checkout: faceValueCents + buyer };
 };
 
+interface MomentDraft { caption: string; mediaKind: 'media' | 'audio' | 'text'; mediaUrl: string; file: File | null }
+const emptyMomentDraft: MomentDraft = { caption: '', mediaKind: 'media', mediaUrl: '', file: null };
+interface PublicationAttempt { eventId: string; scope: string; draft: MomentDraft; extended: boolean; ready: boolean; isCurrentOwner: () => boolean }
+interface OwnMomentAction { id: string; mode: 'edit' | 'delete'; caption: string; updatedAt: string }
+interface OwnMomentAttempt { eventId: string; action: OwnMomentAction; isCurrentOwner: () => boolean }
+const sessionChanged = () => new Error('Tu sesión cambió. Vuelve al evento antes de publicar.');
+
 export default function SocialEventDetailPage() {
   const { eventId = '' } = useParams();
   const { search, pathname, hash } = useLocation();
@@ -51,14 +59,20 @@ export default function SocialEventDetailPage() {
   const { currency: preferredCurrency, locale, timezone } = useLocalePreferences();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [caption, setCaption] = useState('');
-  const [mediaKind, setMediaKind] = useState<'media' | 'audio' | 'text'>('media');
-  const [ownAction, setOwnAction] = useState<{ id: string; mode: 'edit' | 'delete'; caption: string; updatedAt: string } | null>(null);
-  const [mediaUrl, setMediaUrl] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const uploadedFile = useRef<{ file: File; url: string } | null>(null);
+  const editorScope = `${eventId}:${accountScope}:${getAuthSessionEpoch()}`;
+  const composer = useOwnedSessionDraft({ ownerId: session?.partyId ?? null, scope: eventId,
+    baseline: emptyMomentDraft, empty: emptyMomentDraft });
+  const { caption, mediaKind, mediaUrl, file } = composer.draft;
+  const setCaption = (value: string) => composer.setDraft((previous) => ({ ...previous, caption: value }));
+  const setMediaKind = (value: MomentDraft['mediaKind']) => composer.setDraft((previous) => ({ ...previous, mediaKind: value }));
+  const setMediaUrl = (value: string) => composer.setDraft((previous) => ({ ...previous, mediaUrl: value }));
+  const setFile = (value: File | null) => composer.setDraft((previous) => ({ ...previous, file: value }));
+  const [storedAction, setStoredAction] = useState<(OwnMomentAction & { scope: string }) | null>(null);
+  const ownAction = storedAction?.scope === editorScope ? storedAction : null;
+  const setOwnAction = (action: OwnMomentAction | null) => setStoredAction(action ? { ...action, scope: editorScope } : null);
+  const uploadedFile = useRef<{ scope: string; file: File; url: string } | null>(null);
   const [publishingPhase, setPublishingPhase] = useState('');
-  useEffect(() => { setCaption(''); setMediaUrl(''); setFile(null); setOwnAction(null); uploadedFile.current = null; if (fileInputRef.current) fileInputRef.current.value = ''; }, [eventId, accountScope]);
+  useEffect(() => { uploadedFile.current = null; if (fileInputRef.current) fileInputRef.current.value = ''; }, [editorScope]);
   const [ticketName, setTicketName] = useState('General');
   const [ticketPrice, setTicketPrice] = useState('');
   const [ticketQuantity, setTicketQuantity] = useState('100');
@@ -106,53 +120,54 @@ export default function SocialEventDetailPage() {
   const capabilities = useQuery({ queryKey: ['event-memory-preferences', session?.partyId], queryFn: EventMemoryInvitations.preferences, enabled: Boolean(session?.partyId), retry: false });
   const supportsExtended = capabilities.data?.supportsExtendedMoments === true;
   const ownMutation = useMutation({
-    mutationFn: async () => {
-      if (!ownAction) return;
-      if (ownAction.mode === 'delete') await SocialEventsAPI.deleteMoment(eventId, ownAction.id);
-      else await SocialEventsAPI.editMoment(eventId, ownAction.id, ownAction.caption, ownAction.updatedAt);
+    mutationFn: async (attempt: OwnMomentAttempt) => {
+      if (!attempt.isCurrentOwner()) throw sessionChanged();
+      const action = attempt.action;
+      if (action.mode === 'delete') await SocialEventsAPI.deleteMoment(attempt.eventId, action.id);
+      else await SocialEventsAPI.editMoment(attempt.eventId, action.id, action.caption, action.updatedAt);
     },
-    onSuccess: () => { setOwnAction(null); void queryClient.invalidateQueries({ queryKey: ['social-event-moments', eventId] }); },
+    onSuccess: (_value, attempt) => { if (attempt.isCurrentOwner()) { setOwnAction(null); void queryClient.invalidateQueries({ queryKey: ['social-event-moments', attempt.eventId] }); } },
   });
   const postMutation = useMutation({
-    mutationFn: async () => {
-      if (!session) throw new Error('Inicia sesión para publicar en el evento.');
-      const publicationEpoch = getAuthSessionEpoch();
-      let url = mediaUrl.trim();
-      if (file) {
-        const maxBytes = file.type.startsWith('image/') ? 10 * 1024 * 1024 : 25 * 1024 * 1024;
-        if (!file.size || file.size > maxBytes) throw new Error('El archivo supera el límite: 10 MB para imágenes y 25 MB para audio o video.');
-        if (!supportsExtended && !file.type.startsWith('image/')) throw new Error('Este servidor todavía solo permite subir imágenes.');
+    mutationFn: async (attempt: PublicationAttempt) => {
+      if (!attempt.ready || !attempt.isCurrentOwner()) throw sessionChanged();
+      const { caption: submittedCaption, mediaKind: kind, mediaUrl: submittedUrl, file: submittedFile } = attempt.draft;
+      let url = submittedUrl.trim();
+      if (submittedFile) {
+        const maxBytes = submittedFile.type.startsWith('image/') ? 10 * 1024 * 1024 : 25 * 1024 * 1024;
+        if (!submittedFile.size || submittedFile.size > maxBytes) throw new Error('El archivo supera el límite: 10 MB para imágenes y 25 MB para audio o video.');
+        if (!attempt.extended && !submittedFile.type.startsWith('image/')) throw new Error('Este servidor todavía solo permite subir imágenes.');
         setPublishingPhase('Subiendo archivo…');
-        if (uploadedFile.current?.file === file) url = uploadedFile.current.url;
+        if (uploadedFile.current?.scope === attempt.scope && uploadedFile.current.file === submittedFile) url = uploadedFile.current.url;
         else {
-          const uploaded = await (supportsExtended ? SocialEventsAPI.uploadMomentMedia(eventId, file) : SocialEventsAPI.uploadMomentImage(eventId, file));
-          if (getAuthSessionEpoch() !== publicationEpoch) throw new Error('Tu sesión cambió. Vuelve al evento antes de publicar.');
+          const uploaded = await (attempt.extended ? SocialEventsAPI.uploadMomentMedia(attempt.eventId, submittedFile) : SocialEventsAPI.uploadMomentImage(attempt.eventId, submittedFile));
+          if (!attempt.isCurrentOwner()) throw sessionChanged();
           url = uploaded.eiuPublicUrl;
-          uploadedFile.current = { file, url };
+          uploadedFile.current = { scope: attempt.scope, file: submittedFile, url };
         }
       }
-      if (mediaKind !== 'text' && !url) throw new Error('Selecciona una imagen o pega un enlace al archivo.');
-      if (mediaKind === 'text' && !caption.trim()) throw new Error('Escribe tu recuerdo antes de publicar.');
-      if (caption.trim().length > 280) throw new Error('La descripción debe tener como máximo 280 caracteres.');
+      if (kind !== 'text' && !url) throw new Error('Selecciona una imagen o pega un enlace al archivo.');
+      if (kind === 'text' && !submittedCaption.trim()) throw new Error('Escribe tu recuerdo antes de publicar.');
+      if (submittedCaption.trim().length > 280) throw new Error('La descripción debe tener como máximo 280 caracteres.');
       const payload: SocialEventMomentCreateDTO = {
-        emCreateCaption: caption.trim() || undefined,
-        emCreateMediaUrl: mediaKind === 'text' ? '' : url,
-        emCreateMediaType: mediaKind === 'text' ? 'text' : mediaKind === 'audio' ? 'audio' : inferredMediaType(url),
+        emCreateCaption: submittedCaption.trim() || undefined,
+        emCreateMediaUrl: kind === 'text' ? '' : url,
+        emCreateMediaType: kind === 'text' ? 'text' : kind === 'audio' ? 'audio' : inferredMediaType(url),
       };
-      if (getAuthSessionEpoch() !== publicationEpoch) throw new Error('Tu sesión cambió. Vuelve al evento antes de publicar.');
+      if (!attempt.isCurrentOwner()) throw sessionChanged();
       setPublishingPhase('Publicando recuerdo…');
-      return SocialEventsAPI.createMoment(eventId, payload);
+      return SocialEventsAPI.createMoment(attempt.eventId, payload);
     },
-    onSuccess: () => {
+    onSuccess: (_value, attempt) => {
+      if (!attempt.isCurrentOwner()) return;
       uploadedFile.current = null;
-      setCaption('');
-      setMediaUrl('');
-      setFile(null);
+      composer.setDraft({ ...emptyMomentDraft, mediaKind: attempt.draft.mediaKind });
       if (fileInputRef.current) fileInputRef.current.value = '';
-      void queryClient.invalidateQueries({ queryKey: ['social-event-moments', eventId] });
+      void queryClient.invalidateQueries({ queryKey: ['social-event-moments', attempt.eventId] });
     },
-    onSettled: () => setPublishingPhase(''),
+    onSettled: (_value, _error, attempt) => { if (attempt.isCurrentOwner()) setPublishingPhase(''); },
   });
+  const publicationPending = postMutation.variables?.scope === editorScope && postMutation.isPending;
   const ticketTierMutation = useMutation({
     mutationFn: () => {
       const price = Number(ticketPrice);
@@ -193,7 +208,8 @@ export default function SocialEventDetailPage() {
   const ticketPurchaseUrl = typeof window === 'undefined'
     ? ''
     : new URL(`/eventos/${encodeURIComponent(eventId)}/entradas`, window.location.origin).toString();
-  const error = eventQuery.error ?? momentsQuery.error ?? postMutation.error;
+  const sessionBoundaryError = postMutation.error instanceof Error && postMutation.error.message === sessionChanged().message;
+  const error = eventQuery.error ?? momentsQuery.error ?? (postMutation.variables?.scope === editorScope || sessionBoundaryError ? postMutation.error : null);
 
   const shareTicketPurchaseLink = async () => {
     if (!event || !ticketPurchaseUrl) return;
@@ -235,17 +251,17 @@ export default function SocialEventDetailPage() {
               ) : (
                 <>
                   <Alert severity="info">Los archivos y enlaces compartidos aquí son públicos. Publica solo contenido que tengas permiso de compartir. No incluyas información privada de otras personas.</Alert>
-                  {supportsExtended && <TextField select label="Tipo de recuerdo" value={mediaKind} disabled={postMutation.isPending} onChange={(event) => { setMediaKind(event.target.value as typeof mediaKind); setFile(null); setMediaUrl(''); }}><MenuItem value="media">Foto o video</MenuItem><MenuItem value="audio">Audio</MenuItem><MenuItem value="text">Solo texto</MenuItem></TextField>}
-                  <TextField disabled={postMutation.isPending} inputRef={captionInput} label="Describe tu publicación" value={caption} onChange={(event) => setCaption(event.target.value)} multiline minRows={2} inputProps={{ maxLength: 280 }} helperText={`${caption.length}/280`} />
-                  <TextField sx={{ display: mediaKind === 'text' ? 'none' : undefined }} label={mediaKind === 'audio' ? 'Enlace público de audio' : 'Enlace de imagen o video'} value={mediaUrl} onChange={(event) => setMediaUrl(event.target.value)} disabled={Boolean(file) || postMutation.isPending} placeholder="https://…" InputProps={{ startAdornment: <LinkIcon sx={{ mr: 1, color: 'text.secondary' }} /> }} />
+                  {supportsExtended && <TextField select label="Tipo de recuerdo" value={mediaKind} disabled={!composer.ready || publicationPending} onChange={(event) => { setMediaKind(event.target.value as typeof mediaKind); setFile(null); setMediaUrl(''); }}><MenuItem value="media">Foto o video</MenuItem><MenuItem value="audio">Audio</MenuItem><MenuItem value="text">Solo texto</MenuItem></TextField>}
+                  <TextField disabled={!composer.ready || publicationPending} inputRef={captionInput} label="Describe tu publicación" value={caption} onChange={(event) => setCaption(event.target.value)} multiline minRows={2} inputProps={{ maxLength: 280 }} helperText={`${caption.length}/280`} />
+                  <TextField sx={{ display: mediaKind === 'text' ? 'none' : undefined }} label={mediaKind === 'audio' ? 'Enlace público de audio' : 'Enlace de imagen o video'} value={mediaUrl} onChange={(event) => setMediaUrl(event.target.value)} disabled={Boolean(file) || !composer.ready || publicationPending} placeholder="https://…" InputProps={{ startAdornment: <LinkIcon sx={{ mr: 1, color: 'text.secondary' }} /> }} />
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-                    <Button disabled={postMutation.isPending} sx={{ display: mediaKind === 'text' ? 'none' : undefined }} component="label" variant="outlined" startIcon={<ImageIcon />}>
+                    <Button disabled={!composer.ready || publicationPending} sx={{ display: mediaKind === 'text' ? 'none' : undefined }} component="label" variant="outlined" startIcon={<ImageIcon />}>
                       {supportsExtended ? 'Seleccionar archivo' : 'Seleccionar imagen'}
                       <input ref={fileInputRef} hidden type="file" accept={supportsExtended ? "image/jpeg,image/png,image/webp,image/gif,image/bmp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/wav,audio/x-wav,audio/ogg,audio/flac" : "image/jpeg,image/png,image/webp,image/gif,image/bmp"} onChange={(event) => { const next = event.target.files?.[0] ?? null; setFile(next); uploadedFile.current = null; if (next) setMediaKind(next.type.startsWith('audio/') ? 'audio' : 'media'); }} />
                     </Button>
                     <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>{file ? file.name : supportsExtended ? 'Fotos: hasta 10 MB. Video y audio: hasta 25 MB.' : 'Imágenes de hasta 10 MB. Para video, pega un enlace público.'}</Typography>
-                    <Button variant="contained" onClick={() => postMutation.mutate()} disabled={postMutation.isPending || (mediaKind === 'text' ? !caption.trim() : !file && !mediaUrl.trim())}>
-                      {postMutation.isPending ? <><CircularProgress size={20} color="inherit" sx={{ mr: 1 }} /><span role="status">{publishingPhase || 'Preparando…'}</span></> : 'Publicar'}
+                    <Button variant="contained" onClick={() => postMutation.mutate({ eventId, scope: editorScope, draft: composer.draft, extended: supportsExtended, ready: composer.ready, isCurrentOwner: composer.isCurrentOwner })} disabled={!composer.ready || publicationPending || (mediaKind === 'text' ? !caption.trim() : !file && !mediaUrl.trim())}>
+                      {publicationPending ? <><CircularProgress size={20} color="inherit" sx={{ mr: 1 }} /><span role="status">{publishingPhase || 'Preparando…'}</span></> : 'Publicar'}
                     </Button>
                   </Stack>
                 </>
@@ -427,7 +443,7 @@ export default function SocialEventDetailPage() {
               : <Typography>La publicación dejará de estar disponible en el evento. Los archivos públicos y las copias externas pueden seguir existiendo.</Typography>}
             {ownMutation.isError && <Alert severity="error">No se pudo completar la acción. Actualiza el evento antes de reintentar.</Alert>}
           </DialogContent>
-          <DialogActions><Button disabled={ownMutation.isPending} onClick={() => setOwnAction(null)}>Cancelar</Button><Button disabled={ownMutation.isPending} onClick={() => ownMutation.mutate()}>{ownMutation.isPending ? 'Guardando…' : 'Confirmar'}</Button></DialogActions>
+          <DialogActions><Button disabled={ownMutation.isPending} onClick={() => setOwnAction(null)}>Cancelar</Button><Button disabled={ownMutation.isPending} onClick={() => { if (ownAction) ownMutation.mutate({ eventId, action: ownAction, isCurrentOwner: composer.isCurrentOwner }); }}>{ownMutation.isPending ? 'Guardando…' : 'Confirmar'}</Button></DialogActions>
         </Dialog>
       </Stack>
     </PageShell>

@@ -11954,6 +11954,92 @@
       ],
       "formalModels": [],
       "verification": "Executed full-schema SQL with replay, rollback and negative control; actual authenticated HTTP including simultaneous decisions, committed-evidence rollback refusal, desktop/phone browser persistence; no complete refinement, physical-device or production claim."
+    },
+    {
+      "domain": "SOCIAL",
+      "authority": "Explicit product owner request 2026-10-25: Event Memories, Community Engagement & Post-Event Activation",
+      "source": "formal/system/event-memory-session.md",
+      "contract": "formal/system/event-memory-session.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded policy and executable regressions do not establish complete refinement, device behavior or production qualification."
+      },
+      "confidence": "Scoped evidence only; deployment and broader product gaps remain explicit.",
+      "ambiguity": [],
+      "historicalStatus": "new",
+      "evidence": "reports/event-memory-source-moderation-2026-10-25.md; retain negative and corrected execution identities separately.",
+      "id": "SOCIAL-EVENT-SESSION-001",
+      "title": "Session-owned web memory drafts, consent and decisions",
+      "statement": "A captured web memory publication, preference or moderation decision cannot adopt replacement credentials before React renders; old completion cannot clear or consent the new account.",
+      "property": "Current owner, credential epoch and editor scope gate dispatch and acknowledgement; consent remains an explicit action of the current account.",
+      "actors": [
+        "Authenticated web participant",
+        "Organizer",
+        "Scoped moderator"
+      ],
+      "preconditions": [
+        "Known current session Party",
+        "Existing source access",
+        "Explicit action in the current editor scope"
+      ],
+      "inputs": [
+        "Credential epoch",
+        "Owner Party",
+        "Event/editor scope",
+        "Draft or decision",
+        "Late acknowledgement"
+      ],
+      "state": {
+        "editor": [
+          "current",
+          "revoked"
+        ],
+        "attempt": [
+          "prepared",
+          "dispatched",
+          "acknowledged",
+          "ignored"
+        ]
+      },
+      "allowedTransitions": [
+        "current explicit action -> scoped attempt",
+        "credential/scope change -> revoked prior callback",
+        "current acknowledgement -> current draft/cache update"
+      ],
+      "forbiddenTransitions": [
+        "old callback -> replacement credentials",
+        "old opt-in -> new-account consent",
+        "old success -> clear new-account draft"
+      ],
+      "effects": [
+        "Shared client ownership guard; existing server APIs and defaults retained."
+      ],
+      "authorization": "Client intent guard supplements current server permissions; never grants or replaces server authorization.",
+      "privacy": "No draft or reason content in telemetry; current rendered draft is empty across ownership changes.",
+      "concurrency": "Captured mutation variables retain the original owner guard across React Query callback updates and async responses.",
+      "idempotency": "Existing source ledger and mutation retry policy retained; this change does not add general create replay.",
+      "failure": "Before dispatch, revoked callbacks produce an actionable session-change error; post-dispatch old responses are ignored for current UI/cache.",
+      "recovery": "Reopen the action in the current session; original persisted publications remain authored by their original account.",
+      "observability": "Synthetic request counts and retained negative controls; no claims about production incidents.",
+      "implementation": [
+        "tdf-hq-ui/src/session/useSessionOwner.ts",
+        "tdf-hq-ui/src/session/useOwnedSessionDraft.ts",
+        "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx",
+        "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
+        "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx",
+        "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
+        "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Three observed pre-render counterexamples followed by corrected zero-dispatch regressions, late response and existing real session-provider/profile tests. Browser/API integration is qualified separately."
     }
   ]
 }

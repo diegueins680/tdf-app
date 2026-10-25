@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 jest.unstable_mockModule('../features/interactions/InteractionPanel', () => ({ InteractionPanel: () => null }));
 jest.unstable_mockModule('../components/events/EventMemoryInvitations', () => ({ default: () => null }));
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { SocialEventDTO, SocialEventMomentDTO, SocialTicketTierDTO } from '../api/socialEvents';
 
@@ -153,6 +153,27 @@ describe('SocialEventDetailPage ticket sharing', () => {
     view.unmount();
   });
 
+  it('does not dispatch a draft when credentials change before the session render', async () => {
+    activeSession = { partyId: 9 };
+    createMomentMock.mockResolvedValue({ emId: '999', emAuthorName: 'Synthetic B', emCaption: 'Private draft for A', emMediaType: 'text', emMediaUrl: '' });
+    const view = renderPage();
+    const kind = await screen.findByRole('combobox', { name: 'Tipo de recuerdo' });
+    fireEvent.mouseDown(kind);
+    fireEvent.click(await screen.findByRole('option', { name: 'Solo texto' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Describe tu publicación' }), { target: { value: 'Private draft for A' } });
+    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    advanceAuthSessionEpoch();
+    activeSession = { partyId: 10 };
+    // Credentials change synchronously; the old button can still exist until
+    // React commits the session update. No publication may cross that boundary.
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
+    await waitFor(() => expect(Boolean(screen.queryByText('Tu sesión cambió. Vuelve al evento antes de publicar.')) || createMomentMock.mock.calls.length > 0).toBe(true));
+    expect(createMomentMock).not.toHaveBeenCalled();
+    await screen.findByText('Tu sesión cambió. Vuelve al evento antes de publicar.');
+    expect(uploadMomentMediaMock).not.toHaveBeenCalled();
+    view.unmount();
+  });
+
   it('does not publish an uploaded draft after the authentication epoch changes', async () => {
     activeSession = { partyId: 9 };
     let finishUpload!: (value: { eiuPublicUrl: string }) => void;
@@ -192,6 +213,33 @@ describe('SocialEventDetailPage ticket sharing', () => {
     finishFeed([]);
     await screen.findByText('Todavía no hay publicaciones');
     expect(screen.queryByText('Recuerdo privado de la cuenta anterior')).toBeNull();
+    view.unmount();
+  });
+
+  it('preserves the new account draft when an earlier publication finishes late', async () => {
+    activeSession = { partyId: 9 };
+    let finish!: (value: SocialEventMomentDTO) => void;
+    const pending = new Promise<SocialEventMomentDTO>((resolve) => { finish = resolve; });
+    createMomentMock.mockReturnValueOnce(pending);
+    const view = renderPage();
+    fireEvent.mouseDown(await screen.findByRole('combobox', { name: 'Tipo de recuerdo' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Solo texto' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Describe tu publicación' }), { target: { value: 'Synthetic account A draft' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
+    await waitFor(() => expect(createMomentMock).toHaveBeenCalledTimes(1));
+    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    advanceAuthSessionEpoch(); activeSession = { partyId: 10 };
+    view.rerender(<QueryClientProvider client={view.queryClient}><MemoryRouter initialEntries={['/social/eventos/121']}>
+      <Routes><Route path="/social/eventos/:eventId" element={<SocialEventDetailPage />} /></Routes>
+    </MemoryRouter></QueryClientProvider>);
+    const caption = await screen.findByRole('textbox', { name: 'Describe tu publicación' });
+    await waitFor(() => expect(caption).toHaveProperty('disabled', false));
+    expect(caption).toHaveProperty('value', '');
+    fireEvent.change(caption, { target: { value: 'Synthetic account B draft' } });
+    await act(async () => { finish({ emId: '991', emAuthorName: 'Synthetic A', emMediaType: 'text', emMediaUrl: '', emCaption: 'Synthetic account A draft' }); await pending; });
+    await waitFor(() => expect(view.queryClient.isMutating()).toBe(0));
+    expect(screen.getByRole('textbox', { name: 'Describe tu publicación' })).toHaveProperty('value', 'Synthetic account B draft');
+    expect(createMomentMock).toHaveBeenCalledTimes(1);
     view.unmount();
   });
 

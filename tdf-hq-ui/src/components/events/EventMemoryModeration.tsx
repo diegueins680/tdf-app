@@ -5,6 +5,7 @@ import { ApiError } from '../../api/client';
 import { safeMemoryFileUrl, sourceCommand, sourceReports, validSourceControls } from '../../api/eventMemoryModeration';
 import type { MemorySourceCommand, MemorySourceControls, MemorySourceReport } from '../../api/eventMemoryModeration';
 import { useSession } from '../../session/SessionContext';
+import { useSessionOwner } from '../../session/useSessionOwner';
 
 type Action = 'report' | 'hide' | 'remove' | 'restore' | 'resolve';
 interface Selection { action: Action; targetId: string; version: number; controls: MemorySourceControls }
@@ -17,6 +18,10 @@ const actionError = (error: unknown) => error instanceof ApiError && error.statu
     : 'No se pudo confirmar la acción. Puedes reintentar con el mismo motivo.';
 
 function SourceActionDialog({ selection, onClose, onDone }: { selection: Selection; onClose: () => void; onDone: () => Promise<void> }) {
+  const { session } = useSession();
+  const ownership = useSessionOwner(session?.partyId ?? null, selection.targetId);
+  // A dialog belongs to the session that opened it, including across retries.
+  const openedOwner = useRef(ownership.isCurrentOwner);
   const heading = useId(); const [reason, setReason] = useState(''); const [pending, setPending] = useState(false); const [error, setError] = useState('');
   const attempt = useRef<{ key: string; command: MemorySourceCommand } | null>(null);
   const mounted = useRef(true);
@@ -24,6 +29,7 @@ function SourceActionDialog({ selection, onClose, onDone }: { selection: Selecti
   const confirm = async () => {
     const { action, version, controls, targetId } = selection;
     if (!reason.trim() || pending) return;
+    if (!openedOwner.current()) { setError('Tu sesión cambió. Cancela y vuelve a abrir esta acción.'); return; }
     if (!attempt.current) {
       const shared = { reason: reason.trim(), expectedSourceRevision: controls.sourceRevision };
       const command: MemorySourceCommand = action === 'report' ? { operation: 'source.report', ...shared }
@@ -34,7 +40,7 @@ function SourceActionDialog({ selection, onClose, onDone }: { selection: Selecti
     setPending(true); setError('');
     try {
       await sourceCommand(targetId, attempt.current.command, attempt.current.key);
-      if (mounted.current) { await onDone(); if (mounted.current) onClose(); }
+      if (mounted.current && openedOwner.current()) { await onDone(); if (mounted.current && openedOwner.current()) onClose(); }
     } catch (failure) { if (mounted.current) setError(actionError(failure)); }
     finally { if (mounted.current) setPending(false); }
   };
