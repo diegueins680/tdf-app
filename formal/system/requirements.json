@@ -5676,7 +5676,7 @@
       "id": "PRIV-ANALYTICS-001",
       "title": "Private navigation and credentials are excluded at analytics serialization",
       "domain": "PRIV",
-      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client. Ordinary scalar campaign labels remain intact; recognized URL properties and HTTP(S)/tdf URLs retain URL sanitization.",
+      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client. Ordinary scalar campaign labels remain intact; recognized URL properties and HTTP(S)/tdf URLs retain URL sanitization. Application failure diagnostics redact error names/messages and selected context fields before console or analytics delivery; raw Error objects and complete location URLs are not passed to native exception capture, and caller context cannot override the core diagnostic envelope.",
       "authority": "AUTHORITY-042; accepted main PR487 privacy consolidation and docs/analytics.md; preserved #468/#485 correspondence",
       "source": "docs/analytics.md; #485 reviewed privacy corrections",
       "contract": "formal/system/web-cutover-correspondence.md",
@@ -5733,10 +5733,13 @@
       "recovery": "Do not replay customer payloads through logs. Change configuration only through the supported release/consent workflow.",
       "observability": "Tests inspect synthetic serialized payloads and fixed warnings; production receipt requires separately verified provider evidence.",
       "implementation": [
-        "tdf-hq-ui/src/analytics/posthog.ts"
+        "tdf-hq-ui/src/analytics/posthog.ts",
+        "tdf-hq-ui/src/analytics/errorReporting.ts",
+        "tdf-hq-ui/src/components/RouteErrorBoundary.tsx"
       ],
       "tests": [
-        "tdf-hq-ui/src/__tests__/analytics.test.ts"
+        "tdf-hq-ui/src/__tests__/analytics.test.ts",
+        "tdf-hq-ui/src/analytics/errorReporting.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -5750,7 +5753,7 @@
         "reason": "Incoming reviewed main implementation has mapped deterministic examples; fresh combined-candidate execution and deployed analytics configuration/consent correspondence remain required."
       },
       "property": "Named sensitive payloads do not survive recognized serializer boundaries; public attribution and configured project token remain usable.",
-      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof.",
+      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof. Synthetic client-error and actual route-boundary tests cover raw-error exclusion, embedded URL sentinels, selected context, throwing getters and console failure; scope and exclusions are in formal/system/client-error-privacy.md.",
       "evidence": "Exact-candidate UI gate; original main PR487 validation is historical for subsequent merged trees."
     },
     {
@@ -7467,7 +7470,8 @@
       "inputs": [
         "Order lookup token",
         "Buyer transfer reference",
-        "Staff review action and notes"
+        "Staff review action and notes",
+        "Optional private JPG, PNG or PDF receipt up to 5 MiB"
       ],
       "state": {
         "boundary": "event_ticket_checkout_runtime.manual_hold_expires_at and canonical manual payment evidence",
@@ -7492,7 +7496,7 @@
         "Idempotent ticket issuance"
       ],
       "authorization": "Lookup token for buyer actions; strict administrator or event organizer for review, checked inside the review transaction.",
-      "privacy": "Guests become new unverified contact parties with name and email only; account details are server configuration shown after selection; approval notes stay internal.",
+      "privacy": "Guests become new unverified contact parties with name and email only; account details are server configuration shown after selection; approval notes stay internal. Receipt files stay outside public assets and are returned only to the managing organizer or strict administrator, with no-store responses.",
       "concurrency": "Review locks checkout, attempt and evidence rows FOR UPDATE and keeps the locks through the decision (savepoint, not commit); a concurrent reviewer waits and then sees the decided state. The hold guard and expiry run in the database.",
       "idempotency": "Repeated selection replays the same attempt; repeated approval of a paid order returns success and issuance is idempotent.",
       "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail. A failed ticket issuance rolls the approval back (409) and leaves the evidence reviewable.",
@@ -7517,7 +7521,9 @@
         "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq-ui/src/api/generated/types.ts",
-        "formal/system/compiled-api-surface.json"
+        "formal/system/compiled-api-surface.json",
+        "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs",
+        "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx"
       ],
       "tests": [
         "tdf-hq/test/integration/ticket_manual_bank_transfer.sql",
@@ -7531,7 +7537,10 @@
         "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
         "scripts/test-ticket-manual-review-concurrency.sh",
         "scripts/verify-event-operations-formal.sh",
-        "tdf-hq/test/TDF/Test/DisposablePostgres.hs"
+        "tdf-hq/test/TDF/Test/DisposablePostgres.hs",
+        "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs",
+        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
+        "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx"
       ],
       "formalModels": [
         "formal/event-operations/ManualBankTransfer.tla",
@@ -8846,7 +8855,8 @@
         "tdf-hq-ui/src/routes/AppErrorBoundary.tsx",
         "tdf-hq-ui/src/utils/lazyWithReload.ts",
         "tdf-hq-ui/src/api/session.ts",
-        "tdf-hq-ui/src/session/SessionContext.tsx"
+        "tdf-hq-ui/src/session/SessionContext.tsx",
+        "tdf-hq-ui/src/components/RouteErrorBoundary.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
@@ -8994,7 +9004,9 @@
       "forbiddenTransitions": [
         "cart reachable only by scrolling past listings",
         "badge stale after a cart change",
-        "login/logout clearing the cart"
+        "login/logout clearing the cart",
+        "failed or offline-paused cart read -> empty-cart claim",
+        "unconfirmed cart read -> checkout"
       ],
       "effects": [
         "Shared summary store drives header badge, drawer and sticky mobile bar."
@@ -9003,8 +9015,8 @@
       "privacy": "Only cart id, count and preview are stored locally.",
       "concurrency": "Repeat taps are ignored while an add is pending; server upsert sets quantity.",
       "idempotency": "Server sets, not increments, quantities.",
-      "failure": "Failed cart reads keep the last known count until a successful fetch.",
-      "recovery": "Restore saved cart or browse catalog from the empty state.",
+      "failure": "Failed cart reads keep the last known count and cart id, show an explicit retry state, and never claim the cart is empty. Offline-paused initial reads and cached refreshes show a waiting-for-connection state. Checkout waits for a confirmed idle successful read.",
+      "recovery": "Retry the same saved cart without creating a replacement; successful authoritative reads restore its contents and count.",
       "observability": "Existing marketplace analytics; jest and browser evidence.",
       "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
       "implementation": [
@@ -9033,7 +9045,7 @@
       "critical": false,
       "property": "CartAlwaysReachable and BadgeMatchesCart",
       "contract": "formal/system/mobile-entry-ux.md",
-      "verification": "Cart summary store tests, header button tests at 360px, MarketplacePage add/remove tests and a browser cart journey with reload.",
+      "verification": "Cart summary/header/component regressions, failed-read recovery, cached-error checkout blocking, offline-paused read and synthetic browser recovery journey.",
       "evidence": "cartSummary, MarketplaceCartButton and MarketplacePage tests; e2e marketplace-cart.",
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },

@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
@@ -759,6 +759,114 @@ describe('MarketplacePage', () => {
       await waitForExpectation(() => expect(drawer()?.textContent).toContain('Vintage Mic'));
 
       await cleanup();
+    });
+
+    it('distinguishes a failed cart read from empty and recovers the saved cart on retry', async () => {
+      window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
+      window.localStorage.setItem('tdf-marketplace-cart-meta', JSON.stringify({ cartId: 'cart-1', count: 1, updatedAt: Date.now() }));
+      getCartMock.mockRejectedValue(new Error('Temporary connection failure'));
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const cleanup = await renderWithHeaderCart(container);
+      try {
+        await act(async () => { headerButton()?.click(); await flushPromises(); });
+        await waitForExpectation(() => expect(drawer()?.textContent).toContain('No pudimos cargar tu carrito'));
+        expect(drawer()?.textContent).not.toContain('Tu carrito está vacío.');
+        expect(headerBadge()).toBe('1');
+        expect(window.localStorage.getItem('tdf-marketplace-cart-id')).toBe('cart-1');
+        expect(createCartMock).not.toHaveBeenCalled();
+
+        getCartMock.mockResolvedValue(buildCart());
+        await act(async () => { clickButtonByText('Reintentar carrito', 'last'); await flushPromises(); });
+        await waitForExpectation(() => expect(drawer()?.textContent).toContain('Vintage Mic'));
+        expect(drawer()?.textContent).not.toContain('No pudimos cargar tu carrito');
+        expect(headerBadge()).toBe('1');
+        expect(createCartMock).not.toHaveBeenCalled();
+        expect(checkoutMock).not.toHaveBeenCalled();
+      } finally { await cleanup(); }
+    });
+
+    it('keeps cached products visible but blocks checkout after a failed refresh', async () => {
+      window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const cleanup = await renderWithHeaderCart(container);
+      try {
+        await act(async () => { headerButton()?.click(); await flushPromises(); });
+        await waitForExpectation(() => expect(drawer()?.textContent).toContain('Vintage Mic'));
+        getCartMock.mockRejectedValue(new Error('Temporary connection failure'));
+        await act(async () => {
+          window.dispatchEvent(new StorageEvent('storage', { key: 'tdf-marketplace-cart-id' }));
+          await flushPromises();
+        });
+        await waitForExpectation(() => expect(drawer()?.textContent).toContain('No pudimos cargar tu carrito'));
+        expect(drawer()?.textContent).toContain('Vintage Mic');
+        expect(drawer()?.textContent).not.toContain('Tu carrito está vacío.');
+        const checkout = Array.from(drawer()?.querySelectorAll('button') ?? [])
+          .find((button) => button.textContent?.trim() === 'Ir al checkout');
+        expect(checkout?.disabled).toBe(true);
+        expect(headerBadge()).toBe('1');
+        expect(checkoutMock).not.toHaveBeenCalled();
+      } finally { await cleanup(); }
+    });
+
+    it('explains an offline-paused cached refresh and resumes checkout after reconnecting', async () => {
+      window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const cleanup = await renderWithHeaderCart(container);
+      const checkoutButton = () => Array.from(drawer()?.querySelectorAll('button') ?? [])
+        .find((button) => button.textContent?.trim() === 'Ir al checkout');
+      try {
+        await act(async () => { headerButton()?.click(); await flushPromises(); });
+        await waitForExpectation(() => expect(drawer()?.textContent).toContain('Vintage Mic'));
+        expect(checkoutButton()?.disabled).toBe(false);
+        const readsBeforePause = getCartMock.mock.calls.length;
+        await act(async () => {
+          onlineManager.setOnline(false);
+          window.dispatchEvent(new StorageEvent('storage', { key: 'tdf-marketplace-cart-id' }));
+          await flushPromises();
+        });
+        await waitForExpectation(() => expect(drawer()?.textContent).toContain('Esperando conexión para recuperar tu carrito.'));
+        expect(drawer()?.textContent).toContain('Vintage Mic');
+        expect(drawer()?.textContent).not.toContain('Tu carrito está vacío.');
+        expect(checkoutButton()?.disabled).toBe(true);
+        expect(headerBadge()).toBe('1');
+        expect(getCartMock).toHaveBeenCalledTimes(readsBeforePause);
+
+        await act(async () => { onlineManager.setOnline(true); await flushPromises(); });
+        await waitForExpectation(() => {
+          expect(getCartMock.mock.calls.length).toBeGreaterThan(readsBeforePause);
+          expect(checkoutButton()?.disabled).toBe(false);
+          expect(drawer()?.textContent).not.toContain('Esperando conexión');
+        });
+        expect(headerBadge()).toBe('1');
+        expect(createCartMock).not.toHaveBeenCalled();
+        expect(checkoutMock).not.toHaveBeenCalled();
+      } finally {
+        await cleanup();
+        onlineManager.setOnline(true);
+      }
+    });
+
+    it('does not claim that an offline-paused saved cart is empty', async () => {
+      onlineManager.setOnline(false);
+      window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
+      window.localStorage.setItem('tdf-marketplace-cart-meta', JSON.stringify({ cartId: 'cart-1', count: 1, updatedAt: Date.now() }));
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const cleanup = await renderWithHeaderCart(container);
+      try {
+        await act(async () => { headerButton()?.click(); await flushPromises(); });
+        expect(drawer()?.textContent).toContain('Esperando conexión para recuperar tu carrito.');
+        expect(drawer()?.textContent).not.toContain('Tu carrito está vacío.');
+        expect(headerBadge()).toBe('1');
+        expect(getCartMock).not.toHaveBeenCalled();
+        expect(createCartMock).not.toHaveBeenCalled();
+      } finally {
+        await cleanup();
+        onlineManager.setOnline(true);
+      }
     });
 
     it('reflects the server cart after a refetch drops an unavailable item', async () => {

@@ -132,3 +132,17 @@ VITE_POSTHOG_KEY=phc_your_dev_key npm run dev
 If you see nothing in PostHog, check the browser console / Metro log — the no-op client prints a single `[analytics] PostHog disabled: <reason>` line on startup so you know immediately whether the env var was picked up.
 
 Privacy references: [OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html) recommends excluding access credentials and unnecessary personal information from logs. The existing PostHog `before_send` integration enforces the same boundary for analytics payloads.
+
+
+### Failure diagnostics
+
+The `client_error` reporter redacts error names/messages and selected diagnostic
+context before capture, drops unknown context and prevents replacement of its
+core event fields. Section error boundaries use this reporter rather than
+native exception capture with a raw Error and complete URL. Application-issued
+console diagnostics contain only the redacted name/message, without raw stack,
+cause or custom Error fields. Embedded URLs/paths are masked even inside prose.
+Pattern redaction does not recognize arbitrary personal text: do not put account
+or form data in error messages or allowed context. Browser/React/third-party
+logs and historical provider retention are separate obligations. See
+[the scoped failure diagnostic contract](../formal/system/client-error-privacy.md).
