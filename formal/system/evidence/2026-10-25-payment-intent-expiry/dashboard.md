@@ -1,5 +1,14 @@
 # Verification cycle: payment-intent expiry
 
+Current integration: `5140a86f47b377ab56cbd5a6fc68262e86fae052`, incorporating
+protected main `9a927fa390066f43cc27c872800bf1b0412e166e`.
+[Current machine-readable scorecard](integration.json): **138 requirements, 112 critical**,
+all complete requirements and 276 implementation/refinement obligations unproven;
+11 conditional SMT claims remain separately PROVEN. Fresh merged-source execution
+passes seven cases; prior model/mutation inputs match exactly. PR #609 is open,
+independent review and hosted CI pending, zero merged. The table below retains
+the original source checkpoint and does not relabel old executions.
+
 Source candidate: `5ca62256af0a8eecd2ec4929a7d0eb01a96425b5`.
 Main baseline: `512d590e902760130f54ca2927620c001a754b85`.
 Exact tools, hashes, commands and computed metrics: [receipt.json](receipt.json).
