@@ -11507,6 +11507,85 @@
       "observability": "Native browser receipts record credential-presence booleans only, never cookie or token values."
     },
     {
+      "id": "COMMUNITY-PROFILE-001",
+      "title": "Require an owned successful read before profile replacement",
+      "statement": "Fan and artist editors must bind drafts and asynchronous callbacks to the active account generation and synchronous authentication epoch, reject replacement writes before an authoritative profile read, revoke callbacks immediately on credential changes, and retain unsaved edits through background reads.",
+      "domain": "COMMUNITY",
+      "authority": "Product owner user-value completion instruction 2026-10-25: prioritize verified data-loss blockers and complete existing profile journeys.",
+      "source": "docs/persona-testing/journey-specifications.md ST-004; formal/system/profile-editing-baseline.md",
+      "property": "Save implies successful current-Party baseline; an old account generation cannot alter the current draft.",
+      "contract": "formal/system/profile-editing-baseline.md",
+      "actors": [
+        "Authenticated artist",
+        "Authenticated fan"
+      ],
+      "preconditions": [
+        "The session is available and the server returns its authoritative profile DTO."
+      ],
+      "inputs": [
+        "Session Party and lifecycle",
+        "Profile GET response or failure",
+        "Editor changes",
+        "Save and upload completion"
+      ],
+      "state": {
+        "editor": [
+          "unloaded",
+          "loaded",
+          "dirty",
+          "saving",
+          "read-error"
+        ],
+        "owner": "Party plus synchronous authentication epoch and in-memory account generation"
+      },
+      "allowedTransitions": [
+        "Successful matching baseline -> editable draft",
+        "Read error -> explicit retry",
+        "Loaded draft -> edited draft -> guarded save",
+        "Account change -> unloaded fresh generation"
+      ],
+      "forbiddenTransitions": [
+        "Pending or failed initial GET -> profile replacement",
+        "Old account fields -> current account replacement",
+        "Background read -> overwrite unsaved edits",
+        "Old generation response -> current draft or success/error message",
+        "Authentication epoch changed before React render -> old callback dispatches profile fields with new credentials"
+      ],
+      "effects": [
+        "Artist and fan profiles share draft ownership and hydration logic.",
+        "Retry recovers the editor without writing blank fields."
+      ],
+      "authorization": "Existing server session and profile ownership checks remain authoritative; current-Party DTO matching and account-generation guards prevent accidental client replacement.",
+      "privacy": "Drafts stay in component memory; no profile values or credentials added to persistent storage or logs.",
+      "concurrency": "Auth-epoch checks revoke captured callbacks before React rescoping and again at mutation dispatch; background reads retain dirty fields. Already dispatched requests, cross-device concurrent writes and universal server session revocation remain outside this client boundary.",
+      "idempotency": "No automatic mutation retry or new idempotency guarantee; manual retry reloads the baseline only.",
+      "failure": "Pending/error/mismatched reads disable fields and save controls; the save handler also refuses; late account callbacks are discarded.",
+      "recovery": "Explicit profile retry loads the current account and restores guarded editing. A reviewed web revert needs no migration.",
+      "observability": "Synthetic editor regressions, negative-control logs, disposable API/PostgreSQL/browser receipts and scoped hosted checks.",
+      "implementation": [
+        "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts",
+        "tdf-hq-ui/src/features/fans/useFanProfile.ts",
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx",
+        "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Source-confirmed destructive-write hazard with rendered regression controls; no complete implementation correctness proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local repair and regression evidence; hosted CI, independent review, protected merge and deployed availability must be recorded separately."
+      },
+      "verification": "Real session and query providers, endpoints, API client/header with intercepted native Fetch validate pre-render/same-Party credential transitions; rendered editor regressions and original-source negative controls; disposable API/PostgreSQL/browser verification. No mathematical proof claimed.",
+      "evidence": "Current candidate logs and delivery report; historical local or passing unit tests do not establish deployment."
+    },
+    {
       "id": "NAV-MENU-COVERAGE-001",
       "title": "Complete permission-aware menus for available feature destinations",
       "statement": "Every usable standalone registered web feature has one concrete sidebar destination in an appropriate existing group. Public reputation rights remain reachable through the Security page menu. Visibility obeys current session roles, modules and feature flags. Signed-in public pages expose the same menu in a lazy drawer.",
