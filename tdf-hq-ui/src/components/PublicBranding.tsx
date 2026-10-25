@@ -296,12 +296,16 @@ export default function PublicBranding({
           anchor="left"
           open
           onClose={() => setFeatureMenuOpen(false)}
-          PaperProps={{ role: 'dialog', 'aria-modal': true, 'aria-label': t('authEntry.featureMenu') }}
+          PaperProps={{
+            role: 'dialog', 'aria-modal': true, 'aria-label': t('authEntry.featureMenu'),
+            // The mobile sidebar is fixed-position and does not size its parent.
+            sx: { width: { xs: 260, md: 240 }, overflow: 'hidden' },
+          }}
         >
           <IconButton
             aria-label={t('authEntry.closeFeatureMenu')}
             onClick={() => setFeatureMenuOpen(false)}
-            sx={{ position: 'absolute', top: 4, right: 4, zIndex: 1, minWidth: 44, minHeight: 44 }}
+            sx={{ position: 'absolute', top: 4, right: 4, zIndex: (theme) => theme.zIndex.drawer + 1, minWidth: 44, minHeight: 44 }}
           ><CloseIcon /></IconButton>
           <Suspense fallback={<CircularProgress aria-label={t('authEntry.featureMenu')} sx={{ m: 4 }} />}>
             <FeatureMenu open onNavigate={() => setFeatureMenuOpen(false)} />

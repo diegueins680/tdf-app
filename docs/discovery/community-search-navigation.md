@@ -310,3 +310,10 @@ feature flag changes, denied-role/module combinations and the public rights menu
 Signed-in public pages (including Comunidad) expose Menú de funciones in the
 header. It loads the same sidebar on demand in a dismissible drawer, closes
 after navigation or account change, and keeps the guest header unchanged.
+
+The public drawer reserves its width independently of the lazy sidebar. The close
+control stays above the sidebar and inside the viewport after loading. A compiled
+browser regression waits for the real search field before checking touch/click
+dismissal, warm reopen, Escape and focus restoration. The previous mobile layout
+fails the close-control viewport check; a loading-placeholder-only check is not
+accepted as evidence that the loaded menu can be dismissed.

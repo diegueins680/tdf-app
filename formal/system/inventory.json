@@ -2807,7 +2807,7 @@
     {
       "id": "SURFACE-e304a20b61d5c193",
       "path": "e2e/web/community-discovery.spec.mjs",
-      "sha256": "9fb22467b072db50eeffc2deb009c2361c21d0ac496e96a07076a9af367d6260",
+      "sha256": "029a2425d43d6f816f1f6a9b39d68a08a23a8bde8443bb077dd3b41115c9bbf7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7391,7 +7391,7 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "2471eb13a3eda8df4d3ff8c784874c62164ba3b24da2eb1ddfc555fbdf9f9996",
+      "sha256": "564d20da56e36a873b02eeb8c9f9d246aca6d509c44d77777c15968df59c6a66",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19191,7 +19191,7 @@
     },
     {
       "path": "docs/discovery/community-search-navigation.md",
-      "sha256": "8c2579642044c532c6c294cdc67f6bea5c7e530705483dc3ab2748fb8f5b49e2",
+      "sha256": "1950faeed69abe0c2194c33fdfb20b04d3765185711aabd9c5a765e9818e7023",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26429,7 +26429,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "0b2892fba6591e193062aecad148d59ea54cc0eb742e3ba81e3d5e72678850a5",
+      "sha256": "46d0f029a5927e4eef2c5527d308bdfd5377060a6fe796d01e876210416a4469",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

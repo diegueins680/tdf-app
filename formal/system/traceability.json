@@ -11555,7 +11555,7 @@
       "failure": "Unknown group metadata fails explicitly; record-dependent and unavailable routes are excluded.",
       "recovery": "Correct invalid registry metadata; existing sidebar error boundary remains in place.",
       "observability": "Sidebar, feature and access regressions; route registry audit and browser navigation checks.",
-      "property": "Standalone destination coverage, unique concrete paths and per-session access filtering.",
+      "property": "Standalone destination coverage, unique concrete paths and per-session access filtering. A fully loaded mobile menu keeps its close control inside the viewport and restores focus after dismissal.",
       "implementation": [
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/features/featureRegistry.ts",
@@ -11571,7 +11571,8 @@
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/pages/SecurityPage.test.tsx",
         "scripts/audit-feature-registry.mjs",
-        "tdf-hq-ui/src/components/PublicBranding.test.tsx"
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "e2e/web/community-discovery.spec.mjs"
       ],
       "formalModels": [],
       "verification": "Deterministic registry coverage, rendered sidebar/access controls and browser navigation; no formal proof claimed.",
@@ -11607,7 +11608,7 @@
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
     "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
-    "e2e/web/community-discovery.spec.mjs": "9fb22467b072db50eeffc2deb009c2361c21d0ac496e96a07076a9af367d6260",
+    "e2e/web/community-discovery.spec.mjs": "029a2425d43d6f816f1f6a9b39d68a08a23a8bde8443bb077dd3b41115c9bbf7",
     "e2e/web/course-enrollment.spec.mjs": "f64fed981fa69b332499556853637fca938c9b026b90c4aaf1b4f5bb97633311",
     "e2e/web/directory-entry.spec.mjs": "17d56aaa082a13e71c2442b6f09ee29b158413e9a41eb7b07969e3bee61c8c97",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
@@ -12212,7 +12213,7 @@
     "tdf-hq-ui/src/components/NotificationBell.tsx": "de77bfc9b23e3deae24c65db63d5406bd30e077aea6e56a4804d0b2de3554d28",
     "tdf-hq-ui/src/components/NotificationNavigation.test.tsx": "9596ad73723f9a44acbed461617a5f03f5e0f40f968cc71b36b2534980d294d1",
     "tdf-hq-ui/src/components/PublicBranding.test.tsx": "9f3a3c426d5ac0549f8e73b02aec0826f510d96f6f7e214e032971f785ebb119",
-    "tdf-hq-ui/src/components/PublicBranding.tsx": "2471eb13a3eda8df4d3ff8c784874c62164ba3b24da2eb1ddfc555fbdf9f9996",
+    "tdf-hq-ui/src/components/PublicBranding.tsx": "564d20da56e36a873b02eeb8c9f9d246aca6d509c44d77777c15968df59c6a66",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
     "tdf-hq-ui/src/components/RadioWidget.tsx": "8ca26bdf9324376d67357d0bf94a32411d6099d02ec12a3c0d215b4067ddfd98",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
@@ -21925,6 +21926,10 @@
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "NAV-MENU-COVERAGE-001",
+        "relationship": "tests"
       }
     ],
     "e2e/web/directory-entry.spec.mjs": [
@@ -22636,11 +22641,15 @@
     {
       "id": "SURFACE-e304a20b61d5c193",
       "path": "e2e/web/community-discovery.spec.mjs",
-      "sha256": "9fb22467b072db50eeffc2deb009c2361c21d0ac496e96a07076a9af367d6260",
+      "sha256": "029a2425d43d6f816f1f6a9b39d68a08a23a8bde8443bb077dd3b41115c9bbf7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "NAV-MENU-COVERAGE-001",
           "relationship": "tests"
         }
       ]
@@ -30630,7 +30639,7 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "2471eb13a3eda8df4d3ff8c784874c62164ba3b24da2eb1ddfc555fbdf9f9996",
+      "sha256": "564d20da56e36a873b02eeb8c9f9d246aca6d509c44d77777c15968df59c6a66",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50363,7 +50372,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0b2892fba6591e193062aecad148d59ea54cc0eb742e3ba81e3d5e72678850a5",
+      "sourceSha256": "46d0f029a5927e4eef2c5527d308bdfd5377060a6fe796d01e876210416a4469",
       "definition": {
         "states": [
           "absent",
@@ -50393,7 +50402,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0b2892fba6591e193062aecad148d59ea54cc0eb742e3ba81e3d5e72678850a5",
+      "sourceSha256": "46d0f029a5927e4eef2c5527d308bdfd5377060a6fe796d01e876210416a4469",
       "definition": {
         "export": [
           "queued",
