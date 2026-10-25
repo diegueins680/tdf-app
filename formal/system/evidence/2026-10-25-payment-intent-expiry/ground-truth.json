@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "observedDate": "2026-10-25",
+  "baselineMain": "512d590e902760130f54ca2927620c001a754b85",
+  "sourceCandidate": "5ca62256af0a8eecd2ec4929a7d0eb01a96425b5",
+  "historicalPRs": [
+    {
+      "number": 551,
+      "title": "Preserve checkout terms history and consolidate ledger posting fences",
+      "url": "https://github.com/diegueins680/tdf-app/pull/551",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "head": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+      "base": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0"
+    },
+    {
+      "number": 548,
+      "title": "Consolidate music publication, asset recovery and DDEX export invariants",
+      "url": "https://github.com/diegueins680/tdf-app/pull/548",
+      "state": "closed",
+      "draft": false,
+      "merged": true,
+      "head": "82a21ec662d0bd16874a6cc6289145d8a3ce82a4",
+      "base": "6ceca759cdb19a100afbce7063eef6a7fe09a117"
+    },
+    {
+      "number": 581,
+      "title": "Consolidate bounded models and independently check scoped proof certificates",
+      "url": "https://github.com/diegueins680/tdf-app/pull/581",
+      "state": "closed",
+      "draft": false,
+      "merged": true,
+      "head": "3a39d8c2eca439ca96e41b77051d234f795ac986",
+      "base": "c02e758beb999d3e0fee0baee2b0e49b33e5a05a"
+    },
+    {
+      "number": 598,
+      "title": "fix(privacy): filter app failure diagnostics before console and analytics",
+      "url": "https://github.com/diegueins680/tdf-app/pull/598",
+      "state": "closed",
+      "draft": false,
+      "merged": true,
+      "head": "90a3355d17576f54c3e0089be4ea3bfa9be5100d",
+      "base": "56ec8b488b069f0686675b588edace4242a50cea"
+    },
+    {
+      "number": 555,
+      "title": "fix(tickets): keep other payment rails closed while a PayPal capture is unverified",
+      "url": "https://github.com/diegueins680/tdf-app/pull/555",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "head": "497c52384d46426646570ceb2c29b73810134767",
+      "base": "2781ddc2a3c9fd661684742550918d653afdc0cf"
+    },
+    {
+      "number": 596,
+      "title": "Fix PlaceToPay and PayPhone validation across checkout domains",
+      "url": "https://github.com/diegueins680/tdf-app/pull/596",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "head": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
+      "base": "a71e3b9ae5a6ac6e80588aa120a70829071b3ce4"
+    }
+  ],
+  "openPRsAtInitialInspection": [
+    {
+      "number": 605,
+      "title": "Preserve cookie-only sessions when artists upload cover images",
+      "url": "https://github.com/diegueins680/tdf-app/pull/605"
+    },
+    {
+      "number": 555,
+      "title": "fix(tickets): keep other payment rails closed while a PayPal capture is unverified",
+      "url": "https://github.com/diegueins680/tdf-app/pull/555"
+    },
+    {
+      "number": 607,
+      "title": "Prevent profile data loss while loading or switching accounts",
+      "url": "https://github.com/diegueins680/tdf-app/pull/607"
+    },
+    {
+      "number": 608,
+      "title": "Add durable event memories and opt-in post-event inbox invitations",
+      "url": "https://github.com/diegueins680/tdf-app/pull/608"
+    },
+    {
+      "number": 551,
+      "title": "Preserve checkout terms history and consolidate ledger posting fences",
+      "url": "https://github.com/diegueins680/tdf-app/pull/551"
+    },
+    {
+      "number": 593,
+      "title": "verify: check payment helper preconditions against caller source",
+      "url": "https://github.com/diegueins680/tdf-app/pull/593"
+    },
+    {
+      "number": 601,
+      "title": "Add scoped service credentials for the Quito event watch",
+      "url": "https://github.com/diegueins680/tdf-app/pull/601"
+    },
+    {
+      "number": 600,
+      "title": "Bind retrieved recovery bundles to pending restore intents",
+      "url": "https://github.com/diegueins680/tdf-app/pull/600"
+    },
+    {
+      "number": 599,
+      "title": "Add artist video launch campaigns and Liquid Paper Girl review package",
+      "url": "https://github.com/diegueins680/tdf-app/pull/599"
+    },
+    {
+      "number": 596,
+      "title": "Fix PlaceToPay and PayPhone validation across checkout domains",
+      "url": "https://github.com/diegueins680/tdf-app/pull/596"
+    },
+    {
+      "number": 569,
+      "title": "Checkout policies: a terms_version names exactly one terms text per course or event (#564)",
+      "url": "https://github.com/diegueins680/tdf-app/pull/569"
+    },
+    {
+      "number": 592,
+      "title": "Specify and verify patched Mobile URI decoding",
+      "url": "https://github.com/diegueins680/tdf-app/pull/592"
+    },
+    {
+      "number": 554,
+      "title": "Create checkout lines only with their checkout; model the fixed line snapshot (PAY-CHECKOUT-002)",
+      "url": "https://github.com/diegueins680/tdf-app/pull/554"
+    },
+    {
+      "number": 573,
+      "title": "Sign in with Apple: verify Apple identity tokens and issue sessions (/login/apple)",
+      "url": "https://github.com/diegueins680/tdf-app/pull/573"
+    },
+    {
+      "number": 495,
+      "title": "Verify bound recovery bundles, source retention and application cleanup",
+      "url": "https://github.com/diegueins680/tdf-app/pull/495"
+    }
+  ],
+  "reconciliation": {
+    "548": "MERGED: publication/withdrawal isolation, upload recovery and terminal/private DDEX boundary retained on baseline main.",
+    "551": "OPEN DRAFT: financial database fences and terms history are pending; not integrated evidence.",
+    "555": "OPEN source history consolidated into #551; not a separate integration candidate.",
+    "581": "MERGED: retained source snapshots, certificate admission and fail-closed malformed inventory reporting retained.",
+    "596": "OPEN: hosted-provider domain settlement validation depends on #551; not integrated.",
+    "598": "MERGED: diagnostic serialization privacy repair retained."
+  },
+  "limitations": [
+    "This is a dated GitHub/source snapshot, not proof that every historical review finding is resolved.",
+    "#551/#596 inherited receipts do not qualify current main or this candidate.",
+    "No production system, deployment, payment provider or real financial operation was changed."
+  ]
+}
