@@ -10184,7 +10184,7 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "66027b6f797cc4ad32413d1e4a2a57674ba25a55ae37d303c0006a2b80590daf",
+      "sha256": "525d6f5f348aa91c6a7786c00a77f4daab8cc9f225b09709fdacf24f3f2ac337",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10196,7 +10196,7 @@
     {
       "id": "SURFACE-6996ecfbe844e690",
       "path": "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-      "sha256": "6fd94b62815f2481b1d749f421177974590ae50a1f58dd46d55b6465b78af6ed",
+      "sha256": "53de5077dfe4a225331a5d30960ebbbeb102aff92d9b1128f2b8c778df8427a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26261,7 +26261,7 @@
     },
     {
       "path": "formal/system/logout-intent.md",
-      "sha256": "6ec1cc5eec67736737db057d881c36f41f90ca04257c611995304428b1af4aea",
+      "sha256": "ca0f40f6eb8cdf2b1801710bfbb6b429b85d3a7f4ece5586c81d052bdacccf06",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

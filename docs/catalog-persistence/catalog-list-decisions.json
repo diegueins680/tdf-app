@@ -370,6 +370,13 @@
         ]
       ],
       "reason": "Only five reviewed source fingerprints changed: four additive navigation groups and a session featureFlags fixture. All classifications, persistence obligations and audit policies are preserved."
+    },
+    "logoutIntent20261025": {
+      "sourceMain": "b732efd65de23e5b97f3f619a2242397c64965c3",
+      "reviewedIds": [
+        "0c91e00629e658db782f"
+      ],
+      "reason": "Add only the scoped logout protocol classification; preserve every existing reviewed decision and audit rule unchanged."
     }
   },
   "decisions": [
@@ -18057,6 +18064,29 @@
       "evidence": {
         "file": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
         "line": 15
+      }
+    },
+    {
+      "id": "0c91e00629e658db782f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing these protocol states can re-enable automatic cookie restoration or misrepresent unconfirmed server logout.",
+      "justification": "LogoutStatus is the identity-free browser logout/revocation protocol, not selectable booking or community catalog data. The four fixed states must work offline before any server request. Lexical overlaps such as pending/confirmed with booking sources are not consumers of this TypeScript type. Public display copy remains localized independently.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/session/logoutIntent.ts",
+        "line": 6,
+        "name": "LogoutStatus",
+        "kind": "literal-union",
+        "values": [
+          "cleared",
+          "pending",
+          "unconfirmed",
+          "confirmed"
+        ],
+        "contract": "formal/system/logout-intent.md"
       }
     }
   ]

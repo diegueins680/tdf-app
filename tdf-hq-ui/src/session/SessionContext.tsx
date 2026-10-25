@@ -256,7 +256,10 @@ export function SessionProvider({ children }: SessionProviderProps) {
     let revision = getLogoutRevision();
     return subscribeLogoutIntent(() => {
       const next = getLogoutRevision();
-      if (next !== revision && hasLogoutIntent()) clearLocalSessionState();
+      // A different document may already have cleared its logout intent by
+      // logging in again before this tab receives either storage event. Any
+      // unseen auth revision invalidates our old account/cache occurrence.
+      if (next !== revision) clearLocalSessionState();
       revision = next;
     });
   }, [clearLocalSessionState]);

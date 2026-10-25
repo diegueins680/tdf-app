@@ -11850,7 +11850,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "19e69e23ddc763e20726cead7e505d3ba6d25d8da3c999c4f3ea502e3d1e4532",
+    "docs/catalog-persistence/catalog-list-decisions.json": "c600f508e7af74e36b9eb8784373fd36d057f22f70b22faeff5cf52866696b0a",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -12632,9 +12632,9 @@
     "tdf-hq-ui/src/routes/protectedRoutes.tsx": "7b30fe9684172ea1ce741dfa17b650a75e30d7f04bfbfa1a6e6b8134db4f1761",
     "tdf-hq-ui/src/routes/publicRoutes.test.tsx": "b1d51f44ec9320845ae9fe0027eec9f45e088ae3b3d15b991f986e31448bbb5c",
     "tdf-hq-ui/src/routes/publicRoutes.tsx": "0f6ffdb7a973c5e0f419dd9dce384e326d82a4e8615a61deb4e713bc39e84629",
-    "tdf-hq-ui/src/session/SessionContext.tsx": "66027b6f797cc4ad32413d1e4a2a57674ba25a55ae37d303c0006a2b80590daf",
+    "tdf-hq-ui/src/session/SessionContext.tsx": "525d6f5f348aa91c6a7786c00a77f4daab8cc9f225b09709fdacf24f3f2ac337",
     "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx": "d73f62bb5fd41d238f3b9b894dc9e935a525e51885dfd75b6c0efe1b7fd2a2f4",
-    "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx": "6fd94b62815f2481b1d749f421177974590ae50a1f58dd46d55b6465b78af6ed",
+    "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx": "53de5077dfe4a225331a5d30960ebbbeb102aff92d9b1128f2b8c778df8427a3",
     "tdf-hq-ui/src/session/SessionProviders.test.tsx": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
     "tdf-hq-ui/src/session/SessionProviders.tsx": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
     "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx": "5109459ac552aec840246f08366bf65ec95a0fe26579b7664cee39dcfdae6250",
@@ -35511,7 +35511,7 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "66027b6f797cc4ad32413d1e4a2a57674ba25a55ae37d303c0006a2b80590daf",
+      "sha256": "525d6f5f348aa91c6a7786c00a77f4daab8cc9f225b09709fdacf24f3f2ac337",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35543,7 +35543,7 @@
     {
       "id": "SURFACE-6996ecfbe844e690",
       "path": "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-      "sha256": "6fd94b62815f2481b1d749f421177974590ae50a1f58dd46d55b6465b78af6ed",
+      "sha256": "53de5077dfe4a225331a5d30960ebbbeb102aff92d9b1128f2b8c778df8427a3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

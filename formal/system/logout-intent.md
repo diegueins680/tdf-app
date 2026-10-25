@@ -26,8 +26,10 @@ adoption path either checks its captured logout revision (password, Google,
 signup, password reset and invitation redemption), or both its existing synchronous
 account epoch and captured revision (artist onboarding). A later intent invalidates earlier callbacks.
 An old logout completion cannot overwrite a new login revision. Other tabs drop
-their local account on a new logout revision; they do not silently adopt another
-tab's fresh login. Session query caches retain their existing epoch isolation.
+their local account on any unseen authentication revision, including a cleared
+revision from another tab's fresh login. A logout followed by login before storage
+event delivery must still discard the old account and its query cache. They do
+not silently adopt the other tab's fresh login. Session query caches retain their existing epoch isolation.
 
 Storage corruption or unavailable writable storage disables automatic cookie
 restoration. An explicit fresh login may operate in memory. This safeguard needs

@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { fireEvent } from '@testing-library/react';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 
 const snapshot = { username: 'fictional-fan', displayName: 'Fan', partyId: 42, roles: ['fan'] };
 const loadSnapshot = jest.fn<() => Promise<typeof snapshot | null>>().mockResolvedValue(snapshot);
@@ -13,18 +14,21 @@ jest.unstable_mockModule('../api/session', () => ({
 }));
 jest.unstable_mockModule('../analytics/posthog', () => ({ getAnalyticsClient: () => ({ ready: false }) }));
 jest.unstable_mockModule('../utils/logger', () => ({ logger: { warn: jest.fn() } }));
-const { SessionProvider, useSession, SESSION_STORAGE_KEY } = await import('./SessionContext');
+const { SessionQueryProvider } = await import('./SessionQueryProvider');
+let queryClient!: QueryClient;
+const { SessionProvider, useSession, getActiveSession, SESSION_STORAGE_KEY } = await import('./SessionContext');
 const { getLogoutStatus, LOGOUT_INTENT_KEY } = await import('./logoutIntent');
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 function Probe() {
+  queryClient = useQueryClient();
   const { session, loading, login, logout } = useSession();
   return <><output>{loading ? 'loading' : session?.username ?? 'anonymous'}</output>
     <button onClick={logout}>logout</button><button onClick={() => login(snapshot)}>fresh login</button></>;
 }
 let root: ReturnType<typeof createRoot>;
 let container: HTMLDivElement;
-const mount = async () => { root = createRoot(container); await act(async () => root.render(<SessionProvider><Probe /></SessionProvider>)); };
+const mount = async () => { root = createRoot(container); await act(async () => root.render(<SessionProvider><SessionQueryProvider><Probe /></SessionQueryProvider></SessionProvider>)); };
 beforeEach(async () => {
   localStorage.clear(); sessionStorage.clear(); loadSnapshot.mockClear();
   loadSnapshot.mockResolvedValue(snapshot);
@@ -76,4 +80,24 @@ it('cannot adopt an in-flight bootstrap snapshot after another tab logs out', as
   await act(async () => window.dispatchEvent(new StorageEvent('storage', { key: LOGOUT_INTENT_KEY })));
   await act(async () => resolveSnapshot(snapshot));
   expect(container.querySelector('output')?.textContent).toBe('anonymous');
+});
+
+
+it.each([true, false])('invalidates A when remote login is already cleared before storage delivery; queued logout=%s', async (queuedLogout) => {
+  const oldClient = queryClient;
+  oldClient.setQueryData(['synthetic-private-A'], { owner: 42 });
+  const logoutValue = JSON.stringify({ revision: 'remote-logout-A', status: 'unconfirmed' });
+  const loginValue = JSON.stringify({ revision: 'remote-login-B', status: 'cleared' });
+  // Another document can finish both writes before this document gets either event.
+  if (queuedLogout) localStorage.setItem(LOGOUT_INTENT_KEY, logoutValue);
+  localStorage.setItem(LOGOUT_INTENT_KEY, loginValue);
+  await act(async () => {
+    if (queuedLogout) window.dispatchEvent(new StorageEvent('storage', { key: LOGOUT_INTENT_KEY, oldValue: null, newValue: logoutValue }));
+    window.dispatchEvent(new StorageEvent('storage', { key: LOGOUT_INTENT_KEY, oldValue: queuedLogout ? logoutValue : null, newValue: loginValue }));
+  });
+  expect(getActiveSession()).toBeNull();
+  expect(container.querySelector('output')?.textContent).toBe('anonymous');
+  expect(queryClient).not.toBe(oldClient);
+  expect(oldClient.getQueryData(['synthetic-private-A'])).toBeUndefined();
+  expect(queryClient.getQueryData(['synthetic-private-A'])).toBeUndefined();
 });
