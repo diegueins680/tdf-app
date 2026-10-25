@@ -4,7 +4,7 @@ const require = createRequire(import.meta.url);
 
 // Browser integration only: all API calls are synthetic and all external assets
 // are blocked. Database/authorization/media delivery have a separate HTTP lane.
-async function fixture(page, baseURL) {
+async function fixture(page, baseURL, anonymousStatus) {
   const origin = new URL(baseURL).origin;
   const state = { authenticated: false, signups: [], moments: [], failNextPublication: true };
   const session = () => ({ username: 'memory.new@persona.test', displayName: 'Synthetic participant', partyId: 9,
@@ -14,7 +14,8 @@ async function fixture(page, baseURL) {
     if (!['fetch', 'xhr'].includes(request.resourceType())) return url.origin === origin ? route.continue() : route.abort('blockedbyclient');
     const path = url.pathname;
     if (path === '/health') return route.fulfill({ json: { status: 'ok', db: 'ok' } });
-    if (path === '/session') return state.authenticated ? route.fulfill({ json: session() }) : route.fulfill({ status: 401, json: {} });
+    if (path === '/session') return state.authenticated ? route.fulfill({ json: session() })
+      : anonymousStatus === 401 ? route.fulfill({ status: 401, json: {} }) : route.fulfill({ status: 200, body: 'null', contentType: 'application/json' });
     if (path === '/signup') { state.signups.push(request.postDataJSON()); state.authenticated = true; return route.fulfill({ json: { token: 'synthetic-memory-token', partyId: 9, roles: ['Customer'], modules: [] } }); }
     if (path.startsWith('/session/onboarding')) return route.fulfill({ json: { newlyCompleted: false, eligible: false, completedAt: '2026-10-25T00:00:00Z', progress: { eligible: false, completedAt: '2026-10-25T00:00:00Z' } } });
     if (path === '/social-events/events/141') return route.fulfill({ json: { eventId: '141', eventOrganizerPartyId: '1', eventTitle: 'Synthetic memory community', eventStart: '2026-10-01T19:00:00Z', eventEnd: '2026-10-02T02:00:00Z', eventWorkflowStateCode: 'completed', eventIsPublic: true, eventPublicListable: true, eventRsvpEligible: false, eventTicketPurchaseEnabled: false, eventArtists: [] } });
@@ -38,8 +39,11 @@ async function fixture(page, baseURL) {
   return state;
 }
 
-test('new participant preserves event intent, recovers a failed text publication and finds it after reload @mobile-flow @critical', async ({ page, baseURL }, testInfo) => {
-  const state = await fixture(page, baseURL);
+// GET /session normally returns 200/null for an anonymous visitor. Retain the
+// expired-session 401 boundary as a separate scenario, including its redirect.
+for (const entry of [{ name: 'anonymous', status: 200 }, { name: 'expired', status: 401 }]) {
+test(`new participant (${entry.name} session) preserves event intent, recovers a failed text publication and finds it after reload @mobile-flow @critical`, async ({ page, baseURL }, testInfo) => {
+  const state = await fixture(page, baseURL, entry.status);
   const destination = '/social/eventos/141?compose=1#momentos';
   await page.goto(destination, { waitUntil: 'domcontentloaded' });
   await expect(page).toHaveURL(/\/login\?/);
@@ -80,3 +84,4 @@ test('new participant preserves event intent, recovers a failed text publication
   await page.locator('#momentos').screenshot({ path: screenshot });
   await testInfo.attach('Synthetic memories after reload', { path: screenshot, contentType: 'image/png' });
 });
+}
