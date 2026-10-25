@@ -27,16 +27,17 @@
       "tdf-hq-ui/src/pages/FanHubPage.tsx"
     ],
     "expectedBenefit": "Prevent unintended field erasure and copying profile drafts across accounts; allow recovery after a failed read.",
-    "observedBenefit": "En entornos descartables, perfiles intactos durante errores, cero despachos antiguos con nuevas credenciales, subida HttpOnly cookie-only y foto publicada persistida en PostgreSQL/refrescada en Comunidad. En producción se verificaron los assets y el comportamiento sintético publicado de604/605;607 ya está integrado; verificación desplegada en curso, sin afirmar disponibilidad todavía.",
-    "implementationStatus": "FINAL_COMBINED_CANDIDATE_LOCALLY_VERIFIED",
+    "observedBenefit": "En entornos descartables se conservaron perfiles y se bloquearon callbacks antiguos con nuevas credenciales. La web canónica607 publicada pasó fixtures sintéticos escritorio/Pixel7:503/ceroPUT/reintento, guardado con campos conservados, subida cookie-only, caché y callback A después de logout/login comprometido de B sin PUT; B guarda sus propios datos. Cero API/escrituras productivas reenviadas; no es prueba de persistencia productiva o cuentas reales.",
+    "implementationStatus": "MERGED_WEB_SCOPE_DEPLOYED_VERIFIED",
     "validationStatus": "3369_TESTS_300_SUITES_BUILD_LINT_TYPES_NATIVE_RUNTIME_SOURCE_ADMISSION_PASS",
     "pullRequest": "https://github.com/diegueins680/tdf-app/pull/607",
     "mergeStatus": "MERGED_PROTECTED_REVIEW_AND_20_REQUIRED_CHECKS",
-    "productionStatus": "DEPLOYED_VERIFICATION_IN_PROGRESS_NO_AVAILABILITY_CLAIM",
+    "productionStatus": "607_DEPLOYED_WEB_SYNTHETIC_FIXTURE_VERIFIED",
     "scope": "Web form ownership and load-state guard; preserve API/server authorization and historical migrations.",
     "risksAndDependencies": [
       "Already-dispatched requests and cross-device write versioning remain outside this client boundary.",
-      "Production availability/benefit from607 awaits deployed verification receipt."
+      "Deployed fixtures cover committed provider logout/login; before-React credential gap is separately verified by four local real-provider/fetch regressions.",
+      "No real-account authentication, production profile persistence or physical-device end-to-end claim."
     ],
     "branch": "fix/artist-profile-load-safety-20261025",
     "codeChanges": [
@@ -45,7 +46,8 @@
       "Captured save/upload callbacks and preservation of dirty drafts across background reads."
     ],
     "mergeCommit": "cfe75b18786c18d18fb2fc806f843a95e029aeb0",
-    "mergeReceipt": "/private/tmp/tdf-user-value-607-merge-20261025.json"
+    "mergeReceipt": "/private/tmp/tdf-user-value-607-merge-20261025.json",
+    "deploymentReceipt": "/private/tmp/tdf-user-value-607-deployed-20261025.json"
   },
   "historicalMeasurement": {
     "window": "2026-10-12/2026-10-18",
@@ -263,7 +265,7 @@
       "receipt": "/private/tmp/tdf-profile-final-catalog-20261025.json"
     }
   },
-  "updatedAt": "2026-10-25T19:47:11.104169+00:00",
+  "updatedAt": "2026-10-25T19:50:43.336112+00:00",
   "publicObservation": {
     "observedAt": "2026-10-25T08:25:38.806824+00:00",
     "readOnly": true,
@@ -368,7 +370,8 @@
     "/private/tmp/tdf-alert-parity-repro-20261025/v12-frozen-full214/results.json": "153da82b102dffe63b5fc4ca7dc1e3ba375b95924c74c0586ade0181e77a6ade",
     "/private/tmp/tdf-alert-parity-repro-20261025/v12-frozen-full214/official-full214.log": "4f06ed0211905a7da80218ecbad60c29625065489ed8a8fdfeaf6529c325020f",
     "/private/tmp/tdf-alert-parity-repro-20261025/hspec-native-built-by-stack.log": "25ebde6babf80bf205277aff3e737c8f6b4eff1b9f440c1d5fe5aa138b7dac52",
-    "/private/tmp/tdf-user-value-607-merge-20261025.json": "d4f17cdf5906aa262c4b5dfc48c3fdbe1e2eea587f8a1319698daa89cb56be00"
+    "/private/tmp/tdf-user-value-607-merge-20261025.json": "d4f17cdf5906aa262c4b5dfc48c3fdbe1e2eea587f8a1319698daa89cb56be00",
+    "/private/tmp/tdf-user-value-607-deployed-20261025.json": "ad7bca5fb9b5df9d265c7bb5f1ed0aac652d85923f5767731ea450f96dd878f3"
   },
   "integrationRefresh": {
     "protectedMain": "089dce6ba410e5a76bee024c0d4be2ae3df0011d",
@@ -437,5 +440,18 @@
       "Fresh inspector213applied and0pending; preparation explicitlyexecutionAllowedfalse."
     ],
     "productionMutations": false
+  },
+  "profileSafetyDelivery": {
+    "pullRequest": 607,
+    "state": "MERGED_AND_DEPLOYED_WEB_SYNTHETIC_FIXTURE_VERIFIED",
+    "mergeCommit": "cfe75b18786c18d18fb2fc806f843a95e029aeb0",
+    "receipt": "/private/tmp/tdf-user-value-607-deployed-20261025.json",
+    "observedAt": "2026-10-25T19:49:43.915930+00:00",
+    "asset": "https://www.tdfrecords.net/assets/index-dzlEpVI6.js",
+    "assetSha256": "287eac22278297be85cf7e3ee8ddecc03ffd85558afd5dd7b749a4c6c9001997",
+    "backendCommit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+    "productionApiReadsForwarded": 0,
+    "productionWritesForwarded": 0,
+    "scope": "Actual deployed static assets and real SessionProvider/clients in desktop/Pixel7 Chromium with entirely synthetic API/session/profile/image fixtures. Post-React-commit old callback test is separate from four local before-render controls. No real account/provider/production persistence claim."
   }
 }

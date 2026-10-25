@@ -55,7 +55,7 @@ tras controles negativos y ejecución descartable (85→91).
 
 | Orden | Trabajo existente o nuevo | Categoría | A/G/V/J/E/C/R/T | P | Estado y acción |
 | --- | --- | --- | --- | --- | --- |
-| 1, integrado | Evitar guardar borradores ajenos/sin lectura propia y revocar callbacks al cambiar credenciales | S0 | 4/5/4/5/5/4/4/4 | 91 | MERGED: #607 integrado como `cfe75b18`,20checks obligatorios y revisión vigente verificados. Epoch síncrono, lectura propia y caché calificados localmente; verificación desplegada en curso, sin afirmar disponibilidad todavía. |
+| 1, integrado | Evitar guardar borradores ajenos/sin lectura propia y revocar callbacks al cambiar credenciales | S0 | 4/5/4/5/5/4/4/4 | 91 | COMPLETE en alcance web acotado: #607 integrado como `cfe75b18`,20checks y revisión vigente verificados. Assets públicos y fixtures Chromium escritorio/Pixel7 pasan conservación/recuperación y callback antiguo revocado, sin reenviar API productiva. No certifica cuentas reales ni todo el recorrido de perfiles. |
 | 2 | Preservar términos aceptados, ledger y capturas inciertas | S0 | 3/5/5/5/5/3/2/2 | 86 | BLOCKED. Reutilizar #551, sin promover #555/#569 por separado ni activar proveedores. |
 | 3 | Subir portada con sesión HttpOnly válida | S1 | 3/4/4/5/5/5/4/3 | 83 | COMPLETE para el transporte web cookie-only: #605 integrado como `9a927fa3` y publicado, con fixture de navegador verificado. Google real no certificado por esta prueba. |
 | Entregado | Reflejar foto guardada en Comunidad | S1 | 4/3/4/5/5/5/4/3 | 81 | COMPLETE en el alcance de invalidación web: #604 integrado como `512d590e` y assets publicados verificados. Browser real con API sintética; no afirma upload ni escritura productiva real. |
@@ -113,7 +113,7 @@ del servidor ni se afirma que hayan ocurrido pérdidas en cuentas reales.
    de browser/API/PostgreSQL se registran después de ejecutarse, sin promover
    pruebas de UI a evidencia de persistencia real.
 
-**Implementación/validación/entrega.** #607 integrado en `cfe75b18`; verificación desplegada en curso. Consultar el informe JSON acompañante. El responsable de la reparación completa SHA, comandos, resultados,
+**Implementación/validación/entrega.** #607 integrado y web publicada `cfe75b18`, verificada con fixtures sintéticos; no implica persistencia de cuentas reales. Consultar el informe JSON acompañante. El responsable de la reparación completa SHA, comandos, resultados,
 PR, merge y despliegue. No se reclaman pruebas ni beneficio observado antes de
 registrar sus recibos.
 
@@ -122,7 +122,7 @@ registrar sus recibos.
 | Recorrido | Clasificación | Evidencia, disponibilidad y límites |
 | --- | --- | --- |
 | Registro, autenticación y recuperación | PARTIAL | Login/sesión y deadlines existen; #594 está en `main`. ST-001 mantiene pendientes ciclo de reset/expiración/inbox y retorno al intento en la plataforma objetivo. La prueba de login no completa recuperación. |
-| Perfil de artista, publicación y compartir | PARTIAL | Borrador #607 integrado y pendiente de verificación desplegada; subida cookie-only #605 y refresco #604 publicados y verificados en su alcance. No confundir un fallback de imagen o una foto reparada individualmente con corrección general. |
+| Perfil de artista, publicación y compartir | PARTIAL | Guardia web de borrador #607 integrada/publicada y verificada con fixtures sintéticos; subida cookie-only #605 y refresco #604 publicados y verificados en su alcance. No confundir un fallback de imagen o una foto reparada individualmente con corrección general. |
 | Descubrimiento, seguimiento e interacción fan | PARTIAL | #576 ya integrado; la búsqueda canónica y el seguimiento persistido tienen evidencia previa aislada. Foto/caché #604 publicada y verificada; el recorrido completo conserva sus propios límites. Primer valor de onboarding, favorito y follow social son métricas distintas. |
 | Comunidad, notificaciones y mensajería | PARTIAL | #578 ya integra avisos internos y respuestas. Correo/push de #577 no está completado. `social_v2_runtime.enabled=false` en la observación: no certificar V2 disponible ni activar la bandera. |
 | Música, vídeo, eventos y contenidos | PARTIAL / BLOCKED por subcapacidad | Descubrimiento y contenido existente no implican compra/distribución disponible. Las cinco banderas `music_releases.*` están desactivadas; distribución/merch comercial también. #514 conserva condiciones antes de activar releases. |
@@ -191,7 +191,9 @@ actualice `main`, repetir la comparación de contenido antes de reabrir trabajo.
 
 Las correcciones web #604/#605 ya están integradas y publicadas. Las puntuaciones siguen siendo hipótesis ordinales; no hay uplift observado ni un conteo validado de usuarios afectados.
 
-## Evidencia del arreglo seleccionado
+## Evidencia histórica inicial del arreglo #607 (antes de composición final)
+
+Este bloque conserva el ensayo inicial pre603; los números3350/297,334201gzip y1326 son históricos. La composición final3369/300 y334208gzip se describe después; la disponibilidad publicada actual se registra en el cierre607.
 
 - Nueve regresiones fallaron sobre la base protegida antes de la reparación; trece
   pruebas finales pasan e incluyen cambios de cuenta, respuestas tardías y slug.
@@ -210,15 +212,14 @@ Las correcciones web #604/#605 ya están integradas y publicadas. Las puntuacion
 - Beneficio observado: conservación de perfiles y recuperación en entorno
   descartable. No se afirma disponibilidad productiva ni mejora de conversión.
 
-## Investigación del siguiente trabajo ejecutable: alertas guardadas (#534)
+## Investigación inicial y reproducción confirmada: alertas guardadas (#534)
 
 El trigger vigente se redefine en
 `tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql:940`; sus claves
 no cubren fechas, servicio, modalidad remota, disponibilidad ni tipo de perfil,
 aunque la consulta pública sí usa esos predicados. Mobile persiste el sentinel
 `entityType: "all"`, que el trigger interpreta como un tipo literal y excluye
-coincidencias. También divergen substring y aliases en búsqueda textual. Son
-contraejemplos derivados de fuente, todavía no una reproducción SQL/HTTP.
+coincidencias. También divergen substring y aliases en búsqueda textual. Las hipótesis iniciales se contrastaron después:10 discrepancias válidas sobre27 casos PostgreSQL; la reparación actual pasa68 controlesSQL y107HTTP reales. El recibo v12 y sus límites se describen al final.
 
 La reparación no geográfica es ejecutable mediante matcher compartido y pruebas
 reales de paridad. Completar radio está BLOCKED: la especificación del directorio
@@ -332,8 +333,7 @@ No se cambió configuración, storage, contenedores, flags ni diario productivo.
 a las19:40:53UTC:20checks obligatorios, revisión independiente vigente del head
 `35de` y cero conversaciones pendientes. El merge normal conserva exactamente el
 árbol aprobado. Recibo: `/private/tmp/tdf-user-value-607-merge-20261025.json`.
-La verificación desplegada está en curso; los estados históricos anteriores
-no se presentan como disponibilidad actual ni se afirma uplift de conversión.
+La web publicada se verificó a las19:49:43UTC con assets cfe y fixtures sintéticos de escritorio/Pixel7; los estados históricos anteriores no representan disponibilidad actual ni se afirma uplift de conversión.
 
 El siguiente incremento ejecutable es #534. La fuente conserva los138 requisitos
 de ese main campo por campo y añade `DIR-SAVED-SEARCH-001` (139 total). La
@@ -367,3 +367,17 @@ exacto. Solo se actualizan documentos/trazas después del recibo, sin cambios de
 backend/SQL/pruebas. Beneficio observado: las10 divergencias iniciales desaparecen
 en casos sintéticos y se confirma guardado recuperable/alerta interna persistida;
 no hay beneficio productivo ni conversión atribuible antes del release autorizado.
+
+
+Verificación publicada #607: `/private/tmp/tdf-user-value-607-deployed-20261025.json`,
+a las19:49:43UTC. Asset `index-dzlEpVI6.js`, SHA256
+`287eac22278297be85cf7e3ee8ddecc03ffd85558afd5dd7b749a4c6c9001997`.
+Chromium escritorio/Pixel7 verifica503/ceroPUT, reintento, guardado conservador,
+cookie HttpOnly/XHR y tarjeta actualizada. Tras logout/login comprometido por
+SessionProvider, invocar callback viejo de A produce0PUT y B puede guardar su
+propio perfil. Esa prueba publicada ocurre después del commit React; la ventana
+anterior al render se cubre por los4 controles locales separados. No se reenvió
+ninguna API/escritura productiva y hubo0errores de página. El backend público
+sigue `4dac175d`, health/DB ok. Este resultado completa el alcance web acotado607;
+no certifica credenciales/cuentas reales, persistencia productiva ni dispositivo
+físico. La reparación backend #534 continúa sin publicar/desplegar.
