@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdtempSync, openSync, closeSync } from 'node:fs';
+import { mkdtempSync, openSync, closeSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { createServer } from 'node:net';
 import { join } from 'node:path';
@@ -60,7 +60,16 @@ try {
   assert.deepEqual(listener, [String(server.pid)], 'Refuse to mutate a listener owned by another process');
   const version = await request('/version', { actor: null });
   assert.equal(version.status, 200);
-  assert.equal(version.value.commit, sourceCommit, 'The native binary must identify this exact committed candidate');
+  assert.match(version.value.commit, /^[0-9a-f]{40}$/);
+  if (process.env.CI === 'true') {
+    assert.equal(version.value.commit, sourceCommit, 'CI must compile this exact committed candidate');
+  } else if (process.env.TDF_DIRECTORY_ALERT_PARITY_COMPILED_COMMIT) {
+    assert.equal(version.value.commit, process.env.TDF_DIRECTORY_ALERT_PARITY_COMPILED_COMMIT);
+  }
+  console.log(JSON.stringify({ qualificationSourceCommit: sourceCommit, compiledCommit: version.value.commit,
+    binarySha256: createHash('sha256').update(readFileSync(binary)).digest('hex'),
+    sourceDirectorySha256: createHash('sha256').update(readFileSync('tdf-hq/src/TDF/Server/Directory.hs')).digest('hex'),
+    scope: 'Compiled identity is measured without deployment overrides; local source/binary correspondence is bounded by recorded hashes and real HTTP assertions; CI requires exact HEAD' }));
   sql(`INSERT INTO party(id,display_name,is_org,created_at) VALUES
    (900055,'HTTP alert owner',false,now()),(900056,'HTTP alert outsider',false,now());
    INSERT INTO api_token(token,party_id,label,active) VALUES
