@@ -89,6 +89,70 @@ test('music/main reconciliation retains both reviews and the protected migration
   }
 });
 
+test('saved-alert manifest succession preserves exact213 provenance and rejects its stale approval', async () => {
+  const document = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
+  const transition = document.reconciliation.directorySavedSearchParity;
+  const { active, successors, integration } = await readReconciliation();
+  const canonicalHash = value => createHash('sha256').update(JSON.stringify(value,
+    (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
+      ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)).digest('hex');
+  // Immutable protected-main cfe75b source, independently hashed before this
+  // extension. Matching a recorded ID alone cannot preserve the prior review.
+  const previousDecisionHash = '97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0';
+  const protectedPrefixHash = '7b3616b6095436eb7eb46038d6ccaa289ff4cb22e602960c06d971bf915add86';
+  const previous = transition.decisions.find(entry => entry.id === '3f336173e03f10fc023c');
+  assert.equal(canonicalHash(previous), previousDecisionHash);
+  assert.equal(transition.previousDecisionCanonicalSha256, previousDecisionHash);
+  assert.equal(previous.evidence.valueCount, 213);
+  assert.equal(previous.reviewed, true);
+  assert.ok(!active.some(entry => entry.id === previous.id));
+  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'scripts/production-migrations.json'), 'utf8')).migrations;
+  assert.equal(canonicalHash(manifest.slice(0, 213)), protectedPrefixHash);
+  assert.equal(transition.protectedMainManifestCanonicalSha256, protectedPrefixHash);
+  assert.deepEqual(manifest[213], {
+    id: '2026-10-25_directory_saved_search_parity',
+    path: 'tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql',
+    introducedBy: 'eb2f71d62740783369a6eb2a6d35fc024484cb71',
+  });
+  const current = active.find(entry => entry.id === transition.successorDecisionId);
+  assert.equal(current?.id, 'c94cd70c1272ec9ede1b');
+  assert.equal(current.reviewed, true);
+  assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
+  assert.equal(current.evidence.valueCount, 214);
+  const pointer = successors.find(entry => entry.name === 'migrations');
+  assert.equal(pointer.currentId, current.id);
+  assert.equal(pointer.valueCount, 214);
+  assert.equal(pointer.change, current.justification);
+  const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
+  assert.equal(retirement.replacementId, current.id);
+  assert.equal(retirement.currentResolution.id, current.id);
+  assert.equal(retirement.currentResolution.valueCount, 214);
+  assert.equal(retirement.reason, current.justification);
+  assert.ok(pointer.previousCurrentIds.includes(previous.id));
+  assert.ok(retirement.previousReplacementIds.includes(previous.id));
+
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-alert-successor-test-'));
+  try {
+    const repoDir = path.join(tempRoot, 'repo');
+    await fs.mkdir(repoDir);
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: repoDir });
+    await writeFile(repoDir, 'scripts/production-migrations.json', JSON.stringify({ migrations: manifest }));
+    await execFileAsync('git', ['add', '--', 'scripts/production-migrations.json'], { cwd: repoDir });
+    const decisionsPath = path.join(tempRoot, 'decisions.json');
+    const args = [auditScriptPath, '--root', repoDir, '--decisions', decisionsPath, '--fail-on-unreviewed'];
+    await fs.writeFile(decisionsPath, JSON.stringify([current]));
+    await execFileAsync(process.execPath, args, { cwd: repoDir });
+    await fs.writeFile(decisionsPath, JSON.stringify([previous]));
+    await assert.rejects(execFileAsync(process.execPath, args, { cwd: repoDir }),
+      error => error.code === 1 && error.stderr.includes('1 stale decision(s)')
+        && error.stderr.includes('1 unreviewed candidate(s)'));
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test('event catalog retirement ledger preserves evidence and distinct reviewed successors', async () => {
   const { ledger, active, successors } = await readReconciliation();
   assert.equal(ledger.schemaVersion, 1);

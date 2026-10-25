@@ -368,7 +368,10 @@
             "valueCount": 213
           }
         }
-      ]
+      ],
+      "previousDecisionCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+      "protectedMainManifestCanonicalSha256": "7b3616b6095436eb7eb46038d6ccaa289ff4cb22e602960c06d971bf915add86",
+      "successorDecisionId": "c94cd70c1272ec9ede1b"
     }
   },
   "decisions": [

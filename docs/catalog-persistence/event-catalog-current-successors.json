@@ -352,12 +352,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "3f336173e03f10fc023c",
+      "currentId": "c94cd70c1272ec9ede1b",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 213,
-      "change": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+      "valueCount": 214,
+      "change": "The 214-entry deployment execution registry preserves protected main 9a927fa390066f43cc27c872800bf1b0412e166e as its exact 213-entry prefix and appends one non-geographic directory saved-search parity migration. All213 shared entry objects, introduction anchors and historical SQL bytes remain unchanged. The new introduction anchor is eb2f71d62740783369a6eb2a6d35fc024484cb71; subsequent unpublished candidate corrections are reviewed separately. Disposable full-prefix/replay, exact rollback/reapply and authenticated application qualification are separate evidence; this classification authorizes no production application or activation.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -440,11 +440,23 @@
           },
           "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "460a86438e3fd6c3c675b5481174571100659685",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "16866931c2ed39d5dea2d5978dd4c4900626dc34760076c5f8ba9e356281232a",
+          "sourceEntry": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "df36744232de1d7f87c0945fe39e81a5b1e9e5d5206bb927299cdc18e9d18ca5",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Preserve the exact reviewed213-entry current pointer before advancing to the separately reviewed214-entry successor; no retired fingerprint becomes an active approval."
         }
       ],
       "previousCurrentIds": [
         "e60cbdb9121493f47fa6",
-        "a8128668e1b74b7c0ae4"
+        "a8128668e1b74b7c0ae4",
+        "3f336173e03f10fc023c"
       ]
     }
   ]
