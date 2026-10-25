@@ -273,3 +273,32 @@ dc9fb129. Se repiten pruebas de composición web y controles de repositorio; CI 
 revisión independiente deben vincularse al nuevo head, sin reutilizar la aprobación
 anterior. La moderación fuente avanza en una rama sucesora separada, con su propia
 evidencia PostgreSQL/HTTP/navegador; no se presenta como parte de este PR ni desplegada.
+
+## Continuación del 25/oct, 21:20 UTC — CI y nuevo main
+
+La aprobación independiente de 7b16d44bb llegó a las 21:20:22 UTC y se conserva
+como evidencia de ese head. CI encontró un fallo real del runner de navegador:
+516 casos pasaron, 22 quedaron omitidos por configuración y el único fallo fue
+la navegación de registro en WebKit desktop. La prueba abría una segunda URL
+antes de que terminara la redirección al login; ocurrió también en el sucesor
+#615. No se cuenta ninguno de esos runs como satisfactorio.
+
+El recorrido ahora espera la pantalla utilizable y pulsa «Crear cuenta general»,
+como una persona usuaria. Conserva las aserciones de destino original, registro,
+fallo/reintento, publicación, recarga, ancho de pantalla y accesibilidad, y añade
+la comprobación del contexto tras abrir el registro. No hay skips o retries nuevos.
+Firefox local y 34 pruebas de página/API/preferencias pasan; la matriz Chrome local
+y el nuevo WebKit Linux quedan registrados por sus ejecuciones independientes.
+
+Se fusionó normalmente main 000cf8ad3 (PR financiero #609) en ef512e3f2, conservando
+íntegros sus 139 requisitos y añadiendo los dos de recuerdos. El helper financiero
+de expiración procede de main; las migraciones, métodos API y pin Mobile de esta
+entrega no cambian. Los índices se regeneran después del cambio del test y sus
+comprobaciones deben pasar. La aprobación del head anterior no autoriza este nuevo
+head. La cola de integración informaba espera por #610: no se altera ese orden.
+
+El defecto de cierre de sesión fallido reproducido por el flujo de activación
+también impide una aceptación con personas reales hasta su corrección y
+verificación; esa reparación está en trabajo por su propio flujo. Esta entrega
+no modifica SessionContext ni presenta la sesión sintética como aceptación humana.
+No hubo despliegue, cambio de estado de 141 ni comunicaciones productivas.

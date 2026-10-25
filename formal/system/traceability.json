@@ -11885,7 +11885,7 @@
     "e2e/web/community-discovery.spec.mjs": "9fb22467b072db50eeffc2deb009c2361c21d0ac496e96a07076a9af367d6260",
     "e2e/web/course-enrollment.spec.mjs": "f64fed981fa69b332499556853637fca938c9b026b90c4aaf1b4f5bb97633311",
     "e2e/web/directory-entry.spec.mjs": "17d56aaa082a13e71c2442b6f09ee29b158413e9a41eb7b07969e3bee61c8c97",
-    "e2e/web/event-memories.spec.mjs": "268579c624784a3edaec33afc5d78a63dade387e279c718fdcdb2d20c02edd1d",
+    "e2e/web/event-memories.spec.mjs": "046ce12a0780dc8c337fe1b4d07e2e8c6ab3f8399cdc86ba5d03115c9e93788a",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
     "e2e/web/marketplace-cart.spec.mjs": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385",
@@ -23209,7 +23209,7 @@
     {
       "id": "SURFACE-b64dd532c8bafb41",
       "path": "e2e/web/event-memories.spec.mjs",
-      "sha256": "268579c624784a3edaec33afc5d78a63dade387e279c718fdcdb2d20c02edd1d",
+      "sha256": "046ce12a0780dc8c337fe1b4d07e2e8c6ab3f8399cdc86ba5d03115c9e93788a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

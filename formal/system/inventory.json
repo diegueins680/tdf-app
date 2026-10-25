@@ -2853,7 +2853,7 @@
     {
       "id": "SURFACE-b64dd532c8bafb41",
       "path": "e2e/web/event-memories.spec.mjs",
-      "sha256": "268579c624784a3edaec33afc5d78a63dade387e279c718fdcdb2d20c02edd1d",
+      "sha256": "046ce12a0780dc8c337fe1b4d07e2e8c6ab3f8399cdc86ba5d03115c9e93788a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
