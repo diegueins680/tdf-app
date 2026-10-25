@@ -6250,13 +6250,13 @@
     {
       "id": "SURFACE-6fb3830cc5f24988",
       "path": "tdf-hq-ui/src/__tests__/analytics.test.ts",
-      "sha256": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
+      "sha256": "99f56aa4ca5dd09cd6db8fd88535673f1b8418983ec461c591a9998b65fbcd71",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-077e9bba1bd34cd9",
       "path": "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
-      "sha256": "e3ec6f05fb498eaf16d186eb895f9df556e2eb955ff9abcd59a6c788f0cd3147",
+      "sha256": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6268,13 +6268,13 @@
     {
       "id": "SURFACE-b44fc1d5abce9ec3",
       "path": "tdf-hq-ui/src/analytics/errorReporting.test.ts",
-      "sha256": "b0a09f258dbaf3070c2daa75cf5ef5c51fe884a56c7d0bed1ecf1a6961add5c8",
+      "sha256": "c56a20ab2521faed8bfd6e435636898248694c6ba0d75ce2ea66514aca688bc8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bb290758952f3fdd",
       "path": "tdf-hq-ui/src/analytics/errorReporting.ts",
-      "sha256": "9b0ab8f89cb0ab815cdaf58c41a5ca0c95788534dc913b5d8623d2d8e51d918d",
+      "sha256": "c47953821d45c98c9feddca8a4ebb90fdcf350e64e6a568cf243f82129fa52b4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7456,7 +7456,7 @@
     {
       "id": "SURFACE-a3ba5100eb601c90",
       "path": "tdf-hq-ui/src/components/RouteErrorBoundary.tsx",
-      "sha256": "acfa68139f15a453d13485001624f0dface575809f662eab1b870915b03e723b",
+      "sha256": "190fd8757648802bc797eea2c0ff22f42bd2a29509c4232b3a02ab5bf6c3ef05",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18897,7 +18897,7 @@
     },
     {
       "path": "docs/analytics.md",
-      "sha256": "7a2837f2227faceb649922c23d962033758afe95f20a8d67054ff2405415dfbf",
+      "sha256": "7ff775631ec60a0dc26ff1f69f67cf3dae147411d11e3cd0bc82d285a920a21a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25987,6 +25987,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/client-error-privacy.md",
+      "sha256": "c5059e6129c698ca66d88d2d0167292a953c01ef569a1ea825faac9c8b4b5fcf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/compiled-api-boundary.md",
       "sha256": "0985897fc3f1975c48fded4b7189b0098da0270a1d468d8631d127e5c585f79a",
       "authority": "inferred",
@@ -26408,7 +26415,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7ad23c77d09228647c79aef92a9ddf5b83dfd89f66b25ebfc201f44fd61e9571",
+      "sha256": "d24fc2c4e42ac536db4cab494e4dd78737686db34c113ba91f3ca2e61712667f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
