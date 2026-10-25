@@ -219,5 +219,17 @@
     "/private/tmp/tdf-profile-safety-review-20261025.json": "0637879abe9dc4a2537324b1f724f70a924f2bac45b703e9d80f79d406357309",
     "/private/tmp/tdf-profile-safety-build-20261025.log": "d4a551a977572bb3232aac20cadb674705425d4cf7d887105c0ba713d2f8ad0c",
     "/private/tmp/tdf-profile-safety-lint-20261025.log": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5"
+  },
+  "integrationRefresh": {
+    "protectedMain": "089dce6ba410e5a76bee024c0d4be2ae3df0011d",
+    "mergeCommit": "3d674b848fe5b19948c372b49d91e0ac10ba525c",
+    "reason": "PR603 merged while607 was being published. Normal merge preserves protected main requirements and adds the unchanged profile requirement; regenerate conflicting metadata.",
+    "requirements": {
+      "protectedMain": 136,
+      "merged": 137,
+      "protectedTicketRequirementUpdated": "EVT-TICKET-MANUAL-001"
+    },
+    "runtimeQualification": "Disposable browser evidence executed before603 integration. All four profile UI source hashes remain identical; cached E407 backend is not a build of the refreshed candidate, which incorporates separate ticket receipt behavior.",
+    "fullWebQualification": "3350/297 PASS executed on pre603 application tree; targeted profile/receipt checks and hosted CI qualify refreshed head separately."
   }
 }

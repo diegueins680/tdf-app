@@ -259,3 +259,14 @@ Entrega en revisión: [PR #607](https://github.com/diegueins680/tdf-app/pull/607
 rama `fix/artist-profile-load-safety-20261025`. El incremento mantiene estado
 PARTIAL hasta completar revisión independiente, CI, admisión FIFO, merge y
 verificación desplegada. Auto-merge desactivado; no cambia las reglas ni la cola.
+
+Actualización de integración: #603 se fusionó como `089dce6b` durante la
+publicación de #607. Se incorpora mediante merge normal, conservando exactamente
+los 136 requisitos del nuevo main y el nuevo requisito de perfiles. El requisito
+`EVT-TICKET-MANUAL-001` incorpora los campos de comprobantes aprobados en #603.
+Los conflictos de merge afectan solo inventario y trazabilidad generados. Las
+3350 pruebas web se ejecutaron antes de esa integración; se renuevan las
+comprobaciones dirigidas y los gates hospedados. Los bytes de los cuatro módulos
+UI de perfiles se conservan; el binario E407 del ensayo no es una compilación
+del nuevo candidato con #603. Se inicializa el gitlink Mobile exacto heredado
+del main protegido, sin introducir un pin propio.

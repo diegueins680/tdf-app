@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "8adefc5e8b0377b7a07cee99ff1ddd14c3ebb3d0",
+  "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -17376,7 +17376,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "e86ebd59530876bb78d66ed2af65e66cb99351f8f417a0772448b93aab74319f",
+      "sha256": "76df1aac037bdab83262a65de0ca428adae659d7d3b7bd6927730cc91353339c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19219,7 +19219,7 @@
     },
     {
       "path": "docs/engineering/user-value-backlog-2026-10-25.md",
-      "sha256": "2d39106848f10501370be617c0bd5647c068c1410f677c5b4bb7f658d35867f8",
+      "sha256": "c621e3ccf6d80d7c89021e10a65fef228f5cc386030e3abc2b0b48719057e1e4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
