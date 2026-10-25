@@ -20,10 +20,11 @@ original request treats confirmation as unavailable. No automatic revocation
 retry may accidentally target a later user's cookie.
 
 Fresh interactive authentication waits for this document's outstanding logout,
-then clears the intent on adoption of the fresh result. Every production session
+then clears the intent on adoption of the fresh result. A new logout revision
+also cancels credentials still queued before dispatch or a retry. Every production session
 adoption path either checks its captured logout revision (password, Google,
-signup, password reset and invitation redemption), or its existing synchronous
-account epoch (artist onboarding). A later intent invalidates earlier callbacks.
+signup, password reset and invitation redemption), or both its existing synchronous
+account epoch and captured revision (artist onboarding). A later intent invalidates earlier callbacks.
 An old logout completion cannot overwrite a new login revision. Other tabs drop
 their local account on a new logout revision; they do not silently adopt another
 tab's fresh login. Session query caches retain their existing epoch isolation.

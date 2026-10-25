@@ -47,3 +47,14 @@ it('bounds a stalled logout so explicit login can recover', async () => {
   const result = expect(logoutSessionRequest()).rejects.toThrow('deadline');
   await jest.advanceTimersByTimeAsync(30000); await result;
 });
+
+
+it('does not submit a queued fresh login after a newer logout', async () => {
+  let finish!: () => void;
+  trackLogoutRequest(new Promise<void>((resolve) => { finish = resolve; }));
+  const login = loginRequest({ username: 'fictional', password: 'fictional-password' });
+  beginLogoutIntent();
+  const rejection = expect(login).rejects.toThrow('El acceso cambió');
+  finish(); await rejection;
+  expect(fetchMock).not.toHaveBeenCalled();
+});

@@ -11725,13 +11725,15 @@
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/session/logoutIntent.test.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
         "tdf-hq-ui/src/api/logoutIntent.test.ts",
-        "tdf-hq-ui/src/pages/LoginPage.test.tsx"
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Revision, storage, bootstrap, unsigned transport, XHR refusal and deadline regression controls; native optimized browser with actual API and disposable PostgreSQL.",
@@ -12344,7 +12346,7 @@
     "tdf-hq-ui/src/api/accountDeletion.ts": "7d9983a96e95229e1ecf8a2470712214ad62ce525a206a0cb0a8c5ff3a3805ff",
     "tdf-hq-ui/src/api/artistInvitations.ts": "22b382c361b9ee99744c24a7ebb2888ac7037482cc607460a84a353614937a17",
     "tdf-hq-ui/src/api/auth.test.ts": "ae5de69adf0ca516180ce0078770eb6654bfa2ca617b1c8c2a9762108f7b8bf7",
-    "tdf-hq-ui/src/api/auth.ts": "3e38f12a64f452d58b80fc365fd72f1fa543fa4c9090198388dfd172bdf41551",
+    "tdf-hq-ui/src/api/auth.ts": "c2f502db09c6082917f0a796be6258b780a7086329565aea55c3d4661f7e15bb",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "e926290d808f7fed23fe6c52cf24ced83ebdfb77212787ce44b3a85860558d84",
     "tdf-hq-ui/src/api/client.ts": "c1a35d37d170cdf684226758a5fb024b1040545d8404c0f6d77e58e644e165fc",
@@ -12362,7 +12364,7 @@
     "tdf-hq-ui/src/api/inventory.ts": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
     "tdf-hq-ui/src/api/invoices.ts": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
-    "tdf-hq-ui/src/api/logoutIntent.test.ts": "6a8c6893ba50142eff841848f6d0d4cf0a06178e9353919a1d56151336c5f158",
+    "tdf-hq-ui/src/api/logoutIntent.test.ts": "687073169404cc8f167fb3e231f7c364016ec6799f5c4db5a382400a54eb4edb",
     "tdf-hq-ui/src/api/musicReleases.money.test.ts": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
     "tdf-hq-ui/src/api/musicReleases.ts": "150f499252556c86539bbbd5ec5aed68ff2c7031e5e2a6540d59fc87ecb9b917",
     "tdf-hq-ui/src/api/musicReleases.upload.test.ts": "e5a48b23eb9974f54078b4095084a8f2419d193742aba76aee3f798fa85ed695",
@@ -12470,6 +12472,8 @@
     "tdf-hq-ui/src/pages/AccessRequestsPage.tsx": "e91af15d7cab50fb347441fb220f365c694a43b888624582ff2314667506432c",
     "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": "e8128e5d24e1540cfd8e2accbb17d74941f2867957feb3cc8edb6723dab2b541",
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
+    "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx": "866a74f35e771146f540ee887b77295f559d44c36797b4d32044048517ef1bb9",
+    "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx": "6911985d0a867e39999cc716b91ab65fbc8f869adf1dcbd6ce11edc7ede4a4ae",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
     "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "545402d0b86ef118c857130ef91a28c4e5a9fc90d4df25c914395aa81241c894",
@@ -22577,6 +22581,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/session/logoutIntent.test.ts": [
       {
         "requirement": "AUTH-LOGOUT-001",
@@ -22590,6 +22600,12 @@
       }
     ],
     "tdf-hq-ui/src/api/logoutIntent.test.ts": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx": [
       {
         "requirement": "AUTH-LOGOUT-001",
         "relationship": "tests"
@@ -29502,7 +29518,7 @@
     {
       "id": "SURFACE-2a14b72d994c2399",
       "path": "tdf-hq-ui/src/api/auth.ts",
-      "sha256": "3e38f12a64f452d58b80fc365fd72f1fa543fa4c9090198388dfd172bdf41551",
+      "sha256": "c2f502db09c6082917f0a796be6258b780a7086329565aea55c3d4661f7e15bb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30057,7 +30073,7 @@
     {
       "id": "SURFACE-c7a9306039571e52",
       "path": "tdf-hq-ui/src/api/logoutIntent.test.ts",
-      "sha256": "6a8c6893ba50142eff841848f6d0d4cf0a06178e9353919a1d56151336c5f158",
+      "sha256": "687073169404cc8f167fb3e231f7c364016ec6799f5c4db5a382400a54eb4edb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32943,16 +32959,26 @@
     {
       "id": "SURFACE-211c2d4c89fbcb63",
       "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
-      "sha256": "ce9b473b5065b522e50d926baa63510290331badd7b668c4916191bfce5378f1",
+      "sha256": "866a74f35e771146f540ee887b77295f559d44c36797b4d32044048517ef1bb9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-LOGOUT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-a22dcf6e94d1d682",
       "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
-      "sha256": "8f3da99899ffe2f026ffb82ccb08d3dc2ef3143dc9f51955e6f7877fc051ac7c",
+      "sha256": "6911985d0a867e39999cc716b91ab65fbc8f869adf1dcbd6ce11edc7ede4a4ae",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-LOGOUT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-feace0cde60c7f70",
@@ -48498,8 +48524,6 @@
     "SURFACE-34d2f5e2182b0188",
     "SURFACE-441e024eb370fe5d",
     "SURFACE-7d1cdc171a244d93",
-    "SURFACE-211c2d4c89fbcb63",
-    "SURFACE-a22dcf6e94d1d682",
     "SURFACE-67734f5e4107b4c6",
     "SURFACE-fffcbad1b08fd3bd",
     "SURFACE-e7e38d2c86b603f3",
@@ -50783,7 +50807,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4feecbf050e242e92a054db3592a6f80dfc428883d1fcead0c97a4ad8a2b939d",
+      "sourceSha256": "d80531a33738d726e13d47d85d7c98bd3501b0271adc20a6c8ff88be61f0285f",
       "definition": {
         "states": [
           "absent",
@@ -50813,7 +50837,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4feecbf050e242e92a054db3592a6f80dfc428883d1fcead0c97a4ad8a2b939d",
+      "sourceSha256": "d80531a33738d726e13d47d85d7c98bd3501b0271adc20a6c8ff88be61f0285f",
       "definition": {
         "export": [
           "queued",

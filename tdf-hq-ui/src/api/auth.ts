@@ -1,4 +1,4 @@
-import { waitForLogoutRequest } from '../session/logoutIntent';
+import { getLogoutRevision, ownsLogoutRevision, waitForLogoutRequest } from '../session/logoutIntent';
 import { AuthRequestError } from '../utils/authErrorMessage';
 import { fetchWithDeadline, RequestTimeoutError } from './requestDeadline';
 import type { components } from './generated/types';
@@ -90,6 +90,7 @@ async function postAuthJson<T>(
   fallback: string,
   options?: { retryDelaysMs?: readonly number[]; credentialsError?: boolean },
 ): Promise<T> {
+  const authRevision = getLogoutRevision();
   const pendingLogout = waitForLogoutRequest();
   if (pendingLogout) await pendingLogout;
   const retryDelaysMs = options?.retryDelaysMs ?? [];
@@ -97,6 +98,7 @@ async function postAuthJson<T>(
 
   let attempt = 0;
   while (attempt < maxAttempts) {
+    if (!ownsLogoutRevision(authRevision)) throw new Error('El acceso cambió. Inicia sesión de nuevo.');
     let result: AuthResult<T>;
     let responseReceived = false;
     try {
