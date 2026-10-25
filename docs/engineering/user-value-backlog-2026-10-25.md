@@ -270,3 +270,9 @@ comprobaciones dirigidas y los gates hospedados. Los bytes de los cuatro módulo
 UI de perfiles se conservan; el binario E407 del ensayo no es una compilación
 del nuevo candidato con #603. Se inicializa el gitlink Mobile exacto heredado
 del main protegido, sin introducir un pin propio.
+
+Controles posteriores al refresh: 101 pruebas en 8 suites de perfiles, onboarding
+y comprobantes PASS; 13 comprobaciones de clientes API PASS; build/tipos PASS
+(334202 bytes gzip, 5 preloads), inventario/trazabilidad y admisión de superficies
+PASS. Estos recibos actualizan la integración sin atribuir al nuevo head la
+ejecución histórica de 3350 pruebas. CI hospedado y revisión siguen pendientes.

@@ -29,7 +29,7 @@
     "expectedBenefit": "Prevent unintended field erasure and copying profile drafts across accounts; allow recovery after a failed read.",
     "observedBenefit": "En escritorio y Pixel7, las lecturas pendientes/fallidas no producen PUT ni alteran los perfiles; el reintento permite guardar solo la ciudad y conserva todos los demás campos. Beneficio productivo aún no observado.",
     "implementationStatus": "PR_PUBLISHED",
-    "validationStatus": "LOCAL_CHECKS_PASS_HOSTED_AND_REVIEW_PENDING",
+    "validationStatus": "LOCAL_BASELINE_AND_REFRESH_CHECKS_PASS_HOSTED_AND_REVIEW_PENDING",
     "pullRequest": "https://github.com/diegueins680/tdf-app/pull/607",
     "mergeStatus": "NOT_MERGED_REQUIRED_REVIEW_CI_AND_FIFO",
     "productionStatus": "NOT_DEPLOYED",
@@ -167,7 +167,7 @@
       "receipt": "/private/tmp/tdf-profile-safety-source-admission-20261025.json"
     }
   },
-  "updatedAt": "2026-10-25T08:28:56.951248+00:00",
+  "updatedAt": "2026-10-25T08:35:35.764722+00:00",
   "publicObservation": {
     "observedAt": "2026-10-25T08:25:38.806824+00:00",
     "readOnly": true,
@@ -230,6 +230,30 @@
       "protectedTicketRequirementUpdated": "EVT-TICKET-MANUAL-001"
     },
     "runtimeQualification": "Disposable browser evidence executed before603 integration. All four profile UI source hashes remain identical; cached E407 backend is not a build of the refreshed candidate, which incorporates separate ticket receipt behavior.",
-    "fullWebQualification": "3350/297 PASS executed on pre603 application tree; targeted profile/receipt checks and hosted CI qualify refreshed head separately."
+    "fullWebQualification": "3350/297 PASS executed on pre603 application tree; targeted profile/receipt checks and hosted CI qualify refreshed head separately.",
+    "validation": {
+      "focusedWeb": {
+        "passed": 101,
+        "suites": 8,
+        "exitCode": 0,
+        "log": "/private/tmp/tdf-profile-safety-refreshed-focused-20261025.log"
+      },
+      "apiClientChecks": {
+        "passed": 13,
+        "exitCode": 0,
+        "log": "/private/tmp/tdf-profile-safety-refreshed-api-20261025.log"
+      },
+      "buildAndTypes": {
+        "status": "PASS",
+        "preloads": 5,
+        "initialGzipBytes": 334202,
+        "log": "/private/tmp/tdf-profile-safety-refreshed-build-20261025.log"
+      },
+      "sourceAdmission": {
+        "status": "PASS",
+        "receipt": "/private/tmp/tdf-profile-safety-refreshed-admission-20261025.json"
+      },
+      "inventoryAndTraceability": "PASS"
+    }
   }
 }
