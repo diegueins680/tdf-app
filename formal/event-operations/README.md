@@ -10,6 +10,14 @@ with its separately stated sequential scope and two mandatory negative controls.
 
 ## Toolchain used
 
+The payment-intent expiry boundary additionally runs
+`PaymentIntentExpiry.cfg` (188 generated/164 distinct states, expiry 2,
+database/caller times 0..3). `Request`, `Transaction`, `BeforeLock` and
+`Inclusive` configurations each violate `ExpiredAdmissionDenied` as required.
+This is bounded safety evidence under a monotone database clock and a real
+checkout-lock boundary, with no liveness or implementation-equivalence claim.
+See [the contract and actual-store controls](../system/payment-intent-expiry.md).
+
 - OpenJDK `21.0.12.1`, extracted from the Homebrew Sonoma bottle into a temporary directory because
   the host Command Line Tools were too old for a normal Homebrew installation.
 - TLA+ tools/TLC `1.7.2`, SHA-1 `7f21faa2cdae3189e7d5fadb4488f0dfcc658407`, matching the upstream
