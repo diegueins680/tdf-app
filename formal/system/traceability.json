@@ -11587,6 +11587,87 @@
       "evidence": "Current candidate logs and delivery report; historical local or passing unit tests do not establish deployment."
     },
     {
+      "id": "PAY-INTENT-EXPIRY-001",
+      "title": "Fresh payment intents use database time after checkout locking",
+      "statement": "A fresh canonical payment intent may be admitted only if the locked checkout expires strictly after database wall time sampled after acquiring its row lock. Caller audit timestamps and transaction/statement start time do not authorize admission. A live, otherwise eligible checkout is not refused solely because its audit timestamp is in the future.",
+      "domain": "PAY",
+      "authority": "Existing createPaymentIntent expiry rejection; PAY-RETRY-001 closed-checkout denial; explicit financial correctness and concurrency mandate.",
+      "source": "formal/system/payment-intent-expiry.md; formal/system/payment-retry.md",
+      "property": "At the admission sample, admitted implies databaseTime < lockedExpiry; refused-for-expiry implies databaseTime >= lockedExpiry.",
+      "contract": "formal/system/payment-intent-expiry.md",
+      "actors": [
+        "Checkout customer",
+        "Payment runtime"
+      ],
+      "preconditions": [
+        "Canonical checkout and economic binding exist; ordinary PostgreSQL row locks remain enabled.",
+        "Database wall clock and timestamp ordering are authoritative for expiry; privilege/DDL bypass is excluded."
+      ],
+      "inputs": [
+        "Locked checkout expiry",
+        "Database wall time after row lock",
+        "Caller audit timestamp"
+      ],
+      "state": {
+        "admission": [
+          "waiting for checkout lock",
+          "locked",
+          "admitted",
+          "refused"
+        ]
+      },
+      "allowedTransitions": [
+        "Waiting -> locked -> sample database clock -> admitted only before expiry.",
+        "Exact authorized runtime attempt replay remains on its separate existing read-only path."
+      ],
+      "forbiddenTransitions": [
+        "Stale request time admits a fresh intent after expiry.",
+        "Transaction-start time or a clock sampled before the row-lock wait admits an expired checkout.",
+        "Equality with expiry admits a fresh intent."
+      ],
+      "effects": [
+        "Rejected expiry inserts no intent or amount component.",
+        "Accepted creation retains the supplied audit timestamp without using it as admission authority."
+      ],
+      "authorization": "Current caller/session, economic binding and provider qualification remain independent preconditions; no authorization control is relaxed.",
+      "privacy": "Synthetic owned database and fixed test identities; no real payment provider or customer data.",
+      "concurrency": "First lock the checkout row; then sample clock_timestamp() in a separate database statement. Test actual pg_blocking_pids witnesses at READ COMMITTED and REPEATABLE READ.",
+      "idempotency": "No change to existing attempt/intent key binding or authenticated replay semantics.",
+      "failure": "Expiry rejection returns Left and creates no intent/components; SQL errors remain caller-owned rollback failures.",
+      "recovery": "A refused fresh intent requires current valid checkout authority; already-contacted operations require their existing reconciliation/replay flow.",
+      "observability": "Retain exact source hashes, Git revision, tool versions, observed lock waits, named mutation failures and TLC counterexamples.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/PaymentIntentExpiryProbe.hs",
+        "scripts/verify-payment-intent-expiry.py",
+        "scripts/test-provider-retry-runtime.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/PaymentIntentExpiry.tla",
+        "formal/event-operations/PaymentIntentExpiry.cfg",
+        "formal/event-operations/PaymentIntentExpiryRequest.cfg",
+        "formal/event-operations/PaymentIntentExpiryTransaction.cfg",
+        "formal/event-operations/PaymentIntentExpiryBeforeLock.cfg",
+        "formal/event-operations/PaymentIntentExpiryInclusive.cfg"
+      ],
+      "verification": "Seven actual-store PostgreSQL examples; three independently compiled clock mutants must reach assertion failures; finite TLC model and four named negative configurations. Existing backend-quality and event-operations-formal CI lanes enforce execution.",
+      "evidence": "formal/system/evidence/2026-10-25-payment-intent-expiry/receipt.json; replay commands and limits in formal/system/payment-intent-expiry.md. Evidence is valid only for its recorded source hashes.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "TESTED store boundary and BOUNDED_VERIFIED finite abstraction; whole implementation equivalence is UNKNOWN.",
+      "ambiguity": [
+        "Admission is the post-lock time sample, not transaction commit or provider HTTP completion.",
+        "Clock rollback, arbitrary schedules, whole-program refinement and finality of external money remain unverified.",
+        "This does not retrofit every legacy payment writer or activate providers."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped implementation tests and finite model controls; hosted candidate CI and independent review remain required. No whole-program refinement or provider-completion proof."
+      }
+    },
+    {
       "id": "DIR-SAVED-SEARCH-001",
       "title": "Saved alerts share public non-geographic eligibility",
       "statement": "Saved-search alerts and public directory queries share typed non-geographic and entity/derivation predicates, preserve public ranking/facets, reject unsafe new filters, and tolerate unsupported historical filters without broadening or aborting index updates.",
@@ -11862,6 +11943,12 @@
     "formal/event-operations/OperationsWorkerTickDeferredCheck.cfg": "2625c9d9d1041b567a94662529b3d50d018763fdb20b36b54a5ff74f260892ca",
     "formal/event-operations/OperationsWorkerTickNoAttempt.cfg": "e7621f5063764bbf75ce10d625e8bd52d3aef82b69ea1afd9b7435d79778084e",
     "formal/event-operations/OperationsWorkerTickUnboundedRetry.cfg": "5989bf03823d4c58fa8b6fc97963f1f6bc6bf17bb7e3a3d09cb9d5691a2987ed",
+    "formal/event-operations/PaymentIntentExpiry.cfg": "99e6255b3049e3d4e03421e41be27cb4c98a6dbb300174dbcb9d3767aa966943",
+    "formal/event-operations/PaymentIntentExpiry.tla": "c6bc896a7eeb1dbc83eb2dae6955032d2c35137e2707e58fe605c1f4511dac60",
+    "formal/event-operations/PaymentIntentExpiryBeforeLock.cfg": "c67f2fa7106cb988d6ffc32cce985baeab28ad7d718df0f6bfdd4ae130ed243e",
+    "formal/event-operations/PaymentIntentExpiryInclusive.cfg": "b43b697b66ca9bd3cccb30c494c2fea57d7e152f24527a4dd3e7d90a9eaf1230",
+    "formal/event-operations/PaymentIntentExpiryRequest.cfg": "0738b2aecdd57781a4636629369372ec478fcd6f3301ced4846f2a8f07b7c616",
+    "formal/event-operations/PaymentIntentExpiryTransaction.cfg": "c3f9bf74fabd61c706ce443319ac01974fb585f5eb451dd3086bcdf9a2aa1264",
     "formal/event-operations/PaymentRecovery.cfg": "31684633da67e4a607058dce9e9dae842c2214ff87ba126fbade01a5c4bbfbdc",
     "formal/event-operations/PaymentRecovery.tla": "b939b064c407ffa18cd5276d0bd332bb257b7f848b666bc704c8ad1c7394ecb4",
     "formal/event-operations/PaymentRecoveryCompleted.cfg": "6098dc9a9461b295d2e546b932ef710099f2a45e5ea502630c646206f81e0b7d",
@@ -12174,7 +12261,7 @@
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-proof-certificates.py": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
-    "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
+    "scripts/test-provider-retry-runtime.sh": "85522019069466c11dbfa82213c945e016622201ad1234a19ffa39a80ceda3eb",
     "scripts/test-public-route-denial.py": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
@@ -12210,12 +12297,13 @@
     "scripts/verify-auth-predicates.py": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "37dc24cb6ec770fe89db9f071293cfebf794bad416df0eb79d2d18e5d4d0a328",
+    "scripts/verify-event-operations-formal.sh": "76f651557c3c731e605f5f53d6473689b17e35c9db4e6c50c6d36011a243343c",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
     "scripts/verify-payment-arithmetic.py": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
+    "scripts/verify-payment-intent-expiry.py": "7eefe7a53984897caed042f9eff42c2cdd654412239600af4cea4a8f4f1aab09",
     "scripts/verify-playwright-image.mjs": "2545cf9b5a081a85fae318dd11bb50f96177fe64fa3ad7a9f89b6ce8fbba250c",
     "scripts/verify-proof-certificates.py": "8f591e51689a84df4ecbc9af0b37adb8fafe771ddcaddf13dc65763024aeeb46",
     "scripts/verify-readiness.py": "c1db0b9d64151547969116233c66a3160c2ab97327b51c679d0a86af8e7acaeb",
@@ -12622,7 +12710,7 @@
     "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
     "tdf-hq/src/TDF/Commerce/Money.hs": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
-    "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "4e2fb9d4f258dc060804e507d42b1bca93addebf96b6d0a3e2062fe1484d7640",
+    "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "4a655de2a4eb6ad5edb36749d3001f32e9320aa326d9c8c7a84d3ae01cb9617a",
     "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs": "a98813457fa7fb7b967e2ac708340d0fb44298b5cd093771fe732cf6b03ac881",
     "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac",
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "ecb41cb484578984533f0363bb95cc2b9bb49255082f353a84c0251484a68b5b",
@@ -12717,6 +12805,7 @@
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
+    "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
     "tdf-hq/test/Spec.hs": "a3771edf3bc33eafdabec453250151a3fc95c4915e18c32664110709122f3037",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
@@ -13266,6 +13355,10 @@
       },
       {
         "requirement": "SYS-MONEY-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INTENT-EXPIRY-001",
         "relationship": "implementation"
       }
     ],
@@ -14736,6 +14829,10 @@
       },
       {
         "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-INTENT-EXPIRY-001",
         "relationship": "tests"
       }
     ],
@@ -22391,6 +22488,54 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/test/PaymentIntentExpiryProbe.hs": [
+      {
+        "requirement": "PAY-INTENT-EXPIRY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-payment-intent-expiry.py": [
+      {
+        "requirement": "PAY-INTENT-EXPIRY-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/PaymentIntentExpiry.tla": [
+      {
+        "requirement": "PAY-INTENT-EXPIRY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/PaymentIntentExpiry.cfg": [
+      {
+        "requirement": "PAY-INTENT-EXPIRY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/PaymentIntentExpiryRequest.cfg": [
+      {
+        "requirement": "PAY-INTENT-EXPIRY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/PaymentIntentExpiryTransaction.cfg": [
+      {
+        "requirement": "PAY-INTENT-EXPIRY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/PaymentIntentExpiryBeforeLock.cfg": [
+      {
+        "requirement": "PAY-INTENT-EXPIRY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/PaymentIntentExpiryInclusive.cfg": [
+      {
+        "requirement": "PAY-INTENT-EXPIRY-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql": [
       {
         "requirement": "DIR-SAVED-SEARCH-001",
@@ -27829,7 +27974,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
+      "sha256": "85522019069466c11dbfa82213c945e016622201ad1234a19ffa39a80ceda3eb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27850,6 +27995,10 @@
         },
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-INTENT-EXPIRY-001",
           "relationship": "tests"
         }
       ]
@@ -28444,7 +28593,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "37dc24cb6ec770fe89db9f071293cfebf794bad416df0eb79d2d18e5d4d0a328",
+      "sha256": "76f651557c3c731e605f5f53d6473689b17e35c9db4e6c50c6d36011a243343c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28625,6 +28774,18 @@
         {
           "requirement": "SYS-MONEY-002",
           "relationship": "formalModels"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c3cbcaecc7cfb8e1",
+      "path": "scripts/verify-payment-intent-expiry.py",
+      "sha256": "7eefe7a53984897caed042f9eff42c2cdd654412239600af4cea4a8f4f1aab09",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INTENT-EXPIRY-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -40611,7 +40772,7 @@
     {
       "id": "SURFACE-8379bf1fb8e3276e",
       "path": "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
-      "sha256": "4e2fb9d4f258dc060804e507d42b1bca93addebf96b6d0a3e2062fe1484d7640",
+      "sha256": "4a655de2a4eb6ad5edb36749d3001f32e9320aa326d9c8c7a84d3ae01cb9617a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40620,6 +40781,10 @@
         },
         {
           "requirement": "SYS-MONEY-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-INTENT-EXPIRY-001",
           "relationship": "implementation"
         }
       ]
@@ -42822,6 +42987,18 @@
       "sha256": "bab10c452c71294aafc7d3ec5a9885f38abd81391afb21766dba2c99c4f01eb6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-024275abe4566566",
+      "path": "tdf-hq/test/PaymentIntentExpiryProbe.hs",
+      "sha256": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-INTENT-EXPIRY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-13ed80492a91c67d",
@@ -50574,7 +50751,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8be9842eee93e4a6a9e8e8a8897dfde2e339b48718adea4fce81a5c8be62b406",
+      "sourceSha256": "6df807a1db69adfa7567e6b08c7efb2aaf5015aa238f13becc748e6eb2deb46b",
       "definition": {
         "states": [
           "absent",
@@ -50604,7 +50781,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8be9842eee93e4a6a9e8e8a8897dfde2e339b48718adea4fce81a5c8be62b406",
+      "sourceSha256": "6df807a1db69adfa7567e6b08c7efb2aaf5015aa238f13becc748e6eb2deb46b",
       "definition": {
         "export": [
           "queued",
@@ -72880,7 +73057,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 139,
+    "PARTIAL": 140,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

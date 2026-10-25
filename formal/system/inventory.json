@@ -579,6 +579,7 @@
       "scripts/verify-invoice-receipts.py",
       "scripts/verify-music-money-wire.py",
       "scripts/verify-payment-arithmetic.py",
+      "scripts/verify-payment-intent-expiry.py",
       "scripts/verify-playwright-image.mjs",
       "scripts/verify-proof-certificates.py",
       "scripts/verify-readiness.py",
@@ -2109,6 +2110,7 @@
       "tdf-hq/test/MusicReleaseSpecMain.hs",
       "tdf-hq/test/MusicS3ProbeMain.hs",
       "tdf-hq/test/PaymentArithmeticProbe.hs",
+      "tdf-hq/test/PaymentIntentExpiryProbe.hs",
       "tdf-hq/test/RecordsRuntimeProbe.hs",
       "tdf-hq/test/Spec.hs",
       "tdf-hq/test/TDF/APITypesSpec.hs",
@@ -5654,7 +5656,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
+      "sha256": "85522019069466c11dbfa82213c945e016622201ad1234a19ffa39a80ceda3eb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5972,7 +5974,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "37dc24cb6ec770fe89db9f071293cfebf794bad416df0eb79d2d18e5d4d0a328",
+      "sha256": "76f651557c3c731e605f5f53d6473689b17e35c9db4e6c50c6d36011a243343c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6009,6 +6011,12 @@
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
       "sha256": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c3cbcaecc7cfb8e1",
+      "path": "scripts/verify-payment-intent-expiry.py",
+      "sha256": "7eefe7a53984897caed042f9eff42c2cdd654412239600af4cea4a8f4f1aab09",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14030,7 +14038,7 @@
     {
       "id": "SURFACE-8379bf1fb8e3276e",
       "path": "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
-      "sha256": "4e2fb9d4f258dc060804e507d42b1bca93addebf96b6d0a3e2062fe1484d7640",
+      "sha256": "4a655de2a4eb6ad5edb36749d3001f32e9320aa326d9c8c7a84d3ae01cb9617a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15153,6 +15161,12 @@
       "id": "SURFACE-45b71844f2c3aac7",
       "path": "tdf-hq/test/PaymentArithmeticProbe.hs",
       "sha256": "bab10c452c71294aafc7d3ec5a9885f38abd81391afb21766dba2c99c4f01eb6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-024275abe4566566",
+      "path": "tdf-hq/test/PaymentIntentExpiryProbe.hs",
+      "sha256": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24034,6 +24048,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/PaymentIntentExpiry.cfg",
+      "sha256": "99e6255b3049e3d4e03421e41be27cb4c98a6dbb300174dbcb9d3767aa966943",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentIntentExpiry.tla",
+      "sha256": "c6bc896a7eeb1dbc83eb2dae6955032d2c35137e2707e58fe605c1f4511dac60",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/PaymentIntentExpiryBeforeLock.cfg",
+      "sha256": "c67f2fa7106cb988d6ffc32cce985baeab28ad7d718df0f6bfdd4ae130ed243e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentIntentExpiryInclusive.cfg",
+      "sha256": "b43b697b66ca9bd3cccb30c494c2fea57d7e152f24527a4dd3e7d90a9eaf1230",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentIntentExpiryRequest.cfg",
+      "sha256": "0738b2aecdd57781a4636629369372ec478fcd6f3301ced4846f2a8f07b7c616",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentIntentExpiryTransaction.cfg",
+      "sha256": "c3f9bf74fabd61c706ce443319ac01974fb585f5eb451dd3086bcdf9a2aa1264",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/PaymentRecovery.cfg",
       "sha256": "31684633da67e4a607058dce9e9dae842c2214ff87ba126fbade01a5c4bbfbdc",
       "authority": "inferred",
@@ -24350,7 +24406,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "4d1002c7d7aa0d7d1309abe48884bf3e962e6fe44671b5d067089738dad1c656",
+      "sha256": "17df63608152350ee5718597a0a3f178278bea93e1929623fc03c4eecc91e1ff",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25988,7 +26044,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "ed151864cf34bfed35960b92b9d695696c2df0c7192c023debdee804503a4b90",
+      "sha256": "d2d5036056e3b48c85f8cb4fdab31a7228c148edda762037247a90832391ac9d",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -26414,6 +26470,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/payment-intent-expiry.md",
+      "sha256": "683464a954270031bb91a5edfc3461c3ff40f4a41f7cdff004fcda3ab666f15a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/payment-retry.md",
       "sha256": "5c1618bc2913f50a7ce042533cae888278b948a43b942ebb80a05779827ce2a4",
       "authority": "inferred",
@@ -26513,7 +26576,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8be9842eee93e4a6a9e8e8a8897dfde2e339b48718adea4fce81a5c8be62b406",
+      "sha256": "6df807a1db69adfa7567e6b08c7efb2aaf5015aa238f13becc748e6eb2deb46b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -37952,6 +38015,76 @@
         "INVARIANTS NoRequestWithoutToken NoInventedToken FragmentPrecedence",
         "PROPERTY RecoverySettles",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentIntentExpiry.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Expiry = 2",
+        "  MaxTime = 3",
+        "  ClockMode = \"after_lock\"",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK ExpiredAdmissionDenied LiveAdmissionAllowed"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentIntentExpiryBeforeLock.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Expiry = 2",
+        "  MaxTime = 3",
+        "  ClockMode = \"before_lock\"",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK ExpiredAdmissionDenied"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentIntentExpiryInclusive.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Expiry = 2",
+        "  MaxTime = 3",
+        "  ClockMode = \"inclusive\"",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK ExpiredAdmissionDenied"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentIntentExpiryRequest.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Expiry = 2",
+        "  MaxTime = 3",
+        "  ClockMode = \"request\"",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK ExpiredAdmissionDenied"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentIntentExpiryTransaction.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Expiry = 2",
+        "  MaxTime = 3",
+        "  ClockMode = \"transaction\"",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK ExpiredAdmissionDenied"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
