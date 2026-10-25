@@ -381,7 +381,7 @@ export default function PublicEventTicketsPage() {
     }
   };
 
-  const handleBankTransferEvidence = async (reference: string) => {
+  const handleBankTransferEvidence = async (reference: string, receipt?: File) => {
     if (!checkout || !checkoutLookupToken) return;
     setPaymentBusy(true);
     setMessage(null);
@@ -391,6 +391,7 @@ export default function PublicEventTicketsPage() {
         checkout.orderId,
         reference,
         checkoutLookupToken,
+        ...(receipt ? [receipt] as const : []),
       ));
     } catch {
       setMessage(english
@@ -706,7 +707,7 @@ export default function PublicEventTicketsPage() {
                         amountLabel={money(checkout.bankTransfer.amountMinor, checkout.bankTransfer.currency)}
                         holdExpiresLabel={date(checkout.holdExpiresAt)}
                         busy={paymentBusy}
-                        onSubmitReference={(reference) => void handleBankTransferEvidence(reference)}
+                        onSubmitReference={(reference, receipt) => void handleBankTransferEvidence(reference, receipt)}
                       />
                     )}
                     {checkoutLookupToken && (

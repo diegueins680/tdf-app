@@ -46,7 +46,7 @@ FROM artist_profile WHERE artist_party_id=990007;
 SELECT directory_refresh_profile_search(id) FROM directory_profile WHERE subject_party_id BETWEEN 990002 AND 990006;
 """
 
-def query(q='', entity=None, kind=None, cursor=None, limit=20, facets=False):
+def query(q='', entity=None, kind=None, cursor=None, limit=20, facets=False, changes=''):
     params = [q, entity, None, None, None, None, None, None, None, None, None, None, None, None, kind, 'suppressed', cursor, limit]
     if facets: params = params[:-2]
     chunks = (expression('facetsSql') if facets else sql).split('?')
@@ -56,7 +56,7 @@ def query(q='', entity=None, kind=None, cursor=None, limit=20, facets=False):
         if isinstance(value, int): return str(value)
         return "'" + value.replace("'", "''") + "'"
     rendered = chunks[0] + ''.join(quote(value) + chunk for value, chunk in zip(params, chunks[1:]))
-    result = subprocess.run(['psql', url, '-X', '-qAt', '-v', 'ON_ERROR_STOP=1'], input=fixture + rendered + ';\nROLLBACK;', text=True, capture_output=True)
+    result = subprocess.run(['psql', url, '-X', '-qAt', '-v', 'ON_ERROR_STOP=1'], input=fixture + changes + rendered + ';\nROLLBACK;', text=True, capture_output=True)
     if result.returncode:
         raise AssertionError(result.stderr)
     return [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')]
@@ -91,3 +91,27 @@ print('PASS: shared artist facet totals and category counts')
 
 assert any(row['title'] == 'Ana' for row in query('productro', 'artist')), 'Directory biography typo tolerance regressed'
 print('PASS: existing non-title directory typo matching is preserved')
+
+# Arbitrary newly created artists use persisted media, without a seeded slug map.
+for image in ['https://cdn.example.test/first-artist.jpg', 'https://cdn.example.test/replacement.jpg', None]:
+    value = 'NULL' if image is None else "'" + image + "'"
+    changes = "UPDATE artist_profile SET hero_image_url='https://cdn.example.test/original.jpg' WHERE artist_party_id=990001;\n"
+    changes += f"UPDATE artist_profile SET hero_image_url={value} WHERE artist_party_id=990001;\n"
+    row = next(row for row in query('Luna', 'profile', changes=changes) if row['id'] == 'artist-990001')
+    assert row['imageUrl'] == image, row
+    assert row['canonicalPath'] == '/artista/990001', row
+
+# A linked public directory identity follows canonical media updates too.
+link = """
+INSERT INTO directory_legacy_link(profile_id,legacy_kind,legacy_id,source_table)
+SELECT 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','artist_profile',id::text,'artist_profile'
+FROM artist_profile WHERE artist_party_id=990002;
+"""
+for image in ['https://cdn.example.test/linked-artist.jpg', None]:
+    value = 'NULL' if image is None else "'" + image + "'"
+    changes = link + f"UPDATE artist_profile SET hero_image_url={value} WHERE artist_party_id IN (990002,990003,990007);\n"
+    rows = query('Luna', 'profile', changes=changes)
+    row = next(row for row in rows if row['title'] == 'Luna Extended')
+    assert row['imageUrl'] == image, row
+    assert not any(row['id'] in ('artist-990003', 'artist-990007') for row in rows), rows
+print('PASS: arbitrary artist images, replacement/removal, linked preview refresh and private-image suppression')

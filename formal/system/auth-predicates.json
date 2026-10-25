@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "c2242ebae6256d64325bbe38c157f6d616710f65ee4f6fc1addd26ae0803bac1"
+    "tdf-hq/tdf-hq.cabal": "ee5e6128c1fc85318d3ebc98d224e2b3a25fc269f390c8d1eb3d17d896e16cbb"
   },
   "obligations": [
     {
@@ -73,6 +73,16 @@
       "change": "Add TDF.MusicRelease.Money to the executable and test other-modules lists only; removing those exact two lines reproduces the protected Cabal manifest byte for byte.",
       "semanticReview": "No source search paths, module aliases, compiler options, CPP flags, dependencies, extensions or toolchain changes. The new module uses Data.Aeson, Data.Int, Data.Text and Text.Read and introduces no authorization or recovery binding. Entire authorization/RoleEnum/ingestion and ServerAuth/expiry SQL sources plus Stack/lock remain byte-identical to protected main. Conditional predicate translations and their assumptions are unchanged.",
       "qualification": "Requires fresh source-bound SMT, serialized replay, mutation controls and independent CPC validation; full implementation/refinement remains UNPROVEN."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "add7032e8932c060565f978ee68149e46b7a8c84",
+      "reviewedTarget": "8e4eaa8d45f6385751e93f8f8a54b4fbdf73db3f",
+      "previousSha256": "c2242ebae6256d64325bbe38c157f6d616710f65ee4f6fc1addd26ae0803bac1",
+      "currentSha256": "ee5e6128c1fc85318d3ebc98d224e2b3a25fc269f390c8d1eb3d17d896e16cbb",
+      "change": "Register TDF.Server.TicketPaymentReceipt in the executable and test other-modules lists and TDF.TicketPaymentReceiptSpec in the test list. Removing exactly those three lines reproduces the protected main Cabal manifest byte for byte.",
+      "semanticReview": "No source search paths, module aliases, dependencies, compiler options, CPP flags, extensions or toolchain changes. The two added files declare their unique listed modules, without Template Haskell, CPP, OPTIONS_GHC, foreign imports or unsafePerformIO. The receipt helper defines its own JSON type and explicit request-local storage functions; it does not redefine authorization predicates, RoleEnum, ingestion admission or recovery arithmetic. Auth, Models, RecordsIngestion, ServerAuth, recovery SQL and Stack/lock are byte-identical to protected main. Existing conditional translations, claims, assumptions and limitations remain unchanged.",
+      "qualification": "Requires fresh source-bound SMT execution, serialized replay, mutation controls and independent CPC checking. Full implementation/refinement obligations remain UNPROVEN; this technical context review grants no production or GitHub merge authority."
     }
   ]
 }

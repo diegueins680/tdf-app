@@ -395,6 +395,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     mutationFn: Fans.updateMyArtistProfile,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['artist-profile', viewerId] });
+      void qc.invalidateQueries({ queryKey: ['directory', 'search'] });
+      void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+      void qc.invalidateQueries({ queryKey: ['public-artist'] });
       setArtistToast('Perfil de artista actualizado.');
     },
     onError: (error) => {

@@ -131,3 +131,24 @@ trigger or the Haskell handler.
   and electronic invoices (EVT-TICKET-INVOICE-001) are separate requirements.
 - HTTP authentication and `requireRefundManagedEvent` admission are exercised by
   their own suites; this harness starts at the review transaction.
+
+## Receipt attachments (24 October 2026)
+
+The existing `EVT-TICKET-MANUAL-001` evidence boundary additionally accepts an
+optional private JPG, PNG or PDF (up to 5 MiB). The order lookup capability is
+checked before parsing/storing it. Its key includes the order and content hash;
+the evidence row lock protects binding that key together with the reference.
+An identical-file replay succeeds; a different-file replay during review gets
+409. Uploading or opening a receipt does not approve a transfer or issue tickets.
+The staff receipt handler uses `requireRefundManagedEvent` and an event/order
+scoped lookup before reading private storage, with `Cache-Control: no-store`.
+
+`TicketPaymentReceiptSpec` covers type/size/signature checks, private storage
+round-trip, public-directory refusal, production configuration and path/order
+isolation. `TicketPaymentGateSpec` adds real-handler PostgreSQL coverage of
+capability refusal, receipt binding, identical replay and different-file conflict.
+The React panel tests cover opening image/PDF previews, download, preview cleanup,
+legacy references without files, fetch failure and unexpected active content.
+These are execution checks, not an extension of the bounded TLA+ model to file
+storage. Signature checks do not establish document authenticity or bank payment.
+Durable storage configuration and backup/restore remain deployment obligations.

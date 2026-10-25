@@ -71,6 +71,21 @@ describe('EventTickets public API contract', () => {
     );
   });
 
+  it('sends an attached receipt in the capability-protected evidence request', async () => {
+    postMock.mockResolvedValue({ orderId: 11 });
+    await EventTickets.submitBankTransferEvidence(4, 11, 'COMP-123', 'lookup-secret',
+      new File(['%PDF-1.7'], 'receipt.pdf', { type: 'application/pdf' }));
+    expect(postMock).toHaveBeenCalledWith('/public/events/4/ticket-orders/11/bank-transfer/evidence',
+      { customerReference: 'COMP-123', receipt: { contentType: 'application/pdf', base64: btoa('%PDF-1.7') } },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } });
+  });
+
+  it('does not submit unsupported attachment types', async () => {
+    await expect(EventTickets.submitBankTransferEvidence(4, 11, 'COMP-123', 'lookup-secret',
+      new File(['<html/>'], 'receipt.html', { type: 'text/html' }))).rejects.toThrow('JPG, PNG o PDF');
+    expect(postMock).not.toHaveBeenCalled();
+  });
+
   it('fails locally on invalid public identifiers', () => {
     expect(() => EventTickets.getStorefront(0)).toThrow('eventId');
     expect(() => EventTickets.getCheckout(4, -1, 'lookup')).toThrow('orderId');
