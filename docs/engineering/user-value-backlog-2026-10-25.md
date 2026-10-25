@@ -375,9 +375,9 @@ Verificación publicada #607: `/private/tmp/tdf-user-value-607-deployed-20261025
 a las19:49:43UTC. Asset `index-dzlEpVI6.js`, SHA256
 `287eac22278297be85cf7e3ee8ddecc03ffd85558afd5dd7b749a4c6c9001997`.
 Chromium escritorio/Pixel7 verifica503/ceroPUT, reintento, guardado conservador,
-cookie HttpOnly/XHR y tarjeta actualizada. Tras logout/login comprometido por
-SessionProvider, invocar callback viejo de A produce0PUT y B puede guardar su
-propio perfil. Esa prueba publicada ocurre después del commit React; la ventana
+cookie HttpOnly/XHR y tarjeta actualizada. Tras confirmar el cambio de sesión en React,
+invocar callback viejo de A produce0PUT y B puede guardar su
+propio perfil. Esa prueba publicada ocurre después de confirmar el cambio en React; la ventana
 anterior al render se cubre por los4 controles locales separados. No se reenvió
 ninguna API/escritura productiva y hubo0errores de página. El backend público
 sigue `4dac175d`, health/DB ok. Este resultado completa el alcance web acotado607;

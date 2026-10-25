@@ -27,7 +27,7 @@
       "tdf-hq-ui/src/pages/FanHubPage.tsx"
     ],
     "expectedBenefit": "Prevent unintended field erasure and copying profile drafts across accounts; allow recovery after a failed read.",
-    "observedBenefit": "En entornos descartables se conservaron perfiles y se bloquearon callbacks antiguos con nuevas credenciales. La web canónica607 publicada pasó fixtures sintéticos escritorio/Pixel7:503/ceroPUT/reintento, guardado con campos conservados, subida cookie-only, caché y callback A después de logout/login comprometido de B sin PUT; B guarda sus propios datos. Cero API/escrituras productivas reenviadas; no es prueba de persistencia productiva o cuentas reales.",
+    "observedBenefit": "En entornos descartables se conservaron perfiles y se bloquearon callbacks antiguos con nuevas credenciales. La web canónica607 publicada pasó fixtures sintéticos escritorio/Pixel7:503/ceroPUT/reintento, guardado con campos conservados, subida cookie-only, caché y callback A tras confirmar en React el cambio de sesión a B sin PUT; B guarda sus propios datos. Cero API/escrituras productivas reenviadas; no es prueba de persistencia productiva o cuentas reales.",
     "implementationStatus": "MERGED_WEB_SCOPE_DEPLOYED_VERIFIED",
     "validationStatus": "3369_TESTS_300_SUITES_BUILD_LINT_TYPES_NATIVE_RUNTIME_SOURCE_ADMISSION_PASS",
     "pullRequest": "https://github.com/diegueins680/tdf-app/pull/607",
