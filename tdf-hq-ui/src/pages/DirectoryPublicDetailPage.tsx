@@ -263,6 +263,11 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                       origin="public_event_detail"
                     />
                   </Paper>
+                  <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+                    <Typography variant="h5" fontWeight={800}>Recuerdos y comunidad</Typography>
+                    <Typography color="text.secondary" mt={1}>Encuentra los momentos del evento y comparte tu experiencia. Inicia sesión o crea una cuenta para participar.</Typography>
+                    <Button component={RouterLink} to={`/social/eventos/${encodeURIComponent(identifier)}?compose=1#momentos`} variant="contained" sx={{ mt: 2 }}>Compartir mis momentos</Button>
+                  </Paper>
                   <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
                     <Typography variant="h5" fontWeight={800}>Entradas del evento</Typography>
                     <Typography color="text.secondary" mt={1}>Consulta disponibilidad y paga como invitado con un checkout verificado por el servidor.</Typography>

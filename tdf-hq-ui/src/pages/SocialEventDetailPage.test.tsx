@@ -1,10 +1,15 @@
 import { jest } from '@jest/globals';
 jest.unstable_mockModule('../features/interactions/InteractionPanel', () => ({ InteractionPanel: () => null }));
+jest.unstable_mockModule('../components/events/EventMemoryInvitations', () => ({ default: () => null }));
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { SocialEventDTO, SocialEventMomentDTO, SocialTicketTierDTO } from '../api/socialEvents';
 
+const preferenceMock = jest.fn(async () => ({ inApp: false, supportsExtendedMoments: true }));
+const createMomentMock = jest.fn<(eventId: string, body: unknown) => Promise<SocialEventMomentDTO>>();
+let activeSession: { partyId: number } | null = null;
+jest.unstable_mockModule('../api/eventMemoryInvitations', () => ({ EventMemoryInvitations: { preferences: preferenceMock } }));
 const getEventMock = jest.fn<(eventId: string) => Promise<SocialEventDTO>>();
 const listMomentsMock = jest.fn<(eventId: string) => Promise<SocialEventMomentDTO[]>>();
 const listTicketTiersMock = jest.fn<(eventId: string) => Promise<SocialTicketTierDTO[]>>();
@@ -15,7 +20,7 @@ jest.unstable_mockModule('../api/socialEvents', () => ({
     getEvent: (eventId: string) => getEventMock(eventId),
     listMoments: (eventId: string) => listMomentsMock(eventId),
     listTicketTiers: (eventId: string) => listTicketTiersMock(eventId),
-    createMoment: jest.fn(),
+    createMoment: createMomentMock,
     uploadMomentImage: jest.fn(),
     createTicketTier: jest.fn(),
   },
@@ -32,7 +37,8 @@ jest.unstable_mockModule('../api/eventTickets', () => ({
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  useSession: () => ({ session: null }),
+  useSession: () => ({ session: activeSession }),
+  getStoredSessionToken: () => null,
 }));
 
 jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({
@@ -98,12 +104,50 @@ const renderPage = (entry = '/social/eventos/121') => {
 
 describe('SocialEventDetailPage ticket sharing', () => {
   beforeEach(() => {
+    activeSession = null;
+    preferenceMock.mockClear();
+    createMomentMock.mockReset();
     getEventMock.mockReset().mockResolvedValue(eventFixture);
     listMomentsMock.mockReset().mockResolvedValue([]);
     listTicketTiersMock.mockReset().mockResolvedValue([tierFixture]);
     getStorefrontMock.mockReset().mockResolvedValue({ checkoutAvailable: true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
+  });
+
+  it('publishes a text memory with its server-supported type and keeps failed text in the editor', async () => {
+    activeSession = { partyId: 9 };
+    createMomentMock.mockRejectedValueOnce(new Error('Connection failed'));
+    const view = renderPage('/social/eventos/121?compose=1');
+    const type = await screen.findByRole('combobox', { name: 'Tipo de recuerdo' });
+    fireEvent.mouseDown(type);
+    fireEvent.click(await screen.findByRole('option', { name: 'Solo texto' }));
+    const caption = screen.getByRole('textbox', { name: 'Describe tu publicación' });
+    fireEvent.change(caption, { target: { value: 'Un recuerdo sin archivo' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar' }));
+    await screen.findByText('Connection failed');
+    expect(createMomentMock).toHaveBeenCalledWith('121', { emCreateCaption: 'Un recuerdo sin archivo', emCreateMediaUrl: '', emCreateMediaType: 'text' });
+    expect((caption as HTMLInputElement).value).toBe('Un recuerdo sin archivo');
+    expect(caption.getAttribute('maxlength')).toBe('280');
+    view.unmount();
+  });
+
+  it('retains the exact event and composer intent through registration or sign-in', async () => {
+    const view = renderPage('/social/eventos/121?compose=1#momentos');
+    const link = await screen.findByRole('link', { name: 'Iniciar sesión o crear una cuenta' });
+    expect(new URL(link.getAttribute('href')!, 'https://example.test').searchParams.get('redirect')).toBe('/social/eventos/121?compose=1#momentos');
+    view.unmount();
+  });
+
+  it('links artists by the existing canonical Party identity without treating a social artist ID as a Party', async () => {
+    getEventMock.mockResolvedValue({ ...eventFixture, eventArtists: [
+      { artistId: '999', artistPartyId: '55', artistName: 'Synthetic Artist' },
+      { artistId: '1000', artistName: 'Unlinked Artist' },
+    ] });
+    const view = renderPage();
+    expect((await screen.findByRole('link', { name: 'Synthetic Artist' })).getAttribute('href')).toBe('/artista/55');
+    expect(screen.queryByRole('link', { name: 'Unlinked Artist' })).toBeNull();
+    view.unmount();
   });
 
   it('loads, displays and focuses the exact deep-linked moment after the list arrives', async () => {

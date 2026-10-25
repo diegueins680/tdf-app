@@ -11430,6 +11430,195 @@
       "verification": "Deterministic fake-clock tests on body stalls, cancellation, shared deadline and replay boundaries; existing session isolation regressions.",
       "evidence": "Current-candidate local transport and session tests; full web and hosted results must be qualified separately.",
       "historicalStatus": "new"
+    },
+    {
+      "domain": "SOCIAL",
+      "authority": "Explicit product owner request 2026-10-25: Event Memories, Community Engagement & Post-Event Activation",
+      "source": "formal/system/event-memories.md",
+      "contract": "formal/system/event-memories.md",
+      "status": "specified and implemented; qualification in progress",
+      "critical": true,
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded policy and executable regressions do not establish complete refinement, device behavior or production qualification."
+      },
+      "confidence": "Scoped evidence only; deployment and broader product gaps remain explicit.",
+      "ambiguity": [],
+      "historicalStatus": "new",
+      "evidence": "reports/event-memories-2026-10-25.md; execution identities are recorded separately from implementation.",
+      "id": "SOCIAL-EVENT-MEMORY-001",
+      "title": "Persisted event memories and truthful remote publication",
+      "statement": "Reuse EventMoment for authorized image, video, audio and text publication; current authors alone edit/delete, legacy clients keep a compatible feed, and failed remote media never becomes a purported publication.",
+      "property": "Current parent visibility and source authorship govern writes; a local draft never proves synchronized publication.",
+      "actors": [
+        "Authenticated participant",
+        "Source author",
+        "Visitor"
+      ],
+      "preconditions": [
+        "Current event visibility and session; public parent required for public file uploads."
+      ],
+      "inputs": [
+        "Moment payload",
+        "Multipart file",
+        "Expected update timestamp"
+      ],
+      "state": {
+        "content": [
+          "image",
+          "video",
+          "audio",
+          "text"
+        ],
+        "publication": [
+          "draft",
+          "uploading",
+          "committed",
+          "failed",
+          "deleted"
+        ]
+      },
+      "allowedTransitions": [
+        "draft -> upload -> committed",
+        "failed -> retained draft",
+        "current author -> versioned edit/delete"
+      ],
+      "forbiddenTransitions": [
+        "failed upload -> local fallback presented as publication",
+        "social artist ID -> inferred Party identity",
+        "private parent -> public file upload"
+      ],
+      "effects": [
+        "Existing source and canonical interactions are retained; no parallel content authority."
+      ],
+      "authorization": "Current authenticated source author and readable parent; no logistics/admin bypass for source editing.",
+      "privacy": "Public media cannot be presented as participant-only. Restricted file delivery and public-asset erasure remain unavailable.",
+      "concurrency": "Parent-first/source-row locks for author mutations; optimistic timestamp for edits. General publication request idempotency is not implemented.",
+      "idempotency": "No automatic mutation retries added. Local drafts are separate from remote publications; general create replay remains a gap.",
+      "failure": "HTTP validation/permission failures retain the editor; legacy clients receive image/video only.",
+      "recovery": "Retry UI retains captions and successful upload references; a timeout does not prove server rollback.",
+      "observability": "No caption/media/private content is emitted as analytics.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-mobile/app/eventDetail.tsx",
+        "tdf-mobile/src/api/events.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
+        "tdf-mobile/__tests__/eventMomentWirePayload.test.ts",
+        "tdf-mobile/__tests__/eventMomentsRepository.test.ts",
+        "e2e/web/event-memories.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Parser/signature/author-boundary tests, HTTP and browser journeys must be independently executed; no blanket completion claim."
+    },
+    {
+      "domain": "SOCIAL",
+      "authority": "Explicit product owner request 2026-10-25: Event Memories, Community Engagement & Post-Event Activation",
+      "source": "formal/system/event-memories.md",
+      "contract": "formal/system/event-memories.md",
+      "status": "specified and implemented; qualification in progress",
+      "critical": true,
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded policy and executable regressions do not establish complete refinement, device behavior or production qualification."
+      },
+      "confidence": "Scoped evidence only; deployment and broader product gaps remain explicit.",
+      "ambiguity": [],
+      "historicalStatus": "new",
+      "evidence": "reports/event-memories-2026-10-25.md; execution identities are recorded separately from implementation.",
+      "id": "SOCIAL-EVENT-INVITATION-001",
+      "title": "Consented and deduplicated post-event inbox invitations",
+      "statement": "An explicitly enabled organizer campaign delivers internal invitations only after confirmed completion to eligible active accounts with explicit in-app consent; at most one reminder is allowed and publication suppresses it.",
+      "property": "At most two inbox deliveries per event/account, seven-day frequency cap, no delivery before completion/consent, and live notification privacy.",
+      "actors": [
+        "Current organizer",
+        "Eligible active account",
+        "Background dispatcher"
+      ],
+      "preconditions": [
+        "Installed reviewed migration",
+        "Completed active social-event lifecycle with confirmed elapsed end",
+        "Explicit campaign and recipient opt-in"
+      ],
+      "inputs": [
+        "Authoritative participation signals",
+        "Recipient preference",
+        "Campaign setting",
+        "Worker tick",
+        "Publication",
+        "Opening attribution"
+      ],
+      "state": {
+        "campaign": [
+          "disabled",
+          "enabled"
+        ],
+        "recipient": [
+          "excluded",
+          "eligible",
+          "invited",
+          "reminded",
+          "published",
+          "opted_out"
+        ]
+      },
+      "allowedTransitions": [
+        "eligible + finished + consent -> one invitation",
+        "unpublished + current consent + seven days -> one reminder",
+        "publish -> persistent reminder suppression",
+        "opt-out -> no new delivery and historical notice hidden"
+      ],
+      "forbiddenTransitions": [
+        "RSVP -> verified attendance",
+        "identity alias -> transferred consent",
+        "logistics member -> campaign manager",
+        "installation -> automatic campaign activation",
+        "third delivery",
+        "event consent -> marketing/email/push consent"
+      ],
+      "effects": [
+        "Existing notification and delivery receipt commit atomically; aggregate metrics only."
+      ],
+      "authorization": "Current session plus organizer ownership for settings/metrics; recipient/event/UUID binding for attribution.",
+      "privacy": "No contact lists or message content in metrics; live event/account/block/preference authority filters inbox count/list/detail including recovery binaries.",
+      "concurrency": "One transaction dispatcher lock plus event/campaign and recipient locks. Overlapping source writes follow the documented PostgreSQL visibility boundary; universal ordering remains unproven.",
+      "idempotency": "UNIQUE(event_id,party_id,step), atomic inbox insert and retained publication suppression. Separate notification workers keep domain failures isolated.",
+      "failure": "Failed batches roll back and retry on a later bounded tick; missing migration exposes no capability.",
+      "recovery": "Before delivery, rollback restores recorded authorities, disables added catalog capability and preserves tables/content; after delivery or authority successors rollback refuses.",
+      "observability": "Persisted internal deliveries, attributed openings and publication after invitation; no inferred retention or external-provider delivery.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-25_event_memory_invitations.sql",
+        "tdf-hq/sql/2026-10-25_event_memory_invitations_rollback.sql",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Interactions/Notifications.hs",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
+        "tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-mobile/src/navigation/notificationTarget.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/integration/event_memory_invitations.sql",
+        "tdf-hq/test/integration/event_memory_invitation_concurrency.sql",
+        "scripts/test-event-memories.sh",
+        "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-mobile/src/navigation/notificationResponses.test.ts"
+      ],
+      "formalModels": [
+        "formal/event-memories/check.py"
+      ],
+      "verification": "160 bounded policy states and three negative controls; actual full-schema SQL, replay/rollback, HTTP and concurrent-worker checks retain separate receipts."
     }
   ]
 }

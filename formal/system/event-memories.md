@@ -1,0 +1,71 @@
+# Event memories and internal service invitations
+
+Authority: product owner request of 25 October 2026, Event Memories, Community
+Engagement & Post-Event Activation. Implementation is incremental; publication,
+independent review, integration, deployment and provider activation are separate.
+
+## Publication boundary
+
+The existing EventMoment is the only content authority. Image/video clients keep
+an unchanged default feed; `?extended` explicitly includes audio and text. Text
+requires a nonempty caption and no media URL. Media URLs must be absolute HTTPS;
+caption limit remains 280. New clients omit absent optional fields, never null.
+Author edits require the current stored update timestamp, current parent access,
+a live session and source authorship. Deletion erases the source and uses existing
+interaction deletion triggers; public asset erasure/third-party copies are not
+promised. Existing reaction, discussion, mention and moderation authorities remain.
+
+Files use the existing assets store and event lock. New media uploads require a
+public parent, a live session, MIME/extension agreement, recognized signature and
+byte bounds: raster 10 MiB, audio/video 25 MiB. Signatures are not full container
+validation, transcoding or verified duration. Private event files are unavailable
+until authenticated media delivery and lifecycle revocation are implemented.
+Historical public URLs cannot be made private by changing a UI label.
+
+## Invitation invariants
+
+- A current, active social-event lifecycle must say completed, with an explicit
+  end at least one hour ago and less than 30 days ago. An elapsed on-sale event,
+  cancellation or missing/invalid end never qualifies.
+- Campaigns and recipient in-app preferences start disabled. Only the current
+  organizer can change its campaign; a logistics role is insufficient.
+- Audited check-in on a paid valid ticket is verified attendance. Artists,
+  organizers and logistics are professional participation. Accepted RSVP is
+  intention; copy never claims attendance for this group. Ticket purchase without
+  admission evidence grants no verified-attendance claim.
+- The existing active-account, archive, block and parent-access authorities apply.
+  Identity is exact Party identity; no name/email matching or consent transfer
+  across archived aliases. Signals deduplicate with verified/professional/RSVP
+  precedence. Account membership never grants marketing consent.
+- Only the existing internal inbox is delivered. Email, WhatsApp and push are
+  not sent or implicitly authorized. Operations push subscriptions are scoped to
+  that domain and cannot be reused as event-memory consent.
+- Unique (event, account, step), a dispatcher transaction lock and recipient locks
+  enforce at most one invitation plus one reminder, at least seven days apart
+  across all memory campaigns. The notification and delivery record commit
+  together. Repeated ticks and replica contention cannot duplicate effects.
+- A successful publication suppresses reminders; suppression survives deletion
+  of that moment. Opt-out and live source eligibility are rechecked. Overlapping
+  source edits follow PostgreSQL statement visibility; source locks and global
+  account-deletion ordering are not universally proved by the bounded model.
+- The same notification visibility function filters list, count and detail, also
+  for older backend recovery images. Revocation does not recall external copies.
+- Open attribution is recipient/event/UUID bound and is never an access grant.
+  Organizer metrics are aggregates; delivery means committed inbox placement,
+  not read receipt, email delivery or conversion/retention improvement.
+
+## Verification limits
+
+`formal/event-memories/check.py` explores a bounded abstract policy and detects
+three deliberately broken controls. It is not SQL refinement or a distributed
+systems proof. PostgreSQL fixtures exercise the real migrated functions, source
+relations, notification privacy and rollback. HTTP, browser, device, full-suite,
+CI and production results must each retain their actual execution identity.
+
+The dispatcher also respects the existing global interaction delivery pause.
+
+The feature requires the appended reviewed migration. Installation creates no
+campaign or preference and sends nothing. Before any delivery, rollback restores
+the recorded notification/view authorities and prior public-listable capability,
+retains data, disables campaigns and removes the dispatch function. After delivery
+or an authority successor it refuses; use a reviewed forward repair.

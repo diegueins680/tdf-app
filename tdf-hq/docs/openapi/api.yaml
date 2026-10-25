@@ -1748,6 +1748,239 @@ paths:
         '400': { description: Cursor is malformed or limit is outside 1 through 50 }
         '401': { description: Authentication required }
         '404': { description: Profile is missing, ambiguous, non-person, blocked, or non-public }
+  /social-events/me/memory-invitations:
+    get:
+      operationId: getEventMemoryPreferences
+      tags: [Social events]
+      summary: Read explicit internal memory invitation consent
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMemoryPreference' }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+    put:
+      operationId: setEventMemoryPreferences
+      tags: [Social events]
+      summary: Opt into or withdraw internal memory invitations
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: boolean }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMemoryPreference' }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+  /social-events/events/{eventId}/memory-invitations:
+    get:
+      operationId: getEventMemoryCampaign
+      tags: [Social events]
+      summary: Read aggregate memory campaign metrics as current organizer
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMemoryCampaign' }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+    put:
+      operationId: setEventMemoryCampaign
+      tags: [Social events]
+      summary: Enable or disable an organizer-owned campaign
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: boolean }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMemoryCampaign' }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+  /social-events/events/{eventId}/memory-invitations/{deliveryId}/open:
+    post:
+      operationId: openEventMemoryInvitation
+      tags: [Social events]
+      summary: Record an attributed event opening without granting access
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+        - { name: deliveryId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { type: object, required: [recorded], properties: { recorded: { type: boolean } } }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+  /social-events/events/{eventId}/moments:
+    get:
+      operationId: listSocialEventMoments
+      tags: [Social events]
+      summary: Read the currently authorized event moment feed
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+        - { name: extended, in: query, schema: { type: boolean, default: false }, description: Include audio and text. Legacy clients receive only image and video. }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/EventMoment' } }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+    post:
+      operationId: createSocialEventMoment
+      tags: [Social events]
+      summary: Publish an image video audio or text memory
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventMomentCreate' }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMoment' }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+  /social-events/events/{eventId}/moments/{momentId}:
+    put:
+      operationId: editSocialEventMoment
+      tags: [Social events]
+      summary: Edit the description as the current author with optimistic concurrency
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+        - { name: momentId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventMomentEdit' }
+      responses:
+        '200':
+          description: Successful authorized operation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMoment' }
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+    delete:
+      operationId: deleteSocialEventMoment
+      tags: [Social events]
+      summary: Delete the current author source and retire its interaction target
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+        - { name: momentId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      responses:
+        '204':
+          description: Successful authorized operation
+        '400': { description: Invalid identifier or payload }
+        '401': { description: Authentication required }
+        '404': { description: Unavailable or not authorized }
+        '503': { description: Temporarily unavailable }
+  /social-events/events/{eventId}/moments/image:
+    post:
+      operationId: uploadSocialEventMomentImage
+      tags: [Social events]
+      summary: Upload a public raster image up to 10 MiB
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                name: { type: string, maxLength: 180 }
+      responses:
+        '200':
+          description: Public file accepted with MIME extension and signature validation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMomentUpload' }
+        '400': { description: Invalid type signature file name or size }
+        '401': { description: Authentication required }
+        '403': { description: Public-file uploads unavailable for private events }
+        '404': { description: Parent event unavailable }
+  /social-events/events/{eventId}/moments/media:
+    post:
+      operationId: uploadSocialEventMomentMedia
+      tags: [Social events]
+      summary: Upload a public image up to 10 MiB or audio or video up to 25 MiB
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string, pattern: "^[1-9][0-9]*$" } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                name: { type: string, maxLength: 180 }
+      responses:
+        '200':
+          description: Public file accepted with MIME extension and signature validation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventMomentUpload' }
+        '400': { description: Invalid type signature file name or size }
+        '401': { description: Authentication required }
+        '403': { description: Public-file uploads unavailable for private events }
+        '404': { description: Parent event unavailable }
   /social-events/events/{eventId}/moments/{momentId}/reactions:
     post:
       tags: [Social events]
@@ -13356,6 +13589,59 @@ components:
           description: The backend enforces the persisted transition relation.
         sortOrder: { type: integer, minimum: 0 }
         notes: { type: string, nullable: true }
+    EventMemoryPreference:
+      type: object
+      additionalProperties: false
+      required: [inApp, supportsExtendedMoments]
+      properties:
+        inApp: { type: boolean, default: false }
+        supportsExtendedMoments: { type: boolean }
+    EventMemoryCampaign:
+      type: object
+      additionalProperties: false
+      required: [enabled, eventFinished, candidates, consented, invitations, reminders, opened, published, moments, uniqueAuthors]
+      properties:
+        enabled: { type: boolean, default: false }
+        eventFinished: { type: boolean }
+        dispatcherEnabled: { type: boolean }
+        candidates: { type: integer, minimum: 0 }
+        consented: { type: integer, minimum: 0 }
+        invitations: { type: integer, minimum: 0 }
+        reminders: { type: integer, minimum: 0 }
+        opened: { type: integer, minimum: 0 }
+        published: { type: integer, minimum: 0 }
+        moments: { type: integer, minimum: 0 }
+        uniqueAuthors: { type: integer, minimum: 0 }
+    EventMomentCreate:
+      type: object
+      additionalProperties: false
+      required: [emCreateMediaType]
+      description: Text requires a nonblank caption and absent or empty media URL. Other types require an absolute HTTPS media URL. Authenticated Party supplies authorship.
+      properties:
+        emCreateAuthorName: { type: string, deprecated: true }
+        emCreateCaption: { type: string, maxLength: 280 }
+        emCreateMediaUrl: { type: string, maxLength: 2048 }
+        emCreateMediaType: { type: string, enum: [image, video, audio, text] }
+        emCreateMediaWidth: { type: integer, minimum: 1 }
+        emCreateMediaHeight: { type: integer, minimum: 1 }
+        emCreateMediaDurationMs: { type: integer, minimum: 0 }
+    EventMomentEdit:
+      type: object
+      additionalProperties: false
+      required: [emeCaption, emeExpectedUpdatedAt]
+      properties:
+        emeCaption: { type: string, maxLength: 280 }
+        emeExpectedUpdatedAt: { type: string, format: date-time }
+    EventMomentUpload:
+      type: object
+      additionalProperties: false
+      required: [eiuEventId, eiuFileName, eiuPath, eiuPublicUrl, eiuImageUrl]
+      properties:
+        eiuEventId: { type: string }
+        eiuFileName: { type: string }
+        eiuPath: { type: string }
+        eiuPublicUrl: { type: string, format: uri }
+        eiuImageUrl: { type: string, format: uri, description: Legacy alias for the public media URL }
     EventMomentReactionRequest:
       type: object
       additionalProperties: false

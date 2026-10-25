@@ -511,6 +511,9 @@ jobs:
           TDF_AUTOMIG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-automatic-migrations-production-schema.sh
 
+      - name: Verify event memory consent replay and concurrent inbox delivery
+        run: bash scripts/test-event-memories.sh
+
       - name: Verify community search ranking and privacy on PostgreSQL
         env:
           TDF_DISCOVERY_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test

@@ -2,6 +2,7 @@ import { del, get, post, postForm, put } from './client';
 
 export interface SocialArtistDTO {
   artistId?: string | null;
+  artistPartyId?: string | null;
   artistName: string;
   /** Canonical relationship identifiers used by writes and filters. */
   artistGenreIds?: string[];
@@ -93,13 +94,14 @@ export interface SocialEventMomentDTO {
   emMediaHeight?: number | null;
   emMediaDurationMs?: number | null;
   emCreatedAt?: string | null;
+  emUpdatedAt?: string | null;
 }
 
 export interface SocialEventMomentCreateDTO {
   emCreateAuthorName?: string;
   emCreateCaption?: string;
   emCreateMediaUrl: string;
-  emCreateMediaType: 'image' | 'video';
+  emCreateMediaType: 'image' | 'video' | 'audio' | 'text';
   emCreateMediaWidth?: number;
   emCreateMediaHeight?: number;
   emCreateMediaDurationMs?: number;
@@ -606,10 +608,18 @@ export const SocialEventsAPI = {
     if (trimmed) form.append('name', trimmed);
     return await postFormUnknown(`/social-events/events/${encodeURIComponent(eventId)}/image`, form) as SocialEventImageUploadDTO;
   },
+  editMoment: (eventId: string, momentId: string, caption: string, expectedUpdatedAt: string) =>
+    put<SocialEventMomentDTO>(`/social-events/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}`, { emeCaption: caption, emeExpectedUpdatedAt: expectedUpdatedAt }),
+  deleteMoment: (eventId: string, momentId: string) =>
+    del<void>(`/social-events/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}`),
   listMoments: async (eventId: string) =>
-    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments`) as SocialEventMomentDTO[],
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments?extended`) as SocialEventMomentDTO[],
   createMoment: async (eventId: string, payload: SocialEventMomentCreateDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments`, payload) as SocialEventMomentDTO,
+  uploadMomentMedia: (eventId: string, file: File) => {
+    const form = new FormData(); form.append('file', file);
+    return postForm<SocialEventImageUploadDTO>(`/social-events/events/${encodeURIComponent(eventId)}/moments/media`, form);
+  },
   uploadMomentImage: async (eventId: string, file: File, name?: string) => {
     const form = new FormData();
     form.append('file', file);
