@@ -73,6 +73,12 @@
       ]
     },
     {
+      "item": "Protected integration and authorized delivery of the non-geographic saved-search alert repair",
+      "existingIssue": 534,
+      "status": "LOCAL_RUNTIME_PASS_PENDING_REVIEW_HOSTED_CI_MERGE_AND_AUTHORIZED_RELEASE",
+      "limitations": "Geo and legacy-fallback-only changes stay PARTIAL; local implementation is not user delivery."
+    },
+    {
       "item": "Recipient-controlled chat offline email/push",
       "existingIssue": 577,
       "status": "BLOCKED_ON_CONSENT_ADAPTER_AND_DEVICE_QUALIFICATION"
@@ -81,11 +87,6 @@
       "item": "Owner-controlled new artist club activation",
       "existingIssue": 606,
       "status": "UNIMPLEMENTED_EXPLICIT_OPT_IN_REQUIRED"
-    },
-    {
-      "item": "Complete ST-001 recovery, expiration and return to protected intent verification",
-      "requirement": "ST-001",
-      "status": "PARTIAL_REPRODUCTION_AND_TARGET_ENVIRONMENT_VERIFICATION_REQUIRED"
     }
   ],
   "limits": [
@@ -341,7 +342,13 @@
       },
       "sourceCorrespondence": "All backend inputs match compiled base9a except Directory with previously built source hash; no runtime version overrides. CI must compile exact candidateHEAD. Documents/trace metadata may update after this receipt; backend/SQL/test bytes remain frozen.",
       "productionMutations": false,
-      "externalChannels": 0
+      "externalChannels": 0,
+      "catalogStrict": {
+        "status": "PASS",
+        "candidates": 1327,
+        "unreviewed": 0,
+        "receipt": "/private/tmp/tdf-alert-parity-repro-20261025/catalog-audit-frozen.json"
+      }
     },
     "contract": "docs/directory/saved-search-parity.md",
     "pullRequest": null,
@@ -453,5 +460,10 @@
     "productionApiReadsForwarded": 0,
     "productionWritesForwarded": 0,
     "scope": "Actual deployed static assets and real SessionProvider/clients in desktop/Pixel7 Chromium with entirely synthetic API/session/profile/image fixtures. Post-React-commit old callback test is separate from four local before-render controls. No real account/provider/production persistence claim."
+  },
+  "sixthPriority": {
+    "item": "Complete ST-001 recovery, expiration and return to protected intent verification",
+    "requirement": "ST-001",
+    "status": "PARTIAL_REPRODUCTION_AND_TARGET_ENVIRONMENT_VERIFICATION_REQUIRED"
   }
 }

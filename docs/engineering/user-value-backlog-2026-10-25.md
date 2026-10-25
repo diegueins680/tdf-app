@@ -181,13 +181,15 @@ observado; SHA y archivos; comandos/recibos y control negativo; PR/revisión/mer
 versión efectivamente desplegada; flags y dependencias restantes. Cuando se
 actualice `main`, repetir la comparación de contenido antes de reabrir trabajo.
 
-## Cinco siguientes después de la reparación no geográfica #534
+## Cinco acciones siguientes por prioridad actual
 
 1. Resolver los bloqueos de la consolidación financiera #551, conservando sus revisiones, modelos y límites de release.
 2. Preparar la entrega segura del backend #603: almacenamiento privado durable, admisión revisada del siguiente release y disposición de assurance exacta. Reutilizar los drafts #495/#600 donde corresponda; nunca reiniciar el diario completado.
-3. Resolver los prerrequisitos de entrega de chat #577; no prometer email/push antes de evidencia real.
-4. Habilitación explícita e idempotente del club #606, con permisos probados y sin crear miembros o notificaciones implícitos.
-5. Reproducir y calificar el ciclo completo ST-001 de recuperación, expiración y retorno al intento; conservar el login/deadline existente sin reabrirlo sin evidencia.
+3. Integrar y entregar la reparación no geográfica #534 mediante revisión, CI y release autorizado; conservar privacidad, dedup y cero canales externos. La implementación local todavía no entrega el beneficio a usuarios; radio y fallback permanecen PARTIAL.
+4. Resolver los prerrequisitos de entrega de chat #577; no prometer email/push antes de evidencia real.
+5. Habilitación explícita e idempotente del club #606, con permisos probados y sin crear miembros o notificaciones implícitos.
+
+ST-001 queda sexto: reproducir y calificar recuperación, expiración y retorno al intento, conservando el login/deadline existente sin reabrirlo sin evidencia.
 
 Las correcciones web #604/#605 ya están integradas y publicadas. Las puntuaciones siguen siendo hipótesis ordinales; no hay uplift observado ni un conteo validado de usuarios afectados.
 
