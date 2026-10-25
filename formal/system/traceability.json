@@ -11506,6 +11506,92 @@
       "failure": "Existing non-success response and DTO parsing failures reject; no false success is added.",
       "recovery": "Explicit user retry under a valid session; no change to provider permissions.",
       "observability": "Native browser receipts record credential-presence booleans only, never cookie or token values."
+    },
+    {
+      "id": "DIR-SAVED-SEARCH-001",
+      "title": "Saved alerts share public non-geographic eligibility",
+      "statement": "Saved-search alerts and public directory queries share typed non-geographic and entity/derivation predicates, preserve public ranking/facets, reject unsafe new filters, and tolerate unsupported historical filters without broadening or aborting index updates.",
+      "domain": "DIR",
+      "authority": "Product owner user-value completion instruction 2026-10-25; existing directory saved-search contract and issue534.",
+      "source": "docs/music-directory/functional-spec.md saved-search section; issue534; docs/directory/saved-search-parity.md",
+      "property": "For valid non-geographic filters, a public eligible changed canonical indexed result matches its saved alert exactly once per version; invalid/unsupported filters never broaden a match.",
+      "contract": "docs/directory/saved-search-parity.md",
+      "actors": [
+        "Authenticated directory user",
+        "Public directory visitor",
+        "Directory document projector"
+      ],
+      "preconditions": [
+        "The complete reviewed migration prefix and additive parity migration are applied.",
+        "Saved alerts opt in and their frequency is not off."
+      ],
+      "inputs": [
+        "Typed public query filters",
+        "Saved canonical JSON",
+        "Canonical public search documents and aliases",
+        "Result source version"
+      ],
+      "state": {
+        "savedQuery": [
+          "valid-non-geographic",
+          "invalid",
+          "unsupported-geographic"
+        ],
+        "delivery": [
+          "absent",
+          "internal-notification-created"
+        ]
+      },
+      "allowedTransitions": [
+        "Valid query plus eligible new/modified version -> one internal notification.",
+        "Same version replay -> unchanged.",
+        "Unsupported radius removed -> valid alert save."
+      ],
+      "forbiddenTransitions": [
+        "Ignored non-geographic filter -> irrelevant notification.",
+        "Literal all/artist alias mismatch -> lost eligible notification.",
+        "Malformed historical cast -> unrelated document write abort.",
+        "New saved exact coordinates -> persisted payload.",
+        "Same result version -> duplicate delivery."
+      ],
+      "effects": [
+        "Use the same scalar SQL predicates for public and saved matching.",
+        "Preserve valid saved JSON/hash/name/history and public scoring/facets/cursor.",
+        "Unsupported geographic alerts stay unavailable with explicit new-request error."
+      ],
+      "authorization": "Existing authenticated actor owns saved searches; public/canonical visibility remains required for notification eligibility; no new grants or endpoints.",
+      "privacy": "Reject new saved exact coordinates and unknown/nested canonical fields; no historical payload rewrite or external provider activation.",
+      "concurrency": "Existing unique saved-search/result/version delivery fence and transactional notification are retained; no global worker/concurrency proof is claimed.",
+      "idempotency": "Existing saved-search actor/request identity and query hashes are preserved; same-version trigger replay cannot create a second delivery.",
+      "failure": "Invalid new filters return400; radius-enabled alerts return an actionable400; historical malformed/unsupported filters yield no-match without propagating known conversion errors.",
+      "recovery": "Remove unsupported/invalid filters and retry using the same existing endpoint; reviewed rollback restores the exact previous trigger with compatible previous backend.",
+      "observability": "Synthetic SQL/HTTP and plan receipts; minimized validation reasons; no profile payloads or credentials added to logs.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+        "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql",
+        "scripts/test-directory-saved-search-parity.mjs",
+        "scripts/__tests__/directory-saved-search-http.mjs",
+        "scripts/__tests__/directory-search-plan-parity.mjs",
+        "scripts/test-community-search.py",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Source-confirmed defect with real PostgreSQL negative characterization and candidate parity controls; hosted/deployed and physical-device evidence remain separate.",
+      "ambiguity": [
+        "Geographic saved-alert centers require an explicit privacy-compatible product contract; radius-only saved queries cannot be evaluated geographically."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded non-geographic repair; geographic delivery remains unsupported and release/deployed correspondence require independent review and gates."
+      },
+      "verification": "Full-schema PostgreSQL trigger/notification tests, protected input validation, rollback/reapply, shipped query/plan comparison and real authenticated HTTP lane; no mathematical proof claimed.",
+      "evidence": "Dated local reproduction and qualification receipts, final candidate source hashes and hosted checks."
     }
   ],
   "sourceFingerprints": {
@@ -11513,7 +11599,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "8852ae082cd37c13a8513ddb42c0fbf34bc9626d5fe6120720d82737c11e95a6",
+    ".github/workflows/ci.yml": "976b5a9469027764f7616a6ead7a49573a496b10d1b7ae7b72578e2a3927de9c",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "01513cd705efe958bf0194a8295753d33b4e300d3bced014e37fcbffd174d6c1",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -11521,7 +11607,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "1c7ab5d110e1b234d38a317ddd5db52aa6f6b4d9b3eeeaf4d25c729b98916b94",
+    "docs/catalog-persistence/catalog-list-decisions.json": "69d867cf16cbc4727f824efe39217e6399d0b07d67be8a626b6e7464a36bce1d",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -11831,6 +11917,8 @@
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
+    "scripts/__tests__/directory-saved-search-http.mjs": "09fae35e5dd8c2ab9fe66b1d3b435d706fa3ad5bc058396fb7adc8c5bad13bc6",
+    "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "bc05c24381154b962eef119fd96d55728543f0dcc25cba55aa4f441eafc3ab3e",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
@@ -11933,7 +12021,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "39983b8f51cb45da98a3332939a53a2ea00d6032832c198a3840815ac5b219ff",
+    "scripts/production-migrations.json": "72e9a7599eacbe22ea2822529f2a11ceb77e8a3ab6abc4c68bf3aeddd14903af",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
@@ -11964,9 +12052,10 @@
     "scripts/test-backend-version-rebuild.py": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
     "scripts/test-booking-conformance.py": "2d51aa2f20c498e3c00990c27a5b972d8dfe28593fb668ebd292587131e259dc",
     "scripts/test-chat-notifications.sh": "d01a8cbf2c0852222f53b36bd813a7f2dc8875ae6f3b53ea0ab108fba1f2b552",
-    "scripts/test-community-search.py": "62fc49fb26bc0eb3e986d25e001c686eb196ab29a5d275221ce44203ae3b7cb7",
+    "scripts/test-community-search.py": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
+    "scripts/test-directory-saved-search-parity.mjs": "f4d9e034b9c1c80ce8a526224897079a06158baf8856f92b1dbc199f1baa9365",
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -12421,6 +12510,8 @@
     "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync_rollback.sql": "70413903f5aed0c5edd65e0ba9eea914d83d68b799ca89d4f74a2790909971c7",
     "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql": "d80703d04d4508c3a3e0b47ffe6eb2583bc1a29e84a6b05f3f09f1afe17e2782",
     "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql": "0eaf8fd7a04836f35eae5693a709933109c4aa91b63d0eb2b5a148c2c257db94",
+    "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql": "673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4",
+    "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql": "15c50b43f1f1b5591abdacb89cbca6b6db52fb792ca973f31c13c5a67f91e019",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "edb5bfd1fb3d4dab6a9d635e1de23d02c323df9e9d1047c231e2220dfd01f238",
@@ -12497,7 +12588,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "ec50d740c9ce6feed30d1bc67f03fc8d91af097e7e2940bae666c2150e5246ba",
+    "tdf-hq/src/TDF/Server/Directory.hs": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "ab737f3873177b454025dde6c575522cfb06ea43fadf1476276b685c8a7d42e0",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
@@ -12600,6 +12691,7 @@
     "tdf-hq/test/integration/directory_event_search_alias_sync.sql": "74345cd1a950aba9a454c1f089df7d8bd70bfa76ab8e20f292be9f69ab8b9cae",
     "tdf-hq/test/integration/directory_event_search_http_seed.sql": "b00c06818bcc42e8cee4ff9101f73a2a1311cf411edb68535257a01c038dce12",
     "tdf-hq/test/integration/directory_event_search_sync.sql": "5bb5a92c5403719e7398b2613a2c7956a152a69d0f88c7b0646e9b743206f8f6",
+    "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql": "7159a069e3f2d85f2907391c10493a5eca35a75f210edd961aa29a5b0e85da89",
     "tdf-hq/test/integration/interactions/notification-properties.sql": "65d0697ff1ba05a77d8d79d3120e24877c49c23c1b8a45de778096e39adb2d91",
     "tdf-hq/test/integration/ledger_posting_balance.sql": "a84597480d8d2b5844dfb725c8f17289bc45dbe5477426d0e13bb8a58f4da325",
     "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
@@ -13496,6 +13588,10 @@
       {
         "requirement": "DEPLOY-VERSION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/api/generated/types.ts": [
@@ -13745,6 +13841,10 @@
       },
       {
         "requirement": "DISCOVERY-NAV-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
         "relationship": "implementation"
       }
     ],
@@ -21792,6 +21892,10 @@
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx": [
@@ -22161,6 +22265,42 @@
         "requirement": "MEDIA-DRIVE-002",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-directory-saved-search-parity.mjs": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/directory-saved-search-http.mjs": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/directory-search-plan-parity.mjs": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -22229,7 +22369,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "8852ae082cd37c13a8513ddb42c0fbf34bc9626d5fe6120720d82737c11e95a6",
+      "sha256": "976b5a9469027764f7616a6ead7a49573a496b10d1b7ae7b72578e2a3927de9c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22271,6 +22411,10 @@
         {
           "requirement": "DEPLOY-VERSION-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -23355,6 +23499,30 @@
       "requirements": [
         {
           "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-420f7b30c17196ae",
+      "path": "scripts/__tests__/directory-saved-search-http.mjs",
+      "sha256": "09fae35e5dd8c2ab9fe66b1d3b435d706fa3ad5bc058396fb7adc8c5bad13bc6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-38cae059ca169cb6",
+      "path": "scripts/__tests__/directory-search-plan-parity.mjs",
+      "sha256": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "tests"
         }
       ]
@@ -25531,7 +25699,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "39983b8f51cb45da98a3332939a53a2ea00d6032832c198a3840815ac5b219ff",
+      "sha256": "72e9a7599eacbe22ea2822529f2a11ceb77e8a3ab6abc4c68bf3aeddd14903af",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26676,11 +26844,15 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "62fc49fb26bc0eb3e986d25e001c686eb196ab29a5d275221ce44203ae3b7cb7",
+      "sha256": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "tests"
         }
       ]
@@ -26747,6 +26919,18 @@
       "sha256": "f2b36be47672551b47c68cccad8959582239a0beeb80e3ed41f105b3c82022ce",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-66af35e30b926d7a",
+      "path": "scripts/test-directory-saved-search-parity.mjs",
+      "sha256": "f4d9e034b9c1c80ce8a526224897079a06158baf8856f92b1dbc199f1baa9365",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b574af41738316b9",
@@ -39461,6 +39645,30 @@
       ]
     },
     {
+      "id": "SURFACE-8b976b9e85e42f80",
+      "path": "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+      "sha256": "673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-3efaf5b7ed7854d4",
+      "path": "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql",
+      "sha256": "15c50b43f1f1b5591abdacb89cbca6b6db52fb792ca973f31c13c5a67f91e019",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -41439,7 +41647,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "ec50d740c9ce6feed30d1bc67f03fc8d91af097e7e2940bae666c2150e5246ba",
+      "sha256": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41464,6 +41672,10 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "implementation"
         }
       ]
@@ -43623,6 +43835,18 @@
       "requirements": [
         {
           "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ef8e94675f6de4cb",
+      "path": "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql",
+      "sha256": "7159a069e3f2d85f2907391c10493a5eca35a75f210edd961aa29a5b0e85da89",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "tests"
         }
       ]
@@ -50172,7 +50396,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bdab854f53350c583aff25136c002904dd499f50d0293d7205a45111d3c139d1",
+      "sourceSha256": "5014946bb76bfdd233c9c109f91bd840026d3e807977ce0283b3df317ca03063",
       "definition": {
         "states": [
           "absent",
@@ -50202,7 +50426,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bdab854f53350c583aff25136c002904dd499f50d0293d7205a45111d3c139d1",
+      "sourceSha256": "5014946bb76bfdd233c9c109f91bd840026d3e807977ce0283b3df317ca03063",
       "definition": {
         "export": [
           "queued",
@@ -72478,7 +72702,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 137,
+    "PARTIAL": 138,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

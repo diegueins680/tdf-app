@@ -34,7 +34,7 @@ import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (PersistValue(..), toPersistValue)
 import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
-import Data.Scientific (toBoundedInteger)
+import Data.Scientific (base10Exponent, toBoundedInteger, toRealFloat)
 import Servant
 
 import TDF.API.Directory
@@ -160,12 +160,6 @@ directoryVisibleEventDocumentClause :: Text
 directoryVisibleEventDocumentClause =
   "AND (document.entity_kind<>'event' OR NOT EXISTS (SELECT 1 FROM external_event_ref event_ref WHERE event_ref.event_id::text=document.entity_id AND lower(trim(event_ref.source_status))=?)) "
 
--- A derived artist listing duplicates its profile in mixed results; it is
--- listed only when classifieds are requested explicitly.
-directoryDerivedListingDedupClause :: Text
-directoryDerivedListingDedupClause =
-  "AND (input.entity_type IS NOT NULL OR " <> directorySourceProfileSql <> " IS NULL) "
-
 -- The derivation link lives on the materialized row (the public view keeps its
 -- historical column list); read it through the primary key.
 directorySourceProfileSql :: Text
@@ -199,27 +193,35 @@ searchDocumentsSql =
 directoryFilterClause :: Text
 directoryFilterClause =
   directoryVisibleEventDocumentClause <>
-  "AND (input.profile_kind IS NULL OR document.profile_kind=input.profile_kind) " <>
-  "AND (input.city_id IS NULL OR document.city_id=input.city_id) " <>
-  "AND (input.q='' OR document.search_vector @@ plainto_tsquery('simple',directory_normalize_text(input.q)) OR document.search_text LIKE '%'||directory_normalize_text(input.q)||'%' OR directory_text_similarity(document.search_text,input.q)>=.2 OR EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%'))) " <>
-  "AND (document.entity_kind IN ('event','venue') OR ((input.profession_id IS NULL OR input.profession_id=ANY(document.profession_ids)) AND (input.service_id IS NULL OR input.service_id=ANY(document.service_ids)) AND (input.instrument_id IS NULL OR input.instrument_id=ANY(document.instrument_ids)) AND (input.remote_only IS DISTINCT FROM TRUE OR document.remote) AND (input.available_only IS DISTINCT FROM TRUE OR document.availability_score>0))) " <>
-  "AND (input.genre_id IS NULL OR input.genre_id=ANY(document.genre_ids)) " <>
-  "AND (input.latitude IS NULL OR input.radius_km IS NULL OR directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude)<=input.radius_km) " <>
-  "AND (input.date_from IS NULL OR document.expires_at IS NULL OR document.expires_at>=input.date_from) AND (input.date_to IS NULL OR document.effective_at IS NULL OR document.effective_at<=input.date_to) "
+  "AND directory_matches_non_geo_filters(document.entity_kind,document.profile_kind,document.city_id," <>
+  "document.profession_ids,document.service_ids,document.instrument_ids,document.genre_ids," <>
+  "document.search_text,document.search_vector,document.remote,document.availability_score," <>
+  "document.effective_at,document.expires_at,input.q,(SELECT alias_entity_ids FROM directory_query_aliases),input.profile_kind," <>
+  "input.city_id,input.profession_id,input.service_id,input.instrument_id,input.genre_id," <>
+  "input.remote_only,input.available_only,input.date_from,input.date_to) " <>
+  "AND (input.latitude IS NULL OR input.radius_km IS NULL OR directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude)<=input.radius_km) "
 
 directoryEntityTypeClause :: Text
-directoryEntityTypeClause = "AND (input.entity_type IS NULL OR document.entity_kind=input.entity_type OR (input.entity_type='artist' AND document.profile_kind IN ('artist','band','project'))) "
+directoryEntityTypeClause =
+  "AND directory_matches_entity_and_derivation(document.entity_kind,document.profile_kind," <>
+  directorySourceProfileSql <> ",input.entity_type) "
+
+-- Typed query parameters and alias resolution are shared by ranking and facets.
+-- Materialize only aliases: typed inputs remain foldable for index conditions.
+directorySearchInputSql :: Text
+directorySearchInputSql =
+  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to,?::text profile_kind), " <>
+  "directory_query_aliases AS MATERIALIZED (SELECT directory_query_alias_entity_ids((SELECT q FROM input)) alias_entity_ids), "
 
 searchSql :: Bool -> Text
 searchSql sponsoredOnly =
-  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to,?::text profile_kind), " <>
+  directorySearchInputSql <>
   searchDocumentsSql <>
   "scored AS (SELECT document.*," <> directorySourceProfileSql <> " source_profile_id,directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude) distance_km," <>
   "CASE WHEN input.q='' THEN .5 WHEN directory_normalize_text(document.title)=directory_normalize_text(input.q) THEN 10 WHEN directory_normalize_text(document.title) LIKE directory_normalize_text(input.q)||'%' THEN 7 WHEN position(directory_normalize_text(input.q) in directory_normalize_text(document.title))>0 THEN 4 ELSE least(1,greatest(ts_rank_cd(document.search_vector,plainto_tsquery('simple',directory_normalize_text(input.q))),directory_text_similarity(document.title,input.q))) END text_score," <>
   "CASE WHEN input.q='' THEN 0 WHEN EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%')) THEN 1 ELSE 0 END semantic_score " <>
   "FROM documents document CROSS JOIN input WHERE document.sponsored=" <> (if sponsoredOnly then "TRUE " else "FALSE ") <>
   directoryEntityTypeClause <>
-  directoryDerivedListingDedupClause <>
   directoryFilterClause <> "), " <>
   "ranked AS (SELECT scored.*,round(((.40*text_score+.15*semantic_score+.15*CASE WHEN distance_km IS NULL THEN .35 ELSE 1/(1+distance_km/25) END+.10*profile_completeness+.08*least(1,1/(1+extract(epoch from (now()-source_updated_at))/2592000))+.05*availability_score+.07*reputation_score)/5)::numeric,6) organic_score FROM scored), " <>
   "boundary AS (SELECT organic_score,source_updated_at,entity_kind,entity_id FROM ranked WHERE entity_kind||':'||entity_id=?::text), " <>
@@ -235,11 +237,11 @@ searchSql sponsoredOnly =
 -- vanish once a tab is selected.
 facetsSql :: Text
 facetsSql =
-  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to,?::text profile_kind), " <>
+  directorySearchInputSql <>
   searchDocumentsSql <>
   "filtered AS (SELECT document.entity_kind,document.profile_kind,document.city_id,document.city_name," <> directorySourceProfileSql <> " source_profile_id FROM documents document CROSS JOIN input WHERE NOT document.sponsored " <>
   directoryFilterClause <> "), " <>
-  "selected AS (SELECT filtered.* FROM filtered CROSS JOIN input WHERE (input.entity_type IS NULL OR filtered.entity_kind=input.entity_type OR (input.entity_type='artist' AND filtered.profile_kind IN ('artist','band','project'))) AND (input.entity_type IS NOT NULL OR filtered.source_profile_id IS NULL)) " <>
+  "selected AS (SELECT filtered.* FROM filtered CROSS JOIN input WHERE directory_matches_entity_and_derivation(filtered.entity_kind,filtered.profile_kind,filtered.source_profile_id,input.entity_type)) " <>
   "SELECT jsonb_build_object('entityTypes',coalesce((SELECT jsonb_object_agg(entity_kind,total) FROM (SELECT entity_kind,count(*) total FROM filtered GROUP BY entity_kind) counts),'{}'::jsonb)||jsonb_build_object('all',(SELECT count(*) FROM filtered WHERE source_profile_id IS NULL),'artist',(SELECT count(*) FROM filtered WHERE profile_kind IN ('artist','band','project')))," <>
   "'cities',coalesce((SELECT jsonb_agg(jsonb_build_object('id',city_id,'name',city_name,'count',total) ORDER BY total DESC,city_name) FROM (SELECT city_id,max(city_name) city_name,count(*) total FROM selected WHERE city_id IS NOT NULL GROUP BY city_id ORDER BY total DESC LIMIT 20) cities),'[]'::jsonb)," <>
   "'total',(SELECT count(*) FROM selected))"
@@ -1240,11 +1242,63 @@ favoriteTargetWasEligible _ = False
 
 listSavedSearches user = jsonRows "SELECT jsonb_build_object('id',id,'name',name,'canonicalQuery',canonical_query,'alertsEnabled',alerts_enabled,'alertFrequency',alert_frequency,'lastEvaluatedAt',last_evaluated_at,'createdAt',created_at) FROM directory_saved_search WHERE account_party_id=? ORDER BY created_at DESC,id" [toPersistValue (auPartyId user)]
 
+-- Saved searches use the existing DTO, but their filters must have the same
+-- types as public search. Do not persist arbitrary nested payloads/coordinates.
+validateSavedSearchQuery :: Bool -> Value -> AppM ()
+validateSavedSearchQuery alertsEnabled canonicalQuery = do
+  let invalid = savedSearchError "La búsqueda contiene filtros no válidos. Revisa los filtros e inténtalo de nuevo."
+      supportedFields = Set.fromList
+        [ "q", "entityType", "profileKind", "cityId", "professionId", "serviceId"
+        , "instrumentId", "genreId", "remote", "available", "dateFrom", "dateTo"
+        , "latitude", "longitude", "radiusKm"
+        ]
+  case canonicalQuery of
+    Object fields -> forM_ (KeyMap.toList fields) $ \(key, value) -> do
+      let name = Key.toText key
+      unless (name `Set.member` supportedFields) invalid
+      when (name `elem` ["latitude", "longitude"] && value /= Null) $
+        savedSearchError "No se pueden guardar coordenadas exactas. Quita la ubicación de esta búsqueda."
+      case value of
+        Null -> pure ()
+        String text -> do
+          if name == "q" then do
+            _ <- validateQuery (Just text)
+            pure ()
+          else when (T.any isControl (if name `elem` ["entityType", "profileKind"] then T.strip text else text)) invalid
+          when (name `elem` ["dateFrom", "dateTo"]) $
+            case (parseQueryParam text :: Either Text UTCTime) of
+              Left _ -> invalid
+              Right _ -> pure ()
+        Bool _ -> pure ()
+        Number number -> do
+          let radius = toRealFloat number :: Double
+          -- jsonb rejects scales beyond16383 before its decoder can run.
+          unless (name == "radiusKm" && not (isInfinite radius || isNaN radius)
+            && radius > 0 && radius <= 500 && base10Exponent number >= -16383) invalid
+        _ -> invalid
+    _ -> invalid
+  validation <- jsonOne err500
+    "SELECT jsonb_build_object('valid',valid,'reason',reason) FROM directory_parse_saved_search(?::jsonb)"
+    [PersistText (decodeJsonText canonicalQuery)]
+  case validation of
+    Object fields | KeyMap.lookup "valid" fields == Just (Bool True) -> pure ()
+    Object fields | KeyMap.lookup "reason" fields == Just (String "unsupported_radius") ->
+      when alertsEnabled $
+        savedSearchError "Las alertas por radio aún no están disponibles. Quita el radio para guardar esta alerta."
+    Object fields | KeyMap.lookup "reason" fields == Just (String "coordinates_not_allowed") ->
+      savedSearchError "No se pueden guardar coordenadas exactas. Quita la ubicación de esta búsqueda."
+    _ -> invalid
+  where
+    savedSearchError :: Text -> AppM ()
+    savedSearchError message =
+      throwError err400 {errBody=BL.fromStrict (TE.encodeUtf8 message)}
+
 createSavedSearch user idempotency request@SavedSearchCreateRequest
   { name, canonicalQuery, alertsEnabled, alertFrequency } = do
   when (T.length (T.strip name)<1 || T.length name>120 || T.any isControl name) $
     throwError err400 {errBody="saved search name must contain 1-120 safe characters"}
   requireJsonObject "canonicalQuery" canonicalQuery
+  validateSavedSearchQuery alertsEnabled canonicalQuery
   unless (alertFrequency `Set.member` Set.fromList ["instant","daily","weekly","off"]) $
     throwError err400 {errBody="invalid alertFrequency"}
   savedId <- reserveIdempotency user "saved-search.create" idempotency request "saved-search"

@@ -344,6 +344,31 @@
       "preservedPreviousDecision": true,
       "newSyntheticFixtureId": "134cf0fa5a9bb176f981",
       "scope": "Technical API method names and synthetic test DTO only; no product, payment or release approval."
+    },
+    "directorySavedSearchParity": {
+      "sourceMain": "9a927fa390066f43cc27c872800bf1b0412e166e",
+      "reason": "The active migration registry fingerprint gains one additive entry. Preserve the prior reviewed213-entry decision as history and classify its214-entry successor without changing existing migration authority.",
+      "decisions": [
+        {
+          "id": "3f336173e03f10fc023c",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P0-cutover",
+          "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+          "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decisions",
+          "reviewBatch": "music-current-main-integration-20261023",
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3,
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 213
+          }
+        }
+      ]
     }
   },
   "decisions": [
@@ -17920,22 +17945,22 @@
       }
     },
     {
-      "id": "3f336173e03f10fc023c",
+      "id": "c94cd70c1272ec9ede1b",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P0-cutover",
       "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-      "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+      "justification": "The 214-entry deployment execution registry preserves protected main 9a927fa390066f43cc27c872800bf1b0412e166e as its exact 213-entry prefix and appends one non-geographic directory saved-search parity migration. All213 shared entry objects, introduction anchors and historical SQL bytes remain unchanged. The new introduction anchor is eb2f71d62740783369a6eb2a6d35fc024484cb71; subsequent unpublished candidate corrections are reviewed separately. Disposable full-prefix/replay, exact rollback/reapply and authenticated application qualification are separate evidence; this classification authorizes no production application or activation.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "music-current-main-integration-20261023",
+      "reviewBatch": "directory-saved-search-parity-20261025",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 213
+        "valueCount": 214
       }
     },
     {

@@ -113,13 +113,22 @@ BEGIN
   IF profile_kind IS NOT NULL AND profile_kind NOT IN ('person','artist','band','project') THEN
     RETURN NEXT; RETURN;
   END IF;
+  -- Public UUID query parameters require the canonical hyphenated form.
+  -- PostgreSQL accepts braces/compact forms; public search does not. Never
+  -- normalize empty/whitespace values into an absent filter and broaden it.
+  FOREACH field_name IN ARRAY ARRAY['cityId','professionId','serviceId','instrumentId','genreId'] LOOP
+    raw_value:=canonical->>field_name;
+    IF raw_value IS NOT NULL AND raw_value !~ '^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$' THEN
+      RETURN NEXT; RETURN;
+    END IF;
+  END LOOP;
   -- Each cast is inside this guarded decoder. Do not copy unguarded casts to
   -- the trigger's WHERE clause; old canonical_query values were not typed.
-  city_id:=nullif(btrim(canonical->>'cityId'),'')::uuid;
-  profession_id:=nullif(btrim(canonical->>'professionId'),'')::uuid;
-  service_id:=nullif(btrim(canonical->>'serviceId'),'')::uuid;
-  instrument_id:=nullif(btrim(canonical->>'instrumentId'),'')::uuid;
-  genre_id:=nullif(btrim(canonical->>'genreId'),'')::uuid;
+  city_id:=(canonical->>'cityId')::uuid;
+  profession_id:=(canonical->>'professionId')::uuid;
+  service_id:=(canonical->>'serviceId')::uuid;
+  instrument_id:=(canonical->>'instrumentId')::uuid;
+  genre_id:=(canonical->>'genreId')::uuid;
   remote_only:=(canonical->>'remote')::boolean;
   available_only:=(canonical->>'available')::boolean;
   FOREACH field_name IN ARRAY ARRAY['dateFrom','dateTo'] LOOP

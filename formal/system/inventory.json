@@ -119,6 +119,8 @@
       "scripts/__tests__/dependency-security.test.mjs",
       "scripts/__tests__/diagnose-social.test.mjs",
       "scripts/__tests__/directory-event-search-http.mjs",
+      "scripts/__tests__/directory-saved-search-http.mjs",
+      "scripts/__tests__/directory-search-plan-parity.mjs",
       "scripts/__tests__/disposable-postgres-url.test.mjs",
       "scripts/__tests__/event-draft-plan.test.mjs",
       "scripts/__tests__/event-operations-http-runner.test.mjs",
@@ -442,6 +444,7 @@
       "scripts/test-ddex-partner-legacy-compatibility.sh",
       "scripts/test-directory-artist-listings.sh",
       "scripts/test-directory-event-visibility-migration.sh",
+      "scripts/test-directory-saved-search-parity.mjs",
       "scripts/test-distribution-accounting-migration.sh",
       "scripts/test-distribution-product-seeds-migration.sh",
       "scripts/test-domo-quote-checkout-runtime-migration.sh",
@@ -1836,6 +1839,8 @@
       "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync_rollback.sql",
       "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql",
       "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
+      "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+      "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2200,6 +2205,7 @@
       "tdf-hq/test/integration/directory_event_search_alias_sync.sql",
       "tdf-hq/test/integration/directory_event_search_http_seed.sql",
       "tdf-hq/test/integration/directory_event_search_sync.sql",
+      "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql",
       "tdf-hq/test/integration/event_moment_reaction_cutover_postgres.sql",
       "tdf-hq/test/integration/event_operations_command_privacy_assertions.sql",
       "tdf-hq/test/integration/event_operations_foundation_fixture.sql",
@@ -2687,7 +2693,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "8852ae082cd37c13a8513ddb42c0fbf34bc9626d5fe6120720d82737c11e95a6",
+      "sha256": "976b5a9469027764f7616a6ead7a49573a496b10d1b7ae7b72578e2a3927de9c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3240,6 +3246,18 @@
       "id": "SURFACE-2975771fbd868bb1",
       "path": "scripts/__tests__/directory-event-search-http.mjs",
       "sha256": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-420f7b30c17196ae",
+      "path": "scripts/__tests__/directory-saved-search-http.mjs",
+      "sha256": "09fae35e5dd8c2ab9fe66b1d3b435d706fa3ad5bc058396fb7adc8c5bad13bc6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-38cae059ca169cb6",
+      "path": "scripts/__tests__/directory-search-plan-parity.mjs",
+      "sha256": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4499,7 +4517,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "39983b8f51cb45da98a3332939a53a2ea00d6032832c198a3840815ac5b219ff",
+      "sha256": "72e9a7599eacbe22ea2822529f2a11ceb77e8a3ab6abc4c68bf3aeddd14903af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5135,7 +5153,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "62fc49fb26bc0eb3e986d25e001c686eb196ab29a5d275221ce44203ae3b7cb7",
+      "sha256": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5178,6 +5196,12 @@
       "id": "SURFACE-104e997c0ce14359",
       "path": "scripts/test-directory-event-visibility-migration.sh",
       "sha256": "f2b36be47672551b47c68cccad8959582239a0beeb80e3ed41f105b3c82022ce",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-66af35e30b926d7a",
+      "path": "scripts/test-directory-saved-search-parity.mjs",
+      "sha256": "f4d9e034b9c1c80ce8a526224897079a06158baf8856f92b1dbc199f1baa9365",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13509,6 +13533,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8b976b9e85e42f80",
+      "path": "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+      "sha256": "673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3efaf5b7ed7854d4",
+      "path": "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql",
+      "sha256": "15c50b43f1f1b5591abdacb89cbca6b6db52fb792ca973f31c13c5a67f91e019",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -14591,7 +14627,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "ec50d740c9ce6feed30d1bc67f03fc8d91af097e7e2940bae666c2150e5246ba",
+      "sha256": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15690,6 +15726,12 @@
       "id": "SURFACE-4b9b7fcb2555c26b",
       "path": "tdf-hq/test/integration/directory_event_search_sync.sql",
       "sha256": "5bb5a92c5403719e7398b2613a2c7956a152a69d0f88c7b0646e9b743206f8f6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ef8e94675f6de4cb",
+      "path": "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql",
+      "sha256": "7159a069e3f2d85f2907391c10493a5eca35a75f210edd961aa29a5b0e85da89",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19185,6 +19227,13 @@
     {
       "path": "docs/directory/event-search-sync.md",
       "sha256": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/directory/saved-search-parity.md",
+      "sha256": "686372ef5cac5899db66170aa161d789a64e8cf92f478616b0ed23859f1c4f07",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26429,7 +26478,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "bdab854f53350c583aff25136c002904dd499f50d0293d7205a45111d3c139d1",
+      "sha256": "5014946bb76bfdd233c9c109f91bd840026d3e807977ce0283b3df317ca03063",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
