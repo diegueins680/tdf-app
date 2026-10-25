@@ -180,3 +180,66 @@ el flujo de activación, bloquea una aceptación con personas reales hasta que s
 reparación separada esté integrada y verificada. Esta rama no modifica la sesión
 ni despliega esa reparación. CI, revisión independiente y FIFO siguen vigentes;
 no hubo escritura de datos productivos, despliegue ni comunicaciones reales.
+
+
+## Cierre verificable de esta continuación — 25/oct, 23:00 UTC
+
+**Implementado y probado localmente; pendiente de CI/revisión del nuevo head;
+no integrado ni desplegado.** Se incorporó main b732efd65 (#610) y el padre
+#608 2c3b0017a mediante merge normal. Sus 142 requisitos permanecen intactos;
+con moderación y propiedad de sesión hay 144. Las 215 migraciones y sus bytes
+históricos no cambian; no hay nuevas dependencias ni servicios.
+
+La regresión de sesión produjo tres contraejemplos antes de la corrección:
+un envío del borrador, un opt-in y una decisión podían adoptar las credenciales
+nuevas antes de actualizarse React. Se trasladó la autoridad genérica existente
+del editor de perfiles a useSessionOwner/useOwnedSessionDraft, manteniendo su
+entrada antigua como fachada. Cada intento conserva propietario, época y evento;
+los resultados tardíos no borran el borrador ni cambian el caché de otra cuenta.
+La selección de archivo anterior tampoco puede salir por la nueva sesión.
+
+La prueba adicional utiliza SessionProvider, credenciales imperativas, API de
+preferencias y cliente HTTP reales con red sintética: cero PUT del checkbox
+anterior, y un PUT autenticado tras una acción explícita de B. El control negativo
+omitiendo únicamente esa protección detectó un PUT con token sintético B y JSON
+true; se restauraron exactamente los bytes originales. No es un incidente de
+producción. La corrección del logout fallido sigue siendo una dependencia separada.
+
+También se rechazan confirmaciones HTML o malformadas de publicación, edición,
+eliminación, preferencias y campañas. Un opt-out debe confirmar el valor solicitado;
+un HTML 200 no puede mostrarse como unsubscribe exitoso. La creación requiere ID
+persistido y forma de medio compatible, y se comprueba el evento/fuente cuando se
+incluye. Se admiten respuestas heredadas sin eventId. Un resultado incierto conserva
+el editor y recomienda comprobar el evento antes de reintentar; no implementa
+idempotencia general de creación ni garantiza un commit solamente por recibir JSON.
+
+Resultados separados, sin sumar casos que se solapan:
+
+- Suite completa tras propiedad de sesión: 3.415 pruebas/303 suites, cero fallos.
+  Precede a las últimas validaciones SDK y al merge de menús; CI final debe repetir
+  la suite completa sobre el commit limpio de publicación.
+- Composición de menús/propiedad: 70 pruebas/8 suites, cero fallos.
+- Límites de sesión, archivos y respuestas tardías: 35 pruebas/5 suites, cero fallos.
+- SDK/acknowledgements, proveedor de sesión y página: 51 pruebas/4 suites, cero fallos.
+- Tipos, lint, auditoría estricta de catálogos y metadatos/admisión se comprueban
+  sobre la fuente final; los fallos iniciales de preparación/lint se conservan.
+- [API y DB finales](event-memory-source-evidence-20261025/http-session-safe-results.json):
+  113 solicitudes/16 grupos, incluida sesión anónima real 200/null, concurrencia,
+  persistencia y rechazo de rollback con evidencia. [Navegador final](event-memory-source-evidence-20261025/browser-session-safe-results.json):
+  escritorio y teléfono reales sobre API/DB sintéticas, publicación/denuncia/cierre/
+  ocultación/restauración y recarga, sin salida a proveedores. El recibo conserva
+  la revisión dd2d48ab2 con árbol modificado y el ejecutable 830082822b64…;
+  sus hashes críticos deben seguir coincidiendo con los archivos actuales.
+
+El [recibo de regresiones](event-memory-source-evidence-20261025/session-boundary-regression.json)
+retiene hashes de los logs negativos y positivos y sus límites. Las cifras no son
+usuarios adquiridos ni métricas productivas. Última consulta real de solo lectura:
+21:36 UTC, 141 on_sale, siete cuentas relacionadas/cinco activas, sin esquema
+instalado, sin consentimiento recogido. Intentadas/enviadas/entregadas/fallidas:
+**0/0/0/0**. Exclusiones finales y destinatarios consentidos no están acreditados.
+
+La aprobación previa de un head diferente no autoriza estos cambios. Permanecen
+CI obligatorio, revisión independiente, FIFO, recuperación y ensayo canónico,
+despliegue y comprobación productiva. Siguen pendientes medios privados/revocables,
+galerías combinadas, audio/texto nativo, previsualizaciones públicas específicas,
+idempotencia de creación y retención D7/D30. No se afirma cumplimiento total.

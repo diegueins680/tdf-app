@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "dd2d48ab2775b7dc3e68e79f19eb00d36b83b273",
+  "sourceWorktreeDirty": true,
+  "scope": "Synthetic web session ownership and acknowledgement regression evidence; no production write or communication.",
+  "baseline": {
+    "logSha256": "5964dbf9b29b9a030e27634df89059dbe9e4933bf329b46430a56fd80367422c",
+    "failed": 3,
+    "passed": 23,
+    "observed": "One request each escaped through a stale publication, consent and source moderation action."
+  },
+  "realProviderControl": {
+    "negativeLogSha256": "f6ba33337ae005b8ad8ad3a7d224a6a2fadfeffd07c2349cf4412dc8d251e7dd",
+    "detected": "Bypassing only the preference owner guard produces one actual client PUT with Bearer synthetic-B and JSON true.",
+    "positiveLogSha256": "665065721fa1720536a942b315d5087efca82af2dc56b11f062b1636111127e6",
+    "observed": "Guarded stale click sends zero requests; a separate explicit B action sends one authenticated request."
+  },
+  "executions": [
+    {
+      "name": "Full UI after ownership change, before final SDK acknowledgement changes and menu composition",
+      "tests": 3415,
+      "suites": 303,
+      "failed": 0,
+      "logSha256": "bcd145321fade9152ee7d4077d0d5c16a5447255507b226c7073fd69bfa2bbb2"
+    },
+    {
+      "name": "Composed menu and ownership focused suites",
+      "tests": 70,
+      "suites": 8,
+      "failed": 0,
+      "logSha256": "3282ed74a111ca3cecc660d4ba5dfbbb578688265a55156ad14512d254354da1"
+    },
+    {
+      "name": "Ownership plus selected-file and late-response cases",
+      "tests": 35,
+      "suites": 5,
+      "failed": 0,
+      "logSha256": "a4c978f144983de96806bac86ee9300259a36660f53138c26f8eb49894859ed3"
+    },
+    {
+      "name": "Final acknowledgement, session integration and page checks",
+      "tests": 51,
+      "suites": 4,
+      "failed": 0,
+      "logSha256": "4591a1312602e8228fe0b76128c90f3a406b275add46802e442843588c672b97"
+    }
+  ],
+  "limitations": [
+    "Scopes overlap; counts must not be summed as unique tests.",
+    "The first full suite predates final SDK checks and main menu composition; final clean-head CI must rerun all required suites.",
+    "Raw logs remain local and retain their original identities.",
+    "This is not proof of every browser credential mechanism, native device behavior or complete system refinement."
+  ]
+}

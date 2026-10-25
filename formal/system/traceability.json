@@ -12109,14 +12109,18 @@
         "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx",
-        "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx"
+        "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx",
         "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
-        "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx"
+        "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts"
       ],
       "formalModels": [],
       "verification": "Three observed pre-render counterexamples followed by corrected zero-dispatch regressions, late response and existing real session-provider/profile tests. Browser/API integration is qualified separately."
@@ -12589,7 +12593,7 @@
     "scripts/test-community-search.py": "62fc49fb26bc0eb3e986d25e001c686eb196ab29a5d275221ce44203ae3b7cb7",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
-    "scripts/test-event-memories-http.py": "a4a6f2f373b2be590a91163919318a2f04ee395146c27322eb50a7e6451c7818",
+    "scripts/test-event-memories-http.py": "8c7f77502e016b8e3f4ccb290323636f74b64397ddf5d7bebf70b2e0de7bc9bc",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
     "scripts/test-event-memory-source-browser.mjs": "983062c3d286d0f76c428b95e9684c79071ba9ba3aba7f44a7b0d00ad59e9817",
     "scripts/test-event-memory-source-moderation.sh": "df0f32fcd351a360e6cf942e8b90a2d17d91976336b5b532528a96420a191354",
@@ -12725,7 +12729,8 @@
     "tdf-hq-ui/src/api/directory.ts": "6d1b860759bb5841d85ff693ddfe7580cb56561eb9614f8eaef01f07c424fdc3",
     "tdf-hq-ui/src/api/drive.ts": "27e9d44e0bfa36c763b79e57731b118168b77bf0ac051790903693208fe0d2a3",
     "tdf-hq-ui/src/api/drive.upload.test.ts": "7ae7828b0917f8ee4f03f630a5932bff0098b498b0f5ff7fde96b90f7682f033",
-    "tdf-hq-ui/src/api/eventMemoryInvitations.ts": "ee585be840bbb614675ae3e8e5248c4a7e2e2dc94d1f3a3d758005e08f130179",
+    "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts": "9d38441f08bdac34840484807caaea351a6be48c1d701ae5e346587db99ff86f",
+    "tdf-hq-ui/src/api/eventMemoryInvitations.ts": "2ed34e56f52432bff7d53ee495a79c902a9d2fb4c6d79ea630bc92cd61e7e6f9",
     "tdf-hq-ui/src/api/eventMemoryModeration.test.ts": "4bb13866a0291da53b45c7b547ee4716ab6736701b9a938793d32a0f8fa62915",
     "tdf-hq-ui/src/api/eventMemoryModeration.ts": "0b771dcdeb9318776a5955c1ae543d97ae2b9f06af31dc13e2f397f010bb4ed5",
     "tdf-hq-ui/src/api/eventTickets.test.ts": "a411fe9ca5267672db4db1ec3481aecd3fda6d8a19bc913c0885db2eb65ea541",
@@ -12747,8 +12752,8 @@
     "tdf-hq-ui/src/api/requestDeadline.ts": "f8294c115c2638bb82dc0f61ad5f2e4a63018b3d17490d1a7ee1f64d56080a99",
     "tdf-hq-ui/src/api/session.test.ts": "b00e52d37736c2f913029b4ebd6d327b488b4fb00515e7be468f4788c0bf775e",
     "tdf-hq-ui/src/api/session.ts": "f9c1e71ee476a7551fb6a5dd093c8c9776e525d113af0451bde93aebaf910e90",
-    "tdf-hq-ui/src/api/socialEvents.test.ts": "ac2b6c7be3cf0104ec7d974eeabbccbd0a3485c2ac25a3b1ae0b7b154c989bf4",
-    "tdf-hq-ui/src/api/socialEvents.ts": "355890ea7d4b825bb3fc3c3fb7ad1b4fded811343f0fec12aeae4bd5266d2594",
+    "tdf-hq-ui/src/api/socialEvents.test.ts": "7ff622e0574058fa5b19fd0b2379371d95c93204ca02c6a111ed1cb4b460a8bf",
+    "tdf-hq-ui/src/api/socialEvents.ts": "a071a745cbaa496c2a9172fedc9556f5f1bda5f5a14ec3c400f622e9ece84414",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
     "tdf-hq-ui/src/api/whatsappConsentPublic.ts": "5c41328394ff76400c1fbcd32b95555bec11455ad923acd96e922b5aadbccfda",
@@ -19539,6 +19544,10 @@
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SOCIAL-EVENT-SESSION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": [
@@ -23107,6 +23116,10 @@
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SOCIAL-EVENT-SESSION-001",
+        "relationship": "tests"
       }
     ],
     "tdf-mobile/__tests__/eventMomentWirePayload.test.ts": [
@@ -23162,6 +23175,10 @@
     "tdf-hq-ui/src/api/eventMemoryInvitations.ts": [
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SOCIAL-EVENT-SESSION-001",
         "relationship": "implementation"
       }
     ],
@@ -23302,6 +23319,12 @@
       }
     ],
     "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx": [
+      {
+        "requirement": "SOCIAL-EVENT-SESSION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts": [
       {
         "requirement": "SOCIAL-EVENT-SESSION-001",
         "relationship": "tests"
@@ -27952,7 +27975,7 @@
     {
       "id": "SURFACE-92e34e327b523dc8",
       "path": "scripts/test-event-memories-http.py",
-      "sha256": "a4a6f2f373b2be590a91163919318a2f04ee395146c27322eb50a7e6451c7818",
+      "sha256": "8c7f77502e016b8e3f4ccb290323636f74b64397ddf5d7bebf70b2e0de7bc9bc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30573,13 +30596,29 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-ed4c4e2cae08642f",
+      "path": "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts",
+      "sha256": "9d38441f08bdac34840484807caaea351a6be48c1d701ae5e346587db99ff86f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOCIAL-EVENT-SESSION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-8ec51fdb77ca8303",
       "path": "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
-      "sha256": "ee585be840bbb614675ae3e8e5248c4a7e2e2dc94d1f3a3d758005e08f130179",
+      "sha256": "2ed34e56f52432bff7d53ee495a79c902a9d2fb4c6d79ea630bc92cd61e7e6f9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SOCIAL-EVENT-SESSION-001",
           "relationship": "implementation"
         }
       ]
@@ -31267,11 +31306,15 @@
     {
       "id": "SURFACE-f2b48a740f534a82",
       "path": "tdf-hq-ui/src/api/socialEvents.test.ts",
-      "sha256": "ac2b6c7be3cf0104ec7d974eeabbccbd0a3485c2ac25a3b1ae0b7b154c989bf4",
+      "sha256": "7ff622e0574058fa5b19fd0b2379371d95c93204ca02c6a111ed1cb4b460a8bf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SOCIAL-EVENT-SESSION-001",
           "relationship": "tests"
         }
       ]
@@ -31279,7 +31322,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "355890ea7d4b825bb3fc3c3fb7ad1b4fded811343f0fec12aeae4bd5266d2594",
+      "sha256": "a071a745cbaa496c2a9172fedc9556f5f1bda5f5a14ec3c400f622e9ece84414",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31296,6 +31339,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SOCIAL-EVENT-SESSION-001",
           "relationship": "implementation"
         }
       ]
@@ -51901,7 +51948,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b1795d8ed2c524a1217622b32d96159e0099d3de101ded7dfafd091a2fb5b203",
+      "sourceSha256": "ca6b0332830736e2194a377e006adcf6ffe5fb4d4e1ece88c320b98cc1fb3da2",
       "definition": {
         "states": [
           "absent",
@@ -51931,7 +51978,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b1795d8ed2c524a1217622b32d96159e0099d3de101ded7dfafd091a2fb5b203",
+      "sourceSha256": "ca6b0332830736e2194a377e006adcf6ffe5fb4d4e1ece88c320b98cc1fb3da2",
       "definition": {
         "export": [
           "queued",
