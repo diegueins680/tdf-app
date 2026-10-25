@@ -69,6 +69,7 @@ import { FanProfileEditor } from '../features/fans/FanProfileEditor';
 import { FollowedArtists } from '../features/fans/FollowedArtists';
 import { ProfileSectionCard } from '../features/fans/ProfileSectionCard';
 import { useFanProfile } from '../features/fans/useFanProfile';
+import { useOwnedProfileDraft } from '../features/fans/useOwnedProfileDraft';
 import { FanClubPreview } from '../features/fanclubs/FanClubPreview';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { getAnalyticsClient } from '../analytics/posthog';
@@ -79,6 +80,12 @@ import { useTranslation } from 'react-i18next';
 import { useFanHubOnboarding } from '../features/fans/useFanHubOnboarding';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
+const EMPTY_ARTIST_DRAFT: ArtistProfileUpsert = {
+  apuArtistId: 0, apuDisplayName: '', apuSlug: '', apuBio: '', apuCity: '',
+  apuHeroImageUrl: '', apuSpotifyArtistId: '', apuSpotifyUrl: '',
+  apuYoutubeChannelId: '', apuYoutubeUrl: '', apuWebsiteUrl: '',
+  apuFeaturedVideoUrl: '', apuGenreIds: [], apuHighlights: '',
+};
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
 function StatPill({ label, value }: { label: string; value: number }) {
   return (
@@ -311,11 +318,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const {
     profileDraft,
     profileQuery,
+    profileReady,
     saveProfile: handleSaveProfile,
     setProfileDraft,
     updateProfileMutation,
   } = useFanProfile({
-    enabled: Boolean(viewerId && isFan && hasAuthToken && !isHomeManagerView),
+    enabled: Boolean(viewerId && isFan && hasAuthToken && !sessionLoading && !isHomeManagerView),
     viewerId,
   });
 
@@ -337,21 +345,32 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     enabled: Boolean(viewerId && canEditArtist && hasAuthToken),
   });
 
-  const [artistDraft, setArtistDraft] = useState<ArtistProfileUpsert>({
-    apuArtistId: session?.partyId ?? 0,
-    apuDisplayName: '',
-    apuSlug: '',
-    apuBio: '',
-    apuCity: '',
-    apuHeroImageUrl: '',
-    apuSpotifyArtistId: '',
-    apuSpotifyUrl: '',
-    apuYoutubeChannelId: '',
-    apuYoutubeUrl: '',
-    apuWebsiteUrl: '',
-    apuFeaturedVideoUrl: '',
-    apuGenreIds: [],
-    apuHighlights: '',
+  const artistBaseline = useMemo(() => {
+    const dto = artistProfileQuery.data;
+    if (sessionLoading || !canEditArtist || !artistProfileQuery.isSuccess || dto?.apArtistId !== viewerId) return undefined;
+    return {
+      apuArtistId: dto.apArtistId,
+      apuDisplayName: dto.apDisplayName ?? '',
+      apuSlug: dto.apSlug ?? '',
+      apuBio: dto.apBio ?? '',
+      apuCity: dto.apCity ?? '',
+      apuHeroImageUrl: dto.apHeroImageUrl ?? '',
+      apuSpotifyArtistId: dto.apSpotifyArtistId ?? '',
+      apuSpotifyUrl: dto.apSpotifyUrl ?? '',
+      apuYoutubeChannelId: dto.apYoutubeChannelId ?? '',
+      apuYoutubeUrl: dto.apYoutubeUrl ?? '',
+      apuWebsiteUrl: dto.apWebsiteUrl ?? '',
+      apuFeaturedVideoUrl: dto.apFeaturedVideoUrl ?? '',
+      apuGenreIds: dto.apGenreIds ?? [],
+      apuHighlights: dto.apHighlights ?? '',
+    };
+  }, [artistProfileQuery.data, artistProfileQuery.isSuccess, canEditArtist, sessionLoading, viewerId]);
+  const {
+    draft: artistDraft, setDraft: setArtistDraft, ready: artistProfileReady,
+    acknowledgeSave: acknowledgeArtistSave, isCurrentOwner: isCurrentArtistOwner,
+  } = useOwnedProfileDraft<ArtistProfileUpsert>({
+    ownerId: !sessionLoading && canEditArtist ? viewerId : null,
+    baseline: artistBaseline, empty: EMPTY_ARTIST_DRAFT,
   });
   const [heroImageFileName, setHeroImageFileName] = useState<string>('');
   const [expandedFeatured, setExpandedFeatured] = useState<Set<number>>(() => new Set());
@@ -362,42 +381,36 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const [pendingFollowArtistId, setPendingFollowArtistId] = useState<number | null>(null);
   useEffect(() => {
-    if (artistProfileQuery.data && session?.partyId) {
-      const dto = artistProfileQuery.data;
-      artistSlugTouchedRef.current = Boolean((dto.apSlug ?? '').trim());
-      setArtistDraft({
-        apuArtistId: session.partyId,
-        apuDisplayName: dto.apDisplayName ?? '',
-        apuSlug: dto.apSlug ?? '',
-        apuBio: dto.apBio ?? '',
-        apuCity: dto.apCity ?? '',
-        apuHeroImageUrl: dto.apHeroImageUrl ?? '',
-        apuSpotifyArtistId: dto.apSpotifyArtistId ?? '',
-        apuSpotifyUrl: dto.apSpotifyUrl ?? '',
-        apuYoutubeChannelId: dto.apYoutubeChannelId ?? '',
-        apuYoutubeUrl: dto.apYoutubeUrl ?? '',
-        apuWebsiteUrl: dto.apWebsiteUrl ?? '',
-        apuFeaturedVideoUrl: dto.apFeaturedVideoUrl ?? '',
-        apuGenreIds: dto.apGenreIds ?? [],
-        apuHighlights: dto.apHighlights ?? '',
-      });
-      setHeroImageFileName(dto.apHeroImageUrl ? 'Imagen existente' : '');
-    }
-  }, [artistProfileQuery.data, session?.partyId]);
+    artistSlugTouchedRef.current = false;
+    setHeroImageFileName('');
+    setArtistToast(null);
+  }, [viewerId]);
   useEffect(() => {
-    const partyId = session?.partyId;
-    if (!partyId) return;
-    setArtistDraft((prev) => ({ ...prev, apuArtistId: partyId }));
-  }, [session?.partyId]);
-
+    if (!artistBaseline) return;
+    artistSlugTouchedRef.current = Boolean((artistBaseline.apuSlug ?? '').trim());
+  }, [artistBaseline]);
 
   const updateArtistProfileMutation = useMutation({
-    mutationFn: Fans.updateMyArtistProfile,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['artist-profile', viewerId] });
+    mutationFn: (request: {
+      payload: ArtistProfileUpsert;
+      submittedDraft: ArtistProfileUpsert;
+      isCurrentOwner: () => boolean;
+      acknowledgeSave: (draft: ArtistProfileUpsert) => void;
+    }) => {
+      if (!request.isCurrentOwner()) throw new Error('Vuelve a cargar tu perfil antes de guardar.');
+      return Fans.updateMyArtistProfile(request.payload);
+    },
+    onSuccess: (_profile, request) => {
+      void qc.invalidateQueries({ queryKey: ['artist-profile', request.payload.apuArtistId] });
+      void qc.invalidateQueries({ queryKey: ['directory', 'search'] });
+      void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+      void qc.invalidateQueries({ queryKey: ['public-artist'] });
+      if (!request.isCurrentOwner()) return;
+      request.acknowledgeSave(request.submittedDraft);
       setArtistToast('Perfil de artista actualizado.');
     },
-    onError: (error) => {
+    onError: (error, request) => {
+      if (!request.isCurrentOwner()) return;
       setArtistToast(error instanceof Error ? error.message : 'No pudimos guardar tu perfil de artista.');
     },
   });
@@ -662,7 +675,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
 
   const handleSaveArtistProfile = () => {
-    if (!session?.partyId) return;
+    if (!session?.partyId || !artistProfileReady || !isCurrentArtistOwner() || updateArtistProfileMutation.isPending) return;
     if (!genresCatalogQuery.isSuccess) {
       setArtistToast('Espera a que el catálogo de géneros esté disponible antes de guardar.');
       return;
@@ -688,7 +701,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       apuGenreIds: artistDraft.apuGenreIds,
       apuHighlights: normalizeField(artistDraft.apuHighlights),
     };
-    updateArtistProfileMutation.mutate(payload);
+    updateArtistProfileMutation.mutate({
+      payload, submittedDraft: artistDraft, isCurrentOwner: isCurrentArtistOwner,
+      acknowledgeSave: acknowledgeArtistSave,
+    });
   };
 
   const artistPublicPath = useMemo(() => {
@@ -1448,6 +1464,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </Alert>
         )}
 
+        {isFan && profileQuery.isError && (
+          <Alert severity="error" action={<Button onClick={() => void profileQuery.refetch()}>Reintentar perfil fan</Button>}>
+            No pudimos cargar tu perfil fan. Vuelve a cargarlo antes de guardar.
+          </Alert>
+        )}
         {isFan && (
           <FanProfileEditor
             avatarInputRef={avatarInputRef}
@@ -1455,6 +1476,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             genreCatalogError={genresCatalogQuery.isError}
             genreCatalogReady={genresCatalogQuery.isSuccess}
             genreOptions={genreOptions}
+            profileReady={profileReady}
             profileDraft={profileDraft}
             saving={updateProfileMutation.isPending}
             setProfileDraft={setProfileDraft}
@@ -1521,7 +1543,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     <Button
                       variant="contained"
                       onClick={handleSaveArtistProfile}
-                      disabled={updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
+                      disabled={!artistProfileReady || updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
                     >
                       {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Actualizar perfil de artista'}
                     </Button>
@@ -1537,8 +1559,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     </Box>
                   )}
                   {artistProfileQuery.isError && (
-                    <Alert severity="warning">
-                      No pudimos cargar todos los detalles del perfil. Igual puedes abrir el editor o revisar la vista pública.
+                    <Alert severity="warning" action={<Button onClick={() => void artistProfileQuery.refetch()}>Reintentar perfil de artista</Button>}>
+                      No pudimos cargar tu perfil de artista. Vuelve a cargarlo antes de guardar.
                     </Alert>
                   )}
                   <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -1571,233 +1593,236 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 <>
                   {artistProfileQuery.isLoading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.artistLoading')} />}
                   {artistProfileQuery.isError && (
-                    <Alert severity="error">No pudimos cargar tu perfil de artista.</Alert>
+                    <Alert severity="error" action={<Button onClick={() => void artistProfileQuery.refetch()}>Reintentar perfil de artista</Button>}>No pudimos cargar tu perfil de artista.</Alert>
                   )}
-                  <Stack spacing={2}>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                  <Box component="fieldset" disabled={!artistProfileReady} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
+                    <Stack spacing={2}>
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <TextField
+                          label="Nombre artístico"
+                          value={artistDraft.apuDisplayName ?? ''}
+                          onChange={(event) => {
+                            const nextName = event.target.value;
+                            setArtistDraft((prev) => {
+                              const nextSlug = slugify(nextName);
+                              return {
+                                ...prev,
+                                apuDisplayName: nextName,
+                                apuSlug: !artistSlugTouchedRef.current && nextSlug ? nextSlug : prev.apuSlug,
+                              };
+                            });
+                          }}
+                          fullWidth
+                        />
+                        <TextField
+                          label="Slug público"
+                          value={artistDraft.apuSlug ?? ''}
+                          onChange={(event) => {
+                            artistSlugTouchedRef.current = true;
+                            setArtistDraft((prev) => ({ ...prev, apuSlug: event.target.value }));
+                          }}
+                          onBlur={(event) => {
+                            const cleaned = slugify(event.target.value);
+                            setArtistDraft((prev) => ({ ...prev, apuSlug: cleaned }));
+                          }}
+                          placeholder="mi-proyecto"
+                          helperText={artistPublicPath ? `URL pública: ${artistPublicPath}` : ' '}
+                          fullWidth
+                        />
+                      </Stack>
                       <TextField
-                        label="Nombre artístico"
-                        value={artistDraft.apuDisplayName ?? ''}
-                        onChange={(event) => {
-                          const nextName = event.target.value;
-                          setArtistDraft((prev) => {
-                            const nextSlug = slugify(nextName);
-                            return {
-                              ...prev,
-                              apuDisplayName: nextName,
-                              apuSlug: !artistSlugTouchedRef.current && nextSlug ? nextSlug : prev.apuSlug,
-                            };
-                          });
-                        }}
+                        label="Ciudad"
+                        value={artistDraft.apuCity ?? ''}
+                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuCity: event.target.value }))}
                         fullWidth
                       />
                       <TextField
-                        label="Slug público"
-                        value={artistDraft.apuSlug ?? ''}
-                        onChange={(event) => {
-                          artistSlugTouchedRef.current = true;
-                          setArtistDraft((prev) => ({ ...prev, apuSlug: event.target.value }));
-                        }}
-                        onBlur={(event) => {
-                          const cleaned = slugify(event.target.value);
-                          setArtistDraft((prev) => ({ ...prev, apuSlug: cleaned }));
-                        }}
-                        placeholder="mi-proyecto"
-                        helperText={artistPublicPath ? `URL pública: ${artistPublicPath}` : ' '}
+                        label="Bio"
+                        multiline
+                        minRows={3}
+                        value={artistDraft.apuBio ?? ''}
+                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuBio: event.target.value }))}
                         fullWidth
                       />
-                    </Stack>
-                    <TextField
-                      label="Ciudad"
-                      value={artistDraft.apuCity ?? ''}
-                      onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuCity: event.target.value }))}
-                      fullWidth
-                    />
-                    <TextField
-                      label="Bio"
-                      multiline
-                      minRows={3}
-                      value={artistDraft.apuBio ?? ''}
-                      onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuBio: event.target.value }))}
-                      fullWidth
-                    />
-                    <Stack spacing={1}>
-                      <Typography variant="body2" fontWeight={700}>
-                        Portada principal (hosteada)
-                      </Typography>
-                      <GoogleDriveUploadWidget
-                        label="Subir portada a Drive"
-                        helperText="Sube la portada; guardaremos el enlace servido para evitar imágenes pesadas embebidas."
-                        onComplete={(files) => {
-                          const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
-                          if (link) {
-                            setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: link }));
-                            setHeroImageFileName(files[0]?.name ?? 'Imagen en Drive');
-                          }
-                        }}
-                        accept="image/*"
-                        dense
-                      />
-                      <TextField
-                        label="URL de portada (opcional)"
-                        placeholder="https://"
-                        value={artistDraft.apuHeroImageUrl ?? ''}
-                        onChange={(event) => {
-                          const val = event.target.value.trim();
-                          if (val.startsWith('data:')) {
-                            setHeroImageFileName('');
-                            setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
-                            return;
-                          }
-                          setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: val }));
-                          setHeroImageFileName(val ? 'Imagen enlazada' : '');
-                        }}
-                        fullWidth
-                      />
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        {artistDraft.apuHeroImageUrl && (
-                          <Button
-                            variant="text"
-                            color="inherit"
-                            onClick={() => {
-                              setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
+                      <Stack spacing={1}>
+                        <Typography variant="body2" fontWeight={700}>
+                          Portada principal (hosteada)
+                        </Typography>
+                        <GoogleDriveUploadWidget
+                          label="Subir portada a Drive"
+                          helperText="Sube la portada; guardaremos el enlace servido para evitar imágenes pesadas embebidas."
+                          onComplete={(files) => {
+                            if (!isCurrentArtistOwner()) return;
+                            const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
+                            if (link) {
+                              setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: link }));
+                              setHeroImageFileName(files[0]?.name ?? 'Imagen en Drive');
+                            }
+                          }}
+                          accept="image/*"
+                          dense
+                        />
+                        <TextField
+                          label="URL de portada (opcional)"
+                          placeholder="https://"
+                          value={artistDraft.apuHeroImageUrl ?? ''}
+                          onChange={(event) => {
+                            const val = event.target.value.trim();
+                            if (val.startsWith('data:')) {
                               setHeroImageFileName('');
-                            }}
+                              setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
+                              return;
+                            }
+                            setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: val }));
+                            setHeroImageFileName(val ? 'Imagen enlazada' : '');
+                          }}
+                          fullWidth
+                        />
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          {artistDraft.apuHeroImageUrl && (
+                            <Button
+                              variant="text"
+                              color="inherit"
+                              onClick={() => {
+                                setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
+                                setHeroImageFileName('');
+                              }}
+                            >
+                              Quitar portada
+                            </Button>
+                          )}
+                          {artistDraft.apuHeroImageUrl && (
+                            <Typography variant="body2" color="text.secondary">
+                              {heroImageFileName || 'Imagen existente'}
+                            </Typography>
+                          )}
+                        </Stack>
+                        {artistDraft.apuHeroImageUrl && (
+                          <Card
+                            variant="outlined"
+                            sx={{ maxWidth: 420, borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}
                           >
-                            Quitar portada
-                          </Button>
+                            <CardMedia component="img" height="180" image={artistDraft.apuHeroImageUrl} alt="Vista previa" />
+                          </Card>
                         )}
-                        {heroImageFileName && (
-                          <Typography variant="body2" color="text.secondary">
-                            {heroImageFileName}
-                          </Typography>
-                        )}
+                        <Typography variant="caption" color="text.secondary">
+                          Guardamos sólo enlaces hospedados (Drive/CDN) para que el perfil cargue rápido.
+                        </Typography>
                       </Stack>
-                      {artistDraft.apuHeroImageUrl && (
-                        <Card
-                          variant="outlined"
-                          sx={{ maxWidth: 420, borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <TextField
+                          label="Spotify URL"
+                          value={artistDraft.apuSpotifyUrl ?? ''}
+                          onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuSpotifyUrl: event.target.value }))}
+                          fullWidth
+                        />
+                        <TextField
+                          label="Spotify Artist ID"
+                          value={artistDraft.apuSpotifyArtistId ?? ''}
+                          onChange={(event) =>
+                            setArtistDraft((prev) => ({ ...prev, apuSpotifyArtistId: event.target.value }))
+                          }
+                          fullWidth
+                        />
+                      </Stack>
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <TextField
+                          label="YouTube URL"
+                          value={artistDraft.apuYoutubeUrl ?? ''}
+                          onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuYoutubeUrl: event.target.value }))}
+                          fullWidth
+                        />
+                        <TextField
+                          label="YouTube Channel ID"
+                          value={artistDraft.apuYoutubeChannelId ?? ''}
+                          onChange={(event) =>
+                            setArtistDraft((prev) => ({ ...prev, apuYoutubeChannelId: event.target.value }))
+                          }
+                          fullWidth
+                        />
+                      </Stack>
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <TextField
+                          label="Sitio web"
+                          value={artistDraft.apuWebsiteUrl ?? ''}
+                          onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuWebsiteUrl: event.target.value }))}
+                          fullWidth
+                        />
+                        <TextField
+                          label="Video destacado"
+                          value={artistDraft.apuFeaturedVideoUrl ?? ''}
+                          onChange={(event) =>
+                            setArtistDraft((prev) => ({ ...prev, apuFeaturedVideoUrl: event.target.value }))
+                          }
+                          fullWidth
+                        />
+                      </Stack>
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <Autocomplete
+                          multiple
+                          disabled={!genresCatalogQuery.isSuccess}
+                          options={genreOptions}
+                          value={genreOptions.filter((genre) => artistDraft.apuGenreIds.includes(genre.id))}
+                          getOptionLabel={(genre) => genre.name}
+                          isOptionEqualToValue={(option, value) => option.id === value.id}
+                          onChange={(_event, selected) => setArtistDraft((prev) => ({
+                            ...prev,
+                            apuGenreIds: selected.map((genre) => genre.id),
+                          }))}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Géneros"
+                              helperText="Selecciona valores del catálogo publicado."
+                            />
+                          )}
+                          fullWidth
+                        />
+                        <TextField
+                          label="Highlights"
+                          value={artistDraft.apuHighlights ?? ''}
+                          onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuHighlights: event.target.value }))}
+                          fullWidth
+                        />
+                      </Stack>
+                      {genresCatalogQuery.isError && (
+                        <Alert
+                          severity="error"
+                          action={
+                            <Button
+                              color="inherit"
+                              size="small"
+                              onClick={() => { void genresCatalogQuery.refetch(); }}
+                              disabled={genresCatalogQuery.isRefetching}
+                            >
+                              {genresCatalogQuery.isRefetching ? 'Reintentando…' : 'Reintentar'}
+                            </Button>
+                          }
                         >
-                          <CardMedia component="img" height="180" image={artistDraft.apuHeroImageUrl} alt="Vista previa" />
-                        </Card>
+                          No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.
+                        </Alert>
                       )}
-                      <Typography variant="caption" color="text.secondary">
-                        Guardamos sólo enlaces hospedados (Drive/CDN) para que el perfil cargue rápido.
-                      </Typography>
-                    </Stack>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                      <TextField
-                        label="Spotify URL"
-                        value={artistDraft.apuSpotifyUrl ?? ''}
-                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuSpotifyUrl: event.target.value }))}
-                        fullWidth
-                      />
-                      <TextField
-                        label="Spotify Artist ID"
-                        value={artistDraft.apuSpotifyArtistId ?? ''}
-                        onChange={(event) =>
-                          setArtistDraft((prev) => ({ ...prev, apuSpotifyArtistId: event.target.value }))
-                        }
-                        fullWidth
-                      />
-                    </Stack>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                      <TextField
-                        label="YouTube URL"
-                        value={artistDraft.apuYoutubeUrl ?? ''}
-                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuYoutubeUrl: event.target.value }))}
-                        fullWidth
-                      />
-                      <TextField
-                        label="YouTube Channel ID"
-                        value={artistDraft.apuYoutubeChannelId ?? ''}
-                        onChange={(event) =>
-                          setArtistDraft((prev) => ({ ...prev, apuYoutubeChannelId: event.target.value }))
-                        }
-                        fullWidth
-                      />
-                    </Stack>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                      <TextField
-                        label="Sitio web"
-                        value={artistDraft.apuWebsiteUrl ?? ''}
-                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuWebsiteUrl: event.target.value }))}
-                        fullWidth
-                      />
-                      <TextField
-                        label="Video destacado"
-                        value={artistDraft.apuFeaturedVideoUrl ?? ''}
-                        onChange={(event) =>
-                          setArtistDraft((prev) => ({ ...prev, apuFeaturedVideoUrl: event.target.value }))
-                        }
-                        fullWidth
-                      />
-                    </Stack>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                      <Autocomplete
-                        multiple
-                        disabled={!genresCatalogQuery.isSuccess}
-                        options={genreOptions}
-                        value={genreOptions.filter((genre) => artistDraft.apuGenreIds.includes(genre.id))}
-                        getOptionLabel={(genre) => genre.name}
-                        isOptionEqualToValue={(option, value) => option.id === value.id}
-                        onChange={(_event, selected) => setArtistDraft((prev) => ({
-                          ...prev,
-                          apuGenreIds: selected.map((genre) => genre.id),
-                        }))}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Géneros"
-                            helperText="Selecciona valores del catálogo publicado."
-                          />
-                        )}
-                        fullWidth
-                      />
-                      <TextField
-                        label="Highlights"
-                        value={artistDraft.apuHighlights ?? ''}
-                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuHighlights: event.target.value }))}
-                        fullWidth
-                      />
-                    </Stack>
-                    {genresCatalogQuery.isError && (
-                      <Alert
-                        severity="error"
-                        action={
+                      {unavailableArtistGenreIds.length > 0 && (
+                        <Alert severity="warning">
+                          El perfil contiene géneros inactivos o reemplazados. Selecciona valores vigentes antes de guardar.
+                        </Alert>
+                      )}
+                      {isHomeManagerView && (
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                           <Button
-                            color="inherit"
-                            size="small"
-                            onClick={() => { void genresCatalogQuery.refetch(); }}
-                            disabled={genresCatalogQuery.isRefetching}
+                            variant="contained"
+                            onClick={handleSaveArtistProfile}
+                            disabled={!artistProfileReady || updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
                           >
-                            {genresCatalogQuery.isRefetching ? 'Reintentando…' : 'Reintentar'}
+                            {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
                           </Button>
-                        }
-                      >
-                        No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.
-                      </Alert>
-                    )}
-                    {unavailableArtistGenreIds.length > 0 && (
-                      <Alert severity="warning">
-                        El perfil contiene géneros inactivos o reemplazados. Selecciona valores vigentes antes de guardar.
-                      </Alert>
-                    )}
-                    {isHomeManagerView && (
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                        <Button
-                          variant="contained"
-                          onClick={handleSaveArtistProfile}
-                          disabled={updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
-                        >
-                          {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
-                        </Button>
-                        <Button variant="text" onClick={() => setArtistEditorOpen(false)}>
-                          Cerrar editor
-                        </Button>
-                      </Stack>
-                    )}
-                  </Stack>
+                          <Button variant="text" onClick={() => setArtistEditorOpen(false)}>
+                            Cerrar editor
+                          </Button>
+                        </Stack>
+                      )}
+                    </Stack>
+                  </Box>
                 </>
               )}
             </ProfileSectionCard>

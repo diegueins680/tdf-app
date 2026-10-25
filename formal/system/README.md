@@ -122,6 +122,8 @@ These checks make drift fail CI; run them before changing a mapped surface.
   boundaries. `formal/event-operations` and `formal/social` retain scoped
   TLA+/PlusCal/Alloy models and negative controls.
 
+- [profile-editing-baseline.md](profile-editing-baseline.md): fan and artist edits require an owned successful profile read, isolate account generations and preserve dirty drafts through background reads.
+
 ## Authority and conflict resolution
 
 1. Explicit approved product decisions, with their activation scope and recorded
