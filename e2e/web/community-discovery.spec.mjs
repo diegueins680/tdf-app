@@ -140,3 +140,30 @@ test('protected scrolling container restores after async layout and public navig
   await addContent();
   await expect.poll(async () => Math.abs(await main.evaluate((element) => element.scrollTop) - before)).toBeLessThan(8);
 });
+
+// Wait for the lazy sidebar, rather than testing only its loading placeholder.
+// A fixed-position mobile sidebar must not leave the drawer paper at zero width
+// and move the close control outside the viewport after the chunk loads.
+test('loaded feature menu stays dismissible from the public header @critical', async ({ page, baseURL }) => {
+  await fixture(page, baseURL, true);
+  await page.goto('/fans');
+  const trigger = page.getByRole('button', { name: 'Menú de funciones', exact: true });
+  await trigger.click();
+  const menu = page.getByRole('dialog', { name: 'Menú de funciones', exact: true });
+  await expect(menu.getByLabel('Buscar sección')).toBeVisible();
+  await menu.getByLabel('Buscar sección').fill('solicitudes');
+  await expect(menu.locator('a[href="/solicitudes-acceso"]')).toBeVisible();
+  await expect(menu.locator('a[href="/solicitudes-acceso/nueva"]')).toHaveCount(0);
+  await menu.getByLabel('Buscar sección').fill('');
+  const close = menu.getByRole('button', { name: 'Cerrar menú de funciones', exact: true });
+  await expect(close).toBeInViewport({ ratio: 1 });
+  await close.click();
+  await expect(menu).toBeHidden();
+  await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  await expect(menu.getByLabel('Buscar sección')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(menu).toBeHidden();
+  await expect(trigger).toBeFocused();
+});

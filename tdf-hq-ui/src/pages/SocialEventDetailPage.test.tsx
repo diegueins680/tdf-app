@@ -174,6 +174,20 @@ describe('SocialEventDetailPage ticket sharing', () => {
     view.unmount();
   });
 
+  it('does not upload the previous account file when credentials change before render', async () => {
+    activeSession = { partyId: 9 };
+    const view = renderPage();
+    await screen.findByRole('combobox', { name: 'Tipo de recuerdo' });
+    fireEvent.change(view.container.querySelector('input[type="file"]')!, { target: { files: [new File(['synthetic'], 'private-A.png', { type: 'image/png' })] } });
+    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    advanceAuthSessionEpoch(); activeSession = { partyId: 10 };
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
+    await waitFor(() => expect(Boolean(screen.queryByText('Tu sesión cambió. Vuelve al evento antes de publicar.')) || uploadMomentMediaMock.mock.calls.length > 0).toBe(true));
+    expect(uploadMomentMediaMock).not.toHaveBeenCalled();
+    expect(createMomentMock).not.toHaveBeenCalled();
+    view.unmount();
+  });
+
   it('does not publish an uploaded draft after the authentication epoch changes', async () => {
     activeSession = { partyId: 9 };
     let finishUpload!: (value: { eiuPublicUrl: string }) => void;

@@ -35,7 +35,10 @@ beforeEach(() => {
   window.localStorage.clear(); window.sessionStorage.clear(); writes.length = 0;
   globalThis.fetch = jest.fn<typeof fetch>(async (url, init) => {
     if (typeof url !== 'string' || !url.endsWith('/social-events/me/memory-invitations')) throw new Error('Unexpected synthetic endpoint');
-    if (init?.method === 'PUT') writes.push({ authorization: new Headers(init.headers).get('Authorization'), body: JSON.parse(String(init.body)) as unknown });
+    if (init?.method === 'PUT') {
+      if (typeof init.body !== 'string') throw new Error('Expected a JSON preference body');
+      writes.push({ authorization: new Headers(init.headers).get('Authorization'), body: JSON.parse(init.body) as unknown });
+    }
     return response({ inApp: init?.method === 'PUT', supportsExtendedMoments: true });
   });
 });
@@ -62,4 +65,5 @@ it('does not use replacement real-provider credentials to grant consent from the
   fireEvent.click(screen.getByRole('checkbox', { name: /Recibir invitaciones/ }));
   await waitFor(() => expect(writes).toHaveLength(1));
   expect(writes[0]?.authorization).toBe('Bearer synthetic-B');
+  expect(writes[0]?.body).toBe(true);
 });

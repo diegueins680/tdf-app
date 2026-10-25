@@ -313,3 +313,29 @@ La nueva matriz pasó sin reintentos: ocho casos en cuatro tamaños Chrome y
 dos casos Firefox, para ambas respuestas de sesión. El [recibo compacto](event-memories-evidence-20261025/browser-continuation.json)
 conserva el hash exacto del test modificado y los resultados sintéticos. No se
 atribuye esa ejecución al commit limpio posterior ni se extrapola a WebKit.
+
+
+## Integración de menús y control de sesión — 25/oct, 22:15 UTC
+
+El PR #610 se integró como main b732efd65. El merge normal local 107680b7e conserva
+íntegros sus 140 requisitos y añade los dos de recuerdos. Se combinaron las
+clasificaciones de catálogo sin resolver diferencias por descarte: 1.331 decisiones
+activas y auditoría estricta JSON/CSV satisfactoria. La composición pasó 58 pruebas
+en cinco suites, tipos y 32 recorridos compilados Chrome en cuatro tamaños.
+
+El CI de baa1f8cc5 terminó la matriz de personas satisfactoriamente, incluyendo
+WebKit/Linux con ambas sesiones. La UI de ese head pasó 3.377 pruebas/301 suites;
+la UI del sucesor 7a836b214 pasó 3.409/303. Son evidencias de esos heads, no del
+merge posterior ni de cambios sin publicar.
+
+Una comprobación adicional del sucesor reprodujo tres envíos indebidos de la
+interfaz candidata cuando las credenciales cambiaban antes de un nuevo render:
+un borrador, una preferencia de invitaciones y una decisión de moderación.
+No se observaron datos reales expuestos ni se desplegó esta funcionalidad.
+La corrección vive en #615, reutilizando la propiedad de sesión del editor de
+perfiles y capturando la propiedad de cada intento; esta entrega debe esperar
+esa corrección, su CI y revisión. La reparación independiente del logout fallido
+sigue siendo otro requisito para una prueba con personas reales.
+
+Estos cambios no autorizan una campaña. Continúan pendientes revisión del head
+actual, CI obligatorio, FIFO y despliegue verificado; los envíos reales siguen en cero.
