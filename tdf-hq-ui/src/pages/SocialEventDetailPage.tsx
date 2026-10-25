@@ -420,7 +420,7 @@ export default function SocialEventDetailPage() {
         <Dialog open={ownAction !== null} onClose={() => { if (!ownMutation.isPending) setOwnAction(null); }} aria-labelledby="own-memory-action">
           <DialogTitle id="own-memory-action">{ownAction?.mode === 'delete' ? 'Eliminar mi publicación' : 'Editar mi recuerdo'}</DialogTitle>
           <DialogContent>
-            {ownAction?.mode === 'edit' ? <TextField autoFocus fullWidth multiline label="Descripción del recuerdo" value={ownAction.caption} inputProps={{ maxLength: 280 }} onChange={(event) => setOwnAction({ ...ownAction, caption: event.target.value })} />
+            {ownAction?.mode === 'edit' ? <TextField fullWidth multiline label="Descripción del recuerdo" value={ownAction.caption} inputProps={{ maxLength: 280 }} onChange={(event) => setOwnAction({ ...ownAction, caption: event.target.value })} />
               : <Typography>La publicación dejará de estar disponible en el evento. Los archivos públicos y las copias externas pueden seguir existiendo.</Typography>}
             {ownMutation.isError && <Alert severity="error">No se pudo completar la acción. Actualiza el evento antes de reintentar.</Alert>}
           </DialogContent>

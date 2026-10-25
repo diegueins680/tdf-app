@@ -38,7 +38,7 @@ async function fixture(page, baseURL) {
   return state;
 }
 
-test('new participant preserves event intent, recovers a failed text publication and finds it after reload @mobile-flow @critical', async ({ page, baseURL }) => {
+test('new participant preserves event intent, recovers a failed text publication and finds it after reload @mobile-flow @critical', async ({ page, baseURL }, testInfo) => {
   const state = await fixture(page, baseURL);
   const destination = '/social/eventos/141?compose=1#momentos';
   await page.goto(destination, { waitUntil: 'domcontentloaded' });
@@ -71,4 +71,7 @@ test('new participant preserves event intent, recovers a failed text publication
   await page.addScriptTag({ path: require.resolve('axe-core/axe.min.js') });
   const violations = await page.evaluate(async () => (await window.axe.run(document.querySelector('#momentos'), { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] } })).violations.filter((v) => ['serious', 'critical'].includes(v.impact)).map((v) => v.id));
   expect(violations).toEqual([]);
+  const screenshot = testInfo.outputPath('synthetic-event-memories.png');
+  await page.locator('#momentos').screenshot({ path: screenshot });
+  await testInfo.attach('Synthetic memories after reload', { path: screenshot, contentType: 'image/png' });
 });

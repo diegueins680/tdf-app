@@ -16,7 +16,13 @@ if ci:env['PGPASSWORD']=os.environ['TDF_TEST_POSTGRES_PASSWORD']
 db='tdf_event_memories_http_test';routing=['-h',host,'-p',port,'-U',role]
 api_port='18886';origin='http://127.0.0.1:'+api_port
 opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
-report={'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),'binarySha256':hashlib.sha256(binary.read_bytes()).hexdigest(),'requests':[],'assertions':[],'externalProviderCalls':0}
+runtime_paths=['tdf-hq/src/TDF/API/SocialEventsAPI.hs','tdf-hq/src/TDF/DTO/SocialEventsDTO.hs',
+ 'tdf-hq/src/TDF/Server/SocialEventsHandlers.hs','tdf-hq/src/TDF/Interactions/Notifications.hs',
+ 'tdf-hq/sql/2026-10-25_event_memory_invitations.sql','scripts/test-event-memories-http.py']
+def runtime_sources():return {path:hashlib.sha256((root/path).read_bytes()).hexdigest() for path in runtime_paths}
+report={'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),
+ 'sourceWorktreeDirty':bool(subprocess.check_output(['git','status','--porcelain'],cwd=root,text=True).strip()),
+ 'runtimeSources':runtime_sources(),'binarySha256':hashlib.sha256(binary.read_bytes()).hexdigest(),'requests':[],'assertions':[],'externalProviderCalls':0}
 owned=False;server=None;log=None
 
 def run(args,stdin=None):
@@ -93,6 +99,8 @@ try:
  sql('UPDATE interaction_runtime SET enabled=true WHERE singleton')
  request('/social-events/events/919143001/moments?extended',expected=401)
  request('/social-events/events/919143002/moments?extended',participant_token,expected=404)
+ request('/social-events/events/919143002/moments',participant_token,body={'emCreateMediaType':'text','emCreateCaption':'Forbidden private write'},method='POST',expected=404)
+ request('/social-events/events/919143003/moments',owner_token,body={'emCreateMediaType':'text','emCreateCaption':'Forbidden suppressed write'},method='POST',expected=404)
  png=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jQ1sAAAAASUVORK5CYII=')
  image=upload(919143001,owner_token,'memory.png','image/png',png)
  assert '/moments/' in image['eiuPath']
@@ -112,6 +120,11 @@ try:
  video_path=out/'memory.mp4'
  run(['ffmpeg','-hide_banner','-loglevel','error','-f','lavfi','-i','color=c=black:s=16x16:r=1','-t','1','-pix_fmt','yuv420p',str(video_path)])
  video=upload(919143001,owner_token,'memory.mp4','video/mp4',video_path.read_bytes())
+ quicktime_path=out/'memory.mov'
+ run(['ffmpeg','-hide_banner','-loglevel','error','-i',str(video_path),'-c','copy',str(quicktime_path)])
+ quicktime=upload(919143001,owner_token,'memory.mov','video/quicktime',quicktime_path.read_bytes())
+ assert (out/'assets'/quicktime['eiuPath']).read_bytes()==quicktime_path.read_bytes()
+ record('A real QuickTime MOV container uploads without depending on generic Drive storage')
  created=[]
  for kind,url in [('image',image['eiuPublicUrl']),('audio',sound['eiuPublicUrl']),('video',video['eiuPublicUrl']),('text','')]:
   moment=request('/social-events/events/919143001/moments',owner_token,body={'emCreateCaption':'Synthetic '+kind,'emCreateMediaType':kind,'emCreateMediaUrl':url},method='POST')[0]
@@ -155,6 +168,8 @@ try:
  assert len(request('/social-events/events/919143001/moments?extended',participant_token)[0])==4
  assert request('/assets/serve/'+image['eiuPath'])[0]==png
  record('Source deletion persists; surviving moments and media remain after a real API restart')
+ assert report['runtimeSources']==runtime_sources(),'Runtime sources changed during the HTTP execution'
+ assert report['binarySha256']==hashlib.sha256(binary.read_bytes()).hexdigest(),'Candidate binary changed during the HTTP execution'
  report['status']='PASS'
 finally:
  stop()

@@ -44,7 +44,17 @@ test('music/main reconciliation retains both reviews and the protected migration
       assert.match(source.sourceFileSha256, /^[a-f0-9]{64}$/);
       assert.match(source.sourceEntryCanonicalSha256, /^[a-f0-9]{64}$/);
     }
-    const decision = active.find(item => item.id === entry.id);
+    let decision = active.find(item => item.id === entry.id);
+    if (!decision) {
+      // An intentionally extended registry retires its old fingerprint. Require
+      // both the explicit current-source mapping and the complete prior review;
+      // retaining a stale active approval would contradict the strict audit.
+      const successor = active.find(item => item.previousDecision?.id === entry.id);
+      assert.equal(successor?.reviewed, true);
+      const mapping = successors.find(item => item.currentId === successor.id);
+      assert.equal(mapping?.previousResolution?.currentId, entry.id);
+      decision = successor.previousDecision;
+    }
     assert.equal(decision?.reviewed, true);
     if (entry.preservedReviewCanonicalSha256) {
       assert.equal(canonicalHash(decision), entry.preservedReviewCanonicalSha256);

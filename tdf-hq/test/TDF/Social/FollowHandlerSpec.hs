@@ -1065,7 +1065,12 @@ spec = describe "social event handler helpers" $ do
                         (EventMomentCreateDTO Nothing Nothing "https://cdn.example.com/moment.jpg" "image" (Just 800) (Just 600) Nothing)
                     )
                     env
-        assertHiddenEventRoute "moment" momentResult
+        -- This SQLite actor has no live-session witness. Session rejection must
+        -- precede source visibility; authenticated private/suppressed-parent
+        -- publication is asserted through the real HTTP/PostgreSQL lane.
+        case momentResult of
+            Left err -> errHTTPCode err `shouldBe` 401
+            Right response -> expectationFailure ("A synthetic actor must not publish a moment: " <> show response)
 
         stripeResult <-
             runHandler $

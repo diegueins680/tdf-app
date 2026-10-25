@@ -1,102 +1,256 @@
-# Event memories — implementation and verification record, 25 October 2026
+# TDF Records: recuerdos y activación posterior al evento
 
-Status: implementation and qualification in progress. This record does not claim
-protected integration, production deployment, native-device verification or any
-real invitation delivery.
+Informe de ejecución del 25 de octubre de 2026. **Entrega parcial implementada;
+no desplegada ni habilitada para comunicaciones reales.** Las pruebas locales,
+los resultados de CI y la verificación de producción se distinguen abajo.
 
-## Observed pilot and existing architecture
+## 1. Diagnóstico y capacidades reutilizadas
 
-Read-only canonical Hetzner/container/database binding and PostgreSQL inventory
-role verified; aggregate evidence is private under
-`.private/event-memories-20261025` in the original workspace. No private contacts,
-tokens or credentials are included here.
+La auditoría utilizó el checkout protegido y una sesión de Chrome existente.
+La consulta de producción verificó el enlace canónico Hetzner/contenedor/volumen y
+utilizó el rol de inventario en una transacción `READ ONLY`, terminada con
+`ROLLBACK`. La evidencia original, sin publicar contactos ni credenciales, permanece
+en `.private/event-memories-20261025` del workspace original.
 
-- Event 141 is PATCH CULTURE Vol. 1, organized by Diego Saa. Its scheduled window
-  was 24 October 14:00–21:00 America/Guayaquil (19:00Z–02:00Z). The end is elapsed;
-  actual lifecycle remains **on_sale**, not completed. Scheduled elapsed time
-  alone is not confirmation that an event took place and finished.
-- Four linked artists: Emanuele Pilo-Pais, Kevin Montenegro, Llama Este Pez and
-  Oracle Saint Rigel. Three accepted RSVP, one logistics member. Seven distinct
-  related Party accounts across professional/RSVP signals, five currently active
-  accounts; professional and RSVP sets overlap by one. No archived aliases found
-  in this cohort. Zero tickets, zero audited check-ins, zero event moments.
-- The authenticated production event, ticket tiers, moments, self RSVP and summary
-  returned HTTP 200 in actual Chrome. The page displayed its composer. Public
-  health/DB are healthy; API version is 4dac175d4. The public route returns a shell
-  with HTTP 200; this is not by itself proof of authenticated usability.
+Última comprobación de base de datos: **2026-10-25 10:10:26 UTC**.
 
-React/Vite web, Expo mobile and Haskell/Servant/Persistent/PostgreSQL already have
-EventMoment, RSVP, ticket admission audit, artist/Party links, logistics membership,
-canonical interaction reactions/discussions/mentions/reports, scoped notification
-visibility, social follow/block policy, and existing public event Open Graph edge
-rendering. Reuse these rather than duplicating content, identity or messaging.
+| Evento piloto 141 | Observado |
+| --- | --- |
+| Nombre / organizador público | PATCH CULTURE Vol. 1 / Diego Saa |
+| Horario programado en Ecuador | 24 de octubre, 14:00–21:00 |
+| Fin programado UTC | 25 de octubre, 02:00Z |
+| Estado real | `on_sale`; no confirmado como finalizado |
+| Artistas vinculados | 4 |
+| RSVP aceptados | 3; expresan intención, no asistencia acreditada |
+| Miembros de logística | 1 |
+| Cuentas Party distintas relacionadas | 7; 5 activas |
+| Señales profesionales / RSVP | 5 / 3; una cuenta en ambos grupos |
+| Alias archivados en esta cohorte | 0 |
+| Entradas / admisiones auditadas / momentos | 0 / 0 / 0 |
+| Pedidos | 1 pendiente y 3 cancelados en la consulta inicial |
+| Migración de invitaciones instalada | No |
 
-The campaign automation module is CRM/WhatsApp-specific; its consent and
-Operations push subscriptions do not authorize event-memory mail/push. No email,
-WhatsApp or push provider is invoked by this feature.
+Artistas: Emanuele Pilo-Pais, Kevin Montenegro, Llama Este Pez y Oracle Saint Rigel.
+El evento, entradas, momentos, RSVP propio y resumen respondieron 200 en Chrome
+con autenticación. El compositor estaba visible. Un 200 del shell público, por sí
+solo, no se contó como verificación funcional. La API continúa en
+`4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`; `/health` indica DB saludable.
 
-## Verified gaps and repairs
+La arquitectura existente es React/Vite, Expo y Haskell/Servant/Persistent sobre
+PostgreSQL. Se reutilizaron `EventMoment`, almacenamiento duradero de assets,
+Party, artistas, RSVP, admisión auditada, logística, sesión vigente, bloqueos,
+reacciones, conversaciones, menciones, controles de moderación de conversaciones,
+bandeja interna y previsualizaciones públicas de eventos. No se creó otra red
+social, otra autoridad de contenidos ni un sistema paralelo de mensajería.
 
-1. Mobile emitted explicit nulls rejected by the actual moment codec. It now omits
-   absent fields; a wire-payload regression checks the serialized object.
-2. The screen converted an authenticated upload failure to a local draft in the
-   publish-success flow. It now retains the editor as a failure, never calls local
-   storage in that path, and distinguishes explicit local drafts in feedback.
-3. Completed events lost public readability. The additive migration retains
-   public-listable/read/share capability for explicitly public completed events,
-   without enabling RSVP or purchases. Private metadata, source suppression,
-   accounts and blocks continue to govern access.
-4. The server accepted image/video only, arbitrary moment URLs and lacked author
-   edits/deletion. It now supports opt-in extended text/audio reads, HTTPS URLs,
-   author/session/parent-scoped changes and optimistic edits. Existing clients
-   retain the legacy feed. New public uploads validate MIME, extension, signature
-   and size on the existing durable asset path; private parents are denied.
-5. The web caption allowed 1,000 characters while the server accepted 280. Limits
-   now agree; the composer retains failures and reuses successful uploads. New
-   types are capability-gated for older deployed APIs.
-6. Memory invitations previously had no event-specific eligibility/consent/replay
-   authority. The new disabled-by-default flow reuses Notification with distinct
-   consent, live recipient checks, atomic delivery records, deduplication, frequency
-   limits and publication-based reminder suppression. Organizer metrics are
-   aggregates; callers never receive recipient identities.
-7. Public event pages now point directly to the memory composer, preserving intent
-   through login/registration. Event pages expose canonical artist Party links
-   already supplied by the backend; social Artist IDs are never treated as Party
-   IDs. Following remains an explicit decision in existing artist profiles.
+El módulo CRM de campañas/WhatsApp y las suscripciones push de Operations no
+constituyen consentimiento para esta función. No se invocó ningún proveedor de
+correo, WhatsApp o push.
 
-See `formal/system/event-memories.md` for exact invariants and limitations. SQL,
-OpenAPI, both generated clients and scoped model/fixtures accompany the feature.
+## 2. Cambios implementados
 
-## Delivery and pilot campaign hold
+- Backend: publicación y recuperación de imagen, video, audio y texto; lectura
+  extendida explícita y feed histórico compatible para clientes antiguos.
+- Carga mediante endpoints del evento, MIME/extensión/firma/tamaño, comprobación
+  de sesión y acceso actual, archivos duraderos y límites de escritura existentes.
+  Raster: 10 MiB; audio/video: 25 MiB. Se admite MOV/QuickTime.
+- Edición de descripción con versión esperada y conflicto 409. Edición y borrado
+  solamente por el autor actual, con alcance de evento y protección contra IDOR.
+  Se conservan los controles y triggers de las interacciones canónicas.
+- Lecturas autenticadas de momentos con `private, no-store`. Se rechaza la carga
+  de archivos públicos en eventos privados, suprimidos o inexistentes.
+- Web: compositor de texto/audio/imagen/video, límite uniforme de 280 caracteres,
+  errores recuperables, reutilización de una carga exitosa si falla la publicación
+  y bloqueo de publicación si cambia la cuenta durante la carga.
+- El evento terminado prioriza recuerdos en el orden real del DOM. Oculta compras
+  vencidas, mantiene información histórica y enlaza artistas mediante su Party
+  canónico, además del descubrimiento de eventos futuros. Seguir es voluntario.
+- Los enlaces de invitación y CTA conservan evento, intención y ancla al pasar por
+  autenticación o registro. La compartición usa el enlace canónico del evento.
+- Móvil: elimina nulos opcionales rechazados por el codec, usa carga autenticada
+  propia del evento y rechaza el cambio de cuenta entre carga y publicación.
+  Una carga fallida conserva el editor; ya no se presenta un borrador local como
+  publicación remota. Esta fase móvil compone imágenes y videos.
+- Invitaciones: preferencia explícita, campaña deshabilitada por defecto,
+  gestión de campañas limitada al organizador actual, resúmenes agregados y
+  bandeja interna reutilizada. Texto diferenciado para profesionales, asistencia
+  auditada e intención RSVP.
+- Contratos OpenAPI, clientes generados web/móvil, navegación compartida,
+  migración/reversión, requisitos formales, fixtures SQL, pruebas HTTP y navegador
+  y pasos obligatorios del CI actualizados.
 
-No real invitations have been sent by this task. The deployed API does not contain
-this migration or worker, the pilot lifecycle is still on_sale, and no new explicit
-memory-invitation preferences have been collected. Related accounts are not a
-consented recipient list. Delivered/failed/excluded counts cannot be inferred from
-uninstalled infrastructure; task-initiated sends are exactly zero.
+## 3. Arquitectura e invariantes
 
-Protected main requires independent review and required checks. This task must
-publish reviewable changes and satisfy those controls before rollout. No admin
-bypass, provider activation, bulk message, data export or production fixture is
-permitted by passing local tests.
+`EventMoment` sigue siendo la única publicación. Las nuevas tablas únicamente
+registran configuración de campaña, preferencia y entrega. La migración es la
+entrada **214** del manifiesto, introducida en `18690e78a`; los 213 objetos
+anteriores, sus SHAs de introducción y bytes SQL históricos se preservan.
 
-## Remaining scope
+El despachador requiere estado de ciclo de vida `completed`, fin confirmado al
+menos una hora antes y dentro de los últimos 30 días, acceso y cuenta actuales,
+campaña habilitada y preferencia interna explícita. Una compra aislada no acredita
+presencia. Las identidades se deduplican por Party; nunca se transfieren
+consentimientos por nombres, correo parecido ni alias archivados.
 
-Participant-only file delivery/visibility, per-moment private/public switching,
-combined-media gallery posts, durable create-request replay after a lost response,
-full media-container validation/transcoding/duration enforcement, source-moment
-moderation/reporting beyond the existing discussion controls, public moment-specific
-previews, native audio/text composition/playback, consented email/push delivery,
-D7/D30 retention measurement and a real human pilot remain incomplete. Public file
-URLs and external copies are not erased by deleting a source publication. These
-are material gaps, not acceptance passes.
+La clave única `(evento, Party, paso)`, los bloqueos de transacción y la escritura
+atómica de notificación/recibo evitan duplicados. Se admite una invitación y como
+máximo un recordatorio, separados por siete días, con límite de frecuencia entre
+campañas. Publicar suprime el recordatorio incluso si después se borra el momento.
+La baja vuelve a comprobarse y oculta las notificaciones históricas correspondientes.
+El UUID de atribución no otorga permisos.
 
-## Executions
+Se respeta la pausa global existente. El trabajador limita entregas a 20 por tick,
+en una transacción independiente del otro trabajador de notificaciones. Un lote
+fallido revierte y se reintenta; todavía falta aislar una fila problemática para
+que no bloquee otros destinatarios.
 
-Fresh exact results, commits, PRs and hosted/deployment state are appended after
-qualification. Initial setup failures remain in their original logs: missing
-local SSH-key alias (resolved using the existing Mac-specific key), empty stdin
-in the borrowed read-only access helper (fixed in the private probe by binding its
-fixed query into the remote program), missing shared dependency modules, first
-uncached build interruption, ambiguous Haskell key types, and two invalid test
-setups/rollback attempts. No product assertion was waived to obtain a pass.
+La reversión anterior a entregas conserva contenidos/tablas/preferencias, desactiva
+campañas, restaura autoridades registradas y deshabilita la capacidad añadida.
+Rechaza ejecutarse después de una entrega o de un cambio posterior de autoridad.
+
+Contrato detallado: [event-memories.md](../formal/system/event-memories.md).
+El binario describe 913 métodos y 2 montajes Raw: frente a la base protegida se
+añaden exactamente 8 métodos autenticados, cambia la lectura extendida/no-store
+de momentos y no se elimina ninguno. Persisten 396 métodos sin documentación
+OpenAPI, 25 operaciones documentadas sin ruta tipada y 8 diferencias de estado
+heredadas; este snapshot no declara conformidad universal.
+El modelo acotado no demuestra refinamiento SQL ni orden universal de operaciones
+concurrentes sobre todas las autoridades del sistema.
+
+## 4. Commits, PR e integración
+
+Trabajo aislado en `/private/tmp/tdf-event-memories-20261025`, rama
+`feat/event-memories-20261025`; se preservaron los cambios personales del workspace
+original. Base protegida integrada: `089dce6ba` (PR #603 de comprobantes).
+
+- `18690e78a`: backend, web, invitaciones, contratos y verificación inicial.
+- `468de7907`: cargas móviles propias del evento y procedencia de migración.
+- `aa92ce034`: inventarios y trazabilidad.
+- `9b6512125`: integración normal de main protegido, sin descartar comprobantes.
+- PR principal: pendiente de publicación al cerrar la evidencia local.
+- [PR móvil #168](https://github.com/diegueins680/TDF-mobile/pull/168), borrador
+  apilado sobre #163; pin `6b8f4fe6d3efc290587163a5d63b8c4ed401fcd9`.
+
+`main` exige 20 contextos, base actualizada, una aprobación independiente vigente
+y administración sujeta a protecciones. No se activó auto-merge ni se alteraron
+protecciones, aprobaciones, FIFO o políticas de despliegue.
+
+## 5. Pruebas ejecutadas
+
+| Verificación | Resultado real |
+| --- | --- |
+| Web, suite completa tras integrar main | 3.356 pruebas / 298 suites satisfactorias |
+| Web, tipos / lint / build final | Satisfactorios; 13 pruebas de la página repetidas después de retirar autoFocus; JS inicial gzip 334.211 bytes / 5 preloads |
+| Móvil, Node 20.19.4, instalación limpia del lock | 631 pruebas / 98 suites; tipos, lint y release:check satisfactorios |
+| Navegador Chrome escritorio y Pixel 7 | 2 recorridos satisfactorios; API sintética |
+| Accesibilidad del compositor | Sin infracciones serious/critical WCAG A/AA en esos recorridos; no auditoría universal |
+| PostgreSQL 16 real, esquema completo y migración 214 | Replay, reversión/reaplicación, políticas y concurrencia satisfactorios |
+| Modelo de invitaciones | 160 estados acotados; detectó 3 controles negativos |
+| API real inicial | 38 peticiones / 7 grupos satisfactorios; binario y fuente anteriores a integración final |
+| API real final con MOV | 41 peticiones / 8 grupos satisfactorios; PNG, WAV, MP4 y MOV; reinicio real y limpieza comprobados |
+| Stack canónico GHC 9.10.3 / lts-24.42 | Compilación integrada satisfactoria; Hspec: 4.037 ejemplos, cero fallos y 20 pendientes, no contados como aprobados |
+| Inventario y trazabilidad, pruebas de generadores | 6 + 10 pruebas satisfactorias |
+| Conformidad de clientes generados | 13 pruebas satisfactorias; navegación compartida comprobada |
+| Auditoría de listas, conservación y sucesores | 7 pruebas y auditoría estricta JSON/CSV satisfactorias; ninguna lista sin revisar ni decisión activa obsoleta |
+| Rutas públicas / máquinas de estado | Admisión comprobada con 14 controles negativos de rutas y 55 controles negativos de validadores |
+| Calidad completa del repositorio | Satisfactoria; snapshot compilado actualizado y comprobado |
+
+El recorrido de navegador conserva el destino desde registro, retiene el texto
+ante 503, publica mediante teclado, encuentra el contenido al recargar y comprueba
+que no haya desbordamiento horizontal. La persistencia del fixture del navegador
+no se presenta como persistencia de base de datos.
+
+Recibo HTTP final: [http-results.json](event-memories-evidence-20261025/http-results.json).
+Fuente base `9b6512125` con árbol de trabajo modificado: el recibo registra las
+huellas estables de los archivos relevantes y del ejecutable
+`0c9ddc2f0402b07a49af61e8843cb6050199eeb07d249c9c5db7e5efe361655a`.
+No se atribuye este recibo a un checkout limpio de un commit posterior.
+
+La prueba HTTP real usa dos identidades sintéticas y una DB desechable propia:
+archivos recuperados byte a byte, tipos extendidos/feed legado, sesión/permisos,
+IDOR, edición optimista, reacciones/comentarios, preferencia/campaña, recibo interno,
+supresión del recordatorio, borrado y persistencia tras reiniciar la API. No contacta
+proveedores externos. Los recibos conservan fuente, huellas del código/binario y
+estado de limpieza del árbol; no son una atestación del compilador.
+
+Hubo fallos de preparación conservados en sus logs: alias SSH incorrecto, transporte
+stdin de la consulta de solo lectura, módulos locales faltantes, primera compilación
+interrumpida, tipos Haskell ambiguos, configuración inválida de fixtures y conexión
+PostgreSQL, ausencia local de jq, ejecución inicial de Hspec desde un directorio incorrecto, autoFocus rechazado por accesibilidad y snapshots/sucesores pendientes tras integrar
+main. No se contaron como pruebas aprobadas. Los tests SQLite no eluden el testigo
+de sesión: su rechazo se comprueba allí y el caso positivo se ejecuta en PostgreSQL/HTTP.
+
+## 6. Evidencia web y móvil
+
+- Capturas del compositor sintético: [escritorio](event-memories-evidence-20261025/desktop-composer.png) y [teléfono](event-memories-evidence-20261025/phone-composer.png). No muestran una publicación productiva.
+- Capturas y resultados completos de navegador en
+  `/private/tmp/tdf-event-memories-browser-artifacts` y
+  `/private/tmp/tdf-event-memories-browser-results.json`; logs locales con prefijo
+  `/private/tmp/tdf-event-memories-`.
+- Metro arrancó localmente con API offline. Esto no demuestra funcionamiento en
+  dispositivo, permisos de galería/micrófono, recuperación en segundo plano ni iOS.
+- [Mobile Validate 40183425216](https://github.com/diegueins680/TDF-mobile/actions/runs/40183425216): satisfactorio en el pin móvil indicado.
+- [Android test build 40183423677](https://github.com/diegueins680/TDF-mobile/actions/runs/40183423677): satisfactorio en el mismo pin móvil; API local de prueba, OTA deshabilitado, sin publicación en tiendas.
+
+## 7. Despliegue
+
+**No desplegado.** Producción conserva la versión indicada en el diagnóstico y no
+contiene esta migración. Se necesita revisión independiente, CI obligatorio e
+integración protegida antes del procedimiento de despliegue. Después corresponde
+ensayo de migración/canario, verificación de la versión y flujos sintéticos con
+almacenamiento real, antes de habilitar campañas o distribuir el cliente móvil.
+No se afirma una compilación de tienda, publicación nativa ni prueba productiva
+de la funcionalidad nueva.
+
+## 8. Invitaciones reales del evento 141
+
+| Concepto | Estado |
+| --- | --- |
+| Cuentas relacionadas / activas | 7 / 5, observadas por auditoría |
+| Exclusión por cuenta inactiva en esta cohorte | 2, cálculo de auditoría; no contador de campaña desplegada |
+| Cuentas activas retenidas | 5; evento sin confirmar como finalizado y sin preferencia nueva explícita |
+| Destinatarios habilitados para enviar por esta tarea | 0 |
+| Enviadas / entregadas / fallidas | 0 / 0 / 0; cero intentos reales |
+| Recordatorios reales | 0 |
+
+Los contadores productivos de campaña no existen todavía: no se deducen entregas
+ni exclusiones de una simulación. Un organizador debe confirmar la finalización
+real; no se modificó automáticamente el ciclo de vida. Solo se podrán habilitar
+envíos después del despliegue, la comprobación de elegibilidad y el consentimiento.
+No se inventaron asistentes ni contactos y no se envió correo, push o WhatsApp.
+
+## 9. Métricas disponibles y límites
+
+Se implementaron agregados por evento de candidatos, consentimiento, invitaciones
+internas comprometidas, recordatorios, aperturas atribuidas, publicación posterior
+a la invitación, momentos y autores únicos. Los ve únicamente el organizador actual.
+No se exponen listas de contactos ni contenido en analíticas. «Entregada» significa
+inserción comprometida en la bandeja; no lectura humana ni entrega por correo.
+
+Registro atribuido, tiempos/pasos de primera publicación, conexiones causadas,
+visitas recurrentes, cohortes D7/D30 y participación cruzada aún no están medidos de
+forma suficiente. No hay evidencia para atribuir mejoras de conversión o retención.
+
+## 10. Riesgos y siguientes prioridades
+
+1. **P0:** revisión del límite de archivos públicos y moderación de publicaciones
+   fuente, además de la existente para conversaciones. No se ofrece una falsa
+   opción de contenido «solo participantes». Falta entrega autenticada/revocable de
+   archivos y borrado del asset público; borrar la publicación no elimina copias.
+2. **P0:** cierre del CI y validación nativa con identidades/contenido sintéticos;
+   confirmación del estado real del piloto por su organizador. La firma reconocida
+   no sustituye validación completa de contenedores, duración, transcodificación,
+   eliminación de metadatos ni revisión humana.
+3. **P1:** publicación con clave duradera para recuperar respuestas perdidas sin
+   duplicar; galerías y medios combinados; audio/texto nativos. Las publicaciones
+   múltiples móviles siguen siendo momentos individuales.
+4. **P1:** consentimiento real y prueba humana controlada después de revisión y
+   despliegue; correo/push solamente con autorización propia del canal. WhatsApp
+   queda como integración futura, sin dependencia nueva.
+5. **P2/P3:** aislamiento de fallos por destinatario, paginación/ensayos de carga,
+   descubrimiento más amplio y previsualizaciones públicas por publicación, siempre
+   sometidas a visibilidad; medición atribuida y cohortes D7/D30.
+
+Los requisitos nuevos conservan clasificación formal **PARTIAL**. Esta entrega no
+satisface todavía toda la lista de aceptación del encargo, ni se presenta como
+integrada, desplegada o verificada en producción.
