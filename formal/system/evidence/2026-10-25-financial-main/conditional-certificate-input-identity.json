@@ -1,0 +1,176 @@
+{
+  "currentSource": "b71ac3fad0fc86195ceea87c09c45b16847875f8",
+  "certificateExecutionSource": "f8f3d4d3d1de06c5444be238f8b3ed84ee6a3528",
+  "inputs": [
+    {
+      "id": "arithmetic:capture-safety",
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a"
+    },
+    {
+      "id": "arithmetic:capture-admission",
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030"
+    },
+    {
+      "id": "arithmetic:capture-witness-0",
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0"
+    },
+    {
+      "id": "arithmetic:capture-witness-1",
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f"
+    },
+    {
+      "id": "arithmetic:capture-legacy-counterexample",
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8"
+    },
+    {
+      "id": "arithmetic:refund-safety",
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a"
+    },
+    {
+      "id": "arithmetic:refund-admission",
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030"
+    },
+    {
+      "id": "arithmetic:refund-witness-0",
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0"
+    },
+    {
+      "id": "arithmetic:refund-witness-1",
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f"
+    },
+    {
+      "id": "arithmetic:refund-legacy-counterexample",
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8"
+    },
+    {
+      "id": "authorization:strict-admin",
+      "sha256": "7fc3e60bbba531afc47b543e41978f668b1ea0d693b36afe295f713154b4296e"
+    },
+    {
+      "id": "authorization:module-access",
+      "sha256": "b501d1aa1ee540182d45946adae64be2dd961b1018bc4c63cc191edd0731d0f6"
+    },
+    {
+      "id": "authorization:ingestion-admission",
+      "sha256": "33bc931447fac518c2660bdc38614b10a9f0c3dcbea488537e8bdba7f43a90bf"
+    },
+    {
+      "id": "authorization:cardinality-nonnegative",
+      "sha256": "538c1648575c93dcf01c97ad2acf74e6ac86bbb0c8bc09225e0d298dfb7a3915"
+    },
+    {
+      "id": "authorization:cardinality-zero",
+      "sha256": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c"
+    },
+    {
+      "id": "authorization:cardinality-sum",
+      "sha256": "f7354ee4a94da5df4c7055469e6e717351460ed89f8955df2c45685ad1c4e3dc"
+    },
+    {
+      "id": "authorization:strict-admin-witness-true",
+      "sha256": "70b2a1205bbe7f4f5cdb8c8a17ff9dd57ac60ee96fbc0265e0ed63bf9b251ea0"
+    },
+    {
+      "id": "authorization:strict-admin-witness-false",
+      "sha256": "eeaed47cf2849128d81eee8543f1488f2538ec607e5f1054314300b199e0fe6d"
+    },
+    {
+      "id": "authorization:module-access-witness-true",
+      "sha256": "b69a30273b6417f139fbad50f0f06566ee5bb85ab9d585602afc888cf18f9b04"
+    },
+    {
+      "id": "authorization:module-access-witness-false",
+      "sha256": "513953eccb5de4ec24b36f2a755007c915d0967c5dc276715d798a73b9b9594e"
+    },
+    {
+      "id": "authorization:ingestion-admission-witness-true",
+      "sha256": "727d41a67f48c39ccf6f2dce096eb46bd1568c19bd72bc7307a5e86f1ae13243"
+    },
+    {
+      "id": "authorization:ingestion-admission-witness-false",
+      "sha256": "e812df3fef5cadd0a37fafb4cbc760ec34443a4a2fbd514c753711a987df551c"
+    },
+    {
+      "id": "authorization:control-drop-coherence",
+      "sha256": "1aa33b1d244326d8ee1d79787f3fe5ec5e762adc228f422d56296efb6ee6e3cd"
+    },
+    {
+      "id": "authorization:control-admit-operational-role",
+      "sha256": "c0eb0fafc11e007470c645ccab64665f20e44bc8e23b0fc3323361796c046e59"
+    },
+    {
+      "id": "authorization:control-allow-zero-identity",
+      "sha256": "0dc3e705e2041bdb5a58f01562167fb6a0f6b581e434df1f3ec959e8da6a7b33"
+    },
+    {
+      "id": "authorization:control-drop-module-grant",
+      "sha256": "e9f92c4f12111b7c5984b4c5c2f8300976eaff22b07ef83767ea678231e221e4"
+    },
+    {
+      "id": "authorization:control-module-implies-admin",
+      "sha256": "7b7b07ad81bd0f453b589ed24e4dca7a6e29f01d6f96bff8bbfe4b28891af912"
+    },
+    {
+      "id": "recovery:window-equivalence",
+      "sha256": "0eaf4d81ea08baff7a1fee36724590647fad2d9451c316d7b9e1dc90076232f3"
+    },
+    {
+      "id": "recovery:schema-correspondence",
+      "sha256": "6ce0edc16b6585748c551b0e3f2f39e0b8ec6b2b6a931f40d6eb9f385b1e2f88"
+    },
+    {
+      "id": "recovery:issuance-admission",
+      "sha256": "f06b27694c3a5ffd9ea9e8ca124d07869f0dca809705a4d04d103e106b054dbe"
+    },
+    {
+      "id": "recovery:issuance-exact",
+      "sha256": "43a56c1e5385f426bf415d5f46658a1b364a552fb2d8afa2bdd65f3319660d99"
+    },
+    {
+      "id": "recovery:witness-0-0",
+      "sha256": "4e6a8d78e1319e57b40f42b97f9f1e135dfac1283aa76bb60f7d3268399a90b9"
+    },
+    {
+      "id": "recovery:witness-0-899",
+      "sha256": "092874565efa8d1bf7fcde8aef1a23f1fd6945b98adc9ea14d560dded7696118"
+    },
+    {
+      "id": "recovery:witness-9223372036854774907-0",
+      "sha256": "5e06c2fa0197b355f0732c263cdb9285cfc3a73a472a0a6c3ba0467798389757"
+    },
+    {
+      "id": "recovery:witness-9223372036854774907-899",
+      "sha256": "57c3d882e4bc67cf89eb9f7093a2ce472c3d38510dba98d7aca99b13f4d183e0"
+    },
+    {
+      "id": "recovery:witness-overflow-rejection",
+      "sha256": "3133dccb8735eb77f646b547ef2574ecc854d2327620d46a8d38b81f41db9d55"
+    },
+    {
+      "id": "recovery:control-inclusive-deadline",
+      "sha256": "fbdbdd1c6dc83f045527dd24b4131ca7ca84889884d93871d530ff129473836e"
+    },
+    {
+      "id": "recovery:control-future-issuance",
+      "sha256": "ac99cecccaef4c4e243272a9f5474ad11f0d3ac023e1a8533db4afb1c3234414"
+    },
+    {
+      "id": "recovery:control-validator-lifetime",
+      "sha256": "8eaee02d8eeaf4e73202a21fbfe11f5af08f8dc349248636235bd0d5b9f17050"
+    },
+    {
+      "id": "recovery:control-database-lifetime",
+      "sha256": "bf333432149c853d3b8d22fb84afe72b46c4eb23472e619eced03c5dd3e48829"
+    },
+    {
+      "id": "recovery:control-issuance-lifetime",
+      "sha256": "cfd0154fac07d92d6320df2df02035cf8afd022248f13b240d83f61dd1bde1b0"
+    }
+  ],
+  "sameInputs": 41,
+  "independentlyCheckedObligations": 14,
+  "distinctCertificateInputs": 12,
+  "newCheckerExecutionOnCurrentCandidate": false,
+  "receipt": "../2026-10-25-ledger-startup/ci-selection-certificate-receipt.json",
+  "scope": "Current generated SMT bytes match earlier independently checked inputs. Preserve the earlier execution identity; do not promote complete requirement/refinement status."
+}
