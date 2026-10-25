@@ -365,8 +365,7 @@ El binario conserva commit compilado9a y SHA256
 se contrastaron todas las fuentes backend con esa base salvo Directory, cuyo hash
 fue calificado en la compilación original. No se relabela el binario ni se
 presenta como compilación del nuevo commit de docs/UI. CI exige compilar el head
-exacto. Solo se actualizan documentos/trazas después del recibo, sin cambios de
-backend/SQL/pruebas. Beneficio observado: las10 divergencias iniciales desaparecen
+exacto. Después del recibo solo cambian documentos/trazas y se elimina un espacio final del fixture SQL sin alterar sus tokens. Backend, migraciones forward/rollback y runners conservan exactamente sus bytes calificados. Beneficio observado: las10 divergencias iniciales desaparecen
 en casos sintéticos y se confirma guardado recuperable/alerta interna persistida;
 no hay beneficio productivo ni conversión atribuible antes del release autorizado.
 

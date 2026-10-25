@@ -340,7 +340,7 @@
         "pending": 20,
         "scope": "Direct execution of Stack-built test binary; original exe build exit0. Redundant stack test interrupted143 during duplicate exe build; not PASS."
       },
-      "sourceCorrespondence": "All backend inputs match compiled base9a except Directory with previously built source hash; no runtime version overrides. CI must compile exact candidateHEAD. Documents/trace metadata may update after this receipt; backend/SQL/test bytes remain frozen.",
+      "sourceCorrespondence": "All backend inputs match compiled base9a except Directory with previously built source hash; no runtime version overrides. CI must compile exact candidateHEAD. After the receipt only documents/trace metadata change plus one trailing fixture SQL space removed with identical SQL tokens. Backend, forward/rollback migrations and runners retain exact qualified bytes.",
       "productionMutations": false,
       "externalChannels": 0,
       "catalogStrict": {
@@ -348,6 +348,11 @@
         "candidates": 1327,
         "unreviewed": 0,
         "receipt": "/private/tmp/tdf-alert-parity-repro-20261025/catalog-audit-frozen.json"
+      },
+      "fixtureWhitespaceCleanup": {
+        "qualifiedHead": "8b2f981fa952b6d281a22b4c3eb187f3828df870",
+        "cleanupCommit": "898d0a8bf",
+        "change": "One trailing space removed from integration SQL line15; complete SQL token sequence unchanged. No functional/test assertion change and no redundant107HTTP rerun claimed."
       }
     },
     "contract": "docs/directory/saved-search-parity.md",
