@@ -19233,7 +19233,7 @@
     },
     {
       "path": "docs/engineering/user-value-backlog-2026-10-25.md",
-      "sha256": "26f04c57bd309b3cc3bbd3c2159a68fafdab049ed3c76fae8aeab7a602ed3bf1",
+      "sha256": "8d7f5b4f8480cb49421838ef8a9be93aea9cb0f79abde77eba171173c77f9199",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -55,11 +55,11 @@ tras controles negativos y ejecución descartable (85→91).
 
 | Orden | Trabajo existente o nuevo | Categoría | A/G/V/J/E/C/R/T | P | Estado y acción |
 | --- | --- | --- | --- | --- | --- |
-| 1, seleccionado | Evitar guardar borradores ajenos/sin lectura propia y revocar callbacks al cambiar credenciales | S0 | 4/5/4/5/5/4/4/4 | 91 | DEFECTIVE en la base; #607 añade protección compartida, ahora también epoch síncrono. 68 pruebas dirigidas pasan; falta CI/revisión del código nuevo, admisión y despliegue. |
+| 1, seleccionado | Evitar guardar borradores ajenos/sin lectura propia y revocar callbacks al cambiar credenciales | S0 | 4/5/4/5/5/4/4/4 | 91 | DEFECTIVE en la base; #607 combina epoch síncrono, lectura propia y caché. 3369 pruebas / 300 suites, build, lint y runtime combinado pasan; resta CI/revisión del head definitivo, merge y despliegue. |
 | 2 | Preservar términos aceptados, ledger y capturas inciertas | S0 | 3/5/5/5/5/3/2/2 | 86 | BLOCKED. Reutilizar #551, sin promover #555/#569 por separado ni activar proveedores. |
-| 3 | Subir portada con sesión HttpOnly válida | S1 | 3/4/4/5/5/5/4/3 | 83 | PARTIAL. #605 ya actualizado por su operador sobre main `512d590e`; aprobación reciente, CI en curso. No duplicar su rama. |
+| 3 | Subir portada con sesión HttpOnly válida | S1 | 3/4/4/5/5/5/4/3 | 83 | COMPLETE para el transporte web cookie-only: #605 integrado como `9a927fa3` y publicado, con fixture de navegador verificado. Google real no certificado por esta prueba. |
 | Entregado | Reflejar foto guardada en Comunidad | S1 | 4/3/4/5/5/5/4/3 | 81 | COMPLETE en el alcance de invalidación web: #604 integrado como `512d590e` y assets publicados verificados. Browser real con API sintética; no afirma upload ni escritura productiva real. |
-| 4 | Abrir comprobantes privados desde gestión de entradas | S1 | 3/4/4/5/5/3/2/3 | 79 | PARTIAL. #603 integrado como089; backend productivo sigue en `4dac175d`. Verificar gates de release/almacenamiento antes de publicación del backend. |
+| 4 | Abrir comprobantes privados desde gestión de entradas | S1 | 3/4/4/5/5/3/2/3 | 79 | BLOCKED para release. #603 integrado como `089dce6b`, backend productivo4dac; falta configuración privada durable y admisión de nuevo diario, y el assurance exacto sigue BLOCKED. |
 | 5 | Alertas guardadas respetan filtros no geográficos | S1 | 2/3/3/4/5/2/3/2 | 64 | DEFECTIVE confirmado en 27 casos PostgreSQL,10 discrepancias válidas. Reparación compartida en curso; radio sigue BLOCKED por centro/privacidad. |
 | 6 | Correo/push de chat controlado por destinatario | S1 | 3/3/4/4/3/1/1/1 | 60 | BLOCKED para entrega; UNIMPLEMENTED el alcance externo #577, pendiente consentimiento, adaptadores y dispositivos. |
 | 7 | Habilitación explícita del club de un artista nuevo | S1 | 2/2/4/4/5/1/2/1 | 59 | UNIMPLEMENTED en #606; falta ese camino de contenido. El follow funciona y existen enlaces públicos alternativos. Nunca provisionar por GET ni crear miembros/contactos sin consentimiento. |
@@ -186,12 +186,12 @@ actualice `main`, repetir la comparación de contenido antes de reabrir trabajo.
 ## Cinco siguientes después del incremento seleccionado
 
 1. Resolver los bloqueos de la consolidación financiera #551, conservando sus revisiones, modelos y límites de release.
-2. Completar CI/integración protegida de #605 y verificar el upload cookie-only; su operador mantiene la rama.
-3. Verificar el lanzamiento elegible del backend de comprobantes #603, ya integrado, sin ejecutar una release no autorizada.
-4. Completar el matcher no geográfico compartido de #534; datos nuevos o modificados, dedup y ninguna entrega externa. Radio sigue pendiente de definición compatible con privacidad.
-5. Resolver prerrequisitos de entrega de chat #577; no prometer entrega de email/push antes de evidencia real.
+2. Preparar la entrega segura del backend #603: almacenamiento privado durable, admisión revisada del siguiente release y disposición de assurance exacta. Reutilizar los drafts #495/#600 donde corresponda; nunca reiniciar el diario completado.
+3. Completar el matcher no geográfico compartido de #534 y su verificación SQL/HTTP; conservar dedup, privacidad y cero canales externos. Radio continúa pendiente de definición compatible con privacidad.
+4. Resolver los prerrequisitos de entrega de chat #577; no prometer email/push antes de evidencia real.
+5. Habilitación explícita e idempotente del club #606, con permisos probados y sin crear miembros o notificaciones implícitos.
 
-El nuevo candidato #606 se conserva en el ranking, detrás del matcher reproducido; la habilitación de club debe ser explícita del propietario, idempotente y con permisos probados. Las puntuaciones siguen siendo hipótesis ordinales; no hay uplift observado ni una cifra de usuarios afectados validada.
+Las correcciones web #604/#605 ya están integradas y publicadas. Las puntuaciones siguen siendo hipótesis ordinales; no hay uplift observado ni un conteo validado de usuarios afectados.
 
 ## Evidencia del arreglo seleccionado
 
@@ -297,3 +297,32 @@ negativos en consultas válidas;3 JSON históricos malformados y controles de
 privacidad/expiry/dedup. No hay evidencia HTTP todavía. El nuevo alcance comparte
 helpers tipados entre búsqueda y trigger; evita inventar centros geográficos o
 guardar coordenadas precisas, y no reescribe JSON/hashes históricos.
+
+## Cierre de la composición sobre main `9a927fa3`
+
+El operador existente integró #605 como `9a927fa3` a las 18:37 UTC. Se incorpora
+mediante merge normal sin conflicto de runtime: se conservan exactamente los 137
+requisitos protegidos y el requisito propio actualizado (138 total). Los cinco
+archivos UI fueron estables durante la calificación final.
+
+La suite actual pasa **3369 pruebas / 300 suites** (salida 0), build/tipos
+(334208 bytes gzip,5 preloads), lint, 13 comprobaciones de clientes API, inventario/trazabilidad,
+admisión y catálogo estricto. Navegador Chromium escritorio/Pixel7 con sesión
+HttpOnly real y API/PostgreSQL descartables verifica: omisión de credenciales401,
+subida 200 con almacenamiento sintético, guardado persistido, tarjeta de Comunidad
+actualizada, recarga y eliminación de foto, cero PUT por lecturas pendientes/503
+y rechazo 400 de URL privada sin cambio persistido. Los cuatro controles de sesión reales
+se mantienen separados: revocación anterior al render y reautenticación del
+mismo Party, Fetch interceptado sin salida a servidor.
+
+La web pública #605 ya publica `9a927fa3`; su fixture desplegado confirma cookie sin
+bearer y tarjeta actualizada sin reenviar ninguna llamada API productiva.
+#607 aún necesita CI/revisión del commit definitivo y no se declara desplegado.
+Los recibos y los límites exactos están en el informe JSON.
+
+La evaluación de release #603 encontró bloqueos concretos: ausencia productiva
+de `TICKET_PAYMENT_EVIDENCE_DIR` (el código nuevo devuelve 503), 25 registros del
+diario anterior completados sin admisión revisada de otro nonce y assurance
+exacto de `089dce6b`/`9a927fa3` `BLOCKED` sin riesgos aceptados. Hay imagen `089dce6b` probada y cero
+migraciones pendientes, pero no equivalen a permiso ni preparación de release.
+No se cambió configuración, storage, contenedores, flags ni diario productivo.
