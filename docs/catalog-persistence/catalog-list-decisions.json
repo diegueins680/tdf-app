@@ -345,6 +345,32 @@
       "newSyntheticFixtureId": "134cf0fa5a9bb176f981",
       "scope": "Technical API method names and synthetic test DTO only; no product, payment or release approval."
     },
+    "featureMenuCoverage20261025": {
+      "sourceMain": "512d590e902760130f54ca2927620c001a754b85",
+      "successors": [
+        [
+          "e4c7ffe2a8fc0a5752d0",
+          "e1630a13682bf0fee90d"
+        ],
+        [
+          "b180210a3602cfc0bf52",
+          "300853c537ba6401822a"
+        ],
+        [
+          "9fca63dce34f8900c6a4",
+          "a00fcee87036af5dfa95"
+        ],
+        [
+          "ef8764c4421158cb1be7",
+          "ce1e609baf902df58b08"
+        ],
+        [
+          "d98b80c87ee6f14c72ec",
+          "dfea445b31325dad4cf6"
+        ]
+      ],
+      "reason": "Only five reviewed source fingerprints changed: four additive navigation groups and a session featureFlags fixture. All classifications, persistence obligations and audit policies are preserved."
+    },
     "eventMemoriesMainIntegration": {
       "sourceMain": "089dce6ba410e5a76bee024c0d4be2ae3df0011d",
       "reason": "Preserve both protected receipt and memory reviews. Four parent-only fingerprints already have reviewed memory successors; retain their complete objects here rather than leave stale active decisions. Combined transport-method successor retains both parent decisions. No new business catalog, runtime, merge or deployment approval.",
@@ -2534,133 +2560,6 @@
       }
     },
     {
-      "id": "da4f880a8da74120e456",
-      "classification": "security-system-registry",
-      "disposition": "canonical-contract",
-      "specializedModel": "notification_destination_registry",
-      "priority": "P1-integrity",
-      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-        "line": 14
-      },
-      "reviewBatch": "event-memories-2026-10-25",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "2a0d6d57a51e35d91376",
-        "classification": "security-system-registry",
-        "disposition": "canonical-contract",
-        "specializedModel": "notification_destination_registry",
-        "priority": "P1-integrity",
-        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Canonical typed notification destination registry; chat_thread uses a validated positive safe thread identity, selects only an authorized existing conversation and never accepts an arbitrary URL. Generated into Mobile.",
-        "reviewed": true,
-        "evidence": {
-          "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-          "line": 14
-        },
-        "reviewBatch": "chat-notification-destination-2026-10-13",
-        "reviewMethod": "successor-of-reviewed-decision",
-        "previousDecision": {
-          "id": "1a20aae8bb74a6df248f",
-          "classification": "security-system-registry",
-          "disposition": "canonical-contract",
-          "specializedModel": "notification_destination_registry",
-          "priority": "P1-integrity",
-          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
-          "reviewed": true,
-          "evidence": {
-            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-            "line": 14
-          },
-          "reviewBatch": "music-release-platform-sync-2026-10-07",
-          "reviewMethod": "successor-of-reviewed-decision",
-          "previousDecision": {
-            "id": "d8058e9fe53556cbf690",
-            "classification": "security-system-registry",
-            "disposition": "canonical-contract",
-            "specializedModel": "notification_destination_registry",
-            "priority": "P1-integrity",
-            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-            "reviewed": true,
-            "evidence": {
-              "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-              "line": 14
-            },
-            "reviewBatch": "universal-interactions-2026-09-28"
-          }
-        },
-        "mergedSourceDecision": {
-          "id": "2a0d6d57a51e35d91376",
-          "classification": "security-system-registry",
-          "disposition": "canonical-contract",
-          "specializedModel": "notification_destination_registry",
-          "priority": "P1-integrity",
-          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
-          "reviewed": true,
-          "evidence": {
-            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-            "line": 14
-          },
-          "reviewBatch": "music-release-platform-sync-2026-10-07",
-          "reviewMethod": "successor-of-reviewed-decision",
-          "previousDecision": {
-            "id": "d8058e9fe53556cbf690",
-            "classification": "security-system-registry",
-            "disposition": "canonical-contract",
-            "specializedModel": "notification_destination_registry",
-            "priority": "P1-integrity",
-            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-            "reviewed": true,
-            "evidence": {
-              "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-              "line": 14
-            },
-            "reviewBatch": "universal-interactions-2026-09-28"
-          },
-          "previousFingerprint": "1a20aae8bb74a6df248f"
-        }
-      },
-      "mergedSourceDecision": {
-        "id": "2a0d6d57a51e35d91376",
-        "classification": "security-system-registry",
-        "disposition": "canonical-contract",
-        "specializedModel": "notification_destination_registry",
-        "priority": "P1-integrity",
-        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
-        "reviewed": true,
-        "evidence": {
-          "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-          "line": 14
-        },
-        "reviewBatch": "music-release-platform-sync-2026-10-07",
-        "reviewMethod": "successor-of-reviewed-decision",
-        "previousDecision": {
-          "id": "d8058e9fe53556cbf690",
-          "classification": "security-system-registry",
-          "disposition": "canonical-contract",
-          "specializedModel": "notification_destination_registry",
-          "priority": "P1-integrity",
-          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-          "reviewed": true,
-          "evidence": {
-            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-            "line": 14
-          },
-          "reviewBatch": "universal-interactions-2026-09-28"
-        },
-        "previousFingerprint": "1a20aae8bb74a6df248f"
-      }
-    },
-    {
       "id": "e2824f018603453c9246",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -2983,14 +2882,30 @@
       "reviewed": true
     },
     {
-      "id": "e4c7ffe2a8fc0a5752d0",
+      "id": "e1630a13682bf0fee90d",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P3-consumer",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.test.tsx",
+        "line": 10
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "e4c7ffe2a8fc0a5752d0",
+        "classification": "security-system-registry",
+        "disposition": "consumer-update",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-consumer",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+        "reviewed": true
+      }
     },
     {
       "id": "d0b457848a6b6c374e45",
@@ -3003,32 +2918,22 @@
       "reviewed": true
     },
     {
-      "id": "b180210a3602cfc0bf52",
+      "id": "300853c537ba6401822a",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "9fca63dce34f8900c6a4",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "line": 163
+        "line": 142
       },
-      "reviewBatch": "events-nav-carousel-2026-10-08",
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
-        "id": "daaade88abcc60232974",
+        "id": "b180210a3602cfc0bf52",
         "classification": "dynamic-business-catalog",
         "disposition": "migrate-and-remove-authority-from-code",
         "specializedModel": "navigation_item, navigation_item_permission",
@@ -3039,14 +2944,72 @@
       }
     },
     {
-      "id": "ef8764c4421158cb1be7",
+      "id": "a00fcee87036af5dfa95",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 166
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "9fca63dce34f8900c6a4",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+          "line": 163
+        },
+        "reviewBatch": "events-nav-carousel-2026-10-08",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "daaade88abcc60232974",
+          "classification": "dynamic-business-catalog",
+          "disposition": "migrate-and-remove-authority-from-code",
+          "specializedModel": "navigation_item, navigation_item_permission",
+          "priority": "P1-cross-platform",
+          "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+          "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+          "reviewed": true
+        }
+      }
+    },
+    {
+      "id": "ce1e609baf902df58b08",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 190
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "ef8764c4421158cb1be7",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
       "id": "3a83c9975e291400c7d5",
@@ -3104,14 +3067,30 @@
       "reviewed": true
     },
     {
-      "id": "d98b80c87ee6f14c72ec",
+      "id": "dfea445b31325dad4cf6",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 251
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "d98b80c87ee6f14c72ec",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
       "id": "61e76da1f53c6a0f9414",
@@ -6257,7 +6236,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Offering an identification type the SRI does not accept would produce rejected invoices.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
@@ -7869,7 +7848,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Contract drift could let clients send identification types the SRI rejects.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
@@ -15147,7 +15126,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Adding document kinds without SRI document semantics could emit unsupported tax documents.",
-      "justification": "SRI document kinds handled by the invoice worker (factura and nota de cr\u00e9dito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
+      "justification": "SRI document kinds handled by the invoice worker (factura and nota de crédito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
@@ -15162,7 +15141,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Accepting unsupported identification types would store invoices that cannot be issued.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -15177,7 +15156,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Mixing environments would send test invoices to production or the reverse.",
-      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producci\u00f3n; a closed technical domain.",
+      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producción; a closed technical domain.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -16920,47 +16899,6 @@
       "reviewed": true
     },
     {
-      "id": "4a5404a4a008a8f296dd",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed Mobile API methods add uploadMomentMedia using the existing authenticated API client and canonical event-scoped image/media routes. This is transport dispatch, never a selectable business catalog.",
-      "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "event-memories-2026-10-25",
-      "evidence": {
-        "file": "tdf-mobile/src/api/events.ts",
-        "line": 436,
-        "kind": "object-registry",
-        "name": "Events",
-        "valueCount": 31
-      },
-      "previousDecision": {
-        "id": "a7561a719beb23884345",
-        "classification": "genuine-technical-constant",
-        "disposition": "retain-in-code",
-        "specializedModel": "technical_constant_allowlist",
-        "priority": "P3-retain",
-        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-        "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
-        "reviewed": true,
-        "reviewMethod": "deterministic-policy-v3",
-        "reviewBatch": "deterministic-policy-v3",
-        "evidence": {
-          "file": "tdf-mobile/src/api/events.ts",
-          "line": 435,
-          "kind": "object-registry",
-          "name": "Events",
-          "valueCount": 30,
-          "consumerCount": 213,
-          "exactDuplicateIds": [],
-          "similarCandidateIds": []
-        }
-      }
-    },
-    {
       "id": "027498d98521acdaf125",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -17909,6 +17847,329 @@
       "reviewed": true
     },
     {
+      "id": "5531b94c0e2171c68477",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "9e420f33afd21c63f5e3",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "00b90509097d4d414255",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "f9d12ea3d6378957a79f",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "f81a18fcc4b7c3b1f0f5",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "24e83372bf1dbdf7c339",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "dca4339cbea08d013733",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "3b552ac5c12256abe0b4",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing this sweep domain without changing the startup verifier and its policy note can leave a production capability-gate state unverified, so a later container start fails without a test having said so.",
+      "justification": "The three states (missing, disabled, enabled) are the exhaustive domain of one revenue_feature_flag row that the startup-gates sweep varies per asserted flag. It is a finite test domain copied from the verifier's rule shape, not a selectable catalog or a production source of authority.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-12",
+      "reviewBatch": "startup-gates-2026-10-12",
+      "evidence": {
+        "file": "scripts/__tests__/startup-gates-postgres.mjs",
+        "line": 40
+      }
+    },
+    {
+      "id": "de09a0cde54a8f757ce1",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Incomplete browser coverage or version drift could admit an invalid CI environment; this list cannot be replaced by editable business data.",
+      "justification": "These are fake browser factory keys in launch-failure and cleanup controls. They address only the fixed Chromium/Firefox/WebKit test matrix, not a selectable application catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-22",
+      "reviewBatch": "browser-ci-image-2026-10-22",
+      "evidence": {
+        "file": "scripts/__tests__/playwright-image.test.mjs",
+        "line": 68
+      }
+    },
+    {
+      "id": "5da1800a82705df02018",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Incomplete browser coverage or version drift could admit an invalid CI environment; this list cannot be replaced by editable business data.",
+      "justification": "These exact npm package identities must share the pinned image version. They are fixed dependency identifiers for CI validation, not selectable business values or application authority.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-22",
+      "reviewBatch": "browser-ci-image-2026-10-22",
+      "evidence": {
+        "file": "scripts/verify-playwright-image.mjs",
+        "line": 7
+      }
+    },
+    {
+      "id": "c03b7e29a37c1a410589",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-versioned-redaction-projection",
+      "specializedModel": "commerce_reconciliation_exception",
+      "priority": "P0-security",
+      "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
+      "justification": "Reviewed all six creReason response tokens against loadReconciliationEntries.safeReason and actual exception emitters. The new server-authored music_paid_closed_order marks verified money with closed fulfillment for review, without granting an entitlement or financial-release authority. Five known stored reasons map to allowlisted outputs; unknown values remain unrecognized. The OpenAPI, generated web/mobile clients and Spanish/English administrative label agree. SQL, HTTP and panel regressions cover the new case; ADR0125 compatibility addendum preserves all privacy and read-only boundaries.",
+      "reviewed": true,
+      "reviewBatch": "music-payment-outcome-2026-10-15",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "2b2fe601e00052bd7a21",
+        "classification": "security-system-registry",
+        "disposition": "retain-as-versioned-redaction-projection",
+        "specializedModel": "commerce_reconciliation_exception",
+        "priority": "P0-security",
+        "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
+        "justification": "Reviewed the five creReason response tokens against loadReconciliationEntries.safeReason, actual exception emitters and the generated contract. Only four known stored exception types are mapped; every other value becomes unrecognized. This output-only redaction vocabulary cannot mutate workflow, post money or release a hold. Contract parity, legacy-private-reason and closed-approval regressions cover this boundary; ADR 0125 records its limits.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "134cf0fa5a9bb176f981",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Treating this synthetic DTO fixture as production authority could weaken private-receipt and payment-review regressions.",
+      "justification": "The payment object is a synthetic TicketManualPaymentDTO fixture used only by EventManualPaymentsPanel tests. Its field keys represent the existing transport contract and exercise private receipt viewing, legacy records, errors and preview cleanup. They are not selectable customer values, a persisted catalog or payment authority.",
+      "reviewed": true,
+      "reviewBatch": "ticket-receipt-preview-2026-10-24",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
+        "line": 15
+      }
+    },
+    {
+      "id": "da4f880a8da74120e456",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "notification_destination_registry",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+        "line": 14
+      },
+      "reviewBatch": "event-memories-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "2a0d6d57a51e35d91376",
+        "classification": "security-system-registry",
+        "disposition": "canonical-contract",
+        "specializedModel": "notification_destination_registry",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Canonical typed notification destination registry; chat_thread uses a validated positive safe thread identity, selects only an authorized existing conversation and never accepts an arbitrary URL. Generated into Mobile.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+          "line": 14
+        },
+        "reviewBatch": "chat-notification-destination-2026-10-13",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "1a20aae8bb74a6df248f",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+            "line": 14
+          },
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "d8058e9fe53556cbf690",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+              "line": 14
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          }
+        },
+        "mergedSourceDecision": {
+          "id": "2a0d6d57a51e35d91376",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+            "line": 14
+          },
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "d8058e9fe53556cbf690",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+              "line": 14
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          },
+          "previousFingerprint": "1a20aae8bb74a6df248f"
+        }
+      },
+      "mergedSourceDecision": {
+        "id": "2a0d6d57a51e35d91376",
+        "classification": "security-system-registry",
+        "disposition": "canonical-contract",
+        "specializedModel": "notification_destination_registry",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+          "line": 14
+        },
+        "reviewBatch": "music-release-platform-sync-2026-10-07",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "d8058e9fe53556cbf690",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+            "line": 14
+          },
+          "reviewBatch": "universal-interactions-2026-09-28"
+        },
+        "previousFingerprint": "1a20aae8bb74a6df248f"
+      }
+    },
+    {
+      "id": "4a5404a4a008a8f296dd",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Typed Mobile API methods add uploadMomentMedia using the existing authenticated API client and canonical event-scoped image/media routes. This is transport dispatch, never a selectable business catalog.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "event-memories-2026-10-25",
+      "evidence": {
+        "file": "tdf-mobile/src/api/events.ts",
+        "line": 436,
+        "kind": "object-registry",
+        "name": "Events",
+        "valueCount": 31
+      },
+      "previousDecision": {
+        "id": "a7561a719beb23884345",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+        "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+        "reviewed": true,
+        "reviewMethod": "deterministic-policy-v3",
+        "reviewBatch": "deterministic-policy-v3",
+        "evidence": {
+          "file": "tdf-mobile/src/api/events.ts",
+          "line": 435,
+          "kind": "object-registry",
+          "name": "Events",
+          "valueCount": 30,
+          "consumerCount": 213,
+          "exactDuplicateIds": [],
+          "similarCandidateIds": []
+        }
+      }
+    },
+    {
       "id": "92f5d2006375f7fb9757",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
@@ -18130,146 +18391,6 @@
       }
     },
     {
-      "id": "5531b94c0e2171c68477",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
-      "reviewed": true
-    },
-    {
-      "id": "9e420f33afd21c63f5e3",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "00b90509097d4d414255",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "f9d12ea3d6378957a79f",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "f81a18fcc4b7c3b1f0f5",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "24e83372bf1dbdf7c339",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "dca4339cbea08d013733",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "3b552ac5c12256abe0b4",
-      "classification": "genuine-technical-constant",
-      "disposition": "explicit-allowlist",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Changing this sweep domain without changing the startup verifier and its policy note can leave a production capability-gate state unverified, so a later container start fails without a test having said so.",
-      "justification": "The three states (missing, disabled, enabled) are the exhaustive domain of one revenue_feature_flag row that the startup-gates sweep varies per asserted flag. It is a finite test domain copied from the verifier's rule shape, not a selectable catalog or a production source of authority.",
-      "reviewed": true,
-      "reviewMethod": "source-review-2026-10-12",
-      "reviewBatch": "startup-gates-2026-10-12",
-      "evidence": {
-        "file": "scripts/__tests__/startup-gates-postgres.mjs",
-        "line": 40
-      }
-    },
-    {
-      "id": "de09a0cde54a8f757ce1",
-      "classification": "genuine-technical-constant",
-      "disposition": "explicit-allowlist",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Incomplete browser coverage or version drift could admit an invalid CI environment; this list cannot be replaced by editable business data.",
-      "justification": "These are fake browser factory keys in launch-failure and cleanup controls. They address only the fixed Chromium/Firefox/WebKit test matrix, not a selectable application catalog.",
-      "reviewed": true,
-      "reviewMethod": "source-review-2026-10-22",
-      "reviewBatch": "browser-ci-image-2026-10-22",
-      "evidence": {
-        "file": "scripts/__tests__/playwright-image.test.mjs",
-        "line": 68
-      }
-    },
-    {
-      "id": "5da1800a82705df02018",
-      "classification": "genuine-technical-constant",
-      "disposition": "explicit-allowlist",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Incomplete browser coverage or version drift could admit an invalid CI environment; this list cannot be replaced by editable business data.",
-      "justification": "These exact npm package identities must share the pinned image version. They are fixed dependency identifiers for CI validation, not selectable business values or application authority.",
-      "reviewed": true,
-      "reviewMethod": "source-review-2026-10-22",
-      "reviewBatch": "browser-ci-image-2026-10-22",
-      "evidence": {
-        "file": "scripts/verify-playwright-image.mjs",
-        "line": 7
-      }
-    },
-    {
-      "id": "c03b7e29a37c1a410589",
-      "classification": "security-system-registry",
-      "disposition": "retain-as-versioned-redaction-projection",
-      "specializedModel": "commerce_reconciliation_exception",
-      "priority": "P0-security",
-      "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
-      "justification": "Reviewed all six creReason response tokens against loadReconciliationEntries.safeReason and actual exception emitters. The new server-authored music_paid_closed_order marks verified money with closed fulfillment for review, without granting an entitlement or financial-release authority. Five known stored reasons map to allowlisted outputs; unknown values remain unrecognized. The OpenAPI, generated web/mobile clients and Spanish/English administrative label agree. SQL, HTTP and panel regressions cover the new case; ADR0125 compatibility addendum preserves all privacy and read-only boundaries.",
-      "reviewed": true,
-      "reviewBatch": "music-payment-outcome-2026-10-15",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "2b2fe601e00052bd7a21",
-        "classification": "security-system-registry",
-        "disposition": "retain-as-versioned-redaction-projection",
-        "specializedModel": "commerce_reconciliation_exception",
-        "priority": "P0-security",
-        "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
-        "justification": "Reviewed the five creReason response tokens against loadReconciliationEntries.safeReason, actual exception emitters and the generated contract. Only four known stored exception types are mapped; every other value becomes unrecognized. This output-only redaction vocabulary cannot mutate workflow, post money or release a hold. Contract parity, legacy-private-reason and closed-approval regressions cover this boundary; ADR 0125 records its limits.",
-        "reviewed": true
-      }
-    },
-    {
       "id": "c28667c70e40dcc18a55",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
@@ -18369,21 +18490,6 @@
       "evidence": {
         "file": "tdf-hq/sql/2026-10-25_event_memory_invitations.sql",
         "line": 21
-      }
-    },
-    {
-      "id": "134cf0fa5a9bb176f981",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Treating this synthetic DTO fixture as production authority could weaken private-receipt and payment-review regressions.",
-      "justification": "The payment object is a synthetic TicketManualPaymentDTO fixture used only by EventManualPaymentsPanel tests. Its field keys represent the existing transport contract and exercise private receipt viewing, legacy records, errors and preview cleanup. They are not selectable customer values, a persisted catalog or payment authority.",
-      "reviewed": true,
-      "reviewBatch": "ticket-receipt-preview-2026-10-24",
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
-        "line": 15
       }
     },
     {

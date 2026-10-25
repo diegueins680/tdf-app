@@ -2823,7 +2823,7 @@
     {
       "id": "SURFACE-e304a20b61d5c193",
       "path": "e2e/web/community-discovery.spec.mjs",
-      "sha256": "9fb22467b072db50eeffc2deb009c2361c21d0ac496e96a07076a9af367d6260",
+      "sha256": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7431,13 +7431,13 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "16b6e840fce5032cd7c87775aecd0921123c1c840c77c49eb3cc83cf985b5a3f",
+      "sha256": "9f3a3c426d5ac0549f8e73b02aec0826f510d96f6f7e214e032971f785ebb119",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "2ce4418ebef0f36cad67bbb462c4e28f5802eb4efd0aeeb134cb9bbb156975d5",
+      "sha256": "564d20da56e36a873b02eeb8c9f9d246aca6d509c44d77777c15968df59c6a66",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7539,13 +7539,13 @@
     {
       "id": "SURFACE-52ded61d23ac18e9",
       "path": "tdf-hq-ui/src/components/SidebarNav.test.tsx",
-      "sha256": "8c5b3642e04aca7e70781cc19d7b8a556989f56509fa81233267c5e6f7c7f38e",
+      "sha256": "e3256af3ef5a49bb099438a71f1106c9338c186faa26c22b2464da659a0c1728",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-eacab29ef41a9481",
       "path": "tdf-hq-ui/src/components/SidebarNav.tsx",
-      "sha256": "268ba22376715b857adf4fc69ed1cd31297d1a0363bd9ee89d68141f68adb3af",
+      "sha256": "d579734d5562fd3512b424413860a68077f79c4e88b1f2d5e4c5a3d4592c0f62",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8127,7 +8127,7 @@
     {
       "id": "SURFACE-d1ac87354eb95a4d",
       "path": "tdf-hq-ui/src/features/featureRegistry.ts",
-      "sha256": "42dc6c72ccd2bdb2e3b884ba8dd121c2b78d60e23997f1807995c5c5e20170ed",
+      "sha256": "d709057904f96995ef7f5b734952b3c588b93dece56ed510f56e409ad035c955",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8457,13 +8457,13 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "1b31939d6d1fcc0eb9b62ff6a53773934a458990464be84c1d8ed4fa729bcfb1",
+      "sha256": "10ee86e9b01c50a6222c2f24291d812964a7552ea778ebe53054b9012ea9b84e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "3260bcde29c6fc5ce2e623c7f66f50b3c763c0239985b0f928982e03c61d05a0",
+      "sha256": "915ced996ce7903c55e27831791a239ab07441784d70dd1975ce85daaad57e89",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9723,13 +9723,13 @@
     {
       "id": "SURFACE-c3adc6dc170cc53b",
       "path": "tdf-hq-ui/src/pages/SecurityPage.test.tsx",
-      "sha256": "e52cf6ae4e3350d57d9814b992df0a87d51243168ca2ba70144739893dee194e",
+      "sha256": "6d8f0f2af34f9312217af92971c67e977ec63403ffdef45ed9c908fcf1720c49",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1e8f6a752f2cf8a5",
       "path": "tdf-hq-ui/src/pages/SecurityPage.tsx",
-      "sha256": "ec8f78d18e7f7024e5cba20a10d0bf21dee37bb033b8686598e3271a77b7683d",
+      "sha256": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10317,13 +10317,13 @@
     {
       "id": "SURFACE-a14b7188c2af7d0c",
       "path": "tdf-hq-ui/src/utils/accessControl.test.ts",
-      "sha256": "0b20df0cf04f4e24848269a97376d016e22ee014924dbed2379ab0abf60afb16",
+      "sha256": "633c8a7d0f6e20eb90fdd06a18eb198731096e5b2bcbc040d78bb452311e463c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-74c667377a8a66f7",
       "path": "tdf-hq-ui/src/utils/accessControl.ts",
-      "sha256": "19e1b4b22e2f849252355a977a26be9e5bf18b09eea56391b7d3de37c4534adc",
+      "sha256": "4550fd019b3553b00074186bf7e1614e9209c97cb4c94c5a485cb1ea102536c2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19303,7 +19303,7 @@
     },
     {
       "path": "docs/discovery/community-search-navigation.md",
-      "sha256": "72fb7a10ce2d61b078b069395c582da95985b6043a09efbfbfb7cbb76ee712b3",
+      "sha256": "eb0eaa096b2e75f0d5fa7c5c2fc4d748d3e173113a031d17dbe802b23246011d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26611,7 +26611,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "bc2f3e04dfefb217cb3d76a9be4edf77a0e75ea3ea96d36ba916a346cc526c2c",
+      "sha256": "21d59861f0ab8c74fee6b38b1ce989e5ed080996d87a0e7c88365efbed28ad8a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
