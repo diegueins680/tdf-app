@@ -678,7 +678,7 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "c28667c70e40dcc18a55",
+      "replacementId": "7ca220a96b9b65a0fe15",
       "reason": "Append exactly one memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. Preserve every prior entry, introduction SHA and historical SQL byte; no delivery or deployment authorization.",
       "previousReplacementId": "3f336173e03f10fc023c",
       "currentResolution": {

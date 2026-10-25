@@ -55,13 +55,38 @@ idempotencia general de creación y medición completa de retención siguen pend
   denegación tras recarga en ambas sesiones y restauración persistida. Todo el contenido y las
   identidades son sintéticos. Se bloquearon 26 solicitudes externas. El servidor web propio
   terminó correctamente. No es una prueba de dispositivo físico ni de producción.
-- La verificación web completa, cliente móvil generado, lint, tipos, build y admisión de fuente
-  se registrarán con sus resultados finales antes de solicitar revisión.
+- Web: 3.388 pruebas en 300 suites aprobadas durante la composición; después del merge,
+  84 pruebas enfocadas en siete suites repitieron moderación, caché entre cuentas, perfil y
+  carga por cookie. Tipos, lint y build pasan (334.201 bytes gzip de JavaScript inicial).
+  La nueva prueba de caché falló primero por un texto de estado vacío incorrecto en el
+  test; se corrigió el texto esperado y se mantuvo la aserción de ausencia entre cuentas.
+- Mobile 3b455ef90df5dd54a3fe45ec0f8ad5b9e90068b4: 631 pruebas en 98 suites, tipos, lint,
+  release:check y arranque Metro /status aprobados sobre Node 20.19.4. Solo cambió el
+  contrato generado; [PR #169](https://github.com/diegueins680/TDF-mobile/pull/169),
+  apilado sobre #168. Mobile Validate 40227879953 se sigue por separado; no se cuenta
+  una ejecución en curso como aprobada.
+- Auditoría de catálogos: siete regresiones aprobadas; se conserva la cadena completa
+  de aprobaciones y fuentes del registro de migraciones. Los tres candidatos nuevos
+  corresponden al registro de ejecución, los discriminantes técnicos de acciones y los
+  estados de seguridad cerrados por SQL, revisados explícitamente.
+- quality:repo terminó satisfactoriamente. La comprobación adicional del índice detectó
+  documentación posterior sin regenerar; se regeneraron los índices y se repitieron satisfactoriamente sus
+  comprobaciones, sin omitir el control.
+
+Después de registrar las 215 migraciones, se repitieron satisfactoriamente el runner
+de invitaciones (incluida concurrencia y tres controles negativos), el runner de
+moderación (incluido control negativo) y el recorrido real HTTP/navegador: otra vez
+112 solicitudes y 15 grupos. Se retienen los nuevos [recibos HTTP](event-memory-source-evidence-20261025/http-215-results.json)
+y de [navegador](event-memory-source-evidence-20261025/browser-215-results.json), basados
+en fa468b98 con hashes de ejecución y árbol local modificado.
 
 Los [recibos HTTP](event-memory-source-evidence-20261025/http-results.json) y de
 [navegador](event-memory-source-evidence-20261025/browser-results.json) conservan los hashes
 reales de los archivos y del ejecutable. Se ejecutaron sobre el árbol local modificado basado en
 dc9fb129, no sobre un commit limpio posterior; no se cambia su identidad retrospectivamente.
+La primera prueba integrada de navegador falló porque el driver esperaba botones de
+interacciones antes de desplazar la tarjeta de carga diferida a la vista; se corrigió
+el desplazamiento del driver, sin reducir las aserciones de persistencia o permisos.
 La inspección de la API compilada es descubrimiento de tipos, no prueba de refinamiento completo.
 Capturas: [escritorio](event-memory-source-evidence-20261025/desktop.png) y
 [teléfono](event-memory-source-evidence-20261025/phone.png).
@@ -79,6 +104,12 @@ participación profesional y tres por RSVP, con un solapamiento. No hay entradas
 verificadas ni preferencias recogidas para esta campaña. No hay un total de destinatarios
 consentidos acreditado. Invitaciones reales intentadas/enviadas/entregadas/fallidas: **0/0/0/0**.
 No se deduce una cifra de exclusiones definitivas a partir de relaciones o pruebas sintéticas.
+
+La [lectura pública de las 19:52 UTC](event-memory-source-evidence-20261025/production-public-read-only.json)
+confirmó HTTPS 200 para la página, health y version, con DB ok y API todavía 4dac175d.
+Esto prueba disponibilidad y versión, no publicación productiva ni autenticación.
+El lector web remoto no accedió al sitio y el Python local no encontraba su CA;
+la comprobación posterior utilizó curl del sistema con validación TLS activa.
 
 ## Integración y siguientes pasos
 

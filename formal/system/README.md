@@ -400,3 +400,5 @@ The [release intent journal](release-journal.md) orders durable operations and r
 uncertain replay. It remains a library, not a guarded production executor.
 
 Catalog refresh must preserve historical retirement records and their original review evidence. `scripts/build-catalog-decisions.mjs` recomputes discovery counters while retaining reconciliation provenance. Source-specific decisions that require preservation use an explicit successor review method with hash-verified immutable ancestor references, so a deterministic-policy refresh cannot silently replace their priority or rationale. This is review-provenance preservation, not new product or release authority; `SYS-TRACE-001` maps its regression check.
+
+Event-memory source moderation: [contract and verification limits](event-memory-moderation.md).

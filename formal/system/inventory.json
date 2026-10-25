@@ -3214,7 +3214,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "721d52e565391e0c87e802bb0756d28322af1a6770899760139a2b24b677844e",
+      "sha256": "424508b89a5f41531a87c6aadbb069edac4f750803a97df23d29c619e7b0f5d8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26079,7 +26079,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "ed151864cf34bfed35960b92b9d695696c2df0c7192c023debdee804503a4b90",
+      "sha256": "f519560602261606f4c26231f76d473ffca5e15691f1e24f05990512b9879566",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
