@@ -56,3 +56,15 @@ browser/API/disposable PostgreSQL rehearsal. Preserve pre-fix reproduction and
 exact source identities. Protected checks, independent review, integration and
 exact deployed-version verification remain separate gates. Human consent and
 pilot targets remain unverified; automated fixtures never count as participants.
+
+
+Same-party draft preservation: local interactive adoption reconciles the previous
+party directly to the authenticated party; its synchronous notification must not
+insert an anonymous personal-data cleanup between those two states. Remote unseen
+revisions still discard the old scope. A guarded noninteractive role refresh uses
+`refreshExistingSession` only for the current party and unchanged bearer, with no
+active logout intent. Artist activation and owned invitation redemption use this
+path. It advances the local cache/auth epoch but does not publish a new credential
+revision or clear that party's buyer/booking drafts. A refresh cannot cross party,
+token or explicit-logout boundaries. Different-party login and logout continue to
+remove personal data through the existing reconciler.

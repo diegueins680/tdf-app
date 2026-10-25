@@ -11811,7 +11811,8 @@
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
         "tdf-hq-ui/src/api/logoutIntent.test.ts",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-        "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx"
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx"
       ],
       "formalModels": [],
       "verification": "Revision, storage, bootstrap, unsigned transport, XHR refusal and deadline regression controls; native optimized browser with actual API and disposable PostgreSQL.",

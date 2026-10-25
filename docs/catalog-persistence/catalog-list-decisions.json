@@ -374,7 +374,8 @@
     "logoutIntent20261025": {
       "sourceMain": "b732efd65de23e5b97f3f619a2242397c64965c3",
       "reviewedIds": [
-        "0c91e00629e658db782f"
+        "0c91e00629e658db782f",
+        "f99008422acf37ce04d4"
       ],
       "reason": "Add only the scoped logout protocol classification; preserve every existing reviewed decision and audit rule unchanged."
     }
@@ -18085,6 +18086,27 @@
           "pending",
           "unconfirmed",
           "confirmed"
+        ],
+        "contract": "formal/system/logout-intent.md"
+      }
+    },
+    {
+      "id": "f99008422acf37ce04d4",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "session_role_refresh_fixture",
+      "priority": "P3-consumer",
+      "risk": "A synthetic role fixture must never become an independent production grant source.",
+      "justification": "Reviewed Customer-to-Artist grant fixture used only by same-party draft-preservation tests. It consumes the existing backend role registry and does not define, seed or extend production privileges.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
+        "line": 116,
+        "name": "roles",
+        "kind": "array",
+        "values": [
+          "Customer",
+          "Artist"
         ],
         "contract": "formal/system/logout-intent.md"
       }

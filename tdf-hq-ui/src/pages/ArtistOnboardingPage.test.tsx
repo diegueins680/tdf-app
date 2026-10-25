@@ -52,7 +52,7 @@ it('activates a customer profile immediately, refreshes server roles and opens t
   await screen.findByText('Editor de artista');
   expect(activate).toHaveBeenCalledTimes(1);
   expect(get).toHaveBeenCalledWith('/session');
-  expect(login).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42, roles: ['Customer', 'Artist'] }), { remember: false });
+  expect(login).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42, roles: ['Customer', 'Artist'] }), { remember: false, refreshExistingSession: true });
 });
 
 it('keeps the user on the activation screen when activation fails', async () => {
@@ -111,7 +111,7 @@ it('opens the persisted artist profile when optional session storage is inaccess
   jest.spyOn(window, 'sessionStorage', 'get').mockImplementation(() => { throw new DOMException('denied', 'SecurityError'); });
   fireEvent.click(screen.getByRole('button', { name: 'Crear mi perfil de artista' }));
   await screen.findByText('Editor de artista');
-  expect(login).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42 }), { remember: false });
+  expect(login).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42 }), { remember: false, refreshExistingSession: true });
 });
 
 it('rejects a stale activation result after credential rotation in the same account', async () => {

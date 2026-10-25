@@ -75,6 +75,7 @@ export default function ArtistOnboardingPage() {
       }
       login({ ...refreshed, apiToken: session.apiToken }, {
         remember,
+        refreshExistingSession: true,
       });
       navigate('/mi-artista');
     } catch (error) {

@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-25T22:17:08.606Z",
+  "generatedAt": "2026-10-25T23:01:56.290Z",
   "repositoryRoot": ".",
   "filesScanned": 2360,
-  "candidateCount": 1328,
+  "candidateCount": 1329,
   "byClassification": {
     "dynamic-business-catalog": 855,
     "genuine-technical-constant": 70,
     "governed-reference-data": 141,
-    "security-system-registry": 262
+    "security-system-registry": 263
   },
   "exactDuplicateGroupCount": 181,
   "normalizedVariantGroupCount": 155,
@@ -461,6 +461,7 @@
             "b4b329b8f1bf9f1258b8",
             "baf5675444c0fb967e29",
             "fc9f1413160cca112f78",
+            "f99008422acf37ce04d4",
             "fffe489557d71ad441fc",
             "c7c31a11cdb3859ae4bb",
             "e3c566bd60e870870833",
@@ -1106,6 +1107,7 @@
             "baf5675444c0fb967e29",
             "6b0f9200bf15b9d594aa",
             "fc9f1413160cca112f78",
+            "f99008422acf37ce04d4",
             "fffe489557d71ad441fc",
             "a22d4b7eac114d151867",
             "c7c31a11cdb3859ae4bb",
@@ -7697,7 +7699,7 @@
       "lines": [
         56
       ],
-      "consumerCount": 173,
+      "consumerCount": 174,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-04_academy.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -10311,6 +10313,7 @@
         "6b0f9200bf15b9d594aa",
         "fc9f1413160cca112f78",
         "5f6121ec577c7f085591",
+        "f99008422acf37ce04d4",
         "a22d4b7eac114d151867",
         "0fc81941ff36df3bb206",
         "63a1d7ad2f5cd665a512",
@@ -12065,7 +12068,7 @@
       "lines": [
         85
       ],
-      "consumerCount": 132,
+      "consumerCount": 133,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -12167,8 +12170,8 @@
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.test.ts",
-        "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts",
-        "tdf-hq-ui/src/utils/__tests__/roles.test.ts"
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
+        "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts",
@@ -21534,12 +21537,14 @@
       "exactDuplicateIds": [
         "baf5675444c0fb967e29",
         "fc9f1413160cca112f78",
-        "5f6121ec577c7f085591"
+        "5f6121ec577c7f085591",
+        "f99008422acf37ce04d4"
       ],
       "similarCandidateIds": [
         "baf5675444c0fb967e29",
         "fc9f1413160cca112f78",
         "5f6121ec577c7f085591",
+        "f99008422acf37ce04d4",
         "c62ad0035039293adf89"
       ]
     },
@@ -26181,7 +26186,7 @@
       "lines": [
         39
       ],
-      "consumerCount": 48,
+      "consumerCount": 49,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -26224,6 +26229,7 @@
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts"
@@ -34132,7 +34138,7 @@
       "lines": [
         49
       ],
-      "consumerCount": 120,
+      "consumerCount": 121,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-04_academy.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -34217,6 +34223,7 @@
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts",
@@ -35982,7 +35989,7 @@
       "lines": [
         212
       ],
-      "consumerCount": 132,
+      "consumerCount": 133,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -36083,9 +36090,9 @@
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.test.ts",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts",
-        "tdf-hq-ui/src/utils/__tests__/roles.test.ts",
-        "tdf-hq-ui/src/utils/accessControl.test.ts"
+        "tdf-hq-ui/src/utils/__tests__/roles.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts",
@@ -45120,12 +45127,14 @@
       "exactDuplicateIds": [
         "b4b329b8f1bf9f1258b8",
         "fc9f1413160cca112f78",
-        "5f6121ec577c7f085591"
+        "5f6121ec577c7f085591",
+        "f99008422acf37ce04d4"
       ],
       "similarCandidateIds": [
         "b4b329b8f1bf9f1258b8",
         "fc9f1413160cca112f78",
         "5f6121ec577c7f085591",
+        "f99008422acf37ce04d4",
         "c62ad0035039293adf89"
       ]
     },
@@ -55887,7 +55896,7 @@
       "lines": [
         45
       ],
-      "consumerCount": 151,
+      "consumerCount": 152,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-11-04_academy.sql",
@@ -55974,6 +55983,7 @@
         "tdf-hq-ui/src/pages/ServiceTypesPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/pages/UxOptionsPage.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/__tests__/serviceTypesStore.test.ts",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
@@ -56079,7 +56089,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 107,
+      "consumerCount": 108,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-04_academy.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -56153,6 +56163,7 @@
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts",
@@ -56240,7 +56251,7 @@
       "lines": [
         283
       ],
-      "consumerCount": 113,
+      "consumerCount": 114,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-04_academy.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -56317,6 +56328,7 @@
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts",
@@ -56642,11 +56654,13 @@
       "exactDuplicateIds": [
         "b4b329b8f1bf9f1258b8",
         "baf5675444c0fb967e29",
-        "5f6121ec577c7f085591"
+        "5f6121ec577c7f085591",
+        "f99008422acf37ce04d4"
       ],
       "similarCandidateIds": [
         "b4b329b8f1bf9f1258b8",
         "baf5675444c0fb967e29",
+        "f99008422acf37ce04d4",
         "c62ad0035039293adf89"
       ]
     },
@@ -57070,11 +57084,13 @@
       "exactDuplicateIds": [
         "b4b329b8f1bf9f1258b8",
         "baf5675444c0fb967e29",
-        "fc9f1413160cca112f78"
+        "fc9f1413160cca112f78",
+        "f99008422acf37ce04d4"
       ],
       "similarCandidateIds": [
         "b4b329b8f1bf9f1258b8",
         "baf5675444c0fb967e29",
+        "f99008422acf37ce04d4",
         "c62ad0035039293adf89"
       ]
     },
@@ -58744,7 +58760,7 @@
         198,
         213
       ],
-      "consumerCount": 293,
+      "consumerCount": 294,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -58821,6 +58837,7 @@
         "tdf-hq-ui/src/api/inventory.upload.test.ts",
         "tdf-hq-ui/src/api/liveSessions.test.ts",
         "tdf-hq-ui/src/api/liveSessions.ts",
+        "tdf-hq-ui/src/api/logoutIntent.test.ts",
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
@@ -58846,8 +58863,7 @@
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
-        "tdf-hq-ui/src/pages/MerchAdminPage.test.tsx"
+        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/auth.tsx",
@@ -58936,6 +58952,7 @@
         "tdf-hq-ui/src/api/inventory.upload.test.ts",
         "tdf-hq-ui/src/api/liveSessions.test.ts",
         "tdf-hq-ui/src/api/liveSessions.ts",
+        "tdf-hq-ui/src/api/logoutIntent.test.ts",
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
@@ -70837,7 +70854,7 @@
       "domain": "studio-services-booking",
       "kind": "literal-union",
       "name": "SessionStorageScope",
-      "line": 28,
+      "line": 29,
       "values": [
         "local",
         "session"
@@ -70845,7 +70862,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        28
+        29
       ],
       "consumerCount": 53,
       "backendConsumers": [
@@ -70924,6 +70941,219 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
+    },
+    {
+      "id": "f99008422acf37ce04d4",
+      "file": "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
+      "sourceKind": "test",
+      "surface": "web",
+      "domain": "security-authorization",
+      "kind": "array",
+      "name": "roles",
+      "line": 116,
+      "values": [
+        "Customer",
+        "Artist"
+      ],
+      "valueCount": 2,
+      "recommendedClassification": "security-system-registry",
+      "lines": [
+        116
+      ],
+      "consumerCount": 196,
+      "backendConsumers": [
+        "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/user-roles.yaml",
+        "tdf-hq/sql/001_multi_role_migration.sql",
+        "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
+        "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
+        "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
+        "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
+        "tdf-hq/sql/2026-08-14_music_directory_backfill_apply.sql",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql",
+        "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
+        "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+        "tdf-hq/sql/2026-09-14_artist_invitation_auto_approval.sql",
+        "tdf-hq/sql/preflight_security_emergency_readiness.sql",
+        "tdf-hq/src/TDF/API/Catalog.hs",
+        "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/src/TDF/Artists/Enrichment.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/FeatureRegistry.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/Seed.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
+        "tdf-hq/src/TDF/ServerFuture.hs",
+        "tdf-hq/src/TDF/ServerInternAudit.hs",
+        "tdf-hq/src/TDF/ServerInternships.hs",
+        "tdf-hq/src/TDF/UserActivity.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
+        "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
+        "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
+        "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
+        "tdf-hq/test/TDF/Operations/ModelSpec.hs",
+        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
+        "tdf-hq-ui/src/analytics/posthog.ts",
+        "tdf-hq-ui/src/api/admin.ts",
+        "tdf-hq-ui/src/api/auth.test.ts",
+        "tdf-hq-ui/src/api/generated/client.test.ts",
+        "tdf-hq-ui/src/api/generated/client.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/liveSessions.test.ts",
+        "tdf-hq-ui/src/api/session.test.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
+        "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx",
+        "tdf-hq-ui/src/components/SessionMenu.tsx",
+        "tdf-hq-ui/src/components/SidebarNav.test.tsx",
+        "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/components/TopBar.test.tsx",
+        "tdf-hq-ui/src/components/TopBar.tsx",
+        "tdf-hq-ui/src/components/UserRoleManagement.test.tsx",
+        "tdf-hq-ui/src/components/UserRoleManagement.tsx",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
+        "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
+        "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
+        "tdf-hq-ui/src/pages/AdminTokenPage.tsx",
+        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
+        "tdf-hq-ui/src/pages/AdminUsersPage.tsx",
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/BrainAdminPage.test.tsx",
+        "tdf-hq-ui/src/pages/CalendarSyncPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
+        "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
+        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
+        "tdf-hq-ui/src/pages/FanClubPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/app/(tabs)/create.tsx",
+        "tdf-mobile/app/(tabs)/more.tsx",
+        "tdf-mobile/app/_layout.tsx",
+        "tdf-mobile/app/access-requests/index.tsx",
+        "tdf-mobile/app/access-requests/new.tsx",
+        "tdf-mobile/app/access-requests/review.tsx",
+        "tdf-mobile/app/auth.tsx",
+        "tdf-mobile/app/ddex/document/[id].tsx",
+        "tdf-mobile/app/ddex/index.tsx",
+        "tdf-mobile/app/ddex/partners.tsx",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/api/parties.ts",
+        "tdf-mobile/src/api/types.ts",
+        "tdf-mobile/src/components/PartySelector.tsx",
+        "tdf-mobile/src/features/featureRegistry.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "tdf-mobile/src/lib/onboardingIntent.ts",
+        "tdf-mobile/src/providers/AuthProvider.tsx",
+        "tdf-mobile/src/providers/AuthQueryProviders.tsx"
+      ],
+      "automationConsumers": [
+        "scripts/__tests__/app-routes-auth-implementation.test.mjs",
+        "scripts/__tests__/artist-enrichment.test.mjs",
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/build-catalog-decisions.mjs",
+        "scripts/capture-feature-audit-visuals.mjs",
+        "scripts/capture-music-directory-visuals.mjs",
+        "scripts/fixtures/merch-reputation-mobile.mjs",
+        "scripts/generate-feature-audit-reports.mjs",
+        "scripts/persona-test-program.mjs",
+        "scripts/social/FanEffectsSpec.hs",
+        "scripts/social/RelationshipReadSpec.hs",
+        "scripts/specification-conformance.py",
+        "scripts/test-auth-predicates.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/test-contextual-reputation-worker-migration.sh",
+        "scripts/test-hetzner-backup.py",
+        "scripts/test-hetzner-restore.py",
+        "scripts/test-music-directory-migration.sh",
+        "scripts/test-music-release-api-e2e.sh",
+        "scripts/test-specification-conformance.py",
+        "scripts/test-studio-internship-audit-api-e2e.mjs",
+        "scripts/ux-audit-inventory.mjs",
+        "scripts/verify-auth-predicates.py"
+      ],
+      "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/admin.ts",
+        "tdf-hq-ui/src/api/auth.test.ts",
+        "tdf-hq-ui/src/api/generated/client.test.ts",
+        "tdf-hq-ui/src/api/generated/client.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/liveSessions.test.ts",
+        "tdf-hq-ui/src/api/session.test.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/user-roles.yaml",
+        "tdf-hq/src/TDF/API/Catalog.hs",
+        "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
+        "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
+        "tdf-mobile/app/ddex/document/[id].tsx",
+        "tdf-mobile/app/ddex/index.tsx",
+        "tdf-mobile/app/ddex/partners.tsx",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/api/parties.ts",
+        "tdf-mobile/src/api/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "decision": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "session_role_refresh_fixture",
+      "priority": "P3-consumer",
+      "risk": "A synthetic role fixture must never become an independent production grant source.",
+      "justification": "Reviewed Customer-to-Artist grant fixture used only by same-party draft-preservation tests. It consumes the existing backend role registry and does not define, seed or extend production privileges.",
+      "exactDuplicateIds": [
+        "b4b329b8f1bf9f1258b8",
+        "baf5675444c0fb967e29",
+        "fc9f1413160cca112f78",
+        "5f6121ec577c7f085591"
+      ],
+      "similarCandidateIds": [
+        "b4b329b8f1bf9f1258b8",
+        "baf5675444c0fb967e29",
+        "fc9f1413160cca112f78",
+        "5f6121ec577c7f085591",
+        "c62ad0035039293adf89"
+      ]
     },
     {
       "id": "cbb868acd1046cb25bc0",
@@ -71843,7 +72073,7 @@
       "lines": [
         93
       ],
-      "consumerCount": 156,
+      "consumerCount": 157,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -72510,7 +72740,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 132,
+      "consumerCount": 133,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -72612,8 +72842,8 @@
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.test.ts",
-        "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts",
-        "tdf-hq-ui/src/utils/__tests__/roles.test.ts"
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
+        "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts",
@@ -72891,7 +73121,7 @@
       "lines": [
         29
       ],
-      "consumerCount": 87,
+      "consumerCount": 88,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-04_academy.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -72952,6 +73182,7 @@
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts",
         "tdf-hq-ui/src/utils/media.ts"
@@ -73988,7 +74219,7 @@
       "lines": [
         41
       ],
-      "consumerCount": 170,
+      "consumerCount": 171,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-04_academy.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -74554,7 +74785,7 @@
       "lines": [
         45
       ],
-      "consumerCount": 98,
+      "consumerCount": 99,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-04_academy.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -74622,6 +74853,7 @@
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/StudentCreationDialogs.test.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/media.ts"
@@ -75090,7 +75322,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 105,
+      "consumerCount": 106,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2025-11-04_academy.sql",
@@ -75167,6 +75399,7 @@
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/queue.ts",
         "tdf-hq-ui/src/player/types.ts",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts"
@@ -81264,7 +81497,7 @@
       "lines": [
         14211
       ],
-      "consumerCount": 342,
+      "consumerCount": 343,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/docs/openapi/user-roles.yaml",
@@ -81886,7 +82119,7 @@
       "lines": [
         15222
       ],
-      "consumerCount": 535,
+      "consumerCount": 536,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -86017,7 +86250,7 @@
       "lines": [
         632
       ],
-      "consumerCount": 150,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-04_academy.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -86111,6 +86344,7 @@
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts",
@@ -86962,7 +87196,7 @@
       "lines": [
         5
       ],
-      "consumerCount": 99,
+      "consumerCount": 100,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -87029,6 +87263,7 @@
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts",
@@ -100165,7 +100400,7 @@
       "lines": [
         119
       ],
-      "consumerCount": 101,
+      "consumerCount": 102,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-04_academy.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -100238,6 +100473,7 @@
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts",
@@ -100858,7 +101094,7 @@
       "lines": [
         275
       ],
-      "consumerCount": 150,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-04_academy.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -100952,6 +101188,7 @@
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts",
@@ -101812,7 +102049,7 @@
       "lines": [
         379
       ],
-      "consumerCount": 113,
+      "consumerCount": 114,
       "backendConsumers": [
         "tdf-hq/sql/001_multi_role_migration.sql",
         "tdf-hq/sql/002_party_booking_enhancements.sql",
@@ -101885,6 +102122,7 @@
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts",
         "tdf-hq-ui/src/session/onboardingIntentRecovery.ts",
         "tdf-hq-ui/src/utils/inventoryCheckout.ts",
@@ -106868,7 +107106,7 @@
       "lines": [
         135
       ],
-      "consumerCount": 96,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -106941,6 +107179,7 @@
         "tdf-hq-ui/src/pages/UserActivityPage.tsx",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
@@ -107208,7 +107447,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 96,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -107281,6 +107520,7 @@
         "tdf-hq-ui/src/pages/UserActivityPage.tsx",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
@@ -108988,7 +109228,7 @@
       "lines": [
         133
       ],
-      "consumerCount": 96,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -109061,6 +109301,7 @@
         "tdf-hq-ui/src/pages/UserActivityPage.tsx",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
@@ -109845,7 +110086,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 96,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -109918,6 +110159,7 @@
         "tdf-hq-ui/src/pages/UserActivityPage.tsx",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
@@ -110327,7 +110569,7 @@
       "lines": [
         68
       ],
-      "consumerCount": 71,
+      "consumerCount": 72,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -110384,6 +110626,7 @@
         "tdf-hq-ui/src/pages/UserActivityPage.tsx",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
@@ -111255,7 +111498,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 96,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -111328,6 +111571,7 @@
         "tdf-hq-ui/src/pages/UserActivityPage.tsx",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
@@ -111893,7 +112137,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 96,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -111966,6 +112210,7 @@
         "tdf-hq-ui/src/pages/UserActivityPage.tsx",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
@@ -127943,7 +128188,7 @@
       "lines": [
         176
       ],
-      "consumerCount": 97,
+      "consumerCount": 98,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -128016,6 +128261,7 @@
         "tdf-hq-ui/src/pages/UserActivityPage.tsx",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
@@ -139404,7 +139650,7 @@
       "lines": [
         90
       ],
-      "consumerCount": 58,
+      "consumerCount": 59,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -139455,6 +139701,7 @@
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts"
@@ -143131,7 +143378,7 @@
       "lines": [
         156
       ],
-      "consumerCount": 98,
+      "consumerCount": 99,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-04_academy.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -143198,6 +143445,7 @@
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.ts",
@@ -145416,7 +145664,7 @@
       "lines": [
         204
       ],
-      "consumerCount": 20,
+      "consumerCount": 21,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -145435,6 +145683,7 @@
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
         "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts"
       ],
@@ -145505,7 +145754,7 @@
       "lines": [
         871
       ],
-      "consumerCount": 48,
+      "consumerCount": 49,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -145545,6 +145794,7 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.test.ts",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/__tests__/roles.test.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts"
@@ -151748,7 +151998,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 132,
+      "consumerCount": 133,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -151850,8 +152100,8 @@
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.test.ts",
-        "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts",
-        "tdf-hq-ui/src/utils/__tests__/roles.test.ts"
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
+        "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts",
@@ -154210,7 +154460,7 @@
       "lines": [
         5551
       ],
-      "consumerCount": 74,
+      "consumerCount": 75,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -154270,6 +154520,7 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.test.ts",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/__tests__/roles.test.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts"
@@ -154339,7 +154590,7 @@
         5582,
         5590
       ],
-      "consumerCount": 72,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -154399,6 +154650,7 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.test.ts",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/__tests__/roles.test.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts"
@@ -155819,7 +156071,7 @@
       "lines": [
         10800
       ],
-      "consumerCount": 74,
+      "consumerCount": 75,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -155879,6 +156131,7 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.test.ts",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/__tests__/roles.test.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts"
@@ -155946,7 +156199,7 @@
         10815,
         10823
       ],
-      "consumerCount": 72,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -156006,6 +156259,7 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.test.ts",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/__tests__/roles.test.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts"
@@ -156072,7 +156326,7 @@
         11160,
         11252
       ],
-      "consumerCount": 75,
+      "consumerCount": 76,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -156133,6 +156387,7 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.test.ts",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/__tests__/roles.test.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts"
@@ -156203,7 +156458,7 @@
         11262,
         11271
       ],
-      "consumerCount": 73,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -156264,6 +156519,7 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/session/SessionContext.test.ts",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
         "tdf-hq-ui/src/utils/__tests__/roles.test.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts"

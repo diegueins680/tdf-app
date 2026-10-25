@@ -883,7 +883,7 @@ export default function LoginPage() {
           modules: snapshot.modules,
           partyId: snapshot.partyId,
           apiToken: session.apiToken,
-        }, { remember: rememberDevice });
+        }, { remember: rememberDevice, refreshExistingSession: true });
       })
       .catch((error: unknown) => {
         setInvitationRedemptionError(

@@ -23,6 +23,7 @@ export interface SessionUser {
 
 export interface LoginOptions {
   remember?: boolean;
+  refreshExistingSession?: boolean;
 }
 
 type SessionStorageScope = 'local' | 'session';
@@ -222,6 +223,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const [loading, setLoading] = useState(true);
   const [persistScope, setPersistScope] = useState<SessionStorageScope>(initialStoredState.scope);
   const sessionVersionRef = useRef(0);
+  const adoptingLocalSession = useRef(false);
   const pendingLogoutTarget = useRef<{ revision: string; token: string | null } | null>(null);
 
   const updateSessionState = useCallback((next: SessionUser | null) => {
@@ -261,7 +263,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
       // A different document may already have cleared its logout intent by
       // logging in again before this tab receives either storage event. Any
       // unseen auth revision invalidates our old account/cache occurrence.
-      if (next !== revision) clearLocalSessionState();
+      if (next !== revision && !adoptingLocalSession.current) clearLocalSessionState();
       revision = next;
     });
   }, [clearLocalSessionState]);
@@ -331,12 +333,25 @@ export function SessionProvider({ children }: SessionProviderProps) {
   }, [clearLocalSessionState, updateSessionState]);
 
   const login = useCallback((user: SessionUser, options?: LoginOptions) => {
-    clearLogoutIntent();
+    const next = normalizeSessionUser(user);
+    if (options?.refreshExistingSession) {
+      // Role grants do not create another credential occurrence. Keep the
+      // current party's drafts and do not log out its other tabs.
+      if (hasLogoutIntent() || currentSession?.partyId == null
+        || next.partyId !== currentSession.partyId
+        || normalizeApiToken(next.apiToken) !== normalizeApiToken(currentSession.apiToken)) return;
+    } else {
+      // This document adopts the authenticated result below. Remote revisions
+      // still invalidate their old scopes; never reconcile through null here.
+      adoptingLocalSession.current = true;
+      try { clearLogoutIntent(); } finally { adoptingLocalSession.current = false; }
+    }
+    pendingLogoutTarget.current = null;
     sessionVersionRef.current += 1;
     advanceAuthSessionEpoch();
     setPersistScope(options?.remember === false ? 'session' : 'local');
     setLoading(false);
-    updateSessionState(normalizeSessionUser(user));
+    updateSessionState(next);
     transientApiToken = null;
   }, [updateSessionState]);
 
