@@ -54,6 +54,8 @@ import Servant.Multipart (
  )
 import System.FilePath (takeExtension)
 
+import TDF.Server.TicketPaymentReceipt (TicketPaymentReceipt)
+
 import TDF.API.EventResearchAPI (EventResearchRoutes)
 
 import TDF.DTO.SocialEventsDTO (
@@ -526,6 +528,9 @@ type TicketsRoutes =
             :> "review"
             :> ReqBody '[JSON] TicketManualPaymentReviewDTO
             :> Post '[JSON] TicketManualPaymentDTO
+        :<|> "events" :> Capture "eventId" Text :> "ticket-orders"
+            :> Capture "orderId" Text :> "manual-payment" :> "receipt"
+            :> Get '[JSON] (Headers '[Header "Cache-Control" Text] TicketPaymentReceipt)
         -- SRI electronic invoices
         :<|> "events" :> Capture "eventId" Text :> "tax-documents" :> Get '[JSON] [TicketTaxDocumentDTO]
         :<|> "events" :> Capture "eventId" Text :> "tax-documents" :> Capture "documentId" Text :> "retry" :> Post '[JSON] [TicketTaxDocumentDTO]
