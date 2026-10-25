@@ -50,7 +50,7 @@ Dentro de cada categoría, cada dimensión puntúa de 0 a 5:
 Los pesos son una decisión de producto documentada. A/G/V/J/C/R/T son estimaciones
 ordinales revisables. Ninguna puntuación equivale a ROI ni a mejora medida de
 conversión. Las puntuaciones siguientes usan la evidencia disponible antes de la
-reparación nueva, excepto la evidencia del borrador propio, actualizada de3a5
+reparación nueva, excepto la evidencia del borrador propio, actualizada de 3 a 5
 tras controles negativos y ejecución descartable (85→91).
 
 | Orden | Trabajo existente o nuevo | Categoría | A/G/V/J/E/C/R/T | P | Estado y acción |
@@ -214,7 +214,7 @@ y permite avanzar al siguiente candidato seguro.
   reutilizado con árbol de fuentes equivalente; no es una nueva compilación
   identificada por el candidato. Cambio de cuenta en el mismo montaje cubierto
   separadamente por Jest. Build productivo pasa (334201 bytes gzip, 5 preloads).
-- Lint, build, calidad general del repositorio y catálogo estricto1326 pasan; suite web completa:3350pruebas/297suitesPASS, salida0 (507,685s). Estados finales y recibos se
+- Lint, build, calidad general del repositorio y catálogo estricto 1326 pasan; suite web completa: 3350 pruebas / 297 suites PASS, salida 0 (507,685s). Estados finales y recibos se
   mantienen en `reports/user-value-completion-2026-10-25.json`.
 - Beneficio observado: conservación de perfiles y recuperación en entorno
   descartable. No se afirma disponibilidad productiva ni mejora de conversión.
@@ -242,15 +242,20 @@ consentimiento/adaptadores; alertas aparece como siguiente investigación ejecut
 por esa elegibilidad, sin alterar el orden numérico ni prometer cierre completo
 de #534. La corrección del PR #586 ya fusionado no cubre este matcher.
 
-Observación pública25/oct08:25UTC: web `a1dcb77` (asset
+Observación pública25/oct 08:25 UTC: web `a1dcb77` (asset
 `index-B4Qx1_LC.js`, SHA256
 `e1f64cc56405d415385f006340d50016cd28af14e2af5c6c922838a09becac80`),
 API `4dac175d`, health y DB `ok`. La reparación de perfiles todavía no está
-integrada ni desplegada. Recibo de solo lectura en el informeJSON.
+integrada ni desplegada. Recibo de solo lectura en el informe JSON.
 
-Cierre local:3350pruebas/297suites webPASS, lint/tipos/buildPASS,
-quality:repoPASS y catálogo estricto1326PASS. Los136requisitos anteriores se
+Cierre local: 3350 pruebas / 297 suites web PASS, lint/tipos/build PASS,
+quality:repo PASS y catálogo estricto 1326PASS. Los 136 requisitos anteriores se
 conservan campo por campo y se añade `COMMUNITY-PROFILE-001`; se regenera
 inventario y trazabilidad sin afirmar prueba matemática. Revisión local
-independiente sin hallazgos materiales. La revisión deGitHub del headfinal,
+independiente sin hallazgos materiales. La revisión de GitHub del commit definitivo,
 los gates hospedados, la admisión FIFO, el merge y el despliegue siguen pendientes.
+
+Entrega en revisión: [PR #607](https://github.com/diegueins680/tdf-app/pull/607),
+rama `fix/artist-profile-load-safety-20261025`. El incremento mantiene estado
+PARTIAL hasta completar revisión independiente, CI, admisión FIFO, merge y
+verificación desplegada. Auto-merge desactivado; no cambia las reglas ni la cola.

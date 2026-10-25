@@ -28,10 +28,10 @@
     ],
     "expectedBenefit": "Prevent unintended field erasure and copying profile drafts across accounts; allow recovery after a failed read.",
     "observedBenefit": "En escritorio y Pixel7, las lecturas pendientes/fallidas no producen PUT ni alteran los perfiles; el reintento permite guardar solo la ciudad y conserva todos los demás campos. Beneficio productivo aún no observado.",
-    "implementationStatus": "IMPLEMENTED_LOCALLY",
+    "implementationStatus": "PR_PUBLISHED",
     "validationStatus": "LOCAL_CHECKS_PASS_HOSTED_AND_REVIEW_PENDING",
-    "pullRequest": null,
-    "mergeStatus": "NOT_MERGED",
+    "pullRequest": "https://github.com/diegueins680/tdf-app/pull/607",
+    "mergeStatus": "NOT_MERGED_REQUIRED_REVIEW_CI_AND_FIFO",
     "productionStatus": "NOT_DEPLOYED",
     "scope": "Web form ownership and load-state guard; preserve API/server authorization and historical migrations.",
     "risksAndDependencies": [
@@ -40,7 +40,12 @@
       "No universal transaction-fenced session revocation or cross-device optimistic edit fence is claimed.",
       "Production benefit and conversion uplift remain unobserved."
     ],
-    "branch": "fix/artist-profile-load-safety-20261025"
+    "branch": "fix/artist-profile-load-safety-20261025",
+    "codeChanges": [
+      "Shared useOwnedProfileDraft for successful-read baseline and account generation.",
+      "Artist and fan form/handler save guards and explicit read retry.",
+      "Captured save/upload callbacks and preservation of dirty drafts across background reads."
+    ]
   },
   "historicalMeasurement": {
     "window": "2026-10-12/2026-10-18",
@@ -156,9 +161,13 @@
       "requirementAdded": "COMMUNITY-PROFILE-001",
       "preExistingRequirementsPreservedExactly": 136,
       "scope": "Structural discovery, bidirectional traceability and source admission; no full implementation correctness proof."
+    },
+    "sourceAdmission": {
+      "status": "PASS",
+      "receipt": "/private/tmp/tdf-profile-safety-source-admission-20261025.json"
     }
   },
-  "updatedAt": "2026-10-25T08:27:38.253615+00:00",
+  "updatedAt": "2026-10-25T08:28:56.951248+00:00",
   "publicObservation": {
     "observedAt": "2026-10-25T08:25:38.806824+00:00",
     "readOnly": true,
