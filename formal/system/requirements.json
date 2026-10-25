@@ -5676,7 +5676,7 @@
       "id": "PRIV-ANALYTICS-001",
       "title": "Private navigation and credentials are excluded at analytics serialization",
       "domain": "PRIV",
-      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client. Ordinary scalar campaign labels remain intact; recognized URL properties and HTTP(S)/tdf URLs retain URL sanitization.",
+      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client. Ordinary scalar campaign labels remain intact; recognized URL properties and HTTP(S)/tdf URLs retain URL sanitization. Application failure diagnostics redact error names/messages and selected context fields before console or analytics delivery; raw Error objects and complete location URLs are not passed to native exception capture, and caller context cannot override the core diagnostic envelope.",
       "authority": "AUTHORITY-042; accepted main PR487 privacy consolidation and docs/analytics.md; preserved #468/#485 correspondence",
       "source": "docs/analytics.md; #485 reviewed privacy corrections",
       "contract": "formal/system/web-cutover-correspondence.md",
@@ -5733,10 +5733,13 @@
       "recovery": "Do not replay customer payloads through logs. Change configuration only through the supported release/consent workflow.",
       "observability": "Tests inspect synthetic serialized payloads and fixed warnings; production receipt requires separately verified provider evidence.",
       "implementation": [
-        "tdf-hq-ui/src/analytics/posthog.ts"
+        "tdf-hq-ui/src/analytics/posthog.ts",
+        "tdf-hq-ui/src/analytics/errorReporting.ts",
+        "tdf-hq-ui/src/components/RouteErrorBoundary.tsx"
       ],
       "tests": [
-        "tdf-hq-ui/src/__tests__/analytics.test.ts"
+        "tdf-hq-ui/src/__tests__/analytics.test.ts",
+        "tdf-hq-ui/src/analytics/errorReporting.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -5750,7 +5753,7 @@
         "reason": "Incoming reviewed main implementation has mapped deterministic examples; fresh combined-candidate execution and deployed analytics configuration/consent correspondence remain required."
       },
       "property": "Named sensitive payloads do not survive recognized serializer boundaries; public attribution and configured project token remain usable.",
-      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof.",
+      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof. Synthetic client-error and actual route-boundary tests cover raw-error exclusion, embedded URL sentinels, selected context, throwing getters and console failure; scope and exclusions are in formal/system/client-error-privacy.md.",
       "evidence": "Exact-candidate UI gate; original main PR487 validation is historical for subsequent merged trees."
     },
     {
@@ -8846,7 +8849,8 @@
         "tdf-hq-ui/src/routes/AppErrorBoundary.tsx",
         "tdf-hq-ui/src/utils/lazyWithReload.ts",
         "tdf-hq-ui/src/api/session.ts",
-        "tdf-hq-ui/src/session/SessionContext.tsx"
+        "tdf-hq-ui/src/session/SessionContext.tsx",
+        "tdf-hq-ui/src/components/RouteErrorBoundary.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
