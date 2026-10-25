@@ -71,11 +71,6 @@
       ]
     },
     {
-      "item": "Saved alerts use shared non-geo search predicates",
-      "existingIssue": 534,
-      "status": "NON_GEO_LOCAL_PASS_PENDING_FINAL_REVIEW_CI_MERGE_AND_AUTHORIZED_RELEASE"
-    },
-    {
       "item": "Recipient-controlled chat offline email/push",
       "existingIssue": 577,
       "status": "BLOCKED_ON_CONSENT_ADAPTER_AND_DEVICE_QUALIFICATION"
@@ -84,6 +79,11 @@
       "item": "Owner-controlled new artist club activation",
       "existingIssue": 606,
       "status": "UNIMPLEMENTED_EXPLICIT_OPT_IN_REQUIRED"
+    },
+    {
+      "item": "Complete ST-001 recovery, expiration and return to protected intent verification",
+      "requirement": "ST-001",
+      "status": "PARTIAL_REPRODUCTION_AND_TARGET_ENVIRONMENT_VERIFICATION_REQUIRED"
     }
   ],
   "limits": [
@@ -263,7 +263,7 @@
       "receipt": "/private/tmp/tdf-profile-final-catalog-20261025.json"
     }
   },
-  "updatedAt": "2026-10-25T19:44:39.511685+00:00",
+  "updatedAt": "2026-10-25T19:47:11.104169+00:00",
   "publicObservation": {
     "observedAt": "2026-10-25T08:25:38.806824+00:00",
     "readOnly": true,
@@ -293,7 +293,7 @@
   },
   "nextItemInvestigation": {
     "issue": 534,
-    "status": "NON_GEO_REPAIR_LOCALLY_QUALIFIED_FINAL_FROZEN_RECEIPT_PENDING",
+    "status": "NON_GEO_REPAIR_SOURCE_FROZEN_POST607_RUNTIME_PASS_PENDING_REVIEW_AND_RELEASE",
     "findings": [
       "Trigger omits canonical non-geo filters and full-text parity.",
       "Mobile entityType all sentinel incorrectly excludes all document kinds."
@@ -309,13 +309,35 @@
     "cases": 27,
     "validQueryMismatches": 10,
     "externalChannels": 0,
-    "scope": "Canonical changed index documents; real full214 PostgreSQL, public query/plan comparisons, rollback/replay and106 real HTTP passed; final107 with native provenance pending. Geo and legacy-fallback-only changes remain outside this repair.",
+    "scope": "Changed canonical indexed documents; geographic alerts and legacy-fallback-only changes remain outside this repair. No production/provider execution.",
     "qualification": {
+      "status": "PASS",
+      "qualificationHead": "8b2f981fa952b6d281a22b4c3eb187f3828df870",
       "sqlCases": 68,
       "utcControls": 16,
       "planComparisons": 7,
-      "realHttpRequestsPassed": 106,
+      "realHttpRequestsPassed": 107,
+      "migrations": 214,
+      "fullPrefixReplayRollbackReapply": "PASS",
+      "savedJsonHashLedgerPreserved": true,
+      "backendSourcesUnchangedBeforeAfter": 263,
       "finalReceipt": "/private/tmp/tdf-alert-parity-repro-20261025/v12-frozen-full214/results.json",
+      "cleanup": {
+        "databaseRemoved": true,
+        "clusterStopped": true,
+        "portClosed": true
+      },
+      "compiledCommit": "9a927fa390066f43cc27c872800bf1b0412e166e",
+      "binarySha256": "fc8c2819d29760efc7108e5b7c801fc58efc37ff7847bb37fb00d577b19e7d83",
+      "directorySha256": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
+      "sqlSha256": "673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4",
+      "nativeHspec": {
+        "examples": 4035,
+        "failures": 0,
+        "pending": 20,
+        "scope": "Direct execution of Stack-built test binary; original exe build exit0. Redundant stack test interrupted143 during duplicate exe build; not PASS."
+      },
+      "sourceCorrespondence": "All backend inputs match compiled base9a except Directory with previously built source hash; no runtime version overrides. CI must compile exact candidateHEAD. Documents/trace metadata may update after this receipt; backend/SQL/test bytes remain frozen.",
       "productionMutations": false,
       "externalChannels": 0
     },
@@ -342,7 +364,11 @@
     "/private/tmp/tdf-profile-final-runtime-20261025/qualification.json": "8ef3e8ada1d71e58805d7bde145bf7d6e3a361191d6e937094f6ef17760ef2a4",
     "/private/tmp/tdf-profile-auth-epoch-review-20261025.json": "924ab6ee782fcfebfb9af871f165ef9582203d30b1e451918979b0d5f5953a53",
     "/private/tmp/tdf-user-value-605-deployed-20261025.json": "8fe97601d9ac244563a7ccb085cd6c442143ac92e62436a668dbc50ff45a0c9a",
-    "/private/tmp/tdf-603-release-readiness-assessment-20261025.json": "75083d986cb06791b5d6878507c537ae8d595542aff589743c5396d2e9cc3505"
+    "/private/tmp/tdf-603-release-readiness-assessment-20261025.json": "75083d986cb06791b5d6878507c537ae8d595542aff589743c5396d2e9cc3505",
+    "/private/tmp/tdf-alert-parity-repro-20261025/v12-frozen-full214/results.json": "153da82b102dffe63b5fc4ca7dc1e3ba375b95924c74c0586ade0181e77a6ade",
+    "/private/tmp/tdf-alert-parity-repro-20261025/v12-frozen-full214/official-full214.log": "4f06ed0211905a7da80218ecbad60c29625065489ed8a8fdfeaf6529c325020f",
+    "/private/tmp/tdf-alert-parity-repro-20261025/hspec-native-built-by-stack.log": "25ebde6babf80bf205277aff3e737c8f6b4eff1b9f440c1d5fe5aa138b7dac52",
+    "/private/tmp/tdf-user-value-607-merge-20261025.json": "d4f17cdf5906aa262c4b5dfc48c3fdbe1e2eea587f8a1319698daa89cb56be00"
   },
   "integrationRefresh": {
     "protectedMain": "089dce6ba410e5a76bee024c0d4be2ae3df0011d",

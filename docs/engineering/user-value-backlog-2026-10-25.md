@@ -60,7 +60,7 @@ tras controles negativos y ejecución descartable (85→91).
 | 3 | Subir portada con sesión HttpOnly válida | S1 | 3/4/4/5/5/5/4/3 | 83 | COMPLETE para el transporte web cookie-only: #605 integrado como `9a927fa3` y publicado, con fixture de navegador verificado. Google real no certificado por esta prueba. |
 | Entregado | Reflejar foto guardada en Comunidad | S1 | 4/3/4/5/5/5/4/3 | 81 | COMPLETE en el alcance de invalidación web: #604 integrado como `512d590e` y assets publicados verificados. Browser real con API sintética; no afirma upload ni escritura productiva real. |
 | 4 | Abrir comprobantes privados desde gestión de entradas | S1 | 3/4/4/5/5/3/2/3 | 79 | BLOCKED para release. #603 integrado como `089dce6b`, backend productivo4dac; falta configuración privada durable y admisión de nuevo diario, y el assurance exacto sigue BLOCKED. |
-| 5, seleccionado | Alertas guardadas respetan filtros no geográficos | S1 | 2/3/3/4/5/2/3/2 | 64 | PARTIAL:10 discrepancias reproducidas sobre27 casos iniciales; reparación no geográfica compartida pasa68SQL,16UTC,7planes y106HTTP. Última calificación107HTTP preparada; falta revisión/CI/merge/release. Radio sigue BLOCKED por centro/privacidad y fallback legacy fuera del índice no cubierto. |
+| 5, seleccionado | Alertas guardadas respetan filtros no geográficos | S1 | 2/3/3/4/5/2/3/2 | 64 | PARTIAL:10 discrepancias reproducidas sobre27 casos iniciales; reparación no geográfica compartida pasa68SQL,16UTC,7planes y107HTTP con fuente congelada; falta revisión/CI/merge/release. Radio sigue BLOCKED por centro/privacidad y fallback legacy fuera del índice no cubierto. |
 | 6 | Correo/push de chat controlado por destinatario | S1 | 3/3/4/4/3/1/1/1 | 60 | BLOCKED para entrega; UNIMPLEMENTED el alcance externo #577, pendiente consentimiento, adaptadores y dispositivos. |
 | 7 | Habilitación explícita del club de un artista nuevo | S1 | 2/2/4/4/5/1/2/1 | 59 | UNIMPLEMENTED en #606; falta ese camino de contenido. El follow funciona y existen enlaces públicos alternativos. Nunca provisionar por GET ni crear miembros/contactos sin consentimiento. |
 | 8 | Ciclo completo de recuperación, expiración y vuelta al intento | S1 | 4/4/3/3/2/1/1/0 | 58 | PARTIAL, sin defecto adicional reproducido. Conservar ST-001 y el transporte existente. |
@@ -77,7 +77,7 @@ priorización en una excepción a esos controles.
 conservando el resto de su información. En un dispositivo compartido, cambia de
 cuenta sin garantizar un desmontaje completo de la interfaz.
 
-**Fuente y fallo observado en código.**
+**Fuente y fallo observado en la base original.**
 `tdf-hq-ui/src/features/fans/useFanProfile.ts` empieza con campos vacíos y permite
 `Fans.updateProfile(profileDraft)` sin comprobar que finalizó la lectura.
 `tdf-hq-ui/src/pages/FanHubPage.tsx` hace lo mismo para el artista, condicionado
@@ -113,8 +113,7 @@ del servidor ni se afirma que hayan ocurrido pérdidas en cuentas reales.
    de browser/API/PostgreSQL se registran después de ejecutarse, sin promover
    pruebas de UI a evidencia de persistencia real.
 
-**Implementación/validación/entrega.** En curso; consultar el informe JSON
-acompañante. El responsable de la reparación completa SHA, comandos, resultados,
+**Implementación/validación/entrega.** #607 integrado en `cfe75b18`; verificación desplegada en curso. Consultar el informe JSON acompañante. El responsable de la reparación completa SHA, comandos, resultados,
 PR, merge y despliegue. No se reclaman pruebas ni beneficio observado antes de
 registrar sus recibos.
 
@@ -123,8 +122,8 @@ registrar sus recibos.
 | Recorrido | Clasificación | Evidencia, disponibilidad y límites |
 | --- | --- | --- |
 | Registro, autenticación y recuperación | PARTIAL | Login/sesión y deadlines existen; #594 está en `main`. ST-001 mantiene pendientes ciclo de reset/expiración/inbox y retorno al intento en la plataforma objetivo. La prueba de login no completa recuperación. |
-| Perfil de artista, publicación y compartir | DEFECTIVE | Hallazgo de borrador seleccionado; subida cookie-only #605 y refresco #604 tienen solución existente pendiente. No confundir un fallback de imagen o una foto reparada individualmente con corrección general. |
-| Descubrimiento, seguimiento e interacción fan | PARTIAL | #576 ya integrado; la búsqueda canónica y el seguimiento persistido tienen evidencia previa aislada. Inconsistencia de foto/caché sigue en #604. Primer valor de onboarding, favorito y follow social son métricas distintas. |
+| Perfil de artista, publicación y compartir | PARTIAL | Borrador #607 integrado y pendiente de verificación desplegada; subida cookie-only #605 y refresco #604 publicados y verificados en su alcance. No confundir un fallback de imagen o una foto reparada individualmente con corrección general. |
+| Descubrimiento, seguimiento e interacción fan | PARTIAL | #576 ya integrado; la búsqueda canónica y el seguimiento persistido tienen evidencia previa aislada. Foto/caché #604 publicada y verificada; el recorrido completo conserva sus propios límites. Primer valor de onboarding, favorito y follow social son métricas distintas. |
 | Comunidad, notificaciones y mensajería | PARTIAL | #578 ya integra avisos internos y respuestas. Correo/push de #577 no está completado. `social_v2_runtime.enabled=false` en la observación: no certificar V2 disponible ni activar la bandera. |
 | Música, vídeo, eventos y contenidos | PARTIAL / BLOCKED por subcapacidad | Descubrimiento y contenido existente no implican compra/distribución disponible. Las cinco banderas `music_releases.*` están desactivadas; distribución/merch comercial también. #514 conserva condiciones antes de activar releases. |
 | Reservas, clases, entradas y compras | PARTIAL / BLOCKED por subcapacidad | Entradas y marketplace tienen banderas activas; clases, service bookings y Domo comercial están cerrados. #603 completa revisión de comprobantes; #551/#596 contienen dependencias financieras. No hacer cobros reales para verificar. |
@@ -182,13 +181,13 @@ observado; SHA y archivos; comandos/recibos y control negativo; PR/revisión/mer
 versión efectivamente desplegada; flags y dependencias restantes. Cuando se
 actualice `main`, repetir la comparación de contenido antes de reabrir trabajo.
 
-## Cinco siguientes después del incremento seleccionado
+## Cinco siguientes después de la reparación no geográfica #534
 
 1. Resolver los bloqueos de la consolidación financiera #551, conservando sus revisiones, modelos y límites de release.
 2. Preparar la entrega segura del backend #603: almacenamiento privado durable, admisión revisada del siguiente release y disposición de assurance exacta. Reutilizar los drafts #495/#600 donde corresponda; nunca reiniciar el diario completado.
-3. Integrar la reparación no geográfica compartida de #534 por revisión/CI y release autorizado; conservar dedup, privacidad y cero canales externos. Radio continúa pendiente de definición compatible con privacidad.
-4. Resolver los prerrequisitos de entrega de chat #577; no prometer email/push antes de evidencia real.
-5. Habilitación explícita e idempotente del club #606, con permisos probados y sin crear miembros o notificaciones implícitos.
+3. Resolver los prerrequisitos de entrega de chat #577; no prometer email/push antes de evidencia real.
+4. Habilitación explícita e idempotente del club #606, con permisos probados y sin crear miembros o notificaciones implícitos.
+5. Reproducir y calificar el ciclo completo ST-001 de recuperación, expiración y retorno al intento; conservar el login/deadline existente sin reabrirlo sin evidencia.
 
 Las correcciones web #604/#605 ya están integradas y publicadas. Las puntuaciones siguen siendo hipótesis ordinales; no hay uplift observado ni un conteo validado de usuarios afectados.
 
@@ -247,7 +246,7 @@ inventario y trazabilidad sin afirmar prueba matemática. Revisión local
 independiente sin hallazgos materiales. La revisión de GitHub del commit definitivo,
 los gates hospedados, la admisión FIFO, el merge y el despliegue siguen pendientes.
 
-Entrega en revisión: [PR #607](https://github.com/diegueins680/tdf-app/pull/607),
+Entrega histórica en revisión, anterior al merge19:40: [PR #607](https://github.com/diegueins680/tdf-app/pull/607),
 rama `fix/artist-profile-load-safety-20261025`. El incremento mantiene estado
 PARTIAL hasta completar revisión independiente, CI, admisión FIFO, merge y
 verificación desplegada. Auto-merge desactivado; no cambia las reglas ni la cola.
@@ -345,8 +344,7 @@ rechazan coordenadas exactas y radio con alertas activas; quitar el radio permit
 guardar sin inventar un centro. JSON/hash/ledger históricos no se reescriben.
 
 La calificación previa pasa68 controlesSQL,16UTC,7comparaciones públicas/planes,
-106peticionesHTTP, full214/replay y rollback/reapply exacto; el recibo final añade
-medición de provenance nativo (107HTTP). Hspec construido con Stack/GHC9.10.3 pasa
+107peticionesHTTP con medición de provenance nativo, full214/replay y rollback/reapply exacto. El recibo final v12 confirma263 fuentes backend y todos los bytes candidatos estables antes/después, base eliminada, cluster detenido y puerto cerrado. Hspec construido con Stack/GHC9.10.3 pasa
 4035 ejemplos,0fallos,20pending mediante ejecución directa. El comando Stack test
 que además empezó recompilar innecesariamente el exe fue detenido con salida143;
 no se presenta comoPASS. Compilación original del exe:salida0, sin relabel de
@@ -354,3 +352,18 @@ commit por variables de entorno. El alcance #534 sigue PARTIAL: radio sin centro
 especificado, cambios exclusivos de fallback legacy sin trigger, revisión/CI,
 merge y despliegue todavía pendientes. No hay proveedor, cobro ni escritura real
 productiva en esta reparación. Contrato: `docs/directory/saved-search-parity.md`.
+
+
+Recibo final no geográfico: `/private/tmp/tdf-alert-parity-repro-20261025/v12-frozen-full214/results.json`
+(PASS sobre `8b2f981fa952b6d281a22b4c3eb187f3828df870`). SQL SHA256
+`673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4`;
+Directory SHA256 `d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494`.
+El binario conserva commit compilado9a y SHA256
+`fc8c2819d29760efc7108e5b7c801fc58efc37ff7847bb37fb00d577b19e7d83`;
+se contrastaron todas las fuentes backend con esa base salvo Directory, cuyo hash
+fue calificado en la compilación original. No se relabela el binario ni se
+presenta como compilación del nuevo commit de docs/UI. CI exige compilar el head
+exacto. Solo se actualizan documentos/trazas después del recibo, sin cambios de
+backend/SQL/pruebas. Beneficio observado: las10 divergencias iniciales desaparecen
+en casos sintéticos y se confirma guardado recuperable/alerta interna persistida;
+no hay beneficio productivo ni conversión atribuible antes del release autorizado.
