@@ -49,7 +49,11 @@ def migrate():
         return result
     # Replay the additive successor too: replaying the predecessor alone would
     # leave the obsolete lock-only entry function installed for later suites.
-    return subprocess.run(base + ['-f', str(root / 'tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql')],
+    result = subprocess.run(base + ['-f', str(root / 'tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql')],
+                            text=True, capture_output=True, timeout=30)
+    if result.returncode != 0:
+        return result
+    return subprocess.run(base + ['-f', str(root / 'tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql')],
                           text=True, capture_output=True, timeout=30)
 
 
