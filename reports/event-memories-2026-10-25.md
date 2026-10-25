@@ -302,3 +302,14 @@ también impide una aceptación con personas reales hasta su corrección y
 verificación; esa reparación está en trabajo por su propio flujo. Esta entrega
 no modifica SessionContext ni presenta la sesión sintética como aceptación humana.
 No hubo despliegue, cambio de estado de 141 ni comunicaciones productivas.
+
+La fixture ahora representa también el contrato real de GET /session: 200 con
+null para una visita anónima. Se conserva 401 como caso separado de sesión
+caducada; ambos recorren registro, recuperación del error y publicación persistida.
+Los 28 recorridos Chrome y uno Firefox anteriores corresponden a la variante
+401; las dos variantes se ejecutan de nuevo y WebKit queda a cargo de CI Linux.
+
+La nueva matriz pasó sin reintentos: ocho casos en cuatro tamaños Chrome y
+dos casos Firefox, para ambas respuestas de sesión. El [recibo compacto](event-memories-evidence-20261025/browser-continuation.json)
+conserva el hash exacto del test modificado y los resultados sintéticos. No se
+atribuye esa ejecución al commit limpio posterior ni se extrapola a WebKit.
