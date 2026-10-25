@@ -306,3 +306,7 @@ inside Seguridad. These informational routes do not become internal admin tools.
 Regression coverage checks every standalone feature against the actual sidebar,
 unique concrete destinations, searchable artist and directory review entries,
 feature flag changes, denied-role/module combinations and the public rights menu.
+
+Signed-in public pages (including Comunidad) expose Menú de funciones in the
+header. It loads the same sidebar on demand in a dismissible drawer, closes
+after navigation or account change, and keeps the guest header unchanged.

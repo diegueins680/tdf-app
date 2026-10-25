@@ -1,5 +1,7 @@
 // Public arrival, authentication and recovery copy.
 export default {
+  featureMenu: 'Menú de funciones',
+  closeFeatureMenu: 'Cerrar menú de funciones',
   claimReviewAfterSignup: 'Crea tu propia cuenta. Después podrás enviar una solicitud de acceso al perfil seleccionado para revisión; registrarte no te concede su propiedad.',
   "googleLinkTitle": "Conecta tu cuenta TDF",
   "googleLinkExplanation": "Usa tus credenciales de TDF para conectar Google. Si antes usabas solo Google, restablece primero tu contraseña de TDF. Crea una cuenta solo si todavía no tienes una.",

@@ -11441,7 +11441,7 @@
     {
       "id": "NAV-MENU-COVERAGE-001",
       "title": "Complete permission-aware menus for available feature destinations",
-      "statement": "Every usable standalone registered web feature has one concrete sidebar destination in an appropriate existing group. Public reputation rights remain reachable through the Security page menu. Visibility obeys current session roles, modules and feature flags.",
+      "statement": "Every usable standalone registered web feature has one concrete sidebar destination in an appropriate existing group. Public reputation rights remain reachable through the Security page menu. Visibility obeys current session roles, modules and feature flags. Signed-in public pages expose the same menu in a lazy drawer.",
       "authority": "Explicit product owner implementation request, 2026-10-25",
       "domain": "UX",
       "source": "docs/discovery/community-search-navigation.md",
@@ -11466,7 +11466,8 @@
       "allowedTransitions": [
         "Register usable standalone destination -> corresponding grouped menu item",
         "Change session permissions or flags -> update visible menu",
-        "Select menu item -> concrete existing route"
+        "Select menu item -> concrete existing route",
+        "Open feature menu on signed-in public page -> shared navigation drawer; navigate, dismiss or change account -> close drawer"
       ],
       "forbiddenTransitions": [
         "Parameterized placeholder in a global menu URL",
@@ -11490,14 +11491,18 @@
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/utils/accessControl.ts",
-        "tdf-hq-ui/src/pages/SecurityPage.tsx"
+        "tdf-hq-ui/src/pages/SecurityPage.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/pages/SecurityPage.test.tsx",
-        "scripts/audit-feature-registry.mjs"
+        "scripts/audit-feature-registry.mjs",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx"
       ],
       "formalModels": [],
       "verification": "Deterministic registry coverage, rendered sidebar/access controls and browser navigation; no formal proof claimed.",
@@ -12135,8 +12140,8 @@
     "tdf-hq-ui/src/components/MarketplaceCartButton.tsx": "c40979f81f4af476e7a47933a2e86cf3d3889b7674731794e91e1fa3d40dddcd",
     "tdf-hq-ui/src/components/NotificationBell.tsx": "de77bfc9b23e3deae24c65db63d5406bd30e077aea6e56a4804d0b2de3554d28",
     "tdf-hq-ui/src/components/NotificationNavigation.test.tsx": "9596ad73723f9a44acbed461617a5f03f5e0f40f968cc71b36b2534980d294d1",
-    "tdf-hq-ui/src/components/PublicBranding.test.tsx": "16b6e840fce5032cd7c87775aecd0921123c1c840c77c49eb3cc83cf985b5a3f",
-    "tdf-hq-ui/src/components/PublicBranding.tsx": "2ce4418ebef0f36cad67bbb462c4e28f5802eb4efd0aeeb134cb9bbb156975d5",
+    "tdf-hq-ui/src/components/PublicBranding.test.tsx": "9f3a3c426d5ac0549f8e73b02aec0826f510d96f6f7e214e032971f785ebb119",
+    "tdf-hq-ui/src/components/PublicBranding.tsx": "2471eb13a3eda8df4d3ff8c784874c62164ba3b24da2eb1ddfc555fbdf9f9996",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
     "tdf-hq-ui/src/components/RadioWidget.tsx": "8ca26bdf9324376d67357d0bf94a32411d6099d02ec12a3c0d215b4067ddfd98",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
@@ -12193,8 +12198,8 @@
     "tdf-hq-ui/src/i18n/index.ts": "53c26394ae54a6dd8fbfd91429e0300bf5b2d324d7e66f48179e283f7fc832e5",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
-    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "1b31939d6d1fcc0eb9b62ff6a53773934a458990464be84c1d8ed4fa729bcfb1",
-    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "3260bcde29c6fc5ce2e623c7f66f50b3c763c0239985b0f928982e03c61d05a0",
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "10ee86e9b01c50a6222c2f24291d812964a7552ea778ebe53054b9012ea9b84e",
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "915ced996ce7903c55e27831791a239ab07441784d70dd1975ce85daaad57e89",
     "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
     "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "1b14577b1d260ec8c9b65ca2c6939c3db85e20e043d835e5efc1c0183cbc059f",
     "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "dd0ccec28420756aad3a3f52fe1e6e749f6d79caba0974977d96f3e69fd5e58d",
@@ -14029,6 +14034,10 @@
       {
         "requirement": "BOOK-SERVICE-PICKER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "NAV-MENU-COVERAGE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": [
@@ -14046,6 +14055,10 @@
       },
       {
         "requirement": "BOOK-SERVICE-PICKER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "NAV-MENU-COVERAGE-001",
         "relationship": "implementation"
       }
     ],
@@ -18277,6 +18290,10 @@
       {
         "requirement": "BOOK-SERVICE-PICKER-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "NAV-MENU-COVERAGE-001",
+        "relationship": "tests"
       }
     ],
     "e2e/web/mobile-program.spec.mjs": [
@@ -18436,6 +18453,10 @@
       },
       {
         "requirement": "DISCOVERY-NAV-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "NAV-MENU-COVERAGE-001",
         "relationship": "implementation"
       }
     ],
@@ -30485,7 +30506,7 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "16b6e840fce5032cd7c87775aecd0921123c1c840c77c49eb3cc83cf985b5a3f",
+      "sha256": "9f3a3c426d5ac0549f8e73b02aec0826f510d96f6f7e214e032971f785ebb119",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30499,13 +30520,17 @@
         {
           "requirement": "BOOK-SERVICE-PICKER-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "NAV-MENU-COVERAGE-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "2ce4418ebef0f36cad67bbb462c4e28f5802eb4efd0aeeb134cb9bbb156975d5",
+      "sha256": "2471eb13a3eda8df4d3ff8c784874c62164ba3b24da2eb1ddfc555fbdf9f9996",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30526,6 +30551,10 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "NAV-MENU-COVERAGE-001",
           "relationship": "implementation"
         }
       ]
@@ -32028,7 +32057,7 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "1b31939d6d1fcc0eb9b62ff6a53773934a458990464be84c1d8ed4fa729bcfb1",
+      "sha256": "10ee86e9b01c50a6222c2f24291d812964a7552ea778ebe53054b9012ea9b84e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32045,6 +32074,10 @@
         },
         {
           "requirement": "BOOK-SERVICE-PICKER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "NAV-MENU-COVERAGE-001",
           "relationship": "implementation"
         }
       ]
@@ -32052,7 +32085,7 @@
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "3260bcde29c6fc5ce2e623c7f66f50b3c763c0239985b0f928982e03c61d05a0",
+      "sha256": "915ced996ce7903c55e27831791a239ab07441784d70dd1975ce85daaad57e89",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32069,6 +32102,10 @@
         },
         {
           "requirement": "BOOK-SERVICE-PICKER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "NAV-MENU-COVERAGE-001",
           "relationship": "implementation"
         }
       ]
@@ -50226,7 +50263,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9352dfc3c095f46b41b09564295e54704dc486675d3ebb35563e542856e57f11",
+      "sourceSha256": "22fb78b5c2b9f2bc1c4cefee7b2a6f5b7dd4f7ff6c587ada9a2da624404fe10e",
       "definition": {
         "states": [
           "absent",
@@ -50256,7 +50293,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9352dfc3c095f46b41b09564295e54704dc486675d3ebb35563e542856e57f11",
+      "sourceSha256": "22fb78b5c2b9f2bc1c4cefee7b2a6f5b7dd4f7ff6c587ada9a2da624404fe10e",
       "definition": {
         "export": [
           "queued",

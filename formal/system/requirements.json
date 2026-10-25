@@ -11440,7 +11440,7 @@
     {
       "id": "NAV-MENU-COVERAGE-001",
       "title": "Complete permission-aware menus for available feature destinations",
-      "statement": "Every usable standalone registered web feature has one concrete sidebar destination in an appropriate existing group. Public reputation rights remain reachable through the Security page menu. Visibility obeys current session roles, modules and feature flags.",
+      "statement": "Every usable standalone registered web feature has one concrete sidebar destination in an appropriate existing group. Public reputation rights remain reachable through the Security page menu. Visibility obeys current session roles, modules and feature flags. Signed-in public pages expose the same menu in a lazy drawer.",
       "authority": "Explicit product owner implementation request, 2026-10-25",
       "domain": "UX",
       "source": "docs/discovery/community-search-navigation.md",
@@ -11465,7 +11465,8 @@
       "allowedTransitions": [
         "Register usable standalone destination -> corresponding grouped menu item",
         "Change session permissions or flags -> update visible menu",
-        "Select menu item -> concrete existing route"
+        "Select menu item -> concrete existing route",
+        "Open feature menu on signed-in public page -> shared navigation drawer; navigate, dismiss or change account -> close drawer"
       ],
       "forbiddenTransitions": [
         "Parameterized placeholder in a global menu URL",
@@ -11489,14 +11490,18 @@
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/utils/accessControl.ts",
-        "tdf-hq-ui/src/pages/SecurityPage.tsx"
+        "tdf-hq-ui/src/pages/SecurityPage.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/pages/SecurityPage.test.tsx",
-        "scripts/audit-feature-registry.mjs"
+        "scripts/audit-feature-registry.mjs",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx"
       ],
       "formalModels": [],
       "verification": "Deterministic registry coverage, rendered sidebar/access controls and browser navigation; no formal proof claimed.",
