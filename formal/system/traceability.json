@@ -11506,6 +11506,82 @@
       "failure": "Existing non-success response and DTO parsing failures reject; no false success is added.",
       "recovery": "Explicit user retry under a valid session; no change to provider permissions.",
       "observability": "Native browser receipts record credential-presence booleans only, never cookie or token values."
+    },
+    {
+      "id": "COMM-CLUB-001",
+      "title": "Recover fan-club reads without claiming false unavailability",
+      "statement": "A club read failure other than confirmed404 remains a recoverable load failure, not evidence of club absence. The reader can explicitly retry without losing the artist, deep link or session boundary. A missing club offers the existing public artist profile; invalid identifiers never select a different artist. Dependent content is requested only after a valid readable club is available.",
+      "domain": "COMM",
+      "actors": [
+        "Public fan",
+        "Authenticated fan",
+        "Artist"
+      ],
+      "preconditions": [
+        "Existing read endpoints and their authorization remain authoritative; public profile navigation grants no private-club access."
+      ],
+      "inputs": [
+        "Artist route identifier",
+        "Club read result or error status",
+        "Current session",
+        "Deep-link search/hash",
+        "Explicit retry"
+      ],
+      "state": {
+        "club": [
+          "loading",
+          "readable",
+          "not-found",
+          "read-failed",
+          "invalid-link"
+        ]
+      },
+      "allowedTransitions": [
+        "Loading -> readable after successful authorized read.",
+        "Failed read -> explicit retry -> current server outcome.",
+        "Confirmed404 -> public artist profile or Comunidad.",
+        "401/403 -> login preserving pathname, search and hash.",
+        "Readable cached club -> retain visible data during failed background refresh."
+      ],
+      "forbiddenTransitions": [
+        "503/network/timeout/401/403 -> assert artist has no active club.",
+        "Invalid or unsafe numeric identifier -> query another club.",
+        "Missing/unread club -> eagerly fetch its protected content.",
+        "Read or fallback navigation -> create club, membership, follow, post, message or notification."
+      ],
+      "effects": [
+        "Read-only recovery and existing-route navigation; no backend, API, database, provider or feature-flag change."
+      ],
+      "authorization": "Existing public/authenticated endpoints retain their checks. No fallback from a failed private API read to a public API response under the same cache key. Login preserves the requested route.",
+      "privacy": "Never display raw server/network diagnostics or credentials. Public artist links expose only the existing public-profile route.",
+      "concurrency": "Successful cached data remains usable while React Query refreshes. Club readiness gates dependent requests. Session cache isolation remains the shared provider responsibility.",
+      "idempotency": "Retry repeats only the club GET; no relationship or content mutation is introduced.",
+      "failure": "Unconfirmed availability is shown as a load failure with retry; a confirmed404 is not a claim that an artist never enabled a club.",
+      "recovery": "Retry reuses the current route query; users can visit the public artist page or Comunidad.",
+      "observability": "Actual component tests distinguish statuses, verify request ordering and preserve deep links. Browser/API/DB fixture receipts retain their source identities.",
+      "source": "User-authorized activation sprint; issue606 missing-club reproduction and new actual-component non404 negative controls.",
+      "implementation": [
+        "tdf-hq-ui/src/pages/FanClubPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "High for tested component transitions; production deployment and human comprehension remain unverified.",
+      "ambiguity": [
+        "This requirement does not provision new clubs or prove existing-club posting ownership, provider content delivery or human usability."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped component and isolated runtime evidence required; no whole-system refinement, deployed-version or human-pilot claim."
+      },
+      "critical": false,
+      "authority": "Activation journey B7/B8 failure recovery, truthful availability and issue606 acceptance criteria.",
+      "property": "Only confirmed404 can select missing-club UI; non404 read failure remains retryable and preserves artist context.",
+      "contract": "formal/system/fan-club-read-recovery.md",
+      "verification": "Component regression and pre-change negative controls; isolated browser on real API/PostgreSQL for unavailable/new-artist and recovery states.",
+      "evidence": "Exact source qualification receipts; synthetic data excluded from VAR, conversion and retention."
     }
   ],
   "sourceFingerprints": {
@@ -12226,6 +12302,8 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "0d88f1cb2a534ca742147e821578b297c0c12f37ad66569cc5cad9da6f26408f",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "01b3b5cf78791e627b85188e4bd211b37b7f1f88389d6b81bc5526110cd65ebd",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
+    "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": "6bd20c390108e75d63b00d74693fae4de31ef398b6a80d9fb28c85c90387a5b6",
+    "tdf-hq-ui/src/pages/FanClubPage.tsx": "72631656d1a288baec43aff43e523d0bb573629d43db642259ba7d9a33c35b86",
     "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "d2554fe091549fbb6f64a905279e676cec7d67949f20116c11b95fa726945c35",
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "8cdf4c124dc5e37d6234c602bbc323db537d87b6248c470ceaa1a442dae4c1c9",
     "tdf-hq-ui/src/pages/FanHubPage.tsx": "305d86768d2c3ce6adc5ff4144aef835aac7d0521788141a2ef6487b04a84127",
@@ -22159,6 +22237,18 @@
     "tdf-hq-ui/src/api/drive.upload.test.ts": [
       {
         "requirement": "MEDIA-DRIVE-002",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/FanClubPage.tsx": [
+      {
+        "requirement": "COMM-CLUB-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": [
+      {
+        "requirement": "COMM-CLUB-001",
         "relationship": "tests"
       }
     ]
@@ -32958,11 +33048,28 @@
       ]
     },
     {
+      "id": "SURFACE-adbe6d097447b912",
+      "path": "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
+      "sha256": "6bd20c390108e75d63b00d74693fae4de31ef398b6a80d9fb28c85c90387a5b6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMM-CLUB-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-60cd6659a77e2df2",
       "path": "tdf-hq-ui/src/pages/FanClubPage.tsx",
-      "sha256": "2bb3c0031e6829521db3a8fcb41903243acf2165365d12c348266c032e130b90",
+      "sha256": "72631656d1a288baec43aff43e523d0bb573629d43db642259ba7d9a33c35b86",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMM-CLUB-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-843ecd90497b82eb",
@@ -47931,7 +48038,6 @@
     "SURFACE-acd0be5e389457cc",
     "SURFACE-63a292b2e11fa9e9",
     "SURFACE-49d3b4b191a6a827",
-    "SURFACE-60cd6659a77e2df2",
     "SURFACE-a446627998229bcd",
     "SURFACE-797f45d5f8f51c65",
     "SURFACE-624992c0d8b8e1a2",
@@ -50172,7 +50278,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bdab854f53350c583aff25136c002904dd499f50d0293d7205a45111d3c139d1",
+      "sourceSha256": "6f6724781f6d92a86b38f1635bda6d9f9bf1c35b5c76cc432f334d5762aef577",
       "definition": {
         "states": [
           "absent",
@@ -50202,7 +50308,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bdab854f53350c583aff25136c002904dd499f50d0293d7205a45111d3c139d1",
+      "sourceSha256": "6f6724781f6d92a86b38f1635bda6d9f9bf1c35b5c76cc432f334d5762aef577",
       "definition": {
         "export": [
           "queued",
@@ -72478,7 +72584,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 137,
+    "PARTIAL": 138,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
