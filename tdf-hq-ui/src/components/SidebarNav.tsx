@@ -35,6 +35,7 @@ import {
   pathRequiresModule,
 } from '../utils/accessControl';
 import { COURSE_REGISTRATIONS_NAV_LABEL } from '../utils/navigationLabels';
+import { featureGroups, standaloneMenuFeatures } from '../features/featureRegistry';
 
 export interface NavItem {
   label: string;
@@ -140,6 +141,8 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: <AutoAwesomeOutlinedIcon sx={GROUP_HEADER_ICON_SX} />,
     items: [
       { label: 'Inicio', path: '/inicio' },
+      { label: 'Crear perfil de artista', path: '/artista/crear' },
+      { label: 'Nuevo evento', path: '/social/eventos/nuevo' },
       { label: 'Calendario', path: '/estudio/calendario' },
       { label: 'Salas y recursos', path: '/estudio/salas' },
       { label: 'Órdenes estudio', path: '/estudio/ordenes' },
@@ -162,6 +165,7 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: <PeopleAltOutlinedIcon sx={GROUP_HEADER_ICON_SX} />,
     items: [
       { label: 'Comunidad', path: '/fans' },
+      { label: 'Mi perfil de artista', path: '/mi-artista' },
       { label: 'Tienda', path: '/marketplace' },
       { label: 'Lanzamientos públicos', path: '/records' },
       { label: 'Reservar estudio', path: '/reservar' },
@@ -187,6 +191,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Artistas', path: '/label/artistas' },
       { label: 'Proyectos', path: '/label/proyectos' },
       { label: 'Lanzamientos', path: '/label/releases' },
+      { label: 'Nuevo lanzamiento', path: '/label/releases/nuevo' },
       { label: 'Activos', path: '/label/assets' },
       { label: 'Pistas', path: '/label/tracks' },
     ],
@@ -249,9 +254,23 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Acerca de', path: '/acerca' },
       { label: 'Seguridad', path: '/seguridad' },
       { label: 'Sugerencias', path: '/feedback' },
+      { label: 'Mis solicitudes de acceso', path: '/solicitudes-acceso' },
     ],
   },
 ];
+
+// The registry supplies missing destinations so adding a feature cannot leave
+// it reachable only by a pasted URL. Keep curated labels/order and one link per
+// path. Access, module and rollout checks are applied below for each viewer.
+const menuPaths = new Set(NAV_GROUPS.flatMap((group) => group.items.map((item) => item.path)));
+for (const feature of standaloneMenuFeatures) {
+  if (!feature.webRoute || menuPaths.has(feature.webRoute)) continue;
+  const title = featureGroups.find((group) => group.id === feature.navigationGroup)?.labelEs;
+  const group = NAV_GROUPS.find((candidate) => candidate.title === title);
+  if (!group) throw new Error(`Feature ${feature.id} has no sidebar group`);
+  group.items.push({ label: feature.label.es, path: feature.webRoute });
+  menuPaths.add(feature.webRoute);
+}
 
 interface SidebarNavProps {
   open: boolean;
@@ -738,8 +757,8 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const [recentPaths, setRecentPaths] = useState(() => readStoredPathList(QUICK_RECENTS_KEY));
   const searchRef = useRef(null as HTMLInputElement | null);
   const canUsePath = useCallback(
-    (path: string) => canAccessPath(path, session?.roles, session?.modules),
-    [session?.modules, session?.roles],
+    (path: string) => canAccessPath(path, session?.roles, session?.modules, session?.featureFlags),
+    [session?.modules, session?.roles, session?.featureFlags],
   );
   const { unreadCount: chatUnreadCount } = useChatUnreadCount({ enabled: open });
 
