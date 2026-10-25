@@ -1,8 +1,9 @@
-import { Alert, Button, Chip, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Button, Chip, Link, Stack, TextField, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { SocialEventsAPI, type TicketManualPaymentDTO } from '../../api/socialEvents';
+import TicketPaymentReceiptDialog from './TicketPaymentReceiptDialog';
 
 const STATUS_LABEL: Record<TicketManualPaymentDTO['tmpEvidenceStatus'], string> = {
   awaiting_evidence: 'Esperando comprobante',
@@ -27,6 +28,7 @@ export default function EventManualPaymentsPanel({ eventId, formatMoney, formatD
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<TicketManualPaymentDTO | null>(null);
   const queryKey = ['event-manual-payments', eventId];
   const payments = useQuery({
     queryKey,
@@ -70,7 +72,9 @@ export default function EventManualPaymentsPanel({ eventId, formatMoney, formatD
             </Stack>
             <Typography variant="body2" color="text.secondary">
               {payment.tmpBuyerName ?? 'Sin nombre'} · {payment.tmpBuyerEmail ?? 'sin email'}
-              {payment.tmpCustomerReference ? ` · Comprobante: ${payment.tmpCustomerReference}` : ''}
+              {(Boolean(payment.tmpCustomerReference) || payment.tmpHasReceipt === true) && <>{' · '}<Link component="button" type="button" variant="inherit" onClick={() => setSelectedPayment(payment)}>
+                {payment.tmpCustomerReference ? `Comprobante: ${payment.tmpCustomerReference}` : 'Ver comprobante'}
+              </Link></>}
               {payment.tmpSubmittedAt ? ` · Reportado: ${formatDate(payment.tmpSubmittedAt)}` : ''}
             </Typography>
             {reviewable(payment) && (
@@ -113,6 +117,7 @@ export default function EventManualPaymentsPanel({ eventId, formatMoney, formatD
           </Stack>
         );
       })}
+      {selectedPayment && <TicketPaymentReceiptDialog eventId={eventId} payment={selectedPayment} onClose={() => setSelectedPayment(null)} />}
     </Stack>
   );
 }

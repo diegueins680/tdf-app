@@ -8390,6 +8390,30 @@ paths:
   /reviews/eligibility: { $ref: './reviews.yaml#/paths/~1reviews~1eligibility' }
   /reviews: { $ref: './reviews.yaml#/paths/~1reviews' }
 
+  /social-events/events/{eventId}/ticket-orders/{orderId}/manual-payment/receipt:
+    get:
+      tags: [Social events]
+      operationId: getTicketManualPaymentReceipt
+      summary: Read a private transfer receipt as the event organizer or an administrator
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Private JPG, PNG or PDF receipt
+          headers:
+            Cache-Control: { schema: { type: string }, description: Always no-store. }
+          content: { application/json: { schema: { $ref: '#/components/schemas/TicketPaymentReceipt' } } }
+        '401': { description: Authentication required }
+        '403': { description: Event management permission required }
+        '404': { description: Order does not belong to this event or no receipt was attached }
+
   /public/events/{eventId}/tickets:
     get:
       tags: [Public event tickets]
@@ -12005,6 +12029,7 @@ components:
           type: string
           enum: [awaiting_evidence, submitted, under_review, approved, rejected]
         customerReference: { type: string, nullable: true }
+        receiptAttached: { type: boolean, description: Whether the buyer attached a private receipt file. }
         reviewNotes:
           type: string
           nullable: true
@@ -12015,6 +12040,14 @@ components:
       required: [customerReference]
       properties:
         customerReference: { type: string, minLength: 3, maxLength: 120 }
+        receipt: { $ref: '#/components/schemas/TicketPaymentReceipt' }
+    TicketPaymentReceipt:
+      type: object
+      additionalProperties: false
+      required: [contentType, base64]
+      properties:
+        contentType: { type: string, enum: [image/jpeg, image/png, application/pdf] }
+        base64: { type: string, format: byte, maxLength: 6990508, description: Private receipt file, at most 5 MiB decoded. }
     PublicEventTicketPaypalCaptureRequest:
       type: object
       additionalProperties: false

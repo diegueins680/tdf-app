@@ -213,6 +213,7 @@ import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
 import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Server.TicketManualPayments as ManualPayments
+import qualified TDF.Server.TicketPaymentReceipt as Receipt
 import qualified TDF.Server.TicketTaxDocuments as TaxDocuments
 import qualified TDF.Server.TicketRefunds as TicketRefunds
 import qualified TDF.Ticketing.Transfer as Transfer
@@ -4336,6 +4337,7 @@ socialEventsServer user =
             -- Manual bank transfer review
             :<|> listManualPayments
             :<|> reviewManualPayment
+            :<|> getManualPaymentReceipt
             -- SRI electronic invoices
             :<|> listTaxDocuments
             :<|> retryTaxDocument
@@ -5812,6 +5814,24 @@ socialEventsServer user =
         case filter ((== T.pack (show (fromSqlKey orderKey))) . tmpOrderId) rows of
             dto : _ -> pure dto
             [] -> throwError err404{errBody = "Ticket order not found"}
+
+    getManualPaymentReceipt :: T.Text -> T.Text -> AppM (Headers '[Header "Cache-Control" T.Text] Receipt.TicketPaymentReceipt)
+    getManualPaymentReceipt eventIdStr orderIdStr = do
+        Env{..} <- ask
+        (eventKey, _) <- requireRefundManagedEvent eventIdStr
+        orderKey <- parseKeyOr400 "order" orderIdStr
+        rows <- liftIO $ runSqlPool (rawSql
+            "SELECT evidence.evidence_object_key FROM commerce_manual_payment_evidence evidence\
+            \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+            \ JOIN event_ticket_checkout_runtime runtime ON runtime.checkout_id = evidence.checkout_id\
+            \ WHERE runtime.event_id = ? AND runtime.order_id = ?\
+            \ AND attempt.checkout_id = evidence.checkout_id\
+            \ AND attempt.provider = 'bank_transfer' AND attempt.operation = 'manual_verify'"
+            [toPersistValue eventKey, toPersistValue (orderKey :: EventTicketOrderId)]
+            :: SqlPersistT IO [Single (Maybe T.Text)]) envPool
+        case rows of
+            [Single (Just key)] -> addHeader ("no-store" :: T.Text) <$> Receipt.loadReceipt (fromSqlKey orderKey) key
+            _ -> throwError err404{errBody = "No receipt was attached to this transfer"}
 
     -- SRI electronic invoices
     listTaxDocuments :: T.Text -> AppM [TicketTaxDocumentDTO]

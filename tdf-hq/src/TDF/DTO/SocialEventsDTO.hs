@@ -1465,6 +1465,7 @@ data TicketManualPaymentDTO = TicketManualPaymentDTO
     , tmpCurrency :: Text
     , tmpEvidenceStatus :: Text
     , tmpCustomerReference :: Maybe Text
+    , tmpHasReceipt :: Bool
     , tmpSubmittedAt :: Maybe UTCTime
     , tmpReviewedAt :: Maybe UTCTime
     , tmpReviewNotes :: Maybe Text
