@@ -11438,6 +11438,75 @@
       "historicalStatus": "new"
     },
     {
+      "id": "MEDIA-DRIVE-002",
+      "title": "Preserve cookie-only sessions in artist cover uploads",
+      "statement": "Drive XHR uploads use the shared API resolver and include browser cookie credentials, preserving optional application bearer authentication and multipart file/folder/name/provider-token inputs. A cookie-only authenticated artist must not lose authentication solely because the API has a different trusted origin.",
+      "property": "Cookie-only authenticated session -> credentialed Drive XHR; bearer and multipart routing remain compatible.",
+      "domain": "MEDIA",
+      "authority": "User-authorized activation sprint; reproduced native cross-origin cookie omission against isolated actual API session, reusing the existing inventory upload pattern.",
+      "source": "Artist activation journey A4; existing inventory upload session transport.",
+      "contract": "formal/system/drive-upload-session.md",
+      "actors": [
+        "Authenticated artist",
+        "Browser"
+      ],
+      "preconditions": [
+        "Valid server session and explicitly trusted configured API origin; provider permissions remain independently required."
+      ],
+      "inputs": [
+        "File",
+        "Optional folder/name/provider access token",
+        "Current cookie and optional readable application bearer"
+      ],
+      "state": {
+        "upload": [
+          "selected",
+          "pending",
+          "resolved",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Selected -> credentialed upload to shared resolved API",
+        "Successful Drive DTO -> existing media result",
+        "Failed upload -> rejected promise -> explicit retry"
+      ],
+      "forbiddenTransitions": [
+        "Cookie-only session -> silently omit cross-origin credentials",
+        "HttpOnly cookie -> readable bearer or diagnostics",
+        "Client credential option -> bypass server authorization"
+      ],
+      "effects": [
+        "One selected multipart upload; no automatic retry."
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/api/drive.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/drive.upload.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Cookie/bearer/resolver tests, cookie-omission negative control and native cross-origin browser using an actual disposable API session with a non-production Drive adapter.",
+      "evidence": "Source-bound activation sprint receipts. No production upload or Google OAuth certification inferred.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for scoped XHR transport; external provider and production acceptance remain unverified.",
+      "ambiguity": [
+        "Google OAuth, provider storage, upload deadlines, production cross-site cookie policy and physical devices are not certified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and regressions correspond; protected review, hosted checks and deployed/provider acceptance remain required."
+      },
+      "authorization": "Existing server origin, session, role, ownership and provider checks remain authoritative. Cookie inclusion grants no role.",
+      "privacy": "Do not extract or log HttpOnly cookies or provider tokens.",
+      "concurrency": "Each selected upload owns its XHR; server and provider retain concurrent-upload behavior.",
+      "idempotency": "No new exactly-once guarantee or automatic retry; repeated user uploads may create multiple blobs.",
+      "failure": "Existing non-success response and DTO parsing failures reject; no false success is added.",
+      "recovery": "Explicit user retry under a valid session; no change to provider permissions.",
+      "observability": "Native browser receipts record credential-presence booleans only, never cookie or token values."
+    },
+    {
       "id": "NAV-MENU-COVERAGE-001",
       "title": "Complete permission-aware menus for available feature destinations",
       "statement": "Every usable standalone registered web feature has one concrete sidebar destination in an appropriate existing group. Public reputation rights remain reachable through the Security page menu. Visibility obeys current session roles, modules and feature flags. Signed-in public pages expose the same menu in a lazy drawer.",
