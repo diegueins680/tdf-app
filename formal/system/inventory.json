@@ -677,6 +677,7 @@
       "tdf-hq-ui/src/api/domoQuotes.test.ts",
       "tdf-hq-ui/src/api/domoQuotes.ts",
       "tdf-hq-ui/src/api/drive.ts",
+      "tdf-hq-ui/src/api/drive.upload.test.ts",
       "tdf-hq-ui/src/api/engineers.test.ts",
       "tdf-hq-ui/src/api/engineers.ts",
       "tdf-hq-ui/src/api/errorMessage.test.ts",
@@ -6562,7 +6563,13 @@
     {
       "id": "SURFACE-10856a58d8da5733",
       "path": "tdf-hq-ui/src/api/drive.ts",
-      "sha256": "a21bef68d52898ce95de38a0cd341e0ff7278dd81c4a988baa46a77b93145bcd",
+      "sha256": "27e9d44e0bfa36c763b79e57731b118168b77bf0ac051790903693208fe0d2a3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-12933aa6755d74a9",
+      "path": "tdf-hq-ui/src/api/drive.upload.test.ts",
+      "sha256": "7ae7828b0917f8ee4f03f630a5932bff0098b498b0f5ff7fde96b90f7682f033",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26050,6 +26057,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/drive-upload-session.md",
+      "sha256": "8757fd816acc3666bdc1272084a107f6018bdc859b9d1eebfb7e3a7294a8b129",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/event-organizer-assignment.md",
       "sha256": "71f6f3da069ad720ab63d42217a987e35857a90e294aeb107c4030e926d01fcd",
       "authority": "inferred",
@@ -26415,7 +26429,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d24fc2c4e42ac536db4cab494e4dd78737686db34c113ba91f3ca2e61712667f",
+      "sha256": "bdab854f53350c583aff25136c002904dd499f50d0293d7205a45111d3c139d1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
