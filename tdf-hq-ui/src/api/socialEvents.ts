@@ -107,6 +107,21 @@ export interface SocialEventMomentCreateDTO {
   emCreateMediaDurationMs?: number;
 }
 
+// An HTTP 200/HTML fallback is not a committed publication acknowledgement.
+function confirmedMoment(value: unknown, eventId: string, momentId?: string): SocialEventMomentDTO {
+  const row = value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
+  if (!row || typeof row['emId'] !== 'string' || !row['emId'].trim()
+    || (momentId !== undefined && row['emId'] !== momentId)
+    || (row['emEventId'] != null && row['emEventId'] !== eventId)
+    || typeof row['emAuthorName'] !== 'string' || typeof row['emMediaUrl'] !== 'string'
+    || typeof row['emMediaType'] !== 'string' || !['image', 'video', 'audio', 'text'].includes(row['emMediaType'])
+    || (row['emCaption'] != null && typeof row['emCaption'] !== 'string')
+    || (row['emMediaType'] === 'text' ? !String(row['emCaption'] ?? '').trim() : !row['emMediaUrl'].trim())) {
+    throw new Error('No se pudo confirmar la publicación. Revisa el evento antes de reintentar; tu borrador se conserva.');
+  }
+  return value as SocialEventMomentDTO;
+}
+
 export interface SocialInvitationDTO {
   invitationId?: string | null;
   invitationEventId?: string | null;
@@ -609,14 +624,16 @@ export const SocialEventsAPI = {
     if (trimmed) form.append('name', trimmed);
     return await postFormUnknown(`/social-events/events/${encodeURIComponent(eventId)}/image`, form) as SocialEventImageUploadDTO;
   },
-  editMoment: (eventId: string, momentId: string, caption: string, expectedUpdatedAt: string) =>
-    put<SocialEventMomentDTO>(`/social-events/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}`, { emeCaption: caption, emeExpectedUpdatedAt: expectedUpdatedAt }),
-  deleteMoment: (eventId: string, momentId: string) =>
-    del<void>(`/social-events/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}`),
+  editMoment: async (eventId: string, momentId: string, caption: string, expectedUpdatedAt: string) =>
+    confirmedMoment(await put<unknown>(`/social-events/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}`, { emeCaption: caption, emeExpectedUpdatedAt: expectedUpdatedAt }), eventId, momentId),
+  deleteMoment: async (eventId: string, momentId: string) => {
+    const result = await del<unknown>(`/social-events/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}`);
+    if (result !== undefined) throw new Error('No se pudo confirmar la eliminación. Actualiza el evento antes de reintentar.');
+  },
   listMoments: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments?extended`) as SocialEventMomentDTO[],
   createMoment: async (eventId: string, payload: SocialEventMomentCreateDTO) =>
-    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments`, payload) as SocialEventMomentDTO,
+    confirmedMoment(await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments`, payload), eventId),
   uploadMomentMedia: (eventId: string, file: File) => {
     const form = new FormData(); form.append('file', file);
     return postForm<SocialEventImageUploadDTO>(`/social-events/events/${encodeURIComponent(eventId)}/moments/media`, form);

@@ -22,6 +22,7 @@ runtime_paths=['tdf-hq/src/TDF/API/SocialEventsAPI.hs','tdf-hq/src/TDF/DTO/Socia
  'tdf-hq/sql/2026-10-25_event_memory_invitations.sql','scripts/test-event-memories-http.py']
 if a.source_moderation:runtime_paths+=['tdf-hq/src/TDF/Interactions/API.hs','tdf-hq/src/TDF/Interactions/Server.hs','tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql']
 if a.browser:runtime_paths+=['scripts/test-event-memory-source-browser.mjs','tdf-hq-ui/src/components/events/EventMemoryModeration.tsx','tdf-hq-ui/src/api/eventMemoryModeration.ts','tdf-hq-ui/src/pages/SocialEventDetailPage.tsx']
+if a.browser:runtime_paths+=['tdf-hq-ui/src/api/socialEvents.ts','tdf-hq-ui/src/api/client.ts','tdf-hq-ui/src/api/eventMemoryInvitations.ts']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/session/useSessionOwner.ts','tdf-hq-ui/src/session/useOwnedSessionDraft.ts','tdf-hq-ui/src/session/authEvents.ts','tdf-hq-ui/src/session/SessionContext.tsx','tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx','tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts']
 def runtime_sources():return {path:hashlib.sha256((root/path).read_bytes()).hexdigest() for path in runtime_paths}
 report={'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),

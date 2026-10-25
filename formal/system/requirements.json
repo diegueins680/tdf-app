@@ -12108,14 +12108,18 @@
         "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx",
-        "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx"
+        "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx",
         "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
-        "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx"
+        "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts"
       ],
       "formalModels": [],
       "verification": "Three observed pre-render counterexamples followed by corrected zero-dispatch regressions, late response and existing real session-provider/profile tests. Browser/API integration is qualified separately."

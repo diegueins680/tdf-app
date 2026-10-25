@@ -41,3 +41,14 @@ The real SessionProvider, imperative bearer credentials, preference API and HTTP
 client are also exercised with a synthetic fetch boundary. An old checkbox is
 invoked during a batched A-to-B login; no consent write may use B credentials.
 A separate explicit B click must produce one correctly authenticated write.
+
+Publication/edit acknowledgements also need a persisted source ID, compatible media
+shape and current event/source binding when present; legacy replies without an
+eventId remain accepted. Nonempty HTML is not a delete acknowledgement. Retain
+the editor on uncertain replies, and advise checking the event before retrying.
+This does not implement general creation idempotency or prove commit from a reply.
+
+Preference and campaign replies must have their typed boolean/aggregate shape; a
+save must acknowledge the requested value. Malformed HTML or an unchanged opt-in
+is not successful unsubscribe. Attribution accepts only a structured recorded
+boolean and never invents a new opening. No preference changes on a failed reply.
