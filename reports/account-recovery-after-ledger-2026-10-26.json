@@ -1,0 +1,191 @@
+{
+  "observedAt": "2026-10-26T16:27:38.577844+00:00",
+  "protectedMain": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "executionSource": "86d78e8c9cc117054d9f69ae7625a932f29f70d1",
+  "executionTree": "e46e888b9b2b30597f85882c6b181d36ca7f836e",
+  "scope": "Localized reset recovery on the actual integrated ledger/main composition. Real local synthetic nativeAPI/PG222/SMTP/browser; no production action/provider/physicaldevice/human outcome.",
+  "requirements": 145,
+  "allMainNormativeFieldsPreserved": true,
+  "onlyMappingExtension": "AUTH-ENTRY-002 implementation/tests; originalnormative fields unchanged",
+  "sourceCorrespondence": {
+    "unchangedAppAndTestSource": "dbd4d902933250582ac8d9b4f63e1a02dbd748af",
+    "qualifiedWholeUiTests": 3464,
+    "suites": 306,
+    "lint": "PASS retained sameinputs",
+    "typescript": "PASS retained sameinputs",
+    "scope": "PreviouswholeUI execution retainsactualdbd source. All web/e2e/dependency inputs are byteexact in86d78; no unnecessaryrepeat or relabeled execution. FinalheadhostedCI must establish its own results.",
+    "mainBackendSqlOpsMobileExact": true
+  },
+  "strictCatalog": {
+    "candidates": 1339,
+    "unreviewed": 0,
+    "stale": 0,
+    "mainRecordsExact": 1337,
+    "unchangedReviewedAuthSuccessors": 2,
+    "historyRegressionTests": 8,
+    "jsonCsvExitCode": 0
+  },
+  "freshRuntime": {
+    "startedAt": "2026-10-26T16:24:24.384911+00:00",
+    "source": "86d78e8c9cc117054d9f69ae7625a932f29f70d1",
+    "tree": "e46e888b9b2b30597f85882c6b181d36ca7f836e",
+    "binarySource": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+    "binarySha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+    "sourceStatus": [],
+    "steps": [
+      {
+        "step": "compile-loopback-bind-adapter",
+        "exitCode": 0
+      },
+      {
+        "step": "deny-nonloopback-egress",
+        "exitCode": 0
+      },
+      {
+        "step": "deny-nonlocal-egress",
+        "exitCode": 0
+      },
+      {
+        "step": "init",
+        "exitCode": 0
+      },
+      {
+        "step": "start",
+        "exitCode": 0
+      },
+      {
+        "step": "create",
+        "exitCode": 0
+      },
+      {
+        "step": "full-schema",
+        "exitCode": 0
+      },
+      {
+        "step": "build-web",
+        "exitCode": 0
+      },
+      {
+        "step": "browser",
+        "exitCode": 0
+      },
+      {
+        "step": "drop",
+        "exitCode": 0
+      },
+      {
+        "step": "stop",
+        "exitCode": 0
+      }
+    ],
+    "cleanup": {
+      "runtimesStopped": true,
+      "databaseRemoved": true,
+      "clusterStopped": true
+    },
+    "status": "VERIFIED-synthetic-local-only",
+    "humanParticipants": 0,
+    "productionWrites": false,
+    "mailScope": "Actual native MIME generation/SMTP transport to non-relaying loopback synthetic inbox; no real mailbox, TLS/provider/deliverability claim.",
+    "harnessSha256": {
+      "run.py": "dc0caafecfd5ed3031c74c89e0770e02e7e8d0c55e5b78bddbbea8d0d3e748a6",
+      "smtp.py": "16c60c50bcb83b440e4549a170db2a523a1e2a6491b6a32a3d78a030916f6209",
+      "browser.mjs": "37b84eee2e8d329f878fa27b8f20850dffb5f6df5b2d7972c8f62cf3fee778f9",
+      "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+    },
+    "migrations": 222,
+    "ledgerHeaderTriggerEnabled": "O",
+    "frontend": {
+      "entry": "/assets/index-BlL4KQ6s.js",
+      "sha256": "3ce919c6aec547470d337e8cba29c023de210986314e1a22dff29956b2042e88",
+      "sourceVerified": true,
+      "freshCompilation": true
+    },
+    "networkIsolation": {
+      "fourListenersLoopbackOnly": true,
+      "lanRequestsDenied": true,
+      "unlistedLanPortDeniedWithPositiveControl": true,
+      "nonlocalTcpDeniedWithPositiveControl": true,
+      "scope": "Services forced to literal127.0.0.1 and four LAN ingress probes refused. SBPL allows local-machine PostgreSQL/SMTP destination ports only; separate positive-outside/denied-inside GitHub443 TCP control sends no application data. Bounded observed controls, not a theorem about all network traffic."
+    },
+    "actualVersion": {
+      "buildTime": "2026-10-26T02:41:57Z",
+      "commit": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "journey": {
+      "scope": "Real isolated native API/PostgreSQL and rendered optimized web with local synthetic SMTP. No real email/provider/device/production claim.",
+      "checks": {
+        "protectedIntentPreserved": true,
+        "uiSignupAndOriginalIntent": true,
+        "revokedSessionReturnsToLoginWithIntent": true,
+        "nativeLocalizedMailPreservesIntent": true,
+        "tokenRemovedFromVisibleUrl": true,
+        "expiredResetRejectedInUi": true,
+        "resetUiReturnsToOriginalIntent": true,
+        "oldPasswordRejected": true,
+        "newPasswordAuthenticatesSameParty": true,
+        "resetTokenSingleUse": true,
+        "earlierResetStillRejected": true,
+        "oldSessionRejected": true,
+        "activePriorSessionRevokedByReset": true,
+        "singlePersistedCredential": true
+      },
+      "blockedExternal": 10,
+      "blockedMutations": 0,
+      "blockedMutationPaths": [],
+      "pageErrors": 0,
+      "partyId": 4,
+      "status": "PASS"
+    },
+    "finishedAt": "2026-10-26T16:25:26.078109+00:00"
+  },
+  "freshBundle": {
+    "preloads": 5,
+    "initialGzipBytes": 336500,
+    "canonicalBudgetAndSecretScan": "PASS unmodified script on copy of exactfreshAPIboundartifact; no second compilation",
+    "scriptSha256": "2bf25db2328e21e4ee5f22d372b0d3886d8ff3ae876a7a7687531905347e148c"
+  },
+  "sourceAdmission": {
+    "base": "78fa351b469c1d2031df3232204dd722ac480e3b",
+    "head": "86d78e8c9cc117054d9f69ae7625a932f29f70d1",
+    "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "mappedChangedSurfaces": [
+      "tdf-hq-ui/src/api/auth.test.ts",
+      "tdf-hq-ui/src/api/auth.ts",
+      "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+      "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+      "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+      "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+      "tdf-hq-ui/src/utils/authErrorMessage.ts"
+    ],
+    "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+  },
+  "replay": {
+    "overlay": "reports/account-recovery-after-ledger-evidence-20261026/run.py",
+    "retainedSmtpAndBind": "reports/account-recovery-evidence-20261026",
+    "retained14caseBrowser": "reports/account-recovery-after-welcome-evidence-20261026/browser.mjs",
+    "hashes": {
+      "run.py": "dc0caafecfd5ed3031c74c89e0770e02e7e8d0c55e5b78bddbbea8d0d3e748a6",
+      "smtp.py": "16c60c50bcb83b440e4549a170db2a523a1e2a6491b6a32a3d78a030916f6209",
+      "browser.mjs": "37b84eee2e8d329f878fa27b8f20850dffb5f6df5b2d7972c8f62cf3fee778f9",
+      "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+    }
+  },
+  "delivery": {
+    "remote625BeforePublication": "140c43fc160c7ab441c19cd634a4cf2cc6821464",
+    "newPublication": "PENDING evidencecommitandguard",
+    "protectedMerge": "PENDING exactheadCI/currentheadreview/nativeFIFO; older623and624 remain",
+    "productionDeployment": false,
+    "expectedBenefit": "Explain invalid/expired reset links in the active language and preserve a safe path to a new usable link.",
+    "observedBenefit": "14actualboundedchecks pass including persistedcredential/newpassword/singleusetoken/activeoldsessionrevocation. No measured human activation/retention."
+  },
+  "limitations": [
+    "No wholemathematicalcorrectness proof; main145/290global obligations remain UNPROVEN and backendreleaseBLOCKED.",
+    "Actualnativebinary retainsfe179 identity, not a newhead compilation.",
+    "OrdinarysessionTTL, realSMTPproviderTLS/mailboxdeliverability, physicalmobile and fullST001 remain unverified.",
+    "Original pre-welcome and post-welcome receipts and failurehistory keep their source identities."
+  ]
+}
