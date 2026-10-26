@@ -97,6 +97,8 @@ test('saved-alert221 succession preserves213/214/220 provenance and rejects stal
   const header = document.reconciliation.ledgerHeaderMainIntegration;
   const combined = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     header.document), 'utf8'));
+  const provider = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    document.reconciliation.providerDomainMainIntegration.document), 'utf8'));
   const { active, successors, integration } = await readReconciliation();
   const canonicalHash = value => createHash('sha256').update(JSON.stringify(value,
     (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
@@ -116,7 +118,14 @@ test('saved-alert221 succession preserves213/214/220 provenance and rejects stal
   // Freeze the independently reviewed 221-entry main prefix. The header
   // successor must preserve it, rather than waiving its old provenance checks.
   const manifest = actualManifest.slice(0, 221);
-  assert.equal(actualManifest.length, 222);
+  assert.equal(actualManifest.length, 223);
+  assert.equal(canonicalHash(actualManifest.slice(0, 222)),
+    '3de55b856b5d3d21671a9449be31f6169c93f004946a0e0752b784b4d5a0922f');
+  assert.deepEqual(actualManifest[222], {
+    id: '2026-10-16_provider_domain_payment_binding',
+    path: 'tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql',
+    introducedBy: '456be073c944dd3d76eb9e3c2169fe7fbb4041ef',
+  });
   assert.equal(canonicalHash(manifest),
     '1413652c0d640dbb2241fb5c004eaa212245a62dfcb031109f54226d3af31fd9');
   assert.deepEqual(actualManifest[221], {
@@ -163,10 +172,25 @@ test('saved-alert221 succession preserves213/214/220 provenance and rejects stal
   assert.equal(current.reviewed, true);
   assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
   assert.equal(current.evidence.valueCount, 221);
-  const latest = active.find(entry => entry.id === header.currentDecisionId);
-  assert.equal(latest?.id, '6ff395b6131079017c9d');
+  const ledger = provider.mainManifestDecision;
+  assert.equal(ledger.id, header.currentDecisionId);
+  assert.equal(ledger.id, '6ff395b6131079017c9d');
+  assert.equal(ledger.reviewed, true);
+  assert.equal(ledger.evidence.valueCount, 222);
+  assert.equal(canonicalHash(ledger),
+    '866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404');
+  assert.equal(provider.mainDecisionCanonicalSha256, canonicalHash(ledger));
+  assert.equal(canonicalHash(provider.providerManifestDecision),
+    '018a1dc08aafe97b3af2257fe2ad24bac9a8f47f724975df0eec07e729ba8058');
+  assert.equal(provider.preservedPrefixCanonicalSha256,
+    canonicalHash(actualManifest.slice(0, 222)));
+  const latest = active.find(entry => entry.id === provider.currentDecisionId);
+  assert.equal(latest?.id, '2634b239375f2ad309ba');
   assert.equal(latest.reviewed, true);
-  assert.equal(latest.evidence.valueCount, 222);
+  assert.equal(latest.evidence.valueCount, 223);
+  assert.equal(latest.classification, ledger.classification);
+  assert.equal(latest.disposition, ledger.disposition);
+  assert.ok(!active.some(entry => [ledger.id, provider.providerManifestDecision.id].includes(entry.id)));
   assert.equal(latest.classification, current.classification);
   assert.equal(latest.disposition, current.disposition);
   assert.equal(combined.mainParent, 'e938c72ba4b87010214f6838f06bfac45a0f45c0');
@@ -175,12 +199,12 @@ test('saved-alert221 succession preserves213/214/220 provenance and rejects stal
   assert.ok(!active.some(entry => [current.id, combined.headerManifestDecision.id].includes(entry.id)));
   const pointer = successors.find(entry => entry.name === 'migrations');
   assert.equal(pointer.currentId, latest.id);
-  assert.equal(pointer.valueCount, 222);
+  assert.equal(pointer.valueCount, 223);
   assert.equal(pointer.change, latest.justification);
   const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
   assert.equal(retirement.replacementId, latest.id);
   assert.equal(retirement.currentResolution.id, latest.id);
-  assert.equal(retirement.currentResolution.valueCount, 222);
+  assert.equal(retirement.currentResolution.valueCount, 223);
   assert.equal(retirement.reason, latest.justification);
   for (const decision of historical) {
     assert.ok(pointer.previousCurrentIds.includes(decision.id));
@@ -198,7 +222,7 @@ test('saved-alert221 succession preserves213/214/220 provenance and rejects stal
     const args = [auditScriptPath, '--root', repoDir, '--decisions', decisionsPath, '--fail-on-unreviewed'];
     await fs.writeFile(decisionsPath, JSON.stringify([latest]));
     await execFileAsync(process.execPath, args, { cwd: repoDir });
-    for (const decision of [...historical, current, combined.headerManifestDecision]) {
+    for (const decision of [...historical, current, combined.headerManifestDecision, ledger, provider.providerManifestDecision]) {
       await fs.writeFile(decisionsPath, JSON.stringify([decision]));
       await assert.rejects(execFileAsync(process.execPath, args, { cwd: repoDir }),
         error => error.code === 1 && error.stderr.includes('1 stale decision(s)')
