@@ -12383,7 +12383,10 @@
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
         "scripts/test-event-memory-signup-browser.mjs",
-        "scripts/test-event-memory-source-browser.mjs"
+        "scripts/test-event-memory-source-browser.mjs",
+        "scripts/test-event-raci-browser.sh",
+        "scripts/__tests__/event-raci-browser-runner.test.mjs",
+        ".github/workflows/event-raci-browser.yml"
       ],
       "formalModels": [],
       "verification": "Parser/signature/author-boundary tests, HTTP and browser journeys must be independently executed; no blanket completion claim."
@@ -12688,7 +12691,7 @@
     ".github/workflows/ci.yml": "883a9ffc619978fd2f08607f6d2fb558e354b2b83c8ad0c1c1a7901c242b37e5",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
-    ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
+    ".github/workflows/event-raci-browser.yml": "eedb2562c8c44b72d2651ce4bd63d3249422bf4b3160d2388546bf144b978ac6",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
@@ -13071,6 +13074,7 @@
     "scripts/__tests__/disposable-postgres-url.test.mjs": "76cf3c7aaeed689164a94da6d79b6297b5bf84b95ef05782436c46c84e93e636",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
+    "scripts/__tests__/event-raci-browser-runner.test.mjs": "38cbe5de24c03b9aae121eed6ffc5d23d7db44ccd839a5018adc5b83e162d271",
     "scripts/__tests__/event-raci-editor-context-runner.test.mjs": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": "186495b321cdc2ac067af786a72dffa740b289eb1ac22429c1d6e5c14ce85a9c",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
@@ -13216,14 +13220,15 @@
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
-    "scripts/test-event-memories-http.py": "212d9f83d54041406620604641238b98917fdd1774a273a02fd59afae696dfe5",
+    "scripts/test-event-memories-http.py": "a4fad1e0048800059ea25d69e4799d14d4671c186956f63209a1d7bfecf9faf2",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
     "scripts/test-event-memory-signup-browser.mjs": "53325a4eec001efb223ce5a3913518b7a8dd658dea6ea8f2d19f46df0fca2a86",
-    "scripts/test-event-memory-source-browser.mjs": "a104d59804051a557766cff3f05651ffed3551ac47d78511763b21bfd702f5df",
+    "scripts/test-event-memory-source-browser.mjs": "83f22ccfa3a209280c6752cda13c6932635362b9681147cab6476813f77eaa7a",
     "scripts/test-event-memory-source-moderation.sh": "3d25115a7c4767df9537e4c4112ccad2ab88eada159a577925c8665206f0be29",
     "scripts/test-event-memory-source-permissions.py": "97d8944b7f043879ca56fa4503027195ed99fbf2482ea874634bbbdcdb67d30c",
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
+    "scripts/test-event-raci-browser.sh": "1f5732fd0fd9fb56085843be0c3746d92dab1f337973447fec44adca6e8afbd5",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
@@ -22962,6 +22967,10 @@
       {
         "requirement": "OPS-CI-REGISTRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
       }
     ],
     ".github/workflows/interaction-verification.yml": [
@@ -24624,6 +24633,18 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-event-raci-browser.sh": [
+      {
+        "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/event-raci-browser-runner.test.mjs": [
+      {
+        "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/sql/2026-10-25_event_memory_invitations.sql": [
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
@@ -24991,12 +25012,16 @@
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
+      "sha256": "eedb2562c8c44b72d2651ce4bd63d3249422bf4b3160d2388546bf144b978ac6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "OPS-CI-REGISTRY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -26167,9 +26192,14 @@
     {
       "id": "SURFACE-39a576584c31ee3c",
       "path": "scripts/__tests__/event-raci-browser-runner.test.mjs",
-      "sha256": "bc4e5efeb9c4c0f541f346e6ac7ca52357b62c56e7ba75b4d7b7e04325364452",
+      "sha256": "38cbe5de24c03b9aae121eed6ffc5d23d7db44ccd839a5018adc5b83e162d271",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-2207a12e65c74d0d",
@@ -29695,7 +29725,7 @@
     {
       "id": "SURFACE-92e34e327b523dc8",
       "path": "scripts/test-event-memories-http.py",
-      "sha256": "212d9f83d54041406620604641238b98917fdd1774a273a02fd59afae696dfe5",
+      "sha256": "a4fad1e0048800059ea25d69e4799d14d4671c186956f63209a1d7bfecf9faf2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29739,7 +29769,7 @@
     {
       "id": "SURFACE-f6d09097c41b38d4",
       "path": "scripts/test-event-memory-source-browser.mjs",
-      "sha256": "a104d59804051a557766cff3f05651ffed3551ac47d78511763b21bfd702f5df",
+      "sha256": "83f22ccfa3a209280c6752cda13c6932635362b9681147cab6476813f77eaa7a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29835,9 +29865,14 @@
     {
       "id": "SURFACE-de843c5a9b8c5eed",
       "path": "scripts/test-event-raci-browser.sh",
-      "sha256": "09d11b39dfb9ed22f8d8a500d49119e0498fa97996b211b55c61a909d8ab6574",
+      "sha256": "1f5732fd0fd9fb56085843be0c3746d92dab1f337973447fec44adca6e8afbd5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-eebece6e2ab6438c",
@@ -51419,7 +51454,6 @@
     "SURFACE-9344bbc594468ec5",
     "SURFACE-d42db507e3322402",
     "SURFACE-fb39164e1682672b",
-    "SURFACE-39a576584c31ee3c",
     "SURFACE-97975ba39673dd5b",
     "SURFACE-5b7249f002376b56",
     "SURFACE-eb025c512ef7ddad",
@@ -51611,7 +51645,6 @@
     "SURFACE-8222f17ff103ec51",
     "SURFACE-536b0c7c569b3f6b",
     "SURFACE-7a2fc258dcf6f81d",
-    "SURFACE-de843c5a9b8c5eed",
     "SURFACE-eebece6e2ab6438c",
     "SURFACE-9f154943d53e9558",
     "SURFACE-9921ac84db8ffce6",
@@ -54200,7 +54233,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "be09bf97b30f2290e4719fe55b18d4e32856d8993787720dc618c3bf1e93947b",
+      "sourceSha256": "8a4295504a50dd088a55d6dc23cfa4c55c7d43221483827b8ccb0d8ab15cb0f1",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -54228,7 +54261,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "be09bf97b30f2290e4719fe55b18d4e32856d8993787720dc618c3bf1e93947b",
+      "sourceSha256": "8a4295504a50dd088a55d6dc23cfa4c55c7d43221483827b8ccb0d8ab15cb0f1",
       "definition": {
         "states": [
           "absent",
@@ -54258,7 +54291,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "be09bf97b30f2290e4719fe55b18d4e32856d8993787720dc618c3bf1e93947b",
+      "sourceSha256": "8a4295504a50dd088a55d6dc23cfa4c55c7d43221483827b8ccb0d8ab15cb0f1",
       "definition": {
         "export": [
           "queued",

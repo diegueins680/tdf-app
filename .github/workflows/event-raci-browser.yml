@@ -6,6 +6,13 @@ on:
     paths:
       - '.github/workflows/event-raci-browser.yml'
       - 'scripts/*event-raci-browser*'
+      - 'scripts/test-event-memories-http.py'
+      - 'scripts/test-event-memory-*.mjs'
+      - 'scripts/__tests__/fixtures/**'
+      - 'scripts/production-migrations.json'
+      - 'scripts/render-production-migration-batch.mjs'
+      - 'scripts/lib/production-release.mjs'
+      - 'scripts/lib/migration-contract.mjs'
       - 'scripts/__tests__/event-raci-browser-runner.test.mjs'
       - 'playwright.event-raci-browser.config.mjs'
       - 'playwright.config.mjs'
@@ -52,7 +59,7 @@ jobs:
           stack-no-global: true
           cabal-update: false
       - name: Native dependencies
-        run: sudo apt-get update && sudo apt-get install -y libpq-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev pkg-config postgresql-client ffmpeg
       - uses: actions/cache@v6
         with:
           path: |
@@ -69,12 +76,20 @@ jobs:
         working-directory: tdf-hq
         run: stack build tdf-hq:exe:tdf-hq-exe
       - name: Real session, event API, PostgreSQL and browser journeys
-        run: sh scripts/test-event-raci-browser.sh
+        run: sh scripts/test-event-raci-browser.sh --event-memories
       - name: Retain test-only evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: event-raci-real-browser
-          path: artifacts/event-raci-browser/
+          path: |
+            artifacts/event-raci-browser/
+            artifacts/event-memory-browser/results.json
+            artifacts/event-memory-browser/browser-results.json
+            artifacts/event-memory-browser/signup-first-memory-phone.png
+            artifacts/event-memory-browser/source-desktop.png
+            artifacts/event-memory-browser/source-phone.png
+            artifacts/event-memory-browser/source-public-entry-phone.png
+            artifacts/event-memory-browser/source-failure-*.png
           if-no-files-found: ignore
           retention-days: 7

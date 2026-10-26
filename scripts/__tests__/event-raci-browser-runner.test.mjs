@@ -46,6 +46,17 @@ test('remote Docker endpoints fail before build or container creation', () => {
   }
 });
 
+test('unknown memory runner options fail before Docker, compilation or database allocation', () => {
+  for (const args of [['--unknown'], ['--event-memories', '--unknown']]) {
+    const result = spawnSync('/bin/sh', [new URL('scripts/test-event-raci-browser.sh', root).pathname, ...args], {
+      env: { ...process.env, DOCKER_CONTEXT: '', DOCKER_HOST: 'ssh://unreachable.invalid' }, encoding: 'utf8', timeout: 10_000,
+    });
+    assert.equal(result.status, 2, result.stderr);
+    assert.match(result.stderr, /Unsupported browser runner option/);
+    assert.doesNotMatch(result.stdout, /Compiling|PostgreSQL|Removed owned/);
+  }
+});
+
 test('real handlers are composed without production startup or invented sessions', () => {
   const main = read('tdf-hq/test/EventRaciBrowserMain.hs');
   for (const name of ['Auth.sessionServer', 'authContext env', 'eventOperationsServer', 'httpTestConfig',
@@ -73,9 +84,13 @@ test('faults discard actual commits, never manufacture success receipts', () => 
 test('dedicated CI runs owned database and desktop/phone browsers without relaxing existing gates', () => {
   const workflow = read('.github/workflows/event-raci-browser.yml');
   for (const command of ['stack build tdf-hq:exe:tdf-hq-exe', 'playwright install --with-deps chromium',
-    'sh scripts/test-event-raci-browser.sh', 'node --test scripts/__tests__/event-raci-browser-runner.test.mjs']) {
+    'sh scripts/test-event-raci-browser.sh --event-memories', 'node --test scripts/__tests__/event-raci-browser-runner.test.mjs']) {
     assert(workflow.includes(command));
   }
   assert.match(workflow, /contents: read/);
   assert.doesNotMatch(workflow, /continue-on-error|pull_request_target/);
+  assert(workflow.includes("'scripts/test-event-memories-http.py'"));
+  assert(workflow.includes("'scripts/test-event-memory-*.mjs'"));
+  assert(workflow.includes('artifacts/event-memory-browser/results.json'));
+  assert(!workflow.includes('artifacts/event-memory-browser/browser-input.json'));
 });

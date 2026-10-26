@@ -122,3 +122,17 @@ Signup must request no marketing consent; memory invitation preferences must
 remain disabled before and after publication. Authentication for this public
 event must grant neither private-event reads nor organizer campaign access.
 Synthetic browser cases never establish real recipient eligibility or consent.
+
+
+CI invokes the same memory/browser lane using the existing RACI runner's local
+Unix-socket Docker ownership, canonical Stack executable and Chromium install.
+Its explicit `--event-memories` mode reuses the exact disposable container and
+selects the existing backend-CI pgvector/PostgreSQL17 image because the complete
+schema requires vector. RACI's ordinary mode remains PostgreSQL16. The HTTP lane
+owns a separate freshly created test database, binds all226 migrations and drops
+only that database. CI selects bundled Chromium; native local checks use Chrome.
+Unknown arguments and remote Docker endpoints fail before resource allocation.
+Artifacts include only synthetic result JSON and selected screenshots, excluding
+credentials/configuration and raw backend logs. None of these tests send email,
+push or real event invitations. Local direct-run success does not prove that the
+CI adapter has executed; its hosted result must be recorded separately.

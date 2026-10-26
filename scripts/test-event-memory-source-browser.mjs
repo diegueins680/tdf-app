@@ -38,7 +38,9 @@ try {
     if (attempt === 119) throw new Error('Owned frontend readiness deadline');
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  browser = await chromium.launch({ channel: 'chrome', headless: true });
+  const bundledBrowser = process.env.TDF_TEST_BUNDLED_BROWSER === '1';
+  browser = await chromium.launch({ ...(bundledBrowser ? {} : { channel: 'chrome' }), headless: true });
+  result.browserRuntime = { channel: bundledBrowser ? 'playwright-chromium' : 'chrome', version: browser.version() };
   const contexts = [await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'es-EC', timezoneId: 'America/Guayaquil', reducedMotion: 'reduce' }),
     await browser.newContext({ ...devices['Pixel 7'], locale: 'es-EC', timezoneId: 'America/Guayaquil', reducedMotion: 'reduce' }),
     await browser.newContext({ ...devices['Pixel 7'], locale: 'es-EC', timezoneId: 'America/Guayaquil', reducedMotion: 'reduce' })];

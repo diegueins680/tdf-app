@@ -7,13 +7,15 @@ root=pathlib.Path(__file__).resolve().parent.parent
 binary=pathlib.Path(a.binary).resolve();assert binary.is_file()
 out=pathlib.Path(a.output).resolve();out.mkdir(mode=0o700,parents=False,exist_ok=False)
 ci=os.environ.get('GITHUB_ACTIONS')=='true'
+native=os.environ.get('TDF_TEST_NATIVE_POSTGRES')=='1'
 assert not any(os.environ.get(k) for k in ('PGHOSTADDR','PGSERVICE','PGSERVICEFILE'))
-host='postgres' if ci else '127.0.0.1';port='5432' if ci else os.environ.get('TDF_TEST_NATIVE_POSTGRES_PORT','55486')
+host='postgres' if ci and not native else '127.0.0.1';port='5432' if ci and not native else os.environ.get('TDF_TEST_NATIVE_POSTGRES_PORT','55486')
 assert port.isdigit() and 0<int(port)<65536
-role='postgres' if ci else os.environ.get('TDF_TEST_NATIVE_POSTGRES_USER','macpro')
+role='postgres' if ci and not native else os.environ.get('TDF_TEST_NATIVE_POSTGRES_USER','postgres' if ci else 'macpro')
 assert role.replace('_','').isalnum()
 env={k:v for k,v in os.environ.items() if k in ('HOME','PATH','USER','LOGNAME','SHELL','LANG','LC_CTYPE','TZ','TMPDIR')}
 if ci:env['PGPASSWORD']=os.environ['TDF_TEST_POSTGRES_PASSWORD']
+env['TDF_TEST_BUNDLED_BROWSER']='1' if ci else '0'
 db='tdf_event_memories_http_test';routing=['-h',host,'-p',port,'-U',role]
 api_port='18886';origin='http://127.0.0.1:'+api_port
 opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
@@ -25,6 +27,7 @@ if a.browser:runtime_paths+=['scripts/test-event-memory-source-browser.mjs','tdf
 if a.browser:runtime_paths+=['tdf-hq-ui/src/api/socialEvents.ts','tdf-hq-ui/src/api/client.ts','tdf-hq-ui/src/api/eventMemoryInvitations.ts']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/components/PublicBranding.tsx','tdf-hq-ui/src/features/interactions/InteractionPanel.tsx']
 if a.browser:runtime_paths+=['scripts/test-event-memory-signup-browser.mjs','tdf-hq-ui/src/pages/LoginPage.tsx','tdf-hq-ui/src/api/auth.ts','tdf-hq-ui/src/api/session.ts','tdf-hq-ui/src/utils/loginRouting.ts','tdf-hq-ui/src/utils/roles.ts','tdf-hq-ui/src/utils/signupFields.ts','tdf-hq/src/TDF/ServerAuth.hs','tdf-hq/src/TDF/DTO.hs']
+if a.browser:runtime_paths+=['scripts/test-event-raci-browser.sh','.github/workflows/event-raci-browser.yml']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/routes/EventCommunityEntry.tsx','tdf-hq-ui/src/routes/publicRoutes.tsx','tdf-hq-ui/src/routes/protectedRoutes.tsx','tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx','tdf-hq-ui/src/routes/AppRoutes.tsx','tdf-hq-ui/src/routes/AppShell.tsx']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/session/useSessionOwner.ts','tdf-hq-ui/src/session/useOwnedSessionDraft.ts','tdf-hq-ui/src/session/authEvents.ts','tdf-hq-ui/src/session/SessionContext.tsx','tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx','tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts']
 # Bind the actual complete schema, including protected-main successors, rather
