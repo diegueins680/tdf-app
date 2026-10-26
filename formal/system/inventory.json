@@ -5371,7 +5371,7 @@
     {
       "id": "SURFACE-f6d09097c41b38d4",
       "path": "scripts/test-event-memory-source-browser.mjs",
-      "sha256": "983062c3d286d0f76c428b95e9684c79071ba9ba3aba7f44a7b0d00ad59e9817",
+      "sha256": "0c9645b8eaa1491acbee727742aa81bc181291294ffde5028cedc51517903254",
       "semanticConformance": "not-established-by-discovery"
     },
     {
