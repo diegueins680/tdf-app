@@ -56,9 +56,11 @@ function isPipelineDefinition(file) {
   return file === '.github/workflows/ci.yml'
     || file === '.github/workflows/build.yml'
     || file === 'scripts/ci-change-scope.mjs'
+    || file === 'scripts/ci-job-admission.mjs'
     || file === 'scripts/quality-check.sh'
     || file.startsWith('scripts/quality-')
     || file === 'scripts/__tests__/ci-change-scope.test.mjs'
+    || file === 'scripts/__tests__/ci-job-admission.test.mjs'
     || file === 'scripts/__tests__/ci-pipeline.test.mjs';
 }
 

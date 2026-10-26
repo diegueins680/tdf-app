@@ -132,7 +132,9 @@ test('persona browser journeys are artifacted and gate aggregate quality', async
   assert.match(workflow, /path: artifacts\/persona-playwright/);
   assert.match(workflow, /retention-days: 14/);
   assert.match(workflow, /quality:[\s\S]*?needs:[\s\S]*?- persona-web-e2e/);
-  assert.match(workflow, /PERSONA_WEB_E2E_RESULT: \$\{\{ needs\.persona-web-e2e\.result \}\}/);
+  const admission = parseYaml(workflow).jobs.quality.steps.find(step => step.env?.CI_ADMISSION_NEEDS);
+  assert.equal(admission.env.CI_ADMISSION_NEEDS, '${{ toJSON(needs) }}');
+  assert.equal(admission.run, 'node scripts/ci-job-admission.mjs quality');
   assert.match(playwrightConfig, /npm run build:e2e --workspace=tdf-hq-ui && npm run preview:e2e --workspace=tdf-hq-ui/);
   assert.doesNotMatch(playwrightConfig, /npm run dev --workspace=tdf-hq-ui/);
 });
