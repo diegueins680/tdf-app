@@ -11851,6 +11851,92 @@
         "classification": "PARTIAL",
         "reason": "Navigation implementation and local validation; independent review, hosted checks and production publication remain separate gates."
       }
+    },
+    {
+      "id": "DIR-SAVED-SEARCH-001",
+      "title": "Saved alerts share public non-geographic eligibility",
+      "statement": "Saved-search alerts and public directory queries share typed non-geographic and entity/derivation predicates, preserve public ranking/facets, reject unsafe new filters, and tolerate unsupported historical filters without broadening or aborting index updates.",
+      "domain": "DIR",
+      "authority": "Product owner user-value completion instruction 2026-10-25; existing directory saved-search contract and issue534.",
+      "source": "docs/music-directory/functional-spec.md saved-search section; issue534; docs/directory/saved-search-parity.md",
+      "property": "For valid non-geographic filters, a public eligible changed canonical indexed result matches its saved alert exactly once per version; invalid/unsupported filters never broaden a match.",
+      "contract": "docs/directory/saved-search-parity.md",
+      "actors": [
+        "Authenticated directory user",
+        "Public directory visitor",
+        "Directory document projector"
+      ],
+      "preconditions": [
+        "The complete reviewed migration prefix and additive parity migration are applied.",
+        "Saved alerts opt in and their frequency is not off."
+      ],
+      "inputs": [
+        "Typed public query filters",
+        "Saved canonical JSON",
+        "Canonical public search documents and aliases",
+        "Result source version"
+      ],
+      "state": {
+        "savedQuery": [
+          "valid-non-geographic",
+          "invalid",
+          "unsupported-geographic"
+        ],
+        "delivery": [
+          "absent",
+          "internal-notification-created"
+        ]
+      },
+      "allowedTransitions": [
+        "Valid query plus eligible new/modified version -> one internal notification.",
+        "Same version replay -> unchanged.",
+        "Unsupported radius removed -> valid alert save."
+      ],
+      "forbiddenTransitions": [
+        "Ignored non-geographic filter -> irrelevant notification.",
+        "Literal all/artist alias mismatch -> lost eligible notification.",
+        "Malformed historical cast -> unrelated document write abort.",
+        "New saved exact coordinates -> persisted payload.",
+        "Same result version -> duplicate delivery."
+      ],
+      "effects": [
+        "Use the same scalar SQL predicates for public and saved matching.",
+        "Preserve valid saved JSON/hash/name/history and public scoring/facets/cursor.",
+        "Unsupported geographic alerts stay unavailable with explicit new-request error."
+      ],
+      "authorization": "Existing authenticated actor owns saved searches; public/canonical visibility remains required for notification eligibility; no new grants or endpoints.",
+      "privacy": "Reject new saved exact coordinates and unknown/nested canonical fields; no historical payload rewrite or external provider activation.",
+      "concurrency": "Existing unique saved-search/result/version delivery fence and transactional notification are retained; no global worker/concurrency proof is claimed.",
+      "idempotency": "Existing saved-search actor/request identity and query hashes are preserved; same-version trigger replay cannot create a second delivery.",
+      "failure": "Invalid new filters return400; radius-enabled alerts return an actionable400; historical malformed/unsupported filters yield no-match without propagating known conversion errors.",
+      "recovery": "Remove unsupported/invalid filters and retry using the same existing endpoint; reviewed rollback restores the exact previous trigger with compatible previous backend.",
+      "observability": "Synthetic SQL/HTTP and plan receipts; minimized validation reasons; no profile payloads or credentials added to logs.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+        "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql",
+        "scripts/test-directory-saved-search-parity.mjs",
+        "scripts/__tests__/directory-saved-search-http.mjs",
+        "scripts/__tests__/directory-search-plan-parity.mjs",
+        "scripts/test-community-search.py",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Source-confirmed defect with real PostgreSQL negative characterization and candidate parity controls; hosted/deployed and physical-device evidence remain separate.",
+      "ambiguity": [
+        "Geographic saved-alert centers require an explicit privacy-compatible product contract; radius-only saved queries cannot be evaluated geographically."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded non-geographic repair; geographic delivery remains unsupported and release/deployed correspondence require independent review and gates."
+      },
+      "verification": "Full-schema PostgreSQL trigger/notification tests, protected input validation, rollback/reapply, shipped query/plan comparison and real authenticated HTTP lane; no mathematical proof claimed.",
+      "evidence": "Dated local reproduction and qualification receipts, final candidate source hashes and hosted checks."
     }
   ],
   "sourceFingerprints": {
@@ -11858,7 +11944,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "d4933aec2bce9b208f47ffa15ebe512aa501d107eed55c915653b8be88142ba5",
+    ".github/workflows/ci.yml": "4f42f73a21b278482e2f6450490df1106cc3a0e75c929e63fdc4605427f97d0f",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -11866,7 +11952,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "2df15e168c1c66982d4bdd62a25c06fb43fe8593c45dc032ed8bcb2576437f14",
+    "docs/catalog-persistence/catalog-list-decisions.json": "0cf9a1a54080318dea303aeab58b0e65fab809682cca9cc0fce1a348ebac1c4d",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -12210,7 +12296,7 @@
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "7d3fd93e543c62399aa573908553998cc70c6606edc39b31c2120bc24d2f196d",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "eb30521a370a81c42fb49e9a106baf79fa7d4e8a52ce9a3bee2a5dcef4e7054a",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "c95c36e8dd5bd2e15c38999f86f05e33c2a5cee096141db132b855be6a713ae7",
@@ -12219,6 +12305,8 @@
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
+    "scripts/__tests__/directory-saved-search-http.mjs": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
+    "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "76cf3c7aaeed689164a94da6d79b6297b5bf84b95ef05782436c46c84e93e636",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
@@ -12327,7 +12415,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "6b125a762a48305ccd0c948db1817e8dd0490092819e55254dcb78946c44d8be",
+    "scripts/production-migrations.json": "01dea8601b27c2b4ae58f321c5d997c209b3bfc438e542e33e63e0198f903bb7",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
@@ -12362,9 +12450,10 @@
     "scripts/test-checkout-policy-terms-identity-migration.sh": "ceded6be2927dfcb777863190ea62779d58c3637e706d48c6dce5a58b97096c1",
     "scripts/test-checkout-terms-history.sh": "237e633cf0bc7e6efd3317e6dfeeddc2f43a2fd948fbae7888e0ee371324f922",
     "scripts/test-checkout-terms-upgrade-concurrency.py": "7f0d4db4046fa61057d2198469529b92bdeb9b05cf0b55233f8a047e042ba504",
-    "scripts/test-community-search.py": "62fc49fb26bc0eb3e986d25e001c686eb196ab29a5d275221ce44203ae3b7cb7",
+    "scripts/test-community-search.py": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
+    "scripts/test-directory-saved-search-parity.mjs": "f4d9e034b9c1c80ce8a526224897079a06158baf8856f92b1dbc199f1baa9365",
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -12842,6 +12931,8 @@
     "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql": "af468bf34bbfe36bfc6e3321a02ff71875d1ac49d7351a23fb607568de1d643f",
     "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql": "27c2a344d5b0f88fd9757dff720c692e55564d9fb3df5531ed22f38aaafb2694",
     "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql": "3f0cf2121f5de8bc3074c0d7d1eddaf1fb8217d3d46895ae5b0e92070da9ec05",
+    "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql": "673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4",
+    "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql": "15c50b43f1f1b5591abdacb89cbca6b6db52fb792ca973f31c13c5a67f91e019",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "edb5bfd1fb3d4dab6a9d635e1de23d02c323df9e9d1047c231e2220dfd01f238",
@@ -12918,7 +13009,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "ec50d740c9ce6feed30d1bc67f03fc8d91af097e7e2940bae666c2150e5246ba",
+    "tdf-hq/src/TDF/Server/Directory.hs": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "752c46c93d45ae82b5fce380a9616764a5bb2d97858f0b56a09285ef19b8dfaf",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
@@ -13024,6 +13115,7 @@
     "tdf-hq/test/integration/directory_event_search_alias_sync.sql": "74345cd1a950aba9a454c1f089df7d8bd70bfa76ab8e20f292be9f69ab8b9cae",
     "tdf-hq/test/integration/directory_event_search_http_seed.sql": "b00c06818bcc42e8cee4ff9101f73a2a1311cf411edb68535257a01c038dce12",
     "tdf-hq/test/integration/directory_event_search_sync.sql": "5bb5a92c5403719e7398b2613a2c7956a152a69d0f88c7b0646e9b743206f8f6",
+    "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql": "98c52b8c11c22fdbb85ab5ed923a3185e54a2cf6438d0b485155e55640dda557",
     "tdf-hq/test/integration/interactions/notification-properties.sql": "65d0697ff1ba05a77d8d79d3120e24877c49c23c1b8a45de778096e39adb2d91",
     "tdf-hq/test/integration/ledger_posting_balance.sql": "bfca6e8574bf541195a3ea583eebe9b44205d7299ab96e71fd8276eb194d169e",
     "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
@@ -14142,6 +14234,10 @@
       {
         "requirement": "DEPLOY-VERSION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/api/generated/types.ts": [
@@ -14375,6 +14471,10 @@
       },
       {
         "requirement": "DISCOVERY-NAV-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
         "relationship": "implementation"
       }
     ],
@@ -22680,6 +22780,10 @@
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx": [
@@ -23155,6 +23259,42 @@
         "requirement": "NAV-MENU-COVERAGE-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-directory-saved-search-parity.mjs": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/directory-saved-search-http.mjs": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/directory-search-plan-parity.mjs": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -23223,7 +23363,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "d4933aec2bce9b208f47ffa15ebe512aa501d107eed55c915653b8be88142ba5",
+      "sha256": "4f42f73a21b278482e2f6450490df1106cc3a0e75c929e63fdc4605427f97d0f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23269,6 +23409,10 @@
         {
           "requirement": "DEPLOY-VERSION-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -24217,7 +24361,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "7d3fd93e543c62399aa573908553998cc70c6606edc39b31c2120bc24d2f196d",
+      "sha256": "eb30521a370a81c42fb49e9a106baf79fa7d4e8a52ce9a3bee2a5dcef4e7054a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24361,6 +24505,30 @@
       "requirements": [
         {
           "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-420f7b30c17196ae",
+      "path": "scripts/__tests__/directory-saved-search-http.mjs",
+      "sha256": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-38cae059ca169cb6",
+      "path": "scripts/__tests__/directory-search-plan-parity.mjs",
+      "sha256": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "tests"
         }
       ]
@@ -26621,7 +26789,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6b125a762a48305ccd0c948db1817e8dd0490092819e55254dcb78946c44d8be",
+      "sha256": "01dea8601b27c2b4ae58f321c5d997c209b3bfc438e542e33e63e0198f903bb7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27818,11 +27986,15 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "62fc49fb26bc0eb3e986d25e001c686eb196ab29a5d275221ce44203ae3b7cb7",
+      "sha256": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "tests"
         }
       ]
@@ -27889,6 +28061,18 @@
       "sha256": "f2b36be47672551b47c68cccad8959582239a0beeb80e3ed41f105b3c82022ce",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-66af35e30b926d7a",
+      "path": "scripts/test-directory-saved-search-parity.mjs",
+      "sha256": "f4d9e034b9c1c80ce8a526224897079a06158baf8856f92b1dbc199f1baa9365",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b574af41738316b9",
@@ -40881,6 +41065,30 @@
       ]
     },
     {
+      "id": "SURFACE-8b976b9e85e42f80",
+      "path": "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+      "sha256": "673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-3efaf5b7ed7854d4",
+      "path": "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql",
+      "sha256": "15c50b43f1f1b5591abdacb89cbca6b6db52fb792ca973f31c13c5a67f91e019",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -42863,7 +43071,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "ec50d740c9ce6feed30d1bc67f03fc8d91af097e7e2940bae666c2150e5246ba",
+      "sha256": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42888,6 +43096,10 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "implementation"
         }
       ]
@@ -45103,6 +45315,18 @@
       "requirements": [
         {
           "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ef8e94675f6de4cb",
+      "path": "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql",
+      "sha256": "98c52b8c11c22fdbb85ab5ed923a3185e54a2cf6438d0b485155e55640dda557",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "tests"
         }
       ]
@@ -51644,7 +51868,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "74a98f7bb9da6739eb975232b181bba94e688a991e8c6f3616bf4f7ce58bfab1",
+      "sourceSha256": "8bdf2f5b3de23e9af9d5f8f076a8194f13b38d63c106bfed80f9cc0f28635a64",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -51672,7 +51896,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "74a98f7bb9da6739eb975232b181bba94e688a991e8c6f3616bf4f7ce58bfab1",
+      "sourceSha256": "8bdf2f5b3de23e9af9d5f8f076a8194f13b38d63c106bfed80f9cc0f28635a64",
       "definition": {
         "states": [
           "absent",
@@ -51702,7 +51926,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "74a98f7bb9da6739eb975232b181bba94e688a991e8c6f3616bf4f7ce58bfab1",
+      "sourceSha256": "8bdf2f5b3de23e9af9d5f8f076a8194f13b38d63c106bfed80f9cc0f28635a64",
       "definition": {
         "export": [
           "queued",
@@ -73978,7 +74202,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 140,
+    "PARTIAL": 141,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

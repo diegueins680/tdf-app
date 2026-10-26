@@ -18,7 +18,7 @@
     "e2e/web/music-player-native.spec.mjs": "c30ef37d2013401f3baffede88298930fa0795fb277d06c9167d3c9747fb55a0",
     "playwright.music-native.config.mjs": "d89a8b06cf0ac2b15c0acd6000325edb73b46a17cb6df8ecaa39c52b0cd772c7",
     "scripts/test-player-session-model.mjs": "cc1ae78132c81735e2c5562829b3b5a4a5660175dbcea9ae831f3a450eceed2d",
-    ".github/workflows/ci.yml": "d4933aec2bce9b208f47ffa15ebe512aa501d107eed55c915653b8be88142ba5",
+    ".github/workflows/ci.yml": "4f42f73a21b278482e2f6450490df1106cc3a0e75c929e63fdc4605427f97d0f",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
     "scripts/run-native-audio-tests.sh": "89be3522a4c6fb7e4352bc8799edb2aee64de19dac7a95d67efe144395ed48aa"
   },
@@ -475,5 +475,22 @@
     "playerRequirementRetainedExactly": true,
     "backendSqlMigrationDependenciesMobile": "byte-identical to integration baseline",
     "qualification": "earlier executions retain their original source identities; combined candidate CI pending"
+  },
+  "latestIntegrationBaseline": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+  "latestRequirementCount": 141,
+  "lastQualifiedPlaybackHead": {
+    "sha": "464d49dcdf9b72c6670cb4bb6ea1716d6b7e3429",
+    "ci": "https://github.com/diegueins680/tdf-app/actions/runs/40265417111",
+    "result": "success",
+    "nativeRealAndMocked": {
+      "passed": 40,
+      "realMedia": 35,
+      "mockedEngine": 5,
+      "skips": 0,
+      "retries": 0
+    },
+    "reviewId": 5647112905,
+    "reviewSubmittedAt": "2026-10-26T03:46:11Z",
+    "limitation": "this evidence retains its exact head identity; current-main refresh requires fresh checks/review"
   }
 }
