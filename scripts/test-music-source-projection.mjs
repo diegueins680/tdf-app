@@ -128,7 +128,7 @@ try {
   PERFORM music_refresh_validation_flags(vid);`);
   sql("INSERT INTO party(display_name,is_org,created_at) VALUES ('Music publication spec',FALSE,NOW());\n" + fixture);
   const actor = Number(sql("SELECT id FROM party WHERE display_name='Music publication spec'"));
-  const other = Number(sql("INSERT INTO party(display_name) VALUES ('Other listener') RETURNING id"));
+  const other = Number(sql("INSERT INTO party(display_name,is_org,created_at) VALUES ('Other listener',FALSE,NOW()) RETURNING id"));
   const make = mode => {
     const [release, version] = sql(`SELECT release_id,version_id FROM music_source_publishable(${quote(mode)},${quote(mode)})`).split('|');
     sql(`UPDATE music_release_version SET state='scheduled',scheduled_by=created_by,release_at_utc=clock_timestamp()+interval '1 millisecond',release_timezone='UTC' WHERE id='${version}'; SELECT pg_sleep(0.01);`);
