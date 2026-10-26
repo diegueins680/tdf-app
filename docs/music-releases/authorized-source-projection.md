@@ -175,3 +175,28 @@ fixture, not the complete 222-entry schema or compiled HTTP/storage boundary.
 Metadata verification totals36 passing cases:26 passed initially, while the10
 conformance cases could not start until generated inventory conflicts were
 resolved and then passed. The initial import failure remains recorded.
+
+## Protected post-legacy main refresh
+
+After #624 merged, this preparation normally merges
+`62f9d4f874eed1cd5ac94f60194f289d426c4a94` with actual protected main
+`2e01bbe1263e8761fa2692bd951f828c01142449`. All 147 main requirement objects
+are preserved exactly, with the unchanged source-projection requirement for
+148 total. The whole 1,341-decision main catalog file and 222-entry migration
+manifest are retained. The newer legacy-player implementation is inherited from
+protected main, not from an unapproved branch.
+
+All five qualified source inputs are byte-identical to the previous candidate,
+including the combined handler hash `2cc0c863...`, unchanged PostgreSQL runner
+and the CI workflow/selection inputs. The four complete projection functions
+and bindings retain their qualified fragments; the public catalog function
+remains byte-identical to protected main. No PostgreSQL or Stack run is repeated
+or relabeled for this metadata refresh. The earlier fresh owned-PG receipt keeps
+its actual execution identity and selected-fixture/lexical scope. Appropriate
+metadata, strict catalog, scope and committed-source checks are recorded in the
+report and private final receipt.
+
+This baseline is explicitly pinned to the post-#624 main above. A later main
+advance requires its own reconciliation. The existing remote `ac396190` and its
+review remain untouched until parent-controlled publication; no push, new review
+request or production change is performed by this task.
