@@ -133,5 +133,13 @@
     "Execution belongs to runtimeSource600db; future source integration needs its own current checks and review."
   ],
   "privateRawReceipt": "/private/tmp/tdf-welcome-activation-220-20261026-d1agg1q_/results.json",
-  "harnessManifest": "/private/tmp/tdf-welcome-runtime-20261026/manifest.json"
+  "harnessManifest": "reports/welcome-runtime-evidence-20261026/manifest.json",
+  "executedHarnessDirectory": "/private/tmp/tdf-welcome-runtime-20261026",
+  "versionedEvidenceDirectory": "reports/welcome-runtime-evidence-20261026",
+  "executedHarnessSha256": {
+    "run.py": "6d2ad7bcc61de405762631a003c87c6b519123206ea25cce0040c53aff8c323e",
+    "runtime.mjs": "2d29b9c010771040d793519baf38ffb70927dea53467bc2bafbfece343dfa156",
+    "rehearsal.mjs": "30fb75c9bcb7b91c4a41656f3b1c88716afd83224dac71be422bae4ba0102063",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  }
 }
