@@ -13122,8 +13122,8 @@
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-proof-certificates.py": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
     "scripts/test-provider-domain-binding.py": "dde27908fb2bebe25c14c022cc2bf7cc123e03b4236d94e43971699272c9ba77",
-    "scripts/test-provider-domain-harness.py": "48ff5e6b2a6d995e78d4be732bcf006b7ea2b42a9f76d7a7d2e167eda2e6f1e6",
-    "scripts/test-provider-retry-runtime.sh": "d1158b7cbbd108290b479f3ceba3d18e2f5d7e9d291939cdeddd432ddb1feeb9",
+    "scripts/test-provider-domain-harness.py": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
+    "scripts/test-provider-retry-runtime.sh": "6e9f3db759644af6ba162685d6a48aac8a0b8a1b7a25b123e88cfc2f345eabbc",
     "scripts/test-public-route-denial.py": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
@@ -30089,7 +30089,7 @@
     {
       "id": "SURFACE-7d9c91182787e22c",
       "path": "scripts/test-provider-domain-harness.py",
-      "sha256": "48ff5e6b2a6d995e78d4be732bcf006b7ea2b42a9f76d7a7d2e167eda2e6f1e6",
+      "sha256": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30122,7 +30122,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "d1158b7cbbd108290b479f3ceba3d18e2f5d7e9d291939cdeddd432ddb1feeb9",
+      "sha256": "6e9f3db759644af6ba162685d6a48aac8a0b8a1b7a25b123e88cfc2f345eabbc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
