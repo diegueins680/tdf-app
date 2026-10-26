@@ -18,3 +18,21 @@ The baseline receipt, raw logs and replay driver are committed. Candidate
 qualification must be recorded separately at its exact source; baseline failure
 is never a successful current-schema or HTTP result. No deployment or production
 database operation is involved.
+
+SQL qualification at clean85c7c4b32906ed6e2e63627e2854a9e78625d115 succeeds
+with PostgreSQL16.13/UTF8/en_US.UTF-8, matching CI's documented en_US.utf8
+setting. Full222/historical220/header-enabled witness is222|220|O. Original
+replay, exact rollback/reapply, saved-row retention, public-query and seven
+query-plan comparisons pass. Disabling the header trigger causes the named
+current-verifier rejection; rollback restores a passing verifier. The actual
+HTTP lane remains separately required and is not claimed from this SQL run.
+
+An independent same-function/two-locale comparison confirms an existing
+portability failure: normalize('LÚNA') is 'l na' under C and 'luna' under
+en_US.UTF-8. The complete C-locale search test fails and is retained. Supported
+locale policy and an additive normalization repair remain open; no case/accent
+assertion was removed or weakened, and C is not certified. The earlier locale
+probe preparation failure is also retained separately.
+
+No production schema verifier or SQL migration body changed. Native HTTP
+compilation and exact final-head hosted checks/review remain pending.
