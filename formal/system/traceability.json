@@ -8634,7 +8634,8 @@
         "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql",
         "tdf-mobile/src/navigation/notificationTarget.ts",
         "playwright.music-native.config.mjs",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "scripts/run-native-audio-tests.sh"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -11857,7 +11858,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "7b0623e449d35d5fdf1d20743149d048497b16db9f1b9ba17845cface4a346f2",
+    ".github/workflows/ci.yml": "d4933aec2bce9b208f47ffa15ebe512aa501d107eed55c915653b8be88142ba5",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -12338,6 +12339,7 @@
     "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
     "scripts/run-music-release-worker-once.sh": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
     "scripts/run-music-release-worker.sh": "521e52bb3b059c86c17765100957bacbfcf66d1575978b710bc6dc22e916cc5b",
+    "scripts/run-native-audio-tests.sh": "89be3522a4c6fb7e4352bc8799edb2aee64de19dac7a95d67efe144395ed48aa",
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -12651,7 +12653,7 @@
     "tdf-hq-ui/src/pages/MobileAppPage.tsx": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
     "tdf-hq-ui/src/pages/MusicLibraryPage.tsx": "128ba43306d3634403c1ffde27924ad7b15a28367788432c7731cebb60a927b0",
-    "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx": "ec29c19087e351215488e2192c3a635a9ee5be2a76fa85ce73a7aa6bd2268fab",
+    "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx": "9a38d743806d57f1ed655cfe93a2db264c21dd0672db93afbc06c422e4b8698d",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx": "82bb2a837450ba66c5139d899fe44023c79ed3972657f2343929c82861e31ff7",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "3f9928ccb9c7691f0415c16c2294fedad13aee3d2e19d4a9e3cdf0d6d7c2918a",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "4dd4547567f2eeb1945a623bfeb3c57e36b78df60e2808410f7475a7005125fe",
@@ -21056,6 +21058,12 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/run-native-audio-tests.sh": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/player/PlayerProvider.test.tsx": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
@@ -23215,7 +23223,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7b0623e449d35d5fdf1d20743149d048497b16db9f1b9ba17845cface4a346f2",
+      "sha256": "d4933aec2bce9b208f47ffa15ebe512aa501d107eed55c915653b8be88142ba5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26945,6 +26953,18 @@
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-ASSET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5ecb45f4a99c5361",
+      "path": "scripts/run-native-audio-tests.sh",
+      "sha256": "89be3522a4c6fb7e4352bc8799edb2aee64de19dac7a95d67efe144395ed48aa",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
           "relationship": "implementation"
         }
       ]
@@ -34843,7 +34863,7 @@
     {
       "id": "SURFACE-64dc8940afb0c1b4",
       "path": "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
-      "sha256": "ec29c19087e351215488e2192c3a635a9ee5be2a76fa85ce73a7aa6bd2268fab",
+      "sha256": "9a38d743806d57f1ed655cfe93a2db264c21dd0672db93afbc06c422e4b8698d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51624,7 +51644,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ec0824b8662c6263ff1f8090920be16ec8e98325197557b1595c76003b7c5b86",
+      "sourceSha256": "74a98f7bb9da6739eb975232b181bba94e688a991e8c6f3616bf4f7ce58bfab1",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -51652,7 +51672,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ec0824b8662c6263ff1f8090920be16ec8e98325197557b1595c76003b7c5b86",
+      "sourceSha256": "74a98f7bb9da6739eb975232b181bba94e688a991e8c6f3616bf4f7ce58bfab1",
       "definition": {
         "states": [
           "absent",
@@ -51682,7 +51702,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ec0824b8662c6263ff1f8090920be16ec8e98325197557b1595c76003b7c5b86",
+      "sourceSha256": "74a98f7bb9da6739eb975232b181bba94e688a991e8c6f3616bf4f7ce58bfab1",
       "definition": {
         "export": [
           "queued",

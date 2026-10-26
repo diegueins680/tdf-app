@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T02:45:10.081Z",
+  "generatedAt": "2026-10-26T03:21:10.814Z",
   "repositoryRoot": ".",
-  "filesScanned": 2380,
+  "filesScanned": 2381,
   "candidateCount": 1337,
   "byClassification": {
     "dynamic-business-catalog": 862,
@@ -23142,7 +23142,7 @@
       "lines": [
         129
       ],
-      "consumerCount": 136,
+      "consumerCount": 137,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -23267,6 +23267,7 @@
         "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/privacy-request-ledger.py",
         "scripts/process-music-release-audio.sh",
+        "scripts/run-native-audio-tests.sh",
         "scripts/test-booking-conformance.py",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-privacy-request-ledger.py",
@@ -67059,7 +67060,7 @@
         238,
         479
       ],
-      "consumerCount": 136,
+      "consumerCount": 137,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -67184,6 +67185,7 @@
         "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/privacy-request-ledger.py",
         "scripts/process-music-release-audio.sh",
+        "scripts/run-native-audio-tests.sh",
         "scripts/test-booking-conformance.py",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-privacy-request-ledger.py",
@@ -75499,7 +75501,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 386,
+      "consumerCount": 387,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -75681,6 +75683,7 @@
         "scripts/production-migrations.json",
         "scripts/production-release.mjs",
         "scripts/run-music-release-worker-once.sh",
+        "scripts/run-native-audio-tests.sh",
         "scripts/social/HttpSpec.hs",
         "scripts/specification-conformance.py",
         "scripts/sync-artist-shows-to-social-events.py",
@@ -75699,8 +75702,7 @@
         "scripts/test-music-s3-local.mjs",
         "scripts/test-player-session-model.mjs",
         "scripts/test-provider-execution-runtime-migration.sh",
-        "scripts/test-provider-retry-runtime.sh",
-        "scripts/test-public-route-denial.py"
+        "scripts/test-provider-retry-runtime.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/test-stripe-integration.sh",
@@ -158313,7 +158315,7 @@
       "lines": [
         409
       ],
-      "consumerCount": 386,
+      "consumerCount": 387,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -158494,6 +158496,7 @@
         "scripts/production-migrations.json",
         "scripts/production-release.mjs",
         "scripts/run-music-release-worker-once.sh",
+        "scripts/run-native-audio-tests.sh",
         "scripts/social/HttpSpec.hs",
         "scripts/specification-conformance.py",
         "scripts/sync-artist-shows-to-social-events.py",
@@ -158512,8 +158515,7 @@
         "scripts/test-music-s3-local.mjs",
         "scripts/test-player-session-model.mjs",
         "scripts/test-provider-execution-runtime-migration.sh",
-        "scripts/test-provider-retry-runtime.sh",
-        "scripts/test-public-route-denial.py"
+        "scripts/test-provider-retry-runtime.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/test-stripe-integration.sh",

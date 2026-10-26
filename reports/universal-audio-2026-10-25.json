@@ -14,12 +14,13 @@
     "tdf-hq-ui/src/player/assetAccess.ts": "a0da01ca4f664e57db6f1efcbcf5f6cb601c181679bd7d4c4d92b7c5c07c74d1",
     "tdf-hq-ui/src/pages/MusicLibraryPage.tsx": "128ba43306d3634403c1ffde27924ad7b15a28367788432c7731cebb60a927b0",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "3f9928ccb9c7691f0415c16c2294fedad13aee3d2e19d4a9e3cdf0d6d7c2918a",
-    "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx": "ec29c19087e351215488e2192c3a635a9ee5be2a76fa85ce73a7aa6bd2268fab",
+    "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx": "9a38d743806d57f1ed655cfe93a2db264c21dd0672db93afbc06c422e4b8698d",
     "e2e/web/music-player-native.spec.mjs": "c30ef37d2013401f3baffede88298930fa0795fb277d06c9167d3c9747fb55a0",
     "playwright.music-native.config.mjs": "d89a8b06cf0ac2b15c0acd6000325edb73b46a17cb6df8ecaa39c52b0cd772c7",
     "scripts/test-player-session-model.mjs": "cc1ae78132c81735e2c5562829b3b5a4a5660175dbcea9ae831f3a450eceed2d",
-    ".github/workflows/ci.yml": "7b0623e449d35d5fdf1d20743149d048497b16db9f1b9ba17845cface4a346f2",
-    ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e"
+    ".github/workflows/ci.yml": "d4933aec2bce9b208f47ffa15ebe512aa501d107eed55c915653b8be88142ba5",
+    ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
+    "scripts/run-native-audio-tests.sh": "89be3522a4c6fb7e4352bc8799edb2aee64de19dac7a95d67efe144395ed48aa"
   },
   "verification": {
     "baselineFocused": {
@@ -137,6 +138,15 @@
       "candidates": 1337,
       "status": "PASS",
       "meaning": "nine individually classified finite model/fixture constants; all prior decisions unchanged"
+    },
+    "secondHostedFailure": {
+      "head": "6e61811c6cac3da153cd47a28ad05a7b3923b7d7",
+      "nativePassed": 33,
+      "nativeFailed": 7,
+      "failure": "all realFirefox sink failure, nativecode3, trustedplaying then3-6ms; traces identify NS_ERROR_DOM_MEDIA_MEDIASINK_ERR / OnMediaSinkAudioError",
+      "action": "private authenticated PulseAudio clockednullsink bootstrap, no assertion/clock/media mocks",
+      "localLinuxExecution": "UNVERIFIED; Dockerdaemon stopped",
+      "freshHostedExecution": "pending"
     }
   },
   "performance": {

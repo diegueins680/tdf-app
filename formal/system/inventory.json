@@ -355,6 +355,7 @@
       "scripts/run-instagram-follower-invite-2026-09-09.sh",
       "scripts/run-music-release-worker-once.sh",
       "scripts/run-music-release-worker.sh",
+      "scripts/run-native-audio-tests.sh",
       "scripts/scan-music-legacy-releases.sh",
       "scripts/set-loop-github-polling.mjs",
       "scripts/social/ApiContractSpec.hs",
@@ -2716,7 +2717,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7b0623e449d35d5fdf1d20743149d048497b16db9f1b9ba17845cface4a346f2",
+      "sha256": "d4933aec2bce9b208f47ffa15ebe512aa501d107eed55c915653b8be88142ba5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4685,6 +4686,12 @@
       "id": "SURFACE-37d6eca3de4ae9a2",
       "path": "scripts/run-music-release-worker.sh",
       "sha256": "521e52bb3b059c86c17765100957bacbfcf66d1575978b710bc6dc22e916cc5b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5ecb45f4a99c5361",
+      "path": "scripts/run-native-audio-tests.sh",
+      "sha256": "89be3522a4c6fb7e4352bc8799edb2aee64de19dac7a95d67efe144395ed48aa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9508,7 +9515,7 @@
     {
       "id": "SURFACE-64dc8940afb0c1b4",
       "path": "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
-      "sha256": "ec29c19087e351215488e2192c3a635a9ee5be2a76fa85ce73a7aa6bd2268fab",
+      "sha256": "9a38d743806d57f1ed655cfe93a2db264c21dd0672db93afbc06c422e4b8698d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20822,7 +20829,7 @@
     },
     {
       "path": "docs/music-releases/universal-audio-delivery-2026-10-25.md",
-      "sha256": "980195506509017fc8b838bbfebb91d1e3d8a3dd0c32f0a5d07189837c093608",
+      "sha256": "ba0735704e15181d78885a338f3f78593777b4303038e2fbc9cb5f52de735586",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27045,7 +27052,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ec0824b8662c6263ff1f8090920be16ec8e98325197557b1595c76003b7c5b86",
+      "sha256": "74a98f7bb9da6739eb975232b181bba94e688a991e8c6f3616bf4f7ce58bfab1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
