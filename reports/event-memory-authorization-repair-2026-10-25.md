@@ -456,3 +456,15 @@ revisión/CI del root final. #608 continúa en borrador, sin auto-merge. No hay
 escritura ni despliegue productivo, corrección de estado del evento ni invitaciones
 reales de esta entrega. Los elegibles con consentimiento y las exclusiones no
 están acreditados; intentadas/enviadas/entregadas/fallidas siguen **0/0/0/0**.
+
+
+Actualización posterior: [Mobile Validate 40282201755](https://github.com/diegueins680/TDF-mobile/actions/runs/40282201755)
+terminó **SUCCESS** en el head exacto f5197c6: 684 pruebas/98 suites, doce pruebas
+de firma/artefactos y 17/17 controles de Expo Doctor. Se conserva el
+[recibo CI](event-memory-source-evidence-20261025/mobile-text-hosted-ci-20261026.json).
+La [consulta pública de 06:53 UTC](event-memory-source-evidence-20261025/public-readonly-after-mobile-text-20261026.json)
+confirma HTTP 200 en evento/salud/versión y backend productivo 4dac175d; solo
+acredita disponibilidad de la versión anterior. Se detuvieron únicamente Metro
+propio y el PostgreSQL sintético (sin DB de fixture restante) y se retiraron los
+tres enlaces temporales propios conservando sus destinos. No se tocaron los
+servicios compartidos, las ramas ajenas ni el checkout original divergente.
