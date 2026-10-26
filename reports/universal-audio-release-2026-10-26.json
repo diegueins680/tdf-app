@@ -25,7 +25,8 @@
       "id": "AC-003",
       "requirement": "Authorized universal discovery",
       "status": "PARTIAL",
-      "evidenceAndLimit": "622 adds authorized recording-title matching and pagination to release catalog; universal /buscar and non-release/historical coverage remain incomplete. Production public flag was observed disabled."
+      "evidenceAndLimit": "622 adds authorized recording-title matching and pagination to release catalog; universal /buscar and non-release/historical coverage remain incomplete. Production public flag was observed disabled. Exact5f compiled HTTP checks now verify actual handler query/bindings with synthetic published fixtures.",
+      "compiledHttpEvidence": "reports/universal-audio-release-evidence-20261026/compiled-http/results.json"
     },
     {
       "id": "AC-004",
@@ -69,13 +70,15 @@
       "id": "AC-010",
       "requirement": "Private and restricted isolation",
       "status": "PARTIAL",
-      "evidenceAndLimit": "Canonical SQL authorization controls and permission-removal mutants pass. 626 source projection fix is approved but unmerged; storage-layer target evidence remains required."
+      "evidenceAndLimit": "Canonical SQL authorization controls and permission-removal mutants pass. 626 source projection fix is approved but unmerged; storage-layer target evidence remains required. Exact5f compiled HTTP signing rejects synthetic private, withdrawn and territory-inaccessible sources and original masters.",
+      "compiledHttpEvidence": "reports/universal-audio-release-evidence-20261026/compiled-http/results.json"
     },
     {
       "id": "AC-011",
       "requirement": "Revocation and removal at delivery",
       "status": "PARTIAL",
-      "evidenceAndLimit": "Existing signing policy and finite credential expiry inspected. Fresh-sign denial checks do not establish object ACLs, stale-token enforcement, caches or byte revocation in production."
+      "evidenceAndLimit": "Existing signing policy and finite credential expiry inspected. Fresh-sign denial checks do not establish object ACLs, stale-token enforcement, caches or byte revocation in production. Compiled HTTP checks verify 300-second signing and immediate denial of new source credentials after withdrawal; actual response lacks Cache-Control, tracked for a separate fix.",
+      "compiledHttpEvidence": "reports/universal-audio-release-evidence-20261026/compiled-http/results.json"
     },
     {
       "id": "AC-012",
@@ -184,7 +187,7 @@
   },
   "nextActions": [
     "Integrate reviewed listener privacy, legacy-link and source-projection fixes through current protected FIFO; compose with new main and requalify exact heads.",
-    "Complete exact compiled HTTP qualification with isolated PostgreSQL and synthetic fixtures; retain failures and actual binary identity.",
+    "Add explicit private/no-store response policy for media credential issuance, qualify it against actual HTTP, and preserve all authorization/expiry behavior.",
     "Satisfy existing backend deployment, private storage, coordinated recovery and operational activation gates before enabling canonical music.",
     "Review the eight legacy primary references for ownership, rights, actual media type and availability; use private idempotent provenance-preserving import, never automatic public publication.",
     "Implement remaining non-release catalog/search projections, reconciliation, privacy-safe operational measurements and real supported-device acceptance."
@@ -237,8 +240,29 @@
   },
   "compiledHttpQualification": {
     "source": "5f45677588bd8494226e00fd51d81c134b84bdd6",
-    "status": "RUNNING_BUILD_NOT_HTTP_TEST_PASS",
-    "scope": "Exact canonical Stack build in a separate owned clone, followed by isolated actual handler HTTP checks with synthetic metadata; result pending and not inherited from hosted CI or SQL extraction."
+    "sourceTree": "dabd64ad893e2959fd21226206488121eaad8a24",
+    "binarySha256": "e68a97c3496ee8d0e3b8ad1689e299f410c089a5c15f128dbc677e80da189332",
+    "actualVersion": {
+      "buildTime": "2026-10-26T18:24:44Z",
+      "commit": "5f45677588bd8494226e00fd51d81c134b84bdd6",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "status": "PASS-real-compiled-http-synthetic-metadata-only",
+    "receipt": "reports/universal-audio-release-evidence-20261026/compiled-http/results.json",
+    "receiptSha256": "7cbb0532d9651840b6476c4bedaa7a6572becfdf09ea6daf2f62e7713c5be1fd",
+    "summary": "reports/universal-audio-release-evidence-20261026/compiled-http/qualification-summary.json",
+    "assertionsPassed": 34,
+    "stepsRecorded": 54,
+    "fullSchemaMigrationsRehearsed": 222,
+    "cleanup": {
+      "backendStopped": true,
+      "databaseRemoved": true,
+      "clusterStopped": true
+    },
+    "scope": "Real Stack-compiled HTTP/catalog SQL bindings, session and signing handlers with owned PostgreSQL222 and synthetic publishable asset metadata. No actual object delivery, browser playback, upload processing, production environment or performance SLO claim.",
+    "firstTwoHarnessSetupFailuresRetained": true,
+    "missingCacheControlObserved": true
   },
   "evidenceCorrections": [
     {
