@@ -1,0 +1,167 @@
+# Music catalog discovery delivery increment
+
+This P1 candidate combines recording-title search with usable release catalog
+pagination. It is stacked on the universal playback candidate and has not been
+established as merged or deployed by this document.
+
+The combined starting commit is `99ca66b07a7c9ef851d2dfb80199025b3307fc19`:
+pagination commit `a90cb2e9a`, normal merge of playback head `6e61811c6`, and
+recording-search integration `99ca66b07`. The original search baseline and
+source hashes in [catalog-track-search.md](catalog-track-search.md) remain
+historical execution identities. The combined catalog page has pagination in
+addition to the original search-label change; its new hash must not be relabeled
+as an input to the earlier SQL run.
+
+Listeners can search `/musica` using a recording title even when the release
+title differs, then reach releases beyond the first 24 cards. Search/page URL
+parameters survive navigation; a changed query resets the page. Recording-title
+matches reuse the existing asset-accessibility predicate and retain the existing
+release-level response and ordering. Full behavior, assumptions and precise
+test boundaries are in
+[music-catalog-discovery.md](../../formal/system/music-catalog-discovery.md).
+
+The focused requirement `MEDIA-MUSIC-DISCOVERY-001` owns the query, client/page,
+their tests and the dedicated CI invocation. The initial integration retained
+140 foundation requirement objects plus the discovery requirement; an earlier
+foundation refresh below retains 142 objects plus the discovery requirement.
+The final main reconciliation retains 145 main objects plus the unchanged
+discovery requirement, for 146 total. Earlier counts below retain their historical
+baseline scope. Inventory and traceability are regenerated from
+actual sources and the unchanged pinned Mobile checkout; these generated
+mappings establish freshness and coverage, not test success.
+
+Evidence to attach to the exact candidate before merge is the focused frontend
+test run, current handler SQL regression with all four groups and its negative
+control, compilation/type/lint gates, required hosted checks and independent
+review. The original recording-search run passed four runtime groups on owned
+PostgreSQL 16; that result retains its original source hashes. No p95 latency,
+production upload-to-playback acceptance, full HTTP handler binding or physical
+device/screen-reader acceptance is claimed here.
+
+This search/pagination change adds no migration, asset backfill, infrastructure
+or alteration to original masters. Application rollback restores the previous
+query/page implementation.
+The target must already contain the declared directory normalizer and existing
+music publication/delivery predicates. Production verification and normal
+protected integration remain required before claiming delivery.
+
+Remaining P1 work includes universal `/buscar` projection, richer authorized
+metadata/typo retrieval, non-release sources and historical reconciliation.
+Offset pagination assumes stable results between requests; concurrent
+publication or withdrawal may move rows between pages.
+
+## Integrated execution evidence
+
+Combined UI/API/player regression66/66 passed in six suites after preserving the new search label and waiting for the library fixture query to enable its playback button. TypeScript and Vite build passed; the initial bundle is334831 gzip bytes with five preloads. The exact integrated handler and SQL runner passed all four PostgreSQL groups on server16.13; the receipt binds handlerfb6257e6 and runner070bc9f4 before/after, owned databases are removed and the55571listener is stopped. These are SQL-literal controls, not compiled HTTP binding acceptance.
+
+The new actual-browser discovery journeys passed4/4 in desktop Chromium and Pixel7 with synthetic API metadata, zero retries/skips and no media-method substitution. They verify keyboard pagination to records25and49,44px controls, detail/back navigation, query reset and URL/deep-link persistence. The browser served entryindex-nxqzNTxl.js (SHA2563b8c53c329d3c3d747576635c943f9d8fe3659417fd8beffa3bada41149448b7). Metadata/SQL and browser evidence have distinct boundaries. Versioned report `reports/music-catalog-discovery-2026-10-25.json` records the source and receipt identities. Required exact-head hosted checks and fresh review remain pending.
+
+The preceding foundation refresh merged playback
+`464d49dcdf9b72c6670cb4bb6ea1716d6b7e3429`, including the clocked Linux audio
+sink and main's canary integration, as
+`0a0dd901471653fc874175ebb401d4580fb0419b`. Its 140 foundation requirements
+plus discovery made 141 total. The handler/SQL regression inputs remain exactly
+the integrated PostgreSQL execution inputs.
+
+## Latest foundation reconciliation
+
+The new normal merge takes playback foundation
+`70e4e2e2679ac607ee15af9967e56aac5a0f58f0`, which contains protected main
+`1c9c833cc1ba62b47822fca3c20e14e86cf28daa` with the completed directory-alert
+and logout-intent integrations. Every one of that foundation's 142 requirement
+objects is retained field-for-field. The original `MEDIA-MUSIC-DISCOVERY-001`
+object from `0a0dd9014` is appended unchanged, making 143 total. This preserves
+all fields of `AUTH-LOGOUT-001`, `DIR-SAVED-SEARCH-001` and the player requirement,
+including its native-audio test wrapper mapping. Only requirements and generated
+inventory/traceability conflicted; the merged sources are not rewritten by this
+metadata reconciliation.
+
+The actual pinned Mobile source remains
+`d832bb3057dd03d44c0f35eea05be9f36320429d`. Main's 1,330 catalog decisions and
+the nine audio decisions retained by the playback foundation are preserved;
+this discovery refresh adds no catalog decision. The recording-search handler
+and SQL-runner hashes remain `fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc`
+and `070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2`.
+
+The preceding `0a0dd9014` candidate completed
+[hosted CI run 40266955707](https://github.com/diegueins680/tdf-app/actions/runs/40266955707):
+
+- UI: 3,413 tests in 303 suites passed.
+- Canonical backend build and tests: 4,039 examples, zero failures, 21 pending.
+- Recording-search PostgreSQL controls: all four groups passed, including the
+  missing-authorization mutation control.
+- Native audio browser suite: 40 passed.
+- Persona browser suite: 524 passed, 22 skipped; rollout checks: 10 passed;
+  discovery checks: 25 passed.
+
+These are results for that preceding head. Pending examples and skipped browser
+tests are not passes, and the new merged candidate requires its own relevant
+qualification, hosted checks and independent review. The local Stack build was
+**cancelled with exit 130** after the preceding candidate's hosted canonical
+build and tests passed; it is not a local build pass and provides no current
+merged-candidate qualification. No production deployment or business write is
+established by this refresh. Exact result boundaries remain recorded in
+`reports/music-catalog-discovery-2026-10-25.json`.
+
+## Journal integration baseline
+
+The following normal refresh retains playback `7de7c292753565ae6ea64c57dd9aa4b97e330b6d` and protected main `3af768dacd95c1223975c62da3ce8088bed89b47` (release-journal #618). All 142 foundation requirement objects remain exact plus the unchanged discovery requirement. This refresh changes no audio/search/page implementation; 106 combined player/catalog/client/logout regressions in eight suites passed after the prior privacy integration. Exact new-head CI and review remain required.
+
+## Runner-only CI selection
+
+Review of candidate `cd1c3a7e16d95954d255aaf2d090387998d67819` found that editing only the new catalog SQL runner did not select backend verification. The scope classifier now explicitly includes that runner; all 17 scope tests pass. Its regression is mapped to the existing discovery requirement. Runtime query, page, API and SQL-runner bytes remain unchanged; fresh hosted checks and review apply to the final candidate.
+
+## Fan-club baseline preservation
+
+The normal refresh includes foundation `ee688d321fa0ddb09a0f30e981754f69f621c534` and main `ed9eb9a1600f0a827e002bb2ab64a608f8352b2c` (#613). All 143 foundation requirement objects remain exact, plus the discovery requirement with its new runner-only CI mapping, for 144 total. Recording-query, page, API and SQL-runner bytes remain qualified by their original receipts; the scope correction has 17 passing controls. Exact new-head hosted checks and review remain required; no deployment or production write is claimed.
+
+## Final P0 parent reconciliation
+
+The candidate normally merges final playback parent
+`2a7f1b67745e93bb4f0da7958200ca7b54dd5b40` into
+`3749ca68ce02ce01fd0c9794693941ba9e57d84f`. That parent includes protected
+main `a1238fbf6d98062904a4bd80d2f9df35ebc40706` and the welcome integration.
+All 144 parent requirement objects are retained exactly, followed by the
+unchanged `MEDIA-MUSIC-DISCOVERY-001` object from `3749ca68`, including its
+runner-only CI recognition mapping, for 145 total. The whole 1,339-decision
+parent catalog file remains unchanged.
+
+Recording-query, catalog page/API, SQL-runner, browser test and scoped CI
+fingerprints remain exact. The handler is still `fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc`
+and the runner is still `070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2`.
+The prior 106 focused tests and earlier `0a0dd9014` hosted 3,413 UI tests,
+canonical backend and browser results remain historical qualifications of their
+actual inputs. This merge does not relabel them as execution of the final head.
+The existing runner-only classifier correction retains its 17 passing controls.
+
+Only canonical/generated metadata conflicts are resolved. Fresh metadata,
+source-admission, inventory/traceability and strict catalog JSON/CSV checks apply
+to this reconciliation; no new SQL, UI, compiled build, browser or production
+execution is claimed. PR622 remains stacked on PR620 and must target main only
+after PR620 is actually merged. Exact-head CI, review and protected integration
+remain required. No deployment or production write is performed.
+
+## Protected main after playback and ledger integration
+
+PR620 is now merged, and root has retargeted PR622 to main. The final normal
+refresh advances `0c125ac098ef7e900afa4244a9f77b0c354c4070` with protected main
+`78fa351b469c1d2031df3232204dd722ac480e3b`, including the independent ledger
+header integration. All 145 main requirement objects are retained exactly,
+followed by the unchanged discovery requirement and its runner-only CI mapping,
+for 146 total. The whole 1,339-decision main catalog file is unchanged. The
+222-entry migration manifest is inherited unchanged; this P1 correction adds
+no migration and claims no fresh database execution against that full schema.
+
+All nine P1 source fingerprints remain exact, including the recording-query
+handler `fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc` and
+SQL runner `070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2`.
+The prior 106 focused tests, original `0a0dd9014` hosted results and PostgreSQL/
+browser receipts remain tied to their actual inputs. This metadata refresh
+does not relabel them as execution of the new head. No source/UI/runtime change
+or repeated runtime qualification is introduced.
+
+Fresh metadata, source-admission, inventory/traceability and strict catalog
+JSON/CSV checks qualify the final reconciliation. Exact published-head CI and
+independent review remain required. No deployment or production write is
+performed by this refresh. The earlier stacked-branch instructions above are
+historical; the current PR622 integration target is main.

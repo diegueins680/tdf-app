@@ -1,8 +1,11 @@
 {
-  "README.md": "4e57515b8ea56abffa2208a8ca56e84fa1c168f04d8ddefbbc1be4e5a3a17be3",
+  "README.md": "682137b86b916d8334adef253a542d8f650890b8ea3d5a1b93f7d9b03723b396",
   "aggregate-receipt.json": "6a376e55c8464883240ab6f7b94ff05a715fcbd4e9e8bf20fee4a4e41e1eabe3",
   "assurance-artifacts.tar.gz": "57bc573fd8f081ae2875d282c8866ec573a35887452504edc7bb724b0abc15a1",
   "build-receipt.json": "b31250e931d5d7d5e515296af986420fdd3a774863e19695c5a51e8659227beb",
+  "current-main-integration.json": "220f116f36d47b4c1725232fbd8486175b4a10b9e354800ccd38f5dffc318769",
+  "empty-discovery-artifacts.tar.gz": "c791af9a01323ca0af19e07c6c24411dfaad3c631e787ef40034a1806ca07bb8",
+  "empty-discovery-controls.json": "0ad23e15fdd18d9d0cd9621dba7c5b57869e3f4a76ad36f614453dacdecefadf",
   "harness-controls.json": "d1e87eee79ac861b1f1b4c1e467b7a64b3da7e26d13f70c9038450eef5749bae",
   "initial-failed-receipt.json": "1305eafa41950626f41d2c2a5d2b6bd678e38646388288d52b1eab3fc2a18a7b",
   "integration.json": "921b8f8d616c28453eda1c30fc1d22f535a0865726b101cc5fd66ff8acc60d21",

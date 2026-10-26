@@ -1,5 +1,7 @@
 # Provider/domain admission qualification
 
+Current reconciliation uses protected main2e01bbe1263e8761fa2692bd951f828c01142449, after the protected merge of621. Native317 and earlier assurance results retain their cb777/1bca identities. Changes to MusicRelease and SocialEventsHandlers and the strengthened empty-discovery gate require fresh compiled current-head CI. See current-main-integration.json; no whole-backend equality is claimed for this new composition.
+
 Clean financial source: `cb7773790f15099933b92b184cfb50d7cf20c8aa`. All 223
 registered migrations apply and replay; the first 222 objects/SQL/introduction
 ancestors are unchanged from the ledger candidate. Provider migration introduction

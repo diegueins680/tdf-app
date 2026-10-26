@@ -78,3 +78,20 @@ Late-capture review admission must complete actual ticket fulfillment after
 recordVerifiedPayment; that store only synchronizes canonical payment status.
 Fixtures now call the existing finalizePaidTicketOrder operation, retaining all
 payment/admission guards. The failed receipt and logs remain distinct evidence.
+
+## Protected-main reconciliation after ledger merge
+
+PR621 merged as78fa351b469c1d2031df3232204dd722ac480e3b with all41 statuses
+passing/skipped and approval on950c3f7c3f341cd05a48c237e7377cca66e35188.
+This candidate incorporates protected main2e01bbe1263e8761fa2692bd951f828c01142449
+without rewriting any of its222 registry entries or historical SQL. Only the
+original provider migration is appended as223. The old draft's backend failure
+was the historical saved-search prefix/readiness mismatch; the current main
+contains its complete-batch checkpoint correction.
+
+The317-case native result retains cb777 source identity. Current main changes
+MusicRelease and SocialEventsHandlers, so the integrated current head requires
+fresh compiled provider/refund execution. No whole-backend source equality or
+current-head result is inferred from that older run. A controlled missing Hspec
+group reproduces successful empty discovery without --fail-on=empty and failure
+with it; the canonical provider runner now requires that flag.

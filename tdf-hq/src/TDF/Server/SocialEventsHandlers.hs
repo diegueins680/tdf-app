@@ -5211,7 +5211,14 @@ socialEventsServer user =
             currency = eventTicketOrderCurrency orderRecord
             -- Roll the order back to a state where the caller can retry without
             -- double-selling tickets or double-counting promo redemptions.
-            rollbackOrder errText = do
+            rollbackOrder providerError = do
+                liftIO . hPutStrLn stderr . T.unpack . TE.decodeUtf8 . BL.toStrict . Aeson.encode $
+                    Aeson.object
+                        [ "event" Aeson..= ("stripe_ticket_checkout_failed" :: T.Text)
+                        , "orderId" Aeson..= renderKeyText orderKey
+                        , "reason" Aeson..= (if "No valid payment method types" `T.isInfixOf` providerError
+                            then "payment_methods_unavailable" else "initialization_failed" :: T.Text)
+                        ]
                 unless reusedCheckout $
                     liftIO $
                         runSqlPool
@@ -5227,7 +5234,8 @@ socialEventsServer user =
                                     Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
                             )
                             envPool
-                throwError err500{errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe error: " <> errText))}
+                throwError err503
+                    { errBody = "Ticket card payments are temporarily unavailable. Please try again later." }
             storedPromoCode =
                 decodeTicketCheckoutMetadata (eventTicketOrderMetadata orderRecord)
                     >>= snd

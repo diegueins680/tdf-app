@@ -1,0 +1,28 @@
+{
+  "stats": {
+    "startTime": "2026-10-25T22:42:52.633Z",
+    "duration": 234252.674,
+    "expected": 33,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  },
+  "failures": [
+    {
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "welcome-desktop",
+      "error": "Outage observer exhausted its 8s assertion before the existing retry cycle settled."
+    },
+    {
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "welcome-android",
+      "error": "Outage observer exhausted its 8s assertion before the existing retry cycle settled."
+    },
+    {
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "welcome-firefox",
+      "error": "Outage observer exhausted its 8s assertion before the existing retry cycle settled."
+    }
+  ],
+  "resolution": "Use the existing recovery-suite 20s assertion budget; no application retry, timeout, skip or success semantics changed."
+}

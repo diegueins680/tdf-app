@@ -1,0 +1,10 @@
+{
+  "README.md": "0ebb277dca42b211bc630e05d910d3aea31c3673b3d527b6c006f57d8b4b88c4",
+  "baseline-artifacts.tar.gz": "9a46315277ce4ef9a83c1676eaa090258080d392055275889c99ad62a849d3b1",
+  "baseline-receipt.json": "139ef3a8516d89705bf651d01b0405b37ce7c6993977f2c26bcbfbed4273f183",
+  "independent-baseline-diagnostic.json": "c37e22e33e1b89105e396a4acb60e91ee852600a23fa497cc9f4ffa3069f8003",
+  "integration.json": "acd2d6ec3005727f209057f709a24c0abd6c2007cdc29692df12849f8a1832fb",
+  "locale-comparison.json": "c43f8f32f8ec8333aed0d2f3467e6b8d20a5b0ac936acd09b9a22fd8e0bafb8d",
+  "sql-and-locale-artifacts.tar.gz": "056d4234cb06bd5f4b304e075001f6d059e98b1126006a6043ab22da98d44f55",
+  "sql-receipt.json": "b772db38b06af797e690f2360086817bc787333a145b684f416585712baa027a"
+}
