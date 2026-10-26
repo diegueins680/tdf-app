@@ -523,6 +523,37 @@
       "mainParent": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
       "headerParent": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
       "currentDecisionId": "6ff395b6131079017c9d"
+    },
+    "musicTrackSearchDispatchSuccessor": {
+      "baseline": "52aa82ea70ed1e2b3dc26180977d9a0b838dea59",
+      "review": {
+        "date": "2026-10-26",
+        "method": "manual-source-review",
+        "classification": "genuine-technical-constant",
+        "reason": "Protocol method dispatch and finite-model event traces are developer mechanics/test controls, not persisted business choices. No runtime catalog allowlist is introduced."
+      },
+      "previousDecision": {
+        "id": "56e2b5d3ce52bde290e8",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+        "justification": "Typed API-client method names for the music release endpoints are implementation mechanics; they are not selectable or reportable domain values.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/api/musicReleases.ts",
+          "line": 504
+        },
+        "reviewBatch": "music-release-platform-sync-2026-10-07",
+        "reviewMethod": "manual-source-review"
+      },
+      "successorId": "a54bc30988f056e6d713",
+      "additionalModelFixtureIds": [
+        "2f954948d7719fb87a37",
+        "c7ebc0f215501d998ad0"
+      ],
+      "note": "The exact inherited API-dispatch decision remains in append-only history. All other1340 inherited active decision objects are unchanged."
     }
   },
   "decisions": [
@@ -1830,22 +1861,6 @@
       "evidence": {
         "file": "tdf-hq-ui/src/api/musicReleases.ts",
         "line": 7
-      },
-      "reviewBatch": "music-release-platform-sync-2026-10-07",
-      "reviewMethod": "manual-source-review"
-    },
-    {
-      "id": "56e2b5d3ce52bde290e8",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "Typed API-client method names for the music release endpoints are implementation mechanics; they are not selectable or reportable domain values.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/api/musicReleases.ts",
-        "line": 504
       },
       "reviewBatch": "music-release-platform-sync-2026-10-07",
       "reviewMethod": "manual-source-review"
@@ -18547,6 +18562,54 @@
         "line": 7
       },
       "reviewBatch": "legacy-provider-actions-2026-10-26"
+    },
+    {
+      "id": "2f954948d7719fb87a37",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the event sequence could remove an adversarial interleaving or invalidate a model replay.",
+      "justification": "Finite-design regression event sequence with abstract queries/recordings and network/navigation events. It is test protocol data, not a production business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/__tests__/music-track-search-model.test.mjs",
+        "line": 106
+      },
+      "reviewBatch": "music-track-search-2026-10-26",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "a54bc30988f056e6d713",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.ts",
+        "line": 518
+      },
+      "reviewBatch": "music-track-search-2026-10-26",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "c7ebc0f215501d998ad0",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the event sequence could remove an adversarial interleaving or invalidate a model replay.",
+      "justification": "Finite-design regression event sequence with abstract queries/recordings and network/navigation events. It is test protocol data, not a production business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/__tests__/music-track-search-model.test.mjs",
+        "line": 80
+      },
+      "reviewBatch": "music-track-search-2026-10-26",
+      "reviewMethod": "manual-source-review"
     }
   ]
 }

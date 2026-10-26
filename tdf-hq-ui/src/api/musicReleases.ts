@@ -139,6 +139,21 @@ export interface MusicPublicReleaseSummary {
   coverAssetId: string | null;
 }
 
+// Search returns one currently discoverable recording in an authorized release
+// context. These are deferred references, never storage URLs or credentials.
+export interface MusicPublicTrackSearchHit {
+  trackId: string;
+  recordingId: string;
+  releaseId: string;
+  releaseVersionId: string;
+  releaseSlug: string;
+  releaseTitle: string;
+  title: string;
+  displayArtist: string;
+  durationMs: number | null;
+  sources: MusicPublicRelease['tracks'][number]['sources'];
+}
+
 export interface MusicAssetAccess {
   url: string;
   expiresAt: string;
@@ -501,6 +516,23 @@ export interface MusicPublicCatalogPage {
 }
 
 export const musicReleases = {
+  searchTracks: (query: string, page?: MusicPublicCatalogPage) => {
+    const term = query.trim();
+    if (Array.from(term).length > 200) throw new RangeError('Music search query must contain at most 200 characters.');
+    const params = new URLSearchParams();
+    if (term) params.set('q', term);
+    if (page?.limit !== undefined) {
+      if (!Number.isSafeInteger(page.limit) || page.limit < 1 || page.limit > 100) throw new RangeError('Search limit must be an integer from 1 to 100.');
+      params.set('limit', String(page.limit));
+    }
+    if (page?.offset !== undefined) {
+      if (!Number.isSafeInteger(page.offset) || page.offset < 0) throw new RangeError('Search offset must be a nonnegative safe integer.');
+      params.set('offset', String(page.offset));
+    }
+    const suffix = params.toString();
+    const path = apiPath(`/search${suffix ? `?${suffix}` : ''}`);
+    return page?.signal ? get<MusicPublicTrackSearchHit[]>(path, { signal: page.signal }) : get<MusicPublicTrackSearchHit[]>(path);
+  },
   listMine: (artistPartyId?: number) => get<MusicReleaseSummary[]>(apiPath(`/studio/releases${artistPartyId ? `?artistPartyId=${artistPartyId}` : ''}`)),
   listPublic: (query = '', artistPartyId?: number, page?: MusicPublicCatalogPage) => {
     const params = new URLSearchParams();

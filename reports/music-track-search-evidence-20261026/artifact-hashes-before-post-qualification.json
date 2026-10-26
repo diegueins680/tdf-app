@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "scope": "Current packet leaves except this self-referential manifest; later root-owned compiled-http evidence is separate",
+  "files": {
+    "README.md": {
+      "bytes": 4047,
+      "sha256": "33d3e4cd0c72426e4952df14f42ae68d83d831b437d2cd77010cbd40811e1645"
+    },
+    "archive-member-hashes.json": {
+      "bytes": 9857,
+      "sha256": "20522e2ae3373b142252d24cea32be1cf947d9bab1e1145dc4f4928542f81012"
+    },
+    "backend-source-review.json": {
+      "bytes": 293392,
+      "sha256": "45ecacf75475010d931ba43244cebe24f91dac8f8040f4093b751aaa3957ade4"
+    },
+    "catalog-source-review.json": {
+      "bytes": 3243,
+      "sha256": "eff39526cb8fb87767135afb7403355efdb488c2a98efbd66cee1ed97439cbfa"
+    },
+    "frontend-qualification.json": {
+      "bytes": 5012,
+      "sha256": "0c79dba1a214fd3841386dfcf08b730c1d6508f1419052592c5b6d7911a11e4e"
+    },
+    "local-execution-evidence.tar.gz": {
+      "bytes": 184077,
+      "sha256": "5fc5d4f01a82476cccb608a1f6bc55784d4169909a89c50bc68c56e5e5d77d0a"
+    },
+    "model-design-report.json": {
+      "bytes": 30762,
+      "sha256": "dca3d6c478e0426d3626bc73b278626ac6aa90a2accb47c32b9d47d9c0c76712"
+    },
+    "model-qualification.json": {
+      "bytes": 3361,
+      "sha256": "b9c9d16495a03c6be621f87b3728a46790f13ce3e68b9b6f581ea4eec14997d4"
+    },
+    "native-qualification.json": {
+      "bytes": 31489,
+      "sha256": "9ff3fcc717f8448776c6597103c27edf17e71e1f8fea06a2de3e01dd9419d385"
+    },
+    "qualification-summary.json": {
+      "bytes": 5095,
+      "sha256": "561ac3f5fa335758eab3064484cdfc99dfb352ae0cfe600c78838b2ceed7e895"
+    },
+    "qualified-source-inputs.json": {
+      "bytes": 3156,
+      "sha256": "7c93548b7f7ac4435da10b6c78623e39ee4480a12a9496370793cf1601c05032"
+    },
+    "sql-qualification.json": {
+      "bytes": 1612,
+      "sha256": "c2a092318e9cfd4b1f43db692ad519ffc213c21e1f5b0e2346c71da3ac87c313"
+    }
+  }
+}
