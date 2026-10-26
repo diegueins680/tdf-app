@@ -1,0 +1,225 @@
+{
+  "observedAt": "2026-10-26T16:55:46.293970+00:00",
+  "pr": 623,
+  "qualifiedCompositionCommit": "4712f2b767fe9e2c9d1f90feff081a27e5689692",
+  "originalFeatureCommit": "a571e76a6f8eb91c85b6f1de3aee31a6061fbd82",
+  "protectedMain": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "normalMergeParents": [
+    "a571e76a6f8eb91c85b6f1de3aee31a6061fbd82",
+    "78fa351b469c1d2031df3232204dd722ac480e3b"
+  ],
+  "purpose": "Return bounded Stripe checkout failures without exposing provider diagnostics; preserve buyer details, actionable inventory refusals, compensation and automatic payment-method selection.",
+  "sourceAudit": {
+    "observedAt": "2026-10-26T16:54:40.031191+00:00",
+    "pr": 623,
+    "head": "4712f2b767fe9e2c9d1f90feff081a27e5689692",
+    "main": "78fa351b469c1d2031df3232204dd722ac480e3b",
+    "originalFeatureHead": "a571e76a6f8eb91c85b6f1de3aee31a6061fbd82",
+    "mainRequirementCount": 145,
+    "mainRequirementObjectsPreservedExactly": 144,
+    "onlyRequirementExtension": "EVT-TICKET-001 exact original feature record",
+    "catalogDecisionsPreservedExactly": 1339,
+    "mainInputsPreservedExactly": [
+      "tdf-hq/sql",
+      "scripts/production-migrations.json",
+      "scripts/lib/production-release.mjs",
+      "ops",
+      "package.json",
+      "package-lock.json",
+      "packages",
+      "tdf-mobile",
+      "tdf-hq/src/TDF/Services/Stripe.hs"
+    ],
+    "ownedMaterialInputsPreservedExactly": [
+      "formal/ticket-admission/README.md",
+      "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+      "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+      "tdf-hq-ui/src/i18n/locales/en.ts",
+      "tdf-hq-ui/src/i18n/locales/es.ts",
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+    ],
+    "haskellSourceTreeExactToOriginalFeature": true,
+    "registeredSqlHistoryAndManifestExactToMain": 222,
+    "normalParentAncestryPreserved": true,
+    "changedPathsVsMain": [
+      "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+      "docs/catalog-persistence/reports/static-list-inventory.json",
+      "formal/system/inventory.json",
+      "formal/system/requirements.json",
+      "formal/system/traceability.json",
+      "formal/ticket-admission/README.md",
+      "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+      "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+      "tdf-hq-ui/src/i18n/locales/en.ts",
+      "tdf-hq-ui/src/i18n/locales/es.ts",
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+    ],
+    "scope": "Immutable source correspondence. Historical backend41-example execution retains4056/a571 source identity; no new compile, current-head CI, independent approval, provider activation or deployment inferred."
+  },
+  "verification": {
+    "executionContext": "Tests ran on the reconciled working tree before its merge commit. Application material bytes are preserved in the qualified commit; build version metadata still identifies the checked-out original parent. No deployed-artifact claim.",
+    "rootNode": "22.14.0",
+    "repositoryQuality": {
+      "exitCode": 0,
+      "log": "623-repo-quality.log"
+    },
+    "stripeSuites": {
+      "executedSuites": 2,
+      "passedTests": 32,
+      "source": "4712f2b767fe9e2c9d1f90feff081a27e5689692",
+      "invocationExitCode": 1,
+      "reasonForNonzeroExit": "Two additional test-selection paths did not exist; the two Stripe suites themselves passed. Failure log retained."
+    },
+    "correctedApiSelection": {
+      "executedSuites": 4,
+      "passedTests": 33,
+      "exitCode": 0,
+      "source": "4712f2b767fe9e2c9d1f90feff081a27e5689692"
+    },
+    "uiLint": {
+      "exitCode": 0
+    },
+    "uiTypecheckAndProductionBuild": {
+      "exitCode": 0,
+      "initialGzipBytes": 336465,
+      "preloads": 5
+    },
+    "generatedApiClients": {
+      "webRegenerated": true,
+      "mobileRegeneratedExplicitly": true,
+      "bothCommittedBytesUnchanged": true,
+      "mobilePin": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "nativeApplicationTestsExecuted": false
+    },
+    "strictCatalog": {
+      "jsonExitCode": 0,
+      "csvExitCode": 0,
+      "candidates": 1339,
+      "unreviewed": 0,
+      "stale": 0,
+      "decisionRegistryUnchanged": true
+    },
+    "inventoryAndTraceability": "regenerated from reconciled register and checked",
+    "immutableSourceAdmission": {
+      "base": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "head": "4712f2b767fe9e2c9d1f90feff081a27e5689692",
+      "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "mappedChangedSurfaces": [
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+    },
+    "migrationContract": {
+      "observedAt": "2026-10-26T16:54:49.768Z",
+      "head": "4712f2b767fe9e2c9d1f90feff081a27e5689692",
+      "main": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "contractValid": true,
+      "migrationCount": 222,
+      "manifestSha256": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+      "productionLedgerObservedAt": "2026-10-26T16:15:33.315Z",
+      "productionApplied": 213,
+      "pending": [
+        "2026-10-12_ledger_posting_integrity",
+        "2026-10-12_checkout_line_snapshot_fixed",
+        "2026-10-13_checkout_policy_terms_identity",
+        "2026-10-15_checkout_terms_historical_identity",
+        "2026-10-16_ledger_entry_write_fence",
+        "2026-10-22_checkout_terms_history_append_only",
+        "2026-10-24_ledger_guard_namespace",
+        "2026-10-25_directory_saved_search_parity",
+        "2026-10-25_ledger_posted_header"
+      ],
+      "allIncludesChecksumsAndIntroductionAncestryValid": true,
+      "sqlExecuted": false,
+      "productionMutation": false
+    },
+    "historicalBackend": {
+      "executionSource": "4056bddba9ba57c0cc57311a9d31514991bdd6a6",
+      "examples": 41,
+      "failures": 0,
+      "applicationSourceMatches": true,
+      "newCompiledExecution": false
+    }
+  },
+  "setupFailuresRetained": [
+    "Initial test selection contained two nonexistent API paths; Stripe32 positives retained and corrected API33 positives separately executed. No test assertion changed.",
+    "Initial strict catalog invocation omitted --decisions and correctly refused all1339 records. Reran the failed JSON stage with the unchanged reviewed decision registry; strict rejection was preserved.",
+    "First local source audit could not read a Git-quoted Unicode artifact name. Corrected the observer to use NUL-delimited paths; no repository source change.",
+    "The root API generation wrapper skipped Mobile because application dependencies were not installed. The exact Mobile generator was then executed explicitly and both clients checked."
+  ],
+  "logDigests": {
+    "623-focused-first.log": {
+      "sha256": "8c3f9956a2676fecca818cf96aec050f568535d0a40a812e76742ae089ed2287",
+      "bytes": 2340
+    },
+    "623-focused-api.log": {
+      "sha256": "c009d767a88383109376667aa413bd71ed45438dfd78978d69ee635814d5f70a",
+      "bytes": 972
+    },
+    "623-repo-quality.log": {
+      "sha256": "665d107562cd1ecbf2cdce94ead6763bc3da473f1fc8ea0b53d4381f71ef04fd",
+      "bytes": 134669
+    },
+    "623-lint.log": {
+      "sha256": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+      "bytes": 71
+    },
+    "623-build.log": {
+      "sha256": "eca668f5079ead12ef3954d542805e1ca0391c24490b122f775baebe89ad1055",
+      "bytes": 31131
+    },
+    "623-api-generate.log": {
+      "sha256": "672ce5604e4fb49d2380e5572b91744237053b44100cdb72a4d35b38c5c508c0",
+      "bytes": 986
+    },
+    "623-mobile-api-explicit.log": {
+      "sha256": "57c77d4b9672f0316ed7473ce3a758c98a7f14564754bcf0dd45d5761d09be60",
+      "bytes": 334
+    },
+    "623-catalog-json.log": {
+      "sha256": "76b41ded3cbb8e5e754cc3d451cf785bc2d15056faec034a9912a5117473c976",
+      "bytes": 29561
+    },
+    "623-catalog-json-with-decisions.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "623-catalog-csv.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  },
+  "deployment": {
+    "performed": false,
+    "financialOrProviderActivation": false,
+    "productionWrites": 0,
+    "realPayments": 0,
+    "automaticPostReplayAdded": false,
+    "formalReleaseAcceptance": "UNPROVEN/BLOCKED; local tests and historical bounded evidence do not constitute full financial or provider verification.",
+    "requiredNext": [
+      "Current publication-head CI",
+      "Fresh independent review under protected-main policy",
+      "Normal FIFO admission and merge",
+      "Separately qualified deployment and post-deployment verification"
+    ]
+  },
+  "replayCommands": [
+    "npm run quality:repo",
+    "npm run test --workspace=tdf-hq-ui -- --runTestsByPath src/components/__tests__/StripeCheckoutModal.test.tsx src/components/StripeCheckoutModal.logic.test.ts src/api/socialEvents.test.ts src/api/generated/client.test.ts src/api/authHeader.test.ts src/api/errorMessage.test.ts",
+    "npm run lint --workspace=tdf-hq-ui",
+    "npm run build --workspace=tdf-hq-ui",
+    "npm run generate:api:ui",
+    "npm --prefix tdf-mobile run generate:api",
+    "node scripts/check-generated-api.mjs",
+    "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --format json --output docs/catalog-persistence/reports/static-list-inventory.json",
+    "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv",
+    "python3 scripts/specification-inventory.py --check",
+    "python3 scripts/specification-conformance.py --check",
+    "python3 scripts/check-new-specification-surfaces.py --base 78fa351b469c1d2031df3232204dd722ac480e3b --head HEAD"
+  ]
+}

@@ -98,3 +98,24 @@ old queue review in history, plus its individually reviewed successor. The
 The 86-test/27-browser receipt retains its original source identity and does not
 qualify unrelated inherited main changes. Exact committed-source admission,
 current privacy CI/review and production acceptance remain separate gates.
+
+
+Protected-main reconciliation (2026-10-26): this branch normally merges
+`9b7aa4648d4158f6da84fbb5e794267cd4953177`, containing the protected discovery
+PR #622 and Stripe PR #623 changes. It does not incorporate pending legacy,
+source-availability or credential-cache feature heads. Current requirements total
+147: 145 foreign main objects are exact, PLAYER retains its semantic fields with
+only the SessionProviders implementation mapping append, and PRIVACY is unchanged.
+The catalog retains all 1,339 main objects across 1,338 unchanged active records
+and the exact old queue review in history, with one reviewed active successor.
+All inherited reconciliation fields and the 222-entry migration manifest remain
+exact. All six corrected `b6259692` runtime/test hashes and the package graph/lock
+remain unchanged; same-owner fresh-B decoder continuity and corrupt-source
+rejection are preserved.
+
+The historical 86-test/27-browser qualification keeps its original identity. This
+metadata integration runs a new focused unit and structural-metadata qualification;
+it does not relabel historical browser, build or production results. The inherited
+API module change is limited to catalog list pagination; asset-access resolution
+and the player/session runtime are unchanged. Current-candidate hosted checks,
+fresh independent review and production acceptance remain separate gates.
