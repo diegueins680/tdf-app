@@ -1,6 +1,6 @@
 {
   "status": "PARTIAL",
-  "updatedAt": "2026-10-26T07:52:59.640816+00:00",
+  "updatedAt": "2026-10-26T08:10:00.475287+00:00",
   "pr": "https://github.com/diegueins680/tdf-app/pull/627",
   "priority": "P1",
   "userImpact": "El servidor guarda la relación, pero una respuesta perdida dejaba el botón en Seguir y mostraba error. El usuario no podía confirmar su primer valor.",
@@ -49,10 +49,10 @@
     "generatedClients": "PASS (exact Mobile d832)",
     "specificationInventoryAndTraceability": "PASS",
     "changedSurfaceAdmission": "PASS: eight material surfaces",
-    "catalog": "PASS:1330 unchanged decisions,0unreviewed",
+    "catalog": "PASS:1339 unchanged currentmain decisions,0unreviewed",
     "formalRepositoryGate": "PASS; existing warnings retained; no universal refinement claim",
-    "actualRuntime": "activation-follow-response-2026-10-26/runtime.json",
-    "sourceQualification": "activation-follow-response-2026-10-26/source-qualification.json",
+    "actualRuntime": "activation-follow-response-2026-10-26/runtime-main3c.json",
+    "sourceQualification": "activation-follow-response-2026-10-26/source-main3c.json",
     "browserCases": 6,
     "database": {
       "syntheticPairs": 6,
@@ -66,7 +66,24 @@
     },
     "firstAttempt": "FAILED: adapter expected204 for DELETE but existing contract returns200; corrected adapter only. Full first receipt retained.",
     "sourceAdmissionPreflight": "A mistyped expected source SHA was rejected before resources were created; rerun used exact git rev-parse identity.",
-    "cleanup": "Owned API/web stopped, disposable DB removed and PG cluster stopped."
+    "cleanup": "Owned API/web stopped, disposable DB removed and PG cluster stopped.",
+    "previousRuntime43a": "activation-follow-response-2026-10-26/runtime.json",
+    "combinedFullWebTests": {
+      "status": "VERIFIED",
+      "passed": 3479,
+      "suites": 306,
+      "seconds": 560.405,
+      "uiSource": "25e9943e1ac4cbfd0214267735c9d95f3d82c9d8",
+      "webTree": "97ad2d0d8b44e2ea50739256866d8a9fbbcda2e2",
+      "allWebInputsUnchangedDuringRun": true,
+      "inputCount": 860,
+      "inputDigest": "63b4ac5c2dd0ce0879d7fdbe3418f456f84a49afc168e7df402a6611e13d1fbe",
+      "note": "Exact final-head hostedCI remains a separate protected gate."
+    },
+    "combinedTypecheck": "PASS",
+    "combinedLint": "PASS",
+    "inheritedPlayerModel": "PASS:5controls",
+    "combinedFormalRepositoryGate": "PASS; inherited warning debt unchanged; no universal proof claim."
   },
   "measurement": {
     "firstValueAuthority": "Only the existing server-evidence completion endpoint; six newlyCompleted:true receipts for six fictional fans, later refollow receipts:false. No direct analytics from GET.",
@@ -74,12 +91,16 @@
     "productionBaselineConversion": "No new observation or causal attribution",
     "VAR": null,
     "retentionD1D7D30": null,
-    "posthog": "BLOCKED: production read connection/project qualification remains unavailable."
+    "posthog": "BLOCKED: production read connection/project qualification remains unavailable.",
+    "fixtureScopeClarification": "The harness excludes commerce/payment receipt providers; the existing onboarding completion endpoint and its actual receipts are explicitly tested."
   },
   "integration": {
     "status": "PARTIAL",
-    "state": "Draft PR, CI pending final head; no independent approval or protected admission receipt yet.",
-    "rollback": "Revert web change through protected workflow; no migrations."
+    "state": "Protectedmain3c incorporated by normal merge25e; final hostedCI/review/admission still pending, no merge or deployment627.",
+    "rollback": "Revert web change through protected workflow; no migrations.",
+    "base": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+    "qualifiedCombinedSource": "25e9943e1ac4cbfd0214267735c9d95f3d82c9d8",
+    "scope": "Only eight own material web surfaces differ from main3c; current144 main requirement objects and1339 decisions preserved exactly."
   },
   "deployment": {
     "status": "NOT TESTED",
