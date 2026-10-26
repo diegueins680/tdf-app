@@ -124,3 +124,23 @@ commit. Provider destinations and API data remain fully synthetic/local; no
 provider network, external playback or native decoder acceptance is inferred.
 `reports/legacy-provider-actions-2026-10-26.json` retains both historical receipts
 and the new correction receipt with their distinct identities and limits.
+
+## Protected-main refresh after fan-club recovery
+
+The candidate was normally reconciled from
+`3f6c322b40fdb36e642b8ccb0cb56e8b5bd880d3` with protected main
+`ed9eb9a1600f0a827e002bb2ab64a608f8352b2c`, which adds the independently
+owned fan-club recovery requirement. All 143 main requirement objects are
+retained exactly, followed by the unchanged `MEDIA-MUSIC-LEGACY-001` object,
+for 144 total. Main's 1,330 catalog decisions and the two previously reviewed
+legacy technical decisions remain exact, for 1,332 total. Generated conflicts
+are reconciled from the combined canonical rows and actual pinned Mobile.
+
+All six legacy implementation/test inputs and the browser test retain their
+exact bytes from `3f6c322`. The prior 49-unit/four-browser source qualification
+and its bundle hashes remain historical evidence for their actual execution;
+this merge does not relabel them as a fresh build or browser run. Metadata,
+source-admission and strict catalog checks apply to the refreshed candidate.
+The previous review is historical and a fresh review is required after the
+new head is published. No production deployment, provider playback, migration
+or protected-main merge is established by this reconciliation.
