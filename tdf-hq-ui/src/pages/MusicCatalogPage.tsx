@@ -76,7 +76,7 @@ export default function MusicCatalogPage() {
   return <Stack spacing={3} sx={{ maxWidth: 1120, mx: 'auto', px: 2, py: 4 }}>
     <Box><Typography component="h1" variant="h3" fontWeight={900}>Música en TDF</Typography>
       <Typography color="text.secondary">Lanzamientos publicados y disponibles en tu territorio.</Typography></Box>
-    <TextField label="Buscar por lanzamiento o artista" value={query} onChange={(event) => {
+    <TextField label="Buscar por pista, lanzamiento o artista" value={query} onChange={(event) => {
       const value = event.target.value;
       setSearchParams((previous) => {
         const next = new URLSearchParams(previous);
