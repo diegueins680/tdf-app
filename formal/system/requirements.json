@@ -12046,6 +12046,168 @@
       "observability": "Record outcome booleans only; no cookie, token or personal-data diagnostics."
     },
     {
+      "id": "COMM-CLUB-001",
+      "title": "Recover fan-club reads without claiming false unavailability",
+      "statement": "A club read failure other than confirmed404 remains a recoverable load failure, not evidence of club absence. The reader can explicitly retry without losing the artist, deep link or session boundary. A missing club offers the existing public artist profile; invalid identifiers never select a different artist. Dependent content is requested only after a valid readable club is available.",
+      "domain": "COMM",
+      "actors": [
+        "Public fan",
+        "Authenticated fan",
+        "Artist"
+      ],
+      "preconditions": [
+        "Existing read endpoints and their authorization remain authoritative; public profile navigation grants no private-club access."
+      ],
+      "inputs": [
+        "Artist route identifier",
+        "Club read result or error status",
+        "Current session",
+        "Deep-link search/hash",
+        "Explicit retry"
+      ],
+      "state": {
+        "club": [
+          "loading",
+          "readable",
+          "not-found",
+          "read-failed",
+          "invalid-link"
+        ]
+      },
+      "allowedTransitions": [
+        "Loading -> readable after successful authorized read.",
+        "Failed read -> explicit retry -> current server outcome.",
+        "Confirmed404 -> public artist profile or Comunidad.",
+        "401/403 -> login preserving pathname, search and hash.",
+        "Readable cached club -> retain visible data during failed background refresh."
+      ],
+      "forbiddenTransitions": [
+        "503/network/timeout/401/403 -> assert artist has no active club.",
+        "Invalid or unsafe numeric identifier -> query another club.",
+        "Missing/unread club -> eagerly fetch its protected content.",
+        "Read or fallback navigation -> create club, membership, follow, post, message or notification."
+      ],
+      "effects": [
+        "Read-only recovery and existing-route navigation; no backend, API, database, provider or feature-flag change."
+      ],
+      "authorization": "Existing public/authenticated endpoints retain their checks. No fallback from a failed private API read to a public API response under the same cache key. Login preserves the requested route.",
+      "privacy": "Never display raw server/network diagnostics or credentials. Public artist links expose only the existing public-profile route.",
+      "concurrency": "Successful cached data remains usable while React Query refreshes. Club readiness gates dependent requests. Session cache isolation remains the shared provider responsibility.",
+      "idempotency": "Retry repeats only the club GET; no relationship or content mutation is introduced.",
+      "failure": "Unconfirmed availability is shown as a load failure with retry; a confirmed404 is not a claim that an artist never enabled a club.",
+      "recovery": "Retry reuses the current route query; users can visit the public artist page or Comunidad.",
+      "observability": "Actual component tests distinguish statuses, verify request ordering and preserve deep links. Browser/API/DB fixture receipts retain their source identities.",
+      "source": "User-authorized activation sprint; issue606 missing-club reproduction and new actual-component non404 negative controls.",
+      "implementation": [
+        "tdf-hq-ui/src/pages/FanClubPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "High for tested component transitions; production deployment and human comprehension remain unverified.",
+      "ambiguity": [
+        "This requirement does not provision new clubs or prove existing-club posting ownership, provider content delivery or human usability."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped component and isolated runtime evidence required; no whole-system refinement, deployed-version or human-pilot claim."
+      },
+      "critical": false,
+      "authority": "Activation journey B7/B8 failure recovery, truthful availability and issue606 acceptance criteria.",
+      "property": "Only confirmed404 can select missing-club UI; non404 read failure remains retryable and preserves artist context.",
+      "contract": "formal/system/fan-club-read-recovery.md",
+      "verification": "Component regression and pre-change negative controls; isolated browser on real API/PostgreSQL for unavailable/new-artist and recovery states.",
+      "evidence": "Exact source qualification receipts; synthetic data excluded from VAR, conversion and retention."
+    },
+    {
+      "id": "UX-WELCOME-001",
+      "title": "Public discovery shows value before personal profiling",
+      "statement": "The public start page /inicio explains TDF and offers anonymous exploration before the existing directory form. /buscar keeps direct URL-backed search; search controls describe the requested result rather than visitor identity. /tdf exposes studio, services and published work before contextual signup. Exploration does not require registration, geolocation or role selection and remains usable when directory data fails.",
+      "authority": "Explicit product owner execution request 2026-10-25 incorporating eight supplied visitor voice comments.",
+      "domain": "UX",
+      "source": "docs/engineering/welcome-first-discovery-2026-10-25.md",
+      "contract": "docs/engineering/welcome-first-discovery-2026-10-25.md",
+      "actors": [
+        "Anonymous visitor",
+        "Returning visitor",
+        "Authenticated user"
+      ],
+      "preconditions": [
+        "Existing public route and session bootstrap contracts"
+      ],
+      "inputs": [
+        "Current pathname",
+        "Existing URL search parameters",
+        "Public directory and editorial reads"
+      ],
+      "state": {
+        "arrival": [
+          "anonymous welcome",
+          "direct search",
+          "public platform exploration",
+          "directory unavailable"
+        ]
+      },
+      "allowedTransitions": [
+        "Anonymous root after bootstrap -> /inicio welcome and existing search",
+        "/inicio -> /tdf, /records or /buscar without registration",
+        "/tdf -> studio and service anchors, public work or contextual signup",
+        "Directory unavailable -> retry or independent public exploration"
+      ],
+      "forbiddenTransitions": [
+        "Public exploration requires personal profiling",
+        "Search profession is presented as visitor identity",
+        "Arbitrary editorial cover is represented as a studio photograph",
+        "Exploration CTA writes business data or grants access"
+      ],
+      "effects": [
+        "Render welcoming public content and labeled search",
+        "Navigate to existing public destinations",
+        "Emit optional fixed-destination exploration click events"
+      ],
+      "authorization": "Existing backend and session authorization unchanged. Signed-in root destination remains Comunidad.",
+      "privacy": "New welcome CTA events contain only fixed route and destination labels; no search query, identity, coordinates or user-entered data. Existing consent controls remain authoritative.",
+      "concurrency": "Welcome is independent of asynchronous directory data; existing account-scoped search cache and mutation guards are unchanged.",
+      "idempotency": "Exploration is read-only navigation; existing directory write contracts unchanged.",
+      "failure": "Directory failures preserve the welcome and independent exploration links. Analytics failure must not interrupt welcome navigation.",
+      "recovery": "Existing directory retry and URL-backed search remain available.",
+      "observability": "public_discovery_cta_clicked is exploratory intent, never successful activation. No measured conversion uplift is claimed.",
+      "property": "WelcomeBeforeProfiling; DirectSearchPreserved; PublicExplorationWithoutSignup",
+      "implementation": [
+        "tdf-hq-ui/src/components/PublicWelcome.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx",
+        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
+        "e2e/web/persona-public.spec.mjs",
+        "e2e/web/directory-entry.spec.mjs",
+        "e2e/web/directory-favorite-recovery.spec.mjs",
+        "e2e/web/directory-language.spec.mjs",
+        "e2e/web/public-welcome.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
+      "evidence": "reports/welcome-first-discovery-2026-10-25.json",
+      "status": "specified and implemented",
+      "critical": false,
+      "openQuestions": [
+        "Unidentified host portrait from voice feedback; authoritative studio gallery and teaching clips; interior plan/VR; human comprehension and production outcomes."
+      ],
+      "confidence": "Qualitative visitor feedback and scoped source/browser evidence; frequency and causal activation impact unknown.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused implementation; production release, human comprehension, complete media assets and measured user outcomes remain separate obligations."
+      }
+    },
+    {
       "id": "MEDIA-MUSIC-PRIVACY-001",
       "domain": "MEDIA",
       "title": "Client listener ownership and latest-intent precedence for local playback state",

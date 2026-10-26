@@ -166,3 +166,15 @@ The final consolidated refresh also retains merged privacy/logout616 at main1c9c
 ## Release-journal baseline refresh
 
 A normal merge retains protected main `3af768dacd95c1223975c62da3ce8088bed89b47` (release-journal succession #618). Its 142 requirement objects are unchanged except the deliberate existing player contract; all 1,330 main catalog decisions and 221 migrations remain intact. Audio runtime bytes are unchanged from `70e4e2e2679ac607ee15af9967e56aac5a0f58f0`, which received fresh independent approval and a passing native browser job. Those results retain their original head; this merged candidate requires new hosted checks and review. No deployment or production write occurred.
+
+## Fan-club integration baseline
+
+The normal refresh includes protected main `ed9eb9a1600f0a827e002bb2ab64a608f8352b2c` (#613 fan-club recovery). All 143 main requirement objects remain exact except the deliberate existing player contract; all 1,330 catalog decisions, 221 migrations and backend/dependency/Mobile bytes remain main-compatible. Audio runtime bytes are unchanged from `7de7c292753565ae6ea64c57dd9aa4b97e330b6d`, whose native-media CI job passed and independent approval was fresh. Its results keep their actual head; refreshed-candidate CI/review and FIFO admission remain required. No deployment or production write occurred.
+
+## Shared-browser listening-state risk
+
+A separate deterministic diagnostic on main `3af768dacd95c1223975c62da3ce8088bed89b47` uses actual application/session/player components with declared API/media doubles. Logout stops the old audio, but an anonymous or different signed-in principal can see the previous title, queue and positions restored from device storage. No server-private-media disclosure was demonstrated. The persistence loader/writer sections are unchanged in this foundation. The report binds the diagnostic receipt; a separate owner-scoped listening-state fix is in progress. This increment does not close account-isolation or whole-platform privacy acceptance.
+
+## Final protected integration baseline
+
+The normal refresh includes protected main `a1238fbf6d98062904a4bd80d2f9df35ebc40706` (#619 welcome discovery). All 144 main requirement objects remain exact except the existing owned player contract; all 1,330 main catalog decisions, 221 migrations, backend, dependencies and Mobile pin are preserved. Audio runtime remains byte-identical to `7de7c292753565ae6ea64c57dd9aa4b97e330b6d`, whose complete hosted CI40274900753 passed, including native job121416409080 with40 cases (35 real media and5 declared mocks), with fresh independent approval. Results keep that exact source identity. The final refreshed head requires its own checks, review and FIFO admission. The separately qualified owner-isolation increment remains separate; this foundation does not close the documented listening-state privacy gap. No production deployment or business write occurred.

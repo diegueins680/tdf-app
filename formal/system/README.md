@@ -13,6 +13,8 @@ Historical green results are not current-candidate evidence.
 - [auth-predicates.md](auth-predicates.md): three conditional authorization predicate contracts, cardinality lemmas, source mutation controls and explicit endpoint/refinement exclusions.
 - [recovery-expiry-arithmetic.md](recovery-expiry-arithmetic.md): four conditional full-width recovery-time contracts, PostgreSQL correspondence, overflow refusal and finite database boundary probes.
 
+- [fan-club-read-recovery.md](fan-club-read-recovery.md): distinguish read failures from confirmed missing clubs, retain artist/deep-link context and gate dependent content reads.
+
 ## Executable gates
 
 These checks make drift fail CI; run them before changing a mapped surface.

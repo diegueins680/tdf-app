@@ -1,0 +1,180 @@
+{
+  "generatedAt": "2026-10-25T23:48:33.636076+00:00",
+  "baseCommit": "b732efd65de23e5b97f3f619a2242397c64965c3",
+  "status": {
+    "implemented": true,
+    "localChecks": "passed",
+    "merged": false,
+    "deployed": false,
+    "verifiedInProduction": false,
+    "tested": true
+  },
+  "scope": "Bienvenida y exploración pública, lenguaje de búsqueda, orden de contenido y CTA de /tdf.",
+  "baseline": {
+    "observedAt": "2026-10-25T22:34:11.046Z",
+    "observations": [
+      {
+        "mode": "desktop",
+        "path": "/",
+        "url": "https://www.tdfrecords.net/inicio",
+        "h1": [
+          "Encuentra a la gente y las oportunidades que hacen música"
+        ],
+        "entry": "/assets/index-CYNabXuH.js",
+        "overflow": false
+      },
+      {
+        "mode": "desktop",
+        "path": "/tdf",
+        "url": "https://www.tdfrecords.net/tdf",
+        "h1": [
+          "TDF Records"
+        ],
+        "entry": "/assets/index-CYNabXuH.js",
+        "overflow": false
+      },
+      {
+        "mode": "desktop",
+        "path": "/records",
+        "url": "https://www.tdfrecords.net/records",
+        "h1": [],
+        "entry": "/assets/index-CYNabXuH.js",
+        "overflow": false
+      },
+      {
+        "mode": "Pixel7",
+        "path": "/",
+        "url": "https://www.tdfrecords.net/inicio",
+        "h1": [
+          "Encuentra a la gente y las oportunidades que hacen música"
+        ],
+        "entry": "/assets/index-CYNabXuH.js",
+        "overflow": false
+      },
+      {
+        "mode": "Pixel7",
+        "path": "/tdf",
+        "url": "https://www.tdfrecords.net/tdf",
+        "h1": [
+          "TDF Records"
+        ],
+        "entry": "/assets/index-CYNabXuH.js",
+        "overflow": false
+      },
+      {
+        "mode": "Pixel7",
+        "path": "/records",
+        "url": "https://www.tdfrecords.net/records",
+        "h1": [],
+        "entry": "/assets/index-CYNabXuH.js",
+        "overflow": false
+      }
+    ],
+    "limits": "Observación de entrada pública, no completitud del producto. El observador inicial de /records asumía un h1; la prueba candidata valida contenido explícito."
+  },
+  "sourceSha256": {
+    "tdf-hq-ui/src/components/PublicWelcome.tsx": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "7d4854a1f390af0e9c03356297c2340e174992fe7435040cf8d169d83dd7381f",
+    "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": "70a1c437a900dd9fa270980102e8a10e0daf58abd09a5be85d36d8ee5044cc4e",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "98a49a2cf613aa9aa44b99253f39e81f1a9c54298b932fb21982cfda67a6b962",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "62b867e770f329763c7d0f6b81fa7998a9b7b48737351010f67cb673ab418628",
+    "e2e/web/public-welcome.spec.mjs": "b26513be86bde272bec3711ef408aac4d742a9fc13ddff8bf7a4f872fb528044"
+  },
+  "checks": {
+    "unit": {
+      "passed": 47,
+      "suites": 4,
+      "log": "/private/tmp/tdf-welcome-focused-v2-20261025.log"
+    },
+    "lint": {
+      "passed": true,
+      "log": "/private/tmp/tdf-welcome-lint-v3-20261025.log"
+    },
+    "productionBuild": {
+      "passed": true,
+      "gzipInitialJsBytes": 334773,
+      "preloads": 5,
+      "log": "/private/tmp/tdf-welcome-build-v3-20261025.log",
+      "identity": "Compilación local de árbol modificado sobre b732; no es atestación limpia del futuro head del PR."
+    },
+    "repositoryQuality": {
+      "passed": true,
+      "log": "/private/tmp/tdf-welcome-repo-quality-v2-20261025.log"
+    },
+    "catalog": {
+      "passed": true,
+      "reviewedCandidates": 1327,
+      "newDecisions": 0,
+      "modifiedDecisions": 0,
+      "log": "/private/tmp/tdf-welcome-catalog-csv-20261025.log"
+    },
+    "apiClients": {
+      "passed": true,
+      "clients": 2,
+      "mobilePin": "d832bb3057dd03d44c0f35eea05be9f36320429d"
+    },
+    "browser": {
+      "status": "passed",
+      "earlierRun": {
+        "passed": 33,
+        "failed": 3,
+        "reason": "El observador 503 agotaba 8s antes de terminar reintentos; usa ahora los 20s establecidos por la suite de recuperación existente."
+      },
+      "outageRecheck": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0
+      },
+      "scope": "API sintética; Chromium desktop light, Pixel7 emulado dark, Firefox desktop light; sin proveedor ni dispositivo físico.",
+      "final": {
+        "passed": 36,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "durationMs": 217446.806,
+        "projects": [
+          "Chromium desktop light",
+          "Pixel7 emulated dark",
+          "Firefox desktop light"
+        ],
+        "evidence": "reports/welcome-first-discovery-evidence-20261025/browser-results.json"
+      },
+      "accessibility": "No serious or critical axe violations in the tested views; includes 320 CSS px reflow. This is not full WCAG certification."
+    }
+  },
+  "metrics": {
+    "humanParticipants": 0,
+    "verifiedHumanActivations": null,
+    "activationRate": null,
+    "conversionImprovement": null,
+    "retentionD1": null,
+    "retentionD7": null,
+    "retentionD30": null,
+    "newEvent": "public_discovery_cta_clicked",
+    "eventProperties": [
+      "route",
+      "destination"
+    ],
+    "interpretation": "Interés en explorar; no demuestra activación, consentimiento para contacto ni causalidad."
+  },
+  "invariants": {
+    "all140MainRequirementsPreserved": true,
+    "requirements": 141,
+    "backendApiSqlDependenciesMobileUnchanged": true,
+    "rootWorkspacePreserved": true,
+    "businessProductionWrites": 0
+  },
+  "pending": [
+    "CI y revisión independiente del head final, admisión protegida e integración.",
+    "Publicación y verificación productiva posterior a integración.",
+    "Retrato del anfitrión identificado, galería autorizada, plano interior/VR y videos didácticos.",
+    "Prueba humana consentida y línea base analítica fiable; P0 de sesión616 y cuentas615 tienen otros propietarios."
+  ],
+  "evidenceDirectory": "reports/welcome-first-discovery-evidence-20261025",
+  "screenshots": [
+    "reports/welcome-first-discovery-evidence-20261025/after-android.png",
+    "reports/welcome-first-discovery-evidence-20261025/after-desktop.png",
+    "reports/welcome-first-discovery-evidence-20261025/before-Pixel7.png",
+    "reports/welcome-first-discovery-evidence-20261025/before-desktop.png"
+  ]
+}

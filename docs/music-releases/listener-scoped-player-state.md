@@ -10,7 +10,7 @@ case. Prior `a0120daa` 85-test/27-browser results retain their historical identi
 the corrected source has its own 86-test/27-browser qualification.
 
 Status: implemented at `b6259692c11c7b502b974cf6bee7d4ca189925f7`, locally tested;
-not yet merged into the final playback foundation or deployed.
+locally integrated with the final playback foundation; not deployed.
 
 A local audit reproduced a privacy/UX defect: after logout or account changes,
 the next client principal could see the preceding listener's public track title,
@@ -81,3 +81,12 @@ reviewed nine-action successor adds internal guarded `restore`, leaving 1,339
 active decisions. These are reducer dispatch mechanics; no domain catalog or
 permissions become client-controlled. Other decisions/reconciliation history
 remain unchanged.
+
+Final integration baseline: normal merge of playback parent
+`2a7f1b67745e93bb4f0da7958200ca7b54dd5b40`, including protected main
+`a1238fbf6d98062904a4bd80d2f9df35ebc40706`. Canonical requirements total
+145: 143 foreign parent objects remain exact, the owned PLAYER object differs
+only by its authorized SessionProviders implementation append, and PRIVACY is
+new. All six corrected runtime/test fingerprints remain identical to `b6259692`.
+The earlier browser/build receipt predates this merge; it does not qualify
+unrelated inherited welcome/club files or replace exact integrated-candidate CI.
