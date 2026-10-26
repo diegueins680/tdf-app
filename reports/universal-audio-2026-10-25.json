@@ -509,5 +509,28 @@
     "priorApprovedCandidate": "70e4e2e2679ac607ee15af9967e56aac5a0f58f0",
     "nativePriorHead": "PASS hosted121407000063; current merged head needs fresh hosted gates/review",
     "deployment": "not performed"
+  },
+  "fanClubMainRefresh": {
+    "main": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+    "mainRequirements": 143,
+    "preservedMainRequirements": 142,
+    "intentionalPlayerContractDelta": true,
+    "audioRuntimeChanged": false,
+    "priorCandidate": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+    "priorNativeJob": "PASS exact7de CI40274900753 native-music-e2e; retain original head",
+    "hostedCurrentHead": "pending",
+    "deployment": "not performed"
+  },
+  "sharedBrowserListeningStateRisk": {
+    "status": "CONFIRMED baseline diagnostic; not fixed by this foundation increment",
+    "severity": "privacy/UX account isolation gap",
+    "baseline": "3af768dacd95c1223975c62da3ce8088bed89b47",
+    "diagnostic": "one deterministic JSDOM scenario, four identity transitions using actual App/session/player components and declared API/media doubles",
+    "finding": "Old audio stops on logout; old title, queue and position can be restored across principal changes from unscoped storage",
+    "serverPrivateMediaDisclosure": "not demonstrated",
+    "currentPersistenceSections": "loader and writer identical to audited baseline",
+    "receipt": "/private/tmp/tdf-player-account-audit-20261026/receipt.json",
+    "receiptSha256": "d07311da523daad8996b8719654994b37ebf3c115fb3410e75c71ae05c0dd61b",
+    "remediation": "separate owner-scoped listening-state increment in progress; retain device preferences, reject mismatched/untagged queues"
   }
 }
