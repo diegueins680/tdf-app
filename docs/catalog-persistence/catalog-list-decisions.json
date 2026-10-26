@@ -345,6 +345,18 @@
       "newSyntheticFixtureId": "134cf0fa5a9bb176f981",
       "scope": "Technical API method names and synthetic test DTO only; no product, payment or release approval."
     },
+    "ledgerReadinessIntegration": "docs/catalog-persistence/ledger-readiness-reconciliation-20261021.json",
+    "ledgerSnapshotReadinessIntegration": "docs/catalog-persistence/ledger-snapshot-readiness-reconciliation-20261021.json",
+    "ledgerCombinedIntegration": "docs/catalog-persistence/ledger-combined-reconciliation-20261022.json",
+    "termsHistoryAppendOnly": "docs/catalog-persistence/terms-history-append-only-reconciliation-20261022.json",
+    "ledgerMusicMainIntegration": {
+      "document": "docs/catalog-persistence/ledger-music-main-reconciliation-20261023.json",
+      "currentManifestDecisionId": "a1eb1e750e7543b88fe1",
+      "retiredManifestIds": [
+        "3f336173e03f10fc023c",
+        "2b073f20afd2f3798b1e"
+      ]
+    },
     "featureMenuCoverage20261025": {
       "sourceMain": "512d590e902760130f54ca2927620c001a754b85",
       "successors": [
@@ -370,250 +382,6 @@
         ]
       ],
       "reason": "Only five reviewed source fingerprints changed: four additive navigation groups and a session featureFlags fixture. All classifications, persistence obligations and audit policies are preserved."
-    },
-    "eventMemoriesMainIntegration": {
-      "sourceMain": "089dce6ba410e5a76bee024c0d4be2ae3df0011d",
-      "reason": "Preserve both protected receipt and memory reviews. Four parent-only fingerprints already have reviewed memory successors; retain their complete objects here rather than leave stale active decisions. Combined transport-method successor retains both parent decisions. No new business catalog, runtime, merge or deployment approval.",
-      "retiredDecisions": [
-        {
-          "id": "2a0d6d57a51e35d91376",
-          "classification": "security-system-registry",
-          "disposition": "canonical-contract",
-          "specializedModel": "notification_destination_registry",
-          "priority": "P1-integrity",
-          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Canonical typed notification destination registry; chat_thread uses a validated positive safe thread identity, selects only an authorized existing conversation and never accepts an arbitrary URL. Generated into Mobile.",
-          "reviewed": true,
-          "evidence": {
-            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-            "line": 14
-          },
-          "reviewBatch": "chat-notification-destination-2026-10-13",
-          "reviewMethod": "successor-of-reviewed-decision",
-          "previousDecision": {
-            "id": "1a20aae8bb74a6df248f",
-            "classification": "security-system-registry",
-            "disposition": "canonical-contract",
-            "specializedModel": "notification_destination_registry",
-            "priority": "P1-integrity",
-            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-            "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
-            "reviewed": true,
-            "evidence": {
-              "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-              "line": 14
-            },
-            "reviewBatch": "music-release-platform-sync-2026-10-07",
-            "reviewMethod": "successor-of-reviewed-decision",
-            "previousDecision": {
-              "id": "d8058e9fe53556cbf690",
-              "classification": "security-system-registry",
-              "disposition": "canonical-contract",
-              "specializedModel": "notification_destination_registry",
-              "priority": "P1-integrity",
-              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-              "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-              "reviewed": true,
-              "evidence": {
-                "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-                "line": 14
-              },
-              "reviewBatch": "universal-interactions-2026-09-28"
-            }
-          },
-          "mergedSourceDecision": {
-            "id": "2a0d6d57a51e35d91376",
-            "classification": "security-system-registry",
-            "disposition": "canonical-contract",
-            "specializedModel": "notification_destination_registry",
-            "priority": "P1-integrity",
-            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-            "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
-            "reviewed": true,
-            "evidence": {
-              "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-              "line": 14
-            },
-            "reviewBatch": "music-release-platform-sync-2026-10-07",
-            "reviewMethod": "successor-of-reviewed-decision",
-            "previousDecision": {
-              "id": "d8058e9fe53556cbf690",
-              "classification": "security-system-registry",
-              "disposition": "canonical-contract",
-              "specializedModel": "notification_destination_registry",
-              "priority": "P1-integrity",
-              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-              "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-              "reviewed": true,
-              "evidence": {
-                "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-                "line": 14
-              },
-              "reviewBatch": "universal-interactions-2026-09-28"
-            },
-            "previousFingerprint": "1a20aae8bb74a6df248f"
-          }
-        },
-        {
-          "id": "a7561a719beb23884345",
-          "classification": "genuine-technical-constant",
-          "disposition": "retain-in-code",
-          "specializedModel": "technical_constant_allowlist",
-          "priority": "P3-retain",
-          "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-          "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
-          "reviewed": true,
-          "reviewMethod": "deterministic-policy-v3",
-          "reviewBatch": "deterministic-policy-v3",
-          "evidence": {
-            "file": "tdf-mobile/src/api/events.ts",
-            "line": 435,
-            "kind": "object-registry",
-            "name": "Events",
-            "valueCount": 30,
-            "consumerCount": 213,
-            "exactDuplicateIds": [],
-            "similarCandidateIds": []
-          }
-        },
-        {
-          "id": "4beaac5c476079656a0a",
-          "classification": "security-system-registry",
-          "disposition": "canonical-contract",
-          "specializedModel": "notification_destination_registry",
-          "priority": "P1-integrity",
-          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Generated Mobile notification destination registry adds chat_thread with the same validated numeric identity and canonical web route as the web resolver; arbitrary URL navigation remains rejected.",
-          "reviewed": true,
-          "evidence": {
-            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-            "line": 15
-          },
-          "reviewBatch": "chat-notifications-2026-10-13",
-          "reviewMethod": "successor-of-reviewed-decision",
-          "previousDecision": {
-            "id": "2c23d0fa2bac40b01a98",
-            "classification": "security-system-registry",
-            "disposition": "canonical-contract",
-            "specializedModel": "notification_destination_registry",
-            "priority": "P1-integrity",
-            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-            "reviewed": true,
-            "evidence": {
-              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-              "line": 15
-            },
-            "reviewBatch": "universal-interactions-2026-09-28"
-          },
-          "supersededReviews": [
-            {
-              "sourceRevision": "cf723a45e24c7f9a8dd8300d4b7f199b261b5363",
-              "sourceDecisionId": "9de842d0529aa06faf6b",
-              "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
-              "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
-            }
-          ],
-          "mergedSourceDecision": {
-            "id": "4beaac5c476079656a0a",
-            "classification": "security-system-registry",
-            "disposition": "canonical-contract",
-            "specializedModel": "notification_destination_registry",
-            "priority": "P1-integrity",
-            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-            "justification": "Pinned Mobile retains the reviewed notification destination allowlist and adds chat_thread with a positive-safe-integer threadId and /chat fallback. These client routes grant no thread access; recipient and thread membership remain backend authorities. Arbitrary URL navigation remains excluded.",
-            "reviewed": true,
-            "evidence": {
-              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-              "line": 15
-            },
-            "reviewBatch": "booking-mobile-pin-consolidation-2026-10-15",
-            "reviewMethod": "successor-of-reviewed-decision",
-            "previousDecision": {
-              "id": "9de842d0529aa06faf6b",
-              "classification": "security-system-registry",
-              "disposition": "canonical-contract",
-              "specializedModel": "notification_destination_registry",
-              "priority": "P1-integrity",
-              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-              "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
-              "reviewed": true,
-              "evidence": {
-                "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-                "line": 15
-              },
-              "reviewBatch": "music-release-platform-sync-2026-10-07",
-              "reviewMethod": "successor-of-reviewed-decision",
-              "previousDecision": {
-                "id": "2c23d0fa2bac40b01a98",
-                "classification": "security-system-registry",
-                "disposition": "canonical-contract",
-                "specializedModel": "notification_destination_registry",
-                "priority": "P1-integrity",
-                "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-                "reviewed": true,
-                "evidence": {
-                  "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-                  "line": 15
-                },
-                "reviewBatch": "universal-interactions-2026-09-28"
-              }
-            },
-            "mergedSourceDecision": {
-              "id": "4beaac5c476079656a0a",
-              "classification": "security-system-registry",
-              "disposition": "canonical-contract",
-              "specializedModel": "notification_destination_registry",
-              "priority": "P1-integrity",
-              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-              "justification": "Mobile main adds chat_thread to the existing notification destination allowlist, resolving to the canonical same-origin thread path. Existing destinations are preserved; the six notification response regressions pass. This is routing authority, not an editable business catalog.",
-              "reviewed": true,
-              "evidence": {
-                "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-                "line": 15
-              },
-              "reviewBatch": "music-release-platform-sync-2026-10-07",
-              "reviewMethod": "successor-of-reviewed-decision",
-              "previousDecision": {
-                "id": "2c23d0fa2bac40b01a98",
-                "classification": "security-system-registry",
-                "disposition": "canonical-contract",
-                "specializedModel": "notification_destination_registry",
-                "priority": "P1-integrity",
-                "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-                "reviewed": true,
-                "evidence": {
-                  "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-                  "line": 15
-                },
-                "reviewBatch": "universal-interactions-2026-09-28"
-              },
-              "previousFingerprint": "9de842d0529aa06faf6b"
-            }
-          }
-        },
-        {
-          "id": "3f336173e03f10fc023c",
-          "classification": "genuine-technical-constant",
-          "disposition": "explicit-allowlist",
-          "specializedModel": "technical_constant_allowlist",
-          "priority": "P0-cutover",
-          "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-          "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
-          "reviewed": true,
-          "reviewMethod": "successor-of-reviewed-decisions",
-          "reviewBatch": "music-current-main-integration-20261023",
-          "evidence": {
-            "file": "scripts/production-migrations.json",
-            "line": 3,
-            "kind": "json-array",
-            "name": "migrations",
-            "valueCount": 213
-          }
-        }
-      ]
     }
   },
   "decisions": [
@@ -2882,32 +2650,6 @@
       "reviewed": true
     },
     {
-      "id": "e1630a13682bf0fee90d",
-      "classification": "security-system-registry",
-      "disposition": "consumer-update",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P3-consumer",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/SidebarNav.test.tsx",
-        "line": 10
-      },
-      "reviewBatch": "feature-menu-coverage-2026-10-25",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "e4c7ffe2a8fc0a5752d0",
-        "classification": "security-system-registry",
-        "disposition": "consumer-update",
-        "specializedModel": "navigation_item, navigation_item_permission",
-        "priority": "P3-consumer",
-        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-        "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-        "reviewed": true
-      }
-    },
-    {
       "id": "d0b457848a6b6c374e45",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
@@ -2916,100 +2658,6 @@
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
       "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
       "reviewed": true
-    },
-    {
-      "id": "300853c537ba6401822a",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "line": 142
-      },
-      "reviewBatch": "feature-menu-coverage-2026-10-25",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "b180210a3602cfc0bf52",
-        "classification": "dynamic-business-catalog",
-        "disposition": "migrate-and-remove-authority-from-code",
-        "specializedModel": "navigation_item, navigation_item_permission",
-        "priority": "P1-cross-platform",
-        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-        "reviewed": true
-      }
-    },
-    {
-      "id": "a00fcee87036af5dfa95",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "line": 166
-      },
-      "reviewBatch": "feature-menu-coverage-2026-10-25",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "9fca63dce34f8900c6a4",
-        "classification": "dynamic-business-catalog",
-        "disposition": "migrate-and-remove-authority-from-code",
-        "specializedModel": "navigation_item, navigation_item_permission",
-        "priority": "P1-cross-platform",
-        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-        "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target.",
-        "reviewed": true,
-        "evidence": {
-          "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-          "line": 163
-        },
-        "reviewBatch": "events-nav-carousel-2026-10-08",
-        "reviewMethod": "successor-of-reviewed-decision",
-        "previousDecision": {
-          "id": "daaade88abcc60232974",
-          "classification": "dynamic-business-catalog",
-          "disposition": "migrate-and-remove-authority-from-code",
-          "specializedModel": "navigation_item, navigation_item_permission",
-          "priority": "P1-cross-platform",
-          "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-          "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-          "reviewed": true
-        }
-      }
-    },
-    {
-      "id": "ce1e609baf902df58b08",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "line": 190
-      },
-      "reviewBatch": "feature-menu-coverage-2026-10-25",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "ef8764c4421158cb1be7",
-        "classification": "dynamic-business-catalog",
-        "disposition": "migrate-and-remove-authority-from-code",
-        "specializedModel": "navigation_item, navigation_item_permission",
-        "priority": "P1-cross-platform",
-        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-        "reviewed": true
-      }
     },
     {
       "id": "3a83c9975e291400c7d5",
@@ -3065,32 +2713,6 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
-    },
-    {
-      "id": "dfea445b31325dad4cf6",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "line": 251
-      },
-      "reviewBatch": "feature-menu-coverage-2026-10-25",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "d98b80c87ee6f14c72ec",
-        "classification": "dynamic-business-catalog",
-        "disposition": "migrate-and-remove-authority-from-code",
-        "specializedModel": "navigation_item, navigation_item_permission",
-        "priority": "P1-cross-platform",
-        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-        "reviewed": true
-      }
     },
     {
       "id": "61e76da1f53c6a0f9414",
@@ -18002,6 +17624,353 @@
       }
     },
     {
+      "id": "cf264a325e5b4853ecac",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the synthetic child command can invalidate the bounded readiness-wait regression.",
+      "justification": "Node CLI arguments deliberately start a stalled synthetic child to verify timeout and process cleanup. This is test-process plumbing, not a selectable service catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/__tests__/test-process-session.test.mjs",
+        "line": 33
+      },
+      "reviewBatch": "checkout-session-readiness-2026-10-14"
+    },
+    {
+      "id": "79a6def1e91baee6e937",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P0-cutover",
+      "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+      "justification": "Preserve the complete221-entry foundation prefix (protected main917806 all220 entries plus the original invitation migration), then append the three original source moderation, NULL authorization and permission-lock migrations without changing their SQL or introduction SHAs. This224-entry execution registry retains both the217- and221-entry source reviews, including the protected financial220 lineage. Canonical combined schema, runtime, independent review and deployment remain separate obligations; this review authorizes no production action or communication.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "event-memory-source-main-917806-20261026",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 224
+      },
+      "previousDecision": {
+        "id": "d55b0d93ab3224fe96ac",
+        "classification": "genuine-technical-constant",
+        "disposition": "explicit-allowlist",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P0-cutover",
+        "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+        "justification": "The 217-entry execution registry preserves every object and SQL byte of the immutable 216-entry prefix and appends source permission locking introduced by baab857f085b74f333c9f5d29e31306072fbc496. It reuses the existing canonical permission locks, rejects unknown or unsafe predecessors, and retains function OIDs and all source/report/request/audit data. Eight actual PostgreSQL interleavings and an observed committed predecessor counterexample qualify the scoped regression; current review/CI and production deployment remain separate obligations.",
+        "reviewed": true,
+        "reviewMethod": "successor-of-reviewed-decision",
+        "reviewBatch": "event-memory-source-permission-locks-20261025",
+        "evidence": {
+          "file": "scripts/production-migrations.json",
+          "line": 3,
+          "kind": "json-array",
+          "name": "migrations",
+          "valueCount": 217
+        },
+        "previousDecision": {
+          "id": "38bbe0c3d9b9d4ddaa9d",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P0-cutover",
+          "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+          "justification": "The 216-entry execution registry preserves the immutable 215-entry prefix and every historical SQL byte. It appends the NULL-organizer authorization repair introduced by c6ecae133a93b6bab93c84cee4d72290f9e28982. Actual-schema regression reproduces the predecessor unauthorized hide, then verifies denial, allowed moderation, replay revocation and successor guards. No deployment or communication is authorized by this registry classification.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decision",
+          "reviewBatch": "event-memory-source-authorization-20261025",
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3,
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 216
+          },
+          "previousDecision": {
+            "id": "7ca220a96b9b65a0fe15",
+            "classification": "genuine-technical-constant",
+            "disposition": "explicit-allowlist",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P0-cutover",
+            "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+            "justification": "The 215-entry registry preserves the full immutable 214-entry prefix and all historical SQL, then appends source moderation introduced by 3bb05ecd7. Installation hides nothing and sends nothing. Actual full-schema replay/rollback and authenticated HTTP verify behavior; committed evidence refuses rollback. This registry review does not authorize production deployment or feature activation.",
+            "reviewed": true,
+            "reviewMethod": "successor-of-reviewed-decision",
+            "reviewBatch": "event-memory-source-moderation-20261025",
+            "evidence": {
+              "file": "scripts/production-migrations.json",
+              "line": 3,
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 215
+            },
+            "previousDecision": {
+              "id": "c28667c70e40dcc18a55",
+              "classification": "genuine-technical-constant",
+              "disposition": "explicit-allowlist",
+              "specializedModel": "technical_constant_allowlist",
+              "priority": "P0-cutover",
+              "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+              "justification": "The 214-entry execution registry preserves all 213 protected-main entry objects/order/introduction commits and historical SQL bytes, then appends one event-memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. The migration installs no campaigns or consent and sends nothing. Full-schema replay, rollback/refusal, concurrent-worker and actual API tests are separate execution evidence; no production activation is authorized by this registry review.",
+              "reviewed": true,
+              "reviewMethod": "successor-of-reviewed-decision",
+              "reviewBatch": "event-memories-2026-10-25",
+              "evidence": {
+                "file": "scripts/production-migrations.json",
+                "line": 3,
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 214
+              },
+              "previousDecision": {
+                "id": "3f336173e03f10fc023c",
+                "classification": "genuine-technical-constant",
+                "disposition": "explicit-allowlist",
+                "specializedModel": "technical_constant_allowlist",
+                "priority": "P0-cutover",
+                "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+                "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+                "reviewed": true,
+                "reviewMethod": "successor-of-reviewed-decisions",
+                "reviewBatch": "music-current-main-integration-20261023",
+                "evidence": {
+                  "file": "scripts/production-migrations.json",
+                  "line": 3,
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 213
+                }
+              }
+            }
+          }
+        }
+      },
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+          "sourceEntry": {
+            "id": "3f336173e03f10fc023c"
+          },
+          "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+          "sourceEntry": {
+            "id": "2b073f20afd2f3798b1e"
+          },
+          "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+          "sourceEntry": {
+            "id": "a1eb1e750e7543b88fe1"
+          },
+          "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "2c3b0017a352e223803eca40de4a500d9902717f",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "ded861bdcbb03b246ff965701f7392265e4aff0a36b86b9e2fd4e50859c70904",
+          "sourceEntry": {
+            "id": "c28667c70e40dcc18a55"
+          },
+          "sourceEntryCanonicalSha256": "f50f89961486277052c8354582f09684859e64488072dda296b75c43ec07d4d7",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+          "sourceEntry": {
+            "id": "b7cc47848f3f9882770f"
+          },
+          "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "ddb92379859aa7ac7e1d87aec99bb1be3cc1f941",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "1a193c51384355bf1d57e23e2868b8d4759f2324cb1f74cc78659d919b9b910a",
+          "sourceEntry": {
+            "id": "d55b0d93ab3224fe96ac"
+          },
+          "sourceEntryCanonicalSha256": "cb3c85d4b0a4ce7c962aec6a67eb2cc3ffbd2714a14c65e5a9721b2ab6dd2fdc",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "534c5631ac79e927c887c5c730e252fe4dad7cc5",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "337adcd09b9d81a0255d8eb61118c6fce8e1d3669fcda9acc04adbd69d6ce92e",
+          "sourceEntry": {
+            "id": "0ab5d4354ae923d8f2db"
+          },
+          "sourceEntryCanonicalSha256": "4369a49366796704db894cd929e773d333e4994b3338f9d6386f8aa4b12556e6",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ]
+    },
+    {
+      "id": "e1630a13682bf0fee90d",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-consumer",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.test.tsx",
+        "line": 10
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "e4c7ffe2a8fc0a5752d0",
+        "classification": "security-system-registry",
+        "disposition": "consumer-update",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-consumer",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "300853c537ba6401822a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 142
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "b180210a3602cfc0bf52",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "a00fcee87036af5dfa95",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 166
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "9fca63dce34f8900c6a4",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+          "line": 163
+        },
+        "reviewBatch": "events-nav-carousel-2026-10-08",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "daaade88abcc60232974",
+          "classification": "dynamic-business-catalog",
+          "disposition": "migrate-and-remove-authority-from-code",
+          "specializedModel": "navigation_item, navigation_item_permission",
+          "priority": "P1-cross-platform",
+          "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+          "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+          "reviewed": true
+        }
+      }
+    },
+    {
+      "id": "ce1e609baf902df58b08",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 190
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "ef8764c4421158cb1be7",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "dfea445b31325dad4cf6",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 251
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "d98b80c87ee6f14c72ec",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
+    },
+    {
       "id": "da4f880a8da74120e456",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
@@ -18618,101 +18587,6 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3
-      }
-    },
-    {
-      "id": "d55b0d93ab3224fe96ac",
-      "classification": "genuine-technical-constant",
-      "disposition": "explicit-allowlist",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P0-cutover",
-      "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-      "justification": "The 217-entry execution registry preserves every object and SQL byte of the immutable 216-entry prefix and appends source permission locking introduced by baab857f085b74f333c9f5d29e31306072fbc496. It reuses the existing canonical permission locks, rejects unknown or unsafe predecessors, and retains function OIDs and all source/report/request/audit data. Eight actual PostgreSQL interleavings and an observed committed predecessor counterexample qualify the scoped regression; current review/CI and production deployment remain separate obligations.",
-      "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "event-memory-source-permission-locks-20261025",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 217
-      },
-      "previousDecision": {
-        "id": "38bbe0c3d9b9d4ddaa9d",
-        "classification": "genuine-technical-constant",
-        "disposition": "explicit-allowlist",
-        "specializedModel": "technical_constant_allowlist",
-        "priority": "P0-cutover",
-        "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-        "justification": "The 216-entry execution registry preserves the immutable 215-entry prefix and every historical SQL byte. It appends the NULL-organizer authorization repair introduced by c6ecae133a93b6bab93c84cee4d72290f9e28982. Actual-schema regression reproduces the predecessor unauthorized hide, then verifies denial, allowed moderation, replay revocation and successor guards. No deployment or communication is authorized by this registry classification.",
-        "reviewed": true,
-        "reviewMethod": "successor-of-reviewed-decision",
-        "reviewBatch": "event-memory-source-authorization-20261025",
-        "evidence": {
-          "file": "scripts/production-migrations.json",
-          "line": 3,
-          "kind": "json-array",
-          "name": "migrations",
-          "valueCount": 216
-        },
-        "previousDecision": {
-          "id": "7ca220a96b9b65a0fe15",
-          "classification": "genuine-technical-constant",
-          "disposition": "explicit-allowlist",
-          "specializedModel": "technical_constant_allowlist",
-          "priority": "P0-cutover",
-          "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-          "justification": "The 215-entry registry preserves the full immutable 214-entry prefix and all historical SQL, then appends source moderation introduced by 3bb05ecd7. Installation hides nothing and sends nothing. Actual full-schema replay/rollback and authenticated HTTP verify behavior; committed evidence refuses rollback. This registry review does not authorize production deployment or feature activation.",
-          "reviewed": true,
-          "reviewMethod": "successor-of-reviewed-decision",
-          "reviewBatch": "event-memory-source-moderation-20261025",
-          "evidence": {
-            "file": "scripts/production-migrations.json",
-            "line": 3,
-            "kind": "json-array",
-            "name": "migrations",
-            "valueCount": 215
-          },
-          "previousDecision": {
-            "id": "c28667c70e40dcc18a55",
-            "classification": "genuine-technical-constant",
-            "disposition": "explicit-allowlist",
-            "specializedModel": "technical_constant_allowlist",
-            "priority": "P0-cutover",
-            "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-            "justification": "The 214-entry execution registry preserves all 213 protected-main entry objects/order/introduction commits and historical SQL bytes, then appends one event-memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. The migration installs no campaigns or consent and sends nothing. Full-schema replay, rollback/refusal, concurrent-worker and actual API tests are separate execution evidence; no production activation is authorized by this registry review.",
-            "reviewed": true,
-            "reviewMethod": "successor-of-reviewed-decision",
-            "reviewBatch": "event-memories-2026-10-25",
-            "evidence": {
-              "file": "scripts/production-migrations.json",
-              "line": 3,
-              "kind": "json-array",
-              "name": "migrations",
-              "valueCount": 214
-            },
-            "previousDecision": {
-              "id": "3f336173e03f10fc023c",
-              "classification": "genuine-technical-constant",
-              "disposition": "explicit-allowlist",
-              "specializedModel": "technical_constant_allowlist",
-              "priority": "P0-cutover",
-              "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-              "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
-              "reviewed": true,
-              "reviewMethod": "successor-of-reviewed-decisions",
-              "reviewBatch": "music-current-main-integration-20261023",
-              "evidence": {
-                "file": "scripts/production-migrations.json",
-                "line": 3,
-                "kind": "json-array",
-                "name": "migrations",
-                "valueCount": 213
-              }
-            }
-          }
-        }
       }
     },
     {

@@ -339,3 +339,28 @@ sigue siendo otro requisito para una prueba con personas reales.
 
 Estos cambios no autorizan una campaña. Continúan pendientes revisión del head
 actual, CI obligatorio, FIFO y despliegue verificado; los envíos reales siguen en cero.
+
+
+## Reconciliación con main protegido — 26/oct, 02:42 UTC
+
+Se incorpora mediante merge normal main917806ff9c8d455a01bfb8a29c80d6ff353e0e0b,
+que integra #551 y #611. Sus140 requisitos se conservan como objetos exactos,
+incluidos los cinco financieros actualizados. El registro tiene221 entradas:
+las220 de main son el prefijo exacto, con sus SQL/SHAs intactos, seguido de la
+migración original de invitaciones18690e78. «214» en los informes anteriores es
+su posición histórica; su identificador y archivo son la autoridad estable.
+
+Se conservan las revisiones de los registros214 y220 mediante la cadena previa
+y referencias al archivo/objeto Git original con sus hashes comprobados. La
+auditoría estricta JSON/CSV tiene1332 candidatos sin decisiones pendientes ni
+obsoletas; las siete regresiones de historial y los índices pasan. Hay142
+obligaciones con las dos de recuerdos. Tipos y47 pruebas web en cuatro suites
+pasan. El primer intento incluyó por error un archivo de test que solo existe
+en el sucesor615; se conserva como fallo de preparación y se repiten los cuatro
+archivos reales, sin crear una prueba ficticia.
+
+La composición del backend financiero nuevo debe compilarse y verificarse con
+el sucesor615 antes de cualquier despliegue. Los binarios, HTTP y aprobaciones
+de la base anterior no se atribuyen a esta composición. Se mantiene borrador y
+auto-merge desactivado hasta incluir y revisar las correcciones P0 de615. No hay
+escrituras de producción ni invitaciones reales.

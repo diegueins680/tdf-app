@@ -557,6 +557,7 @@ jobs:
           sh scripts/test-credential-lifecycle.sh
           sh scripts/test-ticket-manual-review-concurrency.sh
           sh scripts/test-whatsapp-consent.sh
+          sh scripts/test-ledger-posting.sh
           sh scripts/test-music-publication.sh
           sh scripts/test-index-declarations.sh
           sh scripts/test-interaction-write-budget.sh
@@ -574,6 +575,11 @@ jobs:
         env:
           TDF_CHECKOUT_AMOUNT_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: node scripts/__tests__/checkout-amount-postgres.mjs
+
+      - name: Verify terms identities survive policy deletion and edits
+        env:
+          TDF_TERMS_HISTORY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-checkout-terms-history.sh
 
       - name: Verify music purchase payment record, entitlement and download limits
         env:
@@ -961,6 +967,8 @@ jobs:
 
       - name: Rehearse course checkout runtime migration
         run: ./scripts/test-course-checkout-runtime-migration.sh
+      - name: Verify checkout policy terms identity migration
+        run: ./scripts/test-checkout-policy-terms-identity-migration.sh
 
       - name: Rehearse Domo quote and deposit checkout runtime migration
         run: ./scripts/test-domo-quote-checkout-runtime-migration.sh

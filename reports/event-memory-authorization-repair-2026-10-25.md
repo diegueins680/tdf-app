@@ -110,3 +110,30 @@ reparación de logout integrada, recuperación/canary, despliegue y aceptación 
 También medios privados/revocables, galerías mixtas, texto/audio nativo,
 idempotencia general, previsualizaciones específicas y medición D7/D30. No se
 atribuye adquisición, conversión ni retención a estas pruebas sintéticas.
+
+
+## Composición con el main financiero y canary regional — 26/oct03:02UTC
+
+Se integra mediante merge normal la base534c5631ac79e927c887c5c730e252fe4dad7cc5,
+que contiene el main protegido917806ff9c8d455a01bfb8a29c80d6ff353e0e0b (#551 y
+#611). Se conservan íntegros sus140 requisitos y todos los objetos/SQL de las221
+migraciones de base. Las tres sucesoras originales de moderación se añaden sin
+cambiar archivos ni introducedBy:224 entradas y144 requisitos en total. Los
+números215/216/217 anteriores son posiciones históricas de esta rama; los
+identificadores estables son event_memory_source_moderation,
+event_memory_source_authorization y event_memory_source_permission_locks. En la
+composición ocupan222/223/224. Ambas historias de revisión217/221 se conservan
+con referencias a sus objetos Git y hashes, incluida la financiera220.
+
+La composición pasa77 pruebas web/7suites y tipos, siete regresiones de historial,
+auditorías estrictas JSON/CSV con1334 candidatos, índices y quality:repo. El
+PostgreSQL completo224 pasa permisos/NULL/revocación en ocho intercalaciones,
+rollback histórico, sucesores y reintentos. Invitaciones, deduplicación, despacho
+concurrente y supresión también pasan. Estas ejecuciones preceden al commit de
+merge y conservan ddb923798 con árbol modificado; no se les cambia la identidad.
+
+La compilación Stack canónica del backend financiero combinado está en curso.
+Los binarios, HTTP y CI anteriores NO califican esa composición. Antes de
+proponer integración quedan Hspec/grupos necesarios, binario nuevo, API/DB y
+navegador sobre224, CI y revisión del nuevo head. #608 y #615 permanecen retenidos
+y no existe despliegue ni comunicación productiva.
