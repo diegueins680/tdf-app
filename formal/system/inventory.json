@@ -10144,7 +10144,7 @@
     {
       "id": "SURFACE-4fcbb0b9c41b6de4",
       "path": "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
-      "sha256": "6c9d95071825657a5b6b70bda2765be0c939000084618ea315a54ad2ae2b8046",
+      "sha256": "1c3b69fcee274bf425973960622a2aeb9ef9dc2eba003d82a8ad9df29709b06d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10156,7 +10156,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "f79611dd4a798f8490dfae7acdb5cc23687cd051f4c242c304af17039dd97aa3",
+      "sha256": "4f1981b2830bc5cd71b1d4279a25771c234bee1b4c4612d467b36ad4e22b233a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20843,9 +20843,9 @@
     },
     {
       "path": "docs/music-releases/listener-scoped-player-state.md",
-      "sha256": "12ab105112dbff5bd9fecd549c6d3d46f102d1763610b45a938bffd6b8329c30",
+      "sha256": "f9d15fb9f2453615ed25387ceb7e593d3d82588c4857111e41f9a5382e3121d0",
       "authority": "inferred",
-      "authorityBasis": "Status: implemented at `a0120daa3493c04e358b50c6d60af1cacfc60a31`, locally tested;",
+      "authorityBasis": "Status: implemented at `b6259692c11c7b502b974cf6bee7d4ca189925f7`, locally tested;",
       "kind": "requirement-candidate"
     },
     {
@@ -27143,7 +27143,7 @@
     },
     {
       "path": "formal/system/player-listening-privacy.md",
-      "sha256": "0d12466143c5a784a83944fd8e8eb664f22fbc2a3c6a2b97a0d9fdfe89e87429",
+      "sha256": "36ef0a7d75cca1fb4eda1fdeb373e76af965c5924289cf5f331d595e308359a2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27241,7 +27241,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "694db8227b0ebb63ead3931cdee129bc5a75327392707cc688fa1693d39c17fb",
+      "sha256": "39c6494ea0e94216ec7bbb27deb16c7b70127c3d59f01da228a7e85e5ac425fc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -1,7 +1,16 @@
 # Client listener ownership of playback state
 
+The final validator correction is committed at
+`b6259692c11c7b502b974cf6bee7d4ca189925f7`. A matching-owner saved track
+with sources `[validSource, null]` reproduced an App render crash under the
+previous validator. Nonempty source arrays must now pass the existing predicate
+for every member; the whole corrupt track is discarded and valid explicit B can
+still play. This closes the named crash path, not every possible malformed-field
+case. Prior `a0120daa` 85-test/27-browser results retain their historical identity;
+the corrected source has its own 86-test/27-browser qualification.
+
 Requirement: `MEDIA-MUSIC-PRIVACY-001`. Status: implemented and locally `TESTED`
-at source commit `a0120daa3493c04e358b50c6d60af1cacfc60a31`. Release
+at source commit `b6259692c11c7b502b974cf6bee7d4ca189925f7`. Release
 acceptance remains `PARTIAL` pending exact integrated-candidate CI and review.
 This contract covers accidental restoration/exposure of local listening state
 across client principals. It does not prove server authentication, media access,
@@ -113,10 +122,10 @@ suppression, obsolete save cleanup, latest-selection/clear/reorder precedence,
 same-owner background loading/navigation continuity and immediate preference
 changes followed by an owner switch.
 
-The final source-bound receipt records **85/85 tests in eight suites**: 22
+The final source-bound receipt records **86/86 tests in eight suites**: 23
 identity cases, 39 engine cases, three queue cases and 21 session cases. Scoped
 lint and the Node 22.14.0 TypeScript/Vite/budget build pass; the initial JavaScript
-gzip budget is 336,894 bytes. Earlier 74-test observations and the rejected
+gzip budget is 336,907 bytes. Earlier 74-test observations and the rejected
 readiness-remount variant are historical, not final qualification.
 
 The installed browser matrix passes **27/27 cases** with zero skips, retries or

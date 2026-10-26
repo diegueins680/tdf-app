@@ -1,6 +1,15 @@
 # Listener-scoped local playback state
 
-Status: implemented at `a0120daa3493c04e358b50c6d60af1cacfc60a31`, locally tested;
+The final validator correction is committed at
+`b6259692c11c7b502b974cf6bee7d4ca189925f7`. A matching-owner saved track
+with sources `[validSource, null]` reproduced an App render crash under the
+previous validator. Nonempty source arrays must now pass the existing predicate
+for every member; the whole corrupt track is discarded and valid explicit B can
+still play. This closes the named crash path, not every possible malformed-field
+case. Prior `a0120daa` 85-test/27-browser results retain their historical identity;
+the corrected source has its own 86-test/27-browser qualification.
+
+Status: implemented at `b6259692c11c7b502b974cf6bee7d4ca189925f7`, locally tested;
 not yet merged into the final playback foundation or deployed.
 
 A local audit reproduced a privacy/UX defect: after logout or account changes,
@@ -35,9 +44,9 @@ rejected readiness remount.
 The implementation branch is `fix/player-listening-identity-20261026`, initially
 based on playback head `7de7c292753565ae6ea64c57dd9aa4b97e330b6d`.
 The older diagnostic/design assessment binds main `3af768d`; a desired logout
-regression also fails on `7de7c2927`. Final qualification records 85/85 tests in
-eight suites (22 identity, 39 engine, three queue, 21 session), scoped lint and a
-Node 22.14.0 TypeScript/Vite/budget build passing at 336,894 initial gzip bytes.
+regression also fails on `7de7c2927`. Final qualification records 86/86 tests in
+eight suites (23 identity, 39 engine, three queue, 21 session), scoped lint and a
+Node 22.14.0 TypeScript/Vite/budget build passing at 336,907 initial gzip bytes.
 The installed three-project matrix passes 27/27: 24 native real-media cases plus
 three declared mocked smoke cases, zero skips/retries/flaky cases. Chromium
 desktop/phone emulation and Firefox each pass the new held-session case: fresh B
