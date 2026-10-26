@@ -552,6 +552,24 @@
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]
+    },
+    "ledgerHeaderImmutability": "docs/catalog-persistence/ledger-header-reconciliation-20261025.json",
+    "ledgerHeaderMainIntegration": {
+      "document": "docs/catalog-persistence/ledger-header-main-reconciliation-20261025.json",
+      "mainParent": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+      "headerParent": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
+      "currentDecisionId": "6ff395b6131079017c9d"
+    },
+    "eventMemoryHeaderMainIntegration": {
+      "sourceMain": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "memoryParent": "ebac187c9b96682c741671ba1dccfb133acc4cb7",
+      "mainPrefixCount": 222,
+      "manifestCount": 226,
+      "mainPrefixCanonicalSha256": "3de55b856b5d3d21671a9449be31f6169c93f004946a0e0752b784b4d5a0922f",
+      "originalMemorySuffixCanonicalSha256": "683f89261ab16dca098411d90b94317800bdeb0aa3508b4eced4985b53c8b22b",
+      "currentDecisionId": "f48c34252ff8930b3d74",
+      "memoryDecisionCanonicalSha256": "9f3858a91f37caf5b4b1916fbc280a6ce891cd34536d0ee8953ce2331b8f3fb5",
+      "headerDecisionCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404"
     }
   },
   "decisions": [
@@ -18123,7 +18141,17 @@
           "reviewBatch": "universal-interactions-2026-09-28"
         },
         "previousFingerprint": "1a20aae8bb74a6df248f"
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "sourceDecisionId": "2a0d6d57a51e35d91376",
+          "sourceDecisionSha256": "ccac20209c66a4957a170eb062eddf65ad6d5999731c45a94cb8d7ee00e2b07f",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+          "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
+        }
+      ]
     },
     {
       "id": "4a5404a4a008a8f296dd",
@@ -18164,7 +18192,17 @@
           "exactDuplicateIds": [],
           "similarCandidateIds": []
         }
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "sourceDecisionId": "a7561a719beb23884345",
+          "sourceDecisionSha256": "cfd754599e30a9eb31ad1565cb0b5416fd711f4e348c1021785274cd3f662ffe",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+          "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
+        }
+      ]
     },
     {
       "id": "92f5d2006375f7fb9757",
@@ -18305,6 +18343,14 @@
           "sourceDecisionId": "9de842d0529aa06faf6b",
           "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
           "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
+        },
+        {
+          "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "sourceDecisionId": "4beaac5c476079656a0a",
+          "sourceDecisionSha256": "4b0adcbe4bb243448dcd91fb2fed31264b27d1880b10be20a69610ece91a31ea",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+          "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
         }
       ],
       "mergedSourceDecision": {
@@ -18596,6 +18642,16 @@
             }
           }
         }
+      ],
+      "supersededReviews": [
+        {
+          "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "sourceDecisionId": "48cbf22770303d844cdc",
+          "sourceDecisionSha256": "d0122e0027c1c7297c180b0448c75e7e36f9624693c402eba70a6e38d5625114",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+          "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
+        }
       ]
     },
     {
@@ -18637,241 +18693,502 @@
       }
     },
     {
-      "id": "cff15f30aa13965e5729",
+      "id": "9f4017ded51fb378d543",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 66,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "5d6ca895ee46d472088b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 70,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "287a15fa28ce3a802f32",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 94,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "21a4775e4e991fab585c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 98,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "da3c925244193e512096",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 101,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "15376e7ac130acda2c03",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 103,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "bb430040ffe050fde7c1",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 109,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "ad2d4ef653ed4693d760",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 110,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "023bc70a0fb3d5948978",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed synthetic public-release DTO field names in a regression fixture; values are fixture identities and schema keys, never a shipped artist, release, genre or selectable business catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
+        "line": 17,
+        "kind": "object-registry",
+        "name": "release",
+        "valueCount": 8
+      }
+    },
+    {
+      "id": "f48c34252ff8930b3d74",
       "classification": "security-system-registry",
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "Preserve the complete221-entry protected main1c9c833 migration prefix and every SQL byte/introduction anchor, then append the four original event-memory invitation, source-moderation, NULL-authorization and permission-lock migrations unchanged. Retain both exact224- and221-entry review graphs, including financial and directory lineage. This225-entry execution-registry review grants no production action, campaign activation, permission, financial transaction or release waiver; fresh combined runtime/CI and independent protected review remain required.",
+      "justification": "Preserve the exact222-entry protected main78fa351b prefix, including the posted-ledger-header guard, and append only the four original event-memory migrations without changing any historical SQL or introduction anchor. Retain the complete225-entry memory and222-entry header review decisions, including their financial/directory provenance. This226-entry technical execution-registry review grants no production action, campaign consent, financial transaction, permission change or release waiver; combined tests, independent PR review and protected integration remain required.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "event-memory-current-main-1c9c833-20261026",
-      "sourceReviewReferences": [
-        {
-          "sourceRevision": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9201bfd098de5c87217d90ed3e7e13019fdc38e579dd8197d4501803fc63a34f",
-          "sourceEntry": {
-            "id": "79a6def1e91baee6e937"
-          },
-          "sourceEntryCanonicalSha256": "978e4a28b767ba92ef815fe45ac919ae7550742d9fd9b8cc1007e09e4d0291d9",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        },
-        {
-          "sourceRevision": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "05793bdcb06612ca1a75fc8326ac01a8f0a59defe7c04aef4286889cf7aa6b95",
-          "sourceEntry": {
-            "id": "8229b8202552298c955e"
-          },
-          "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        }
-      ],
+      "reviewBatch": "event-memory-main-78fa-technical-reconciliation-20261026",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 225
+        "valueCount": 226
       },
       "previousDecision": {
-        "id": "79a6def1e91baee6e937",
-        "classification": "genuine-technical-constant",
-        "disposition": "explicit-allowlist",
-        "specializedModel": "technical_constant_allowlist",
-        "priority": "P0-cutover",
-        "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-        "justification": "Preserve the complete221-entry foundation prefix (protected main917806 all220 entries plus the original invitation migration), then append the three original source moderation, NULL authorization and permission-lock migrations without changing their SQL or introduction SHAs. This224-entry execution registry retains both the217- and221-entry source reviews, including the protected financial220 lineage. Canonical combined schema, runtime, independent review and deployment remain separate obligations; this review authorizes no production action or communication.",
+        "id": "cff15f30aa13965e5729",
+        "classification": "security-system-registry",
+        "disposition": "retain-reviewed-deployment-manifest",
+        "specializedModel": "production migration manifest and applied migration ledger",
+        "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+        "justification": "Preserve the complete221-entry protected main1c9c833 migration prefix and every SQL byte/introduction anchor, then append the four original event-memory invitation, source-moderation, NULL-authorization and permission-lock migrations unchanged. Retain both exact224- and221-entry review graphs, including financial and directory lineage. This225-entry execution-registry review grants no production action, campaign activation, permission, financial transaction or release waiver; fresh combined runtime/CI and independent protected review remain required.",
         "reviewed": true,
         "reviewMethod": "successor-of-reviewed-decisions",
-        "reviewBatch": "event-memory-source-main-917806-20261026",
+        "reviewBatch": "event-memory-current-main-1c9c833-20261026",
+        "sourceReviewReferences": [
+          {
+            "sourceRevision": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "9201bfd098de5c87217d90ed3e7e13019fdc38e579dd8197d4501803fc63a34f",
+            "sourceEntry": {
+              "id": "79a6def1e91baee6e937"
+            },
+            "sourceEntryCanonicalSha256": "978e4a28b767ba92ef815fe45ac919ae7550742d9fd9b8cc1007e09e4d0291d9",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+          },
+          {
+            "sourceRevision": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "05793bdcb06612ca1a75fc8326ac01a8f0a59defe7c04aef4286889cf7aa6b95",
+            "sourceEntry": {
+              "id": "8229b8202552298c955e"
+            },
+            "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+          }
+        ],
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3,
           "kind": "json-array",
           "name": "migrations",
-          "valueCount": 224
+          "valueCount": 225
         },
         "previousDecision": {
-          "id": "d55b0d93ab3224fe96ac",
+          "id": "79a6def1e91baee6e937",
           "classification": "genuine-technical-constant",
           "disposition": "explicit-allowlist",
           "specializedModel": "technical_constant_allowlist",
           "priority": "P0-cutover",
           "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-          "justification": "The 217-entry execution registry preserves every object and SQL byte of the immutable 216-entry prefix and appends source permission locking introduced by baab857f085b74f333c9f5d29e31306072fbc496. It reuses the existing canonical permission locks, rejects unknown or unsafe predecessors, and retains function OIDs and all source/report/request/audit data. Eight actual PostgreSQL interleavings and an observed committed predecessor counterexample qualify the scoped regression; current review/CI and production deployment remain separate obligations.",
+          "justification": "Preserve the complete221-entry foundation prefix (protected main917806 all220 entries plus the original invitation migration), then append the three original source moderation, NULL authorization and permission-lock migrations without changing their SQL or introduction SHAs. This224-entry execution registry retains both the217- and221-entry source reviews, including the protected financial220 lineage. Canonical combined schema, runtime, independent review and deployment remain separate obligations; this review authorizes no production action or communication.",
           "reviewed": true,
-          "reviewMethod": "successor-of-reviewed-decision",
-          "reviewBatch": "event-memory-source-permission-locks-20261025",
+          "reviewMethod": "successor-of-reviewed-decisions",
+          "reviewBatch": "event-memory-source-main-917806-20261026",
           "evidence": {
             "file": "scripts/production-migrations.json",
             "line": 3,
             "kind": "json-array",
             "name": "migrations",
-            "valueCount": 217
+            "valueCount": 224
           },
           "previousDecision": {
-            "id": "38bbe0c3d9b9d4ddaa9d",
+            "id": "d55b0d93ab3224fe96ac",
             "classification": "genuine-technical-constant",
             "disposition": "explicit-allowlist",
             "specializedModel": "technical_constant_allowlist",
             "priority": "P0-cutover",
             "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-            "justification": "The 216-entry execution registry preserves the immutable 215-entry prefix and every historical SQL byte. It appends the NULL-organizer authorization repair introduced by c6ecae133a93b6bab93c84cee4d72290f9e28982. Actual-schema regression reproduces the predecessor unauthorized hide, then verifies denial, allowed moderation, replay revocation and successor guards. No deployment or communication is authorized by this registry classification.",
+            "justification": "The 217-entry execution registry preserves every object and SQL byte of the immutable 216-entry prefix and appends source permission locking introduced by baab857f085b74f333c9f5d29e31306072fbc496. It reuses the existing canonical permission locks, rejects unknown or unsafe predecessors, and retains function OIDs and all source/report/request/audit data. Eight actual PostgreSQL interleavings and an observed committed predecessor counterexample qualify the scoped regression; current review/CI and production deployment remain separate obligations.",
             "reviewed": true,
             "reviewMethod": "successor-of-reviewed-decision",
-            "reviewBatch": "event-memory-source-authorization-20261025",
+            "reviewBatch": "event-memory-source-permission-locks-20261025",
             "evidence": {
               "file": "scripts/production-migrations.json",
               "line": 3,
               "kind": "json-array",
               "name": "migrations",
-              "valueCount": 216
+              "valueCount": 217
             },
             "previousDecision": {
-              "id": "7ca220a96b9b65a0fe15",
+              "id": "38bbe0c3d9b9d4ddaa9d",
               "classification": "genuine-technical-constant",
               "disposition": "explicit-allowlist",
               "specializedModel": "technical_constant_allowlist",
               "priority": "P0-cutover",
               "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-              "justification": "The 215-entry registry preserves the full immutable 214-entry prefix and all historical SQL, then appends source moderation introduced by 3bb05ecd7. Installation hides nothing and sends nothing. Actual full-schema replay/rollback and authenticated HTTP verify behavior; committed evidence refuses rollback. This registry review does not authorize production deployment or feature activation.",
+              "justification": "The 216-entry execution registry preserves the immutable 215-entry prefix and every historical SQL byte. It appends the NULL-organizer authorization repair introduced by c6ecae133a93b6bab93c84cee4d72290f9e28982. Actual-schema regression reproduces the predecessor unauthorized hide, then verifies denial, allowed moderation, replay revocation and successor guards. No deployment or communication is authorized by this registry classification.",
               "reviewed": true,
               "reviewMethod": "successor-of-reviewed-decision",
-              "reviewBatch": "event-memory-source-moderation-20261025",
+              "reviewBatch": "event-memory-source-authorization-20261025",
               "evidence": {
                 "file": "scripts/production-migrations.json",
                 "line": 3,
                 "kind": "json-array",
                 "name": "migrations",
-                "valueCount": 215
+                "valueCount": 216
               },
               "previousDecision": {
-                "id": "c28667c70e40dcc18a55",
+                "id": "7ca220a96b9b65a0fe15",
                 "classification": "genuine-technical-constant",
                 "disposition": "explicit-allowlist",
                 "specializedModel": "technical_constant_allowlist",
                 "priority": "P0-cutover",
                 "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-                "justification": "The 214-entry execution registry preserves all 213 protected-main entry objects/order/introduction commits and historical SQL bytes, then appends one event-memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. The migration installs no campaigns or consent and sends nothing. Full-schema replay, rollback/refusal, concurrent-worker and actual API tests are separate execution evidence; no production activation is authorized by this registry review.",
+                "justification": "The 215-entry registry preserves the full immutable 214-entry prefix and all historical SQL, then appends source moderation introduced by 3bb05ecd7. Installation hides nothing and sends nothing. Actual full-schema replay/rollback and authenticated HTTP verify behavior; committed evidence refuses rollback. This registry review does not authorize production deployment or feature activation.",
                 "reviewed": true,
                 "reviewMethod": "successor-of-reviewed-decision",
-                "reviewBatch": "event-memories-2026-10-25",
+                "reviewBatch": "event-memory-source-moderation-20261025",
                 "evidence": {
                   "file": "scripts/production-migrations.json",
                   "line": 3,
                   "kind": "json-array",
                   "name": "migrations",
-                  "valueCount": 214
+                  "valueCount": 215
                 },
                 "previousDecision": {
-                  "id": "3f336173e03f10fc023c",
+                  "id": "c28667c70e40dcc18a55",
                   "classification": "genuine-technical-constant",
                   "disposition": "explicit-allowlist",
                   "specializedModel": "technical_constant_allowlist",
                   "priority": "P0-cutover",
                   "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-                  "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+                  "justification": "The 214-entry execution registry preserves all 213 protected-main entry objects/order/introduction commits and historical SQL bytes, then appends one event-memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. The migration installs no campaigns or consent and sends nothing. Full-schema replay, rollback/refusal, concurrent-worker and actual API tests are separate execution evidence; no production activation is authorized by this registry review.",
                   "reviewed": true,
-                  "reviewMethod": "successor-of-reviewed-decisions",
-                  "reviewBatch": "music-current-main-integration-20261023",
+                  "reviewMethod": "successor-of-reviewed-decision",
+                  "reviewBatch": "event-memories-2026-10-25",
                   "evidence": {
                     "file": "scripts/production-migrations.json",
                     "line": 3,
                     "kind": "json-array",
                     "name": "migrations",
-                    "valueCount": 213
+                    "valueCount": 214
+                  },
+                  "previousDecision": {
+                    "id": "3f336173e03f10fc023c",
+                    "classification": "genuine-technical-constant",
+                    "disposition": "explicit-allowlist",
+                    "specializedModel": "technical_constant_allowlist",
+                    "priority": "P0-cutover",
+                    "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+                    "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+                    "reviewed": true,
+                    "reviewMethod": "successor-of-reviewed-decisions",
+                    "reviewBatch": "music-current-main-integration-20261023",
+                    "evidence": {
+                      "file": "scripts/production-migrations.json",
+                      "line": 3,
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 213
+                    }
                   }
                 }
               }
             }
-          }
+          },
+          "sourceReviewReferences": [
+            {
+              "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+              "sourceEntry": {
+                "id": "3f336173e03f10fc023c"
+              },
+              "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+              "sourceEntry": {
+                "id": "2b073f20afd2f3798b1e"
+              },
+              "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+              "sourceEntry": {
+                "id": "a1eb1e750e7543b88fe1"
+              },
+              "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "2c3b0017a352e223803eca40de4a500d9902717f",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "ded861bdcbb03b246ff965701f7392265e4aff0a36b86b9e2fd4e50859c70904",
+              "sourceEntry": {
+                "id": "c28667c70e40dcc18a55"
+              },
+              "sourceEntryCanonicalSha256": "f50f89961486277052c8354582f09684859e64488072dda296b75c43ec07d4d7",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+              "sourceEntry": {
+                "id": "b7cc47848f3f9882770f"
+              },
+              "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "ddb92379859aa7ac7e1d87aec99bb1be3cc1f941",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "1a193c51384355bf1d57e23e2868b8d4759f2324cb1f74cc78659d919b9b910a",
+              "sourceEntry": {
+                "id": "d55b0d93ab3224fe96ac"
+              },
+              "sourceEntryCanonicalSha256": "cb3c85d4b0a4ce7c962aec6a67eb2cc3ffbd2714a14c65e5a9721b2ab6dd2fdc",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "534c5631ac79e927c887c5c730e252fe4dad7cc5",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "337adcd09b9d81a0255d8eb61118c6fce8e1d3669fcda9acc04adbd69d6ce92e",
+              "sourceEntry": {
+                "id": "0ab5d4354ae923d8f2db"
+              },
+              "sourceEntryCanonicalSha256": "4369a49366796704db894cd929e773d333e4994b3338f9d6386f8aa4b12556e6",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            }
+          ]
         },
-        "sourceReviewReferences": [
+        "concurrentReviewHistory": [
           {
-            "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
-            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-            "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
-            "sourceEntry": {
-              "id": "3f336173e03f10fc023c"
-            },
-            "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
-            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-          },
-          {
-            "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
-            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-            "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
-            "sourceEntry": {
-              "id": "2b073f20afd2f3798b1e"
-            },
-            "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
-            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-          },
-          {
-            "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
-            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-            "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
-            "sourceEntry": {
-              "id": "a1eb1e750e7543b88fe1"
-            },
-            "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
-            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-          },
-          {
-            "sourceRevision": "2c3b0017a352e223803eca40de4a500d9902717f",
-            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-            "sourceFileSha256": "ded861bdcbb03b246ff965701f7392265e4aff0a36b86b9e2fd4e50859c70904",
-            "sourceEntry": {
-              "id": "c28667c70e40dcc18a55"
-            },
-            "sourceEntryCanonicalSha256": "f50f89961486277052c8354582f09684859e64488072dda296b75c43ec07d4d7",
-            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-          },
-          {
-            "sourceRevision": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
-            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-            "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
-            "sourceEntry": {
-              "id": "b7cc47848f3f9882770f"
-            },
-            "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
-            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-          },
-          {
-            "sourceRevision": "ddb92379859aa7ac7e1d87aec99bb1be3cc1f941",
-            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-            "sourceFileSha256": "1a193c51384355bf1d57e23e2868b8d4759f2324cb1f74cc78659d919b9b910a",
-            "sourceEntry": {
-              "id": "d55b0d93ab3224fe96ac"
-            },
-            "sourceEntryCanonicalSha256": "cb3c85d4b0a4ce7c962aec6a67eb2cc3ffbd2714a14c65e5a9721b2ab6dd2fdc",
-            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-          },
-          {
-            "sourceRevision": "534c5631ac79e927c887c5c730e252fe4dad7cc5",
-            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-            "sourceFileSha256": "337adcd09b9d81a0255d8eb61118c6fce8e1d3669fcda9acc04adbd69d6ce92e",
-            "sourceEntry": {
-              "id": "0ab5d4354ae923d8f2db"
-            },
-            "sourceEntryCanonicalSha256": "4369a49366796704db894cd929e773d333e4994b3338f9d6386f8aa4b12556e6",
-            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            "id": "8229b8202552298c955e",
+            "classification": "security-system-registry",
+            "disposition": "retain-reviewed-deployment-manifest",
+            "specializedModel": "production migration manifest and applied migration ledger",
+            "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+            "justification": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
+            "reviewed": true,
+            "reviewMethod": "successor-of-reviewed-decisions",
+            "reviewBatch": "directory-financial-main-integration-20261026",
+            "sourceReviewReferences": [
+              {
+                "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+                "sourceEntry": {
+                  "id": "3f336173e03f10fc023c"
+                },
+                "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+                "sourceEntry": {
+                  "id": "2b073f20afd2f3798b1e"
+                },
+                "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+                "sourceEntry": {
+                  "id": "a1eb1e750e7543b88fe1"
+                },
+                "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+                "sourceEntry": {
+                  "id": "b7cc47848f3f9882770f"
+                },
+                "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+                "sourceEntry": {
+                  "id": "c94cd70c1272ec9ede1b"
+                },
+                "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              }
+            ],
+            "evidence": {
+              "file": "scripts/production-migrations.json",
+              "line": 3,
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 221
+            }
           }
         ]
       },
       "concurrentReviewHistory": [
         {
-          "id": "8229b8202552298c955e",
+          "id": "6ff395b6131079017c9d",
           "classification": "security-system-registry",
           "disposition": "retain-reviewed-deployment-manifest",
           "specializedModel": "production migration manifest and applied migration ledger",
           "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-          "justification": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
+          "justification": "The 222-entry deployment registry preserves the complete 221-entry protected main e938c72ba4b87010214f6838f06bfac45a0f45c0 prefix, including saved-alert migration eb2f71d62740783369a6eb2a6d35fc024484cb71, and appends only the posted-header guard introduced by 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Both independently developed 221-entry predecessor reviews are retained with exact canonical hashes and source references. Historical SQL and introduction SHAs are unchanged. This is a technical source review; current-head CI, independent PR approval and production authorization remain separate requirements.",
           "reviewed": true,
           "reviewMethod": "successor-of-reviewed-decisions",
-          "reviewBatch": "directory-financial-main-integration-20261026",
+          "reviewBatch": "ledger-header-main-technical-review-20261025",
           "sourceReviewReferences": [
             {
               "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
@@ -18922,6 +19239,26 @@
               },
               "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
               "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "55915aedf0e4e356a5bca766cdc09b7077f9d0d567523b4d496ad9c5bacb09f0",
+              "sourceEntry": {
+                "id": "8229b8202552298c955e"
+              },
+              "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "881e0be06afb973c1200beb4213e72ae4bad53478e3fab280189c650a55d3b75",
+              "sourceEntry": {
+                "id": "9ada14767bee1662f97d"
+              },
+              "sourceEntryCanonicalSha256": "6528ab5a8a23254d2e4ad4222e392f7f8f052b9f2818ef6e9eb8fc3a461a7003",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
             }
           ],
           "evidence": {
@@ -18929,8 +19266,57 @@
             "line": 3,
             "kind": "json-array",
             "name": "migrations",
-            "valueCount": 221
+            "valueCount": 222
+          },
+          "previousDecisionReferences": {
+            "document": "docs/catalog-persistence/ledger-header-main-reconciliation-20261025.json",
+            "mainId": "8229b8202552298c955e",
+            "headerId": "9ada14767bee1662f97d"
           }
+        }
+      ],
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9201bfd098de5c87217d90ed3e7e13019fdc38e579dd8197d4501803fc63a34f",
+          "sourceEntry": {
+            "id": "79a6def1e91baee6e937"
+          },
+          "sourceEntryCanonicalSha256": "978e4a28b767ba92ef815fe45ac919ae7550742d9fd9b8cc1007e09e4d0291d9",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "05793bdcb06612ca1a75fc8326ac01a8f0a59defe7c04aef4286889cf7aa6b95",
+          "sourceEntry": {
+            "id": "8229b8202552298c955e"
+          },
+          "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "ebac187c9b96682c741671ba1dccfb133acc4cb7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "3578a38dd23e995e330c80a6f4577eff2a0cd1f0ce396839416d61f5084f4574",
+          "sourceEntry": {
+            "id": "cff15f30aa13965e5729"
+          },
+          "sourceEntryCanonicalSha256": "9f3858a91f37caf5b4b1916fbc280a6ce891cd34536d0ee8953ce2331b8f3fb5",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+          "sourceEntry": {
+            "id": "6ff395b6131079017c9d"
+          },
+          "sourceEntryCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
         }
       ]
     }

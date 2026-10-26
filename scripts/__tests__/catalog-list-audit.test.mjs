@@ -109,7 +109,7 @@ test('music/main reconciliation retains both reviews and the protected migration
   }
 });
 
-test('saved-alert and memory225 succession preserve213/214/220/221 reviews and reject stale approvals', async () => {
+test('memory226 and ledger succession preserve213/214/220/221/222/224/225 reviews and reject stale approvals', async () => {
   const document = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
   const transition = document.reconciliation.directorySavedSearchParity;
@@ -136,11 +136,19 @@ test('saved-alert and memory225 succession preserve213/214/220/221 reviews and r
   assert.equal(canonicalHash(manifest.slice(0, 220)), protectedFinancialPrefixHash);
   assert.equal(financial.protectedMainManifestCanonicalSha256, protectedFinancialPrefixHash);
   assert.equal(financial.sourceMain, '5114fe95ac8e328b58162a8dcae5c9015a47ce09');
-  assert.equal(manifest.length, 225);
+  assert.equal(manifest.length, 226);
+  assert.equal(canonicalHash(manifest.slice(0, 222)),
+    '3de55b856b5d3d21671a9449be31f6169c93f004946a0e0752b784b4d5a0922f',
+    'Preserve the full222-entry protected main78fa351b prefix');
+  assert.deepEqual(manifest[221], {
+    id: '2026-10-25_ledger_posted_header',
+    path: 'tdf-hq/sql/2026-10-25_ledger_posted_header.sql',
+    introducedBy: '5cc26ad46c958a029ec4539c60cc1ca77fec1d01',
+  });
   assert.equal(canonicalHash(manifest.slice(0, 221)),
     '1413652c0d640dbb2241fb5c004eaa212245a62dfcb031109f54226d3af31fd9',
     'Preserve every object of protected main1c9c833, including its directory successor');
-  assert.equal(canonicalHash(manifest.slice(221)),
+  assert.equal(canonicalHash(manifest.slice(222)),
     '683f89261ab16dca098411d90b94317800bdeb0aa3508b4eced4985b53c8b22b',
     'Append only the four unchanged memory entries from reviewed candidate31c16bffe');
   assert.deepEqual(manifest[220], {
@@ -187,9 +195,29 @@ test('saved-alert and memory225 succession preserve213/214/220/221 reviews and r
   assert.equal(memoryParent.evidence.valueCount, 224);
   assert.equal(finalCurrent.classification, current.classification);
   assert.equal(finalCurrent.disposition, current.disposition);
-  assert.equal(finalCurrent.evidence.valueCount, 225);
+  assert.equal(finalCurrent.evidence.valueCount, 226);
   assert.ok(!active.some(entry => entry.id === current.id || entry.id === memoryParent.id));
-  const retiredParents = [...historical, current, memoryParent];
+  const memory225 = history.find(entry => entry.id === 'cff15f30aa13965e5729');
+  const header222 = history.find(entry => entry.id === '6ff395b6131079017c9d');
+  assert.equal(canonicalHash(memory225),
+    '9f3858a91f37caf5b4b1916fbc280a6ce891cd34536d0ee8953ce2331b8f3fb5');
+  assert.equal(canonicalHash(header222),
+    '866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404');
+  assert.equal(memory225.evidence.valueCount, 225);
+  assert.equal(header222.evidence.valueCount, 222);
+  assert.equal(memory225.reviewed, true);
+  assert.equal(header222.reviewed, true);
+  const header = document.reconciliation.ledgerHeaderMainIntegration;
+  const combined = JSON.parse(await fs.readFile(path.join(workspaceRoot, header.document), 'utf8'));
+  assert.equal(header.currentDecisionId, header222.id);
+  assert.equal(current.id, financial.currentDecisionId);
+  assert.equal(header222.classification, current.classification);
+  assert.equal(header222.disposition, current.disposition);
+  assert.equal(combined.mainParent, 'e938c72ba4b87010214f6838f06bfac45a0f45c0');
+  assert.equal(combined.mainDecisionCanonicalSha256, canonicalHash(current));
+  assert.equal(combined.headerDecisionCanonicalSha256, canonicalHash(combined.headerManifestDecision));
+  assert.ok(!active.some(entry => [current.id, combined.headerManifestDecision.id, memory225.id, header222.id].includes(entry.id)));
+  const retiredParents = [...historical, current, memoryParent, memory225, header222, combined.headerManifestDecision];
   assert.equal(current.classification, decision220.classification);
   assert.equal(current.disposition, decision220.disposition);
   assert.deepEqual(current.sourceReviewReferences.slice(0, decision220.sourceReviewReferences.length),
@@ -198,12 +226,12 @@ test('saved-alert and memory225 succession preserve213/214/220/221 reviews and r
   assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
   assert.equal(current.evidence.valueCount, 221);
   assert.equal(pointer.currentId, finalCurrent.id);
-  assert.equal(pointer.valueCount, 225);
+  assert.equal(pointer.valueCount, 226);
   assert.equal(pointer.change, finalCurrent.justification);
   const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
   assert.equal(retirement.replacementId, finalCurrent.id);
   assert.equal(retirement.currentResolution.id, finalCurrent.id);
-  assert.equal(retirement.currentResolution.valueCount, 225);
+  assert.equal(retirement.currentResolution.valueCount, 226);
   assert.equal(retirement.reason, finalCurrent.justification);
   for (const decision of retiredParents) {
     assert.ok(pointer.previousCurrentIds.includes(decision.id));

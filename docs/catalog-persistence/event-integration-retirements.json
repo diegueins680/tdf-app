@@ -678,12 +678,12 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "cff15f30aa13965e5729",
-      "reason": "Preserve the complete221-entry protected main1c9c833 migration prefix and every SQL byte/introduction anchor, then append the four original event-memory invitation, source-moderation, NULL-authorization and permission-lock migrations unchanged. Retain both exact224- and221-entry review graphs, including financial and directory lineage. This225-entry execution-registry review grants no production action, campaign activation, permission, financial transaction or release waiver; fresh combined runtime/CI and independent protected review remain required.",
+      "replacementId": "f48c34252ff8930b3d74",
+      "reason": "Preserve the exact222-entry protected main78fa351b prefix, including the posted-ledger-header guard, and append only the four original event-memory migrations without changing any historical SQL or introduction anchor. Retain the complete225-entry memory and222-entry header review decisions, including their financial/directory provenance. This226-entry technical execution-registry review grants no production action, campaign consent, financial transaction, permission change or release waiver; combined tests, independent PR review and protected integration remain required.",
       "previousReplacementId": "79a6def1e91baee6e937",
       "currentResolution": {
-        "id": "cff15f30aa13965e5729",
-        "valueCount": 225,
+        "id": "f48c34252ff8930b3d74",
+        "valueCount": 226,
         "sourceParents": [
           "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
           "1c9c833cc1ba62b47822fca3c20e14e86cf28daa"
@@ -971,7 +971,10 @@
         "0ab5d4354ae923d8f2db",
         "79a6def1e91baee6e937",
         "8229b8202552298c955e",
-        "c6a62c7c7469e8974ff1"
+        "c6a62c7c7469e8974ff1",
+        "9ada14767bee1662f97d",
+        "cff15f30aa13965e5729",
+        "6ff395b6131079017c9d"
       ],
       "previousReason": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision."
     }

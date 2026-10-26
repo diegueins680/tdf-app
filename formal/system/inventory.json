@@ -153,6 +153,7 @@
       "scripts/__tests__/identity-http-runtime.mjs",
       "scripts/__tests__/identity-reconciliation.test.mjs",
       "scripts/__tests__/instagram-token-workflows.test.mjs",
+      "scripts/__tests__/ledger-event-identity.mjs",
       "scripts/__tests__/ledger-posting-namespace.py",
       "scripts/__tests__/ledger-posting-snapshot.py",
       "scripts/__tests__/ledger-posting-upgrade.py",
@@ -359,6 +360,7 @@
       "scripts/run-instagram-follower-invite-2026-09-09.sh",
       "scripts/run-music-release-worker-once.sh",
       "scripts/run-music-release-worker.sh",
+      "scripts/run-native-audio-tests.sh",
       "scripts/scan-music-legacy-releases.sh",
       "scripts/set-loop-github-polling.mjs",
       "scripts/social/ApiContractSpec.hs",
@@ -531,6 +533,7 @@
       "scripts/test-persistent-uploads-container.py",
       "scripts/test-physical-postgres-docker.py",
       "scripts/test-physical-postgres-recovery.py",
+      "scripts/test-player-session-model.mjs",
       "scripts/test-privacy-request-ledger.py",
       "scripts/test-proof-certificates.py",
       "scripts/test-provider-event-operations-migration.sh",
@@ -1182,6 +1185,7 @@
       "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
       "tdf-hq-ui/src/pages/MusicLibraryPage.tsx",
       "tdf-hq-ui/src/pages/MusicMakerPage.tsx",
+      "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
       "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx",
       "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
@@ -1895,6 +1899,7 @@
       "tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql",
       "tdf-hq/sql/2026-10-25_event_memory_source_moderation_rollback.sql",
       "tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql",
+      "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2755,7 +2760,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "8a2ab2cf6d0fd25091263e08d6a05a41d73f3216202b1ddf2da5607133e0dd5a",
+      "sha256": "883a9ffc619978fd2f08607f6d2fb558e354b2b83c8ad0c1c1a7901c242b37e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2767,7 +2772,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "01513cd705efe958bf0194a8295753d33b4e300d3bced014e37fcbffd174d6c1",
+      "sha256": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2977,7 +2982,7 @@
     {
       "id": "SURFACE-056631e61150574f",
       "path": "e2e/web/music-player-native.spec.mjs",
-      "sha256": "8a1ef90f2a060ff4ae4e16add3001c09280e8224e06a8d28b49c9793eefb5112",
+      "sha256": "c30ef37d2013401f3baffede88298930fa0795fb277d06c9167d3c9747fb55a0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3265,7 +3270,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "cc7829b084cb1ce61b68e630c7359056160031e1de8b8984a70fe22cb23cbedd",
+      "sha256": "bc6d9d2b9f4ea7c26504fd2e4659ff183a1168583c99b039cf839fe03258b6cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3515,6 +3520,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-421433ee44665786",
+      "path": "scripts/__tests__/ledger-event-identity.mjs",
+      "sha256": "65e6578d15bba078f5e48d36a9a8ad2c240d1f34d89b7f015f43a9f9ca23a526",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-07cf326c41f76882",
       "path": "scripts/__tests__/ledger-posting-namespace.py",
       "sha256": "e2cf1845e5c4d31de06a9f4065969365ff2098bb31e93a1943bb2d7dbb89e490",
@@ -3523,7 +3534,7 @@
     {
       "id": "SURFACE-34836c82b296d0b6",
       "path": "scripts/__tests__/ledger-posting-snapshot.py",
-      "sha256": "5e7ac570a965b6b9370fd53936851212a2c45108e2a7d670a96494c813360751",
+      "sha256": "a69dc1a988132d62c614fe09b4da4207da0ab00134d1e68d0fcdf3adf79f4af3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4447,7 +4458,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "7e3dc3b8c40d68aa9ff4331ed2094196822617a9498be1f5da10449f286b4a47",
+      "sha256": "837a2952f669b8d9819a31548652d1491b35dd37282603dd333a64a2303166c3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4627,7 +4638,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "03e7dc699b9cbf28506f016c5e73e8108ccc7c0ccd7d415718203a6f9a67834f",
+      "sha256": "d0456c47a407009eaffcda5fc2909f7b222d8e07c867e6d98643e35712d2cc0e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4748,6 +4759,12 @@
       "id": "SURFACE-37d6eca3de4ae9a2",
       "path": "scripts/run-music-release-worker.sh",
       "sha256": "521e52bb3b059c86c17765100957bacbfcf66d1575978b710bc6dc22e916cc5b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5ecb45f4a99c5361",
+      "path": "scripts/run-native-audio-tests.sh",
+      "sha256": "89be3522a4c6fb7e4352bc8799edb2aee64de19dac7a95d67efe144395ed48aa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5329,7 +5346,7 @@
     {
       "id": "SURFACE-66af35e30b926d7a",
       "path": "scripts/test-directory-saved-search-parity.mjs",
-      "sha256": "f4d9e034b9c1c80ce8a526224897079a06158baf8856f92b1dbc199f1baa9365",
+      "sha256": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5551,7 +5568,7 @@
     {
       "id": "SURFACE-c3dd26e569b5cb41",
       "path": "scripts/test-ledger-posting.sh",
-      "sha256": "b838a96f759e1d0650cd67180a1847649965f5aff5b17c57896a4988096d3cd9",
+      "sha256": "c70fc5c138cde076c328c5f91059a1c4d90732f428f449eccb8162e8706ce860",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5783,6 +5800,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-71c71f90195a509a",
+      "path": "scripts/test-player-session-model.mjs",
+      "sha256": "cc1ae78132c81735e2c5562829b3b5a4a5660175dbcea9ae831f3a450eceed2d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-17287b59b5e37160",
       "path": "scripts/test-privacy-request-ledger.py",
       "sha256": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
@@ -5815,7 +5838,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "cc1cc8675a93f9c674ab943f1282afa040f9be50d6e9e4a0775a46b8069377a7",
+      "sha256": "358b2213ed089a649b9dfb5c1209204fd6104c8ebf0d829d4bf2fec5c1d4da89",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6133,7 +6156,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "7201b7403faf3a7fe3b22edaf3b8c8600e63e85b53d693ba24f1671defe2a213",
+      "sha256": "955b1db4af68d844636b1c5d3e74707a28b57d62d283ed145202a5d610e549ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9655,13 +9678,19 @@
     {
       "id": "SURFACE-d87ce761a8c9799e",
       "path": "tdf-hq-ui/src/pages/MusicLibraryPage.tsx",
-      "sha256": "329e773ad263a5409e3a38261da4775858977388cbd55a6f9c9838cf4955e332",
+      "sha256": "128ba43306d3634403c1ffde27924ad7b15a28367788432c7731cebb60a927b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a4131610c954eb01",
       "path": "tdf-hq-ui/src/pages/MusicMakerPage.tsx",
       "sha256": "57da61c3585f03f15dfe98cfea806848d6a097e1f24eae4ca14fb26ad97f3722",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-64dc8940afb0c1b4",
+      "path": "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
+      "sha256": "9a38d743806d57f1ed655cfe93a2db264c21dd0672db93afbc06c422e4b8698d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9673,7 +9702,7 @@
     {
       "id": "SURFACE-474a81a2327740d9",
       "path": "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
-      "sha256": "5cc1d83724ae007eea01926ebadcb8a532ad2f3a3a2d1ce8b689134fb75bd86f",
+      "sha256": "3f9928ccb9c7691f0415c16c2294fedad13aee3d2e19d4a9e3cdf0d6d7c2918a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10249,19 +10278,19 @@
     {
       "id": "SURFACE-818df6bbb0d7fdd5",
       "path": "tdf-hq-ui/src/player/GlobalPlayer.tsx",
-      "sha256": "92717c83b108441fcb17e04eb052b21d19a98ee85ce3cb2a1bd8794f8a8e97c1",
+      "sha256": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "690bdc8b04c356eb1a7024980834a0a9d50a28e3db2b23c59bf99b3c69bd6fe5",
+      "sha256": "0933e9cc20b04130bc4a86065556a55525028f8e3f3b02624674c04c695e4d50",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "a1a36f6ab3a24a6ba935d358b9904f8fcf83ea193fe5172c9829c2f688fcf9dc",
+      "sha256": "e6ea941fbe1463ca01d11c07044e6ff518b5572a1be7be9a038b50cef1903a9a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10285,7 +10314,7 @@
     {
       "id": "SURFACE-d6d70a73f7318a52",
       "path": "tdf-hq-ui/src/player/assetAccess.ts",
-      "sha256": "7ec3537cb41cc8d39e2ea001d7055a0333be69e00b4fd3dbae7d253b6bcee4b0",
+      "sha256": "a0da01ca4f664e57db6f1efcbcf5f6cb601c181679bd7d4c4d92b7c5c07c74d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13928,6 +13957,12 @@
       "id": "SURFACE-8fdeee99c3039848",
       "path": "tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql",
       "sha256": "f12c7a3de7c62ec9cce3bd4a21969de40b7993b39889ee3d1704a1b56ac86d1f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-852d0d163a5c0de4",
+      "path": "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
+      "sha256": "63e84df8458ee3bf522fc4ce0c8bfa355d9e2b1236ccd2bee31437af23a3ad70",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21101,6 +21136,20 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/music-releases/universal-audio-audit-2026-10-25.md",
+      "sha256": "b70a7172de875670335d5bf84809c9227cbc5ad8029939051d304333a3c893ff",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/music-releases/universal-audio-delivery-2026-10-25.md",
+      "sha256": "5ed80d49ead443e2161f37aa99049227914aa6b4df824ec0aa6cc6c2936afc08",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/music-releases/version-party-membership.md",
       "sha256": "9ffc40f81e20d28fb2cf47c89f9dd010d00f776e02036695438c554fab2643cc",
       "authority": "inferred",
@@ -23530,6 +23579,27 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/LedgerHeader.cfg",
+      "sha256": "96f2943f914fccd5ff3521bd7d661e5224df2093137a8f209eba5c52043a8d1d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/LedgerHeader.tla",
+      "sha256": "09d3c1f235ddc92be3a774e185ece7d4022897c0c1f9d56f30b530665dd159e8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/LedgerHeaderMutable.cfg",
+      "sha256": "4bf67d22966ae62aae1106d2ec1fba2360684ee143ed839268fbe4ba1c6d6447",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/LedgerNamespace.cfg",
       "sha256": "db079045822f049d73f5ea7bb407b34dd639901336ea1a87edeedd9e188afe5e",
       "authority": "inferred",
@@ -24973,7 +25043,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "6704526e28425a40921e1b9ef55fe651424f6bc4a172c4319b3d847518bf088d",
+      "sha256": "f0b54254a3252352a524a5b2f0451889a8735547a01fc089765967cef0e1d850",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26835,7 +26905,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "2a93c35f5a6bfe618286b7382b13a61756401dcd47d5ff2ef05a0b99fc72b02e",
+      "sha256": "daaf8c8a70d6a6cae9e6815325767ae903ac6fc5f2f517bd029e2f2dae450e47",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -27093,6 +27163,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/ledger-header.md",
+      "sha256": "299915845460814be39e0854021ab382ee3b61db0bf4002fe83c09cefd83629c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/ledger-namespace.md",
       "sha256": "3c3e778f4db95f9c4dcb8a89cac81c8f057563c46353384333770899e6c70f9a",
       "authority": "inferred",
@@ -27345,6 +27422,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/player-session.md",
+      "sha256": "81cef40eb0c0ff1135257fd630136f365a02a6bf97d4f3ca2514e476a02906ce",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/private-upload-persistence.md",
       "sha256": "9642bde8dc6272a601667f5eeb0c3f6d36bcce12451ea573ea5c25df93ba882b",
       "authority": "inferred",
@@ -27430,7 +27514,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "338caa70cbcba2f0e500b1009dae78c832f8e323c44224ffa30877b040e76173",
+      "sha256": "c4390bf2756ec567075a04dbdfca35d51c81a58b574f81f51ce0bcf3757379b0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -36984,6 +37068,28 @@
         "  AtMostOneProviderDocument",
         "  AuthorizedIsFinal",
         "  AuthorizedIsReal"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LedgerHeader.cfg",
+      "declarations": [
+        "CONSTANTS Writers = {writer1, writer2} FreezePostedHeader = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK PostedHeaderFrozen",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LedgerHeaderMutable.cfg",
+      "declarations": [
+        "CONSTANTS Writers = {writer1, writer2} FreezePostedHeader = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK PostedHeaderFrozen",
+        "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

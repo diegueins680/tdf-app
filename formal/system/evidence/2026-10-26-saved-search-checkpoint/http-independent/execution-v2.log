@@ -1,0 +1,29 @@
+/private/tmp/tdf-ledger-checkpoint-http-root-20261026-q_v4jw1i
+compile-loopback-adapter PASS
+deny-nonlocal-egress PASS
+init PASS
+start PASS
+create PASS
+canonical-sql-http PASS
+ERROR:  operator is not unique: text || "char"
+LINE 1: ... directory_alert_qualification.before_target)||'|'||(SELECT ...
+                                                             ^
+HINT:  Could not choose a best candidate operator. You might need to add explicit type casts.
+drop PASS
+stop PASS
+Traceback (most recent call last):
+  File "/private/tmp/tdf-ledger-checkpoint-http-protocol-root-20261026/run.py", line 108, in <module>
+    report['schemaWitness']=sql("SELECT (SELECT count(*) FROM tdf_schema_migration)||'|'||(SELECT jsonb_array_length(prefix_ids) FROM directory_alert_qualification.before_target)||'|'||(SELECT tgenabled FROM pg_trigger WHERE tgrelid='commerce_ledger_transaction'::regclass AND tgname='trg_commerce_ledger_header_immutable');")
+                            ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/tdf-ledger-checkpoint-http-protocol-root-20261026/run.py", line 67, in sql
+    def sql(query): return subprocess.check_output(['psql',url,'-XqAt','-v','ON_ERROR_STOP=1','-c',query],env=env,text=True).strip()
+                           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py", line 472, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               **kwargs).stdout
+               ^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['psql', 'postgresql://macpro@127.0.0.1:55592/tdf_ledger_checkpoint_http_root_20261026_test', '-XqAt', '-v', 'ON_ERROR_STOP=1', '-c', "SELECT (SELECT count(*) FROM tdf_schema_migration)||'|'||(SELECT jsonb_array_length(prefix_ids) FROM directory_alert_qualification.before_target)||'|'||(SELECT tgenabled FROM pg_trigger WHERE tgrelid='commerce_ledger_transaction'::regclass AND tgname='trg_commerce_ledger_header_immutable');"]' returned non-zero exit status 1.

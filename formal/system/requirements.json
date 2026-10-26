@@ -8567,7 +8567,9 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "scripts/test-player-session-model.mjs"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-PLAYER-001",
       "title": "Single persistent web player and public music pages",
@@ -8575,8 +8577,8 @@
       "critical": true,
       "statement": "One PlayerProvider owns a single HTMLAudioElement mounted above all navigation. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. The legacy radio widget is hidden on /musica routes; playback analytics use a stable identity with retry-safe ingestion.",
       "authority": "Unreviewed recovered local implementation; ADR-004 and playback-identity.md in docs/music-releases/",
-      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md",
-      "contract": "docs/music-releases/native-player-verification.md",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md",
+      "contract": "formal/system/player-session.md",
       "property": "At most one audio element plays; a queued item is played only after a fresh authorization for its asset id.",
       "actors": [
         "Public listener",
@@ -8645,7 +8647,10 @@
         "tdf-hq-ui/src/utils/musicPreviewRange.ts",
         "tdf-hq/sql/2026-09-16_music_playback_identity.sql",
         "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql",
-        "tdf-mobile/src/navigation/notificationTarget.ts"
+        "tdf-mobile/src/navigation/notificationTarget.ts",
+        "playwright.music-native.config.mjs",
+        ".github/workflows/ci.yml",
+        "scripts/run-native-audio-tests.sh"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -8669,13 +8674,15 @@
         "e2e/web/music-player.spec.mjs",
         "e2e/web/music-player-native.spec.mjs",
         "e2e/web/music-player-integration.spec.mjs",
-        "e2e/web/fixtures/native-music-setup.mjs"
+        "e2e/web/fixtures/native-music-setup.mjs",
+        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx"
       ],
-      "verification": "Vitest unit tests, Playwright native and integration specs against local API/PostgreSQL/S3",
-      "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md",
+      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified.",
+      "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
       "confidence": "Medium: browser evidence local only.",
       "ambiguity": [
-        "Legacy radio consumers are kept behind compatibility until all are validated."
+        "Legacy radio consumers are kept behind compatibility until all are validated.",
+        "Single authoritative canonical music player does not establish exclusive ownership of provider iframes, legacy radio previews, other tabs or operating-system audio."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -12197,6 +12204,84 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Focused implementation; production release, human comprehension, complete media assets and measured user outcomes remain separate obligations."
+      }
+    },
+    {
+      "id": "PAY-LEDGER-HEADER-001",
+      "title": "Posted ledger identity, source and audit headers are immutable",
+      "statement": "An UPDATE whose existing commerce ledger transaction is posted or reversed must preserve every column value except status and reversal_of. Draft edits and value-preserving writes remain permitted; lifecycle transitions retain their independent existing validators.",
+      "domain": "PAY",
+      "authority": "Explicit user mandate for immutable posted accounting records; accepted ADR-0104 immutable financial events and compensating corrections.",
+      "source": "docs/adr/0104-immutable-financial-ledger.md; formal/system/ledger-header.md",
+      "property": "OLD.status in {posted,reversed} and accepted UPDATE implies projection(NEW)=projection(OLD), where projection removes only status and reversal_of.",
+      "contract": "formal/system/ledger-header.md",
+      "actors": [
+        "Ordinary non-owner ledger-header writer",
+        "Posting runtime"
+      ],
+      "preconditions": [
+        "Registered posting, entry write-fence and namespace guards remain enabled; the lifecycle cannot reopen a draft.",
+        "The actor cannot modify trusted DDL, replace functions, bypass triggers or change replication mode."
+      ],
+      "inputs": [
+        "Old and proposed transaction rows",
+        "Current locked database row status"
+      ],
+      "state": {
+        "statuses": [
+          "draft",
+          "posted",
+          "reversed"
+        ],
+        "header": "All columns other than status and reversal_of"
+      },
+      "allowedTransitions": [
+        "Draft header edit.",
+        "Identical posted/reversed header update, including the entry parent-write fence.",
+        "Independently validated posted-to-reversed lifecycle transition."
+      ],
+      "forbiddenTransitions": [
+        "Changing a posted/reversed primary key, source identity or audit column.",
+        "Committing a draft-era source edit after a concurrent posting has committed."
+      ],
+      "effects": [
+        "Invalid header updates reject atomically; no financial history is rewritten."
+      ],
+      "authorization": "This integrity guard grants no caller, refund or payout authority. Ordinary non-owner fixtures have header SELECT/UPDATE, no entry UPDATE and no trusted-schema CREATE.",
+      "privacy": "Only synthetic owned disposable PostgreSQL fixtures; no customer or provider data.",
+      "concurrency": "A stale header writer must preserve the row after an observed posting lock wait. Named RC/RR/SERIALIZABLE schedules use pg_blocking_pids; PostgreSQL may serialize-fail a repeatable snapshot.",
+      "idempotency": "Preserve the original source-key anchor; this does not establish exactly-once provider charges or all caller replay behavior.",
+      "failure": "SQLSTATE 23514 for a differing posted header, or SQLSTATE 40001 for a conflicting repeatable snapshot; failed operations do not alter committed source attribution.",
+      "recovery": "Authorized compensating transactions; keep the additive guard through application rollback. Historical attribution repair and deployment retain separate approval.",
+      "observability": "Record exact Git/source hashes, tool versions, actual blocking witnesses and named negative controls.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
+        "scripts/lib/production-release.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/ledger-event-identity.mjs",
+        "scripts/__tests__/ledger-posting-snapshot.py",
+        "scripts/test-ledger-posting.sh",
+        "scripts/test-provider-retry-runtime.sh",
+        "scripts/test-directory-saved-search-parity.mjs"
+      ],
+      "formalModels": [
+        "formal/event-operations/LedgerHeader.tla",
+        "formal/event-operations/LedgerHeader.cfg",
+        "formal/event-operations/LedgerHeaderMutable.cfg"
+      ],
+      "verification": "Full registered schema ordinary-role SQL updates, rollback-scoped guard/startup mutations, witnessed posting/header races under three isolations, a guard-removal RC counterexample and a finite two-writer TLC model with a named mutation control. Backend and formal CI lanes enforce execution.",
+      "evidence": "formal/system/evidence/2026-10-26-ledger-header-main/ records current-main composition; formal/system/evidence/2026-10-25-ledger-header/ retains earlier source identities. Replay commands and limits: formal/system/ledger-header.md. Admit evidence only for its recorded relevant source hashes. Saved-search historical-prefix compatibility is tracked separately in formal/system/evidence/2026-10-26-saved-search-checkpoint/; original financial/model receipts retain their source identities.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "TESTED named SQL boundary and BOUNDED_VERIFIED finite abstraction; complete implementation equivalence remains UNKNOWN.",
+      "ambiguity": [
+        "No proof of arbitrary installed function bodies, whole-program refinement, all interleavings, liveness, owner/superuser resistance or deployed correspondence.",
+        "Status/reversal semantics and correction authority remain separate obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped SQL tests and finite model checking do not discharge complete implementation/refinement obligations; independent review and production approval remain required."
       }
     },
     {
