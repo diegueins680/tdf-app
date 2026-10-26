@@ -67,6 +67,19 @@ fi
 # Every provider/refund fixture now runs against the complete reviewed schema.
 # No reduced domain projections or disabled triggers are permitted in this gate.
 sh "$TDF_PROVIDER_RETRY_ROOT/scripts/load-payment-test-schema.sh" "$TDF_PROVIDER_RETRY_URL"
+
+# Preserve the pre-existing empty rollback/reapply rehearsals on the full schema,
+# before any provider or refund case inserts financial history.
+for migration in \
+  2026-10-06_ticket_refund_allocation \
+  2026-10-06_ticket_refund_allocation_rollback \
+  2026-10-06_ticket_refund_allocation \
+  2026-10-06_ticket_refund_request_binding \
+  2026-10-06_ticket_refund_request_binding_rollback \
+  2026-10-06_ticket_refund_request_binding; do
+  psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
+    -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/$migration.sql" >/dev/null
+done
 psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
   -f "$TDF_PROVIDER_RETRY_ROOT/scripts/__tests__/fixtures/provider-domain-fixtures.sql" >/dev/null
 
@@ -96,6 +109,10 @@ psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
 # Match quality-backend.sh optimization settings so its compiled artifacts are
 # reused; --fast here invalidates both executable and test builds after that gate.
 cd "$TDF_PROVIDER_RETRY_ROOT/tdf-hq"
+TDF_PROVIDER_RETRY_DATABASE_URL="$TDF_PROVIDER_RETRY_URL" \
+PGOPTIONS='-c statement_timeout=15000 -c lock_timeout=10000' \
+  python3 "$TDF_PROVIDER_RETRY_ROOT/scripts/verify-payment-intent-expiry.py"
+
 TDF_PROVIDER_RETRY_DATABASE_URL="$TDF_PROVIDER_RETRY_URL" \
 PGOPTIONS='-c statement_timeout=15000 -c lock_timeout=10000' \
   stack test --test-arguments='--match=provider-retry-runtime --fail-on=empty +RTS -N2 -RTS'

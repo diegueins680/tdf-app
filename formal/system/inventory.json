@@ -5803,7 +5803,7 @@
     {
       "id": "SURFACE-7d9c91182787e22c",
       "path": "scripts/test-provider-domain-harness.py",
-      "sha256": "48ff5e6b2a6d995e78d4be732bcf006b7ea2b42a9f76d7a7d2e167eda2e6f1e6",
+      "sha256": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5827,7 +5827,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "d1158b7cbbd108290b479f3ceba3d18e2f5d7e9d291939cdeddd432ddb1feeb9",
+      "sha256": "6e9f3db759644af6ba162685d6a48aac8a0b8a1b7a25b123e88cfc2f345eabbc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
