@@ -1,0 +1,11 @@
+This packet records complete canonical-schema SQL qualification on source7187e17af15a46495aa6ebf388717eed6322f4d7 against handler baseline78fa351b469c1d2031df3232204dd722ac480e3b. It does not compile or execute Haskell/HTTP/media bytes.
+
+Use pinned Node22.14.0/PostgreSQL16 and owned paths in run.py. The candidate application inputs are frozen at source7187; generated metadata is qualified separately. The separate detached baseline78fa adds only an untracked copy of the candidate qualification runner; all actual baseline Haskell/SQL stay exact78fa. The driver proves source/renderer/manifest/fixture/helper correspondence. No original owner worktree is edited. Both runs create/drop only their random owned databases in a new loopback-only PostgreSQL cluster on55594.
+
+python3 /absolute/private/packet/run.py
+
+Baseline must fail exactly10 source-policy agreement checks after complete222 apply/replay. Candidate must pass all four projections, four policy-removal controls and eight argument controls. The real policy function and full migration ledger are unchanged, including after final canonical readiness. Inputs and script hashes are in results.json. Replay requires current run.py, not preserved run-v1.py.
+
+First attempt5a33 failed during fixture setup because Other listener omitted mandatory party.is_org. That is not a policy counterexample or a successful candidate run; rawreceipt originally left statusRUNNING and is explicitly superseded by first-attempt-failure-audit.json. The fixture now supplies FALSE/NOW without changing constraints or policy assertions. The original worker-cleanup CI failure at744 is a separate preserved observation. No worker timeout/retry/cleanup assertion was weakened or omitted. Exact finalhead compiled CI/review/FIFO and deployed acceptance remain required.
+
+The earlier passing349c full-schema run is retained as initial-success-*. The final7187 run adds only HOME for the read-only Git identification call, preserving CI exact-checkout trust. PostgreSQL/renderer children still use the unchanged credential-scrubbed environment. git-context-control.json records a realGit negative different-owner control without HOME and a positive control with exact checkout configuration; no wildcard/globaloperator trust changes.

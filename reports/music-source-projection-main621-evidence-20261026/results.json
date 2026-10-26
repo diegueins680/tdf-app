@@ -1,0 +1,81 @@
+{
+  "startedAt": "2026-10-26T17:03:55.018698+00:00",
+  "source": "7187e17af15a46495aa6ebf388717eed6322f4d7",
+  "mainBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "status": "PASS_SCOPED_FULL222_SQL_AND_BINDING_CONTROLS",
+  "newCompilation": false,
+  "productionWrites": false,
+  "steps": [
+    {
+      "name": "init",
+      "exitCode": 0,
+      "expectedExitCode": 0
+    },
+    {
+      "name": "start",
+      "exitCode": 0,
+      "expectedExitCode": 0
+    },
+    {
+      "name": "baseline",
+      "exitCode": 1,
+      "expectedExitCode": 1
+    },
+    {
+      "name": "candidate",
+      "exitCode": 0,
+      "expectedExitCode": 0
+    },
+    {
+      "name": "stop",
+      "exitCode": 0,
+      "expectedExitCode": 0
+    }
+  ],
+  "cleanup": {
+    "ownedDatabasesRemoved": true,
+    "clusterStopped": true,
+    "postgresListenerClosed": true
+  },
+  "inputSha256": {
+    "scripts/test-music-source-projection.mjs": "1efdc0a81e8ae85e78f56814057d2636ebc20c2470c7621a24876696982b6416",
+    "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
+    "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+    "scripts/lib/production-release.mjs": "837a2952f669b8d9819a31548652d1491b35dd37282603dd333a64a2303166c3",
+    "scripts/lib/music-test-database.mjs": "b63039bc86ab6dd58a17cd7448bf26ad439e27e23a0c7ab7b67b3eca94d7ebaf",
+    "scripts/__tests__/fixtures/production-schema-20260814.sql": "d8872748af4142954076cdbf587709d0115b4041837302530d273c8372d517cf",
+    "scripts/__tests__/fixtures/catalog-production-source-fixture.sql": "20d601eaf885eedf213e1110da3fa9489d19eed8629cd32f149e690fd947512c",
+    "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3"
+  },
+  "handlerHashes": {
+    "baseline": "5570d29e8f02f39e838b7e94a650551f177add4f6e67389c92defdf35b067f35",
+    "candidate": "9b001e5a36c2dde75a8df89e898992815765451f39d6a25cdb167dde9ec74bea"
+  },
+  "protocolSha256": "484f0674688412149828b6175e876bb708aff9545fd4c8348aecc67431c535b6",
+  "scope": "Real disposable PostgreSQL16 full222 canonical schema and same source runner on main and candidate. FiniteSQL/lexical tests, not nativeHTTP/media/production proof. Baseline adds only untracked qualification runner; candidate application code stays frozen.",
+  "postgresVersion": "PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit",
+  "baselineAgreementFailures": [
+    "FAIL: getPublicRelease: preview-only listener must receive no denied full rendition",
+    "FAIL: getPublicRelease: EC must receive no US-only sources",
+    "FAIL: getPublicRelease: every emitted source agrees with delivery policy",
+    "FAIL: getPublicRelease: every emitted source agrees with delivery policy",
+    "FAIL: listFavorites: preview-only listener must receive no denied full rendition",
+    "FAIL: listFavorites: every emitted source agrees with delivery policy",
+    "FAIL: listPlaylists: preview-only listener must receive no denied full rendition",
+    "FAIL: listPlaylists: every emitted source agrees with delivery policy",
+    "FAIL: listPlaybackHistory: preview-only listener must receive no denied full rendition",
+    "FAIL: listPlaybackHistory: every emitted source agrees with delivery policy"
+  ],
+  "candidate": {
+    "kind": "music-source-projection-qualification",
+    "sourceRevision": "7187e17af15a46495aa6ebf388717eed6322f4d7",
+    "migrations": 222,
+    "surfaces": 4,
+    "policyRemovalControls": 4,
+    "bindingArgumentControls": 8,
+    "policySha256": "3cdef784382b64064b3c343313361406217f849fb6c1502008f92be31df916f9",
+    "handlerSha256": "9b001e5a36c2dde75a8df89e898992815765451f39d6a25cdb167dde9ec74bea",
+    "scope": "Complete canonical schema and finite real SQL/lexical controls; not compiled HTTP, bytes, performance or production acceptance"
+  },
+  "finishedAt": "2026-10-26T17:04:32.396245+00:00"
+}

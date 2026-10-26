@@ -1,0 +1,27 @@
+2026-10-26T07:23:25.8544646Z PASS real artwork processing promotes original and registers matching derivative hashes
+2026-10-26T07:23:34.8901896Z PASS DDEX commit gate: synthetic package succeeds; recipient revoked during rendering blocks final validation
+2026-10-26T07:23:36.6771554Z PASS DDEX processing failure: export report carries a fixed message, job keeps the operator summary, retry reaches valid
+2026-10-26T07:23:36.6772509Z PASS complete audio release becomes ready for human review exactly once
+2026-10-26T07:23:38.4053101Z PASS valid DDEX retry preserves the existing package without rendering or uploading again
+2026-10-26T07:23:38.9235995Z PASS two sibling jobs close a release once without losing the final validation
+2026-10-26T07:24:44.9387675Z PASS heartbeat keeps a long-running job exclusive across multiple lease intervals
+2026-10-26T07:24:46.1940617Z PASS expired attempt cannot fail a replacement attempt even with the same worker name
+2026-10-26T07:24:49.3270611Z PASS stale transfer cannot promote metadata or overwrite replacement state
+2026-10-26T07:25:54.9470522Z node:internal/modules/run_main:123
+2026-10-26T07:25:54.9471385Z     triggerUncaughtException(
+2026-10-26T07:25:54.9471788Z     ^
+2026-10-26T07:25:54.9471971Z 
+2026-10-26T07:25:54.9472363Z AssertionError [ERR_ASSERTION]: Timed out: test worker cleanup
+2026-10-26T07:25:54.9473269Z     at until (file:///__w/tdf-app/tdf-app/scripts/test-music-release-worker-runtime.mjs:42:12)
+2026-10-26T07:25:54.9474226Z     at async file:///__w/tdf-app/tdf-app/scripts/test-music-release-worker-runtime.mjs:759:5 {
+2026-10-26T07:25:54.9474873Z   generatedMessage: false,
+2026-10-26T07:25:54.9475244Z   code: 'ERR_ASSERTION',
+2026-10-26T07:25:54.9475579Z   actual: false,
+2026-10-26T07:25:54.9475890Z   expected: true,
+2026-10-26T07:25:54.9476205Z   operator: '==',
+2026-10-26T07:25:54.9476506Z   diff: 'simple'
+2026-10-26T07:25:54.9477135Z }
+2026-10-26T07:25:54.9477370Z 
+2026-10-26T07:25:54.9477483Z Node.js v22.23.3
+2026-10-26T07:25:54.9614489Z ##[error]Process completed with exit code 1.
+2026-10-26T07:25:54.9846356Z ##[group]Run actions/upload-artifact@v7
