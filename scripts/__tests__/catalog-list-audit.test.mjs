@@ -109,6 +109,129 @@ test('music/main reconciliation retains both reviews and the protected migration
   }
 });
 
+test('saved-alert and memory225 succession preserve213/214/220/221 reviews and reject stale approvals', async () => {
+  const document = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
+  const transition = document.reconciliation.directorySavedSearchParity;
+  const financial = document.reconciliation.directoryFinancialMainIntegration;
+  const { active, successors, integration } = await readReconciliation();
+  const canonicalHash = value => createHash('sha256').update(JSON.stringify(value,
+    (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
+      ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)).digest('hex');
+  // Immutable protected-main cfe75b source, independently hashed before this
+  // extension. Matching a recorded ID alone cannot preserve the prior review.
+  const previousDecisionHash = '97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0';
+  const protectedPrefixHash = '7b3616b6095436eb7eb46038d6ccaa289ff4cb22e602960c06d971bf915add86';
+  const previous = transition.decisions.find(entry => entry.id === '3f336173e03f10fc023c');
+  assert.equal(canonicalHash(previous), previousDecisionHash);
+  assert.equal(transition.previousDecisionCanonicalSha256, previousDecisionHash);
+  assert.equal(previous.evidence.valueCount, 213);
+  assert.equal(previous.reviewed, true);
+  assert.ok(!active.some(entry => entry.id === previous.id));
+  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'scripts/production-migrations.json'), 'utf8')).migrations;
+  assert.equal(canonicalHash(manifest.slice(0, 213)), protectedPrefixHash);
+  assert.equal(transition.protectedMainManifestCanonicalSha256, protectedPrefixHash);
+  const protectedFinancialPrefixHash = 'c025cf3d2ab92f64bfb92d3656384d7fe0da6919457440d3c24301d7f6b8f232';
+  assert.equal(canonicalHash(manifest.slice(0, 220)), protectedFinancialPrefixHash);
+  assert.equal(financial.protectedMainManifestCanonicalSha256, protectedFinancialPrefixHash);
+  assert.equal(financial.sourceMain, '5114fe95ac8e328b58162a8dcae5c9015a47ce09');
+  assert.equal(manifest.length, 225);
+  assert.equal(canonicalHash(manifest.slice(0, 221)),
+    '1413652c0d640dbb2241fb5c004eaa212245a62dfcb031109f54226d3af31fd9',
+    'Preserve every object of protected main1c9c833, including its directory successor');
+  assert.equal(canonicalHash(manifest.slice(221)),
+    '683f89261ab16dca098411d90b94317800bdeb0aa3508b4eced4985b53c8b22b',
+    'Append only the four unchanged memory entries from reviewed candidate31c16bffe');
+  assert.deepEqual(manifest[220], {
+    id: '2026-10-25_directory_saved_search_parity',
+    path: 'tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql',
+    introducedBy: 'eb2f71d62740783369a6eb2a6d35fc024484cb71',
+  });
+  const decision214 = financial.decisions.find(entry => entry.id === 'c94cd70c1272ec9ede1b');
+  const decision220 = financial.decisions.find(entry => entry.id === 'b7cc47848f3f9882770f');
+  const historical = [previous, decision214, decision220];
+  const expectedHashes = [previousDecisionHash,
+    '409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4',
+    '8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28'];
+  for (const [index, decision] of historical.entries()) {
+    assert.equal(canonicalHash(decision), expectedHashes[index]);
+    assert.equal(financial.preservedDecisionCanonicalSha256[decision.id], expectedHashes[index]);
+    assert.equal(decision.reviewed, true);
+    assert.ok(!active.some(entry => entry.id === decision.id));
+  }
+  assert.equal(transition.successorDecisionId, decision214.id, 'Keep the original213-to214 review intact');
+  assert.equal(decision214.evidence.valueCount, 214);
+  assert.equal(decision220.evidence.valueCount, 220);
+  const pointer = successors.find(entry => entry.name === 'migrations');
+  const finalCurrent = active.find(entry => entry.id === pointer.currentId);
+  assert.equal(finalCurrent?.reviewed, true);
+  const history = []; const seen = new Set();
+  const visit = value => {
+    if (!value) return;
+    assert.ok(!seen.has(value), 'review graph must be acyclic'); seen.add(value); history.push(value);
+    visit(value.previousDecision);
+    for (const branch of value.concurrentReviewHistory ?? []) visit(branch);
+  };
+  visit(finalCurrent);
+  const current = history.find(entry => entry.id === financial.currentDecisionId);
+  assert.equal(current?.id, '8229b8202552298c955e');
+  assert.equal(canonicalHash(current),
+    '12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f',
+    'Preserve the exact 221-entry protected-main review, not a reconstructed approval');
+  const memoryParent = history.find(entry => entry.id === '79a6def1e91baee6e937');
+  assert.equal(canonicalHash(memoryParent),
+    '978e4a28b767ba92ef815fe45ac919ae7550742d9fd9b8cc1007e09e4d0291d9',
+    'Preserve the entire 224-entry memory/financial review graph');
+  assert.equal(memoryParent.reviewed, true);
+  assert.equal(memoryParent.evidence.valueCount, 224);
+  assert.equal(finalCurrent.classification, current.classification);
+  assert.equal(finalCurrent.disposition, current.disposition);
+  assert.equal(finalCurrent.evidence.valueCount, 225);
+  assert.ok(!active.some(entry => entry.id === current.id || entry.id === memoryParent.id));
+  const retiredParents = [...historical, current, memoryParent];
+  assert.equal(current.classification, decision220.classification);
+  assert.equal(current.disposition, decision220.disposition);
+  assert.deepEqual(current.sourceReviewReferences.slice(0, decision220.sourceReviewReferences.length),
+    decision220.sourceReviewReferences);
+  assert.equal(current.reviewed, true);
+  assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
+  assert.equal(current.evidence.valueCount, 221);
+  assert.equal(pointer.currentId, finalCurrent.id);
+  assert.equal(pointer.valueCount, 225);
+  assert.equal(pointer.change, finalCurrent.justification);
+  const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
+  assert.equal(retirement.replacementId, finalCurrent.id);
+  assert.equal(retirement.currentResolution.id, finalCurrent.id);
+  assert.equal(retirement.currentResolution.valueCount, 225);
+  assert.equal(retirement.reason, finalCurrent.justification);
+  for (const decision of retiredParents) {
+    assert.ok(pointer.previousCurrentIds.includes(decision.id));
+    assert.ok(retirement.previousReplacementIds.includes(decision.id));
+  }
+
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-alert-successor-test-'));
+  try {
+    const repoDir = path.join(tempRoot, 'repo');
+    await fs.mkdir(repoDir);
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: repoDir });
+    await writeFile(repoDir, 'scripts/production-migrations.json', JSON.stringify({ migrations: manifest }));
+    await execFileAsync('git', ['add', '--', 'scripts/production-migrations.json'], { cwd: repoDir });
+    const decisionsPath = path.join(tempRoot, 'decisions.json');
+    const args = [auditScriptPath, '--root', repoDir, '--decisions', decisionsPath, '--fail-on-unreviewed'];
+    await fs.writeFile(decisionsPath, JSON.stringify([finalCurrent]));
+    await execFileAsync(process.execPath, args, { cwd: repoDir });
+    for (const decision of retiredParents) {
+      await fs.writeFile(decisionsPath, JSON.stringify([decision]));
+      await assert.rejects(execFileAsync(process.execPath, args, { cwd: repoDir }),
+        error => error.code === 1 && error.stderr.includes('1 stale decision(s)')
+          && error.stderr.includes('1 unreviewed candidate(s)'));
+    }
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test('event catalog retirement ledger preserves evidence and distinct reviewed successors', async () => {
   const { ledger, active, successors } = await readReconciliation();
   assert.equal(ledger.schemaVersion, 1);

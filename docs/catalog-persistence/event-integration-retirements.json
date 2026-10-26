@@ -678,40 +678,50 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "79a6def1e91baee6e937",
-      "reason": "Append exactly one memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. Preserve every prior entry, introduction SHA and historical SQL byte; no delivery or deployment authorization.",
-      "previousReplacementId": "3f336173e03f10fc023c",
+      "replacementId": "cff15f30aa13965e5729",
+      "reason": "Preserve the complete221-entry protected main1c9c833 migration prefix and every SQL byte/introduction anchor, then append the four original event-memory invitation, source-moderation, NULL-authorization and permission-lock migrations unchanged. Retain both exact224- and221-entry review graphs, including financial and directory lineage. This225-entry execution-registry review grants no production action, campaign activation, permission, financial transaction or release waiver; fresh combined runtime/CI and independent protected review remain required.",
+      "previousReplacementId": "79a6def1e91baee6e937",
       "currentResolution": {
-        "id": "79a6def1e91baee6e937",
-        "valueCount": 224,
-        "sourceRevision": "534c5631ac79e927c887c5c730e252fe4dad7cc5",
+        "id": "cff15f30aa13965e5729",
+        "valueCount": 225,
+        "sourceParents": [
+          "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+          "1c9c833cc1ba62b47822fca3c20e14e86cf28daa"
+        ],
+        "sourceRevision": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
         "previousResolution": {
-          "id": "d55b0d93ab3224fe96ac",
-          "valueCount": 217,
-          "sourceRevision": "baab857f085b74f333c9f5d29e31306072fbc496",
+          "id": "79a6def1e91baee6e937",
+          "valueCount": 224,
+          "sourceRevision": "534c5631ac79e927c887c5c730e252fe4dad7cc5",
           "previousResolution": {
-            "id": "38bbe0c3d9b9d4ddaa9d",
-            "valueCount": 216,
-            "sourceRevision": "c6ecae133a93b6bab93c84cee4d72290f9e28982",
+            "id": "d55b0d93ab3224fe96ac",
+            "valueCount": 217,
+            "sourceRevision": "baab857f085b74f333c9f5d29e31306072fbc496",
             "previousResolution": {
-              "id": "7ca220a96b9b65a0fe15",
-              "valueCount": 215,
-              "sourceRevision": "3bb05ecd777a7243da6d60af0717044b15b59c41",
+              "id": "38bbe0c3d9b9d4ddaa9d",
+              "valueCount": 216,
+              "sourceRevision": "c6ecae133a93b6bab93c84cee4d72290f9e28982",
               "previousResolution": {
-                "id": "c28667c70e40dcc18a55",
-                "valueCount": 214,
-                "sourceRevision": "18690e78a9ce97255529bade31c5ce2250b7ce22",
+                "id": "7ca220a96b9b65a0fe15",
+                "valueCount": 215,
+                "sourceRevision": "3bb05ecd777a7243da6d60af0717044b15b59c41",
                 "previousResolution": {
-                  "id": "3f336173e03f10fc023c",
-                  "valueCount": 213,
-                  "sourceRevision": "music-current-main-integration-20261023"
+                  "id": "c28667c70e40dcc18a55",
+                  "valueCount": 214,
+                  "sourceRevision": "18690e78a9ce97255529bade31c5ce2250b7ce22",
+                  "previousResolution": {
+                    "id": "3f336173e03f10fc023c",
+                    "valueCount": 213,
+                    "sourceRevision": "music-current-main-integration-20261023"
+                  }
                 }
               }
             }
           }
-        }
+        },
+        "justification": "Preserve the complete221-entry protected main1c9c833 migration prefix and every SQL byte/introduction anchor, then append the four original event-memory invitation, source-moderation, NULL-authorization and permission-lock migrations unchanged. Retain both exact224- and221-entry review graphs, including financial and directory lineage. This225-entry execution-registry review grants no production action, campaign activation, permission, financial transaction or release waiver; fresh combined runtime/CI and independent protected review remain required."
       },
-      "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
+      "change": "Preserve the complete221-entry protected main1c9c833 migration prefix and every SQL byte/introduction anchor, then append the four original event-memory invitation, source-moderation, NULL-authorization and permission-lock migrations unchanged. Retain both exact224- and221-entry review graphs, including financial and directory lineage. This225-entry execution-registry review grants no production action, campaign activation, permission, financial transaction or release waiver; fresh combined runtime/CI and independent protected review remain required.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -876,6 +886,37 @@
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         },
         {
+          "sourceRevision": "460a86438e3fd6c3c675b5481174571100659685",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "8d1683fee8299180edb5aa6a6459045741f3ee95dd25576a8748e4bfafb71f8b",
+          "sourceEntry": {
+            "originalDecision.id": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "96a04cea53aebd59ffd30b9bbcc978bdc9100a950e57c0d38134785a58c8f410",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Preserve the exact reviewed213-entry current pointer before advancing to the separately reviewed214-entry successor; no retired fingerprint becomes an active approval."
+        },
+        {
+          "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "1d6e60e96b365c20cb5d36b6cf492288791aa26cef366bbaefc55b3212bf405d",
+          "sourceEntry": {
+            "originalDecision.id": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "4329a6553b10f4c2d434c29e4afa1214010439a7366159db595b514d5727117a",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "066fc0a0181227407cb7c4c2885c47a141114dd8cb8746a456874676566b2e9a",
+          "sourceEntry": {
+            "originalDecision.id": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "72d70add24fede5a1636ce159e168d993455c41ddb11a52e2333e5e3da63c776",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
           "sourceRevision": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
           "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
           "sourceFileSha256": "1d6e60e96b365c20cb5d36b6cf492288791aa26cef366bbaefc55b3212bf405d",
@@ -894,15 +935,43 @@
           },
           "sourceEntryCanonicalSha256": "c0cea8cfb3a6ae3def8413df6ae65f4c4e1eb283bacdb4d9818ee9cf4566520b",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "15cd83bc56ca3a54e53b8bd7576974da1ab75cfd2a3c2612c1a4b2cf8853203a",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "598ea7f40a6794aefd3bf8db76fdf7c7fca317ed855093f2097aa3238b3851d7",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "0885a0036c3a85b2df424b03268d3ce36ff5efb54c4570b8c4580af91e8f4b41",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "4ebccf51ec2b7c062df0bbbbf046373c00e8356b34b04f20b1e23b4fea3204af",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "previousReplacementIds": [
         "e60cbdb9121493f47fa6",
         "a8128668e1b74b7c0ae4",
+        "3f336173e03f10fc023c",
+        "2b073f20afd2f3798b1e",
+        "a1eb1e750e7543b88fe1",
+        "c94cd70c1272ec9ede1b",
+        "b7cc47848f3f9882770f",
         "7ca220a96b9b65a0fe15",
         "38bbe0c3d9b9d4ddaa9d",
         "d55b0d93ab3224fe96ac",
-        "0ab5d4354ae923d8f2db"
+        "0ab5d4354ae923d8f2db",
+        "79a6def1e91baee6e937",
+        "8229b8202552298c955e",
+        "c6a62c7c7469e8974ff1"
       ],
       "previousReason": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision."
     }

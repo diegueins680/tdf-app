@@ -11845,6 +11845,183 @@
       }
     },
     {
+      "id": "DIR-SAVED-SEARCH-001",
+      "title": "Saved alerts share public non-geographic eligibility",
+      "statement": "Saved-search alerts and public directory queries share typed non-geographic and entity/derivation predicates, preserve public ranking/facets, reject unsafe new filters, and tolerate unsupported historical filters without broadening or aborting index updates.",
+      "domain": "DIR",
+      "authority": "Product owner user-value completion instruction 2026-10-25; existing directory saved-search contract and issue534.",
+      "source": "docs/music-directory/functional-spec.md saved-search section; issue534; docs/directory/saved-search-parity.md",
+      "property": "For valid non-geographic filters, a public eligible changed canonical indexed result matches its saved alert exactly once per version; invalid/unsupported filters never broaden a match.",
+      "contract": "docs/directory/saved-search-parity.md",
+      "actors": [
+        "Authenticated directory user",
+        "Public directory visitor",
+        "Directory document projector"
+      ],
+      "preconditions": [
+        "The complete reviewed migration prefix and additive parity migration are applied.",
+        "Saved alerts opt in and their frequency is not off."
+      ],
+      "inputs": [
+        "Typed public query filters",
+        "Saved canonical JSON",
+        "Canonical public search documents and aliases",
+        "Result source version"
+      ],
+      "state": {
+        "savedQuery": [
+          "valid-non-geographic",
+          "invalid",
+          "unsupported-geographic"
+        ],
+        "delivery": [
+          "absent",
+          "internal-notification-created"
+        ]
+      },
+      "allowedTransitions": [
+        "Valid query plus eligible new/modified version -> one internal notification.",
+        "Same version replay -> unchanged.",
+        "Unsupported radius removed -> valid alert save."
+      ],
+      "forbiddenTransitions": [
+        "Ignored non-geographic filter -> irrelevant notification.",
+        "Literal all/artist alias mismatch -> lost eligible notification.",
+        "Malformed historical cast -> unrelated document write abort.",
+        "New saved exact coordinates -> persisted payload.",
+        "Same result version -> duplicate delivery."
+      ],
+      "effects": [
+        "Use the same scalar SQL predicates for public and saved matching.",
+        "Preserve valid saved JSON/hash/name/history and public scoring/facets/cursor.",
+        "Unsupported geographic alerts stay unavailable with explicit new-request error."
+      ],
+      "authorization": "Existing authenticated actor owns saved searches; public/canonical visibility remains required for notification eligibility; no new grants or endpoints.",
+      "privacy": "Reject new saved exact coordinates and unknown/nested canonical fields; no historical payload rewrite or external provider activation.",
+      "concurrency": "Existing unique saved-search/result/version delivery fence and transactional notification are retained; no global worker/concurrency proof is claimed.",
+      "idempotency": "Existing saved-search actor/request identity and query hashes are preserved; same-version trigger replay cannot create a second delivery.",
+      "failure": "Invalid new filters return400; radius-enabled alerts return an actionable400; historical malformed/unsupported filters yield no-match without propagating known conversion errors.",
+      "recovery": "Remove unsupported/invalid filters and retry using the same existing endpoint; reviewed rollback restores the exact previous trigger with compatible previous backend.",
+      "observability": "Synthetic SQL/HTTP and plan receipts; minimized validation reasons; no profile payloads or credentials added to logs.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+        "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql",
+        "scripts/test-directory-saved-search-parity.mjs",
+        "scripts/__tests__/directory-saved-search-http.mjs",
+        "scripts/__tests__/directory-search-plan-parity.mjs",
+        "scripts/test-community-search.py",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Source-confirmed defect with real PostgreSQL negative characterization and candidate parity controls; hosted/deployed and physical-device evidence remain separate.",
+      "ambiguity": [
+        "Geographic saved-alert centers require an explicit privacy-compatible product contract; radius-only saved queries cannot be evaluated geographically."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded non-geographic repair; geographic delivery remains unsupported and release/deployed correspondence require independent review and gates."
+      },
+      "verification": "Full-schema PostgreSQL trigger/notification tests, protected input validation, rollback/reapply, shipped query/plan comparison and real authenticated HTTP lane; no mathematical proof claimed.",
+      "evidence": "Dated local reproduction and qualification receipts, final candidate source hashes and hosted checks."
+    },
+    {
+      "id": "AUTH-LOGOUT-001",
+      "title": "Retain explicit browser logout intent through network failure and reload",
+      "statement": "Explicit browser logout must suppress automatic cookie and descriptor restoration until fresh interactive authentication, distinguish unconfirmed server revocation, and reject stale session adoption callbacks.",
+      "property": "Active local logout intent implies no automatic account restoration; late callbacks do not own later logout/login revisions.",
+      "domain": "AUTH",
+      "authority": "User-authorized value activation sprint: prioritize reproducible privacy and authentication blockers before human pilot.",
+      "source": "Isolated real browser/API/PostgreSQL failed logout reproduction; journeys A/B logout and return.",
+      "contract": "formal/system/logout-intent.md",
+      "actors": [
+        "Browser user",
+        "Server session owner"
+      ],
+      "preconditions": [
+        "Same-origin browser application and storage; existing server authentication remains authoritative."
+      ],
+      "inputs": [
+        "Explicit logout",
+        "Revocation result or deadline",
+        "Reload",
+        "Fresh interactive authentication",
+        "Storage events"
+      ],
+      "state": {
+        "localIntent": [
+          "cleared",
+          "pending",
+          "unconfirmed",
+          "confirmed"
+        ],
+        "revision": "Identity-free per-transition ownership revision"
+      },
+      "allowedTransitions": [
+        "Logout -> persisted intent and local anonymous state",
+        "Revocation response -> confirmed or unconfirmed under same revision",
+        "Fresh interactive authentication -> new cleared revision",
+        "Other-tab logout -> local anonymous state"
+      ],
+      "forbiddenTransitions": [
+        "Active intent -> automatic cookie or descriptor restoration",
+        "Stale authentication callback -> clear later logout intent",
+        "Old logout completion -> overwrite fresh login revision",
+        "Network failure -> claim server revocation"
+      ],
+      "effects": [
+        "Bounded explicit logout request; no automatic retry; existing cache epoch invalidation."
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/session/SessionContext.tsx",
+        "tdf-hq-ui/src/api/session.ts",
+        "tdf-hq-ui/src/api/client.ts",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/api/drive.ts",
+        "tdf-hq-ui/src/api/inventory.ts",
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/session/logoutIntent.test.ts",
+        "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
+        "tdf-hq-ui/src/api/logoutIntent.test.ts",
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Revision, storage, bootstrap, unsigned transport, XHR refusal and deadline regression controls; native optimized browser with actual API and disposable PostgreSQL.",
+      "evidence": "Pre-fix native reproduction retained; current candidate execution receipts qualified separately from CI, review, merge and deployment.",
+      "historicalStatus": "new",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for scoped local controls; production and human acceptance remain unverified.",
+      "ambiguity": [
+        "Offline server revocation, accepted requests, cross-document Set-Cookie ordering, raw transports outside scoped clients, native devices and external providers are not certified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped implementation and executable checks; full distributed session safety and production acceptance are not proved."
+      },
+      "authorization": "Existing server session, ownership, role and origin authorization remain authoritative.",
+      "privacy": "Persist only revision and confirmation status, no identity or credentials.",
+      "concurrency": "Captured revision and existing synchronous account epoch reject obsolete UI adoption; no cross-client linearizability claim.",
+      "idempotency": "No automatic logout replay; explicit retry remains separate.",
+      "failure": "Server revocation remains unconfirmed on network, deadline or non-success response.",
+      "recovery": "Explicit bounded retry or fresh interactive login; retain unsigned public reads.",
+      "observability": "Record outcome booleans only; no cookie, token or personal-data diagnostics."
+    },
+    {
       "domain": "SOCIAL",
       "authority": "Explicit product owner request 2026-10-25: Event Memories, Community Engagement & Post-Event Activation",
       "source": "formal/system/event-memories.md",

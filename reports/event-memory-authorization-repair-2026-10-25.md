@@ -258,3 +258,47 @@ El recibo conserva ambos resultados y los hashes de los logs locales completos.
 Las ejecuciones generales se realizaron antes del commit final de documentación:
 las fuentes de ejecución mantienen sus hashes y el binario conserva su identidad
 810d646 real. No se les atribuye otra revisión compilada.
+
+
+## Preparación aislada con directorio y logout — 26/oct 05:18 UTC
+
+Se prepara un merge normal de la entrega de recuerdos `31c16bffe` con el main
+protegido `1c9c833cc1ba62b47822fca3c20e14e86cf28daa`, que ya contiene #614 y
+la reparación de logout #616. Las ramas publicadas de #615/#608 conservan sus
+heads durante la preparación. Esta sección no convierte los recibos anteriores
+sobre 917 en pruebas de la nueva composición.
+
+El código de aplicación se integró sin conflictos. Se resolvieron nueve
+conflictos de manifiestos e índices manteniendo íntegros los 142 requisitos del
+main, sus 221 entradas ordenadas y todos sus SQL. Se añaden los cuatro registros
+originales de recuerdos sin modificar SQL ni SHAs de introducción: 225 migraciones
+y 146 requisitos. El registro técnico `cff15f30aa13965e5729` conserva la
+clasificación/disposición de seguridad de main, el grafo 224 de recuerdos y el
+registro 221 de directorio, con sus objetos originales, hashes y referencias.
+
+Pasan ocho regresiones de linaje reforzadas: se mantienen las comprobaciones
+213/214/220/221; se agregan el prefijo 221 exacto, las cuatro entradas originales
+y los hashes completos de ambos reviews. Las aprobaciones antiguas 221/224 se
+rechazan para el registro 225. No se cambia el hash histórico de archivado, que
+usa el orden de JSON.stringify; mi primer helper aplicó erróneamente el formato
+canónico ordenado y se detuvo. El ajuste preserva el hash original. El primer
+checkout móvil con --reference no aceptó el worktree enlazado; el checkout SSH
+normal verificó después el commit 7000df1. La primera exploración del catálogo
+se canceló por checkout incompleto y otra se sustituyó al cambiar la prueba:
+no cuentan como ejecuciones aprobadas.
+
+Las auditorías estrictas JSON/CSV frescas pasan con 1.336 candidatos. La web
+combinada pasa lint, tipos, **3.475 pruebas/308 suites**, build de producción y
+presupuesto inicial de JavaScript: 335.236 bytes gzip, cinco preloads. Estas
+pruebas preceden al commit de preparación y conservan 31c16bffe con árbol
+modificado; no se les atribuye una revisión compilada nueva.
+
+La comprobación global `quality:repo` también pasó, usando el jq y el entorno
+PyYAML existentes desde el inicio de esta ejecución.
+
+El backend cambió con Directory.hs de #614. El ejecutable 810d646 anterior no
+califica ese cambio: faltan compilación canónica y pruebas de runtime de la
+composición, además de los gates y revisión independientes de la entrega raíz.
+El CI principal de #615 pasó en 31c16bffe; el workflow RACI seguía compilando al
+último chequeo. No se ha fusionado #615 ni promovido esta preparación a #608,
+y no hay despliegue ni envíos productivos de recuerdos.
