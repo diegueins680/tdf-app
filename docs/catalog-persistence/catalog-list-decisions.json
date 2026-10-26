@@ -516,6 +516,13 @@
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]
+    },
+    "ledgerHeaderImmutability": "docs/catalog-persistence/ledger-header-reconciliation-20261025.json",
+    "ledgerHeaderMainIntegration": {
+      "document": "docs/catalog-persistence/ledger-header-main-reconciliation-20261025.json",
+      "mainParent": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+      "headerParent": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
+      "currentDecisionId": "6ff395b6131079017c9d"
     }
   },
   "decisions": [
@@ -18056,15 +18063,15 @@
       "reviewBatch": "checkout-session-readiness-2026-10-14"
     },
     {
-      "id": "8229b8202552298c955e",
+      "id": "6ff395b6131079017c9d",
       "classification": "security-system-registry",
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
+      "justification": "The 222-entry deployment registry preserves the complete 221-entry protected main e938c72ba4b87010214f6838f06bfac45a0f45c0 prefix, including saved-alert migration eb2f71d62740783369a6eb2a6d35fc024484cb71, and appends only the posted-header guard introduced by 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Both independently developed 221-entry predecessor reviews are retained with exact canonical hashes and source references. Historical SQL and introduction SHAs are unchanged. This is a technical source review; current-head CI, independent PR approval and production authorization remain separate requirements.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "directory-financial-main-integration-20261026",
+      "reviewBatch": "ledger-header-main-technical-review-20261025",
       "sourceReviewReferences": [
         {
           "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
@@ -18115,6 +18122,26 @@
           },
           "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "55915aedf0e4e356a5bca766cdc09b7077f9d0d567523b4d496ad9c5bacb09f0",
+          "sourceEntry": {
+            "id": "8229b8202552298c955e"
+          },
+          "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "881e0be06afb973c1200beb4213e72ae4bad53478e3fab280189c650a55d3b75",
+          "sourceEntry": {
+            "id": "9ada14767bee1662f97d"
+          },
+          "sourceEntryCanonicalSha256": "6528ab5a8a23254d2e4ad4222e392f7f8f052b9f2818ef6e9eb8fc3a461a7003",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "evidence": {
@@ -18122,7 +18149,12 @@
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 221
+        "valueCount": 222
+      },
+      "previousDecisionReferences": {
+        "document": "docs/catalog-persistence/ledger-header-main-reconciliation-20261025.json",
+        "mainId": "8229b8202552298c955e",
+        "headerId": "9ada14767bee1662f97d"
       }
     },
     {
@@ -18313,6 +18345,177 @@
           "Artist"
         ],
         "contract": "formal/system/logout-intent.md"
+      }
+    },
+    {
+      "id": "9f4017ded51fb378d543",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 66,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "5d6ca895ee46d472088b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 70,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "287a15fa28ce3a802f32",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 94,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "21a4775e4e991fab585c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 98,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "da3c925244193e512096",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 101,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "15376e7ac130acda2c03",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 103,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "bb430040ffe050fde7c1",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 109,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "ad2d4ef653ed4693d760",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 110,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "023bc70a0fb3d5948978",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed synthetic public-release DTO field names in a regression fixture; values are fixture identities and schema keys, never a shipped artist, release, genre or selectable business catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
+        "line": 17,
+        "kind": "object-registry",
+        "name": "release",
+        "valueCount": 8
       }
     },
     {

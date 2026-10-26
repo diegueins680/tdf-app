@@ -6,7 +6,7 @@
   "sourceCommit": "6f9b192cd6d0b4652b9e3342e4e7db392082fd64",
   "branch": "fix/legacy-audio-links-20261026",
   "targetBranch": "main",
-  "observedRemoteMain": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "observedRemoteMain": "78fa351b469c1d2031df3232204dd722ac480e3b",
   "implementationReceipt": {
     "kind": "legacy-provider-source-selection-increment",
     "base": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
@@ -102,9 +102,9 @@
   },
   "integration": {
     "pr": "https://github.com/diegueins680/tdf-app/pull/624",
-    "ci": "Exact refreshed candidate hosted checks pending publication",
+    "ci": "Pending exact-candidate hosted checks after parent publication",
     "review": "Prior approval on 3f6c322 remains historical; fresh approval required after publishing the new head",
-    "merge": "Normal local merge of protected main a1238fb; no protected-main merge by this task",
+    "merge": "Normal local merge of protected main78fa351; no protected-main merge or deployment by this task",
     "deployment": null,
     "productionBusinessWrites": 0,
     "migrations": 0,
@@ -700,5 +700,66 @@
       "catalog-json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "catalog-csv": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
+  },
+  "protectedMainPlaybackLedgerRefresh20261026": {
+    "main": "78fa351b469c1d2031df3232204dd722ac480e3b",
+    "fromCandidate": "e7d79be4df7a50d3c3780ea20196cf6f868f78e7",
+    "method": "normal merge",
+    "preservedMainRequirementsExactly": 145,
+    "ownRequirementPreservedExactly": "MEDIA-MUSIC-LEGACY-001",
+    "requirementsTotal": 146,
+    "mainCatalogDecisionsExactly": 1339,
+    "candidateCatalogDecisions": 1341,
+    "mainMigrationManifestEntries": 222,
+    "currentSourceHashes": {
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "67c0980c3268cc54bda54b7ee871d8345a79d754b1e100e6c98f18340b1f1b68",
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": "c5ad21fcffed6f6d4096788ddfafef44cbdcf3b693dc6c9c37b1012e871c0faf",
+      "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx": "8efc3df3b7c1cb37c6a8c0c670b46f83099015634afa19d64a104d4beb11a1fa",
+      "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx": "5025c515898d64cf45433b275f81d8752d8f4b1c46ad3b7b82899ceccfa4ebb5",
+      "tdf-hq-ui/src/pages/FanHubPage.tsx": "e7bbd53c926c611a74a64883edc1a433faabd183234c2d0e90dfb564b62b848c",
+      "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d",
+      "e2e/web/legacy-provider-playback.spec.mjs": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413"
+    },
+    "sourceHashChangesFromHistoricalQualification": [],
+    "runtimeEvidence": "Historical49-unit/four-browser receipt retained with its original source/bundle identity. New88-focused-unit compatibility run exercises the merged protected player dependency; no browser/build/provider/production acceptance rerun.",
+    "verification": {
+      "metadataRegressions": {
+        "passed": 36,
+        "failed": 0,
+        "groups": [
+          9,
+          6,
+          10,
+          11
+        ]
+      },
+      "strictCatalogJson": {
+        "status": "PASS",
+        "count": 1341
+      },
+      "strictCatalogCsv": {
+        "status": "PASS",
+        "rows": 1341
+      },
+      "finalFreshness": "Exact final generation/check follows this metadata update; external final receipt retains results",
+      "sourceAdmission": "Working-source and immutable committed-tree checks required after final generation/commit",
+      "currentPlayerCompatibility": {
+        "passed": 88,
+        "failed": 0,
+        "suites": 4,
+        "node": "22.14.0",
+        "scope": "Three legacy focused suites plus protected-main PlayerProvider regressions on current merged dependency; JSDOM/media doubles, no new native/browser/build result."
+      }
+    },
+    "validationLogHashes": {
+      "declarations": "7c758af7411e05fc2e6c4fb89045f7a03d9a5957d5305092903a23a66373d034",
+      "inventory": "793f3cf814e3ef14e821c528350fb5f3b43b09554a516c7a2646312758910d91",
+      "conformance": "8d019e058edc83e2b381839f07f99eea54e79c401bf013157ab6377d83347dac",
+      "admission": "8d1bb7971df8c4a9cedad71aebc54b516f0a382c7ec906586afaf46c0bfc6086",
+      "catalogJson": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "catalogCsv": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentPlayerCompatibility": "d3ea849794c5b95fbcdaad7bcc833d2faa7610bf43cde2b44a1f056b9c627fed"
+    },
+    "initialConformanceAttempt": "Read unresolved generated inventory JSON during merge and failed before tests; retained initial failure, regenerated inventory/traceability in dependency order, then10/10 passed without changing guards."
   }
 }

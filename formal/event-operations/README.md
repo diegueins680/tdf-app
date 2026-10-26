@@ -62,6 +62,8 @@ integrity checker/tests; CI selects Node 22 explicitly.
 | `LedgerPostingAppend.cfg`, `LedgerPostingUnvalidated.cfg`, `LedgerPostingReopen.cfg`, `LedgerPostingInsertPosted.cfg`, `LedgerPostingReverserMutable.cfg` | Negative controls: entries added after posting, posting without validation, a posted transaction reopened, a transaction created already posted, a referenced reversing transaction leaving posted | Expected exit 12 with `PostedImmutable`, `PostedBalanced`, `PostedHistory`, `PostedBalanced`, `ReversedByPosted` |
 | `LedgerNamespace.cfg` | One nonempty currency with zero/nonzero balance; an ordinary actor can shadow entries or parent relations; trusted public-schema/DDL assumptions | PASS; 22 generated, 12 distinct states; `PostedBalanced`; no SQL refinement or liveness claim |
 | `LedgerNamespacePosting.cfg`, `LedgerNamespaceEntry.cfg` | Negative controls remove trusted relation lookup separately for posting and entry writes | Expected exit 12 with `PostedBalanced` |
+| `LedgerHeader.cfg` | One transaction, two header values and two queued writers; atomic posting and no reopening | PASS; 138 generated, 48 distinct states; `PostedHeaderFrozen`; no SQL refinement/liveness claim |
+| `LedgerHeaderMutable.cfg` | Negative control removes posted-header immutability | Expected exit 12 with `PostedHeaderFrozen` |
 
 ### PlusCal regeneration integrity
 

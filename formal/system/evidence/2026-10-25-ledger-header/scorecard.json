@@ -1,0 +1,110 @@
+{
+  "generatedAt": "2026-10-26T03:26:54.824432+00:00",
+  "qualifiedSource": "e57c8d1404e4a6f7b587e05c5ddbb2072520431c",
+  "mainObserved": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
+  "scope": "Candidate source snapshot; current remote delivery status must be read separately. No production claim.",
+  "requirements": {
+    "total": 141,
+    "critical": 114,
+    "completeConformance": {
+      "PARTIAL": 141
+    },
+    "fullyProven": 0,
+    "completeImplementationAndRefinementObligations": {
+      "UNPROVEN": 282
+    },
+    "criticalFinancial": 19,
+    "criticalAuthorization": 11
+  },
+  "thisCorrection": {
+    "id": "PAY-LEDGER-HEADER-001",
+    "status": "PARTIAL",
+    "databaseAssurance": "TESTED",
+    "modelAssurance": "BOUNDED_VERIFIED",
+    "protectedColumnMutationsRejected": 16,
+    "startupMutationsRejected": 4,
+    "observedHeaderLockSchedulesPassed": 3,
+    "modelPositiveConfigurations": 1,
+    "modelNegativeControls": 1,
+    "modelDistinctStates": 48,
+    "modelGeneratedStates": 138,
+    "entireSqlSnapshotPortfolio": {
+      "positive": 30,
+      "negativeControls": 7
+    },
+    "compiledLedgerExamples": 10,
+    "compiledLedgerFailures": 0,
+    "compiledLedgerPending": 0,
+    "migrationCountAppliedAndReplayed": 221,
+    "integratedIntoMain": false,
+    "distinctBusinessCounterexamples": 1,
+    "actualHeaderRemovalControls": 2
+  },
+  "deliveryObserved": {
+    "previousFinancialPR": 551,
+    "state": "MERGED",
+    "mergeCommit": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+    "thisCorrection": "Prepared; hosted CI and independent approval remain required",
+    "approval": {
+      "user": "tdfrecords",
+      "commit": "fa5a34792cee86cdf309a81a362de52032aa0b9c",
+      "submittedAt": "2026-10-26T01:45:51Z",
+      "url": "https://github.com/diegueins680/tdf-app/pull/551#pullrequestreview-5646536609"
+    }
+  },
+  "limitations": [
+    "Selected SQL executions and finite abstraction are different assurance levels.",
+    "No whole-system implementation/refinement or deployed correspondence proof.",
+    "Runtime DDL/owner privilege policy, historical attribution repair and production activation remain open.",
+    "The unchanged Haskell/test source uses a previously built Stack artifact; its original source and hash are retained in receipt.json."
+  ],
+  "repositoryQuality": {
+    "command": "npm run quality:repo",
+    "source": "e57c8d1404e4a6f7b587e05c5ddbb2072520431c",
+    "exitCode": 0,
+    "log": "repository-quality.log.gz",
+    "externalRunnerSkips": "Explicit skips in the raw log are not PostgreSQL passes."
+  },
+  "freshAssuranceReportMetrics": {
+    "requirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 141,
+      "NOT_APPLICABLE": 0
+    },
+    "requirementsWithDeclaredAmbiguityEntries": 131,
+    "obligationsByCategory": {
+      "implementation": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 141,
+        "NOT_APPLICABLE": 0
+      },
+      "refinement": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 141,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-authorization-SMT": {
+        "PROVEN": 3,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-recovery-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      }
+    }
+  },
+  "proofLimit": "Fresh source-derived SMT obligations are conditional solver-checked claims. Independent CPC replay was not rerun here; full implementation/refinement remain UNPROVEN."
+}

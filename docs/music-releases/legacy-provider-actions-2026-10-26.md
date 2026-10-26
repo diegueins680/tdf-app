@@ -164,3 +164,30 @@ bundle identity. This metadata reconciliation does not rerun or relabel it as
 a new build, browser run, provider playback or production acceptance. A fresh
 review must target the final published merge candidate; no push, protected-main
 merge, migration or deployment is performed by this refresh task.
+
+
+## Protected playback and ledger main reconciliation
+
+This normal merge advances `e7d79be4df7a50d3c3780ea20196cf6f868f78e7` to protected main
+`78fa351b469c1d2031df3232204dd722ac480e3b`. It preserves all 145 main requirement objects
+and unchanged `MEDIA-MUSIC-LEGACY-001`, for 146 total. The inherited production
+migration manifest has 222 entries and is unchanged; no migration is applied.
+
+All seven qualified legacy implementation/test inputs retain their original
+source hashes. Main reconciliation is preserved exactly; the two unchanged
+legacy technical decisions are appended, for 1,341 catalog decisions. Prior
+49-unit/four-browser evidence retains its original source and bundle identity;
+this refresh does not rerun or relabel it as current rendered acceptance.
+
+Generated inventory, traceability, strict catalog and source-admission checks
+qualify the combined metadata independently of runtime evidence. Fresh exact-head
+hosted checks and independent review remain required after publication. No push,
+review request, protected-main merge or production deployment is made by this
+refresh task.
+
+The protected playback provider dependency changed even though the seven legacy
+inputs did not. A fresh Node 22.14.0 compatibility run therefore executed the
+three legacy focused suites and `PlayerProvider.test.tsx`: 88 tests passed across
+four suites using declared JSDOM/media doubles. The old four-browser qualification
+remains historical; no fresh browser, build, decoder or provider acceptance is
+inferred from this current component/provider regression run.
