@@ -678,17 +678,27 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "7ca220a96b9b65a0fe15",
+      "replacementId": "38bbe0c3d9b9d4ddaa9d",
       "reason": "Append exactly one memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. Preserve every prior entry, introduction SHA and historical SQL byte; no delivery or deployment authorization.",
       "previousReplacementId": "3f336173e03f10fc023c",
       "currentResolution": {
-        "id": "c28667c70e40dcc18a55",
-        "valueCount": 214,
-        "sourceRevision": "18690e78a9ce97255529bade31c5ce2250b7ce22",
+        "id": "38bbe0c3d9b9d4ddaa9d",
+        "valueCount": 216,
+        "sourceRevision": "c6ecae133a93b6bab93c84cee4d72290f9e28982",
         "previousResolution": {
-          "id": "3f336173e03f10fc023c",
-          "valueCount": 213,
-          "sourceRevision": "music-current-main-integration-20261023"
+          "id": "7ca220a96b9b65a0fe15",
+          "valueCount": 215,
+          "sourceRevision": "3bb05ecd777a7243da6d60af0717044b15b59c41",
+          "previousResolution": {
+            "id": "c28667c70e40dcc18a55",
+            "valueCount": 214,
+            "sourceRevision": "18690e78a9ce97255529bade31c5ce2250b7ce22",
+            "previousResolution": {
+              "id": "3f336173e03f10fc023c",
+              "valueCount": 213,
+              "sourceRevision": "music-current-main-integration-20261023"
+            }
+          }
         }
       },
       "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
@@ -778,7 +788,8 @@
       ],
       "previousReplacementIds": [
         "e60cbdb9121493f47fa6",
-        "a8128668e1b74b7c0ae4"
+        "a8128668e1b74b7c0ae4",
+        "7ca220a96b9b65a0fe15"
       ],
       "previousReason": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision."
     }

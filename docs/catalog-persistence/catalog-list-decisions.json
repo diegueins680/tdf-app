@@ -18621,58 +18621,77 @@
       }
     },
     {
-      "id": "7ca220a96b9b65a0fe15",
+      "id": "38bbe0c3d9b9d4ddaa9d",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P0-cutover",
       "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-      "justification": "The 215-entry registry preserves the full immutable 214-entry prefix and all historical SQL, then appends source moderation introduced by 3bb05ecd7. Installation hides nothing and sends nothing. Actual full-schema replay/rollback and authenticated HTTP verify behavior; committed evidence refuses rollback. This registry review does not authorize production deployment or feature activation.",
+      "justification": "The 216-entry execution registry preserves the immutable 215-entry prefix and every historical SQL byte. It appends the NULL-organizer authorization repair introduced by c6ecae133a93b6bab93c84cee4d72290f9e28982. Actual-schema regression reproduces the predecessor unauthorized hide, then verifies denial, allowed moderation, replay revocation and successor guards. No deployment or communication is authorized by this registry classification.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "event-memory-source-moderation-20261025",
+      "reviewBatch": "event-memory-source-authorization-20261025",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 215
+        "valueCount": 216
       },
       "previousDecision": {
-        "id": "c28667c70e40dcc18a55",
+        "id": "7ca220a96b9b65a0fe15",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P0-cutover",
         "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-        "justification": "The 214-entry execution registry preserves all 213 protected-main entry objects/order/introduction commits and historical SQL bytes, then appends one event-memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. The migration installs no campaigns or consent and sends nothing. Full-schema replay, rollback/refusal, concurrent-worker and actual API tests are separate execution evidence; no production activation is authorized by this registry review.",
+        "justification": "The 215-entry registry preserves the full immutable 214-entry prefix and all historical SQL, then appends source moderation introduced by 3bb05ecd7. Installation hides nothing and sends nothing. Actual full-schema replay/rollback and authenticated HTTP verify behavior; committed evidence refuses rollback. This registry review does not authorize production deployment or feature activation.",
         "reviewed": true,
         "reviewMethod": "successor-of-reviewed-decision",
-        "reviewBatch": "event-memories-2026-10-25",
+        "reviewBatch": "event-memory-source-moderation-20261025",
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3,
           "kind": "json-array",
           "name": "migrations",
-          "valueCount": 214
+          "valueCount": 215
         },
         "previousDecision": {
-          "id": "3f336173e03f10fc023c",
+          "id": "c28667c70e40dcc18a55",
           "classification": "genuine-technical-constant",
           "disposition": "explicit-allowlist",
           "specializedModel": "technical_constant_allowlist",
           "priority": "P0-cutover",
           "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-          "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+          "justification": "The 214-entry execution registry preserves all 213 protected-main entry objects/order/introduction commits and historical SQL bytes, then appends one event-memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. The migration installs no campaigns or consent and sends nothing. Full-schema replay, rollback/refusal, concurrent-worker and actual API tests are separate execution evidence; no production activation is authorized by this registry review.",
           "reviewed": true,
-          "reviewMethod": "successor-of-reviewed-decisions",
-          "reviewBatch": "music-current-main-integration-20261023",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "reviewBatch": "event-memories-2026-10-25",
           "evidence": {
             "file": "scripts/production-migrations.json",
             "line": 3,
             "kind": "json-array",
             "name": "migrations",
-            "valueCount": 213
+            "valueCount": 214
+          },
+          "previousDecision": {
+            "id": "3f336173e03f10fc023c",
+            "classification": "genuine-technical-constant",
+            "disposition": "explicit-allowlist",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P0-cutover",
+            "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+            "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+            "reviewed": true,
+            "reviewMethod": "successor-of-reviewed-decisions",
+            "reviewBatch": "music-current-main-integration-20261023",
+            "evidence": {
+              "file": "scripts/production-migrations.json",
+              "line": 3,
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 213
+            }
           }
         }
       }
