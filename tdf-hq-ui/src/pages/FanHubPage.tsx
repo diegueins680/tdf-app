@@ -333,7 +333,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const followsQuery = useQuery({
     queryKey: ['fan-follows', viewerId],
     queryFn: Fans.listFollows,
-    enabled: Boolean(viewerId && hasAuthToken && !sessionLoading && !isHomeManagerView),
+    enabled: Boolean(viewerId && isFan && hasAuthToken && !sessionLoading && !isHomeManagerView),
   });
 
   const myClubsQuery = useQuery({
@@ -573,7 +573,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       setLoginPromptOpen(true);
       return;
     }
-    if (followActionPending.current || !session || getActiveSession() !== session
+    if (followActionPending.current || !isFan || !session || getActiveSession() !== session
       || !safeArtistId(viewerId) || !safeArtistId(artistId)
       || !followsQuery.isSuccess || followsQuery.isFetching) return;
     followActionPending.current = true;
@@ -1285,7 +1285,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                                   variant="contained"
                                   size="small"
                                   onClick={() => handleFollowToggle(artist.apArtistId, false)}
-                                  disabled={followMutation.isPending || unfollowMutation.isPending || (hasAuthToken && (!followsQuery.isSuccess || followsQuery.isFetching))}
+                                  disabled={followMutation.isPending || unfollowMutation.isPending || (hasAuthToken && (!isFan || !followsQuery.isSuccess || followsQuery.isFetching))}
                                 >
                                   Seguir
                                 </Button>
@@ -1440,7 +1440,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   variant="outlined"
                   onClick={() => {
                     void artistsQuery.refetch();
-                    if (!isHomeManagerView) {
+                    if (isFan && !isHomeManagerView) {
                       void profileQuery.refetch();
                       const failedFollow = followMutation.isError ? followMutation.variables : undefined;
                       const failedUnfollow = unfollowMutation.isError ? unfollowMutation.variables : undefined;
@@ -2139,7 +2139,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                               e.stopPropagation();
                               handleFollowToggle(artist.apArtistId, isFollowing);
                             }}
-                            disabled={followMutation.isPending || unfollowMutation.isPending || (hasAuthToken && (!followsQuery.isSuccess || followsQuery.isFetching))}
+                            disabled={followMutation.isPending || unfollowMutation.isPending || (hasAuthToken && (!isFan || !followsQuery.isSuccess || followsQuery.isFetching))}
                           >
                             {isFollowing ? 'Siguiendo' : 'Seguir'}
                           </Button>

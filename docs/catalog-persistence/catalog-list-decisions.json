@@ -516,6 +516,14 @@
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]
+    },
+    "followResponseRecoveryReview": {
+      "sourceHeadBeforeRepair": "4be1ae8cf3733995470362496d9ea2e1502f3056",
+      "preservedExistingDecisions": 1339,
+      "addedIds": [
+        "9e9313f86dcdab1693e5"
+      ],
+      "scope": "One fixed authorization-regression fixture, reviewed as test input; no runtime role authority or existing decision changed."
     }
   },
   "decisions": [
@@ -18484,6 +18492,24 @@
         "kind": "object-registry",
         "name": "release",
         "valueCount": 8
+      }
+    },
+    {
+      "id": "9e9313f86dcdab1693e5",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-activation-verification",
+      "risk": "Changing the fixture roles can hide a regression in the existing Fan/Customer membership boundary; this fixture must never grant runtime access.",
+      "justification": "This exact Artist+Customer account is synthetic test input proving that the existing isFan predicate retains Customer eligibility while Artist-only and Admin-only requests are refused. The production role list is unchanged and the backend remains authoritative; this array adds no role, grant, editable catalog or selectable product data.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-26",
+      "reviewBatch": "follow-response-membership-boundary-20261026",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "line": 535,
+        "sourceSha256": "c0da4534df22f6993d1a95379878d3e1be72845fc8e412cb7914f197ee3c9077",
+        "requirement": "COMM-FOLLOW-RECOVERY-001"
       }
     }
   ]

@@ -1,6 +1,6 @@
 {
   "status": "PARTIAL",
-  "updatedAt": "2026-10-26T15:57:22.185119+00:00",
+  "updatedAt": "2026-10-26T16:46:12.040197+00:00",
   "pr": "https://github.com/diegueins680/tdf-app/pull/627",
   "priority": "P1",
   "userImpact": "El servidor guarda la relación, pero una respuesta perdida dejaba el botón en Seguir y mostraba error. El usuario no podía confirmar su primer valor.",
@@ -96,10 +96,11 @@
     "hostedPersonaRepair": "activation-follow-response-2026-10-26/ci-persona-repair.json",
     "reviewNavigationRepair": "activation-follow-response-2026-10-26/review-navigation-repair.json",
     "currentFocusedTests": {
-      "passed": 102,
+      "passed": 107,
       "suites": 5,
-      "scope": "Four delayed navigation cases and all existing follow/profile/onboarding controls."
-    }
+      "scope": "Navigation, roles, retry denial and all prior current-account follow/profile/onboarding controls."
+    },
+    "reviewRoleAccessRepair": "activation-follow-response-2026-10-26/review-role-access-repair.json"
   },
   "measurement": {
     "firstValueAuthority": "Only the existing server-evidence completion endpoint; six newlyCompleted:true receipts for six fictional fans, later refollow receipts:false. No direct analytics from GET.",
@@ -112,7 +113,7 @@
   },
   "integration": {
     "status": "PARTIAL",
-    "state": "743 has fresh approval and19/20requiredPASS but valid navigation review finding is being repaired. New code must obtain exact-headCI, fresh independent approval and protectedadmission; no merge/deploy627.",
+    "state": "4be navigation finding resolved; a second valid role-access finding is repaired locally with107focused tests. New final head must reconcile protectedmain78fa/222schema and obtain CI/review/admission; no merge/deploy627.",
     "rollback": "Revert web change through protected workflow; no migrations.",
     "base": "3c25a9de56345a8fccea4c1320b0548fed37a334",
     "qualifiedCombinedSource": "25e9943e1ac4cbfd0214267735c9d95f3d82c9d8",

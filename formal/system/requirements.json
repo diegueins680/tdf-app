@@ -12248,7 +12248,7 @@
       "effects": [
         "Refresh existing account-scoped membership cache and related artist reads; clear only confirmed current-profile follow intent."
       ],
-      "authorization": "Capture the exact SessionUser occurrence; guard before and after the fresh read and before write/first-value handoff. Backend authorization remains authoritative.",
+      "authorization": "Capture the exact SessionUser occurrence; guard before and after the fresh read and before write/first-value handoff. Backend authorization remains authoritative. Comunidad retains the existing Fan/Customer capability for membership reads, actions and explicit retries; cached data cannot enable unsupported actions. Public catalog retry never refetches denied fan resources.",
       "privacy": "No tokens or raw diagnostics in UI or receipts. Existing SessionProviders client isolation remains in force; this change adds no credentials or persisted personal data.",
       "concurrency": "Coalesce repeated clicks while the write and confirmation read settle. Cancel superseded account-key queries, explicitly invalidate without a refetch, then fetch fresh once with no automatic retry. Guard queryFn before returning data so a retired occurrence cannot cache its response. Delayed URL cleanup requires the captured navigation lifetime to remain current; same-artist navigation preserves its latest search/hash and only the current valid resume intent may be consumed.",
       "idempotency": "Never replay POST/DELETE in response recovery. Existing server onboarding completion newlyCompleted receipt controls analytics emission.",

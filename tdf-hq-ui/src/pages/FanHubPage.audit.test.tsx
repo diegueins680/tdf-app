@@ -18,6 +18,7 @@ const followMock = jest.fn<(artistId: number) => Promise<FanFollowDTO>>();
 const unfollowMock = jest.fn<(artistId: number) => Promise<void>>();
 const captureFirstValueMock = jest.fn(async () => false);
 const listMyClubsMock = jest.fn(async () => []);
+const getMyArtistProfileMock = jest.fn<() => Promise<ArtistProfileDTO | null>>(async () => null);
 const releaseFeedRefetchMock = jest.fn(async () => undefined);
 const profileRefetchMock = jest.fn(async () => undefined);
 let sessionLoading = false;
@@ -52,7 +53,7 @@ jest.unstable_mockModule('../api/fans', () => ({
     listArtists: listArtistsMock,
     listFollows: listFollowsMock,
     listMyClubs: listMyClubsMock,
-    getMyArtistProfile: jest.fn(async () => null),
+    getMyArtistProfile: getMyArtistProfileMock,
     updateMyArtistProfile: jest.fn(),
     requestMyFanRole: jest.fn(),
     follow: followMock,
@@ -143,13 +144,14 @@ const eligibleProgress: OnboardingProgressDTO = {
 const completedProgress: OnboardingProgressDTO = { ...eligibleProgress, eligible: false, completedAt: '2026-09-15T00:05:00Z' };
 const completedReceipt: OnboardingCompletionResultDTO = { newlyCompleted: true, progress: completedProgress };
 
-function renderPage(initialEntry = '/fans') {
+function renderPage(initialEntry = '/fans', knownFollows?: FanFollowDTO[]) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
       mutations: { retry: false },
     },
   });
+  if (knownFollows !== undefined) queryClient.setQueryData(['fan-follows', sessionMock?.partyId ?? null], knownFollows);
   const node = () => (
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialEntry]}>
@@ -186,6 +188,7 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     listFollowsMock.mockReset().mockResolvedValue([]);
     followMock.mockReset();unfollowMock.mockReset();captureFirstValueMock.mockClear();
     listMyClubsMock.mockClear();
+    getMyArtistProfileMock.mockReset().mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -511,6 +514,48 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     expect(view.queryClient.getQueryData(['fan-follows', 43])).toEqual([]);
     expect(captureFirstValueMock).not.toHaveBeenCalled();
     expect(screen.queryByText(es.artistFollow.changeError)).toBeNull();view.unmount();view.queryClient.clear();
+  });
+
+  it.each(['Artist', 'Admin'])('keeps fan membership access gated for %s-only accounts with cached data', async role => {
+    sessionMock = { ...sessionMock!, roles: [role] };
+    const artist: ArtistProfileDTO = { apArtistId: 17, apDisplayName: 'Artista ficticio', apGenreIds: [], apFollowerCount: 0, apHasUserAccount: true };
+    listArtistsMock.mockResolvedValue([artist]);
+    listFollowsMock.mockRejectedValue(new Error('Synthetic403: requires Fan or Customer'));
+    const view = renderPage('/fans', []);
+    const buttons = await screen.findAllByRole('button', { name: 'Seguir', exact: true });
+    expect(listFollowsMock).not.toHaveBeenCalled();
+    expect(buttons.every(node => (node as HTMLButtonElement).disabled)).toBe(true);
+    buttons.forEach(node => fireEvent.click(node));
+    expect(followMock).not.toHaveBeenCalled();expect(unfollowMock).not.toHaveBeenCalled();
+    expect(screen.queryByText('Tuvimos un problema cargando tu información. Revisa tu conexión o intenta de nuevo.')).toBeNull();
+    view.unmount();view.queryClient.clear();
+  });
+
+  it('retains fan membership access for an artist with the Customer role', async () => {
+    sessionMock = { ...sessionMock!, roles: ['Artist', 'Customer'] };
+    const artist: ArtistProfileDTO = { apArtistId: 17, apDisplayName: 'Artista ficticio', apGenreIds: [], apFollowerCount: 0, apHasUserAccount: true };
+    listArtistsMock.mockResolvedValue([artist]);
+    const view = renderPage();const buttons = await screen.findAllByRole('button', { name: 'Seguir', exact: true });
+    await waitFor(() => expect((buttons[buttons.length - 1] as HTMLButtonElement).disabled).toBe(false));
+    expect(listFollowsMock).toHaveBeenCalledTimes(1);
+    expect(followMock).not.toHaveBeenCalled();view.unmount();view.queryClient.clear();
+  });
+
+  it.each(['Artist', 'Admin'])('keeps artist-profile retry separate from denied fan membership access for %s-only accounts', async role => {
+    sessionMock = { ...sessionMock!, roles: [role] };
+    const artist: ArtistProfileDTO = { apArtistId: 17, apDisplayName: 'Artista ficticio', apGenreIds: [], apFollowerCount: 0, apHasUserAccount: true };
+    listArtistsMock.mockResolvedValue([artist]);
+    getMyArtistProfileMock.mockRejectedValueOnce(new Error('Synthetic artist-profile503')).mockResolvedValue(null);
+    listFollowsMock.mockRejectedValue(new Error('Synthetic403: requires Fan or Customer'));
+    profileRefetchMock.mockClear();
+    const view = renderPage('/fans', []);
+    fireEvent.click(await screen.findByRole('button', { name: 'Reintentar', exact: true }));
+    await waitFor(() => expect(listArtistsMock).toHaveBeenCalledTimes(2));
+    await screen.findAllByRole('button', { name: 'Seguir', exact: true });
+    expect(getMyArtistProfileMock).toHaveBeenCalledTimes(2);
+    expect(listFollowsMock).not.toHaveBeenCalled();expect(profileRefetchMock).not.toHaveBeenCalled();
+    expect(screen.queryByText('Tuvimos un problema cargando tu información. Revisa tu conexión o intenta de nuevo.')).toBeNull();
+    view.unmount();view.queryClient.clear();
   });
 
 });

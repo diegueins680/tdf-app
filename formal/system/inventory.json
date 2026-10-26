@@ -9164,7 +9164,7 @@
     {
       "id": "SURFACE-843ecd90497b82eb",
       "path": "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-      "sha256": "3ccbe5b9fea851f81f67be2e9ec3e6fe49aae4ab597cf76ea7e4913789424751",
+      "sha256": "c0da4534df22f6993d1a95379878d3e1be72845fc8e412cb7914f197ee3c9077",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9182,7 +9182,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "65105fc75e42eb1a441bf521bf1749d7f6be6b1dfdc8d927b9f758bf1fcf4528",
+      "sha256": "ee904be14e3732a28782d25c470b5f31999ad36f717d62ea5d6beff06398887c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26870,7 +26870,7 @@
     },
     {
       "path": "formal/system/follow-response-recovery.md",
-      "sha256": "fa971689fe530ab887682ae5a3afdf49d18cfdcd3c1257a6099bb3d364dc8b8c",
+      "sha256": "a9fd70cc8e5798454be337c89db11aa5272232c9fb0ab422372cd80aa43a527c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27276,7 +27276,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f21daacd92b73a525eb5cce5d12a634d6c21574b90546af33ab2e3b91d88293c",
+      "sha256": "0e47d5118bfb8cb4361b7e1c9284b1a44785729d5e06febdad132a98c34301c6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

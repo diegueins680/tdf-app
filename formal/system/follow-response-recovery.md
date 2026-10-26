@@ -8,6 +8,12 @@ confirmation. A successful read displays current truth, including an unchanged
 relationship when the request never committed. An unreadable state remains
 unknown; the existing read retry repeats only the GET and disables blind toggles.
 
+Comunidad retains the existing `isFan` capability, which covers Fan and Customer
+roles, for membership reads, actions and explicit read retries. Retrying the hub or an owned
+artist profile never refetches fan-only profile/membership resources for an
+Artist-only or Admin-only account. Cached membership data cannot enable an action for
+an account lacking that capability. Backend authorization is unchanged.
+
 The command captures the exact session occurrence and safe positive account and
 artist identifiers. Guard before sending and before returning the GET result to
 QueryClient; a late response cannot populate or confirm another occurrence.
