@@ -3283,7 +3283,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "b51fded0ec0fe1efd8ade7249be4e613f95a1c0b8b46ec3bc83112dd808fac38",
+      "sha256": "9a2db7e690c4c5211be36dd7e338d9189cd2ae15fdb1bdc63f09c391caa00722",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26870,7 +26870,7 @@
     },
     {
       "path": "formal/system/browser-ci-image.md",
-      "sha256": "8a287162a3ea00e051bb2967a66c7d7e2f897209c4dba82a7082d3966e78ec92",
+      "sha256": "edb2e891c992102dcfd920559271740a99e641a111336b6e1a67c86babb7d4f5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27423,7 +27423,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "82f1f1cb4e59b24342e299d42f96fb3a8c08ee66916c0b7a802b3931bac85aa0",
+      "sha256": "27278b8df9d1c83d9785da2c08fc636455a2629255f0a6f01793e092187b535d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

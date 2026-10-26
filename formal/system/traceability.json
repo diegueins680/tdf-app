@@ -10967,7 +10967,7 @@
       ],
       "authorization": "The job runs as user 1001 to match GitHub workspace/home ownership; this test infrastructure grants no production or release authority.",
       "privacy": "Preflight reports browser names and versions only; application test artifacts retain existing sanitization and retention.",
-      "concurrency": "Existing browser workers and fixture isolation are unchanged; the container uses the official shared-memory recommendation.",
+      "concurrency": "The global CI limit remains two workers; each WebKit project admits one worker, while Chromium/Firefox scheduling, fixture isolation and simultaneous operations within a test remain unchanged. The container retains the official shared-memory recommendation.",
       "idempotency": "Preflight does not install packages or modify application data.",
       "failure": "Fail closed on missing metadata, version drift, invalid pin, browser-path redirection or any failed launch; there is no installer fallback.",
       "recovery": "Update the lockfile and verified official image together, then require all existing hosted browser stages and protected admission.",
@@ -10980,7 +10980,8 @@
         ".github/workflows/ci.yml",
         "scripts/verify-playwright-image.mjs",
         "scripts/quality-repo.sh",
-        ".github/workflows/social-verification.yml"
+        ".github/workflows/social-verification.yml",
+        "playwright.config.mjs"
       ],
       "tests": [
         "scripts/__tests__/playwright-image.test.mjs",
@@ -12903,7 +12904,7 @@
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
     "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
-    "playwright.config.mjs": "016429e964027bd196982efabee711e56df08b51664f51f8e5298e3cdd7b5f93",
+    "playwright.config.mjs": "3b3298f30ef87aaac997a92d3fa0def4bd0a907bb41dff89dc3712210b32a957",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
     "playwright.music-native.config.mjs": "d89a8b06cf0ac2b15c0acd6000325edb73b46a17cb6df8ecaa39c52b0cd772c7",
     "screencast/meta-app-review/review.env.example": "6103b9dd02e37ab7539735007924ca02f31b67e40d2d8efbdf88a69abcd91100",
@@ -12917,7 +12918,7 @@
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "51dfd59c5f1a2c70a16e7acb552711a7806e90f39af21a6c0ace4e3c4f1da8c7",
-    "scripts/__tests__/ci-pipeline.test.mjs": "b51fded0ec0fe1efd8ade7249be4e613f95a1c0b8b46ec3bc83112dd808fac38",
+    "scripts/__tests__/ci-pipeline.test.mjs": "9a2db7e690c4c5211be36dd7e338d9189cd2ae15fdb1bdc63f09c391caa00722",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
@@ -20126,6 +20127,10 @@
       {
         "requirement": "PRIV-INTAKE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-CI-BROWSER-001",
+        "relationship": "implementation"
       }
     ],
     "e2e/web/account-deletion.spec.mjs": [
@@ -25547,7 +25552,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "b51fded0ec0fe1efd8ade7249be4e613f95a1c0b8b46ec3bc83112dd808fac38",
+      "sha256": "9a2db7e690c4c5211be36dd7e338d9189cd2ae15fdb1bdc63f09c391caa00722",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53360,7 +53365,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "82f1f1cb4e59b24342e299d42f96fb3a8c08ee66916c0b7a802b3931bac85aa0",
+      "sourceSha256": "27278b8df9d1c83d9785da2c08fc636455a2629255f0a6f01793e092187b535d",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -53388,7 +53393,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "82f1f1cb4e59b24342e299d42f96fb3a8c08ee66916c0b7a802b3931bac85aa0",
+      "sourceSha256": "27278b8df9d1c83d9785da2c08fc636455a2629255f0a6f01793e092187b535d",
       "definition": {
         "states": [
           "absent",
@@ -53418,7 +53423,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "82f1f1cb4e59b24342e299d42f96fb3a8c08ee66916c0b7a802b3931bac85aa0",
+      "sourceSha256": "27278b8df9d1c83d9785da2c08fc636455a2629255f0a6f01793e092187b535d",
       "definition": {
         "export": [
           "queued",

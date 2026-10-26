@@ -5,9 +5,32 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+
+test('WebKit project capacity preserves the global browser test policy', async () => {
+  const { default: config } = await import(pathToFileURL(path.join(root, 'playwright.config.mjs')));
+  assert.equal(config.workers, process.env.CI ? 2 : 1);
+  assert.equal(config.timeout, 30_000);
+  assert.equal(config.expect.timeout, 8_000);
+  assert.equal(config.retries, 0);
+  assert.equal(config.fullyParallel, false);
+  let webkitProjects = 0;
+  for (const project of config.projects) {
+    if ((project.use.browserName ?? project.use.defaultBrowserType) === 'webkit') {
+      webkitProjects++;
+      assert.equal(project.workers, 1, project.name);
+    } else {
+      assert.equal(project.workers, undefined, project.name);
+    }
+  }
+  assert.equal(webkitProjects, 2);
+  assert.equal(config.projects.find(project => project.name === 'webkit-iphone').grep.source, '@mobile-flow');
+  assert.equal(config.projects.find(project => project.name === 'webkit-critical').grep.source, '@critical');
+  assert.equal(config.use.trace, 'retain-on-failure');
+  assert.equal(config.use.screenshot, 'only-on-failure');
+});
 
 test('PostgreSQL runner uses the CI service and deletes only its newly created test database', () => {
   const script = `

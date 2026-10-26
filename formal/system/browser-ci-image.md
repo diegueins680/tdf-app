@@ -74,3 +74,22 @@ that failed run and its skipped browser journey. Install the same pinned binding
 into a fresh isolated prefix with scripts and workspaces disabled, then copy
 only that native package into the existing install. The version guard remains
 unchanged and fresh current-head Linux qualification is still required.
+
+## WebKit project capacity
+
+The iPhone and critical Safari projects each admit one worker. The global CI
+limit remains two, and Chromium and Firefox keep their existing scheduling.
+All original browser cases, project filters, 30-second test deadlines,
+eight-second expectations, zero retries, screenshots and traces remain required.
+The complete test listing must match the preceding configuration before this
+scheduling change is admitted. Multiple pages or simultaneous operations within
+a test remain available; application and database concurrency checks are unchanged.
+
+Two complete executions of source `7bed38d67d3d418eec2ae655c01a61c1f227f821`
+each ended with 579 passes, 22 skips and one failure. The first reported campaign
+tab contrast in WebKit; the single replay instead exhausted the cart journey's
+30-second deadline after several successful actions had each taken seconds.
+Preserve both failures and their distinct diagnostics. Per-project capacity is
+a bounded contention hypothesis, not an established explanation of either
+failure. Fresh hosted Linux execution of the complete suite is still mandatory;
+local configuration controls and Chromium results do not qualify WebKit.
