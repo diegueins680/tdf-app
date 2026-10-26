@@ -93,8 +93,11 @@
     "productionVerified": false
   },
   "remainingGates": [
-    "Complete current-head CI",
-    "Current protected main integration slot/base and fresh approval must all remain valid before merge"
+    "Protected integration slot currently waits for PR623; current main e05 follows the qualified candidate base78fa",
+    "Recompose final protected main and requalify; request fresh review only if the source head changes",
+    "Normal protected merge, authorized publication and actual production verification remain undone"
   ],
-  "scope": "This branch adds evidence only; PR628head stays c219279. No production mutation or deployment performed."
+  "scope": "This branch adds evidence only; PR628head stays c219279. No production mutation or deployment performed.",
+  "ciEvidence": "reports/studio-gallery-ci-2026-10-26.json",
+  "additionalPhotoChecks": "reports/studio-gallery-preview-evidence-20261026/all-photos.json"
 }

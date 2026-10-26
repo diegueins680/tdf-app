@@ -1,0 +1,11 @@
+{
+  "observedAt": "2026-10-26T18:21:38.865188+00:00",
+  "url": "https://www.tdfrecords.net/tdf",
+  "entry": "/assets/index-CKGWTwaL.js",
+  "entrySha256": "299a725d1cbfdea898bb248fff2937d2f66a3bd4ccbbd180ba8aeb7ff6b51e50",
+  "containsGalleryCandidate": false,
+  "metadataCommitMatches": [
+    "e05d003669a930d54b4fe7dd71d72d09335c11ae"
+  ],
+  "scope": "Read-only public HTML and compiled-entry GETs only; no browser journey or API/business state inspected."
+}

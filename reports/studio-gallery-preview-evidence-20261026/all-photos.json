@@ -1,0 +1,29 @@
+{
+  "scope": "Actual Cloudflare preview c219279; all6complete1280pxphotos and all6thumbnails SHA256verified percontext. Business/session APIs synthetic and external requests blocked.",
+  "cases": [
+    {
+      "mode": "desktop-light",
+      "completePhotos": [
+        "control-room",
+        "recording-room",
+        "instruments",
+        "mixing-detail",
+        "drum-session",
+        "studio-community"
+      ],
+      "allOriginalDerivativesMatch": true
+    },
+    {
+      "mode": "Pixel7-dark",
+      "completePhotos": [
+        "control-room",
+        "recording-room",
+        "instruments",
+        "mixing-detail",
+        "drum-session",
+        "studio-community"
+      ],
+      "allOriginalDerivativesMatch": true
+    }
+  ]
+}
