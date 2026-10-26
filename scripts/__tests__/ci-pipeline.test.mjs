@@ -137,6 +137,38 @@ test('persona browser journeys are artifacted and gate aggregate quality', async
   assert.doesNotMatch(playwrightConfig, /npm run dev --workspace=tdf-hq-ui/);
 });
 
+test('social browser verification retains its checks and timeout with an independently selected pinned image', async () => {
+  const workflow = parseYaml(await source('.github/workflows/social-verification.yml'));
+  const job = workflow.jobs['social-client'];
+  const persona = parseYaml(await source('.github/workflows/ci.yml')).jobs['persona-web-e2e'];
+  assert.equal(job.container.image, persona.container.image);
+  assert.equal(job.container.options, '--init --ipc=host --user 1001');
+  assert.equal(job['timeout-minutes'], 15);
+  assert.equal(job.env.NPM_CONFIG_IGNORE_SCRIPTS, true);
+  assert.equal(job.env.PLAYWRIGHT_BROWSERS_PATH, '/ms-playwright');
+  assert.equal(job.steps.find(step => step.uses === 'actions/setup-node@v7').with['node-version'], '24');
+  const commands = job.steps.map(step => step.run).filter(Boolean);
+  assert.ok(!commands.some(command => /playwright install|apt-get/.test(command)));
+  const preflight = 'node scripts/verify-playwright-image.mjs --workflow .github/workflows/social-verification.yml --job social-client';
+  assert.ok(commands.includes(preflight));
+  const journey = commands.find(command => command.includes('node scripts/social/verify-preview.mjs'));
+  assert.ok(journey && commands.indexOf(preflight) < commands.indexOf(journey));
+  assert.match(journey, /trap 'kill "\$preview_pid"' EXIT/);
+  assert.match(journey, /curl --fail --retry 30 --retry-connrefused --retry-delay 1/);
+  const focused = commands.find(command => command.includes('node_modules/.bin/jest'));
+  for (const name of ['SocialWorkspace.test.tsx', 'socialV2.test.ts', 'social.test.ts',
+    'ChatPage.privacy.test.tsx', 'chatReadState.test.ts', 'PartyRelationshipMigration.test.ts']) {
+    assert.ok(focused?.includes(name), 'Retain critical social test: ' + name);
+  }
+  assert.ok(commands.some(command => command.includes('diff -u tdf-hq-ui/src/api/generated/social-v2.ts /tmp/social-v2.ts')));
+  assert.ok(!job['continue-on-error'] && !job.steps.some(step => step['continue-on-error']));
+  const artifact = job.steps.find(step => step.uses === 'actions/upload-artifact@v7');
+  assert.equal(artifact.if, 'always()');
+  assert.equal(artifact.with.name, 'social-client-browser');
+  assert.match(artifact.with.path, /\/tmp\/social-browser-current\/\*/);
+  assert.match(artifact.with.path, /\/tmp\/social-preview.txt/);
+});
+
 test('backend quality compiles, tests and exports the binary in one Stack pass', async () => {
   const script = await source('scripts/quality-backend.sh');
   assert.match(script, /build_args=\(--no-terminal test --force-dirty tdf-hq\)/);

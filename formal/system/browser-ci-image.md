@@ -40,3 +40,27 @@ stale metadata, browser-path redirection and failed launches. Mock launch contro
 do not establish actual Linux browser availability. Fresh complete hosted execution
 of the preflight and all three existing browser stages remains required. No browser
 assertion or budget is waived, and no production or release authority is granted.
+
+## Social preview job
+
+The social client job uses the same immutable Noble browser image and user 1001
+as the persona job. Its Node 24 setup, fifteen-minute limit, six focused test
+files, generated-contract comparison, synthetic browser journey and always-run
+artifact upload remain required. It does not install browser system packages
+during the job.
+
+The shared preflight selects the social workflow and its `social-client` job
+explicitly. It must validate that selected job's container, lockfile, installed
+packages, bundled metadata, browser directory and home ownership, then launch
+and close Chromium, Firefox and WebKit. A valid persona job cannot substitute
+for an absent or invalid social container. The original command without
+arguments continues to select the persona job.
+
+Observed motivation: the social job for source `7ddfbd73bf08d007b4658b700bb9cbe289a6b480`
+exceeded its fifteen-minute limit during Playwright dependency installation;
+its browser journey did not execute. Retain that failure and its distinction
+from the separate WebKit marketplace-cart timeout. This change removes that
+installer from the social lane; it does not establish a fix for the cart case.
+Registry availability and a fresh Linux execution of the selected preflight
+and unchanged social assertions remain qualification requirements. Local pure
+tests do not establish installed-image or application acceptance.

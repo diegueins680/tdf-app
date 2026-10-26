@@ -10978,7 +10978,8 @@
       "implementation": [
         ".github/workflows/ci.yml",
         "scripts/verify-playwright-image.mjs",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        ".github/workflows/social-verification.yml"
       ],
       "tests": [
         "scripts/__tests__/playwright-image.test.mjs",

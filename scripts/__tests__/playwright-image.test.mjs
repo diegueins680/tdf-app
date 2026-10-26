@@ -2,7 +2,42 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   validateImage, validateHomeOwner, launchBrowsers, packages, browsers,
+  parseWorkflowSelection, selectedWorkflowImage,
 } from '../verify-playwright-image.mjs';
+
+test('the existing persona command retains its default workflow and job', () => {
+  assert.deepEqual({ ...parseWorkflowSelection([]) }, {
+    workflow: '.github/workflows/ci.yml', job: 'persona-web-e2e',
+  });
+});
+
+test('social preflight selects its own actual workflow and job', () => {
+  assert.deepEqual({ ...parseWorkflowSelection([
+    '--workflow', '.github/workflows/social-verification.yml', '--job', 'social-client',
+  ]) }, { workflow: '.github/workflows/social-verification.yml', job: 'social-client' });
+});
+
+test('invalid workflow paths, unknown options, missing values and empty jobs fail closed', () => {
+  for (const args of [
+    ['--workflow', '/tmp/unreviewed.yml'], ['--workflow', '../ci.yml'],
+    ['--unknown', 'value'], ['--job'], ['--job', ''], ['social-client'],
+  ]) assert.throws(() => parseWorkflowSelection(args));
+});
+
+test('a valid persona image cannot mask the selected social job missing its image', () => {
+  const workflow = { jobs: { 'persona-web-e2e': { container: { image: fixture().image } },
+    'social-client': { steps: [] } } };
+  assert.equal(selectedWorkflowImage(workflow, 'persona-web-e2e'), fixture().image);
+  assert.throws(() => selectedWorkflowImage(workflow, 'social-client'), /Selected workflow job/);
+  assert.throws(() => selectedWorkflowImage(workflow, 'absent'), /Selected workflow job/);
+});
+
+test('a mutable selected social image is rejected even when the persona image is pinned', () => {
+  const workflow = { jobs: { 'persona-web-e2e': { container: { image: fixture().image } },
+    'social-client': { container: { image: 'mcr.microsoft.com/playwright:v1.59.1-noble' } } } };
+  assert.throws(() => validateImage({ ...fixture(), image: selectedWorkflowImage(workflow, 'social-client') }),
+    /immutable official/);
+});
 
 test('accepts the CI browser user owning its mounted home', () => {
   assert.doesNotThrow(() => validateHomeOwner(1001, 1001));
