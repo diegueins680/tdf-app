@@ -1,0 +1,33 @@
+{
+  "failedHead": "43c7adba83ab8c1554c944ea99871b8a9c406c3b",
+  "failedRun": 40264727828,
+  "failedJob": 121384498681,
+  "failure": "source drift needs a new review: scripts/production-migrations.json migrations",
+  "classification": "Stale 220-entry catalog source-review fingerprint after adding migration221",
+  "oldDecision": "b7cc47848f3f9882770f",
+  "newDecision": "9ada14767bee1662f97d",
+  "scope": "One source-reviewed manifest successor; exact old decision retained; other1327 active decisions unchanged; no code/test/SQL/guard weakening.",
+  "qualifiedInputsStillMatch": true,
+  "reconciliation": "docs/catalog-persistence/ledger-header-reconciliation-20261025.json",
+  "hostedFinalHead": "Pending; earlier catalog failure remains a failure.",
+  "pr": 621,
+  "localCatalogUnitTests": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "catalogCandidates": 1328,
+  "otherActiveDecisionsPreservedExactly": 1327,
+  "fullCatalogAudit": {
+    "command": "npm run audit:catalog-lists",
+    "exitCode": 0
+  },
+  "catalogSourceHashes": {
+    "docs/catalog-persistence/catalog-list-decisions.json": "881e0be06afb973c1200beb4213e72ae4bad53478e3fab280189c650a55d3b75",
+    "docs/catalog-persistence/ledger-header-reconciliation-20261025.json": "8b1df2d04d3a25a99e1bf56bdeef3966ae22ec18fc300874456a371c470fbd6f",
+    "docs/catalog-persistence/event-catalog-current-successors.json": "97afb8872444b3a58853c36e2120fa4e2a01f75e468135434fab66777c1a0317",
+    "docs/catalog-persistence/event-integration-retirements.json": "6b4396a80aebe04f970cb2b2c4420b78a645946edb539a3e6cf385cb69d93897",
+    "docs/catalog-persistence/reports/static-list-inventory.json": "5c53d2839c5133c3eabb41784d298703b7026696cd1fee9712eb3590de2f477a",
+    "docs/catalog-persistence/reports/list-consumer-matrix.csv": "f7f42975dbd8086b1885583b92eed4fae3c6e646491f45436cb80fe4d5e4b2e0"
+  }
+}

@@ -24,8 +24,9 @@ The focused requirement `MEDIA-MUSIC-DISCOVERY-001` owns the query, client/page,
 their tests and the dedicated CI invocation. The initial integration retained
 140 foundation requirement objects plus the discovery requirement; an earlier
 foundation refresh below retains 142 objects plus the discovery requirement.
-The final P0 parent reconciliation retains 144 parent objects plus the unchanged
-discovery requirement, for 145 total. Inventory and traceability are regenerated from
+The final main reconciliation retains 145 main objects plus the unchanged
+discovery requirement, for 146 total. Earlier counts below retain their historical
+baseline scope. Inventory and traceability are regenerated from
 actual sources and the unchanged pinned Mobile checkout; these generated
 mappings establish freshness and coverage, not test success.
 
@@ -139,3 +140,28 @@ to this reconciliation; no new SQL, UI, compiled build, browser or production
 execution is claimed. PR622 remains stacked on PR620 and must target main only
 after PR620 is actually merged. Exact-head CI, review and protected integration
 remain required. No deployment or production write is performed.
+
+## Protected main after playback and ledger integration
+
+PR620 is now merged, and root has retargeted PR622 to main. The final normal
+refresh advances `0c125ac098ef7e900afa4244a9f77b0c354c4070` with protected main
+`78fa351b469c1d2031df3232204dd722ac480e3b`, including the independent ledger
+header integration. All 145 main requirement objects are retained exactly,
+followed by the unchanged discovery requirement and its runner-only CI mapping,
+for 146 total. The whole 1,339-decision main catalog file is unchanged. The
+222-entry migration manifest is inherited unchanged; this P1 correction adds
+no migration and claims no fresh database execution against that full schema.
+
+All nine P1 source fingerprints remain exact, including the recording-query
+handler `fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc` and
+SQL runner `070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2`.
+The prior 106 focused tests, original `0a0dd9014` hosted results and PostgreSQL/
+browser receipts remain tied to their actual inputs. This metadata refresh
+does not relabel them as execution of the new head. No source/UI/runtime change
+or repeated runtime qualification is introduced.
+
+Fresh metadata, source-admission, inventory/traceability and strict catalog
+JSON/CSV checks qualify the final reconciliation. Exact published-head CI and
+independent review remain required. No deployment or production write is
+performed by this refresh. The earlier stacked-branch instructions above are
+historical; the current PR622 integration target is main.

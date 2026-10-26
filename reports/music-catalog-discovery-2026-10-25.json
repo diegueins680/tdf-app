@@ -255,12 +255,12 @@
   ],
   "integration": {
     "pr": "https://github.com/diegueins680/tdf-app/pull/622",
-    "ci": "Pending exact final stacked candidate checks; prior0a hosted results retain original identity",
-    "merge": "Normal local merge of final P0parent2a7; no protected-main integration performed",
+    "ci": "Pending final published head checks; historical hosted results not relabeled",
+    "merge": "Normal local merge of current protected main78fa; no protected-main merge performed by this refresh",
     "deployment": "not performed",
     "productionBusinessWrites": 0,
-    "intendedBase": "fix/universal-playback-reliability-20261025",
-    "retargetMain": "Only after protected merge of PR620"
+    "intendedBase": "main",
+    "retargetMain": "PR620 actually merged as3c25; PR622 retargeted to main by root"
   },
   "foundationRefresh": {
     "normalMerge": true,
@@ -285,7 +285,7 @@
     "priorHeadEvidenceDoesNotEstablishNewHeadPass": true,
     "catalogDecisions": "Foundation preserves main1330 and9audio decisions; this P1refresh adds no catalog decision"
   },
-  "integrationBaseline": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "integrationBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
   "previousHostedCandidate": {
     "head": "0a0dd901471653fc874175ebb401d4580fb0419b",
     "runId": 40266955707,
@@ -436,6 +436,88 @@
       "candidates": 1339,
       "parentDecisionFileByteExact": true,
       "newDecisions": 0
+    }
+  },
+  "currentMainRefresh": {
+    "method": "normal merge",
+    "previousHead": "0c125ac098ef7e900afa4244a9f77b0c354c4070",
+    "main": "78fa351b469c1d2031df3232204dd722ac480e3b",
+    "protectedP0Merge": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+    "mainRequirementObjectsPreservedExactly": 145,
+    "ownDiscoveryRequirementUnchanged": true,
+    "requirementsTotal": 146,
+    "mainCatalogFileByteExact": true,
+    "mainCatalogDecisions": 1339,
+    "mainMigrationManifestEntries": 222,
+    "p1SourceFingerprintsUnchanged": {
+      "tdf-hq/src/TDF/Server/MusicRelease.hs": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
+      "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "7b4d424b566195ca074af95148cf3fd63a194bbb5ceaba0798d12deccedf4784",
+      "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
+      "tdf-hq-ui/src/api/musicReleases.ts": "6c1ae9c62c2c4cdb51ba8e94bc5086d3c54e6a2cfd323c14da1d7d74f3c6ca6e",
+      "tdf-hq-ui/src/api/musicReleases.pagination.test.ts": "e1b83d693a268efebd2121a899cf6fa422d39994895425abddb68054056b652e",
+      "scripts/test-music-catalog-search.mjs": "070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2",
+      "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
+      "scripts/ci-change-scope.mjs": "56dd35bfe3648d8732b28ed6066e118cf743e58093fef5657b031dada0a1112e",
+      "scripts/__tests__/ci-change-scope.test.mjs": "51dfd59c5f1a2c70a16e7acb552711a7806e90f39af21a6c0ace4e3c4f1da8c7"
+    },
+    "scope": "Current metadata-only main integration. Existing106focused,0a hosted and earlier SQL/browser results retain actual inputs; no new runtime/UI/source qualification claimed.",
+    "metadataChecks": {
+      "metadataTestsPassed": 36,
+      "failed": 0,
+      "groups": [
+        {
+          "group": "declarations",
+          "passed": 9,
+          "exitCode": 0,
+          "path": "/private/tmp/tdf-discovery-78fa-declarations-20261026.log",
+          "sha256": "ca18ffc8e8fdc6b71e49e9b4fd64e04661daa3243fb767d57a64ce80ea2d7b63"
+        },
+        {
+          "group": "inventory",
+          "passed": 6,
+          "exitCode": 0,
+          "path": "/private/tmp/tdf-discovery-78fa-inventory-20261026.log",
+          "sha256": "87e250bf62d1264aef14ae2a4ee640a44cff7f984716707aac3105c98b037999"
+        },
+        {
+          "group": "conformance",
+          "passed": 10,
+          "exitCode": 0,
+          "path": "/private/tmp/tdf-discovery-78fa-conformance-20261026.log",
+          "sha256": "ce338362e6e8eee576123be2b0b3f52483f628d50710f3f26f866c95c861ba08"
+        },
+        {
+          "group": "admission",
+          "passed": 11,
+          "exitCode": 0,
+          "path": "/private/tmp/tdf-discovery-78fa-admission-20261026.log",
+          "sha256": "7ab6c742c89ea40194a51db4efc235abdeff560e460a1c5607a6f8b545e65b2f"
+        }
+      ],
+      "inventoryFreshness": "PASS",
+      "traceabilityFreshness": "PASS",
+      "workingSourceAdmission": {
+        "main": "78fa351b469c1d2031df3232204dd722ac480e3b",
+        "workingSourceAdmission": "PASS",
+        "count": 10,
+        "checked": [
+          ".github/workflows/ci.yml",
+          "e2e/web/music-catalog-discovery.spec.mjs",
+          "scripts/__tests__/ci-change-scope.test.mjs",
+          "scripts/ci-change-scope.mjs",
+          "scripts/test-music-catalog-search.mjs",
+          "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
+          "tdf-hq-ui/src/api/musicReleases.ts",
+          "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
+          "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+          "tdf-hq/src/TDF/Server/MusicRelease.hs"
+        ],
+        "scope": "Working source against immutable current main; committed-tree verification follows merge commit"
+      },
+      "strictCatalogJson": "PASS",
+      "strictCatalogCsv": "PASS",
+      "candidateCount": 1339,
+      "sourceRuntimeUiRetested": false
     }
   }
 }
