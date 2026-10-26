@@ -53,5 +53,60 @@
     "Fresh final-head full-schema hosted checks and independent review; normal merge preserving456be073c944dd3d76eb9e3c2169fe7fbb4041ef.",
     "Full SQL/application refinement, arbitrary schedules, provider/merchant environment correspondence and real external charge idempotency remain unresolved.",
     "Review runtime privileges, function namespace policy, authorization changes, settlement recovery and provider webhook authenticity beyond this admission boundary."
-  ]
+  ],
+  "proofReportSource": "1bca8b216d5cf1f41b053ca5c02c189760fe6eaf",
+  "proofMetrics": {
+    "requirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 144,
+      "NOT_APPLICABLE": 0
+    },
+    "requirementsWithDeclaredAmbiguityEntries": 134,
+    "obligationsByCategory": {
+      "implementation": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 144,
+        "NOT_APPLICABLE": 0
+      },
+      "refinement": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 144,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-authorization-SMT": {
+        "PROVEN": 3,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-recovery-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      }
+    }
+  },
+  "criticalCompleteRequirementAssurance": {
+    "PROVEN": 0,
+    "UNPROVEN": 116
+  },
+  "financialCompleteRequirementAssurance": {
+    "PROVEN": 0,
+    "UNPROVEN": 20
+  },
+  "authorizationCompleteRequirementAssurance": {
+    "PROVEN": 0,
+    "UNPROVEN": 12
+  },
+  "scopeNotice": "Native317 execution is cb777; fresh assurance report/repository quality are clean1bca8b216. Evidence-only publication preserves those exact identities. Conditional SMT claims do not prove provider admission or complete requirements."
 }

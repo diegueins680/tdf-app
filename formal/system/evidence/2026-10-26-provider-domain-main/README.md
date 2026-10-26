@@ -47,3 +47,5 @@ This is TESTED finite SQL/application behavior, not a universal proof, bounded
 model-checking result or complete implementation equivalence. PR #621 must merge
 first; current-head hosted checks, independent review and normal merge ancestry
 remain mandatory. Keep guards across application rollback.
+
+Fresh integrated assurance: clean `1bca8b216d5cf1f41b053ca5c02c189760fe6eaf` report and repository quality pass. `assurance-artifacts.tar.gz` preserves raw report/SMT inputs and repository log. All144 complete requirements and288 implementation/refinement obligations remain UNPROVEN, separate from11 conditional source-derived SMT claims. No new independent CPC replay or mathematical proof of provider admission is claimed. `scorecard.json` preserves these scopes separately from the native317 execution atcb777.

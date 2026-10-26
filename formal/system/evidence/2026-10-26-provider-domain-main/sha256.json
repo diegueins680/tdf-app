@@ -1,11 +1,13 @@
 {
-  "README.md": "33f0a9904a565966faa8d7c5afe5730f08413c9a43904d386a3a32b5cb508fa6",
+  "README.md": "4e57515b8ea56abffa2208a8ca56e84fa1c168f04d8ddefbbc1be4e5a3a17be3",
   "aggregate-receipt.json": "6a376e55c8464883240ab6f7b94ff05a715fcbd4e9e8bf20fee4a4e41e1eabe3",
+  "assurance-artifacts.tar.gz": "57bc573fd8f081ae2875d282c8866ec573a35887452504edc7bb724b0abc15a1",
   "build-receipt.json": "b31250e931d5d7d5e515296af986420fdd3a774863e19695c5a51e8659227beb",
   "harness-controls.json": "d1e87eee79ac861b1f1b4c1e467b7a64b3da7e26d13f70c9038450eef5749bae",
   "initial-failed-receipt.json": "1305eafa41950626f41d2c2a5d2b6bd678e38646388288d52b1eab3fc2a18a7b",
   "integration.json": "921b8f8d616c28453eda1c30fc1d22f535a0865726b101cc5fd66ff8acc60d21",
   "receipt.json": "882b3d7e83121d100e4b39af15aefa45c3f6e3f9cffa7255a39a0708b8347fb1",
-  "scorecard.json": "940f6f2e01889bb36db27280cb54c1b390b7d5a6a816478cd683dcb02a2b7488",
+  "repository-quality.json": "0f18170b08891b7dc3410272c64b4133b26183150b68a1200a5d231bded32450",
+  "scorecard.json": "ec769ae4d397f6db121ad5071b065ae56954cec487dddc1fe45908eae2e3996d",
   "verification-artifacts.tar.gz": "148f788082ba91bc00cd69244cf300dd481bf26524d9c69f041c31bfd2b4f828"
 }
