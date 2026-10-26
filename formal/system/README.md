@@ -123,6 +123,8 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [index-declarations.md](index-declarations.md): nine uniqueness constraints created from index declarations become plain indexes; bounded model, three negative controls and PostgreSQL tests.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
 - [ledger-posting.md](ledger-posting.md): commerce ledger posting rules in PostgreSQL (SYS-MONEY-003)
+- [ledger-header.md](ledger-header.md): immutable posted source/audit headers,
+  stale-writer SQL schedules, startup drift checks and a bounded two-writer model.
 - [ledger-namespace.md](ledger-namespace.md): trusted relation lookup for ledger
   guards, non-owner shadowing counterexamples and explicit privilege assumptions.
   and [identity-recovery.md](identity-recovery.md) define narrow verification
