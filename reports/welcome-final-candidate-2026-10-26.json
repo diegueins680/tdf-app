@@ -1,0 +1,60 @@
+{
+  "observedAt": "2026-10-26T05:32:44.678522+00:00",
+  "publishedPr": 619,
+  "previousPublishedHead": "d8191612b1d8e185e997a4ecf72c2d23ed83fba9",
+  "preparedSource": "69f0b4059c2b88e61807d5acdfd1a35d51d25fde",
+  "protectedMain": "3af768dacd95c1223975c62da3ce8088bed89b47",
+  "protectedPrerequisitesMerged": [
+    616,
+    618
+  ],
+  "protectedJournalTreeEqualsApprovedSource": true,
+  "preparedProtectedMergeTreeUnchanged": true,
+  "protectedRequirementRecordsExact": 142,
+  "combinedRequirements": 143,
+  "additionalRequirement": "UX-WELCOME-001",
+  "uiE2eDependenciesExactExecutionSource": "ffa52950bc6157de4f1cd672742bdf97428b2a61",
+  "backendSchemaOpsModelsMobileExactProtectedMain": true,
+  "migrationManifestCount": 221,
+  "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "validation": {
+    "freshInventory": "PASS",
+    "freshTraceability": "PASS",
+    "freshMaterialSourceAdmission": 12,
+    "generatedApiClients": 2,
+    "strictCatalogCandidates": 1330,
+    "strictCatalogUnreviewed": 0,
+    "catalogDecisionsExactProtectedMain": true,
+    "derivedCsvChangedRows": 65,
+    "derivedCsvChangedFields": [
+      "consumerCount"
+    ],
+    "priorLocalUnitTests": {
+      "passed": 213,
+      "suites": 21,
+      "source": "ffa52950bc6157de4f1cd672742bdf97428b2a61",
+      "note": "Existing execution; no rerun or relabel. UI/e2e/dependency source hashes unchanged."
+    },
+    "priorNativeWelcomePrivacyActivation": "reports/welcome-logout-integration-2026-10-26.json",
+    "realPublicRecordsDestination": "reports/welcome-public-destinations-2026-10-26.json",
+    "wholeSystemConformance": "PARTIAL/UNPROVEN; scoped evidence is not whole-program proof"
+  },
+  "releaseState": {
+    "implemented": true,
+    "sourceAndLocalRuntimeQualifiedAsScoped": true,
+    "freshHostedCi": "Required on final published head",
+    "freshIndependentReview": "Required on final published head; d819 approval does not transfer",
+    "merged619": false,
+    "deployed619": false,
+    "verified619InProduction": false
+  },
+  "humanParticipants": 0,
+  "productionWrites": false,
+  "conversionImprovement": null,
+  "contentRemaining": [
+    "Authoritatively identified host portrait",
+    "Authorized studio gallery/teaching videos/interior plan or VR",
+    "Human comprehension and measured activation outcomes"
+  ],
+  "artifactRule": "Final PR head is the containing commit of this report. Reports-only additions do not create a new UI/native execution; hosted checks and approval must bind the actual final head."
+}

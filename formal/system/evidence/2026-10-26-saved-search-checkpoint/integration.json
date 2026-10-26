@@ -234,5 +234,14 @@
     "tdf-hq/sql/2026-10-25_ledger_posted_header.sql": "63e84df8458ee3bf522fc4ce0c8bfa355d9e2b1236ccd2bee31437af23a3ad70"
   },
   "scope": "Only byte-identical SQL, harness and backend inputs admit native results. Fan-club frontend/specification inherited separately. Full current-head HTTP/CI remains required.",
-  "productionOperations": false
+  "productionOperations": false,
+  "additionalMainParent": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "backendInputPaths": [
+    "tdf-hq/src",
+    "tdf-hq/test",
+    "tdf-hq/tdf-hq.cabal",
+    "tdf-hq/stack.yaml",
+    "tdf-hq/stack.yaml.lock"
+  ],
+  "backendDiff": "empty"
 }
