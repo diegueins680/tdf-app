@@ -358,6 +358,7 @@ const en = {
       paymentFailed: 'Payment failed',
       paymentUnclear: 'Payment status unclear. Please contact support.',
       unavailable: 'Payment is unavailable right now. No tickets were reserved. Please try again later.',
+      cardUnavailable: 'Card payments are temporarily unavailable. Please try again later.',
       paymentIntent: 'Failed to create payment intent',
       unexpected: 'An unexpected error occurred',
       termsRequired: 'Accept the ticket terms and refund policy to continue.',

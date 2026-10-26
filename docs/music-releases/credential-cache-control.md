@@ -46,3 +46,12 @@ rewrite, but removing the boundary restores the cache-instruction gap and
 therefore needs an explicit release-risk decision. Previously issued grants
 remain subject to their original authorization/expiry bounds; this change does
 not purge caches or revoke object credentials.
+
+Integration refresh: the source checkpoint `2a90e5d38817833bcfb54fda7ffe68e9d57263d3`
+is normally merged with protected main
+`9b7aa4648d4158f6da84fbb5e794267cd4953177`. All 146 current main requirement
+objects are preserved, with one new scoped requirement (147 total). All eight
+qualified implementation/test fingerprints and the public API source remain
+unchanged. The 42-example result retains its original execution context; the
+current full application/HTTP and release gates remain pending. The complete
+1339-decision file and 222-entry migration manifest retain current main bytes.

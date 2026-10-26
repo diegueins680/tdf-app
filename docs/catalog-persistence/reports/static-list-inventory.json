@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T19:00:56.500Z",
+  "generatedAt": "2026-10-26T19:09:05.728Z",
   "repositoryRoot": ".",
   "filesScanned": 2401,
   "candidateCount": 1339,
@@ -5570,7 +5570,7 @@
       "lines": [
         84
       ],
-      "consumerCount": 323,
+      "consumerCount": 324,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -12810,7 +12810,7 @@
       "lines": [
         214
       ],
-      "consumerCount": 268,
+      "consumerCount": 269,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -12893,6 +12893,7 @@
         "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/ReactionBar.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/TopBar.tsx",
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
@@ -12912,8 +12913,7 @@
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
         "tdf-hq-ui/src/features/interactions/AccountControls.tsx",
         "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx",
-        "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
-        "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx"
+        "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/merch.tsx",
@@ -12987,6 +12987,7 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/trials.ts",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
@@ -19570,7 +19571,7 @@
       "lines": [
         142
       ],
-      "consumerCount": 72,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -19610,6 +19611,7 @@
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/Server/MerchReputation.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerFanClub.hs",
         "tdf-hq/src/TDF/Services/RecordsIngestion.hs",
         "tdf-hq/test/EventOperationsHttpMain.hs",
@@ -19620,8 +19622,7 @@
         "tdf-hq/test/integration/interactions/entity-properties.sql",
         "tdf-hq/test/integration/interactions/moderation-properties.sql",
         "tdf-hq/test/integration/interactions/navigation-properties.sql",
-        "tdf-hq/test/integration/interactions/notification-properties.sql",
-        "tdf-hq/test/integration/interactions/report-content-migration.sql"
+        "tdf-hq/test/integration/interactions/notification-properties.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/errorMessage.ts",
@@ -28417,7 +28418,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 286,
+      "consumerCount": 287,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -28502,6 +28503,7 @@
         "tdf-hq-ui/src/components/ReactionBar.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/TopBar.tsx",
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
@@ -28519,8 +28521,7 @@
         "tdf-hq-ui/src/components/reputation/PublicReputationSummary.tsx",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
         "tdf-hq-ui/src/features/interactions/AccountControls.tsx",
-        "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx",
-        "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx"
+        "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/merch.tsx",
@@ -28596,6 +28597,7 @@
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/trials.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
@@ -31760,7 +31762,7 @@
       "lines": [
         59
       ],
-      "consumerCount": 44,
+      "consumerCount": 45,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/src/TDF/API/Marketplace.hs",
@@ -31773,6 +31775,7 @@
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/Server/MerchReputation.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
         "tdf-hq/test/TDF/ServerExtraSpec.hs"
       ],
@@ -48013,7 +48016,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 317,
+      "consumerCount": 318,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -48104,6 +48107,7 @@
         "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/ReactionBar.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/TopBar.tsx",
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
@@ -48115,8 +48119,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
-        "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
-        "tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.tsx"
+        "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/merch.tsx",
@@ -48196,6 +48199,7 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/trials.ts",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/utils/instagramTraffic.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
@@ -49635,7 +49639,7 @@
       "lines": [
         4441
       ],
-      "consumerCount": 317,
+      "consumerCount": 318,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -49726,6 +49730,7 @@
         "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/ReactionBar.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/TopBar.tsx",
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
@@ -49737,8 +49742,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
-        "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
-        "tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.tsx"
+        "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/merch.tsx",
@@ -49818,6 +49822,7 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/trials.ts",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/utils/instagramTraffic.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
@@ -59548,7 +59553,7 @@
         198,
         213
       ],
-      "consumerCount": 298,
+      "consumerCount": 299,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -59636,6 +59641,7 @@
         "tdf-hq-ui/src/api/session.ts",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
@@ -59650,8 +59656,7 @@
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
         "tdf-hq-ui/src/pages/LoginPage.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx"
+        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/auth.tsx",
@@ -59750,6 +59755,7 @@
         "tdf-hq-ui/src/api/session.test.ts",
         "tdf-hq-ui/src/api/session.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
