@@ -84,4 +84,28 @@ publication captures event, actor, mode, query key and owner predicate in mutati
 variables. Recheck before upload/create and after asynchronous results; an old
 response cannot restore its caption over a new draft. A→B→A does not revive the
 old session occurrence. Key event content by route event to retire the previous
-editor. Native audio/text and physical-device acceptance remain unavailable.
+editor. That pinned client does not include native audio/text; physical-device acceptance remains unverified.
+
+
+## Canonical community entry
+
+The canonical social event URL first waits for session bootstrap. Anonymous
+visitors use the existing public Directory event page and its server-authorized
+public projections. Verified signed-in visitors retain the existing Shell and
+workspace. Explicit compose, moment or task intent requires authentication and
+retains its complete internal return target. A public401/403/404 uses the same
+login fallback for private and unavailable events; it reveals no private source.
+Transient failures offer explicit retry. The publication CTA retains query
+attribution and requests compose without granting consent or other authority.
+This entry does not make the authenticated moment endpoint public.
+
+Native image/video confirmation above describes the pinned7000 client. Separate
+#172/#173/#174 add text/audio and author actions with their own immutable receipts;
+they are not active merely because the root still pins7000. Physical-device and
+store acceptance remain separately unverified.
+
+Canonical event signup and discussion-login links retain their complete internal
+event target, including query attribution and the selected anchor. The legacy
+`/eventos/:id` alias keeps its existing sanitizer, which strips query and hash
+from authentication return targets. These navigation
+links neither perform an interaction nor grant notification consent.

@@ -57,15 +57,66 @@ try {
     if (url.origin === config.api && (url.pathname.includes('/commands') || url.pathname.endsWith('/moments') || url.pathname === '/login'))
       result.sourceApiResponses.push({ method: response.request().method(), path: url.pathname, status: response.status() });
   });
-  const destination = `/social/eventos/${config.eventId}?compose=1#momentos`;
+  const guestDestination = `/social/eventos/${config.eventId}?utm_source=synthetic-invitation#momentos`;
+  const destination = `/social/eventos/${config.eventId}?utm_source=synthetic-invitation&compose=1#momentos`;
+  const publicResponse = await contexts[0].request.get(`${config.api}/directory/events/${config.eventId}`);
+  expect(publicResponse.status()).toBe(200);
+  const publicEvent = await publicResponse.json();
+  expect(String(publicEvent.id)).toBe(config.eventId);
+  expect(publicEvent.workflowStateCode).toBe('completed');
+  expect(typeof publicEvent.title).toBe('string');
+  result.publicEntry = { publicSnapshotStatus: publicResponse.status(), completed: true, injectedNetworkFailures: 0, protectedGuestMomentReads: 0 };
+  const privateDestination = '/social/eventos/919143002?utm_source=synthetic-private-invitation#momentos';
+  await pages[0].goto(origin + privateDestination, { waitUntil: 'domcontentloaded' });
+  await expect(pages[0].locator('input[autocomplete="username"]')).toBeVisible({ timeout: 30000 });
+  expect(new URL(pages[0].url()).searchParams.get('redirect')).toBe(privateDestination);
+  await expect(pages[0].getByRole('combobox', { name: 'Tipo de recuerdo' })).toHaveCount(0);
+  result.assertions.push('Unavailable public metadata retains private-event authentication and the exact original target');
   for (const [index, page] of pages.entries()) {
-    await page.goto(`${origin}/login?redirect=${encodeURIComponent(destination)}`, { waitUntil: 'domcontentloaded' });
+    const guestReads = (request) => {
+      const url = new URL(request.url());
+      if (url.origin === config.api && url.pathname === `/social-events/events/${config.eventId}/moments`) result.publicEntry.protectedGuestMomentReads += 1;
+    };
+    page.on('request', guestReads);
+    if (index === 0) await page.route(`${config.api}/directory/events/${config.eventId}`, async (route) => {
+      if (result.publicEntry.injectedNetworkFailures === 0) {
+        result.publicEntry.injectedNetworkFailures += 1;
+        return route.abort('internetdisconnected');
+      }
+      return route.continue();
+    });
+    await page.goto(origin + guestDestination, { waitUntil: 'domcontentloaded' });
+    if (index === 0) {
+      await expect(page.getByRole('button', { name: 'Reintentar', exact: true })).toBeVisible({ timeout: 30000 });
+      await expect(page).toHaveURL(origin + guestDestination);
+      await expect(page.locator('input[autocomplete="username"]')).toHaveCount(0);
+      await page.getByRole('button', { name: 'Reintentar', exact: true }).click();
+    }
+    await expect(page.getByRole('heading', { name: publicEvent.title, exact: true })).toBeVisible({ timeout: 30000 });
+    await expect(page).toHaveURL(origin + guestDestination);
+    await expect(page.locator('input[autocomplete="username"]')).toHaveCount(0);
+    const signupLinks = page.locator('a[href*="signup=1"]');
+    expect(await signupLinks.count()).toBeGreaterThan(0);
+    for (const link of await signupLinks.all()) {
+      const signup = new URL(await link.getAttribute('href'), origin);
+      expect(signup.searchParams.get('redirect')).toBe(guestDestination);
+    }
+    expect(result.publicEntry.protectedGuestMomentReads).toBe(0);
+    page.off('request', guestReads);
+    await page.getByRole('link', { name: 'Compartir mis momentos', exact: true }).scrollIntoViewIfNeeded();
+    if (index === 1) await page.screenshot({ path: path.join(output, 'source-public-entry-phone.png'), fullPage: true });
+    await page.getByRole('link', { name: 'Compartir mis momentos', exact: true }).click();
+    await expect(page.locator('input[autocomplete="username"]')).toBeVisible({ timeout: 30000 });
+    expect(new URL(page.url()).searchParams.get('redirect')).toBe(destination);
     await page.locator('input[autocomplete="username"]').fill(config.accounts[index].email);
     await page.locator('input[autocomplete="current-password"]').fill(config.accounts[index].password);
     await page.locator('button[type="submit"]').first().click();
     await expect(page).toHaveURL(new URL(destination, origin).href, { timeout: 30000 });
     await expect(page.getByRole('combobox', { name: 'Tipo de recuerdo' })).toBeVisible({ timeout: 30000 });
   }
+  expect(result.publicEntry.injectedNetworkFailures).toBe(1);
+  result.assertions.push('Anonymous desktop/phone render completed-event metadata without private moment reads; explicit publication retains attribution through login');
+  result.assertions.push('One injected metadata network failure remains on the public event; explicit retry receives real metadata');
   result.assertions.push('Two real isolated sessions sign in and retain event/composer context');
   const [owner, participant] = pages; const caption = 'Prueba sintética de revisión y restauración';
   const card = (page) => page.getByRole('region', { name: /^Publicación de / }).filter({ hasText: caption });

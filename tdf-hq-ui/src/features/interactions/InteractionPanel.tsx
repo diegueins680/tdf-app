@@ -4,7 +4,8 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { Alert, Avatar, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle,
   IconButton, Link, Menu, MenuItem, Select, Stack, TextField, Typography } from '@mui/material';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { buildLoginRedirectPath } from '../../utils/loginRouting';
 import { ApiError } from '../../api/client';
 import { Interactions } from '../../api/interactions';
 import type { InteractionCommand, InteractionComment, InteractionCommentContext, InteractionIdentity, InteractionPage, InteractionSort, InteractionSummary } from '../../api/interactions';
@@ -188,6 +189,8 @@ export function InteractionPanel(props: PanelProps) {
   return <div ref={container}><InteractionPanelContent {...props} active={active} /></div>;
 }
 function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExpanded = false, beforeActivation, active }: PanelProps & { active: boolean }) {
+  const location = useLocation();
+  const loginPath = buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`);
   const { session } = useSession(); const authenticated = Boolean(session); const scope = session ? `account:${session.partyId ?? session.username}` : 'anonymous';
   const identity = { kind, entityKey }; const client = useQueryClient(); const sectionId = useId();
   const discussionToggle = useRef<HTMLButtonElement>(null);
@@ -258,7 +261,7 @@ function InteractionPanelContent({ kind, entityKey, focusCommentId, initiallyExp
       </Stack>
       {(data.canManage || data.canModerate) && <DiscussionControls summary={data} scope={scope} run={run} />}
       {authenticated && <AccountControls scope={scope} canModerate={data.canModerate} />}
-      {!authenticated && <Typography><Link component={RouterLink} to="/login">Inicia sesión</Link> para participar.</Typography>}
+      {!authenticated && <Typography><Link component={RouterLink} to={loginPath}>Inicia sesión</Link> para participar.</Typography>}
       {data.commentPolicy === 'off' ? <Typography>Los comentarios están desactivados.</Typography> : !data.canComment && authenticated ? <Typography>No tienes permiso para comentar en esta publicación.</Typography> : null}
       {data.canComment && <CommentComposer targetId={data.id} onSave={(body, mentions, requestKey) => run({ operation: 'comment.create', body, mentions }, requestKey)} />}
       {context.isError && <Alert severity="info">El comentario enlazado ya no está disponible.</Alert>}

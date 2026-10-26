@@ -29,6 +29,7 @@ import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-rout
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
+import { ApiError } from '../api/client';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import {
   buildDirectoryContactLoginPath,
@@ -62,7 +63,7 @@ const formatEventDate = (value: unknown, locale: string, timezone?: string): str
     return parsed.toLocaleString(locale, { dateStyle: 'full', timeStyle: 'short' });
   }
 };
-export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }) {
+export default function DirectoryPublicDetailPage({ kind, authenticationFallback }: { kind: DetailKind; authenticationFallback?: string }) {
   const params = useParams();
   const location = useLocation();
   const { session } = useSession();
@@ -79,6 +80,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
       return await Directory.venue(identifier) as unknown as Record<string, unknown>;
     },
     enabled: Boolean(identifier),
+    ...(authenticationFallback ? { retry: false } : {}),
   });
   const value = detail.data ?? {};
   const displayLocale = navigator.language || 'es';
@@ -153,7 +155,19 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${title} · ${canonical}`)}`;
 
   if (detail.isLoading) return <Stack minHeight="55vh" alignItems="center" justifyContent="center"><CircularProgress aria-label="Cargando perfil del directorio" /></Stack>;
-  if (detail.isError) return <Container maxWidth="md" sx={{ py: 8 }}><Alert severity="error">Este contenido no está publicado, vigente o disponible.</Alert></Container>;
+  if (detail.isError) {
+    const status = detail.error instanceof ApiError ? detail.error.status : undefined;
+    if (authenticationFallback && (status === 401 || status === 403 || status === 404)) {
+      return <Navigate to={authenticationFallback} replace />;
+    }
+    return <Container maxWidth="md" sx={{ py: 8 }}>
+      <Alert severity="error">Este contenido no está publicado, vigente o disponible.</Alert>
+      {authenticationFallback && <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+        <Button onClick={() => { void detail.refetch(); }} disabled={detail.isFetching}>Reintentar</Button>
+        <Button component={RouterLink} to={authenticationFallback}>Iniciar sesión</Button>
+      </Stack>}
+    </Container>;
+  }
 
   // Moment media uses the existing authenticated event endpoint. Preserve old
   // public discussion URLs while sending them through the normal login route.
@@ -161,6 +175,10 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   if (kind === 'event' && requestedMoment && /^[1-9][0-9]{0,17}$/.test(requestedMoment)) {
     return <Navigate replace to={`/social/eventos/${encodeURIComponent(identifier)}?moment=${requestedMoment}`} />;
   }
+
+  const composeSearch = new URLSearchParams(location.search);
+  composeSearch.set('compose', '1');
+  const composePath = `/social/eventos/${encodeURIComponent(identifier)}?${composeSearch.toString()}#momentos`;
 
   const locationValue = record(value['location']) ?? rows(value['locations'])[0];
   const professions = rows(value['professions']);
@@ -266,7 +284,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                   <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
                     <Typography variant="h5" fontWeight={800}>Recuerdos y comunidad</Typography>
                     <Typography color="text.secondary" mt={1}>Encuentra los momentos del evento y comparte tu experiencia. Inicia sesión o crea una cuenta para participar.</Typography>
-                    <Button component={RouterLink} to={`/social/eventos/${encodeURIComponent(identifier)}?compose=1#momentos`} variant="contained" sx={{ mt: 2 }}>Compartir mis momentos</Button>
+                    <Button component={RouterLink} to={composePath} variant="contained" sx={{ mt: 2 }}>Compartir mis momentos</Button>
                   </Paper>
                   <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
                     <Typography variant="h5" fontWeight={800}>Entradas del evento</Typography>

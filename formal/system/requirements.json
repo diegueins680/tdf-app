@@ -12359,7 +12359,12 @@
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
         "tdf-mobile/app/eventDetail.tsx",
-        "tdf-mobile/src/api/events.ts"
+        "tdf-mobile/src/api/events.ts",
+        "tdf-hq-ui/src/routes/EventCommunityEntry.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx"
       ],
       "tests": [
         "tdf-hq/test/Spec.hs",
@@ -12371,7 +12376,11 @@
         "tdf-mobile/__tests__/eventMomentsRepository.test.ts",
         "e2e/web/event-memories.spec.mjs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-        "scripts/test-event-memories-http.py"
+        "scripts/test-event-memories-http.py",
+        "tdf-hq-ui/src/routes/EventCommunityEntry.test.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx"
       ],
       "formalModels": [],
       "verification": "Parser/signature/author-boundary tests, HTTP and browser journeys must be independently executed; no blanket completion claim."

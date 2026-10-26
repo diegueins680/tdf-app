@@ -19319,6 +19319,25 @@
           "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
         }
       ]
+    },
+    {
+      "id": "46515447e1de3fdd20c9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Treating a mocked public-event DTO as live lifecycle or permission authority would misrepresent the test; this value is confined to the test module.",
+      "justification": "Synthetic Directory event response fixture fields exercise public entry, private/unavailable metadata fallback and explicit retry. They are a mocked DTO shape, not selectable event types, live workflow state, permission rules or recipient consent. Runtime authority remains the existing server projection and authenticated workspace.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-technical-review",
+      "reviewBatch": "event-memory-public-entry-20261026",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "line": 311,
+        "kind": "object-registry",
+        "name": "event",
+        "valueCount": 9
+      }
     }
   ]
 }
