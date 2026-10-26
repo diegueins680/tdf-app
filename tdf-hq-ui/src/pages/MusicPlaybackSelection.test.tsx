@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { LoadPlayerTrackDetail } from '../player/types';
@@ -84,7 +84,7 @@ it('selects library favorites without authorizing every queued rendition first',
   mount('/musica/biblioteca');
   const button = await screen.findByRole('button', { name: 'Reproducir favoritos' });
   // The enabled state reflects the loaded library snapshot.
-  await act(async () => undefined);
+  await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(button);
   expect(events).toHaveLength(1);
   expect(events[0]?.track.id).toBe('first');

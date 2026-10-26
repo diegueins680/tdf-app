@@ -1,8 +1,11 @@
 # Authorized recording-title search
 
 Baseline: protected main `5114fe95ac8e328b58162a8dcae5c9015a47ce09`.
-Scope: a focused continuation of universal audio P1, separate from playback PR
-#620. This change does not establish complete universal search or deployment.
+Scope: a focused continuation of universal audio P1, originally prepared
+separately from playback PR #620. Recording search is now combined with catalog
+pagination on the playback candidate; see
+[the discovery delivery increment](catalog-discovery-delivery-2026-10-25.md).
+This change does not establish complete universal search or deployment.
 
 ## User-visible behavior and authorization
 
@@ -78,7 +81,8 @@ The corrected source passed four runtime groups:
 
 The final runtime run on October 26 UTC / October 25 Ecuador passed on the
 owned PostgreSQL 16 cluster at loopback port 55571. Its disposable database was
-removed and the cluster stopped. Source identities:
+removed and the cluster stopped. Original search-run source identities
+(historical; the combined paginated catalog page has subsequently changed):
 
 | File | SHA-256 |
 |---|---|
@@ -105,9 +109,10 @@ proof and not a completed universal audio catalog. Baseline failure and final
 runtime logs are retained locally as `/private/tmp/tdf-audio-search-baseline.log`
 and `/private/tmp/tdf-audio-search-candidate.log`.
 
+Frontend catalog pagination is now integrated in the combined P1 candidate.
 Universal `/buscar` projection, typo tolerance, credits/genre/aliases search,
-track-level result cards, frontend catalog pagination, historical ingestion and
-non-release audio contexts remain separate work. This increment adds no query
+track-level result cards, historical ingestion and non-release audio contexts
+remain separate work. This increment adds no query
 ranking model; existing chronological ordering is preserved. Index changes
 require representative `EXPLAIN` and latency evidence before being justified.
 

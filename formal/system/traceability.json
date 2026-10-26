@@ -11850,6 +11850,93 @@
         "classification": "PARTIAL",
         "reason": "Navigation implementation and local validation; independent review, hosted checks and production publication remain separate gates."
       }
+    },
+    {
+      "id": "MEDIA-MUSIC-DISCOVERY-001",
+      "title": "Authorized recording-title search and paginated public release discovery",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "The public music release catalog searches canonical recording titles only through a currently authorized stream or preview asset for that recording and release version, while retaining existing release/artist matching, public visibility, artist filters and stable release identity. Web listeners can navigate beyond the first 24 authorized release cards; search and page URL state remain consistent and obsolete query responses cannot replace current results.",
+      "authority": "Explicit user universal audio implementation directive, 2026-10-25, sections 9, 13, 17 and P1; independent release review remains required.",
+      "source": "docs/music-releases/catalog-track-search.md; docs/music-releases/catalog-discovery-delivery-2026-10-25.md",
+      "contract": "formal/system/music-catalog-discovery.md",
+      "property": "A recording-title search match implies a same-recording/version stream or preview satisfying music_public_asset_accessible at query time; EXISTS preserves release row identity. With a stable result set, page p shows at most 24 rows at offset (p-1)*24 and uses one authorized sentinel row for next-page availability; older query results cannot replace the current query.",
+      "actors": [
+        "Public listener",
+        "Signed-in listener",
+        "Backend public release query"
+      ],
+      "preconditions": [
+        "The existing public music feature gate and trusted edge-territory derivation apply.",
+        "Existing music public views, delivery authorization predicates and directory_normalize_text are deployed.",
+        "Cross-page coverage assumes the authorized result set does not change between offset requests."
+      ],
+      "inputs": [
+        "Search text, optional artist party ID, limit and offset, trusted edge territory",
+        "URL q/page parameters and pagination/search/retry actions",
+        "Authorized public release summaries and asynchronous query outcomes"
+      ],
+      "state": {
+        "boundary": "Public release retrieval and MusicCatalogPage query/page state",
+        "database": "Existing published release view, release tracks, canonical recordings, assets and availability/rights predicates",
+        "client": "Deferred query/page pair, query-key-specific pending/result/error state, URL navigation history"
+      },
+      "allowedTransitions": [
+        "Change search -> reset to page one -> request current deferred query/page",
+        "Request success -> display up to 24 unique release cards; authorized row 25 enables next page",
+        "Page selection -> update URL page while retaining query; browser back -> restore prior URL state",
+        "Request failure -> explicit retry or previous-page navigation; superseded result -> remain outside current query view"
+      ],
+      "forbiddenTransitions": [
+        "A hidden recording title makes an otherwise visible release match without a currently authorized same-recording/version delivery asset.",
+        "Matching multiple renditions duplicates the release SQL result row.",
+        "An empty normalized query becomes a match-all wildcard for a nonempty unrelated raw query.",
+        "An obsolete query response replaces visible results for the current query.",
+        "Advancing by 25 skips the sentinel release that should be the next page first row."
+      ],
+      "effects": [
+        "Read-only release-level search results using stable published_at DESC/id ordering",
+        "URL-backed catalog navigation, bounded visible rows, loading/error/empty feedback and retry controls"
+      ],
+      "authorization": "Retain requirePublicFeature, trusted edge territory, music_public_release and existing availability rules; the added canonical recording-title branch requires music_public_asset_accessible for the matched recording/version. Playback still independently authorizes the selected asset.",
+      "privacy": "Introduce no matched-track metadata, media credentials or new response fields. The new recording-title branch cannot use an unauthorized hidden track as a search signal; this is not a fresh proof of every existing public metadata or cache policy.",
+      "concurrency": "Query/page are deferred together; request cancellation and query-key identity reject obsolete results. Offset pagination has no snapshot guarantee during concurrent publication, withdrawal or rights changes.",
+      "idempotency": "Search and page requests are read-only; repeating a request against an unchanged authorized catalog returns the same ordered release identities.",
+      "failure": "Failed requests expose retry and disable next-page navigation using stale success data. Empty later pages retain the previous-page action. Invalid page values fall back to page one and invalid client limit/offset arguments are rejected.",
+      "recovery": "Retry the current authorized request or navigate to a previous page. Application-source rollback requires no schema or asset mutation.",
+      "observability": "Focused PostgreSQL runtime groups and authorization mutation control, rendered page regressions, API-client contracts and dedicated backend CI invocation; operational search latency and production release evidence remain separate.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        ".github/workflows/ci.yml"
+      ],
+      "interactions": [
+        "MEDIA-MUSIC-RELEASE-001",
+        "MEDIA-MUSIC-ASSET-001",
+        "MEDIA-MUSIC-PLAYER-001"
+      ],
+      "tests": [
+        "scripts/test-music-catalog-search.mjs",
+        "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
+        "e2e/web/music-catalog-discovery.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Deterministic PostgreSQL integration/security controls execute the actual handler SQL literal and authoritative predicates, including a deliberate missing-authorization mutant. Component/API contracts exercise pagination and stale responses. These tests do not execute compiled HTTP routing or prove Haskell parameter ordering; no mathematical proof or formal model is claimed.",
+      "evidence": "Original SQL baseline/candidate runs and source identities in docs/music-releases/catalog-track-search.md; exact combined-candidate tests, hosted CI, independent review and release receipts remain separate.",
+      "status": "specified and implemented",
+      "confidence": "Scoped finite SQL and client contract evidence; no whole-platform catalog completeness or target-environment acceptance claim.",
+      "ambiguity": [
+        "The SQL extractor substitutes its own parameter list; compiled Haskell binding and HTTP-route integration require separate verification.",
+        "Offset pagination can miss or repeat rows across requests when the catalog changes; no snapshot cursor is implemented.",
+        "Universal /buscar, typo tolerance, richer credits/genre/aliases, non-release sources and historical reconciliation remain incomplete.",
+        "Representative-catalog query plans, p95 latency, physical assistive technology and production deployment remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused authorized recording search and release pagination are implemented with finite SQL/security/client regression coverage. Full HTTP binding, current candidate hosted checks, independent review and deployed acceptance remain separate obligations; no mathematical proof or universal catalog completion is established."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -11857,7 +11944,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "7b0623e449d35d5fdf1d20743149d048497b16db9f1b9ba17845cface4a346f2",
+    ".github/workflows/ci.yml": "8eb5cbab123f4ae31c196f4b4f5d22b2d8d027db7613dcfa702889bdefd23343",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -11881,6 +11968,7 @@
     "e2e/web/marketplace-cart.spec.mjs": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385",
     "e2e/web/mobile-layout-regressions.spec.mjs": "db3505fa7e16300fac202d80cca9957d8208eb067b8f2c6c53f0e08f547411fc",
     "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
+    "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
     "e2e/web/music-player-native.spec.mjs": "c30ef37d2013401f3baffede88298930fa0795fb277d06c9167d3c9747fb55a0",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
@@ -12376,6 +12464,7 @@
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
     "scripts/test-meta-redelivery.sh": "ede4ee564fb1ff86e4d4da13342ab56eca7b382e411abc41eea4d7bce247616a",
+    "scripts/test-music-catalog-search.mjs": "070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2",
     "scripts/test-music-correction-concurrency.mjs": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
     "scripts/test-music-ddex-credits.sh": "220bdee67ca10d4257ba488de067617e244479d7e30143e5eceafe4d3a0d7a71",
     "scripts/test-music-ddex-package.mjs": "b27e141ea3cb945aa4c1e4ec425f75b6da6c02bf0d662b735a7040795ead5b74",
@@ -12507,7 +12596,8 @@
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
     "tdf-hq-ui/src/api/invoices.ts": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
     "tdf-hq-ui/src/api/musicReleases.money.test.ts": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
-    "tdf-hq-ui/src/api/musicReleases.ts": "150f499252556c86539bbbd5ec5aed68ff2c7031e5e2a6540d59fc87ecb9b917",
+    "tdf-hq-ui/src/api/musicReleases.pagination.test.ts": "e1b83d693a268efebd2121a899cf6fa422d39994895425abddb68054056b652e",
+    "tdf-hq-ui/src/api/musicReleases.ts": "6c1ae9c62c2c4cdb51ba8e94bc5086d3c54e6a2cfd323c14da1d7d74f3c6ca6e",
     "tdf-hq-ui/src/api/musicReleases.upload.test.ts": "e5a48b23eb9974f54078b4095084a8f2419d193742aba76aee3f798fa85ed695",
     "tdf-hq-ui/src/api/musicStorageResponse.test.ts": "4d173a68d03907dd1106b079b472a92d6212b2938e8421b360cb78a315797b8f",
     "tdf-hq-ui/src/api/musicStorageResponse.ts": "8f48adb2834adc89083f4ef643dde01dcfae051815f42121ac21bb1e6e233e78",
@@ -12649,9 +12739,10 @@
     "tdf-hq-ui/src/pages/MarketplacePage.tsx": "b129902039b0dca4eba1ed7077c2a61d7909da0a02bcb4eca2c35650c07cd102",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
     "tdf-hq-ui/src/pages/MobileAppPage.tsx": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
-    "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
+    "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
+    "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "7b4d424b566195ca074af95148cf3fd63a194bbb5ceaba0798d12deccedf4784",
     "tdf-hq-ui/src/pages/MusicLibraryPage.tsx": "128ba43306d3634403c1ffde27924ad7b15a28367788432c7731cebb60a927b0",
-    "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx": "ec29c19087e351215488e2192c3a635a9ee5be2a76fa85ce73a7aa6bd2268fab",
+    "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx": "9a38d743806d57f1ed655cfe93a2db264c21dd0672db93afbc06c422e4b8698d",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx": "82bb2a837450ba66c5139d899fe44023c79ed3972657f2343929c82861e31ff7",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "3f9928ccb9c7691f0415c16c2294fedad13aee3d2e19d4a9e3cdf0d6d7c2918a",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "4dd4547567f2eeb1945a623bfeb3c57e36b78df60e2808410f7475a7005125fe",
@@ -12920,7 +13011,7 @@
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "752c46c93d45ae82b5fce380a9616764a5bb2d97858f0b56a09285ef19b8dfaf",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
-    "tdf-hq/src/TDF/Server/MusicRelease.hs": "5570d29e8f02f39e838b7e94a650551f177add4f6e67389c92defdf35b067f35",
+    "tdf-hq/src/TDF/Server/MusicRelease.hs": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
     "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs": "e0742f56e34371946ef5ffd5ca814c768332e85be2d8c27701c5727bb9a9fc76",
     "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs": "2c848527dfcff004e724d1c32ce61ecc1b7279a996de43195b348de088e324f2",
     "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "44cc676fab692ead582f71d854211c29accd5ff61a3553ac16d9700f49caa49c",
@@ -14139,6 +14230,10 @@
       },
       {
         "requirement": "DEPLOY-VERSION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -19978,6 +20073,10 @@
       {
         "requirement": "PAY-MUSIC-MONEY-WIRE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs": [
@@ -19997,6 +20096,10 @@
       },
       {
         "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -20969,6 +21072,10 @@
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -23147,6 +23254,30 @@
         "requirement": "NAV-MENU-COVERAGE-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/test-music-catalog-search.mjs": [
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/musicReleases.pagination.test.ts": [
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/music-catalog-discovery.spec.mjs": [
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -23215,7 +23346,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7b0623e449d35d5fdf1d20743149d048497b16db9f1b9ba17845cface4a346f2",
+      "sha256": "8eb5cbab123f4ae31c196f4b4f5d22b2d8d027db7613dcfa702889bdefd23343",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23260,6 +23391,10 @@
         },
         {
           "requirement": "DEPLOY-VERSION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -23629,6 +23764,18 @@
       "requirements": [
         {
           "requirement": "MOB-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6910fe6162437c91",
+      "path": "e2e/web/music-catalog-discovery.spec.mjs",
+      "sha256": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "tests"
         }
       ]
@@ -28240,6 +28387,18 @@
       ]
     },
     {
+      "id": "SURFACE-cb78d4325e1fc93d",
+      "path": "scripts/test-music-catalog-search.mjs",
+      "sha256": "070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d8aeda8890026d82",
       "path": "scripts/test-music-correction-concurrency.mjs",
       "sha256": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
@@ -30806,9 +30965,21 @@
       ]
     },
     {
+      "id": "SURFACE-48d8b51a42b47771",
+      "path": "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
+      "sha256": "e1b83d693a268efebd2121a899cf6fa422d39994895425abddb68054056b652e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-111a69931c7b0da3",
       "path": "tdf-hq-ui/src/api/musicReleases.ts",
-      "sha256": "150f499252556c86539bbbd5ec5aed68ff2c7031e5e2a6540d59fc87ecb9b917",
+      "sha256": "6c1ae9c62c2c4cdb51ba8e94bc5086d3c54e6a2cfd323c14da1d7d74f3c6ca6e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30817,6 +30988,10 @@
         },
         {
           "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -34810,13 +34985,29 @@
       ]
     },
     {
+      "id": "SURFACE-eb82e4705c1d2848",
+      "path": "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
+      "sha256": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5f2964f5ab118818",
       "path": "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
-      "sha256": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
+      "sha256": "7b4d424b566195ca074af95148cf3fd63a194bbb5ceaba0798d12deccedf4784",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -34843,7 +35034,7 @@
     {
       "id": "SURFACE-64dc8940afb0c1b4",
       "path": "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
-      "sha256": "ec29c19087e351215488e2192c3a635a9ee5be2a76fa85ce73a7aa6bd2268fab",
+      "sha256": "9a38d743806d57f1ed655cfe93a2db264c21dd0672db93afbc06c422e4b8698d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42941,7 +43132,7 @@
     {
       "id": "SURFACE-83d8f1c82facfb02",
       "path": "tdf-hq/src/TDF/Server/MusicRelease.hs",
-      "sha256": "5570d29e8f02f39e838b7e94a650551f177add4f6e67389c92defdf35b067f35",
+      "sha256": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42950,6 +43141,10 @@
         },
         {
           "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -50505,7 +50700,8 @@
     "AUTH-ENTRY-002",
     "DEPLOY-VERSION-001",
     "MEDIA-DRIVE-002",
-    "COMMUNITY-PROFILE-001"
+    "COMMUNITY-PROFILE-001",
+    "MEDIA-MUSIC-DISCOVERY-001"
   ],
   "stateMachines": [
     {
@@ -51624,7 +51820,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ec0824b8662c6263ff1f8090920be16ec8e98325197557b1595c76003b7c5b86",
+      "sourceSha256": "23fa4d1c294d7cb1373c60f31e9498b349914132054aac823ae30815e455205a",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -51652,7 +51848,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ec0824b8662c6263ff1f8090920be16ec8e98325197557b1595c76003b7c5b86",
+      "sourceSha256": "23fa4d1c294d7cb1373c60f31e9498b349914132054aac823ae30815e455205a",
       "definition": {
         "states": [
           "absent",
@@ -51682,7 +51878,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ec0824b8662c6263ff1f8090920be16ec8e98325197557b1595c76003b7c5b86",
+      "sourceSha256": "23fa4d1c294d7cb1373c60f31e9498b349914132054aac823ae30815e455205a",
       "definition": {
         "export": [
           "queued",
@@ -73958,7 +74154,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 140,
+    "PARTIAL": 141,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

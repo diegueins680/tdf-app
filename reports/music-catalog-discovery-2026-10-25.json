@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 1,
+  "scope": "Focused P1 release catalog search/pagination; universal search mission incomplete",
+  "foundation": "6e61811c6cac3da153cd47a28ad05a7b3923b7d7",
+  "baseline": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+  "combinedInitialCommit": "99ca66b07a7c9ef851d2dfb80199025b3307fc19",
+  "sourceFingerprints": {
+    "tdf-hq/src/TDF/Server/MusicRelease.hs": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
+    "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "7b4d424b566195ca074af95148cf3fd63a194bbb5ceaba0798d12deccedf4784",
+    "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
+    "tdf-hq-ui/src/api/musicReleases.ts": "6c1ae9c62c2c4cdb51ba8e94bc5086d3c54e6a2cfd323c14da1d7d74f3c6ca6e",
+    "tdf-hq-ui/src/api/musicReleases.pagination.test.ts": "e1b83d693a268efebd2121a899cf6fa422d39994895425abddb68054056b652e",
+    "scripts/test-music-catalog-search.mjs": "070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2",
+    "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84"
+  },
+  "tests": {
+    "uiApiPlayer": {
+      "passed": 66,
+      "suites": 6,
+      "log": "/private/tmp/tdf-audio-discovery-integrated-ui2.log"
+    },
+    "postgres": {
+      "groups": 4,
+      "receipt": {
+        "startedAt": "2026-10-26T03:11:35.763389+00:00",
+        "worktree": "/private/tmp/tdf-audio-pagination-20261025",
+        "candidateHead": "99ca66b07a7c9ef851d2dfb80199025b3307fc19",
+        "sourceBefore": {
+          "tdf-hq/src/TDF/Server/MusicRelease.hs": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
+          "scripts/test-music-catalog-search.mjs": "070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2"
+        },
+        "nodeVersion": "v24.13.1",
+        "psqlClientVersion": "psql (PostgreSQL) 18.2",
+        "postgresServerVersion": "16.13 (Homebrew)",
+        "command": [
+          "node",
+          "scripts/test-music-catalog-search.mjs"
+        ],
+        "ownedCluster": "/private/tmp/tdf-audio-search-pg-20261025/data",
+        "port": 55571,
+        "databaseCountBefore": 0,
+        "exitCode": 0,
+        "sourceAfter": {
+          "tdf-hq/src/TDF/Server/MusicRelease.hs": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
+          "scripts/test-music-catalog-search.mjs": "070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2"
+        },
+        "databaseCountAfter": 0,
+        "completedAt": "2026-10-26T03:11:42.017569+00:00",
+        "passGroups": [
+          "PASS: shipped SQL finds recording titles; existing release/artist behavior; accent/case/partial; publication and territory isolation",
+          "PASS: release-level deduplication, stable limit/offset pagination, artist filter, empty browsing",
+          "PASS: per-track territory isolation within visible release; deliberate missing-authorization mutant detected",
+          "PASS: literal non-Latin matching and empty-normalization isolation"
+        ],
+        "log": "/private/tmp/tdf-audio-search-integrated.log",
+        "logSha256": "38d6ca7f6de22b82ae92d2cc9b3378358f18c6bc013c5d57405fb5a4e3c15284",
+        "clusterStopped": true,
+        "sourceUnchanged": true,
+        "outcome": "PASS",
+        "clusterStatus": "pg_ctl: no server running",
+        "listenerPresent": false,
+        "cleanupVerifiedAt": "2026-10-26T03:11:51.943905+00:00"
+      }
+    },
+    "browser": {
+      "passed": 4,
+      "receipt": {
+        "kind": "real-rendered-catalog-with-synthetic-api-fixtures",
+        "sourceTest": "/private/tmp/tdf-audio-pagination-20261025/e2e/web/music-catalog-discovery.spec.mjs",
+        "sourceTestSha256": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
+        "resultsPath": "/private/tmp/tdf-audio-pagination-browser/results.json",
+        "resultsSha256": "4af2b484dcc0965890387dc0209a86d91fdc163f800d850ea2a0231543e92130",
+        "bundleSha256": {
+          "index-nxqzNTxl.js": "3b8c53c329d3c3d747576635c943f9d8fe3659417fd8beffa3bada41149448b7"
+        },
+        "checks": [
+          {
+            "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back",
+            "project": "chromium-desktop",
+            "status": "passed",
+            "durationMs": 2782,
+            "fixtureBoundary": {
+              "catalogRequests": [
+                {
+                  "q": "",
+                  "limit": 25,
+                  "offset": 0
+                },
+                {
+                  "q": "",
+                  "limit": 25,
+                  "offset": 24
+                },
+                {
+                  "q": "",
+                  "limit": 25,
+                  "offset": 48
+                }
+              ],
+              "detailRequests": [
+                "release-sintetico-25"
+              ],
+              "deniedExternal": [],
+              "unexpectedMutations": [],
+              "loadedEntries": [
+                "http://127.0.0.1:4218/assets/index-nxqzNTxl.js"
+              ],
+              "limitations": "API/metadata fixtures; no PostgreSQL, production authorization, or audio decoding claim."
+            }
+          },
+          {
+            "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release",
+            "project": "chromium-desktop",
+            "status": "passed",
+            "durationMs": 2212,
+            "fixtureBoundary": {
+              "catalogRequests": [
+                {
+                  "q": "Artista sintético",
+                  "limit": 25,
+                  "offset": 24
+                },
+                {
+                  "q": "horizonte",
+                  "limit": 25,
+                  "offset": 0
+                }
+              ],
+              "detailRequests": [
+                "release-sintetico-25",
+                "release-sintetico-25"
+              ],
+              "deniedExternal": [],
+              "unexpectedMutations": [],
+              "loadedEntries": [
+                "http://127.0.0.1:4218/assets/index-nxqzNTxl.js",
+                "http://127.0.0.1:4218/assets/index-nxqzNTxl.js"
+              ],
+              "limitations": "API/metadata fixtures; no PostgreSQL, production authorization, or audio decoding claim."
+            }
+          },
+          {
+            "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back",
+            "project": "chromium-phone",
+            "status": "passed",
+            "durationMs": 2869,
+            "fixtureBoundary": {
+              "catalogRequests": [
+                {
+                  "q": "",
+                  "limit": 25,
+                  "offset": 0
+                },
+                {
+                  "q": "",
+                  "limit": 25,
+                  "offset": 24
+                },
+                {
+                  "q": "",
+                  "limit": 25,
+                  "offset": 48
+                }
+              ],
+              "detailRequests": [
+                "release-sintetico-25"
+              ],
+              "deniedExternal": [],
+              "unexpectedMutations": [],
+              "loadedEntries": [
+                "http://127.0.0.1:4218/assets/index-nxqzNTxl.js"
+              ],
+              "limitations": "API/metadata fixtures; no PostgreSQL, production authorization, or audio decoding claim."
+            }
+          },
+          {
+            "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release",
+            "project": "chromium-phone",
+            "status": "passed",
+            "durationMs": 2271,
+            "fixtureBoundary": {
+              "catalogRequests": [
+                {
+                  "q": "Artista sintético",
+                  "limit": 25,
+                  "offset": 24
+                },
+                {
+                  "q": "horizonte",
+                  "limit": 25,
+                  "offset": 0
+                }
+              ],
+              "detailRequests": [
+                "release-sintetico-25",
+                "release-sintetico-25"
+              ],
+              "deniedExternal": [],
+              "unexpectedMutations": [],
+              "loadedEntries": [
+                "http://127.0.0.1:4218/assets/index-nxqzNTxl.js",
+                "http://127.0.0.1:4218/assets/index-nxqzNTxl.js"
+              ],
+              "limitations": "API/metadata fixtures; no PostgreSQL, production authorization, or audio decoding claim."
+            }
+          }
+        ],
+        "limitations": [
+          "No production or PostgreSQL authorization/search evidence from this browser fixture.",
+          "No audio-decoder acceptance; no media methods or clocks replaced.",
+          "Existing compiled dist served on strict loopback4218; no build performed in this test step."
+        ],
+        "gitEditsByThisTask": [
+          "e2e/web/music-catalog-discovery.spec.mjs"
+        ]
+      }
+    },
+    "typecheck": {
+      "exit": 0,
+      "log": "/private/tmp/tdf-audio-discovery-types.log"
+    },
+    "build": {
+      "exit": 0,
+      "initialJsGzipBytes": 334831,
+      "preloads": 5
+    },
+    "metadataRegressionTests": 25,
+    "formalStatus": "TESTED finite controls; no mathematical proof or model/refinement claim"
+  },
+  "priorFailure": {
+    "combinedFirstUnit": "65PASS/1FAIL because inherited library fixture clicked disabled button before query settled; now explicit enabled-state wait",
+    "negativePagination": {
+      "failed": 15,
+      "passed": 1,
+      "meaning": "expected baseline failures"
+    },
+    "negativeSearch": "release-title control passed, recording-title query expected failure"
+  },
+  "limitations": [
+    "synthetic browser API; real PostgreSQL SQL-literal test is separate",
+    "compiled Haskell bindings/actual HTTP unverified by local test",
+    "offset pagination is not a concurrent catalog snapshot",
+    "no typo tolerance,universal /buscar projection,historical backfill or non-release catalog coverage",
+    "no p95,SLO,physical devices,fullWCAG,deployment or production acceptance"
+  ],
+  "integration": {
+    "pr": "pending",
+    "ci": "pending",
+    "merge": "not performed",
+    "deployment": "not performed",
+    "productionBusinessWrites": 0
+  }
+}

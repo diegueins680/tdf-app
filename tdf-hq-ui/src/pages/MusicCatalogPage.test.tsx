@@ -47,7 +47,7 @@ it('makes release 25 reachable and preserves the query through forward and brows
   await screen.findByRole('heading', { name: 'Lanzamiento 25', exact: true });
   fireEvent.click(screen.getByRole('button', { name: 'Volver en historial' }));
   await screen.findByRole('heading', { name: 'Lanzamiento 1', exact: true });
-  expect(screen.getByRole('textbox', { name: 'Buscar por lanzamiento o artista' }).getAttribute('value')).toBe('Álbum');
+  expect(screen.getByRole('textbox', { name: 'Buscar por pista, lanzamiento o artista' }).getAttribute('value')).toBe('Álbum');
 });
 
 it('resets pagination on a changed query and rejects a late response from the previous query', async () => {
@@ -62,7 +62,7 @@ it('resets pagination on a changed query and rejects a late response from the pr
   });
   mount('/musica?q=anterior&page=2');
   await waitFor(() => expect(listPublic).toHaveBeenCalled());
-  fireEvent.change(screen.getByRole('textbox', { name: 'Buscar por lanzamiento o artista' }), { target: { value: 'nuevo' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Buscar por pista, lanzamiento o artista' }), { target: { value: 'nuevo' } });
   await screen.findByRole('heading', { name: 'Nuevo resultado', exact: true });
   expect(screen.getByTestId('location').textContent).toBe('/musica?q=nuevo');
   expect(listPublic).toHaveBeenLastCalledWith('nuevo', undefined, expect.objectContaining({ limit: 25, offset: 0 }));
