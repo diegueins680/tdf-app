@@ -1,8 +1,9 @@
 // Executes actual detail/library SQL against the real delivery-policy function.
-// Owns one random disposable database; no HTTP/storage/production assertions.
+// Owns one random disposable database with the complete canonical schema.
+// No HTTP/storage/production assertions; never relax the shared owner/URL guards.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -72,15 +73,28 @@ const check = (condition, label) => { if (!condition) { failures.push(label); co
 
 try {
   owner.create();
-  for (const name of ['init_schema.sql', '2026-07-12_notification_table.sql',
-    '2026-08-05_artist_enrichment.sql', '2026-08-13_unified_checkout_core.sql',
-    '2026-09-04_access_request_notification_types.sql', '2026-09-11_music_release_platform.sql',
-    '2026-09-15_music_preview_ranges.sql', '2026-09-15_music_version_parties.sql',
-    '2026-09-15_music_party_details.sql', '2026-09-16_music_correction_asset_graph.sql',
-    '2026-09-16_music_correction_concurrency.sql', '2026-09-16_music_resource_graph_validation.sql',
-    '2026-10-11_music_publication_isolation.sql', '2026-10-15_music_exact_minor_units.sql']) {
-    command('psql', [...psqlArgs, '-f', join(root, 'tdf-hq/sql', name)]);
+  // Use the same immutable production fixtures and canonical batch renderer as
+  // the complete integration rehearsal. This database remains owned solely by
+  // disposableMusicDatabase; do not broaden its name or connection guards.
+  for (const relative of ['scripts/__tests__/fixtures/production-schema-20260814.sql',
+    'scripts/__tests__/fixtures/catalog-production-source-fixture.sql']) {
+    command('psql', [...psqlArgs, '-f', join(root, relative)]);
   }
+  const sourceRevision = command('git', ['rev-parse', 'HEAD'], { cwd: root });
+  const batch = command(process.execPath, ['scripts/render-production-migration-batch.mjs'], {
+    cwd: root, env: { ...env, SOURCE_COMMIT: sourceRevision }, maxBuffer: 64 * 1024 * 1024,
+  });
+  const manifest = JSON.parse(readFileSync(join(root, 'scripts/production-migrations.json'), 'utf8'));
+  sql(batch);
+  assert.equal(Number(sql('SELECT count(*) FROM tdf_schema_migration')), manifest.migrations.length,
+    'Apply the complete canonical migration registry');
+  const ledgerQuery = 'SELECT jsonb_agg(to_jsonb(m) ORDER BY migration_id) FROM tdf_schema_migration m';
+  const ledgerBefore = sql(ledgerQuery);
+  sql(batch);
+  assert.equal(sql(ledgerQuery), ledgerBefore, 'Canonical replay cannot rewrite migration history');
+  const policyQuery = "SELECT pg_get_functiondef('music_public_asset_accessible(uuid,text)'::regprocedure)";
+  const policyBefore = sql(policyQuery);
+  console.log(`PASS schema: complete ${manifest.migrations.length}-entry canonical apply/replay`);
   // Preserve the real submission/approval fixture and add valid preview assets
   // before it becomes immutable. No publication/immutability trigger bypass.
   const fixtureSource = readFileSync(join(root, 'tdf-hq/test/TDF/MusicPublicationSpec.hs'), 'utf8');
@@ -172,6 +186,16 @@ try {
   }
   console.log('PASS controls: account isolation, unknown territory and withdrawal preserve existing metadata/row semantics');
   assert.deepEqual(failures, [], 'Source arrays must agree with authorized delivery for the requesting territory');
+  assert.equal(sql(policyQuery), policyBefore, 'Fixtures cannot replace the real delivery-policy function');
+  sql(batch);
+  assert.equal(sql(ledgerQuery), ledgerBefore, 'Final readiness retains exact migration history');
+  console.log(JSON.stringify({ kind: 'music-source-projection-qualification', sourceRevision,
+    migrations: manifest.migrations.length, surfaces: names.length, policyRemovalControls: names.length,
+    bindingArgumentControls: names.length * 2,
+    policySha256: createHash('sha256').update(policyBefore).digest('hex'),
+    handlerSha256: createHash('sha256').update(source).digest('hex'),
+    scope: 'Complete canonical schema and finite real SQL/lexical controls; not compiled HTTP, bytes, performance or production acceptance',
+  }));
   console.log('PASS: all four shipped source projections exclude unauthorized rendition references');
 } finally {
   await owner.cleanup();

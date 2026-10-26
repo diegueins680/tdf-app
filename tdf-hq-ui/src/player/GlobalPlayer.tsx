@@ -66,6 +66,7 @@ export default function GlobalPlayer() {
   const closeOptionsRef = useRef<HTMLButtonElement>(null);
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const track = player.currentTrack;
+  const activePlayback = player.status === 'playing' || player.status === 'buffering';
   const barRef = useRef<HTMLElement | null>(null);
   // Other docked bars and page CTAs stack above the player instead of under it.
   useDockedBarHeight(GLOBAL_PLAYER_HEIGHT_VAR, barRef, Boolean(track));
@@ -134,14 +135,14 @@ export default function GlobalPlayer() {
               <SkipPreviousIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title={player.status === 'playing' ? 'Pausar (Espacio)' : 'Reproducir (Espacio)'}>
+          <Tooltip title={activePlayback ? 'Pausar (Espacio)' : 'Reproducir (Espacio)'}>
             <IconButton
               color="primary"
-              aria-label={player.status === 'playing' ? 'Pausar' : 'Reproducir'}
+              aria-label={activePlayback ? 'Pausar' : 'Reproducir'}
               onClick={player.togglePlayback}
               sx={{ minWidth: 44, minHeight: 44 }}
             >
-              {player.status === 'playing' ? <PauseIcon /> : <PlayArrowIcon />}
+              {activePlayback ? <PauseIcon /> : <PlayArrowIcon />}
             </IconButton>
           </Tooltip>
           <Tooltip title="Pista siguiente (Alt + →)">

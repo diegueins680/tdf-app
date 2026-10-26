@@ -246,6 +246,44 @@ jobs:
           path: artifacts/discovery-playwright
           retention-days: 14
 
+  native-music-e2e:
+    needs: changes
+    if: needs.changes.outputs.ui == 'true' || needs.changes.outputs.repo == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+      options: --init --ipc=host
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies and synthetic audio tools
+        run: |
+          npm ci
+          apt-get update
+          apt-get install -y --no-install-recommends ffmpeg jq pulseaudio pulseaudio-utils
+      - name: Verify bundled Playwright browsers
+        env:
+          HOME: /root
+        run: node scripts/verify-playwright-image.mjs
+      - name: Decode real AAC and FLAC with controlled authorization failures
+        env:
+          HOME: /root
+          PLAYWRIGHT_ARTIFACT_DIR: artifacts/native-music
+        run: bash scripts/run-native-audio-tests.sh npm run test:music-player-native
+      - name: Preserve native audio test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-music-${{ github.run_id }}
+          path: artifacts/native-music
+          retention-days: 14
+
   mobile-quality:
     needs: changes
     if: needs.changes.outputs.mobile == 'true'
@@ -818,6 +856,7 @@ jobs:
       - repo-quality
       - ui-quality
       - persona-web-e2e
+      - native-music-e2e
       - mobile-quality
       - backend-quality
       - native-android-e2e
@@ -829,11 +868,12 @@ jobs:
           REPO_RESULT: ${{ needs.repo-quality.result }}
           UI_RESULT: ${{ needs.ui-quality.result }}
           PERSONA_WEB_E2E_RESULT: ${{ needs.persona-web-e2e.result }}
+          NATIVE_MUSIC_RESULT: ${{ needs.native-music-e2e.result }}
           MOBILE_RESULT: ${{ needs.mobile-quality.result }}
           BACKEND_RESULT: ${{ needs.backend-quality.result }}
           NATIVE_ANDROID_RESULT: ${{ needs.native-android-e2e.result }}
         run: |
-          for result in "$CHANGES_RESULT" "$REPO_RESULT" "$UI_RESULT" "$PERSONA_WEB_E2E_RESULT" "$MOBILE_RESULT" "$BACKEND_RESULT" "$NATIVE_ANDROID_RESULT"; do
+          for result in "$CHANGES_RESULT" "$REPO_RESULT" "$UI_RESULT" "$PERSONA_WEB_E2E_RESULT" "$NATIVE_MUSIC_RESULT" "$MOBILE_RESULT" "$BACKEND_RESULT" "$NATIVE_ANDROID_RESULT"; do
             case "$result" in
               success|skipped) ;;
               *) echo "Selected quality job did not pass: $result" >&2; exit 1 ;;

@@ -174,6 +174,65 @@ def post_first(isolation):
         cleanup()
 
 
+def header_after_post(isolation, control=False):
+    """A draft-era ordinary writer waits behind posting, then cannot relabel it."""
+    identity = draft()
+    role = 'ledger_header_' + uuid.uuid4().hex
+    sql('CREATE ROLE ' + role + ' NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE;'
+        'GRANT USAGE ON SCHEMA public TO ' + role + ';'
+        'GRANT SELECT, UPDATE ON commerce_ledger_transaction TO ' + role + ';')
+    binding = value("SELECT pg_get_triggerdef(oid)||'|'||tgenabled::text FROM pg_trigger "
+                    "WHERE tgrelid='public.commerce_ledger_transaction'::regclass "
+                    "AND tgname='trg_commerce_ledger_header_immutable'")
+    require(binding.endswith('|O'), 'expected an enabled header guard')
+    target = holder = None
+    try:
+        if control:
+            sql('ALTER TABLE commerce_ledger_transaction DISABLE TRIGGER trg_commerce_ledger_header_immutable')
+        target, holder = Session(isolation), Session('READ COMMITTED')
+        target.send('SET LOCAL ROLE ' + role + '; SELECT '
+                    'NOT (SELECT rolsuper FROM pg_roles WHERE rolname=current_user) '
+                    "AND NOT pg_has_role(current_user,(SELECT relowner FROM pg_class WHERE "
+                    "oid='public.commerce_ledger_transaction'::regclass),'USAGE') "
+                    "AND NOT has_schema_privilege(current_user,'public','CREATE') "
+                    "AND NOT has_table_privilege(current_user,'public.commerce_ledger_entry','UPDATE');")
+        require(target.line() == 't', 'header writer must be an ordinary non-owner')
+        holder.send(posting(identity) + "SELECT 'posted-held';")
+        require(holder.line() == 'posted-held', 'posting did not acquire the row lock')
+        target.send("UPDATE commerce_ledger_transaction SET source_id='changed_after_post' "
+                    "WHERE id='" + identity + "'; COMMIT;")
+        blocked(target, holder)
+        require(holder.finish('COMMIT;\n')[0] == 0, 'posting writer failed')
+        code, _, error = target.finish()
+        source = value("SELECT source_id FROM commerce_ledger_transaction WHERE id='" + identity + "'")
+        if control:
+            require(code == 0 and source == 'changed_after_post', (code, error, source))
+            outcome = 'counterexample: posted source identity changed'
+        else:
+            expected = '23514' if isolation == 'READ COMMITTED' else '40001'
+            require(code != 0 and expected in error and source == identity, (code, error, source))
+            if isolation == 'READ COMMITTED':
+                require('Posted ledger header is immutable' in error, error)
+            outcome = expected
+        require(state(identity) == 'posted|0', 'header schedule changed the posted balance')
+        record('header-after-post', isolation=isolation, control=control,
+               ordinaryWriter=True, witnessedBlocking=True, outcome=outcome)
+    finally:
+        if holder:
+            holder.close()
+        if target:
+            target.close()
+        if control:
+            sql('ALTER TABLE commerce_ledger_transaction ENABLE TRIGGER trg_commerce_ledger_header_immutable')
+        require(value("SELECT pg_get_triggerdef(oid)||'|'||tgenabled::text FROM pg_trigger "
+                      "WHERE tgrelid='public.commerce_ledger_transaction'::regclass "
+                      "AND tgname='trg_commerce_ledger_header_immutable'") == binding,
+                'header control did not restore the trigger exactly')
+        cleanup()
+        sql('REVOKE ALL ON commerce_ledger_transaction FROM ' + role + ';'
+            'REVOKE USAGE ON SCHEMA public FROM ' + role + '; DROP ROLE ' + role + ';')
+
+
 def upgrade_preflight(function):
     migration = ROOT / 'tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql'
     for case in ['empty', 'unbalanced']:
@@ -224,7 +283,9 @@ def run(controls):
                 entry_first(isolation, operation, overlap)
         post_first(isolation)
         entry_first(isolation, 'insert', True, rollback=True)
+        header_after_post(isolation)
     if controls:
+        header_after_post('READ COMMITTED', control=True)
         write_fence = ("UPDATE commerce_ledger_transaction SET created_at = created_at\n"
                        "    WHERE id = COALESCE(OLD.transaction_id, NEW.transaction_id)\n"
                        "    RETURNING status INTO transaction_status;")
@@ -245,10 +306,12 @@ def run(controls):
                'tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql',
                'tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql',
                'tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql',
+               'tdf-hq/sql/2026-10-25_ledger_posted_header.sql',
                'scripts/production-migrations.json',
                'scripts/__tests__/fixtures/production-schema-20260814.sql',
                'scripts/__tests__/fixtures/catalog-production-source-fixture.sql',
-               'formal/event-operations/LedgerPosting.tla']
+               'formal/event-operations/LedgerPosting.tla',
+               'formal/event-operations/LedgerHeader.tla']
     print(json.dumps({'kind': 'postgresql-integration-receipt',
                       'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                       'sourceRevision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT,

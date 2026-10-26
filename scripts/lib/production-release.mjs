@@ -1934,6 +1934,19 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
   END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
+    WHERE t.tgrelid=to_regclass('public.commerce_ledger_transaction')
+      AND t.tgname='trg_commerce_ledger_header_immutable'
+      AND p.oid=to_regprocedure('public.commerce_protect_posted_ledger_header()')
+      AND t.tgenabled IN ('O','A') AND NOT t.tgisinternal
+      AND t.tgtype=19 AND t.tgqual IS NULL AND t.tgattr=''::int2vector
+      AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND p.proconfig @> ARRAY['search_path=pg_catalog']::text[]
+      AND NOT p.prosecdef AND p.prorettype='trigger'::regtype
+  ) THEN
+    RAISE EXCEPTION 'Posted ledger header immutability guard is missing or changed';
+  END IF;
   -- Replaying an older CREATE OR REPLACE FUNCTION can discard proconfig while
   -- leaving its migration receipt and trigger binding intact. Inspect both
   -- installed lookup boundaries instead of trusting those receipts.
