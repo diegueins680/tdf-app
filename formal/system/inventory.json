@@ -5376,7 +5376,7 @@
     {
       "id": "SURFACE-92e34e327b523dc8",
       "path": "scripts/test-event-memories-http.py",
-      "sha256": "f9d205b3683fb5ddc0c82c61c862be45aaeeab33896a7eaddea276866cdd2189",
+      "sha256": "aecac68d98ba7a6625529a2a185e085c3e940003b73a67707db39dd980eb1dcd",
       "semanticConformance": "not-established-by-discovery"
     },
     {

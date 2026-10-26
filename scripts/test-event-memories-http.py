@@ -24,6 +24,14 @@ if a.source_moderation:runtime_paths+=['tdf-hq/src/TDF/Interactions/API.hs','tdf
 if a.browser:runtime_paths+=['scripts/test-event-memory-source-browser.mjs','tdf-hq-ui/src/components/events/EventMemoryModeration.tsx','tdf-hq-ui/src/api/eventMemoryModeration.ts','tdf-hq-ui/src/pages/SocialEventDetailPage.tsx']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/api/socialEvents.ts','tdf-hq-ui/src/api/client.ts','tdf-hq-ui/src/api/eventMemoryInvitations.ts']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/session/useSessionOwner.ts','tdf-hq-ui/src/session/useOwnedSessionDraft.ts','tdf-hq-ui/src/session/authEvents.ts','tdf-hq-ui/src/session/SessionContext.tsx','tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx','tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts']
+# Bind the actual complete schema, including protected-main successors, rather
+# than assuming that a successful source-specific request proves migration scope.
+manifest=json.loads((root/'scripts/production-migrations.json').read_text())
+expected_migration_ids=sorted(entry['id'] for entry in manifest['migrations'])
+assert expected_migration_ids and len(expected_migration_ids)==len(set(expected_migration_ids))
+runtime_paths+=['scripts/production-migrations.json','scripts/render-production-migration-batch.mjs','scripts/lib/production-release.mjs','scripts/lib/migration-contract.mjs']
+runtime_paths+=[entry['path'] for entry in manifest['migrations']]
+runtime_paths=list(dict.fromkeys(runtime_paths))
 def runtime_sources():return {path:hashlib.sha256((root/path).read_bytes()).hexdigest() for path in runtime_paths}
 report={'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),
  'sourceWorktreeDirty':bool(subprocess.check_output(['git','status','--porcelain'],cwd=root,text=True).strip()),
@@ -214,6 +222,12 @@ try:
  apply(root/'scripts/__tests__/fixtures/production-schema-20260814.sql')
  apply(root/'scripts/__tests__/fixtures/catalog-production-source-fixture.sql')
  batch=run(['node','scripts/render-production-migration-batch.mjs']);(out/'migrations.sql').write_bytes(batch);apply(out/'migrations.sql')
+ installed_migration_ids=json.loads(sql("SELECT coalesce(jsonb_agg(migration_id ORDER BY migration_id),'[]'::jsonb) FROM tdf_schema_migration"))
+ assert installed_migration_ids==expected_migration_ids,'The actual schema migration ledger must match the complete canonical manifest'
+ report['migrationLedger']={'expectedCount':len(expected_migration_ids),'appliedCount':len(installed_migration_ids),
+  'idsSha256':hashlib.sha256(json.dumps(installed_migration_ids,separators=(',',':')).encode()).hexdigest(),
+  'batchSha256':hashlib.sha256(batch).hexdigest()}
+ record('Actual complete migration ledger matches the canonical manifest; all migration sources and batch are bound')
  if sql("SELECT to_regprocedure('event_memory_dispatch_batch(integer)') IS NULL")=='t':apply(root/'tdf-hq/sql/2026-10-25_event_memory_invitations.sql')
  if a.source_moderation:
   assert sql("SELECT to_regprocedure('event_memory_source_command(bigint,uuid,uuid,jsonb)') IS NOT NULL")=='t','Canonical manifest must install source moderation'
@@ -326,6 +340,7 @@ try:
   assert driver.returncode==0,'Integrated browser failed; see its private evidence/log'
   report['browser']=json.loads((out/'browser-results.json').read_text());assert report['browser']['status']=='PASS'
   record('Actual desktop/phone product UI signs in, publishes, reports, hides and restores against this PostgreSQL/API instance')
+ assert json.loads(sql("SELECT coalesce(jsonb_agg(migration_id ORDER BY migration_id),'[]'::jsonb) FROM tdf_schema_migration"))==expected_migration_ids,'The migration ledger changed during the actual HTTP/browser execution'
  assert report['runtimeSources']==runtime_sources(),'Runtime sources changed during the HTTP execution'
  assert report['binarySha256']==hashlib.sha256(binary.read_bytes()).hexdigest(),'Candidate binary changed during the HTTP execution'
  report['status']='PASS'
