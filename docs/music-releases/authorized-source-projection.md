@@ -133,3 +133,45 @@ qualify the combined metadata independently of runtime evidence. Fresh exact-hea
 hosted checks and independent review remain required after publication. No push,
 review request, protected-main merge or production deployment is made by this
 refresh task.
+
+## Protected catalog-search and Stripe main reconciliation
+
+Local preparation normally merges the previously published
+`ac396190351fc8b26279cc1f2611c1eff34ce271` with actual protected main
+`9b7aa4648d4158f6da84fbb5e794267cd4953177`. All 146 current main requirement
+objects and the unchanged scoped source-projection requirement are retained
+(147 total), along with the whole 1,339-decision file and 222-entry migration
+manifest. No unapproved listening, credential-cache or other branch is grafted.
+
+The combined handler now has SHA-256
+`2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f`.
+Its complete `listPublicReleases` function is byte-identical to current main's
+recording-title search. Each of the four complete source-projection function
+blocks, including its SQL and actual Haskell bindings, is byte-identical to the
+qualified `ac396190` version. The runner remains byte-identical. This preserves
+the relevant qualified fragments, not the old whole-handler hash.
+
+The merged workflow retains both dedicated PostgreSQL runner steps. Both
+runner-only backend selectors and their regression cases remain, while every
+other main CI entry is preserved. The merged CI contract suite passed 46 tests
+with zero failures under Node 22.14.0. The report records new complete-file hashes,
+fragment correspondence and later qualification results separately from the
+historical SQL receipts. A fresh owned PostgreSQL run, metadata gates and
+committed-source admission are recorded when executed; the subset runner still
+does not establish the complete production-schema, compiled HTTP or byte-delivery
+boundary. The separate full-schema test follow-up is not imported here.
+
+This is unpublished preparation. The existing remote `ac396190` review remains
+untouched. Publication, a new independent review, current-head CI and production
+acceptance remain separate release gates; no deployment is performed.
+
+The fresh root-orchestrated PostgreSQL run on 2026-10-26 passed all four
+projection groups, four policy-removal mutation controls and eight lexical
+argument controls, using a new owned PG16 cluster and Node22. Its source
+fingerprints bind the combined handler above and unchanged runner. All random
+databases were removed, the cluster stopped and port55571 verified closed; the
+older search cluster was untouched. This executes the selected 14-file SQL
+fixture, not the complete 222-entry schema or compiled HTTP/storage boundary.
+Metadata verification totals36 passing cases:26 passed initially, while the10
+conformance cases could not start until generated inventory conflicts were
+resolved and then passed. The initial import failure remains recorded.

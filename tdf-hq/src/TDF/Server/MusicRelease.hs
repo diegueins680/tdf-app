@@ -182,8 +182,12 @@ listPublicReleases edgeCountry query artistPartyId requestedLimit requestedOffse
   let limit = max 1 (min 100 (fromMaybe 24 requestedLimit))
       offset = max 0 (fromMaybe 0 requestedOffset)
       normalizedQuery = T.strip (fromMaybe "" query)
+  -- Match recording titles only through a currently authorized delivery asset.
+  -- EXISTS retains one row per release even when several renditions match.
+  -- Reuse directory normalization while retaining literal non-Latin matching.
   jsonRows
-    "SELECT jsonb_build_object(\
+    "WITH input AS (SELECT ?::text raw_query,directory_normalize_text(?::text) query)\
+    \ SELECT jsonb_build_object(\
     \ 'id',public.id,'artistPartyId',public.artist_party_id,'slug',public.canonical_slug,\
     \ 'kind',public.release_kind,'versionId',public.release_version_id,'versionNumber',public.version_number,\
     \ 'title',public.title,'subtitle',public.subtitle,'versionTitle',public.version_title,\
@@ -191,15 +195,28 @@ listPublicReleases edgeCountry query artistPartyId requestedLimit requestedOffse
     \ 'originalReleaseDate',public.original_release_date,'releaseAtUtc',public.release_at_utc,\
     \ 'labelName',public.label_name,'catalogNumber',public.catalog_number,'publishedAt',public.published_at,\
     \ 'coverAssetId',(SELECT asset.id FROM music_asset asset WHERE asset.release_version_id=public.release_version_id AND asset.asset_role='cover_display' AND asset.processing_state='ready' ORDER BY asset.created_at DESC LIMIT 1)\
-    \) FROM music_public_release public\
-    \ WHERE (?='' OR public.title ILIKE '%' || ? || '%' OR public.display_artist ILIKE '%' || ? || '%')\
+    \) FROM music_public_release public CROSS JOIN input\
+    \ WHERE (input.raw_query='' OR (\
+    \   (input.query<>'' AND directory_normalize_text(public.title) LIKE '%' || input.query || '%')\
+    \   OR strpos(lower(public.title),lower(input.raw_query))>0\
+    \   OR (input.query<>'' AND directory_normalize_text(public.display_artist) LIKE '%' || input.query || '%')\
+    \   OR strpos(lower(public.display_artist),lower(input.raw_query))>0\
+    \   OR EXISTS (SELECT 1 FROM music_release_track track\
+    \     JOIN music_recording recording ON recording.id=track.recording_id\
+    \     JOIN music_asset audio ON audio.release_version_id=track.release_version_id\
+    \       AND audio.recording_id=recording.id\
+    \     WHERE track.release_version_id=public.release_version_id\
+    \       AND ((input.query<>'' AND directory_normalize_text(recording.canonical_title) LIKE '%' || input.query || '%')\
+    \         OR strpos(lower(recording.canonical_title),lower(input.raw_query))>0)\
+    \       AND audio.asset_role IN ('stream_audio','preview_audio')\
+    \       AND music_public_asset_accessible(audio.id,?::text))))\
     \   AND (?::bigint IS NULL OR public.artist_party_id=?::bigint)\
     \   AND EXISTS (SELECT 1 FROM music_availability_rule rule WHERE rule.release_version_id=public.release_version_id\
     \     AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW())\
     \     AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories)))\
     \       OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories)))))\
     \ ORDER BY public.published_at DESC, public.id LIMIT ? OFFSET ?"
-    [ PersistText normalizedQuery, PersistText normalizedQuery, PersistText normalizedQuery
+    [ PersistText normalizedQuery, PersistText normalizedQuery, optionalText territory
     , optionalInt64 artistPartyId, optionalInt64 artistPartyId
     , optionalText territory, optionalText territory, optionalText territory
     , PersistInt64 (fromIntegral limit), PersistInt64 (fromIntegral offset)

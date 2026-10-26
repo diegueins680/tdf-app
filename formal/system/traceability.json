@@ -4700,7 +4700,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4791,7 +4791,8 @@
         "tdf-hq-ui/src/i18n/locales/es.ts",
         "tdf-hq-ui/src/i18n/locales/fr.ts",
         "tdf-hq-ui/src/i18n/locales/pt.ts",
-        "tdf-hq-ui/src/utils/checkoutStripe.ts"
+        "tdf-hq-ui/src/utils/checkoutStripe.ts",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
@@ -4819,7 +4820,7 @@
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
       ],
-      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation.",
+      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted.",
       "evidence": "Incoming review/test evidence is historical; final consolidated candidate must rerun.",
       "status": "specified and implemented",
       "critical": true,
@@ -12286,6 +12287,95 @@
       }
     },
     {
+      "id": "MEDIA-MUSIC-DISCOVERY-001",
+      "title": "Authorized recording-title search and paginated public release discovery",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "The public music release catalog searches canonical recording titles only through a currently authorized stream or preview asset for that recording and release version, while retaining existing release/artist matching, public visibility, artist filters and stable release identity. Web listeners can navigate beyond the first 24 authorized release cards; search and page URL state remain consistent and obsolete query responses cannot replace current results.",
+      "authority": "Explicit user universal audio implementation directive, 2026-10-25, sections 9, 13, 17 and P1; independent release review remains required.",
+      "source": "docs/music-releases/catalog-track-search.md; docs/music-releases/catalog-discovery-delivery-2026-10-25.md",
+      "contract": "formal/system/music-catalog-discovery.md",
+      "property": "A recording-title search match implies a same-recording/version stream or preview satisfying music_public_asset_accessible at query time; EXISTS preserves release row identity. With a stable result set, page p shows at most 24 rows at offset (p-1)*24 and uses one authorized sentinel row for next-page availability; older query results cannot replace the current query.",
+      "actors": [
+        "Public listener",
+        "Signed-in listener",
+        "Backend public release query"
+      ],
+      "preconditions": [
+        "The existing public music feature gate and trusted edge-territory derivation apply.",
+        "Existing music public views, delivery authorization predicates and directory_normalize_text are deployed.",
+        "Cross-page coverage assumes the authorized result set does not change between offset requests."
+      ],
+      "inputs": [
+        "Search text, optional artist party ID, limit and offset, trusted edge territory",
+        "URL q/page parameters and pagination/search/retry actions",
+        "Authorized public release summaries and asynchronous query outcomes"
+      ],
+      "state": {
+        "boundary": "Public release retrieval and MusicCatalogPage query/page state",
+        "database": "Existing published release view, release tracks, canonical recordings, assets and availability/rights predicates",
+        "client": "Deferred query/page pair, query-key-specific pending/result/error state, URL navigation history"
+      },
+      "allowedTransitions": [
+        "Change search -> reset to page one -> request current deferred query/page",
+        "Request success -> display up to 24 unique release cards; authorized row 25 enables next page",
+        "Page selection -> update URL page while retaining query; browser back -> restore prior URL state",
+        "Request failure -> explicit retry or previous-page navigation; superseded result -> remain outside current query view"
+      ],
+      "forbiddenTransitions": [
+        "A hidden recording title makes an otherwise visible release match without a currently authorized same-recording/version delivery asset.",
+        "Matching multiple renditions duplicates the release SQL result row.",
+        "An empty normalized query becomes a match-all wildcard for a nonempty unrelated raw query.",
+        "An obsolete query response replaces visible results for the current query.",
+        "Advancing by 25 skips the sentinel release that should be the next page first row."
+      ],
+      "effects": [
+        "Read-only release-level search results using stable published_at DESC/id ordering",
+        "URL-backed catalog navigation, bounded visible rows, loading/error/empty feedback and retry controls"
+      ],
+      "authorization": "Retain requirePublicFeature, trusted edge territory, music_public_release and existing availability rules; the added canonical recording-title branch requires music_public_asset_accessible for the matched recording/version. Playback still independently authorizes the selected asset.",
+      "privacy": "Introduce no matched-track metadata, media credentials or new response fields. The new recording-title branch cannot use an unauthorized hidden track as a search signal; this is not a fresh proof of every existing public metadata or cache policy.",
+      "concurrency": "Query/page are deferred together; request cancellation and query-key identity reject obsolete results. Offset pagination has no snapshot guarantee during concurrent publication, withdrawal or rights changes.",
+      "idempotency": "Search and page requests are read-only; repeating a request against an unchanged authorized catalog returns the same ordered release identities.",
+      "failure": "Failed requests expose retry and disable next-page navigation using stale success data. Empty later pages retain the previous-page action. Invalid page values fall back to page one and invalid client limit/offset arguments are rejected.",
+      "recovery": "Retry the current authorized request or navigate to a previous page. Application-source rollback requires no schema or asset mutation.",
+      "observability": "Focused PostgreSQL runtime groups and authorization mutation control, rendered page regressions, API-client contracts and dedicated backend CI invocation; operational search latency and production release evidence remain separate.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs"
+      ],
+      "interactions": [
+        "MEDIA-MUSIC-RELEASE-001",
+        "MEDIA-MUSIC-ASSET-001",
+        "MEDIA-MUSIC-PLAYER-001"
+      ],
+      "tests": [
+        "scripts/test-music-catalog-search.mjs",
+        "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
+        "e2e/web/music-catalog-discovery.spec.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Deterministic PostgreSQL integration/security controls execute the actual handler SQL literal and authoritative predicates, including a deliberate missing-authorization mutant. Component/API contracts exercise pagination and stale responses. These tests do not execute compiled HTTP routing or prove Haskell parameter ordering; no mathematical proof or formal model is claimed.",
+      "evidence": "Original SQL baseline/candidate runs and source identities in docs/music-releases/catalog-track-search.md; exact combined-candidate tests, hosted CI, independent review and release receipts remain separate.",
+      "status": "specified and implemented",
+      "confidence": "Scoped finite SQL and client contract evidence; no whole-platform catalog completeness or target-environment acceptance claim.",
+      "ambiguity": [
+        "The SQL extractor substitutes its own parameter list; compiled Haskell binding and HTTP-route integration require separate verification.",
+        "Offset pagination can miss or repeat rows across requests when the catalog changes; no snapshot cursor is implemented.",
+        "Universal /buscar, typo tolerance, richer credits/genre/aliases, non-release sources and historical reconciliation remain incomplete.",
+        "Representative-catalog query plans, p95 latency, physical assistive technology and production deployment remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused authorized recording search and release pagination are implemented with finite SQL/security/client regression coverage. Full HTTP binding, current candidate hosted checks, independent review and deployed acceptance remain separate obligations; no mathematical proof or universal catalog completion is established."
+      }
+    },
+    {
       "id": "MEDIA-MUSIC-SOURCES-001",
       "domain": "MEDIA",
       "title": "Authorized public-listening source projection in release detail and personal music collections",
@@ -12370,7 +12460,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "4f17df9d98e7935ba5d85df64a0e0d05b043169239076a6fbcb7f9977ef06534",
+    ".github/workflows/ci.yml": "de616a8748d411f6d673a22d59d8d9d3fd2ca73ab74dd703191836cdaaa1ff30",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -12396,6 +12486,7 @@
     "e2e/web/marketplace-cart.spec.mjs": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385",
     "e2e/web/mobile-layout-regressions.spec.mjs": "db3505fa7e16300fac202d80cca9957d8208eb067b8f2c6c53f0e08f547411fc",
     "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
+    "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
     "e2e/web/music-player-native.spec.mjs": "c30ef37d2013401f3baffede88298930fa0795fb277d06c9167d3c9747fb55a0",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
@@ -12743,7 +12834,7 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": "e16e672607635ad011a51c7e5cad2281e8f5be88d27e7d48b7fa794b00e14a0d",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
-    "scripts/__tests__/ci-change-scope.test.mjs": "e411ba86db22b662de37bdb3992428bca0169bf3a37134657387b411013de3e5",
+    "scripts/__tests__/ci-change-scope.test.mjs": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
     "scripts/__tests__/ci-pipeline.test.mjs": "76ec02976468affc43319d2d77b4461ac6304a89065f9fe3ce483ca819b49760",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
@@ -12810,7 +12901,7 @@
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
-    "scripts/ci-change-scope.mjs": "abf7c6b2653cb13d1798d3aa066023f6586f6fbb0ad91ff506556fef01749be8",
+    "scripts/ci-change-scope.mjs": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
@@ -12912,6 +13003,7 @@
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
     "scripts/test-meta-redelivery.sh": "ede4ee564fb1ff86e4d4da13342ab56eca7b382e411abc41eea4d7bce247616a",
+    "scripts/test-music-catalog-search.mjs": "070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2",
     "scripts/test-music-correction-concurrency.mjs": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
     "scripts/test-music-ddex-credits.sh": "220bdee67ca10d4257ba488de067617e244479d7e30143e5eceafe4d3a0d7a71",
     "scripts/test-music-ddex-package.mjs": "b27e141ea3cb945aa4c1e4ec425f75b6da6c02bf0d662b735a7040795ead5b74",
@@ -13045,7 +13137,8 @@
     "tdf-hq-ui/src/api/invoices.ts": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
     "tdf-hq-ui/src/api/logoutIntent.test.ts": "5366999e451b40e12be270e6db4ec4142761877b23aacf111733b5babbc5c66c",
     "tdf-hq-ui/src/api/musicReleases.money.test.ts": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
-    "tdf-hq-ui/src/api/musicReleases.ts": "150f499252556c86539bbbd5ec5aed68ff2c7031e5e2a6540d59fc87ecb9b917",
+    "tdf-hq-ui/src/api/musicReleases.pagination.test.ts": "e1b83d693a268efebd2121a899cf6fa422d39994895425abddb68054056b652e",
+    "tdf-hq-ui/src/api/musicReleases.ts": "6c1ae9c62c2c4cdb51ba8e94bc5086d3c54e6a2cfd323c14da1d7d74f3c6ca6e",
     "tdf-hq-ui/src/api/musicReleases.upload.test.ts": "e5a48b23eb9974f54078b4095084a8f2419d193742aba76aee3f798fa85ed695",
     "tdf-hq-ui/src/api/musicStorageResponse.test.ts": "4d173a68d03907dd1106b079b472a92d6212b2938e8421b360cb78a315797b8f",
     "tdf-hq-ui/src/api/musicStorageResponse.ts": "8f48adb2834adc89083f4ef643dde01dcfae051815f42121ac21bb1e6e233e78",
@@ -13085,11 +13178,11 @@
     "tdf-hq-ui/src/components/SidebarNav.test.tsx": "e3256af3ef5a49bb099438a71f1106c9338c186faa26c22b2464da659a0c1728",
     "tdf-hq-ui/src/components/SidebarNav.tsx": "d579734d5562fd3512b424413860a68077f79c4e88b1f2d5e4c5a3d4592c0f62",
     "tdf-hq-ui/src/components/StreamingPlayer.tsx": "3b4577b82858d1cfd74b7e38107084a35ff6b56952c6b1050e38e0ababaca8cb",
-    "tdf-hq-ui/src/components/StripeCheckoutModal.tsx": "52245be2a87128343f4ad81495f8c0b14fab63f1189ddea09ffd8759156bf8ed",
+    "tdf-hq-ui/src/components/StripeCheckoutModal.tsx": "f6908307c3ee9e6120fd9f28d702e0f053de847a7f3c0242a994c5ea70eb9d05",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
     "tdf-hq-ui/src/components/TopBar.tsx": "3103c4693585b90c462206149c79af0e45107a8ff9203afecaf70ebe7fee1fb5",
     "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx": "2a49091cfcf2e83610c72a0372203f6552928576be5283399df5ce37959c1137",
-    "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx": "4c21e2d3dee57873cc9951240625a5f036ad6c45a9d46c4b8e4251dc5a0a3ad9",
+    "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx": "842b3e0d5275029c2eff10337fe546d2ee5afefb16df6b54f8080f3a4fbef850",
     "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx": "55bda163a94847cea6c1b62eda88974f2a31f47be0a149e0d569b67a84f2f1dc",
     "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx": "f342a2bad3450c04bcb599119ff0bbc4bf57a35ebbc3f55b92f36f54882d6aea",
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx": "8dd7b161d48cb42ad908c110619321011fd66354cd81796413f63be2b3cd1953",
@@ -13139,8 +13232,8 @@
     "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
     "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "62b867e770f329763c7d0f6b81fa7998a9b7b48737351010f67cb673ab418628",
     "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "98a49a2cf613aa9aa44b99253f39e81f1a9c54298b932fb21982cfda67a6b962",
-    "tdf-hq-ui/src/i18n/locales/en.ts": "498365b7aa8b9990059bbb5fc14ea259b3754df38a8df187f33e8cc99b2850bb",
-    "tdf-hq-ui/src/i18n/locales/es.ts": "39fa2c7f117979998b30743472893389b28ee84132ef32d9af981cecba034194",
+    "tdf-hq-ui/src/i18n/locales/en.ts": "3e310ec8d58e8ced31cb0e5edded6db4380615666d2e941db185ec41dc7fb561",
+    "tdf-hq-ui/src/i18n/locales/es.ts": "56f81911002a54ed03623b044ab6706180cfea6110b50190570bf464181b9555",
     "tdf-hq-ui/src/i18n/locales/fr.ts": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
     "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts": "e99993b766505ad368038b768dd19f31032e7b4f0854376a10e78eaa7b6acb96",
     "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts": "6500275d794c925824d4fe895a8503f53384e2d48c15f9dacacd4532c9ce085d",
@@ -13192,7 +13285,8 @@
     "tdf-hq-ui/src/pages/MarketplacePage.tsx": "b129902039b0dca4eba1ed7077c2a61d7909da0a02bcb4eca2c35650c07cd102",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
     "tdf-hq-ui/src/pages/MobileAppPage.tsx": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
-    "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
+    "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
+    "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "7b4d424b566195ca074af95148cf3fd63a194bbb5ceaba0798d12deccedf4784",
     "tdf-hq-ui/src/pages/MusicLibraryPage.tsx": "128ba43306d3634403c1ffde27924ad7b15a28367788432c7731cebb60a927b0",
     "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx": "9a38d743806d57f1ed655cfe93a2db264c21dd0672db93afbc06c422e4b8698d",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx": "82bb2a837450ba66c5139d899fe44023c79ed3972657f2343929c82861e31ff7",
@@ -13472,7 +13566,7 @@
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "752c46c93d45ae82b5fce380a9616764a5bb2d97858f0b56a09285ef19b8dfaf",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
-    "tdf-hq/src/TDF/Server/MusicRelease.hs": "9b001e5a36c2dde75a8df89e898992815765451f39d6a25cdb167dde9ec74bea",
+    "tdf-hq/src/TDF/Server/MusicRelease.hs": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
     "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs": "e0742f56e34371946ef5ffd5ca814c768332e85be2d8c27701c5727bb9a9fc76",
     "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs": "2c848527dfcff004e724d1c32ce61ecc1b7279a996de43195b348de088e324f2",
     "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "44cc676fab692ead582f71d854211c29accd5ff61a3553ac16d9700f49caa49c",
@@ -13482,7 +13576,7 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "87c8c7b4a38fb0284555d9d0a3436654b4ad6d0aedeccff8e7e6dd0e29eac3af",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "3c8c5a10a541d0ddeadece3fe8f00b25a23a9c424a0ef546c2743572361088cf",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
@@ -14235,6 +14329,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "MEDIA-MUSIC-SOURCES-001",
         "relationship": "implementation"
       }
@@ -14328,6 +14426,10 @@
       },
       {
         "requirement": "SYS-STATE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
         "relationship": "tests"
       },
       {
@@ -14729,6 +14831,10 @@
       {
         "requirement": "DIR-SAVED-SEARCH-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "implementation"
       },
       {
         "requirement": "MEDIA-MUSIC-SOURCES-001",
@@ -18081,6 +18187,16 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/components/StripeCheckoutModal.tsx": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-CONSENT-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/ticket-admission-model.test.mjs": [
       {
         "requirement": "EVT-TICKET-001",
@@ -20677,6 +20793,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "MEDIA-MUSIC-SOURCES-001",
         "relationship": "implementation"
       }
@@ -20698,6 +20818,10 @@
       },
       {
         "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -21670,6 +21794,10 @@
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -22646,12 +22774,6 @@
       }
     ],
     "tdf-hq-ui/src/api/courses.ts": [
-      {
-        "requirement": "LEGAL-CONSENT-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/components/StripeCheckoutModal.tsx": [
       {
         "requirement": "LEGAL-CONSENT-001",
         "relationship": "implementation"
@@ -24055,6 +24177,30 @@
         "relationship": "formalModels"
       }
     ],
+    "scripts/test-music-catalog-search.mjs": [
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/musicReleases.pagination.test.ts": [
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/music-catalog-discovery.spec.mjs": [
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
     "scripts/test-music-source-projection.mjs": [
       {
         "requirement": "MEDIA-MUSIC-SOURCES-001",
@@ -24128,7 +24274,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4f17df9d98e7935ba5d85df64a0e0d05b043169239076a6fbcb7f9977ef06534",
+      "sha256": "de616a8748d411f6d673a22d59d8d9d3fd2ca73ab74dd703191836cdaaa1ff30",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24178,6 +24324,10 @@
         {
           "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+          "relationship": "implementation"
         },
         {
           "requirement": "MEDIA-MUSIC-SOURCES-001",
@@ -24564,6 +24714,18 @@
       "requirements": [
         {
           "requirement": "MOB-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6910fe6162437c91",
+      "path": "e2e/web/music-catalog-discovery.spec.mjs",
+      "sha256": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "tests"
         }
       ]
@@ -25196,7 +25358,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "e411ba86db22b662de37bdb3992428bca0169bf3a37134657387b411013de3e5",
+      "sha256": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25209,6 +25371,10 @@
         },
         {
           "requirement": "SYS-STATE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "tests"
         },
         {
@@ -26501,7 +26667,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "abf7c6b2653cb13d1798d3aa066023f6586f6fbb0ad91ff506556fef01749be8",
+      "sha256": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26510,6 +26676,10 @@
         },
         {
           "requirement": "SYS-API-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "implementation"
         },
         {
@@ -29279,6 +29449,18 @@
       ]
     },
     {
+      "id": "SURFACE-cb78d4325e1fc93d",
+      "path": "scripts/test-music-catalog-search.mjs",
+      "sha256": "070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d8aeda8890026d82",
       "path": "scripts/test-music-correction-concurrency.mjs",
       "sha256": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
@@ -31889,9 +32071,21 @@
       ]
     },
     {
+      "id": "SURFACE-48d8b51a42b47771",
+      "path": "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
+      "sha256": "e1b83d693a268efebd2121a899cf6fa422d39994895425abddb68054056b652e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-111a69931c7b0da3",
       "path": "tdf-hq-ui/src/api/musicReleases.ts",
-      "sha256": "150f499252556c86539bbbd5ec5aed68ff2c7031e5e2a6540d59fc87ecb9b917",
+      "sha256": "6c1ae9c62c2c4cdb51ba8e94bc5086d3c54e6a2cfd323c14da1d7d74f3c6ca6e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31900,6 +32094,10 @@
         },
         {
           "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -33007,9 +33205,13 @@
     {
       "id": "SURFACE-336a5f791a58d95b",
       "path": "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
-      "sha256": "52245be2a87128343f4ad81495f8c0b14fab63f1189ddea09ffd8759156bf8ed",
+      "sha256": "f6908307c3ee9e6120fd9f28d702e0f053de847a7f3c0242a994c5ea70eb9d05",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "LEGAL-CONSENT-001",
           "relationship": "implementation"
@@ -33122,7 +33324,7 @@
     {
       "id": "SURFACE-b09be6a71cc01631",
       "path": "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
-      "sha256": "4c21e2d3dee57873cc9951240625a5f036ad6c45a9d46c4b8e4251dc5a0a3ad9",
+      "sha256": "842b3e0d5275029c2eff10337fe546d2ee5afefb16df6b54f8080f3a4fbef850",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34430,7 +34632,7 @@
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "498365b7aa8b9990059bbb5fc14ea259b3754df38a8df187f33e8cc99b2850bb",
+      "sha256": "3e310ec8d58e8ced31cb0e5edded6db4380615666d2e941db185ec41dc7fb561",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34450,7 +34652,7 @@
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "39fa2c7f117979998b30743472893389b28ee84132ef32d9af981cecba034194",
+      "sha256": "56f81911002a54ed03623b044ab6706180cfea6110b50190570bf464181b9555",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35968,13 +36170,29 @@
       ]
     },
     {
+      "id": "SURFACE-eb82e4705c1d2848",
+      "path": "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
+      "sha256": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5f2964f5ab118818",
       "path": "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
-      "sha256": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
+      "sha256": "7b4d424b566195ca074af95148cf3fd63a194bbb5ceaba0798d12deccedf4784",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -44202,7 +44420,7 @@
     {
       "id": "SURFACE-83d8f1c82facfb02",
       "path": "tdf-hq/src/TDF/Server/MusicRelease.hs",
-      "sha256": "9b001e5a36c2dde75a8df89e898992815765451f39d6a25cdb167dde9ec74bea",
+      "sha256": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44211,6 +44429,10 @@
         },
         {
           "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "implementation"
         },
         {
@@ -44390,7 +44612,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "87c8c7b4a38fb0284555d9d0a3436654b4ad6d0aedeccff8e7e6dd0e29eac3af",
+      "sha256": "3c8c5a10a541d0ddeadece3fe8f00b25a23a9c424a0ef546c2743572361088cf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51776,6 +51998,7 @@
     "MEDIA-DRIVE-002",
     "COMMUNITY-PROFILE-001",
     "AUTH-LOGOUT-001",
+    "MEDIA-MUSIC-DISCOVERY-001",
     "MEDIA-MUSIC-SOURCES-001"
   ],
   "stateMachines": [
@@ -52895,7 +53118,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ffa1663a5700a19592d27cf2dfe040e922ab23fa21d58329fbb849663a992fcb",
+      "sourceSha256": "b620d25d0a724405d568e6b4976479b77915fbafc0b7e02fe2606db43d9e866e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -52923,7 +53146,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ffa1663a5700a19592d27cf2dfe040e922ab23fa21d58329fbb849663a992fcb",
+      "sourceSha256": "b620d25d0a724405d568e6b4976479b77915fbafc0b7e02fe2606db43d9e866e",
       "definition": {
         "states": [
           "absent",
@@ -52953,7 +53176,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ffa1663a5700a19592d27cf2dfe040e922ab23fa21d58329fbb849663a992fcb",
+      "sourceSha256": "b620d25d0a724405d568e6b4976479b77915fbafc0b7e02fe2606db43d9e866e",
       "definition": {
         "export": [
           "queued",
@@ -75229,7 +75452,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 146,
+    "PARTIAL": 147,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
