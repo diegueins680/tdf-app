@@ -2780,7 +2780,7 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "375f391cdf296138240d97c2fbdbb0f7f52fb349d42536241a104803e3745a45",
+      "sha256": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3278,7 +3278,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "c16f7d089697c1ced43ea387585b2d8832c3f6a9891812935ca9ad249e615d3d",
+      "sha256": "b51fded0ec0fe1efd8ade7249be4e613f95a1c0b8b46ec3bc83112dd808fac38",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26828,7 +26828,7 @@
     },
     {
       "path": "formal/system/browser-ci-image.md",
-      "sha256": "65b004d35ac4775103a3c43f944c1b208058eff8d2180c2406d1f4cfb0aea637",
+      "sha256": "8a287162a3ea00e051bb2967a66c7d7e2f897209c4dba82a7082d3966e78ec92",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

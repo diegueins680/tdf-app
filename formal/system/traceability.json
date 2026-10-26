@@ -12475,7 +12475,7 @@
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    ".github/workflows/social-verification.yml": "375f391cdf296138240d97c2fbdbb0f7f52fb349d42536241a104803e3745a45",
+    ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/catalog-persistence/catalog-list-decisions.json": "fc28d03ed980644c63767c8bd82b9ef3e947673ddadefd6399f1018b6650a54e",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -12845,7 +12845,7 @@
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "51dfd59c5f1a2c70a16e7acb552711a7806e90f39af21a6c0ace4e3c4f1da8c7",
-    "scripts/__tests__/ci-pipeline.test.mjs": "c16f7d089697c1ced43ea387585b2d8832c3f6a9891812935ca9ad249e615d3d",
+    "scripts/__tests__/ci-pipeline.test.mjs": "b51fded0ec0fe1efd8ade7249be4e613f95a1c0b8b46ec3bc83112dd808fac38",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
@@ -24455,7 +24455,7 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "375f391cdf296138240d97c2fbdbb0f7f52fb349d42536241a104803e3745a45",
+      "sha256": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25424,7 +25424,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "c16f7d089697c1ced43ea387585b2d8832c3f6a9891812935ca9ad249e615d3d",
+      "sha256": "b51fded0ec0fe1efd8ade7249be4e613f95a1c0b8b46ec3bc83112dd808fac38",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

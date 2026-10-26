@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T21:53:22.415Z",
+  "generatedAt": "2026-10-26T22:16:01.350Z",
   "repositoryRoot": ".",
   "filesScanned": 2399,
   "candidateCount": 1341,
@@ -16313,7 +16313,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 39,
+      "consumerCount": 40,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -16349,6 +16349,7 @@
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "automationConsumers": [
+        ".github/workflows/social-verification.yml",
         "scripts/__tests__/build-trust.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/dependency-security.test.mjs",
@@ -58674,7 +58675,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 36,
+      "consumerCount": 37,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -58709,6 +58710,7 @@
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "automationConsumers": [
+        ".github/workflows/social-verification.yml",
         "scripts/__tests__/build-trust.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/dependency-security.test.mjs",

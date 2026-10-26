@@ -147,6 +147,11 @@ test('social browser verification retains its checks and timeout with an indepen
   assert.equal(job.env.NPM_CONFIG_IGNORE_SCRIPTS, true);
   assert.equal(job.env.PLAYWRIGHT_BROWSERS_PATH, '/ms-playwright');
   assert.equal(job.steps.find(step => step.uses === 'actions/setup-node@v7').with['node-version'], '24');
+  const resolver = job.steps.find(step => step.name === "Install the lockfile's missing Linux resolver binding");
+  assert.match(resolver.run, /resolver_dir=\$\(mktemp -d\)/);
+  assert.match(resolver.run, /npm install --prefix "\$resolver_dir" --workspaces=false --no-save --package-lock=false --ignore-scripts @unrs\/resolver-binding-linux-x64-gnu@1\.11\.1/);
+  assert.match(resolver.run, /cp -R "\$resolver_dir\/node_modules\/@unrs\/resolver-binding-linux-x64-gnu" node_modules\/@unrs\//);
+  assert.match(resolver.run, /trap 'rm -rf "\$resolver_dir"' EXIT/);
   const commands = job.steps.map(step => step.run).filter(Boolean);
   assert.ok(!commands.some(command => /playwright install|apt-get/.test(command)));
   const preflight = 'node scripts/verify-playwright-image.mjs --workflow .github/workflows/social-verification.yml --job social-client';

@@ -64,3 +64,13 @@ installer from the social lane; it does not establish a fix for the cart case.
 Registry availability and a fresh Linux execution of the selected preflight
 and unchanged social assertions remain qualification requirements. Local pure
 tests do not establish installed-image or application acceptance.
+
+The first social-image candidate `fd5eefbc1b94acbec6e9ab22ad8f27f138e17083`
+passed all 63 focused tests and its generated-contract check, then the new
+preflight rejected installed Playwright 1.64.1 against the locked/image version
+1.59.1. The existing additional root `npm install --no-save --package-lock=false`
+for the missing resolver binding had re-resolved project dependencies. Preserve
+that failed run and its skipped browser journey. Install the same pinned binding
+into a fresh isolated prefix with scripts and workspaces disabled, then copy
+only that native package into the existing install. The version guard remains
+unchanged and fresh current-head Linux qualification is still required.
