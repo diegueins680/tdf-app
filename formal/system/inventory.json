@@ -21003,6 +21003,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/music-releases/universal-audio-release-2026-10-26.md",
+      "sha256": "50a442a8cdea26cca3ad3c5d8247ab5d85206ce622cea56efd27ea5360f48be3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/music-releases/version-party-membership.md",
       "sha256": "9ffc40f81e20d28fb2cf47c89f9dd010d00f776e02036695438c554fab2643cc",
       "authority": "inferred",
