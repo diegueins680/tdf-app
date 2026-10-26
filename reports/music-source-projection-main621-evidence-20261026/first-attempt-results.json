@@ -1,0 +1,52 @@
+{
+  "startedAt": "2026-10-26T16:49:53.616715+00:00",
+  "source": "5a33e3f6c56c0e1fb0b7737cb7dfafb8f113c637",
+  "mainBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "status": "RUNNING",
+  "newCompilation": false,
+  "productionWrites": false,
+  "steps": [
+    {
+      "name": "init",
+      "exitCode": 0,
+      "expectedExitCode": 0
+    },
+    {
+      "name": "start",
+      "exitCode": 0,
+      "expectedExitCode": 0
+    },
+    {
+      "name": "baseline",
+      "exitCode": 1,
+      "expectedExitCode": 1
+    },
+    {
+      "name": "stop",
+      "exitCode": 0,
+      "expectedExitCode": 0
+    }
+  ],
+  "cleanup": {
+    "clusterStopped": true,
+    "postgresListenerClosed": true
+  },
+  "inputSha256": {
+    "scripts/test-music-source-projection.mjs": "8dd59bd443ec23120d7ec7c19a400e0af6555464e41d7927823aad44c7b0dbb4",
+    "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
+    "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+    "scripts/lib/production-release.mjs": "837a2952f669b8d9819a31548652d1491b35dd37282603dd333a64a2303166c3",
+    "scripts/lib/music-test-database.mjs": "b63039bc86ab6dd58a17cd7448bf26ad439e27e23a0c7ab7b67b3eca94d7ebaf",
+    "scripts/__tests__/fixtures/production-schema-20260814.sql": "d8872748af4142954076cdbf587709d0115b4041837302530d273c8372d517cf",
+    "scripts/__tests__/fixtures/catalog-production-source-fixture.sql": "20d601eaf885eedf213e1110da3fa9489d19eed8629cd32f149e690fd947512c",
+    "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3"
+  },
+  "handlerHashes": {
+    "baseline": "5570d29e8f02f39e838b7e94a650551f177add4f6e67389c92defdf35b067f35",
+    "candidate": "9b001e5a36c2dde75a8df89e898992815765451f39d6a25cdb167dde9ec74bea"
+  },
+  "protocolSha256": "a907c56bd82c5a823c308b3dea23efa347c0c617de6f96590e940e6fd9b86576",
+  "scope": "Real disposable PostgreSQL16 full222 canonical schema and same source runner on main and candidate. FiniteSQL/lexical tests, not nativeHTTP/media/production proof. Baseline adds only untracked qualification runner; candidate application code stays frozen.",
+  "postgresVersion": "PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit",
+  "finishedAt": "2026-10-26T16:50:14.650512+00:00"
+}

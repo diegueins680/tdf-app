@@ -1,0 +1,10 @@
+{
+  "observedAt": "2026-10-26T17:03:52.734850+00:00",
+  "fixture": "/private/tmp/tdf-music-source-git-context-20261026-lkimi0a1/fixture",
+  "negativeWithoutHome": "REJECTED dubious ownership",
+  "positiveWithExactTrustedCheckoutConfig": "PASS actualGit",
+  "trustScope": "Exactfixturepath only; no wildcard or globaloperator config changed",
+  "simulation": "Git test-only different-owner control; no uid/permission changes",
+  "databaseChildrenInheritHome": false,
+  "reason": "BackendCI explicitly configures exact checkout trust under HOME; sanitizedDBenvironment must not erase that context for a read-only Git metadata call."
+}

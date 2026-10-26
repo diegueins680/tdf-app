@@ -133,3 +133,40 @@ qualify the combined metadata independently of runtime evidence. Fresh exact-hea
 hosted checks and independent review remain required after publication. No push,
 review request, protected-main merge or production deployment is made by this
 refresh task.
+
+## Full canonical financial-main qualification
+
+The next normal composition retains protected main
+`78fa351b469c1d2031df3232204dd722ac480e3b`: all145 requirement objects,
+including the posted-ledger-header contract, remain exact. The original scoped
+source-projection requirement is unchanged, for146 total. All1339 current-main
+catalog decisions, client/player code, operations, dependencies and pinned Mobile
+source are retained. The four-predicate handler patch is byte identical to744e75.
+
+The existing SQL runner now prepares the complete schema using the canonical
+production fixtures and migration renderer, rather than its older14-migration
+subset. It checks all222 receipts, replay without history changes, the actual
+delivery-policy function before/after fixtures, and final canonical readiness.
+The shared random-database owner and connection guards are unchanged.
+
+At source`7187e17af15a46495aa6ebf388717eed6322f4d7`, a separate main78fa
+handler baseline reproduces ten policy-agreement failures on that complete
+schema. The candidate passes all four SQL projections, four removed-filter
+controls and eight omitted/reordered argument controls. Both random databases
+were removed and the owned loopback cluster stopped. No compiled HTTP, media
+byte, performance or production result is inferred from this SQL qualification.
+
+The first complete-schema attempt failed before policy checks because its
+synthetic other-party row omitted mandatory`is_org`; the fixture now explicitly
+supplies`FALSE` and`NOW()`, with the real constraint retained. Failure evidence
+is preserved. The older744 CI worker-cleanup timeout is recorded separately;
+its unchanged worker test must pass in the new final-head CI, without relaxed
+timeouts, skipped cases or approval inheritance. The evidence packet is
+`reports/music-source-projection-main621-evidence-20261026`.
+
+A separate actual-Git fixture reproduces rejection when the scrubbed environment
+loses CI exact-checkout trust configuration, and success with that configuration.
+Only the read-only Git identity call now receives HOME; SQL and renderer children
+retain the unchanged scrubbed environment. No wildcard or globaloperator trust
+setting is introduced. The complete SQL qualification was repeated after this
+runner correction, with its new source identity retained.
