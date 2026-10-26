@@ -29,7 +29,7 @@
     "independentReviewer": "tdfrecords",
     "approvedAt": "2026-10-26T22:37:11Z",
     "codexReview": "No major issues at98f3ed230",
-    "hostedCI": "PENDING: required checks not replaced by this local qualification"
+    "hostedCI": "Backend, financial, migration and browser journey checks pass; the event-RACI real-browser workflow remains required."
   },
   "limits": [
     "Finite synthetic database cases; real provider HTTP, production data, arbitrary schedules, liveness and external exactly-once charges are not proven.",
