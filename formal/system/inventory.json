@@ -1094,6 +1094,7 @@
       "tdf-hq-ui/src/pages/EventTaskPage.tsx",
       "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx",
       "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
+      "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
       "tdf-hq-ui/src/pages/FanClubPage.tsx",
       "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
       "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
@@ -9106,9 +9107,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-adbe6d097447b912",
+      "path": "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
+      "sha256": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-60cd6659a77e2df2",
       "path": "tdf-hq-ui/src/pages/FanClubPage.tsx",
-      "sha256": "2bb3c0031e6829521db3a8fcb41903243acf2165365d12c348266c032e130b90",
+      "sha256": "12eab619ce83baadb79404750556e08cf68e8833e66433135441e0c1b4107af2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26611,7 +26618,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "ca2e0c7f919c1a69848f6ed78f7ae6c6f959b83533cedf4f4ed4b358ef0b24ec",
+      "sha256": "d6a69e6ead4e12ce86b7754232faf2f9b845b48e54545a52e1e44c0f48abbfa2",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -26773,6 +26780,13 @@
     {
       "path": "formal/system/event-organizer-assignment.md",
       "sha256": "71f6f3da069ad720ab63d42217a987e35857a90e294aeb107c4030e926d01fcd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/fan-club-read-recovery.md",
+      "sha256": "c986b59782301949720e1594cae1e435fc93122eb63a48e4d2d643248fae9f0c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27178,7 +27192,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7bacd7dce080404002e9434d7d6c349f5a30b1d5b4637f13d1da85ac0ba9faf5",
+      "sha256": "0d25ec40390e6c0f9720a9105057c6a4decfbb41fe87fdc3cebfb7bf63a1cb1e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
