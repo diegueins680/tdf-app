@@ -94,6 +94,9 @@ test('saved-alert221 succession preserves213/214/220 provenance and rejects stal
     'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
   const transition = document.reconciliation.directorySavedSearchParity;
   const financial = document.reconciliation.directoryFinancialMainIntegration;
+  const header = document.reconciliation.ledgerHeaderMainIntegration;
+  const combined = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    header.document), 'utf8'));
   const { active, successors, integration } = await readReconciliation();
   const canonicalHash = value => createHash('sha256').update(JSON.stringify(value,
     (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
@@ -108,8 +111,19 @@ test('saved-alert221 succession preserves213/214/220 provenance and rejects stal
   assert.equal(previous.evidence.valueCount, 213);
   assert.equal(previous.reviewed, true);
   assert.ok(!active.some(entry => entry.id === previous.id));
-  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+  const actualManifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'scripts/production-migrations.json'), 'utf8')).migrations;
+  // Freeze the independently reviewed 221-entry main prefix. The header
+  // successor must preserve it, rather than waiving its old provenance checks.
+  const manifest = actualManifest.slice(0, 221);
+  assert.equal(actualManifest.length, 222);
+  assert.equal(canonicalHash(manifest),
+    '1413652c0d640dbb2241fb5c004eaa212245a62dfcb031109f54226d3af31fd9');
+  assert.deepEqual(actualManifest[221], {
+    id: '2026-10-25_ledger_posted_header',
+    path: 'tdf-hq/sql/2026-10-25_ledger_posted_header.sql',
+    introducedBy: '5cc26ad46c958a029ec4539c60cc1ca77fec1d01',
+  });
   assert.equal(canonicalHash(manifest.slice(0, 213)), protectedPrefixHash);
   assert.equal(transition.protectedMainManifestCanonicalSha256, protectedPrefixHash);
   const protectedFinancialPrefixHash = 'c025cf3d2ab92f64bfb92d3656384d7fe0da6919457440d3c24301d7f6b8f232';
@@ -137,7 +151,10 @@ test('saved-alert221 succession preserves213/214/220 provenance and rejects stal
   assert.equal(transition.successorDecisionId, decision214.id, 'Keep the original213-to214 review intact');
   assert.equal(decision214.evidence.valueCount, 214);
   assert.equal(decision220.evidence.valueCount, 220);
-  const current = active.find(entry => entry.id === financial.currentDecisionId);
+  const current = combined.mainManifestDecision;
+  assert.equal(current.id, financial.currentDecisionId);
+  assert.equal(canonicalHash(current),
+    '12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f');
   assert.equal(current?.id, '8229b8202552298c955e');
   assert.equal(current.classification, decision220.classification);
   assert.equal(current.disposition, decision220.disposition);
@@ -146,15 +163,25 @@ test('saved-alert221 succession preserves213/214/220 provenance and rejects stal
   assert.equal(current.reviewed, true);
   assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
   assert.equal(current.evidence.valueCount, 221);
+  const latest = active.find(entry => entry.id === header.currentDecisionId);
+  assert.equal(latest?.id, '6ff395b6131079017c9d');
+  assert.equal(latest.reviewed, true);
+  assert.equal(latest.evidence.valueCount, 222);
+  assert.equal(latest.classification, current.classification);
+  assert.equal(latest.disposition, current.disposition);
+  assert.equal(combined.mainParent, 'e938c72ba4b87010214f6838f06bfac45a0f45c0');
+  assert.equal(combined.mainDecisionCanonicalSha256, canonicalHash(current));
+  assert.equal(combined.headerDecisionCanonicalSha256, canonicalHash(combined.headerManifestDecision));
+  assert.ok(!active.some(entry => [current.id, combined.headerManifestDecision.id].includes(entry.id)));
   const pointer = successors.find(entry => entry.name === 'migrations');
-  assert.equal(pointer.currentId, current.id);
-  assert.equal(pointer.valueCount, 221);
-  assert.equal(pointer.change, current.justification);
+  assert.equal(pointer.currentId, latest.id);
+  assert.equal(pointer.valueCount, 222);
+  assert.equal(pointer.change, latest.justification);
   const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
-  assert.equal(retirement.replacementId, current.id);
-  assert.equal(retirement.currentResolution.id, current.id);
-  assert.equal(retirement.currentResolution.valueCount, 221);
-  assert.equal(retirement.reason, current.justification);
+  assert.equal(retirement.replacementId, latest.id);
+  assert.equal(retirement.currentResolution.id, latest.id);
+  assert.equal(retirement.currentResolution.valueCount, 222);
+  assert.equal(retirement.reason, latest.justification);
   for (const decision of historical) {
     assert.ok(pointer.previousCurrentIds.includes(decision.id));
     assert.ok(retirement.previousReplacementIds.includes(decision.id));
@@ -165,13 +192,13 @@ test('saved-alert221 succession preserves213/214/220 provenance and rejects stal
     const repoDir = path.join(tempRoot, 'repo');
     await fs.mkdir(repoDir);
     await execFileAsync('git', ['init', '-b', 'main'], { cwd: repoDir });
-    await writeFile(repoDir, 'scripts/production-migrations.json', JSON.stringify({ migrations: manifest }));
+    await writeFile(repoDir, 'scripts/production-migrations.json', JSON.stringify({ migrations: actualManifest }));
     await execFileAsync('git', ['add', '--', 'scripts/production-migrations.json'], { cwd: repoDir });
     const decisionsPath = path.join(tempRoot, 'decisions.json');
     const args = [auditScriptPath, '--root', repoDir, '--decisions', decisionsPath, '--fail-on-unreviewed'];
-    await fs.writeFile(decisionsPath, JSON.stringify([current]));
+    await fs.writeFile(decisionsPath, JSON.stringify([latest]));
     await execFileAsync(process.execPath, args, { cwd: repoDir });
-    for (const decision of historical) {
+    for (const decision of [...historical, current, combined.headerManifestDecision]) {
       await fs.writeFile(decisionsPath, JSON.stringify([decision]));
       await assert.rejects(execFileAsync(process.execPath, args, { cwd: repoDir }),
         error => error.code === 1 && error.stderr.includes('1 stale decision(s)')

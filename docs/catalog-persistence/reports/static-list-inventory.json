@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T15:34:43.698Z",
+  "generatedAt": "2026-10-26T16:20:10.374Z",
   "repositoryRoot": ".",
-  "filesScanned": 2394,
+  "filesScanned": 2396,
   "candidateCount": 1339,
   "byClassification": {
     "dynamic-business-catalog": 863,
@@ -4407,7 +4407,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 1069,
+      "consumerCount": 1072,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -4607,14 +4607,14 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs",
-        "scripts/__tests__/mobile-distribution-expiry.test.mjs"
+        "scripts/__tests__/migration-batch-postgres.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -4695,7 +4695,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 1069,
+      "consumerCount": 1072,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -4895,14 +4895,14 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs",
-        "scripts/__tests__/mobile-distribution-expiry.test.mjs"
+        "scripts/__tests__/migration-batch-postgres.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -6813,7 +6813,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1069,
+      "consumerCount": 1072,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -7014,13 +7014,13 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
-        "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs"
+        "scripts/__tests__/merch-runtime-safety.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -8347,7 +8347,7 @@
       "lines": [
         64
       ],
-      "consumerCount": 211,
+      "consumerCount": 213,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -8476,7 +8476,9 @@
       "automationConsumers": [
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-music-directory-visuals.mjs",
@@ -10179,7 +10181,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 193,
+      "consumerCount": 195,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -10308,7 +10310,9 @@
       "automationConsumers": [
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -10399,7 +10403,7 @@
       "lines": [
         34
       ],
-      "consumerCount": 198,
+      "consumerCount": 200,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -10529,7 +10533,9 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -10619,7 +10625,7 @@
       "lines": [
         35
       ],
-      "consumerCount": 196,
+      "consumerCount": 198,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -10749,7 +10755,9 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -10834,7 +10842,7 @@
       "lines": [
         36
       ],
-      "consumerCount": 199,
+      "consumerCount": 201,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -10963,7 +10971,9 @@
       "automationConsumers": [
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -11052,7 +11062,7 @@
       "lines": [
         37
       ],
-      "consumerCount": 197,
+      "consumerCount": 199,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -11182,7 +11192,9 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -11269,7 +11281,7 @@
       "lines": [
         38
       ],
-      "consumerCount": 197,
+      "consumerCount": 199,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -11399,7 +11411,9 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -11480,7 +11494,7 @@
       "lines": [
         39
       ],
-      "consumerCount": 196,
+      "consumerCount": 198,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -11610,7 +11624,9 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -11695,7 +11711,7 @@
       "lines": [
         40
       ],
-      "consumerCount": 195,
+      "consumerCount": 197,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -11825,7 +11841,9 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -11910,7 +11928,7 @@
       "lines": [
         41
       ],
-      "consumerCount": 193,
+      "consumerCount": 195,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -12039,7 +12057,9 @@
       "automationConsumers": [
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -12124,7 +12144,7 @@
       "lines": [
         42
       ],
-      "consumerCount": 199,
+      "consumerCount": 201,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -12255,7 +12275,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -12782,7 +12804,7 @@
       "lines": [
         214
       ],
-      "consumerCount": 266,
+      "consumerCount": 267,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -12820,6 +12842,7 @@
         "tdf-hq/sql/2026-09-16_event_task_completion.sql",
         "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
         "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/Admin.hs",
         "tdf-hq/src/TDF/API/Calendar.hs",
@@ -12832,8 +12855,7 @@
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialDiscoveryAPI.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-        "tdf-hq/src/TDF/App/Boot.hs",
-        "tdf-hq/src/TDF/App/StartupResponse.hs"
+        "tdf-hq/src/TDF/App/Boot.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -13121,7 +13143,7 @@
       "domain": "music-catalog-cms",
       "kind": "array",
       "name": "<anonymous>",
-      "line": 2866,
+      "line": 2879,
       "values": [
         "{id=local-preflight, mutating=false}",
         "{id=remote-preflight, mutating=false}",
@@ -13134,7 +13156,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        2866
+        2879
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -13669,7 +13691,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "8229b8202552298c955e",
+      "id": "6ff395b6131079017c9d",
       "file": "scripts/production-migrations.json",
       "sourceKind": "production",
       "surface": "automation",
@@ -13898,9 +13920,10 @@
         "{id=2026-10-16_ledger_entry_write_fence}",
         "{id=2026-10-22_checkout_terms_history_append_only}",
         "{id=2026-10-24_ledger_guard_namespace}",
-        "{id=2026-10-25_directory_saved_search_parity}"
+        "{id=2026-10-25_directory_saved_search_parity}",
+        "{id=2026-10-25_ledger_posted_header}"
       ],
-      "valueCount": 221,
+      "valueCount": 222,
       "recommendedClassification": "security-system-registry",
       "lines": [
         3
@@ -13993,7 +14016,7 @@
       "specializedModel": "production migration manifest and applied migration ledger",
       "priority": "",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
+      "justification": "The 222-entry deployment registry preserves the complete 221-entry protected main e938c72ba4b87010214f6838f06bfac45a0f45c0 prefix, including saved-alert migration eb2f71d62740783369a6eb2a6d35fc024484cb71, and appends only the posted-header guard introduced by 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Both independently developed 221-entry predecessor reviews are retained with exact canonical hashes and source references. Historical SQL and introduction SHAs are unchanged. This is a technical source review; current-head CI, independent PR approval and production authorization remain separate requirements.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -14450,7 +14473,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 844,
+      "consumerCount": 845,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14626,6 +14649,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -14655,8 +14679,7 @@
         "scripts/continuous-improvement-loop.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
         "scripts/generate-feature-audit-reports.mjs",
-        "scripts/get-instagram-token.mjs",
-        "scripts/identity-reconciliation.mjs"
+        "scripts/get-instagram-token.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -15213,7 +15236,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 840,
+      "consumerCount": 841,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -15388,6 +15411,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -15418,8 +15442,7 @@
         "scripts/continuous-improvement-loop.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
         "scripts/generate-feature-audit-reports.mjs",
-        "scripts/get-instagram-token.mjs",
-        "scripts/identity-reconciliation.mjs"
+        "scripts/get-instagram-token.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -15503,7 +15526,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 840,
+      "consumerCount": 841,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -15678,6 +15701,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -15708,8 +15732,7 @@
         "scripts/continuous-improvement-loop.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
         "scripts/generate-feature-audit-reports.mjs",
-        "scripts/get-instagram-token.mjs",
-        "scripts/identity-reconciliation.mjs"
+        "scripts/get-instagram-token.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -21980,7 +22003,7 @@
       "lines": [
         180
       ],
-      "consumerCount": 198,
+      "consumerCount": 200,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -22110,7 +22133,9 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -23366,7 +23391,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 904,
+      "consumerCount": 905,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -23543,6 +23568,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -23572,8 +23598,7 @@
         "scripts/continuous-improvement-loop.mjs",
         "scripts/fixtures/merch-reputation-mobile.mjs",
         "scripts/generate-feature-audit-reports.mjs",
-        "scripts/get-instagram-token.mjs",
-        "scripts/identity-reconciliation.mjs"
+        "scripts/get-instagram-token.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -25370,7 +25395,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 371,
+      "consumerCount": 372,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2026-04-23_inventory_checkout_amounts.sql",
@@ -25495,6 +25520,7 @@
         "scripts/__tests__/disposable-postgres-url.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -25534,8 +25560,7 @@
         "scripts/test-checkout-policy-terms-identity-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
-        "scripts/test-domo-quote-checkout-runtime-migration.sh",
-        "scripts/test-marketplace-contact-identity.sh"
+        "scripts/test-domo-quote-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/test-stripe-integration.sh",
@@ -28375,7 +28400,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 284,
+      "consumerCount": 285,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -28414,6 +28439,7 @@
         "tdf-hq/sql/2026-09-16_event_task_completion.sql",
         "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
         "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/Admin.hs",
         "tdf-hq/src/TDF/API/Calendar.hs",
@@ -28425,8 +28451,7 @@
         "tdf-hq/src/TDF/API/MerchReputation.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
-        "tdf-hq/src/TDF/API/SocialDiscoveryAPI.hs",
-        "tdf-hq/src/TDF/API/SocialEventsAPI.hs"
+        "tdf-hq/src/TDF/API/SocialDiscoveryAPI.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -32619,7 +32644,7 @@
         472,
         843
       ],
-      "consumerCount": 199,
+      "consumerCount": 201,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32750,7 +32775,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -32840,7 +32867,7 @@
         562,
         599
       ],
-      "consumerCount": 199,
+      "consumerCount": 201,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32971,7 +32998,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -33062,7 +33091,7 @@
       "lines": [
         642
       ],
-      "consumerCount": 243,
+      "consumerCount": 245,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -33194,7 +33223,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -33299,7 +33330,7 @@
       "lines": [
         673
       ],
-      "consumerCount": 204,
+      "consumerCount": 206,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -33430,7 +33461,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -33519,7 +33552,7 @@
       "lines": [
         786
       ],
-      "consumerCount": 197,
+      "consumerCount": 199,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -33649,7 +33682,9 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -35006,7 +35041,7 @@
       "lines": [
         29
       ],
-      "consumerCount": 199,
+      "consumerCount": 201,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -35137,7 +35172,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -35439,7 +35476,7 @@
         107,
         116
       ],
-      "consumerCount": 193,
+      "consumerCount": 195,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -35568,7 +35605,9 @@
       "automationConsumers": [
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -35668,7 +35707,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 199,
+      "consumerCount": 201,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -35799,7 +35838,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -38674,7 +38715,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 369,
+      "consumerCount": 370,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -38810,6 +38851,7 @@
         "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/hetzner-restore.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/legacy-escrow-contract.test.mjs",
         "scripts/__tests__/migration-batch-postgres.mjs",
@@ -38839,8 +38881,7 @@
         "scripts/install-flyctl.mjs",
         "scripts/install-proof-checkers.py",
         "scripts/install-recovery-tools.py",
-        "scripts/interactions/test-api.py",
-        "scripts/interactions/test-concurrency.py"
+        "scripts/interactions/test-api.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -38957,7 +38998,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 375,
+      "consumerCount": 376,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -39093,6 +39134,7 @@
         "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/hetzner-restore.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/legacy-escrow-contract.test.mjs",
         "scripts/__tests__/migration-batch-postgres.mjs",
@@ -39122,8 +39164,7 @@
         "scripts/generate-identity-party-reference-view.mjs",
         "scripts/identity-reconciliation.mjs",
         "scripts/inspect-hetzner-production.mjs",
-        "scripts/install-flyctl.mjs",
-        "scripts/install-proof-checkers.py"
+        "scripts/install-flyctl.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -41591,7 +41632,7 @@
         4050,
         4450
       ],
-      "consumerCount": 204,
+      "consumerCount": 206,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -41722,7 +41763,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -42046,7 +42089,7 @@
       "lines": [
         3944
       ],
-      "consumerCount": 240,
+      "consumerCount": 242,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -42178,7 +42221,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -42500,7 +42545,7 @@
       "lines": [
         3981
       ],
-      "consumerCount": 206,
+      "consumerCount": 208,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -42630,7 +42675,9 @@
       "automationConsumers": [
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -42900,7 +42947,7 @@
       "lines": [
         4017
       ],
-      "consumerCount": 195,
+      "consumerCount": 197,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -43029,7 +43076,9 @@
       "automationConsumers": [
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -43294,7 +43343,7 @@
       "lines": [
         4325
       ],
-      "consumerCount": 199,
+      "consumerCount": 201,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -43425,7 +43474,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -43729,7 +43780,7 @@
       "lines": [
         4334
       ],
-      "consumerCount": 199,
+      "consumerCount": 201,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -43860,7 +43911,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -44405,7 +44458,7 @@
       "lines": [
         4459
       ],
-      "consumerCount": 204,
+      "consumerCount": 206,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -44536,7 +44589,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -44961,7 +45016,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 930,
+      "consumerCount": 931,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -45139,6 +45194,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -45167,8 +45223,7 @@
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
-        "scripts/continuous-improvement-loop.mjs",
-        "scripts/fixtures/artist-merch-mobile.mjs"
+        "scripts/continuous-improvement-loop.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -45612,7 +45667,7 @@
         43,
         55
       ],
-      "consumerCount": 198,
+      "consumerCount": 200,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -45742,7 +45797,9 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -47930,7 +47987,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 315,
+      "consumerCount": 316,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -47980,8 +48037,8 @@
         "tdf-hq/sql/2026-09-29_interaction_review_repairs.sql",
         "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
         "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
-        "tdf-hq/src/TDF/API.hs",
-        "tdf-hq/src/TDF/API/Admin.hs"
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
+        "tdf-hq/src/TDF/API.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/analytics/errorReporting.test.ts",
@@ -49552,7 +49609,7 @@
       "lines": [
         4441
       ],
-      "consumerCount": 315,
+      "consumerCount": 316,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -49602,8 +49659,8 @@
         "tdf-hq/sql/2026-09-29_interaction_review_repairs.sql",
         "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
         "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
-        "tdf-hq/src/TDF/API.hs",
-        "tdf-hq/src/TDF/API/Admin.hs"
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
+        "tdf-hq/src/TDF/API.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/analytics/errorReporting.test.ts",
@@ -51929,7 +51986,7 @@
       "lines": [
         147
       ],
-      "consumerCount": 1092,
+      "consumerCount": 1095,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -52130,13 +52187,13 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
-        "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs"
+        "scripts/__tests__/merch-runtime-safety.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -53445,7 +53502,7 @@
       "lines": [
         402
       ],
-      "consumerCount": 1071,
+      "consumerCount": 1074,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -53646,13 +53703,13 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
-        "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs"
+        "scripts/__tests__/merch-runtime-safety.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -54260,7 +54317,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 930,
+      "consumerCount": 931,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -54438,6 +54495,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -54466,8 +54524,7 @@
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
-        "scripts/continuous-improvement-loop.mjs",
-        "scripts/fixtures/artist-merch-mobile.mjs"
+        "scripts/continuous-improvement-loop.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -54558,7 +54615,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 193,
+      "consumerCount": 195,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -54687,7 +54744,9 @@
       "automationConsumers": [
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -57163,7 +57222,7 @@
       "lines": [
         370
       ],
-      "consumerCount": 198,
+      "consumerCount": 200,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -57293,7 +57352,9 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -57572,7 +57633,7 @@
       "lines": [
         416
       ],
-      "consumerCount": 264,
+      "consumerCount": 266,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -57710,7 +57771,9 @@
         "scripts/__tests__/fixtures/artist-management-claim.sql",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/artist-enrichment.mjs",
@@ -59819,7 +59882,7 @@
       "lines": [
         1056
       ],
-      "consumerCount": 326,
+      "consumerCount": 327,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/interactions.yaml",
@@ -60377,7 +60440,7 @@
       "lines": [
         137
       ],
-      "consumerCount": 246,
+      "consumerCount": 248,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -60502,6 +60565,7 @@
         "scripts/__tests__/fixtures/artist-management-claim.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/artist-enrichment.mjs",
@@ -61754,7 +61818,7 @@
       "lines": [
         158
       ],
-      "consumerCount": 166,
+      "consumerCount": 168,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -61843,7 +61907,9 @@
         "scripts/__tests__/compiled-api-surface.test.mjs",
         "scripts/__tests__/directory-search-plan-parity.mjs",
         "scripts/__tests__/fixtures/artist-management-claim.sql",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/mobile-distribution-expiry.test.mjs",
         "scripts/audit-feature-registry.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -61886,9 +61952,7 @@
         "scripts/test-recovery-files.py",
         "scripts/test-recovery-tools.py",
         "scripts/test-social-event-optional-end-migration.sh",
-        "scripts/test-specification-conformance.py",
-        "scripts/test-ticket-manual-review.sh",
-        "scripts/test-unified-checkout-migration.sh"
+        "scripts/test-specification-conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/eventOperations.test.ts",
@@ -61944,7 +62008,7 @@
       "lines": [
         17
       ],
-      "consumerCount": 439,
+      "consumerCount": 440,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -62081,6 +62145,7 @@
         "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/hetzner-restore.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/legacy-escrow-contract.test.mjs",
         "scripts/__tests__/migration-batch-postgres.mjs",
@@ -62110,8 +62175,7 @@
         "scripts/generate-identity-party-reference-view.mjs",
         "scripts/identity-reconciliation.mjs",
         "scripts/inspect-hetzner-production.mjs",
-        "scripts/install-flyctl.mjs",
-        "scripts/install-proof-checkers.py"
+        "scripts/install-flyctl.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -64133,7 +64197,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 930,
+      "consumerCount": 931,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -64311,6 +64375,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -64339,8 +64404,7 @@
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
-        "scripts/continuous-improvement-loop.mjs",
-        "scripts/fixtures/artist-merch-mobile.mjs"
+        "scripts/continuous-improvement-loop.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -64433,7 +64497,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 930,
+      "consumerCount": 931,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -64611,6 +64675,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -64639,8 +64704,7 @@
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
-        "scripts/continuous-improvement-loop.mjs",
-        "scripts/fixtures/artist-merch-mobile.mjs"
+        "scripts/continuous-improvement-loop.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -65207,7 +65271,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1077,
+      "consumerCount": 1080,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -65408,13 +65472,13 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
-        "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs"
+        "scripts/__tests__/merch-runtime-safety.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -65834,7 +65898,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 930,
+      "consumerCount": 931,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -66012,6 +66076,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -66040,8 +66105,7 @@
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
-        "scripts/continuous-improvement-loop.mjs",
-        "scripts/fixtures/artist-merch-mobile.mjs"
+        "scripts/continuous-improvement-loop.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -66508,7 +66572,7 @@
       "lines": [
         1112
       ],
-      "consumerCount": 19,
+      "consumerCount": 21,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
@@ -66516,6 +66580,7 @@
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
         "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
         "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
@@ -66528,6 +66593,7 @@
       "webConsumers": [],
       "mobileConsumers": [],
       "automationConsumers": [
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -70868,7 +70934,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 239,
+      "consumerCount": 241,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -71000,7 +71066,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -71397,7 +71465,7 @@
       "lines": [
         65
       ],
-      "consumerCount": 236,
+      "consumerCount": 238,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -71528,7 +71596,9 @@
         "scripts/__tests__/calendar-http-runtime.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -71937,7 +72007,7 @@
       "lines": [
         116
       ],
-      "consumerCount": 198,
+      "consumerCount": 200,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -72067,7 +72137,9 @@
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -72223,7 +72295,7 @@
       "lines": [
         41
       ],
-      "consumerCount": 198,
+      "consumerCount": 200,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -72354,7 +72426,9 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -72443,7 +72517,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 192,
+      "consumerCount": 194,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -72572,7 +72646,9 @@
       "automationConsumers": [
         "scripts/__tests__/app-routes-auth-implementation.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -74735,7 +74811,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 57,
+      "consumerCount": 58,
       "backendConsumers": [
         "tdf-hq/src/TDF/App/StartupResponse.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -74794,6 +74870,7 @@
         "scripts/production_access.py",
         "scripts/rehearse-hetzner-restore.mjs",
         "scripts/test-booking-conformance.py",
+        "scripts/test-directory-saved-search-parity.mjs",
         "scripts/test-hetzner-inspection.py",
         "scripts/test-hetzner-restore.py",
         "scripts/test-music-release-api-e2e.mjs",
@@ -77030,7 +77107,7 @@
         2954,
         3056
       ],
-      "consumerCount": 337,
+      "consumerCount": 338,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -77186,6 +77263,7 @@
         "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/hetzner-restore.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
@@ -77209,8 +77287,7 @@
         "scripts/ci-change-scope.mjs",
         "scripts/fetch-ddex-ern432-schema.sh",
         "scripts/inspect-compiled-api.mjs",
-        "scripts/inspect-payment-staging.mjs",
-        "scripts/interactions/prepare-test-database.sh"
+        "scripts/inspect-payment-staging.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -77543,7 +77620,7 @@
       "lines": [
         7723
       ],
-      "consumerCount": 429,
+      "consumerCount": 430,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -77701,6 +77778,7 @@
         "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/hetzner-restore.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
@@ -77724,8 +77802,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/check-dependency-security.mjs",
         "scripts/ci-change-scope.mjs",
-        "scripts/fetch-ddex-ern432-schema.sh",
-        "scripts/inspect-compiled-api.mjs"
+        "scripts/fetch-ddex-ern432-schema.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -78363,7 +78440,7 @@
       "lines": [
         10697
       ],
-      "consumerCount": 932,
+      "consumerCount": 934,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -78543,6 +78620,7 @@
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -78569,8 +78647,7 @@
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
-        "scripts/catalog-list-audit.mjs",
-        "scripts/check-messaging-token.mjs"
+        "scripts/catalog-list-audit.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/generated-api-conformance.test.mjs",
@@ -79555,7 +79632,7 @@
       "lines": [
         11482
       ],
-      "consumerCount": 200,
+      "consumerCount": 202,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -79606,7 +79683,7 @@
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
         "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
         "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
-        "tdf-hq/sql/test_admin_operations_control_center.sql"
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
@@ -79669,6 +79746,7 @@
         "scripts/__tests__/fixtures/artist-management-claim.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -81765,7 +81843,7 @@
       "lines": [
         13866
       ],
-      "consumerCount": 1070,
+      "consumerCount": 1073,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -81966,13 +82044,13 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
-        "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs"
+        "scripts/__tests__/merch-runtime-safety.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -82770,7 +82848,7 @@
       "lines": [
         14268
       ],
-      "consumerCount": 1070,
+      "consumerCount": 1073,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -82971,13 +83049,13 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
-        "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs"
+        "scripts/__tests__/merch-runtime-safety.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -84820,7 +84898,7 @@
         16729,
         16781
       ],
-      "consumerCount": 1069,
+      "consumerCount": 1072,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -85021,13 +85099,13 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
-        "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs"
+        "scripts/__tests__/merch-runtime-safety.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -86582,7 +86660,7 @@
       "lines": [
         18275
       ],
-      "consumerCount": 927,
+      "consumerCount": 929,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -86762,6 +86840,7 @@
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -86788,8 +86867,7 @@
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
-        "scripts/catalog-list-audit.mjs",
-        "scripts/check-messaging-token.mjs"
+        "scripts/catalog-list-audit.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/generated-api-conformance.test.mjs",
@@ -86957,7 +87035,7 @@
       "lines": [
         18318
       ],
-      "consumerCount": 1076,
+      "consumerCount": 1079,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -87158,13 +87236,13 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
-        "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs"
+        "scripts/__tests__/merch-runtime-safety.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -100050,7 +100128,7 @@
       "lines": [
         242
       ],
-      "consumerCount": 32,
+      "consumerCount": 34,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_backfill_rollback.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -100062,6 +100140,7 @@
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
         "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
         "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
@@ -100084,6 +100163,7 @@
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -102502,7 +102582,7 @@
       "lines": [
         277
       ],
-      "consumerCount": 167,
+      "consumerCount": 169,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -102592,7 +102672,9 @@
         "scripts/__tests__/compiled-api-surface.test.mjs",
         "scripts/__tests__/directory-search-plan-parity.mjs",
         "scripts/__tests__/fixtures/artist-management-claim.sql",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/mobile-distribution-expiry.test.mjs",
         "scripts/audit-feature-registry.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -102635,9 +102717,7 @@
         "scripts/test-records-youtube-catalog-migration.sh",
         "scripts/test-recovery-files.py",
         "scripts/test-recovery-tools.py",
-        "scripts/test-social-event-optional-end-migration.sh",
-        "scripts/test-specification-conformance.py",
-        "scripts/test-ticket-manual-review.sh"
+        "scripts/test-social-event-optional-end-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/eventOperations.test.ts",
@@ -103015,7 +103095,7 @@
       "lines": [
         320
       ],
-      "consumerCount": 61,
+      "consumerCount": 63,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -103040,6 +103120,7 @@
         "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
         "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
         "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
@@ -103069,6 +103150,7 @@
       "automationConsumers": [
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/artist-enrichment.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -103593,7 +103675,7 @@
       "lines": [
         428
       ],
-      "consumerCount": 250,
+      "consumerCount": 252,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -103716,6 +103798,7 @@
         "scripts/__tests__/fixtures/artist-management-claim.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -107384,7 +107467,7 @@
       "lines": [
         921
       ],
-      "consumerCount": 59,
+      "consumerCount": 61,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/sql/2026-08-14_music_directory_backfill_rollback.sql",
@@ -107400,6 +107483,7 @@
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
         "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
         "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
         "tdf-hq/src/TDF/Directory/Policy.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
@@ -107444,6 +107528,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/catalog-list-audit.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
@@ -118645,7 +118730,7 @@
       "lines": [
         206
       ],
-      "consumerCount": 236,
+      "consumerCount": 238,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -118777,7 +118862,9 @@
         "scripts/__tests__/compiled-api-surface.test.mjs",
         "scripts/__tests__/directory-search-plan-parity.mjs",
         "scripts/__tests__/fixtures/artist-management-claim.sql",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/mobile-distribution-expiry.test.mjs",
         "scripts/audit-feature-registry.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -118820,8 +118907,7 @@
         "scripts/test-unified-checkout-migration.sh",
         "scripts/test-user-experiment-assignment-migration.sh",
         "scripts/test-user-onboarding-progress-migration.sh",
-        "scripts/test-verified-experience-reviews-migration.sh",
-        "scripts/ux-audit-inventory.mjs"
+        "scripts/test-verified-experience-reviews-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -120228,7 +120314,7 @@
       "lines": [
         380
       ],
-      "consumerCount": 235,
+      "consumerCount": 237,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -120347,6 +120433,7 @@
         "scripts/__tests__/fixtures/artist-management-claim.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -121496,7 +121583,7 @@
       "lines": [
         542
       ],
-      "consumerCount": 200,
+      "consumerCount": 202,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -121546,8 +121633,8 @@
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
         "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
         "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
-        "tdf-hq/sql/test_admin_operations_control_center.sql",
-        "tdf-hq/src/TDF/Artists/Enrichment.hs"
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
+        "tdf-hq/sql/test_admin_operations_control_center.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
@@ -121610,6 +121697,7 @@
         "scripts/__tests__/fixtures/artist-management-claim.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -126194,7 +126282,7 @@
       "lines": [
         1228
       ],
-      "consumerCount": 86,
+      "consumerCount": 88,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -126219,6 +126307,7 @@
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
         "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
         "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
@@ -126268,6 +126357,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/catalog-list-audit.mjs",
         "scripts/privacy-request-ledger.py",
@@ -129122,7 +129212,7 @@
       "lines": [
         145
       ],
-      "consumerCount": 87,
+      "consumerCount": 89,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
@@ -129149,6 +129239,7 @@
         "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
         "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
         "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
@@ -129172,8 +129263,7 @@
         "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
         "tdf-hq/test/TicketManualReviewMain.hs",
         "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
-        "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
-        "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql"
+        "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -129195,6 +129285,7 @@
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -129948,7 +130039,7 @@
       "lines": [
         245
       ],
-      "consumerCount": 53,
+      "consumerCount": 55,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -129976,6 +130067,7 @@
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
         "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
         "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
         "tdf-hq/src/TDF/EventOperations/Types.hs",
@@ -130003,6 +130095,7 @@
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/catalog-list-audit.mjs",
         "scripts/interactions/test-api.py",
@@ -130150,7 +130243,7 @@
       "lines": [
         299
       ],
-      "consumerCount": 212,
+      "consumerCount": 214,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -130267,6 +130360,7 @@
         "scripts/__tests__/fixtures/artist-management-claim.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -134978,7 +135072,7 @@
       "lines": [
         562
       ],
-      "consumerCount": 167,
+      "consumerCount": 169,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -135068,7 +135162,9 @@
         "scripts/__tests__/compiled-api-surface.test.mjs",
         "scripts/__tests__/directory-search-plan-parity.mjs",
         "scripts/__tests__/fixtures/artist-management-claim.sql",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/mobile-distribution-expiry.test.mjs",
         "scripts/audit-feature-registry.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -135111,9 +135207,7 @@
         "scripts/test-records-youtube-catalog-migration.sh",
         "scripts/test-recovery-files.py",
         "scripts/test-recovery-tools.py",
-        "scripts/test-social-event-optional-end-migration.sh",
-        "scripts/test-specification-conformance.py",
-        "scripts/test-ticket-manual-review.sh"
+        "scripts/test-social-event-optional-end-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/eventOperations.test.ts",
@@ -137074,7 +137168,7 @@
       "lines": [
         335
       ],
-      "consumerCount": 175,
+      "consumerCount": 177,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -137166,7 +137260,9 @@
         "scripts/__tests__/directory-search-plan-parity.mjs",
         "scripts/__tests__/fixtures/artist-management-claim.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/mobile-distribution-expiry.test.mjs",
         "scripts/audit-feature-registry.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
@@ -137208,9 +137304,7 @@
         "scripts/test-notification-navigation-migration.sh",
         "scripts/test-physical-postgres-recovery.py",
         "scripts/test-records-youtube-catalog-migration.sh",
-        "scripts/test-recovery-files.py",
-        "scripts/test-recovery-tools.py",
-        "scripts/test-social-event-optional-end-migration.sh"
+        "scripts/test-recovery-files.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/eventOperations.test.ts",
@@ -145675,7 +145769,7 @@
       "lines": [
         1709
       ],
-      "consumerCount": 199,
+      "consumerCount": 201,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -145726,7 +145820,7 @@
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
         "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
         "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
-        "tdf-hq/sql/test_admin_operations_control_center.sql"
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
@@ -145789,6 +145883,7 @@
         "scripts/__tests__/fixtures/artist-management-claim.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -150042,7 +150137,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 539,
+      "consumerCount": 540,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -150350,7 +150445,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 930,
+      "consumerCount": 931,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -150528,6 +150623,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
@@ -150556,8 +150652,7 @@
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
-        "scripts/continuous-improvement-loop.mjs",
-        "scripts/fixtures/artist-merch-mobile.mjs"
+        "scripts/continuous-improvement-loop.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -152049,7 +152144,7 @@
       "lines": [
         1197
       ],
-      "consumerCount": 1069,
+      "consumerCount": 1072,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -152250,13 +152345,13 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-namespace.py",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/__tests__/ledger-posting-upgrade.py",
         "scripts/__tests__/ledger-startup-namespace.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
-        "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs"
+        "scripts/__tests__/merch-runtime-safety.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
