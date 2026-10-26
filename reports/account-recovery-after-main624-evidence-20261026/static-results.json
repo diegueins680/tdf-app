@@ -1,0 +1,135 @@
+{
+  "source": "553e0562135072b556f49f31b04a2d568ad5dfe3",
+  "hash": "013ced97f662b7a7cca1702e630ff04a6839c161d05b0bcd18f25109e7be401e",
+  "base": "http://127.0.0.1:4297",
+  "startedAt": "2026-10-26T22:11:15.015Z",
+  "status": "PASS_STATIC_CLIENT_SYNTHETIC_BUSINESS",
+  "cases": [
+    {
+      "language": "es",
+      "formFactor": "desktop-web",
+      "status": 400,
+      "confirms": 1,
+      "requests": 1,
+      "blockedExternal": 2,
+      "unexpectedMutations": 0,
+      "pageErrors": [],
+      "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+      "requestPayload": {
+        "email": "static-reset@persona.test"
+      },
+      "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+    },
+    {
+      "language": "es",
+      "formFactor": "desktop-web",
+      "status": 401,
+      "confirms": 1,
+      "requests": 1,
+      "blockedExternal": 2,
+      "unexpectedMutations": 0,
+      "pageErrors": [],
+      "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+      "requestPayload": {
+        "email": "static-reset@persona.test"
+      },
+      "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+    },
+    {
+      "language": "es",
+      "formFactor": "Pixel7-emulated-web",
+      "status": 400,
+      "confirms": 1,
+      "requests": 1,
+      "blockedExternal": 2,
+      "unexpectedMutations": 0,
+      "pageErrors": [],
+      "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+      "requestPayload": {
+        "email": "static-reset@persona.test"
+      },
+      "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+    },
+    {
+      "language": "es",
+      "formFactor": "Pixel7-emulated-web",
+      "status": 401,
+      "confirms": 1,
+      "requests": 1,
+      "blockedExternal": 2,
+      "unexpectedMutations": 0,
+      "pageErrors": [],
+      "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+      "requestPayload": {
+        "email": "static-reset@persona.test"
+      },
+      "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+    },
+    {
+      "language": "en",
+      "formFactor": "desktop-web",
+      "status": 400,
+      "confirms": 1,
+      "requests": 1,
+      "blockedExternal": 2,
+      "unexpectedMutations": 0,
+      "pageErrors": [],
+      "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+      "requestPayload": {
+        "email": "static-reset@persona.test"
+      },
+      "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+    },
+    {
+      "language": "en",
+      "formFactor": "desktop-web",
+      "status": 401,
+      "confirms": 1,
+      "requests": 1,
+      "blockedExternal": 2,
+      "unexpectedMutations": 0,
+      "pageErrors": [],
+      "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+      "requestPayload": {
+        "email": "static-reset@persona.test"
+      },
+      "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+    },
+    {
+      "language": "en",
+      "formFactor": "Pixel7-emulated-web",
+      "status": 400,
+      "confirms": 1,
+      "requests": 1,
+      "blockedExternal": 2,
+      "unexpectedMutations": 0,
+      "pageErrors": [],
+      "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+      "requestPayload": {
+        "email": "static-reset@persona.test"
+      },
+      "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+    },
+    {
+      "language": "en",
+      "formFactor": "Pixel7-emulated-web",
+      "status": 401,
+      "confirms": 1,
+      "requests": 1,
+      "blockedExternal": 2,
+      "unexpectedMutations": 0,
+      "pageErrors": [],
+      "entry": "http://127.0.0.1:4297/assets/index-DMf-7Dv1.js",
+      "requestPayload": {
+        "email": "static-reset@persona.test"
+      },
+      "outcome": "PASS_LOCALIZED_EXPIRY_AND_NEW_LINK_INTENT"
+    }
+  ],
+  "productionBusinessWrites": 0,
+  "actualBusinessRequestsForwarded": 0,
+  "humans": 0,
+  "scope": "Hash-bound actual optimized static client. Every API, session, reset and email-request response is synthetic and intercepted; all external traffic blocked. No production account, token, password, email, API persistence or cookie revocation claim.",
+  "browserClosed": true,
+  "finishedAt": "2026-10-26T22:11:30.175Z"
+}
