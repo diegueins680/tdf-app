@@ -1,0 +1,50 @@
+{
+  "source": "e57c8d1404e4a6f7b587e05c5ddbb2072520431c",
+  "dirty": false,
+  "tla2toolsSha256": "fa18543e44ed5974a85bd2c60c0dc16620ae117680ea8e693d2691999ed90b22",
+  "javaVersion": "openjdk version \"21.0.12.1\" 2026-08-18 LTS\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode)",
+  "sourceHashes": {
+    "formal/event-operations/LedgerHeader.tla": "09d3c1f235ddc92be3a774e185ece7d4022897c0c1f9d56f30b530665dd159e8",
+    "formal/event-operations/LedgerHeaderMutable.cfg": "4bf67d22966ae62aae1106d2ec1fba2360684ee143ed839268fbe4ba1c6d6447",
+    "formal/event-operations/LedgerHeader.cfg": "96f2943f914fccd5ff3521bd7d661e5224df2093137a8f209eba5c52043a8d1d"
+  },
+  "runs": [
+    {
+      "config": "LedgerHeader.cfg",
+      "exitCode": 0,
+      "command": [
+        "/tmp/tdf-formal-jre21-20261021/jdk-21.0.12.1+1-jre/Contents/Home/bin/java",
+        "-Djava.io.tmpdir=/private/tmp/tdf-ledger-header-tlc-qualified-20261026",
+        "-XX:+UseParallelGC",
+        "-jar",
+        "/tmp/tdf-formal-tla2tools-1.7.2-20261021.jar",
+        "-workers",
+        "1",
+        "-metadir",
+        "/private/tmp/tdf-ledger-header-tlc-qualified-20261026/LedgerHeader.cfg",
+        "-config",
+        "LedgerHeader.cfg",
+        "LedgerHeader.tla"
+      ]
+    },
+    {
+      "config": "LedgerHeaderMutable.cfg",
+      "exitCode": 12,
+      "command": [
+        "/tmp/tdf-formal-jre21-20261021/jdk-21.0.12.1+1-jre/Contents/Home/bin/java",
+        "-Djava.io.tmpdir=/private/tmp/tdf-ledger-header-tlc-qualified-20261026",
+        "-XX:+UseParallelGC",
+        "-jar",
+        "/tmp/tdf-formal-tla2tools-1.7.2-20261021.jar",
+        "-workers",
+        "1",
+        "-metadir",
+        "/private/tmp/tdf-ledger-header-tlc-qualified-20261026/LedgerHeaderMutable.cfg",
+        "-config",
+        "LedgerHeaderMutable.cfg",
+        "LedgerHeader.tla"
+      ]
+    }
+  ],
+  "finishedAt": "2026-10-26T03:22:06.582461+00:00"
+}
