@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { logger } from '../utils/logger';
-import { EMPTY_QUEUE, nextQueueIndex, previousQueueIndex, queueReducer, type QueueState } from './queue';
+import { EMPTY_QUEUE, nextQueueIndex, previousQueueIndex, queueReducer, type QueueAction, type QueueState } from './queue';
 import { authorizePlayerAsset } from './assetAccess';
 import {
   PLAYER_LOAD_TRACK_EVENT,
@@ -31,6 +31,7 @@ const TARGET_LOUDNESS_LUFS = -14;
 const MAX_NETWORK_RETRIES = 2;
 
 interface PersistedPlayerState {
+  ownerPartyId?: number | null;
   queue: QueueState;
   volume: number;
   muted: boolean;
@@ -90,13 +91,19 @@ const isTrack = (value: unknown): value is PlayerTrack => {
         || (typeof source.assetId === 'string' && source.assetId.length > 0)));
 };
 
-const loadPersistedState = (): PersistedPlayerState => {
+const loadPersistedState = (ownerPartyId: number | null | undefined, identityReady: boolean): PersistedPlayerState => {
   if (typeof window === 'undefined') {
     return { queue: EMPTY_QUEUE, volume: 0.8, muted: false, quality: 'auto', positions: {} };
   }
   try {
     const parsed = JSON.parse(window.localStorage.getItem(PERSISTENCE_KEY) ?? 'null') as Partial<PersistedPlayerState> | null;
-    const tracks = Array.isArray(parsed?.queue?.tracks) ? parsed.queue.tracks.filter(isTrack).slice(0, 200) : [];
+    // Missing ownership denotes legacy, device-wide listening state. In
+    // particular, it must not be interpreted as an anonymous owner's null tag.
+    const restoreListening = identityReady && ownerPartyId !== undefined
+      && parsed != null && Object.prototype.hasOwnProperty.call(parsed, 'ownerPartyId')
+      && parsed.ownerPartyId === ownerPartyId;
+    const tracks = restoreListening && Array.isArray(parsed?.queue?.tracks)
+      ? parsed.queue.tracks.filter(isTrack).slice(0, 200) : [];
     const currentIndex = Number.isSafeInteger(parsed?.queue?.currentIndex)
       ? Math.min(Math.max(parsed?.queue?.currentIndex ?? -1, -1), tracks.length - 1)
       : -1;
@@ -104,10 +111,12 @@ const loadPersistedState = (): PersistedPlayerState => {
       ? Math.min(Math.max(parsed.volume, 0), 1)
       : 0.8;
     const quality = parsed?.quality === 'auto' || isPlayerQuality(parsed?.quality) ? parsed.quality : 'auto';
-    const repeat = isRepeatMode(parsed?.queue?.repeat) ? parsed.queue.repeat : 'off';
-    const positions = parsed?.positions && typeof parsed.positions === 'object' ? parsed.positions : {};
+    const repeat = restoreListening && isRepeatMode(parsed?.queue?.repeat) ? parsed.queue.repeat : 'off';
+    const positions = restoreListening && parsed?.positions && typeof parsed.positions === 'object'
+      ? Object.fromEntries(Object.entries(parsed.positions).filter(([, position]) => typeof position === 'number'
+        && Number.isFinite(position) && position >= 0)) : {};
     return {
-      queue: { tracks, currentIndex, shuffle: parsed?.queue?.shuffle === true, repeat },
+      queue: { tracks, currentIndex, shuffle: restoreListening && parsed?.queue?.shuffle === true, repeat },
       volume,
       muted: parsed?.muted === true,
       quality,
@@ -177,16 +186,63 @@ const emitPlayerEvent = (eventType: string, track: PlayerTrack, positionSeconds:
   }));
 };
 
-export function PlayerProvider({ children }: { children: ReactNode }) {
-  const persisted = useMemo(loadPersistedState, []);
-  const [queue, dispatchQueue] = useReducer(queueReducer, persisted.queue);
+interface PlayerIdentity {
+  ready: boolean;
+  // null means resolved anonymous; undefined means an account without a valid ID.
+  partyId: number | null | undefined;
+}
+
+interface PlayerPreferences {
+  volume: number;
+  muted: boolean;
+  quality: PlayerQuality | 'auto';
+}
+
+const ANONYMOUS_IDENTITY: PlayerIdentity = { ready: true, partyId: null };
+
+export function PlayerProvider({ children, identity = ANONYMOUS_IDENTITY }: { children: ReactNode; identity?: PlayerIdentity }) {
+  const ownerPartyId = identity.partyId === null ? null
+    : Number.isSafeInteger(identity.partyId) && (identity.partyId ?? 0) > 0 ? identity.partyId : undefined;
+  // Device preferences survive listener changes even before the save debounce.
+  const [preferences, setPreferences] = useState<PlayerPreferences>(() => loadPersistedState(undefined, false));
+  const [boundary, setBoundary] = useState({ ownerPartyId, epoch: 0 });
+  if (boundary.ownerPartyId !== ownerPartyId) {
+    // Reset before children commit under a different listener. A same-owner
+    // bootstrap completion must keep a newer explicit selection and decoder.
+    setBoundary({ ownerPartyId, epoch: boundary.epoch + 1 });
+    return null;
+  }
+  return <PlayerSession key={boundary.epoch} ownerPartyId={ownerPartyId} identityReady={identity.ready}
+    restoreListening={boundary.epoch === 0}
+    preferences={preferences} setPreferences={setPreferences}>{children}</PlayerSession>;
+}
+
+function PlayerSession({ children, ownerPartyId, identityReady, restoreListening, preferences, setPreferences }: {
+  children: ReactNode; ownerPartyId: number | null | undefined; identityReady: boolean;
+  restoreListening: boolean;
+  preferences: PlayerPreferences;
+  setPreferences: (update: (current: PlayerPreferences) => PlayerPreferences) => void;
+}) {
+  // Only a fresh application context can restore. A -> B -> A must remain
+  // empty even if an old A envelope survives the short persistence debounce.
+  const [persisted] = useState(() => loadPersistedState(ownerPartyId, identityReady && restoreListening));
+  const [queue, reduceQueue] = useReducer(queueReducer, persisted.queue);
+  const queueIntentRef = useRef(false);
+  const [listeningHydrated, setListeningHydrated] = useState(identityReady);
+  const dispatchQueue = useCallback((action: QueueAction) => {
+    queueIntentRef.current = true;
+    reduceQueue(action);
+  }, []);
   const [status, setStatus] = useState<PlaybackStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, updateVolume] = useState(persisted.volume);
-  const [muted, updateMuted] = useState(persisted.muted);
-  const [quality, updateQuality] = useState<PlayerQuality | 'auto'>(persisted.quality);
+  const { volume, muted, quality } = preferences;
+  const updateVolume = useCallback((value: number) => setPreferences((current) => ({ ...current, volume: value })), [setPreferences]);
+  const updateMuted = useCallback((value: boolean | ((current: boolean) => boolean)) => setPreferences((current) => ({
+    ...current, muted: typeof value === 'function' ? value(current.muted) : value,
+  })), [setPreferences]);
+  const updateQuality = useCallback((value: PlayerQuality | 'auto') => setPreferences((current) => ({ ...current, quality: value })), [setPreferences]);
   const [sourceRefresh, setSourceRefresh] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const positionsRef = useRef<Record<string, number>>(persisted.positions);
@@ -202,6 +258,18 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const currentTrack = queue.currentIndex >= 0 ? queue.tracks[queue.currentIndex] ?? null : null;
   const candidates = useMemo(() => orderedSources(currentTrack, quality), [currentTrack, quality]);
   const source = candidates[0] ?? null;
+
+  useEffect(() => {
+    if (!identityReady || listeningHydrated) return;
+    // Any explicit queue command, including clearing an empty queue, supersedes
+    // persisted state. Hydration cannot replace a user's newer selection.
+    if (!queueIntentRef.current) {
+      const saved = loadPersistedState(ownerPartyId, restoreListening);
+      positionsRef.current = saved.positions;
+      reduceQueue({ type: 'restore', queue: saved.queue });
+    }
+    setListeningHydrated(true);
+  }, [identityReady, listeningHydrated, ownerPartyId, restoreListening]);
 
   const cancelRetry = useCallback(() => {
     if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
@@ -295,7 +363,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (index === queue.currentIndex) { void play(); return; }
     autoplayRef.current = true;
     dispatchQueue({ type: 'select', index });
-  }, [play, queue.currentIndex]);
+  }, [dispatchQueue, play, queue.currentIndex]);
 
   const next = useCallback(() => {
     const nextIndex = nextQueueIndex(queue);
@@ -311,7 +379,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
     autoplayRef.current = true;
     dispatchQueue({ type: 'select', index: nextIndex });
-  }, [pause, play, queue]);
+  }, [dispatchQueue, pause, play, queue]);
 
   const previous = useCallback(() => {
     const audio = audioRef.current;
@@ -325,7 +393,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       autoplayRef.current = true;
       dispatchQueue({ type: 'select', index: previousIndex });
     }
-  }, [queue]);
+  }, [dispatchQueue, queue]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -551,7 +619,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       window.removeEventListener(PLAYER_LOAD_TRACK_EVENT, handleLoad as EventListener);
       window.removeEventListener(RADIO_TAKEOVER_EVENT, handleRadioTakeover);
     };
-  }, [pause]);
+  }, [dispatchQueue, pause]);
 
   useEffect(() => installPlayerAnalyticsBridge(), []);
 
@@ -612,9 +680,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentTrack, next, pause, play, previous, status]);
+  }, [currentTrack, next, pause, play, previous, status, updateMuted]);
 
   useEffect(() => {
+    // Never replace a saved listener queue with the initial unresolved empty
+    // state, or label an unknown authenticated account as anonymous.
+    if (!identityReady || !listeningHydrated || ownerPartyId === undefined) return undefined;
     const timeout = window.setTimeout(() => {
       try {
         const persistedQueue: QueueState = {
@@ -628,6 +699,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           })),
         };
         window.localStorage.setItem(PERSISTENCE_KEY, JSON.stringify({
+          ownerPartyId,
           queue: persistedQueue,
           volume,
           muted,
@@ -639,9 +711,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }
     }, 250);
     return () => window.clearTimeout(timeout);
-  }, [currentTime, muted, quality, queue, volume]);
+  }, [currentTime, identityReady, listeningHydrated, muted, ownerPartyId, quality, queue, volume]);
 
   const playTrack = useCallback((track: PlayerTrack, replacementQueue?: PlayerTrack[], autoplay = true) => {
+    queueIntentRef.current = true;
     if (track === currentTrack && !replacementQueue) {
       if (autoplay) void play(); else pause();
       return;
@@ -649,7 +722,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const tracks = replacementQueue?.filter(isTrack) ?? [track];
     autoplayRef.current = autoplay;
     dispatchQueue({ type: 'replace', tracks, currentTrackId: track.id });
-  }, [currentTrack, pause, play]);
+  }, [currentTrack, dispatchQueue, pause, play]);
 
   const contextValue = useMemo<PlayerContextValue>(() => ({
     queue,
@@ -692,7 +765,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setRepeat: (mode) => dispatchQueue({ type: 'repeat', mode }),
   }), [
     currentTime, currentTrack, duration, error, muted, next, pause, play, playTrack, previous,
-    quality, queue, resolvedQuality, selectTrack, status, volume,
+    quality, queue, resolvedQuality, selectTrack, status, volume, dispatchQueue, updateMuted, updateQuality, updateVolume,
   ]);
 
   return (

@@ -9,9 +9,21 @@ const assetId = (i, q) => `55000000-0000-4000-8000-0000000000${i}${q}`;
 const qualities = ['low', 'high', 'lossless'];
 const previewAssetId = '55000000-0000-4000-8000-000000000099';
 
-async function prepare(page, { previewFallback = false } = {}) {
+async function prepare(page, { previewFallback = false, holdSameOwnerSession = false } = {}) {
   const fixture = JSON.parse(process.env.TDF_NATIVE_MUSIC_FIXTURE);
   const events = [], deniedNetwork = [], assetRequests = [];
+  const cachedListener = { partyId: 101, username: 'synthetic-native-listener', displayName: 'Synthetic listener', roles: ['customer'] };
+  let resolveSession = () => undefined;
+  const pendingSession = holdSameOwnerSession ? new Promise((resolve) => { resolveSession = resolve; }) : Promise.resolve();
+  if (holdSameOwnerSession) {
+    await page.addInitScript(({ listener, source }) => {
+      localStorage.setItem('tdf-hq-ui/session', JSON.stringify(listener));
+      localStorage.setItem('tdf-global-player/v1', JSON.stringify({ ownerPartyId: listener.partyId,
+        queue: { tracks: [{ id: 'synthetic-old-selection-A', title: 'Old saved selection A', artist: 'Fixture TDF',
+          sources: [{ url: source, quality: 'high', mediaType: 'audio/mp4' }] }], currentIndex: 0, shuffle: false, repeat: 'off' },
+        positions: { 'synthetic-old-selection-A': 12 }, volume: 0.8, muted: false, quality: 'auto' }));
+    }, { listener: cachedListener, source: `${fixture.endpoint}/media/second/high` });
+  }
   const summary = { id: releaseId, versionId, versionNumber: 1, artistPartyId: 101,
     slug: 'audio-nativo-sintetico', kind: 'album', title: 'Audio nativo sintético',
     displayArtist: 'Fixture TDF', releaseAtUtc: '2026-09-13T00:00:00Z', publishedAt: '2026-09-13T00:00:01Z',
@@ -43,7 +55,14 @@ async function prepare(page, { previewFallback = false } = {}) {
     if (url.hostname !== '127.0.0.1' && url.hostname !== 'localhost') {
       deniedNetwork.push(url.origin); return route.abort('blockedbyclient');
     }
-    if (url.pathname === '/session') return route.fulfill({ status: 401, json: { error: 'synthetic visitor' } });
+    if (url.pathname === '/session') {
+      if (!holdSameOwnerSession) return route.fulfill({ status: 401, json: { error: 'synthetic visitor' } });
+      await pendingSession;
+      return route.fulfill({ json: cachedListener });
+    }
+    if (url.pathname === '/session/onboarding/reconcile') return route.fulfill({ json: {
+      newlyCompleted: false, progress: { eligible: false, completedAt: null, firstValue: null },
+    } });
     if (url.pathname === '/fans/artists') return route.fulfill({ json: [] });
     if (url.pathname === '/catalogs/batch') return route.fulfill({ json: {} });
     if (url.pathname === '/music/releases') return route.fulfill({ json: [summary] });
@@ -101,7 +120,7 @@ async function prepare(page, { previewFallback = false } = {}) {
   await expect.poll(() => audio.evaluate((a) => a.currentTime), { message: 'Native decoder must advance the real media clock', timeout: 15000 }).toBeGreaterThan(0.5);
   await expect(player.getByRole('button', { name: 'Pausar' })).toBeVisible();
   await audio.evaluate((a) => { globalThis.__originalNativeAudio = a; });
-  return { player, audio, events, fixture, deniedNetwork, assetRequests };
+  return { player, audio, events, fixture, deniedNetwork, assetRequests, finishSession: () => resolveSession() };
 }
 
 async function seek(player, value) {
@@ -173,6 +192,28 @@ test('@critical PW-MUSIC-NATIVE-01 decodes real derivatives and keeps playback a
   expect(await audio.evaluate((a) => a === globalThis.__originalNativeAudio && !a.error)).toBe(true);
   expect(await page.evaluate(() => globalThis.__nativeMediaEvents.filter((e) => e.type === 'playing' && e.trusted).length)).toBeGreaterThanOrEqual(3);
   expect(events.some((e) => e.eventType === 'play_start')).toBe(true);
+});
+
+test('@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer selection and its real decoder', async ({ page }) => {
+  // Session, catalogue and access metadata are synthetic. Actual native AAC
+  // bytes, media methods and media clocks are unchanged and use loopback HTTP.
+  const { player, audio, finishSession } = await prepare(page, { holdSameOwnerSession: true });
+  const savedBefore = await page.evaluate(() => JSON.parse(localStorage.getItem('tdf-global-player/v1')));
+  expect(savedBefore.queue.tracks[0].id).toBe('synthetic-old-selection-A');
+  await expect(player.getByText('Pista nativa 1', { exact: true })).toBeVisible();
+  await expect.poll(() => audio.evaluate((a) => a.currentSrc)).toMatch(/\/media\/first\//);
+  const before = await audio.evaluate((a) => a.currentTime);
+  const response = page.waitForResponse((res) => new URL(res.url()).pathname === '/session' && res.status() === 200);
+  finishSession(); await response;
+  // A persisted new selection proves the ready-state transition completed;
+  // pending identity must never have written over the old fixture beforehand.
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('tdf-global-player/v1')).queue.tracks[0].id)).toBe(trackId(1));
+  await expect(audio).toHaveCount(1);
+  expect(await audio.evaluate((a) => a === globalThis.__originalNativeAudio && !a.paused && !a.error)).toBe(true);
+  await expect.poll(() => audio.evaluate((a) => a.currentTime)).toBeGreaterThan(before + 0.5);
+  await expect.poll(() => audio.evaluate((a) => a.currentSrc)).toMatch(/\/media\/first\//);
+  await expect(player.getByText('Pista nativa 1', { exact: true })).toBeVisible();
+  await expect(player.getByText('Old saved selection A', { exact: true })).toHaveCount(0);
 });
 
 test('@critical PW-MUSIC-NATIVE-02 native ended advances the queue and repetition actually restarts audio', async ({ page }) => {
