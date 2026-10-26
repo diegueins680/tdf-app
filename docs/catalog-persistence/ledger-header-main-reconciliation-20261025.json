@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "mainParent": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+  "headerParent": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
+  "mainManifestDecision": {
+    "id": "8229b8202552298c955e",
+    "classification": "security-system-registry",
+    "disposition": "retain-reviewed-deployment-manifest",
+    "specializedModel": "production migration manifest and applied migration ledger",
+    "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+    "justification": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
+    "reviewed": true,
+    "reviewMethod": "successor-of-reviewed-decisions",
+    "reviewBatch": "directory-financial-main-integration-20261026",
+    "sourceReviewReferences": [
+      {
+        "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+        "sourceEntry": {
+          "id": "3f336173e03f10fc023c"
+        },
+        "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+        "sourceEntry": {
+          "id": "2b073f20afd2f3798b1e"
+        },
+        "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+        "sourceEntry": {
+          "id": "a1eb1e750e7543b88fe1"
+        },
+        "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+        "sourceEntry": {
+          "id": "b7cc47848f3f9882770f"
+        },
+        "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+        "sourceEntry": {
+          "id": "c94cd70c1272ec9ede1b"
+        },
+        "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      }
+    ],
+    "evidence": {
+      "file": "scripts/production-migrations.json",
+      "line": 3,
+      "kind": "json-array",
+      "name": "migrations",
+      "valueCount": 221
+    }
+  },
+  "headerManifestDecision": {
+    "id": "9ada14767bee1662f97d",
+    "classification": "security-system-registry",
+    "disposition": "retain-reviewed-deployment-manifest",
+    "specializedModel": "production migration manifest and applied migration ledger",
+    "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+    "justification": "The 221-entry deployment execution registry preserves all 220 migration objects and historical SQL bytes from protected main 917806ff9c8d455a01bfb8a29c80d6ff353e0e0b as its exact ordered prefix. The only addition is the posted ledger header guard introduced by ancestor 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Full-schema apply/replay, ordinary-role mutations, witnessed posting/header races and guard-removal controls qualify the unchanged SQL. This technical source review retains the previous complete decision and source references; it grants no production execution, provider activation, runtime privilege change or independent PR approval.",
+    "reviewed": true,
+    "reviewMethod": "successor-of-reviewed-decisions",
+    "reviewBatch": "ledger-header-technical-review-20261025",
+    "sourceReviewReferences": [
+      {
+        "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+        "sourceEntry": {
+          "id": "3f336173e03f10fc023c"
+        },
+        "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+        "sourceEntry": {
+          "id": "2b073f20afd2f3798b1e"
+        },
+        "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+        "sourceEntry": {
+          "id": "a1eb1e750e7543b88fe1"
+        },
+        "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "43c7adba83ab8c1554c944ea99871b8a9c406c3b",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+        "sourceEntry": {
+          "id": "b7cc47848f3f9882770f"
+        },
+        "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      }
+    ],
+    "evidence": {
+      "file": "scripts/production-migrations.json",
+      "line": 3,
+      "kind": "json-array",
+      "name": "migrations",
+      "valueCount": 221
+    },
+    "previousDecisionReference": {
+      "document": "docs/catalog-persistence/ledger-header-reconciliation-20261025.json",
+      "id": "b7cc47848f3f9882770f",
+      "canonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28"
+    }
+  },
+  "mainDecisionCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+  "headerDecisionCanonicalSha256": "6528ab5a8a23254d2e4ad4222e392f7f8f052b9f2818ef6e9eb8fc3a461a7003",
+  "protectedMainManifestCanonicalSha256": "1413652c0d640dbb2241fb5c004eaa212245a62dfcb031109f54226d3af31fd9",
+  "protectedMainManifestCount": 221,
+  "currentManifestCount": 222,
+  "currentManifestId": "6ff395b6131079017c9d",
+  "headerMigration": {
+    "id": "2026-10-25_ledger_posted_header",
+    "path": "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
+    "introducedBy": "5cc26ad46c958a029ec4539c60cc1ca77fec1d01"
+  },
+  "scope": "Exact predecessor source reviews retained as history; current technical decision is independently reviewed. No stale-ID waiver, deployment permission or whole-system proof."
+}

@@ -1,0 +1,409 @@
+{
+  "stats": {
+    "startTime": "2026-10-25T23:43:47.816Z",
+    "duration": 217446.806,
+    "expected": 36,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "scope": "Synthetic API/browser qualification; no production business request or provider execution.",
+  "tests": [
+    {
+      "title": "Directory remains searchable when city storage denies getter @critical",
+      "project": "welcome-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3297
+        }
+      ]
+    },
+    {
+      "title": "Directory remains searchable when city storage denies getItem @critical",
+      "project": "welcome-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2983
+        }
+      ]
+    },
+    {
+      "title": "Directory remains searchable when city storage denies setItem @critical",
+      "project": "welcome-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2947
+        }
+      ]
+    },
+    {
+      "title": "Directory remains searchable when city storage denies getter @critical",
+      "project": "welcome-android",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3363
+        }
+      ]
+    },
+    {
+      "title": "Directory remains searchable when city storage denies getItem @critical",
+      "project": "welcome-android",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3248
+        }
+      ]
+    },
+    {
+      "title": "Directory remains searchable when city storage denies setItem @critical",
+      "project": "welcome-android",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3190
+        }
+      ]
+    },
+    {
+      "title": "Directory remains searchable when city storage denies getter @critical",
+      "project": "welcome-firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 5965
+        }
+      ]
+    },
+    {
+      "title": "Directory remains searchable when city storage denies getItem @critical",
+      "project": "welcome-firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 4775
+        }
+      ]
+    },
+    {
+      "title": "Directory remains searchable when city storage denies setItem @critical",
+      "project": "welcome-firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 4569
+        }
+      ]
+    },
+    {
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "welcome-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 10719
+        }
+      ]
+    },
+    {
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "welcome-android",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 10949
+        }
+      ]
+    },
+    {
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "welcome-firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 11882
+        }
+      ]
+    },
+    {
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "welcome-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 11605
+        }
+      ]
+    },
+    {
+      "title": "Directory complete search and favorite recovery use en @critical",
+      "project": "welcome-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 11489
+        }
+      ]
+    },
+    {
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "welcome-android",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 12341
+        }
+      ]
+    },
+    {
+      "title": "Directory complete search and favorite recovery use en @critical",
+      "project": "welcome-android",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 12221
+        }
+      ]
+    },
+    {
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "welcome-firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 12721
+        }
+      ]
+    },
+    {
+      "title": "Directory complete search and favorite recovery use en @critical",
+      "project": "welcome-firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 12699
+        }
+      ]
+    },
+    {
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "welcome-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 1898
+        }
+      ]
+    },
+    {
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "welcome-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2028
+        }
+      ]
+    },
+    {
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "welcome-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 1922
+        }
+      ]
+    },
+    {
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "welcome-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2239
+        }
+      ]
+    },
+    {
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "welcome-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 9432
+        }
+      ]
+    },
+    {
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "welcome-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2786
+        }
+      ]
+    },
+    {
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "welcome-android",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3079
+        }
+      ]
+    },
+    {
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "welcome-android",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2146
+        }
+      ]
+    },
+    {
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "welcome-android",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2390
+        }
+      ]
+    },
+    {
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "welcome-android",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2727
+        }
+      ]
+    },
+    {
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "welcome-android",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 9768
+        }
+      ]
+    },
+    {
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "welcome-android",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3022
+        }
+      ]
+    },
+    {
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "welcome-firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2620
+        }
+      ]
+    },
+    {
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "welcome-firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2808
+        }
+      ]
+    },
+    {
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "welcome-firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 2390
+        }
+      ]
+    },
+    {
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "welcome-firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3773
+        }
+      ]
+    },
+    {
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "welcome-firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 10011
+        }
+      ]
+    },
+    {
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "welcome-firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 3762
+        }
+      ]
+    }
+  ]
+}

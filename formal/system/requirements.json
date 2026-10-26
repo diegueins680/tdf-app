@@ -8568,7 +8568,9 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "scripts/test-player-session-model.mjs"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-PLAYER-001",
       "title": "Single persistent web player and public music pages",
@@ -8576,8 +8578,8 @@
       "critical": true,
       "statement": "One PlayerProvider owns a single HTMLAudioElement mounted above all navigation. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. The legacy radio widget is hidden on /musica routes; playback analytics use a stable identity with retry-safe ingestion.",
       "authority": "Unreviewed recovered local implementation; ADR-004 and playback-identity.md in docs/music-releases/",
-      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md",
-      "contract": "docs/music-releases/native-player-verification.md",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md",
+      "contract": "formal/system/player-session.md",
       "property": "At most one audio element plays; a queued item is played only after a fresh authorization for its asset id.",
       "actors": [
         "Public listener",
@@ -8646,7 +8648,10 @@
         "tdf-hq-ui/src/utils/musicPreviewRange.ts",
         "tdf-hq/sql/2026-09-16_music_playback_identity.sql",
         "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql",
-        "tdf-mobile/src/navigation/notificationTarget.ts"
+        "tdf-mobile/src/navigation/notificationTarget.ts",
+        "playwright.music-native.config.mjs",
+        ".github/workflows/ci.yml",
+        "scripts/run-native-audio-tests.sh"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -8670,13 +8675,15 @@
         "e2e/web/music-player.spec.mjs",
         "e2e/web/music-player-native.spec.mjs",
         "e2e/web/music-player-integration.spec.mjs",
-        "e2e/web/fixtures/native-music-setup.mjs"
+        "e2e/web/fixtures/native-music-setup.mjs",
+        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx"
       ],
-      "verification": "Vitest unit tests, Playwright native and integration specs against local API/PostgreSQL/S3",
-      "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md",
+      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified.",
+      "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
       "confidence": "Medium: browser evidence local only.",
       "ambiguity": [
-        "Legacy radio consumers are kept behind compatibility until all are validated."
+        "Legacy radio consumers are kept behind compatibility until all are validated.",
+        "Single authoritative canonical music player does not establish exclusive ownership of provider iframes, legacy radio previews, other tabs or operating-system audio."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -12037,6 +12044,246 @@
       "failure": "Server revocation remains unconfirmed on network, deadline or non-success response.",
       "recovery": "Explicit bounded retry or fresh interactive login; retain unsigned public reads.",
       "observability": "Record outcome booleans only; no cookie, token or personal-data diagnostics."
+    },
+    {
+      "id": "COMM-CLUB-001",
+      "title": "Recover fan-club reads without claiming false unavailability",
+      "statement": "A club read failure other than confirmed404 remains a recoverable load failure, not evidence of club absence. The reader can explicitly retry without losing the artist, deep link or session boundary. A missing club offers the existing public artist profile; invalid identifiers never select a different artist. Dependent content is requested only after a valid readable club is available.",
+      "domain": "COMM",
+      "actors": [
+        "Public fan",
+        "Authenticated fan",
+        "Artist"
+      ],
+      "preconditions": [
+        "Existing read endpoints and their authorization remain authoritative; public profile navigation grants no private-club access."
+      ],
+      "inputs": [
+        "Artist route identifier",
+        "Club read result or error status",
+        "Current session",
+        "Deep-link search/hash",
+        "Explicit retry"
+      ],
+      "state": {
+        "club": [
+          "loading",
+          "readable",
+          "not-found",
+          "read-failed",
+          "invalid-link"
+        ]
+      },
+      "allowedTransitions": [
+        "Loading -> readable after successful authorized read.",
+        "Failed read -> explicit retry -> current server outcome.",
+        "Confirmed404 -> public artist profile or Comunidad.",
+        "401/403 -> login preserving pathname, search and hash.",
+        "Readable cached club -> retain visible data during failed background refresh."
+      ],
+      "forbiddenTransitions": [
+        "503/network/timeout/401/403 -> assert artist has no active club.",
+        "Invalid or unsafe numeric identifier -> query another club.",
+        "Missing/unread club -> eagerly fetch its protected content.",
+        "Read or fallback navigation -> create club, membership, follow, post, message or notification."
+      ],
+      "effects": [
+        "Read-only recovery and existing-route navigation; no backend, API, database, provider or feature-flag change."
+      ],
+      "authorization": "Existing public/authenticated endpoints retain their checks. No fallback from a failed private API read to a public API response under the same cache key. Login preserves the requested route.",
+      "privacy": "Never display raw server/network diagnostics or credentials. Public artist links expose only the existing public-profile route.",
+      "concurrency": "Successful cached data remains usable while React Query refreshes. Club readiness gates dependent requests. Session cache isolation remains the shared provider responsibility.",
+      "idempotency": "Retry repeats only the club GET; no relationship or content mutation is introduced.",
+      "failure": "Unconfirmed availability is shown as a load failure with retry; a confirmed404 is not a claim that an artist never enabled a club.",
+      "recovery": "Retry reuses the current route query; users can visit the public artist page or Comunidad.",
+      "observability": "Actual component tests distinguish statuses, verify request ordering and preserve deep links. Browser/API/DB fixture receipts retain their source identities.",
+      "source": "User-authorized activation sprint; issue606 missing-club reproduction and new actual-component non404 negative controls.",
+      "implementation": [
+        "tdf-hq-ui/src/pages/FanClubPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "High for tested component transitions; production deployment and human comprehension remain unverified.",
+      "ambiguity": [
+        "This requirement does not provision new clubs or prove existing-club posting ownership, provider content delivery or human usability."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped component and isolated runtime evidence required; no whole-system refinement, deployed-version or human-pilot claim."
+      },
+      "critical": false,
+      "authority": "Activation journey B7/B8 failure recovery, truthful availability and issue606 acceptance criteria.",
+      "property": "Only confirmed404 can select missing-club UI; non404 read failure remains retryable and preserves artist context.",
+      "contract": "formal/system/fan-club-read-recovery.md",
+      "verification": "Component regression and pre-change negative controls; isolated browser on real API/PostgreSQL for unavailable/new-artist and recovery states.",
+      "evidence": "Exact source qualification receipts; synthetic data excluded from VAR, conversion and retention."
+    },
+    {
+      "id": "UX-WELCOME-001",
+      "title": "Public discovery shows value before personal profiling",
+      "statement": "The public start page /inicio explains TDF and offers anonymous exploration before the existing directory form. /buscar keeps direct URL-backed search; search controls describe the requested result rather than visitor identity. /tdf exposes studio, services and published work before contextual signup. Exploration does not require registration, geolocation or role selection and remains usable when directory data fails.",
+      "authority": "Explicit product owner execution request 2026-10-25 incorporating eight supplied visitor voice comments.",
+      "domain": "UX",
+      "source": "docs/engineering/welcome-first-discovery-2026-10-25.md",
+      "contract": "docs/engineering/welcome-first-discovery-2026-10-25.md",
+      "actors": [
+        "Anonymous visitor",
+        "Returning visitor",
+        "Authenticated user"
+      ],
+      "preconditions": [
+        "Existing public route and session bootstrap contracts"
+      ],
+      "inputs": [
+        "Current pathname",
+        "Existing URL search parameters",
+        "Public directory and editorial reads"
+      ],
+      "state": {
+        "arrival": [
+          "anonymous welcome",
+          "direct search",
+          "public platform exploration",
+          "directory unavailable"
+        ]
+      },
+      "allowedTransitions": [
+        "Anonymous root after bootstrap -> /inicio welcome and existing search",
+        "/inicio -> /tdf, /records or /buscar without registration",
+        "/tdf -> studio and service anchors, public work or contextual signup",
+        "Directory unavailable -> retry or independent public exploration"
+      ],
+      "forbiddenTransitions": [
+        "Public exploration requires personal profiling",
+        "Search profession is presented as visitor identity",
+        "Arbitrary editorial cover is represented as a studio photograph",
+        "Exploration CTA writes business data or grants access"
+      ],
+      "effects": [
+        "Render welcoming public content and labeled search",
+        "Navigate to existing public destinations",
+        "Emit optional fixed-destination exploration click events"
+      ],
+      "authorization": "Existing backend and session authorization unchanged. Signed-in root destination remains Comunidad.",
+      "privacy": "New welcome CTA events contain only fixed route and destination labels; no search query, identity, coordinates or user-entered data. Existing consent controls remain authoritative.",
+      "concurrency": "Welcome is independent of asynchronous directory data; existing account-scoped search cache and mutation guards are unchanged.",
+      "idempotency": "Exploration is read-only navigation; existing directory write contracts unchanged.",
+      "failure": "Directory failures preserve the welcome and independent exploration links. Analytics failure must not interrupt welcome navigation.",
+      "recovery": "Existing directory retry and URL-backed search remain available.",
+      "observability": "public_discovery_cta_clicked is exploratory intent, never successful activation. No measured conversion uplift is claimed.",
+      "property": "WelcomeBeforeProfiling; DirectSearchPreserved; PublicExplorationWithoutSignup",
+      "implementation": [
+        "tdf-hq-ui/src/components/PublicWelcome.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx",
+        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
+        "e2e/web/persona-public.spec.mjs",
+        "e2e/web/directory-entry.spec.mjs",
+        "e2e/web/directory-favorite-recovery.spec.mjs",
+        "e2e/web/directory-language.spec.mjs",
+        "e2e/web/public-welcome.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
+      "evidence": "reports/welcome-first-discovery-2026-10-25.json",
+      "status": "specified and implemented",
+      "critical": false,
+      "openQuestions": [
+        "Unidentified host portrait from voice feedback; authoritative studio gallery and teaching clips; interior plan/VR; human comprehension and production outcomes."
+      ],
+      "confidence": "Qualitative visitor feedback and scoped source/browser evidence; frequency and causal activation impact unknown.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused implementation; production release, human comprehension, complete media assets and measured user outcomes remain separate obligations."
+      }
+    },
+    {
+      "id": "PAY-LEDGER-HEADER-001",
+      "title": "Posted ledger identity, source and audit headers are immutable",
+      "statement": "An UPDATE whose existing commerce ledger transaction is posted or reversed must preserve every column value except status and reversal_of. Draft edits and value-preserving writes remain permitted; lifecycle transitions retain their independent existing validators.",
+      "domain": "PAY",
+      "authority": "Explicit user mandate for immutable posted accounting records; accepted ADR-0104 immutable financial events and compensating corrections.",
+      "source": "docs/adr/0104-immutable-financial-ledger.md; formal/system/ledger-header.md",
+      "property": "OLD.status in {posted,reversed} and accepted UPDATE implies projection(NEW)=projection(OLD), where projection removes only status and reversal_of.",
+      "contract": "formal/system/ledger-header.md",
+      "actors": [
+        "Ordinary non-owner ledger-header writer",
+        "Posting runtime"
+      ],
+      "preconditions": [
+        "Registered posting, entry write-fence and namespace guards remain enabled; the lifecycle cannot reopen a draft.",
+        "The actor cannot modify trusted DDL, replace functions, bypass triggers or change replication mode."
+      ],
+      "inputs": [
+        "Old and proposed transaction rows",
+        "Current locked database row status"
+      ],
+      "state": {
+        "statuses": [
+          "draft",
+          "posted",
+          "reversed"
+        ],
+        "header": "All columns other than status and reversal_of"
+      },
+      "allowedTransitions": [
+        "Draft header edit.",
+        "Identical posted/reversed header update, including the entry parent-write fence.",
+        "Independently validated posted-to-reversed lifecycle transition."
+      ],
+      "forbiddenTransitions": [
+        "Changing a posted/reversed primary key, source identity or audit column.",
+        "Committing a draft-era source edit after a concurrent posting has committed."
+      ],
+      "effects": [
+        "Invalid header updates reject atomically; no financial history is rewritten."
+      ],
+      "authorization": "This integrity guard grants no caller, refund or payout authority. Ordinary non-owner fixtures have header SELECT/UPDATE, no entry UPDATE and no trusted-schema CREATE.",
+      "privacy": "Only synthetic owned disposable PostgreSQL fixtures; no customer or provider data.",
+      "concurrency": "A stale header writer must preserve the row after an observed posting lock wait. Named RC/RR/SERIALIZABLE schedules use pg_blocking_pids; PostgreSQL may serialize-fail a repeatable snapshot.",
+      "idempotency": "Preserve the original source-key anchor; this does not establish exactly-once provider charges or all caller replay behavior.",
+      "failure": "SQLSTATE 23514 for a differing posted header, or SQLSTATE 40001 for a conflicting repeatable snapshot; failed operations do not alter committed source attribution.",
+      "recovery": "Authorized compensating transactions; keep the additive guard through application rollback. Historical attribution repair and deployment retain separate approval.",
+      "observability": "Record exact Git/source hashes, tool versions, actual blocking witnesses and named negative controls.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
+        "scripts/lib/production-release.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/ledger-event-identity.mjs",
+        "scripts/__tests__/ledger-posting-snapshot.py",
+        "scripts/test-ledger-posting.sh",
+        "scripts/test-provider-retry-runtime.sh",
+        "scripts/test-directory-saved-search-parity.mjs"
+      ],
+      "formalModels": [
+        "formal/event-operations/LedgerHeader.tla",
+        "formal/event-operations/LedgerHeader.cfg",
+        "formal/event-operations/LedgerHeaderMutable.cfg"
+      ],
+      "verification": "Full registered schema ordinary-role SQL updates, rollback-scoped guard/startup mutations, witnessed posting/header races under three isolations, a guard-removal RC counterexample and a finite two-writer TLC model with a named mutation control. Backend and formal CI lanes enforce execution.",
+      "evidence": "formal/system/evidence/2026-10-26-ledger-header-main/ records current-main composition; formal/system/evidence/2026-10-25-ledger-header/ retains earlier source identities. Replay commands and limits: formal/system/ledger-header.md. Admit evidence only for its recorded relevant source hashes. Saved-search historical-prefix compatibility is tracked separately in formal/system/evidence/2026-10-26-saved-search-checkpoint/; original financial/model receipts retain their source identities.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "TESTED named SQL boundary and BOUNDED_VERIFIED finite abstraction; complete implementation equivalence remains UNKNOWN.",
+      "ambiguity": [
+        "No proof of arbitrary installed function bodies, whole-program refinement, all interleavings, liveness, owner/superuser resistance or deployed correspondence.",
+        "Status/reversal semantics and correction authority remain separate obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped SQL tests and finite model checking do not discharge complete implementation/refinement obligations; independent review and production approval remain required."
+      }
     }
   ]
 }
