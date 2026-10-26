@@ -1,6 +1,6 @@
 # TDF Records — Informe ejecutivo de recuerdos de eventos
 
-Corte de esta continuación: 26 de octubre de 2026, 18:42 UTC. **Implementado y probado parcialmente, publicado para revisión; sin integración protegida, despliegue ni invitaciones reales de esta entrega. El objetivo integral continúa pendiente.**
+Corte de esta continuación: 26 de octubre de 2026, 18:54 UTC. **Implementado y probado parcialmente, publicado para revisión; sin integración protegida, despliegue ni invitaciones reales de esta entrega. El objetivo integral continúa pendiente.**
 
 ## 1. Diagnóstico y capacidades reutilizadas
 
@@ -46,7 +46,7 @@ La nueva preparación incorpora las reparaciones protegidas del reproductor y la
 
 ## 5. Pruebas ejecutadas y resultados
 
-La [corrección de entrada pública](event-memory-source-evidence-20261025/public-entry-qualification.json), core `87c3ed194`, pasa **3540 pruebas / 311 suites**, lint, TypeScript, build (336422 bytes gzip, cinco preloads), `quality:repo`, catálogo estricto JSON/CSV de **1346** entradas y ocho controles de historial. La admisión mapea doce superficies modificadas; mantiene exactos los 145 requisitos protegidos, 149 totales, y el backend/esquema de 226 migraciones. Estos son controles ejecutados; la cobertura estructural no prueba toda la especificación.
+La [corrección de entrada pública](event-memory-source-evidence-20261025/public-entry-qualification.json), core `87c3ed194`, pasa **3540 pruebas / 311 suites**, lint, TypeScript, build (336422 bytes gzip, cinco preloads), `quality:repo`, catálogo estricto JSON/CSV de **1347** entradas y ocho controles de historial. La admisión mapea doce superficies modificadas; mantiene exactos los 145 requisitos protegidos, 149 totales, y el backend/esquema de 226 migraciones. Estos son controles ejecutados; la cobertura estructural no prueba toda la especificación. El [seguimiento de catálogo](event-memory-source-evidence-20261025/public-entry-catalog-followup.json) conserva el fallo CI inicial: el escaneo1346 anterior omitió el fixture de sesión del test nuevo, aún sin seguimiento en Git. Se revisaron explícitamente sus dos campos sintéticos y se repitieron JSON/CSV estrictos sobre los1347 candidatos versionados y los ocho controles, sin modificar el scanner ni las pruebas funcionales.
 
 La [API/PostgreSQL reales de esta corrección](event-memory-source-evidence-20261025/public-entry-http-browser-results.json) pasan **120 peticiones / 18 grupos / 258 hashes**, con ledger226 exacto. Se conserva la identidad real del mismo binario Darwin `262295679`/SHA f01ef34b: sus inputs siguen iguales y no se atribuye una recompilación al nuevo commit. Los únicos archivos sin seguimiento durante el recorrido eran dos enlaces propios de dependencias; no es una atestación de release limpio.
 
@@ -77,7 +77,7 @@ El [recorrido Expo Web del cliente móvil](event-memory-source-evidence-20261025
 
 ## 7. Despliegue y producción
 
-**Sin integración protegida, despliegue, migración, cambio de preferencias ni escritura productiva de esta entrega.** La lectura pública de 16:48 UTC responde200 para página/evento/salud/versión, DB ok; backend publicado **4dac175d**, anterior a esta funcionalidad. Es disponibilidad y estado público observado, no aceptación productiva de los cambios nuevos.
+**Sin integración protegida, despliegue, migración, cambio de preferencias ni escritura productiva de esta entrega.** El [PR#632](https://github.com/diegueins680/tdf-app/pull/632) está listo para revisión independiente. Cloudflare publicó una previsualización del head8a, pero el [recorrido real anónimo del evento141 falló por CORS](event-memory-source-evidence-20261025/public-entry-preview141-cors-blocked.json): la API no devuelve permiso para ese origen. Se verificaron commit8a embebido y hash0cef5a48 del entry; hubo cero escrituras. Publicación técnica del preview no equivale a aceptación del recorrido ni de producción. La política CORS productiva no se cambió. La lectura pública de 16:48 UTC responde200 para página/evento/salud/versión, DB ok; backend publicado **4dac175d**, anterior a esta funcionalidad. Es disponibilidad y estado público observado, no aceptación productiva de los cambios nuevos.
 
 El despliegue requiere revisión/integración protegidas, imagen canónica, procedimientos vigentes de Hetzner, recuperación/canary y aceptación real. Después podrá corregirse el estado confirmado del evento141 y verificarse su lectura/publicación antes de activar cualquier campaña. No se evaden protección de ramas, aprobaciones ni FIFO.
 
@@ -98,7 +98,7 @@ Están implementados recibos internos, aperturas atribuidas, publicación poster
 
 1. Obtener la revisión independiente de #615, de la corrección de entrada pública y de la cadena móvil; las solicitudes existentes siguen pendientes. No inferir aprobación a partir de CI o de “Continue”.
 2. Integrar la fuente revisada en #608, mantener la base protegida vigente y obtener CI/revisión nuevos del head final, resolviendo las conversaciones y respetando FIFO. Las aprobaciones antiguas no cubren cambios posteriores.
-3. Completar imagen/recovery/canary/despliegue y aceptación productiva. Solo entonces verificar elegibilidad y preferencias reales y ejecutar invitaciones trazables/idempotentes del evento141.
+3. Resolver la verificación del origen de previsualización mediante procedimientos autorizados o comprobar el dominio canónico tras una entrega revisada; completar imagen/recovery/canary/despliegue y aceptación productiva. Solo entonces verificar elegibilidad y preferencias reales y ejecutar invitaciones trazables/idempotentes del evento141.
 4. Resolver brechas explícitas: medios privados/revocables y borrado físico, galerías mixtas por publicación, etiquetado estructurado, idempotencia general de creación, previews específicos de publicaciones, pruebas nativas en dispositivos y mediciónD7/D30. Los archivos públicos nunca se presentan como restringidos.
 
 La API, Vite y las bases de pruebas propias se retiraron; el cluster propio se detuvo tras verificar que solo quedaba `postgres`. Se conservan logs y caches de dependencias; no se detuvieron servicios compartidos. La preparación y su evidencia no constituyen autorización de producción ni finalización de los criterios pendientes.

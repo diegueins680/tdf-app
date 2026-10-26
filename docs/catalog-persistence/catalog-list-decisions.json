@@ -19338,6 +19338,25 @@
         "name": "event",
         "valueCount": 9
       }
+    },
+    {
+      "id": "cc7bc1104dae33fddfde",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Confusing the two mocked hook fields with deployed session authority could imply unverified authentication or privacy. Only this test module supplies them; it cannot create a session or grant server access.",
+      "justification": "The loading/session keys are the synthetic useSession hook fixture for route tests. They exercise waiting for bootstrap, anonymous entry and reuse of the guarded Shell; party7 is a synthetic test value. This object is neither a selectable business catalog, a role registry, nor an authenticated permission decision. Actual authority remains verified SessionContext and server permissions.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-technical-review",
+      "reviewBatch": "event-memory-public-entry-tracked-catalog-20261026",
+      "evidence": {
+        "file": "tdf-hq-ui/src/routes/EventCommunityEntry.test.tsx",
+        "line": 6,
+        "kind": "object-registry",
+        "name": "state",
+        "valueCount": 2
+      }
     }
   ]
 }
