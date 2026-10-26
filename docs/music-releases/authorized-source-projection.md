@@ -34,8 +34,9 @@ The contract is
 [music-source-projection.md](../../formal/system/music-source-projection.md), owned
 by `MEDIA-MUSIC-SOURCES-001`. The original source-baseline metadata retained all
 142 main requirement objects plus the scoped requirement, for 143 total. The
-current-main refresh below retains 143 main objects plus the same scoped
-requirement, for 144 total. All 1,330 main catalog decisions are
+earlier fan-club main refresh retained 143 main objects plus the same scoped
+requirement, for 144 total. The latest welcome integration below retains 144
+main objects plus the scoped requirement, for 145 total. All 1,330 main catalog decisions are
 retained. Inventory, traceability and catalog classifications are checked
 separately after this recorded source freeze; their outputs establish structural
 coverage and freshness, not a test pass or authorization proof.
@@ -90,3 +91,22 @@ sources. Metadata and strict catalog checks are repeated after the normal merge.
 No source SQL, build, HTTP, playback or deployment result is relabeled as a new
 execution. The versioned report separates source-baseline evidence from the
 current integration baseline and its metadata validation.
+
+## Protected-main welcome integration
+
+The next normal merge advances candidate
+`80fd2a676720112166d1245b70cf7dcf03be11a9` to protected main
+`a1238fbf6d98062904a4bd80d2f9df35ebc40706`, including the independent
+welcome integration. All 144 main requirement objects, including the full
+`UX-WELCOME-001` object, are retained exactly. The original scoped
+`MEDIA-MUSIC-SOURCES-001` remains unchanged, for 145 total. The complete
+1,330-decision catalog file and all five source qualification inputs remain
+byte-identical to their preserved authorities. The pinned Mobile source remains
+`d832bb3057dd03d44c0f35eea05be9f36320429d`.
+
+Only canonical/generated metadata conflicts are resolved. Inventory, traceability,
+source admission and strict catalog JSON/CSV checks qualify this combined metadata.
+The actual PostgreSQL receipts stay tied to source baseline `3af768d` and source
+commit `ade78b5`; they are not relabeled as execution of this merge. No new SQL,
+compiled build, actual HTTP, browser/storage playback or deployment result is
+claimed. Exact published-head CI and independent review remain required.

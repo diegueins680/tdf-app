@@ -10,8 +10,8 @@
     "contract": "formal/system/music-source-projection.md",
     "classification": "PARTIAL",
     "mathematicalProof": false,
-    "preservedMainRequirements": 143,
-    "totalRequirements": 144,
+    "preservedMainRequirements": 144,
+    "totalRequirements": 145,
     "preservedMainCatalogDecisions": 1330,
     "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
     "structurallyMappedSourcePaths": [
@@ -72,52 +72,57 @@
     "sourceCommit": "ade78b5ab11ba297cf419a96012032ebf289820d"
   },
   "metadataValidation": {
-    "integrationBaseline": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
-    "passed": 25,
+    "integrationBaseline": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+    "passed": 36,
+    "failed": 0,
     "commands": [
       {
         "command": "python3 scripts/test-requirement-declarations.py",
         "passed": 9,
         "exitCode": 0,
-        "log": "/private/tmp/tdf-audio-source-ed9-metadata-declarations-20261026.log",
-        "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
+        "log": "/private/tmp/tdf-source-a123-declarations-20261026.log",
+        "sha256": "5684d13977a1f6829bcd5f644c72b35ab6f8d42951d571a5f230c4cc35a359f3"
       },
       {
         "command": "python3 scripts/test-specification-inventory.py",
         "passed": 6,
         "exitCode": 0,
-        "log": "/private/tmp/tdf-audio-source-ed9-metadata-inventory-20261026.log",
-        "sha256": "85670be38e3b6c019234b44f686ec665583478d85214e15d228fed8ba0872cd9"
+        "log": "/private/tmp/tdf-source-a123-inventory-20261026.log",
+        "sha256": "5f0585ac0fb0ecbd063b8a850cb0e39f14f0160faca0a5a706283cb6ff6d4631"
       },
       {
         "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
         "passed": 10,
         "exitCode": 0,
-        "log": "/private/tmp/tdf-audio-source-ed9-metadata-conformance-20261026.log",
-        "sha256": "be86705dd26ab4c8828dd8f4776d1ae4aa61a09b8f4ef719fcd0b793519156c5"
+        "log": "/private/tmp/tdf-source-a123-conformance-20261026.log",
+        "sha256": "2e646b9d7592f677ab359827a1ab9498b1288bf5607220a97d6e6ae9868b7647"
+      },
+      {
+        "command": "python3 scripts/test-new-specification-surfaces.py",
+        "passed": 11,
+        "exitCode": 0,
+        "log": "/private/tmp/tdf-source-a123-admission-20261026.log",
+        "sha256": "96ed4591ce32c8bb22d2c46fc501ab67eb6237df0a58490f643a38fd99ad2cc1"
       }
     ],
-    "freshness": [
-      "specification-inventory.py --check PASS",
-      "specification-conformance.py --check PASS"
-    ],
-    "preservation": "Exact143main objects+unchanged SOURCE144; exact1330main decisions; inherited main613files exact; all5source hashes unchanged",
-    "earlyWhitespaceCheck": {
-      "outcome": "not admitted as final validation",
-      "reason": "Ran before concurrent catalog regeneration finished; generated conflict markers remained; final whitespace check repeated after writers completed."
+    "workingSourceAdmission": {
+      "outcome": "PASS",
+      "changedMaterialPaths": 5,
+      "receipt": "/private/tmp/tdf-source-a123-working-admission-20261026.json"
     },
-    "unrunBoundary": "No new-specification-surfaces test counted here; committed-source admission/compiledStack/HTTP belong integration qualification."
+    "freshness": "Final inventory/conformance checks required after generation; results retained in external refresh receipt",
+    "sourceRuntimeBoundary": "No SQL, compiled Stack, actual HTTP or browser/storage rerun; original source qualification stays bound to actual3af/ade78"
   },
   "catalogValidation": {
-    "outcome": "PASS on current main ed9 integration",
+    "outcome": "PASS on a123 integration",
     "candidateCount": 1330,
     "unreviewed": 0,
-    "stale": 0,
     "jsonReport": "docs/catalog-persistence/reports/static-list-inventory.json",
     "csvReport": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
-    "baselineDecisionObjectsPreserved": 1330,
+    "wholeMainDecisionFilePreservedExactly": true,
     "newDecisions": 0,
-    "scope": "Actual pinned Mobile and tracked5source paths; incomplete original scan not admitted"
+    "jsonExitCode": 0,
+    "csvExitCode": 0
   },
   "implementationBoundary": [
     "getPublicRelease",
@@ -139,9 +144,9 @@
   ],
   "integration": {
     "pr": null,
-    "ci": "not established",
-    "review": "pending",
-    "merge": "not performed",
+    "ci": "pending exact refreshed-candidate publication and hosted checks",
+    "review": "fresh independent review required on published candidate",
+    "merge": "Normal local merge of protected main a1238; no protected-main merge or publication by this task",
     "deployment": null,
     "productionWrites": 0,
     "migrations": 0,
@@ -176,7 +181,7 @@
       "artifact": "/private/tmp/tdf-audio-source-catalog-audit-20261026.json"
     }
   ],
-  "integrationBaseline": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+  "integrationBaseline": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
   "historicalMetadataValidationAt3af": {
     "passed": 25,
     "commands": [
@@ -231,5 +236,74 @@
     ],
     "scope": "SourceSQLqualification stays tied to actualade78/base3af; newmain metadata-only integration does not establish a fresh SQL/build/HTTP or deployment run.",
     "metadataChecks": "143main+SOURCE144 and1330catalog preservation,25metadata regressions,fresh generation andstrictJSON/CSV passed; no newSQL/build/HTTP execution relabeling"
+  },
+  "historicalMetadataValidationAtEd9": {
+    "integrationBaseline": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+    "passed": 25,
+    "commands": [
+      {
+        "command": "python3 scripts/test-requirement-declarations.py",
+        "passed": 9,
+        "exitCode": 0,
+        "log": "/private/tmp/tdf-audio-source-ed9-metadata-declarations-20261026.log",
+        "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
+      },
+      {
+        "command": "python3 scripts/test-specification-inventory.py",
+        "passed": 6,
+        "exitCode": 0,
+        "log": "/private/tmp/tdf-audio-source-ed9-metadata-inventory-20261026.log",
+        "sha256": "85670be38e3b6c019234b44f686ec665583478d85214e15d228fed8ba0872cd9"
+      },
+      {
+        "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+        "passed": 10,
+        "exitCode": 0,
+        "log": "/private/tmp/tdf-audio-source-ed9-metadata-conformance-20261026.log",
+        "sha256": "be86705dd26ab4c8828dd8f4776d1ae4aa61a09b8f4ef719fcd0b793519156c5"
+      }
+    ],
+    "freshness": [
+      "specification-inventory.py --check PASS",
+      "specification-conformance.py --check PASS"
+    ],
+    "preservation": "Exact143main objects+unchanged SOURCE144; exact1330main decisions; inherited main613files exact; all5source hashes unchanged",
+    "earlyWhitespaceCheck": {
+      "outcome": "not admitted as final validation",
+      "reason": "Ran before concurrent catalog regeneration finished; generated conflict markers remained; final whitespace check repeated after writers completed."
+    },
+    "unrunBoundary": "No new-specification-surfaces test counted here; committed-source admission/compiledStack/HTTP belong integration qualification."
+  },
+  "welcomeMainRefresh": {
+    "method": "normal merge",
+    "fromCandidate": "80fd2a676720112166d1245b70cf7dcf03be11a9",
+    "protectedMain": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+    "preservedMainRequirementsExactly": 144,
+    "additionalRequirementUnchanged": "MEDIA-MUSIC-SOURCES-001",
+    "requirementsTotal": 145,
+    "wholeMainCatalogFileUnchanged": true,
+    "mainCatalogDecisions": 1330,
+    "sourceFiveHashesUnchanged": true,
+    "sourceHashes": {
+      "tdf-hq/src/TDF/Server/MusicRelease.hs": "9b001e5a36c2dde75a8df89e898992815765451f39d6a25cdb167dde9ec74bea",
+      "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      ".github/workflows/ci.yml": "7d7dbe3a796cd0b218ee720950ad40131ac95bf21a4042352bd5a80f12b83685",
+      "scripts/ci-change-scope.mjs": "abf7c6b2653cb13d1798d3aa066023f6586f6fbb0ad91ff506556fef01749be8",
+      "scripts/__tests__/ci-change-scope.test.mjs": "e411ba86db22b662de37bdb3992428bca0169bf3a37134657387b411013de3e5"
+    },
+    "retainedNewMainRequirement": "UX-WELCOME-001",
+    "scope": "Metadata-only qualification of the new baseline; source SQL receipts retain actual3af/ade78 identities; no source/build/HTTP or deployment rerun claimed.",
+    "metadataChecks": "36 metadata/source-admission unit regressions PASS; working admission5pathsPASS; strictJSON/CSV1330PASS; generated artifact freshness retained in external refresh receipt"
+  },
+  "historicalCatalogValidationAtEd9": {
+    "outcome": "PASS on current main ed9 integration",
+    "candidateCount": 1330,
+    "unreviewed": 0,
+    "stale": 0,
+    "jsonReport": "docs/catalog-persistence/reports/static-list-inventory.json",
+    "csvReport": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+    "baselineDecisionObjectsPreserved": 1330,
+    "newDecisions": 0,
+    "scope": "Actual pinned Mobile and tracked5source paths; incomplete original scan not admitted"
   }
 }

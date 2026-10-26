@@ -12,17 +12,15 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import GroupsIcon from '@mui/icons-material/Groups';
 import MicExternalOnIcon from '@mui/icons-material/MicExternalOn';
-import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SchoolIcon from '@mui/icons-material/School';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useQuery } from '@tanstack/react-query';
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 
@@ -38,19 +36,6 @@ import { formatNumberForUser } from '../utils/formatters';
 const GENERAL_SIGNUP_PATH = '/login?signup=1';
 const FAN_SIGNUP_PATH = '/login?signup=1&intent=follow_artists&redirect=/fans';
 const ARTIST_SIGNUP_PATH = '/login?signup=1&intent=artist_profile';
-const HERO_VIDEO_SRC = '/videos/music-hero.mp4';
-
-interface NavigatorConnection {
-  saveData?: boolean;
-  addEventListener?: (type: 'change', listener: () => void) => void;
-  removeEventListener?: (type: 'change', listener: () => void) => void;
-}
-
-function getNavigatorConnection(): NavigatorConnection | undefined {
-  if (typeof navigator === 'undefined') return undefined;
-  return (navigator as Navigator & { connection?: NavigatorConnection }).connection;
-}
-
 type RgbTriplet = readonly [number, number, number];
 type CssPercent = `${number}%`;
 
@@ -616,46 +601,19 @@ export default function TdfPlatformPage() {
   const location = useLocation();
   const { t } = useTranslation();
   const analytics = useAnalytics();
-  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
-  const [heroVideoEnabled, setHeroVideoEnabled] = useState(false);
-  const [heroVideoPaused, setHeroVideoPaused] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const narrowViewport = window.matchMedia('(max-width: 599px)');
-    const connection = getNavigatorConnection();
-    const updateVideoPreference = () => {
-      const enabled = !reducedMotion.matches && !narrowViewport.matches && !connection?.saveData;
-      setHeroVideoEnabled(enabled);
-      if (!enabled) setHeroVideoPaused(true);
-    };
-
-    updateVideoPreference();
-    reducedMotion.addEventListener('change', updateVideoPreference);
-    narrowViewport.addEventListener('change', updateVideoPreference);
-    connection?.addEventListener?.('change', updateVideoPreference);
-    return () => {
-      reducedMotion.removeEventListener('change', updateVideoPreference);
-      narrowViewport.removeEventListener('change', updateVideoPreference);
-      connection?.removeEventListener?.('change', updateVideoPreference);
-    };
-  }, []);
-
   useEffect(() => {
     captureGrowthAttribution({ search: location.search, pathname: location.pathname });
     captureGrowthEvent(analytics, 'acquisition_landing_viewed', { route: '/tdf' });
   }, [analytics, location.pathname, location.search]);
 
-  const toggleHeroVideo = () => {
-    const video = heroVideoRef.current;
-    if (!video) return;
-    if (video.paused) {
-      void video.play();
-    } else {
-      video.pause();
+  const trackExploration = (destination: '#estudio' | '#servicios' | '/records') => {
+    try {
+      analytics.capture('public_discovery_cta_clicked', { route: '/tdf', destination });
+    } catch {
+      // Optional measurement must not interrupt public exploration.
     }
   };
+
   const artistsQuery = useQuery({
     queryKey: ['tdf-platform', 'public-artists'],
     queryFn: Fans.listPublicArtists,
@@ -723,29 +681,15 @@ export default function TdfPlatformPage() {
           borderBottom: BORDER_SUBTLE,
         }}
       >
-        {heroVideoEnabled && (
-          <Box
-            component="video"
-            ref={heroVideoRef}
-            src={HERO_VIDEO_SRC}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            aria-hidden="true"
-            onPlay={() => setHeroVideoPaused(false)}
-            onPause={() => setHeroVideoPaused(true)}
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              opacity: 0.5,
-            }}
-          />
-        )}
+        <Box
+          component="img"
+          src="/assets/tdf-ui/esteban-munoz.jpg"
+          alt="Persona junto a una consola, instrumentos y equipos de sonido"
+          width={640}
+          height={640}
+          decoding="async"
+          sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%', opacity: 0.45, border: BORDER_STRONG }}
+        />
         <Box
           sx={{
             position: 'absolute',
@@ -753,31 +697,9 @@ export default function TdfPlatformPage() {
             background: HERO_OVERLAY_BACKGROUND,
           }}
         />
-        {heroVideoEnabled && (
-          <Button
-            type="button"
-            variant="contained"
-            size="small"
-            onClick={toggleHeroVideo}
-            startIcon={heroVideoPaused ? <PlayArrowIcon /> : <PauseIcon />}
-            aria-pressed={heroVideoPaused}
-            sx={{
-              position: 'absolute',
-              zIndex: 2,
-              right: { xs: 16, sm: 24 },
-              bottom: { xs: 16, sm: 24 },
-              minHeight: 44,
-              bgcolor: 'rgba(15,23,42,0.9)',
-              color: '#ffffff',
-              '&:hover': { bgcolor: '#0f172a' },
-            }}
-          >
-            {heroVideoPaused ? 'Reproducir fondo' : 'Pausar fondo'}
-          </Button>
-        )}
         <Container maxWidth="lg" sx={{ position: 'relative', py: { xs: 8, md: GRID_FULL_SPAN } }}>
           <Stack spacing={3.5} sx={{ maxWidth: HERO_CONTENT_MAX_WIDTH_PX }}>
-            <Eyebrow>Comunidad musical · Plataforma global</Eyebrow>
+            <Eyebrow>Bienvenido · Estudio, escuela y comunidad</Eyebrow>
             <Stack spacing={2}>
               <Typography
                 component="h1"
@@ -795,18 +717,18 @@ export default function TdfPlatformPage() {
                 variant="h5"
                 sx={{ color: COLOR_HERO_COPY, lineHeight: 1.45, maxWidth: HERO_COPY_MAX_WIDTH_PX }}
               >
-                La plataforma de una comunidad de músicos y entusiastas de la música, construida para convertirse en un sello descentralizado donde artistas y seguidores estrechan su relación y aportan más valor de lado y lado.
+                Nos apasiona el sonido y todo lo que podemos crear contigo. Conoce nuestros espacios, explora sesiones y descubre cómo grabar, aprender y conectar con otros amantes de la música.
               </Typography>
             </Stack>
+            <Typography sx={{ color: COLOR_TEXT_PRIMARY }}>Explora a tu ritmo, sin registro ni preguntas sobre tu perfil.</Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <Button
                 disabled={false}
-                component={RouterLink}
-                to={GENERAL_SIGNUP_PATH}
+                component="a"
+                href="#estudio"
                 variant="contained"
                 size="large"
-                startIcon={<AccountCircleIcon />}
-                onClick={() => captureGrowthEvent(analytics, 'acquisition_cta_clicked', { route: '/tdf', intent: 'general' })}
+                onClick={() => trackExploration('#estudio')}
                 sx={{
                   bgcolor: COLOR_TDF_GOLD,
                   color: COLOR_ON_GOLD,
@@ -816,86 +738,84 @@ export default function TdfPlatformPage() {
                   '&:hover': { bgcolor: COLOR_TDF_GOLD_LIGHT },
                 }}
               >
-                {copy.createAccount}
+                Conoce el estudio
               </Button>
               <Button
                 disabled={false}
-                component={RouterLink}
-                to={FAN_SIGNUP_PATH}
+                component="a"
+                href="#servicios"
                 variant="outlined"
                 size="large"
-                onClick={() => captureGrowthEvent(analytics, 'acquisition_cta_clicked', { route: '/tdf', intent: 'fan' })}
+                onClick={() => trackExploration('#servicios')}
                 sx={{ color: COLOR_TEXT_PRIMARY, borderColor: COLOR_OUTLINE_ON_DARK, textTransform: 'none' }}
               >
-                {copy.fanProfile}
+                Explora nuestros servicios
               </Button>
               <Button
                 disabled={false}
                 component={RouterLink}
-                to={ARTIST_SIGNUP_PATH}
+                to="/records"
                 variant="text"
                 size="large"
-                onClick={() => captureGrowthEvent(analytics, 'acquisition_cta_clicked', { route: '/tdf', intent: 'artist' })}
+                onClick={() => trackExploration('/records')}
                 sx={{ color: COLOR_CYAN_TEXT, textTransform: 'none' }}
               >
-                {copy.artistProfile}
+                Mira sesiones y lanzamientos
               </Button>
             </Stack>
             <Stack direction="row" spacing={1} flexWrap="wrap">
-              <Chip label="Fans con acceso exclusivo" sx={{ bgcolor: COLOR_CYAN_CHIP_BACKGROUND, color: COLOR_CYAN_SOFT_TEXT }} />
-              <Chip label="Artistas con datos de comunidad" sx={{ bgcolor: COLOR_ROSE_CHIP_BACKGROUND, color: COLOR_ROSE_SOFT_TEXT }} />
+              <Chip label="Descubre artistas" sx={{ bgcolor: COLOR_CYAN_CHIP_BACKGROUND, color: COLOR_CYAN_SOFT_TEXT }} />
+              <Chip label="Comparte tu música" sx={{ bgcolor: COLOR_ROSE_CHIP_BACKGROUND, color: COLOR_ROSE_SOFT_TEXT }} />
               <Chip label="Estudio, escuela y live sessions" sx={{ bgcolor: COLOR_EYEBROW_BACKGROUND, color: COLOR_TDF_GOLD_LIGHT }} />
             </Stack>
           </Stack>
         </Container>
       </Box>
 
-      <Box component="section" sx={{ py: { xs: 7, md: DECIMAL_BASE }, bgcolor: COLOR_SECTION_SURFACE }}>
+      <Box component="section" id="estudio" sx={{ py: { xs: 7, md: DECIMAL_BASE }, borderTop: BORDER_SUBTLE }}>
         <Container maxWidth="lg">
-          <Grid container spacing={4} alignItems="stretch">
-            <Grid item xs={GRID_FULL_SPAN} md={GRID_HALF_SPAN}>
-              <ValueCard
-                title="Para fans"
-                description="Crea tu perfil para seguir artistas, recibir contenido exclusivo y conectar con otros miembros que comparten tus gustos."
-                action={copy.createFanProfile}
-                to={FAN_SIGNUP_PATH}
-                accent="#22d3ee"
-              />
-            </Grid>
-            <Grid item xs={GRID_FULL_SPAN} md={GRID_HALF_SPAN}>
-              <ValueCard
-                title="Para artistas"
-                description="Crea o reclama tu perfil para publicar tu mundo, conocer mejor a tus fans y activar experiencias directas con tu comunidad."
-                action={copy.createArtistProfile}
-                to={ARTIST_SIGNUP_PATH}
-                accent="#fb7185"
-              />
-            </Grid>
-            <Grid item xs={GRID_FULL_SPAN} md={GRID_HALF_SPAN}>
-              <Stack spacing={2.5}>
+          <Grid container spacing={4} alignItems="center">
+            <Grid item xs={GRID_FULL_SPAN} md={GRID_FULL_SPAN}>
+              <Stack spacing={3}>
                 <SectionHeader
-                  eyebrow="Fans"
-                  title="Más que escuchar: participar."
-                  body="El perfil fan convierte la curiosidad en una relación continua con artistas, lanzamientos y comunidad."
+                  eyebrow="Conoce el estudio"
+                  title="Un espacio para crear y aprender."
+                  body="La comunidad digital se conecta con experiencias presenciales: reservas, clases, sesiones en vivo, DJ Booth y encuentros alrededor de la música."
                 />
-                <BenefitList items={fanBenefits} emptyMessage={copy.fanBenefitsEmpty} />
+                <Button component={RouterLink} to="/records" sx={{ alignSelf: 'flex-start', color: COLOR_CYAN_TEXT, minHeight: 44 }}>
+                  Conoce nuestro trabajo: sesiones y lanzamientos
+                </Button>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                  <Button
+                    disabled={false}
+                    component={RouterLink}
+                    to="/reservar"
+                    variant="contained"
+                    startIcon={<EventAvailableIcon />}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {copy.reserveExperience}
+                  </Button>
+                  <Button
+                    disabled={false}
+                    component="a"
+                    href={STUDIO_MAP_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    variant="outlined"
+                    sx={{ textTransform: 'none', color: COLOR_TEXT_PRIMARY, borderColor: COLOR_OUTLINE_ON_DARK }}
+                  >
+                    {copy.viewLocation}
+                  </Button>
+                </Stack>
               </Stack>
             </Grid>
-            <Grid item xs={GRID_FULL_SPAN} md={GRID_HALF_SPAN}>
-              <Stack spacing={2.5}>
-                <SectionHeader
-                  eyebrow="Artistas"
-                  title="Más que publicar: conocer a tu audiencia."
-                  body="El perfil de artista da una base propia para reunir señales, contar tu historia y mover a tus seguidores hacia experiencias reales."
-                />
-                <BenefitList items={artistBenefits} emptyMessage={copy.artistBenefitsEmpty} />
-              </Stack>
-            </Grid>
+
           </Grid>
         </Container>
       </Box>
 
-      <Box component="section" sx={{ py: { xs: 7, md: DECIMAL_BASE }, borderTop: BORDER_SUBTLE }}>
+      <Box component="section" id="servicios" sx={{ py: { xs: 7, md: DECIMAL_BASE }, borderTop: BORDER_SUBTLE }}>
         <Container maxWidth="lg">
           <Stack spacing={4}>
             <SectionHeader
@@ -952,6 +872,51 @@ export default function TdfPlatformPage() {
 
       <Box component="section" sx={{ py: { xs: 7, md: DECIMAL_BASE }, bgcolor: COLOR_SECTION_SURFACE }}>
         <Container maxWidth="lg">
+          <Grid container spacing={4} alignItems="stretch">
+            <Grid item xs={GRID_FULL_SPAN} md={GRID_HALF_SPAN}>
+              <ValueCard
+                title="Para fans"
+                description="Crea tu perfil para seguir artistas, recibir contenido exclusivo y conectar con otros miembros que comparten tus gustos."
+                action={copy.createFanProfile}
+                to={FAN_SIGNUP_PATH}
+                accent="#22d3ee"
+              />
+            </Grid>
+            <Grid item xs={GRID_FULL_SPAN} md={GRID_HALF_SPAN}>
+              <ValueCard
+                title="Para artistas"
+                description="Crea o reclama tu perfil para publicar tu mundo, conocer mejor a tus fans y activar experiencias directas con tu comunidad."
+                action={copy.createArtistProfile}
+                to={ARTIST_SIGNUP_PATH}
+                accent="#fb7185"
+              />
+            </Grid>
+            <Grid item xs={GRID_FULL_SPAN} md={GRID_HALF_SPAN}>
+              <Stack spacing={2.5}>
+                <SectionHeader
+                  eyebrow="Fans"
+                  title="Más que escuchar: participar."
+                  body="El perfil fan convierte la curiosidad en una relación continua con artistas, lanzamientos y comunidad."
+                />
+                <BenefitList items={fanBenefits} emptyMessage={copy.fanBenefitsEmpty} />
+              </Stack>
+            </Grid>
+            <Grid item xs={GRID_FULL_SPAN} md={GRID_HALF_SPAN}>
+              <Stack spacing={2.5}>
+                <SectionHeader
+                  eyebrow="Artistas"
+                  title="Más que publicar: conocer a tu audiencia."
+                  body="El perfil de artista da una base propia para reunir señales, contar tu historia y mover a tus seguidores hacia experiencias reales."
+                />
+                <BenefitList items={artistBenefits} emptyMessage={copy.artistBenefitsEmpty} />
+              </Stack>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
+      <Box component="section" sx={{ py: { xs: 7, md: DECIMAL_BASE }, bgcolor: COLOR_SECTION_SURFACE }}>
+        <Container maxWidth="lg">
           <Stack spacing={4}>
             <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={2}>
               <SectionHeader
@@ -981,64 +946,6 @@ export default function TdfPlatformPage() {
               recordsImages={recordsImages}
             />
           </Stack>
-        </Container>
-      </Box>
-
-      <Box component="section" sx={{ py: { xs: 7, md: DECIMAL_BASE }, borderTop: BORDER_SUBTLE }}>
-        <Container maxWidth="lg">
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={GRID_FULL_SPAN} md={GRID_HALF_SPAN}>
-              <Stack spacing={3}>
-                <SectionHeader
-                  eyebrow="Lugar fisico + plataforma"
-                  title="TDF también vive en el estudio."
-                  body="La comunidad digital se conecta con experiencias presenciales: reservas, clases, sesiones en vivo, DJ Booth y encuentros alrededor de la música."
-                />
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-                  <Button
-                    disabled={false}
-                    component={RouterLink}
-                    to="/reservar"
-                    variant="contained"
-                    startIcon={<EventAvailableIcon />}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    {copy.reserveExperience}
-                  </Button>
-                  <Button
-                    disabled={false}
-                    component="a"
-                    href={STUDIO_MAP_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    variant="outlined"
-                    sx={{ textTransform: 'none', color: COLOR_TEXT_PRIMARY, borderColor: COLOR_OUTLINE_ON_DARK }}
-                  >
-                    {copy.viewLocation}
-                  </Button>
-                </Stack>
-              </Stack>
-            </Grid>
-            {recordsImages[0] && (
-              <Grid item xs={GRID_FULL_SPAN} md={GRID_HALF_SPAN}>
-                <Box
-                  component="img"
-                  src={recordsImages[0]}
-                  alt="Contenido editorial publicado por TDF Records"
-                  loading="lazy"
-                  decoding="async"
-                  sx={{
-                    width: '100%',
-                    aspectRatio: '4 / 3',
-                    objectFit: 'cover',
-                    borderRadius: 2,
-                    border: BORDER_STRONG,
-                    display: 'block',
-                  }}
-                />
-              </Grid>
-            )}
-          </Grid>
         </Container>
       </Box>
 

@@ -1,0 +1,87 @@
+{
+  "startedAt": "2026-10-26T04:54:05.356Z",
+  "scope": "Anonymous read-only production destination verification. No signup, authentication, follow, booking, provider playback or other business mutation. External images/embeds blocked; media playback and thumbnail availability are not verified.",
+  "cases": [
+    {
+      "mode": "desktop",
+      "url": "https://www.tdfrecords.net/records#releases",
+      "feedStatus": 200,
+      "counts": {
+        "collections": 3,
+        "releases": 67,
+        "recordings": 33,
+        "sessions": 5
+      },
+      "publishedSessionVisible": true,
+      "publicSessionLinkPresent": true,
+      "releasesAnchorWorks": true,
+      "passwordGateAbsent": true,
+      "anonymousSession": true,
+      "pageErrors": [],
+      "businessWrites": 0,
+      "blockedExternalRequests": 70,
+      "blockedExternalWrites": [
+        {
+          "type": "fetch",
+          "origin": "https://eu.i.posthog.com",
+          "method": "POST",
+          "path": "/flags/"
+        }
+      ],
+      "entryPath": "/assets/index-DQPVTKU-.js",
+      "entrySha256": "a6efd21bc64de48c060e55d8c063a47fdb5403150f541b0626e61584a95c2a42",
+      "embeddedCommits": [
+        "1c9c833cc1ba62b47822fca3c20e14e86cf28daa"
+      ],
+      "passed": true
+    },
+    {
+      "mode": "Pixel7",
+      "url": "https://www.tdfrecords.net/records#releases",
+      "feedStatus": 200,
+      "counts": {
+        "collections": 3,
+        "releases": 67,
+        "recordings": 33,
+        "sessions": 5
+      },
+      "publishedSessionVisible": true,
+      "publicSessionLinkPresent": true,
+      "releasesAnchorWorks": true,
+      "passwordGateAbsent": true,
+      "anonymousSession": true,
+      "pageErrors": [],
+      "businessWrites": 0,
+      "blockedExternalRequests": 54,
+      "blockedExternalWrites": [
+        {
+          "type": "fetch",
+          "origin": "https://eu.i.posthog.com",
+          "method": "POST",
+          "path": "/flags/"
+        }
+      ],
+      "entryPath": "/assets/index-DQPVTKU-.js",
+      "entrySha256": "a6efd21bc64de48c060e55d8c063a47fdb5403150f541b0626e61584a95c2a42",
+      "embeddedCommits": [
+        "1c9c833cc1ba62b47822fca3c20e14e86cf28daa"
+      ],
+      "passed": true
+    }
+  ],
+  "firstAttempt": "Preserved results-first-attempt.json and verify-first-attempt.mjs. Observer classified blocked external /flags/ POST as a business write; corrected classification keeps all external traffic and all canonical-site/API mutations blocked.",
+  "status": "VERIFIED-public-records-destination-only",
+  "browserClosed": true,
+  "finishedAt": "2026-10-26T04:54:11.569Z",
+  "publishedPr619Head": "d8191612b1d8e185e997a4ecf72c2d23ed83fba9",
+  "welcome619Merged": false,
+  "welcome619Deployed": false,
+  "humanParticipants": 0,
+  "conversionImprovement": null,
+  "measuredNewActivations": null,
+  "meaning": "Existing public Records destination is usable anonymously. This does not verify the unmerged welcome, every catalog item, external playback/thumbnails, human understanding or conversion.",
+  "evidenceDirectory": "reports/welcome-public-destinations-evidence-20261026",
+  "executedBrowserDriverSha256": "8d4766a8040ff16fb3f2424ed8636ef4d23c589992657b9e34b8675a3f459af0",
+  "externalRequests": "All blocked, including PostHog configuration POST. Canonical-site/API mutation attempts would fail the test.",
+  "firstAttemptExplanation": "Observer originally counted a blocked external configuration POST /flags/ as a business write. Original script/result retained; corrected origin classification preserves all network/mutation blocking."
+}

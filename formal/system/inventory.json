@@ -55,6 +55,7 @@
       "e2e/web/notification-navigation.spec.mjs",
       "e2e/web/persona-public.spec.mjs",
       "e2e/web/public-text-reflow.spec.mjs",
+      "e2e/web/public-welcome.spec.mjs",
       "e2e/web/records-thumbnails.spec.mjs",
       "e2e/web/service-storage-recovery.spec.mjs",
       "e2e/web/studio-internship-audit.spec.mjs",
@@ -831,6 +832,7 @@
       "tdf-hq-ui/src/components/PublicBrandBar.tsx",
       "tdf-hq-ui/src/components/PublicBranding.test.tsx",
       "tdf-hq-ui/src/components/PublicBranding.tsx",
+      "tdf-hq-ui/src/components/PublicWelcome.tsx",
       "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
       "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
       "tdf-hq-ui/src/components/RadioWidget.tsx",
@@ -2858,19 +2860,19 @@
     {
       "id": "SURFACE-6826ca2044602fd9",
       "path": "e2e/web/directory-entry.spec.mjs",
-      "sha256": "17d56aaa082a13e71c2442b6f09ee29b158413e9a41eb7b07969e3bee61c8c97",
+      "sha256": "08cbc831a6260271171aa65121ec655f0b3f916d0c468e670278157032d387a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a4b7714e233a9cb9",
       "path": "e2e/web/directory-favorite-recovery.spec.mjs",
-      "sha256": "00c51c0a3d345432471139f4b38c1e534d5d3b5b498269b8c67c4297335c60bb",
+      "sha256": "08dd8f020ec9c1f0ab75f00a2af230764e57acf65a224826c54b2201b5670fe3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2d19f45e5f75f841",
       "path": "e2e/web/directory-language.spec.mjs",
-      "sha256": "d39127857b4d62e5edee6fcc51726c7657cc7cf9f6621003a53c5c249f53c587",
+      "sha256": "bd2ea2a63805ab1b466e7056eeefdaed3fab6d430efa67e6c46f161904717800",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2960,13 +2962,19 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "afaaabc5ab1c3a0fd039e08d715a5ea3a4505c6e7c9931b80269e68e7de490a9",
+      "sha256": "52621b77b14d7d15e4081493a4b92e39aaa3996f9247cc5f2ab2f1285108236c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e5280fb6cf4274bc",
       "path": "e2e/web/public-text-reflow.spec.mjs",
       "sha256": "16fd028ff663f392c6145e65866eb7ba1aeb1c82835307e3518c4a55578fd31d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a2826b2994431e77",
+      "path": "e2e/web/public-welcome.spec.mjs",
+      "sha256": "b26513be86bde272bec3711ef408aac4d742a9fc13ddff8bf7a4f872fb528044",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7530,6 +7538,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-100603869e0d8848",
+      "path": "tdf-hq-ui/src/components/PublicWelcome.tsx",
+      "sha256": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d385ed9b2a05df5c",
       "path": "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
       "sha256": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
@@ -8552,13 +8566,13 @@
     {
       "id": "SURFACE-7e096967d3a00d3b",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-      "sha256": "1b14577b1d260ec8c9b65ca2c6939c3db85e20e043d835e5efc1c0183cbc059f",
+      "sha256": "62b867e770f329763c7d0f6b81fa7998a9b7b48737351010f67cb673ab418628",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-31dfb712c6445325",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-      "sha256": "dd0ccec28420756aad3a3f52fe1e6e749f6d79caba0974977d96f3e69fd5e58d",
+      "sha256": "98a49a2cf613aa9aa44b99253f39e81f1a9c54298b932fb21982cfda67a6b962",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9020,13 +9034,13 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "0d88f1cb2a534ca742147e821578b297c0c12f37ad66569cc5cad9da6f26408f",
+      "sha256": "c3dc63053f7a1e5d75781797b96bb414c63b20755f368ed2e11ab0819b47d743",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "01b3b5cf78791e627b85188e4bd211b37b7f1f88389d6b81bc5526110cd65ebd",
+      "sha256": "7d4854a1f390af0e9c03356297c2340e174992fe7435040cf8d169d83dd7381f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9920,13 +9934,13 @@
     {
       "id": "SURFACE-94ed138833ff9be9",
       "path": "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx",
-      "sha256": "e01816a2781b40fbedaee0d0de8d885354850a52c84c875a19178f1d0ab63073",
+      "sha256": "a497fb3d7e11289a6be96cb284c6ceee1dd4a2f0435a3b05ecf51030a8e5bbcc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a8a994f85758ab3a",
       "path": "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-      "sha256": "f65878e0267a1d4a781b5b93e44f47ba4d99f2bd911c633e92e49ae3b57fceb4",
+      "sha256": "70a1c437a900dd9fa270980102e8a10e0daf58abd09a5be85d36d8ee5044cc4e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19512,6 +19526,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/engineering/welcome-first-discovery-2026-10-25.md",
+      "sha256": "c1e81487cfc9fcc710f529e35bc6e8ea0052eb1935133b95e53a59948879a51d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/event-operations/README.md",
       "sha256": "c0737f40fe41f6e386f58a83bef09a3fb2453075716912df6d08571aa108694b",
       "authority": "inferred",
@@ -20724,7 +20745,7 @@
     },
     {
       "path": "docs/music-releases/authorized-source-projection.md",
-      "sha256": "3bbf8ef568149d9d0bed9f2dae4fe02580914ef9b3ff5538d2230d4da210b525",
+      "sha256": "616d35a7b9e675446e7d8cff62268708090b979aa64d89ef2117121c80ff7220",
       "authority": "inferred",
       "authorityBasis": "Status: source controls tested; exact-candidate compiled CI and release evidence pending.",
       "kind": "requirement-candidate"
@@ -27213,7 +27234,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "bb37604b23b9abda0c914c41768a8939ce724ba88f1d02f2ac8a67da026c031c",
+      "sha256": "8e06f45d9545fea9d413228231624220a92bcbc6fcde24b8a33fa1f86d39d13e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
