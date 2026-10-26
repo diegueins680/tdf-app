@@ -1,7 +1,7 @@
 # Recuerdos: reparación de autorización y publicación móvil
 
 **Implementado y probado localmente; nuevo CI y revisión independiente pendientes.
-Sin integración, despliegue ni invitaciones reales.** Continúa el [diagnóstico y
+Sin integración a main, despliegue productivo ni invitaciones reales.** Continúa el [diagnóstico y
 los diez entregables originales](event-memories-2026-10-25.md) y el
 [informe de moderación y sesión web](event-memory-source-moderation-2026-10-25.md).
 
@@ -132,8 +132,129 @@ rollback histórico, sucesores y reintentos. Invitaciones, deduplicación, despa
 concurrente y supresión también pasan. Estas ejecuciones preceden al commit de
 merge y conservan ddb923798 con árbol modificado; no se les cambia la identidad.
 
-La compilación Stack canónica del backend financiero combinado está en curso.
-Los binarios, HTTP y CI anteriores NO califican esa composición. Antes de
-proponer integración quedan Hspec/grupos necesarios, binario nuevo, API/DB y
-navegador sobre224, CI y revisión del nuevo head. #608 y #615 permanecen retenidos
-y no existe despliegue ni comunicación productiva.
+La compilación Stack canónica del backend financiero combinado pasó con
+GHC 9.10.3/lts-24.42. El ejecutable nuevo declara el commit
+`810d646208215bcc7c99d870b40f90e17f5beb00`, buildTime
+`2026-10-26T03:23:26Z`, SHA-256
+`4d71101f0c02a2735fafacffe5560fd8a6972a04c2a450b1495588a3e054f487`.
+Es un binario Darwin local, no una imagen Linux desplegada.
+
+El [recibo HTTP nuevo](event-memory-source-evidence-20261025/http-financial-main-917-results.json)
+pasa **120 solicitudes/17 grupos**, y sus 24 hashes coinciden con las fuentes de
+esta composición. El [navegador nuevo](event-memory-source-evidence-20261025/browser-financial-main-917-results.json)
+pasa publicación, denuncia, cierre, ocultación con teclado, recarga y restauración
+en escritorio y Pixel 7 emulado, sobre la misma API/DB real sintética. Se
+conserva `sourceWorktreeDirty=true`: había dos enlaces de dependencias propios,
+con los archivos versionados limpios. Se detuvieron API/Vite y se eliminó solo
+la base desechable del runner. Cero llamadas a proveedores externos.
+
+También pasan los diez casos Hspec de integridad contable contra PostgreSQL y
+los cuatro grupos musicales no vacíos: dominio 25, contenido 10, DDEX 22 y
+almacenamiento 4. Los controles SQL financieros pasan admisión histórica,
+reversión concurrente, 33 escenarios finitos con controles negativos, namespace
+con dos contraejemplos esperados y arranque con diez mutaciones rechazadas y dos
+configuraciones compatibles; se restauran las autoridades exactamente. No se
+convierten estos escenarios finitos en una prueba de refinamiento completo.
+
+La inspección compilada encuentra 913 métodos y dos montajes raw; conserva
+396 operaciones sin documentación, 25 documentadas sin ruta tipada y ocho
+diferencias de estado, sin autoridades competidoras. El snapshot declarado
+coincide; no se afirma conformidad global de la API.
+
+El [checkpoint de verificación](event-memory-source-evidence-20261025/financial-main-917-verification.json)
+distingue cada identidad y alcance. `quality:ui` completo pasó en Node 24.13.1:
+lint, tipos, **3.440 pruebas/305 suites**, compilación de producción y presupuesto
+inicial de JavaScript: 334.257 bytes gzip, cinco preloads. No es una medición de
+latencia de usuarios reales. `quality:repo` también pasó. Su primer intento
+falló porque `jq` no estaba en el PATH del subprocess y el fixture del importador
+no pudo ejecutarse; se conserva ese fallo. La repetición completa con el binario
+real jq 1.8.1 disponible pasó, sin cambiar pruebas ni aserciones.
+La suite general Stack terminó con código 0: **4.041 ejemplos, cero fallos y 21
+pendientes** de runners de integración específicos. Esos 21 no se presentan
+como aprobados. El grupo contable se ejecutó aparte contra la base sintética
+propia: diez ejemplos, cero fallos. Las demás integraciones conservan sus
+prerrequisitos y gates dedicados. El runner de reintentos del proveedor pasó
+**308 ejemplos, cero fallos**, junto con el rechazo de rollback del historial
+usado. La [admisión por caducidad](event-memory-source-evidence-20261025/financial-main-917-expiry-results.json)
+pasó en la implementación real y detectó tres mutantes independientes de reloj;
+las fuentes permanecieron intactas. Es un fixture PostgreSQL sintético, sin
+HTTP a proveedores ni datos productivos.
+El CI y las aprobaciones históricos no se trasladan al nuevo head de #615.
+#608 recibió una aprobación nueva para su commit 534c5631, pero permanece
+retenido hasta incluir la reparación P0 revisada. No hay integración,
+despliegue ni comunicación productiva de estos cambios.
+
+
+## Estado del piloto y límites de entrega — 26/oct, actualización
+
+Diego confirmó que PATCH CULTURE Vol. 1 se celebró y terminó. La consulta
+productiva de solo lectura de **26/oct 03:22:22 UTC** conserva `on_sale`, siete
+cuentas relacionadas y cinco activas. Hay cinco señales profesionales y tres
+RSVP aceptados, con una cuenta en ambos grupos; no son ocho personas ni prueban
+asistencia presencial. No hay alias archivados en esta cohorte. El esquema y las
+preferencias de campaña de esta entrega todavía no están instalados. No se ha
+calculado un total definitivo de elegibles consentidos ni de excluidos.
+
+Intentadas/enviadas/entregadas/fallidas reales: **0/0/0/0**. Ningún resultado
+sintético se presenta como una invitación real. Cambiar `on_sale` requiere
+primero desplegar y comprobar que el evento finalizado sigue siendo legible.
+La confirmación del fin no sustituye consentimiento ni habilita proveedores.
+
+| Capacidad | Implementación y prueba disponible | Producción |
+| --- | --- | --- |
+| Texto, audio, foto, video, edición/borrado, reacciones y comentarios web | API/DB y navegador sintéticos | Pendiente |
+| Moderación de fuente, permisos actuales, NULL y revocación concurrente | SQL, HTTP y controles negativos | Pendiente |
+| Navegación y registro con contexto del evento | Web local; reparación independiente de logout #616 aún necesaria | Pendiente |
+| Foto/video móvil, confirmación remota y retiro de sesión | 653 pruebas, CI exacto y bundle Android | Sin aceptación física ni publicación móvil |
+| Invitación interna y un recordatorio, preferencias, deduplicación, métricas agregadas | SQL/HTTP sintéticos; deshabilitados por defecto | Sin esquema ni envíos |
+| Galerías mixtas, medios privados/revocables y eliminación física | Pendiente | No disponible por esta entrega |
+| Audio/texto móvil, previsualización específica de publicación y D7/D30 | Pendiente | Sin evidencia de mejora |
+
+La arquitectura reutiliza las autoridades existentes y conserva información
+histórica. La ocultación de la publicación controla lecturas e interacciones de
+TDF; **no revoca una URL de archivo público ya conocida**. No se admite carga de
+medios públicos para un evento privado. La visibilidad restringida y la
+revocación de medios requieren trabajo y validación propios antes de anunciarse.
+La recuperación todavía requiere ensayo con la imagen Linux final y el
+estado real de flags. Conservar tablas y funciones no acredita por sí solo un
+downgrade seguro del backend o del lector web. No se ha autorizado volver a un
+lector anterior como recuperación de esta función: debe conservarse la política
+de moderación, incluso con interacciones pausadas, o aplicarse una corrección
+revisada hacia adelante. El rechazo de rollback SQL probado no se presenta como
+prueba de rollback de la aplicación.
+
+Correo, push y WhatsApp no se activaron. Los agregados observados no permiten
+atribuir adquisición, conversión ni retención.
+
+
+La inspección móvil adicional mantiene el alcance de #170: tipos, codec local,
+feed remoto, carga y tarjeta admiten imagen/video. Texto/audio requieren una
+ampliación coordinada de esas capas y sus controles de sesión; cambiar solo el
+selector dejaría publicaciones que el propio cliente no recupera o representa
+correctamente. No se modificó el commit móvil al evaluar esta brecha. Para
+seleccionar audio se evaluó el [selector de documentos de Expo](https://docs.expo.dev/versions/latest/sdk/document-picker/),
+pero su documentación actual y la ruta histórica v54 redirigen a la última
+versión. La app usa SDK 54: antes de instalar debe verificarse la versión
+compatible del SDK y la selección/carga en dispositivos. Esta evaluación no se
+presenta como soporte nativo implementado ni como impedimento de autorización.
+También sigue pendiente etiquetado estructurado en la publicación; las menciones
+reutilizadas actualmente pertenecen a los comentarios canónicos.
+
+
+A las 03:48:01 UTC se integró externamente #614 y `main` avanzó a
+`e938c72ba4b87010214f6838f06bfac45a0f45c0`. Esta composición de #615 continúa
+sobre su base #608 `534c5631`, que contiene `917806f`. Los recibos conservan esa
+base y no califican el directorio nuevo de #614. La entrega raíz final requiere
+reconciliarse con el main entonces vigente, preservar su manifiesto e historial,
+y repetir las comprobaciones afectadas y la revisión del candidato exacto.
+No se modifica la rama de #614 ni se interpreta la aprobación de #608 como
+aprobación de una combinación futura.
+
+
+La verificación final de inventario y trazabilidad pasó. La primera llamada de
+trazabilidad se detuvo por ausencia de PyYAML en el Python por defecto; se usó
+el entorno existente con PyYAML 6.0.3, sin modificar dependencias ni aserciones.
+El recibo conserva ambos resultados y los hashes de los logs locales completos.
+Las ejecuciones generales se realizaron antes del commit final de documentación:
+las fuentes de ejecución mantienen sus hashes y el binario conserva su identidad
+810d646 real. No se les atribuye otra revisión compilada.

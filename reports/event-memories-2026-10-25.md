@@ -1,7 +1,11 @@
 # TDF Records: recuerdos y activación posterior al evento
 
+El diagnóstico inicial y sus posiciones de migración se conservan como historial.
+El [informe actualizado de integración y autorización](event-memory-authorization-repair-2026-10-25.md)
+registra la confirmación de fin del evento, la composición con main y los resultados posteriores.
+
 Informe de ejecución del 25 de octubre de 2026. **Entrega parcial implementada;
-no desplegada ni habilitada para comunicaciones reales.** Las pruebas locales,
+no desplegada en producción ni habilitada para comunicaciones reales.** Las pruebas locales,
 los resultados de CI y la verificación de producción se distinguen abajo.
 
 ## 1. Diagnóstico y capacidades reutilizadas
