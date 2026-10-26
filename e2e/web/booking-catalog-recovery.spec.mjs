@@ -80,6 +80,9 @@ for (const failure of ['error', 'empty']) {
     await page.getByRole('button', { name: 'Continuar', exact: true }).click();
     await expect(page.getByLabel(/^Fecha y hora/)).toBeVisible();
     await page.setViewportSize({ width: 320, height: 740 });
+    // Viewport resizing can resolve before the matchMedia-driven React render.
+    // Measure the settled mobile view, retaining the zero-overflow assertion.
+    await expect(page.getByText('Paso 2 de 3', { exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
     expect(errors).toEqual([]);
     expect(writes).toEqual([]);
