@@ -70,8 +70,11 @@ sh "$TDF_PROVIDER_RETRY_ROOT/scripts/load-payment-test-schema.sh" "$TDF_PROVIDER
 psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
   -f "$TDF_PROVIDER_RETRY_ROOT/scripts/__tests__/fixtures/provider-domain-fixtures.sql" >/dev/null
 
+python3 "$TDF_PROVIDER_RETRY_ROOT/scripts/test-provider-domain-harness.py"
+python3 -O "$TDF_PROVIDER_RETRY_ROOT/scripts/test-provider-domain-harness.py"
+
 TDF_PROVIDER_RETRY_DATABASE_URL="$TDF_PROVIDER_RETRY_URL" \
-  python3 "$TDF_PROVIDER_RETRY_ROOT/scripts/test-provider-domain-binding.py"
+  python3 -O "$TDF_PROVIDER_RETRY_ROOT/scripts/test-provider-domain-binding.py"
 
 # Exercise repeat-apply and empty rollback with exact operator-seed retention
 # before test data is inserted. Never roll back a used queue or financial history.

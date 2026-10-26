@@ -55,6 +55,7 @@ import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
 import qualified TDF.TicketManualReviewSpec as TicketManualReviewSpec
+import qualified TDF.TicketPaymentReceiptSpec as TicketPaymentReceiptSpec
 import qualified TDF.IndexDeclarationSpec as IndexDeclarationSpec
 import qualified TDF.InvoiceWorkerSpec as InvoiceWorkerSpec
 import qualified Test.QuickCheck as QC
@@ -626,12 +627,19 @@ import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
 import qualified TDF.OperationsInboundCaptureSpec as OperationsInboundCaptureSpec
 import qualified TDF.MetaRedeliverySpec as MetaRedeliverySpec
+import qualified TDF.RagIndexPrivacySpec as RagIndexPrivacySpec
+import qualified TDF.CoursePublicMetadataSpec as CoursePublicMetadataSpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
 import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
 import qualified TDF.LedgerPostingSpec as LedgerPostingSpec
+import qualified TDF.MusicPublicationSpec as MusicPublicationSpec
 import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
 import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
+import qualified TDF.MusicRelease.DomainSpec as MusicDomainSpec
+import qualified TDF.MusicRelease.ContentSpec as MusicContentSpec
+import qualified TDF.MusicRelease.DDEX.ERN432Spec as MusicErn432Spec
+import qualified TDF.MusicRelease.Storage.S3Spec as MusicS3Spec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
 import qualified TDF.WhatsAppRedeliverySpec as WhatsAppRedeliverySpec
 import qualified TDF.ServerSpec as ServerSpec
@@ -887,6 +895,7 @@ main = hspec $ do
     EventOrganizerSpec.spec
     InvoiceDatilSpec.spec
     TicketManualReviewSpec.spec
+    TicketPaymentReceiptSpec.spec
     IndexDeclarationSpec.spec
     InvoiceWorkerSpec.spec
     describe "merch commercial reputation formula v1" $ do
@@ -17921,12 +17930,20 @@ main = hspec $ do
     CredentialLifecycleSpec.spec
     WhatsAppConsentSpec.spec
     LedgerPostingSpec.spec
+    MusicPublicationSpec.spec
     InteractionWriteBudgetSpec.spec
     MusicPurchaseSpec.spec
+    describe "music release unit contracts" $ do
+      describe "music-unit-domain" MusicDomainSpec.spec
+      describe "music-unit-content" MusicContentSpec.spec
+      describe "music-unit-ddex" MusicErn432Spec.spec
+      describe "music-unit-storage" MusicS3Spec.spec
     DriveReplaySpec.spec
     WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec
     MetaRedeliverySpec.spec
+    RagIndexPrivacySpec.spec
+    CoursePublicMetadataSpec.spec
     TrialIdentitySpec.spec
     CourseIdentitySpec.spec
     TicketPaymentGateSpec.spec

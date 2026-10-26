@@ -1,5 +1,10 @@
 // Public arrival, authentication and recovery copy.
 export default {
+  logoutPending: 'Saliste de esta aplicación. Estamos confirmando el cierre en el servidor.',
+  logoutUnconfirmed: 'Saliste de esta aplicación, pero no pudimos confirmar el cierre en el servidor. Reintenta cuando tengas conexión.',
+  retryLogout: 'Reintentar cierre',
+  featureMenu: 'Menú de funciones',
+  closeFeatureMenu: 'Cerrar menú de funciones',
   claimReviewAfterSignup: 'Crea tu propia cuenta. Después podrás enviar una solicitud de acceso al perfil seleccionado para revisión; registrarte no te concede su propiedad.',
   "googleLinkTitle": "Conecta tu cuenta TDF",
   "googleLinkExplanation": "Usa tus credenciales de TDF para conectar Google. Si antes usabas solo Google, restablece primero tu contraseña de TDF. Crea una cuenta solo si todavía no tienes una.",
@@ -145,7 +150,6 @@ export default {
   "help": "Necesito ayuda",
   "createAccount": "Crear cuenta",
   "signInAutofill": "Ingresar y autocompletar",
-  "generalBooking": "Reserva general",
   "openCommunity": "Abrir comunidad",
   "skipContent": "Saltar al contenido principal",
   "goTdf": "Ir a TDF",

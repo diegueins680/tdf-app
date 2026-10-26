@@ -3,7 +3,7 @@ BEGIN;
 SET LOCAL statement_timeout = '15s';
 DO $$
 DECLARE course_key bigint; event_key bigint; subject record; policy_key uuid;
-  insert_sql text; count_before bigint; current_scope text; rejection text;
+  insert_sql text; count_before bigint; current_scope text; rejection text; mutation text;
 BEGIN
   INSERT INTO course(slug,title,price_cents,currency,capacity)
     VALUES('terms-history-'||gen_random_uuid()::text,'Synthetic history course',100,'USD',2)
@@ -28,6 +28,31 @@ BEGIN
     EXECUTE format('SELECT count(*) FROM %I WHERE %I=$1',subject.table_name||'_history',subject.scope_column)
       INTO count_before USING subject.scope_key;
     IF count_before<2 THEN RAISE EXCEPTION 'Historical snapshots did not survive deletion'; END IF;
+    -- Every mutation is tested independently by the red/guard-removal runners.
+    -- All attempted writes are in subtransactions inside this rolled-back fixture.
+    FOREACH mutation IN ARRAY ARRAY['DELETE','UPDATE','TRUNCATE'] LOOP
+      CONTINUE WHEN coalesce(current_setting('tdf.terms_history_mutation',true),'')<>''
+        AND current_setting('tdf.terms_history_mutation',true)<>mutation;
+      BEGIN
+        IF mutation='DELETE' THEN
+          EXECUTE format('DELETE FROM %I WHERE %I=$1',subject.table_name||'_history',subject.scope_column)
+            USING subject.scope_key;
+        ELSIF mutation='UPDATE' THEN
+          EXECUTE format('UPDATE %I SET snapshot=jsonb_set(snapshot,''{terms_summary}'',to_jsonb(''Changed history''::text)) WHERE %I=$1',
+            subject.table_name||'_history',subject.scope_column) USING subject.scope_key;
+        ELSE
+          EXECUTE format('TRUNCATE TABLE %I',subject.table_name||'_history');
+        END IF;
+        RAISE EXCEPTION '% history % accepted',subject.kind,mutation;
+      EXCEPTION WHEN integrity_constraint_violation THEN
+        GET STACKED DIAGNOSTICS rejection = MESSAGE_TEXT;
+        IF position('history is append-only' IN rejection)=0 THEN RAISE; END IF;
+      END;
+      RAISE NOTICE 'PASS: % history % refused',subject.kind,mutation;
+    END LOOP;
+    EXECUTE format('SELECT count(*) FROM %I WHERE %I=$1',subject.table_name||'_history',subject.scope_column)
+      INTO current_scope USING subject.scope_key;
+    IF current_scope::bigint<>count_before THEN RAISE EXCEPTION 'Historical snapshots changed'; END IF;
     BEGIN
       EXECUTE insert_sql INTO policy_key USING subject.scope_key,'history-conflict','history-v1','Changed terms';
       RAISE EXCEPTION '% historical reuse accepted after last policy deletion',subject.kind;

@@ -1,9 +1,10 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.TicketPaymentGateSpec (spec) where
 
 import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar, threadDelay, tryPutMVar)
 import Control.Concurrent.Async (withAsync, wait)
-import Control.Exception (SomeException, finally, try)
+import Control.Exception (SomeException, bracket, finally, try)
 import Control.Monad (forM_, void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
@@ -18,10 +19,11 @@ import qualified Data.Text as T
 import Data.Time (getCurrentTime)
 import Database.Persist (PersistValue(..))
 import Database.Persist.Postgresql (createPostgresqlPool)
-import Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool)
+import Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, toSqlKey, rawExecute, rawSql, runSqlPool)
 import Network.Socket (SockAddr(SockAddrInet), tupleToHostAddress)
-import Servant (Handler, ServerError, errBody, errHTTPCode, runHandler, (:<|>)(..))
-import System.Environment (lookupEnv)
+import Servant (Header, Headers, getResponse, getHeaders, Handler, ServerError, errBody, errHTTPCode, runHandler, (:<|>)(..))
+import System.Environment (lookupEnv, setEnv, unsetEnv)
+import System.IO.Temp (withSystemTempDirectory)
 import System.Timeout (timeout)
 import Test.Hspec
 import TDF.Test.DisposablePostgres (isDisposablePostgresUrl)
@@ -29,12 +31,16 @@ import TDF.Test.DisposablePostgres (isDisposablePostgresUrl)
 import TDF.API.ProviderExecution (PaymentSessionCreateDTO(..))
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
+import TDF.Auth (AuthedUser(..), modulesForRoles)
+import TDF.Models (RoleEnum(..))
 import TDF.Config (loadConfig)
 import TDF.DB (Env(..))
 import qualified TDF.Routes.EventTickets as Routes
 import TDF.Server.EventTicketCheckout
   ( lockTicketOrderSalesOpen, paypalCaptureFailureCode, publicEventTicketsServer, ticketCaptureUnverified
   , ticketOrderSalesOpen, ticketSalesClosedRefusal, ticketUnverifiedCaptureRefusal )
+import qualified TDF.Server.TicketPaymentReceipt as Receipt
+import TDF.Server.SocialEventsHandlers (socialEventsServer)
 import TDF.Server.ProviderExecution (providerExecutionServer)
 
 -- | A held, unpaid ticket order must not be payable once its event stops selling
@@ -108,11 +114,53 @@ spec = describe "ticket-payment-gate-postgresql" $ do
         fmap (fmap Routes.evidenceStatus . Routes.bankTransfer) selected `shouldBe` Right (Just "awaiting_evidence")
         closeSales pool order "postponed"
         submitted <- run pool (bankEvidence (oEvent order) (oOrder order) (Just (oToken order))
-          (Routes.PublicEventTicketBankTransferEvidenceRequest "SYNTHETIC-REF-1"))
+          (Routes.PublicEventTicketBankTransferEvidenceRequest "SYNTHETIC-REF-1" Nothing))
         fmap (fmap Routes.evidenceStatus . Routes.bankTransfer) submitted `shouldBe` Right (Just "submitted")
         stored <- runSqlPool (rawSql
           "SELECT count(*) FROM commerce_manual_payment_evidence WHERE customer_reference='SYNTHETIC-REF-1'" []) pool
         stored `shouldBe` [Single (1 :: Int64)]
+
+      it "binds private receipt evidence and refuses a different-file replay" $ \pool ->
+        withSystemTempDirectory "tdf-ticket-receipt" $ \root ->
+          bracket (lookupEnv "TICKET_PAYMENT_EVIDENCE_DIR")
+            (maybe (unsetEnv "TICKET_PAYMENT_EVIDENCE_DIR") (setEnv "TICKET_PAYMENT_EVIDENCE_DIR")) $ \_ -> do
+            setEnv "TICKET_PAYMENT_EVIDENCE_DIR" root
+            activateBankTransfer pool
+            order <- newOrder pool "receipt"
+            _ <- run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order)))
+            let file = Receipt.TicketPaymentReceipt "application/pdf" "JVBERi0xLjc="
+                request = Routes.PublicEventTicketBankTransferEvidenceRequest "SYNTHETIC-RECEIPT" (Just file)
+                submit token payload = run pool (bankEvidence (oEvent order) (oOrder order) token payload)
+            missingCapability <- submit (Just "wrong-token") request
+            missingCapability `shouldSatisfy` isLeft
+            before <- scalar pool "SELECT count(*) FROM commerce_manual_payment_evidence WHERE checkout_id=?::uuid AND evidence_object_key IS NOT NULL" [PersistText (oCheckout order)]
+            before `shouldBe` 0
+            submitted <- submit (Just (oToken order)) request
+            fmap (fmap Routes.receiptAttached . Routes.bankTransfer) submitted `shouldBe` Right (Just True)
+            replay <- submit (Just (oToken order)) request
+            fmap (fmap Routes.receiptAttached . Routes.bankTransfer) replay `shouldBe` Right (Just True)
+            let changed = Routes.PublicEventTicketBankTransferEvidenceRequest "SYNTHETIC-RECEIPT"
+                  (Just (Receipt.TicketPaymentReceipt "application/pdf" "JVBERi0yLjA="))
+            conflict <- submit (Just (oToken order)) changed
+            fmap errHTTPCode (either Just (const Nothing) conflict) `shouldBe` Just 409
+            keys <- runSqlPool (rawSql "SELECT evidence_object_key FROM commerce_manual_payment_evidence WHERE checkout_id=?::uuid"
+              [PersistText (oCheckout order)] :: SqlPersistT IO [Single (Maybe Text)]) pool
+            case keys of
+              [Single (Just key)] -> run pool (Receipt.loadReceipt (oOrder order) key) `shouldReturn` Right file
+              _ -> expectationFailure "Expected one private receipt"
+            let user role party = AuthedUser (toSqlKey party) [role] (modulesForRoles [role]) Nothing Nothing
+                readAs actor event = run pool (manualReceiptFor actor (T.pack (show event)) (T.pack (show (oOrder order))))
+            adminView <- readAs (user Admin 1) (oEvent order)
+            fmap getResponse adminView `shouldBe` Right file
+            fmap (lookup "Cache-Control" . getHeaders) adminView `shouldBe` Right (Just "no-store")
+            runSqlPool (rawExecute "UPDATE social_event SET organizer_party_id='2' WHERE id=?" [PersistInt64 (oEvent order)]) pool
+            organizerView <- readAs (user Fan 2) (oEvent order)
+            fmap getResponse organizerView `shouldBe` Right file
+            outsiderView <- readAs (user Fan 3) (oEvent order)
+            fmap errHTTPCode (either Just (const Nothing) outsiderView) `shouldSatisfy` (`elem` [Just 403, Just 404])
+            other <- newOrder pool "other-receipt-event"
+            wrongEvent <- readAs (user Admin 1) (oEvent other)
+            fmap errHTTPCode (either Just (const Nothing) wrongEvent) `shouldBe` Just 404
 
       it "does not gate a checkout that is already processing" $ \pool -> do
         order <- newOrder pool "processing"
@@ -336,6 +384,16 @@ getOrder :: Int64 -> Int64 -> Maybe Text -> App Routes.PublicEventTicketCheckout
 createOrder :: Int64 -> Maybe Text -> Routes.PublicEventTicketCheckoutRequest -> App Routes.PublicEventTicketCheckoutResponse
 _ :<|> createOrder :<|> getOrder :<|> datafastCreate :<|> _ :<|> paypalCreate :<|> paypalCapture
   :<|> bankSelect :<|> bankEvidence = publicEventTicketsServer
+
+manualReceiptFor :: AuthedUser -> Text -> Text -> App (Headers '[Header "Cache-Control" Text] Receipt.TicketPaymentReceipt)
+manualReceiptFor user = case socialEventsServer user of
+  _events :<|> _cities :<|> _sources :<|> _research :<|> _venues :<|> _artists
+    :<|> _rsvps :<|> _invitations :<|> _moments :<|> _live :<|> tickets :<|> _ -> case tickets of
+      _tiers :<|> _createTier :<|> _updateTier :<|> _myOrders :<|> _orders
+        :<|> _createOrder :<|> _updateOrder :<|> _tickets :<|> _checkIn
+        :<|> _promos :<|> _createPromo :<|> _updatePromo :<|> _validatePromo
+        :<|> _stripe :<|> _requestRefund :<|> _refunds :<|> _approveRefund :<|> _rejectRefund
+        :<|> _manualPayments :<|> _review :<|> receipt :<|> _ -> receipt
 
 captureRequest :: Routes.PublicEventTicketPaypalCaptureRequest
 captureRequest = Routes.PublicEventTicketPaypalCaptureRequest "SYNTHETIC-PAYPAL-ORDER"

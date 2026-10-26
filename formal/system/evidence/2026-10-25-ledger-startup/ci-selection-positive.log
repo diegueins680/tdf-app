@@ -1,0 +1,24 @@
+✔ UI-only changes do not compile backend or mobile (5.128873ms)
+✔ ordinary backend changes avoid UI, mobile, contracts and migrations (0.439478ms)
+✔ notification navigation drift is checked when only tdf-hq-ui/src/components/notificationTarget.ts changes (0.312258ms)
+✔ notification navigation drift is checked when only scripts/generate-notification-navigation.mjs changes (0.278935ms)
+✔ public booking HTTP concurrency harness selects backend validation (0.373562ms)
+✔ OpenAPI changes validate both generated clients (0.293316ms)
+✔ Mobile pins and contract definition changes select generated API validation (0.547716ms)
+✔ every event operations HTTP runner selects backend validation (0.423381ms)
+✔ schema model changes run backend and migration checks (0.349946ms)
+✔ merch checkout expiry runner and SQL assertions select migration validation (0.475031ms)
+✔ production migration runner changes run backend and migration checks (0.294238ms)
+✔ ledger runtime and verification changes select the real PostgreSQL backend lane (0.345207ms)
+✔ root dependency changes cover every JavaScript consumer (0.220875ms)
+✔ pipeline changes fail safe across every scope (0.242936ms)
+✔ backend artifact builds can force backend validation (0.218655ms)
+✔ declared lifecycle models and their bindings select migrated-schema checks (0.360975ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 170.678835

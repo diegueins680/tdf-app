@@ -35,6 +35,12 @@ jest.unstable_mockModule('./events/UpcomingEventsCarousel', () => ({
   default: () => null,
 }));
 
+jest.unstable_mockModule('./SidebarNav', () => ({
+  default: ({ onNavigate }: { onNavigate?: () => void }) => (
+    <nav aria-label="Navegación de la aplicación"><a href="/admin/directorio" onClick={(event) => { event.preventDefault(); onNavigate?.(); }}>Revisar directorio</a></nav>
+  ),
+}));
+
 const { default: PublicBranding } = await import('./PublicBranding');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -96,9 +102,6 @@ describe('PublicBranding', () => {
       expect(container.textContent).toContain('Reservas, cursos y clases en un solo lugar.');
       expect(linkHrefByText(container, 'Reservar servicios')).toBe(
         '/reservar?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links',
-      );
-      expect(linkHrefByText(container, 'DJ Booth')).toBe(
-        '/dj-booth?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links',
       );
       expect(linkHrefByText(container, 'Inscribirme: cursos')).toBe(
         '/curso/produccion-musical?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links',
@@ -262,4 +265,29 @@ it('sends the TDF Mobile navigation entry to the landing with its surface', asyn
     await view.cleanup();
     container.remove();
   }
+});
+
+
+it('opens the shared feature menu from a signed-in public page and closes it after navigation', async () => {
+  await i18n.changeLanguage('es');
+  activeSession = { username: 'menu-admin', displayName: 'Admin', roles: ['Admin'], partyId: 42 };
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const view = await renderBranding(container, '/fans');
+  try {
+    const button = container.querySelector<HTMLButtonElement>('button[aria-label="Menú de funciones"]');
+    expect(button).not.toBeNull();
+    await act(async () => { button!.click(); await flushPromises(); });
+    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="Menú de funciones"] nav')).not.toBeNull());
+    await act(async () => { document.querySelector<HTMLAnchorElement>('[role="dialog"] a[href="/admin/directorio"]')!.click(); await flushPromises(); });
+    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="Menú de funciones"]')).toBeNull());
+    expect(button!.getAttribute('aria-expanded')).toBe('false');
+  } finally { await view.cleanup(); container.remove(); activeSession = null; }
+});
+
+it('keeps the authenticated feature menu out of the guest header', async () => {
+  activeSession = null;
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const view = await renderBranding(container, '/fans');
+  try { expect(container.querySelector('button[aria-haspopup="dialog"]')).toBeNull(); }
+  finally { await view.cleanup(); container.remove(); }
 });

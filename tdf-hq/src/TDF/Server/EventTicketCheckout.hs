@@ -66,6 +66,7 @@ import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Server.SocialEventsHandlers as SocialEvents
+import qualified TDF.Server.TicketPaymentReceipt as Receipt
 
 type AppM = ReaderT Env Handler
 
@@ -1748,15 +1749,16 @@ ticketPaymentReference orderId = "TDF-" <> T.pack (show orderId)
 loadBankTransferView :: TicketRuntimeView -> AppM (Maybe Routes.PublicEventTicketBankTransferDTO)
 loadBankTransferView runtime = do
   rows <- runDB (rawSql
-    "SELECT evidence.status, evidence.customer_reference, evidence.review_notes\
+    "SELECT evidence.status, evidence.customer_reference, evidence.review_notes,\
+    \ evidence.evidence_object_key IS NOT NULL\
     \ FROM commerce_manual_payment_evidence evidence\
     \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
     \ WHERE evidence.checkout_id = ?::uuid AND attempt.checkout_id = evidence.checkout_id\
     \ AND attempt.provider = 'bank_transfer' AND attempt.operation = 'manual_verify'"
     [PersistText (trvCheckoutId runtime)]
-    :: SqlPersistT IO [(Single Text, Single (Maybe Text), Single (Maybe Text))])
+    :: SqlPersistT IO [(Single Text, Single (Maybe Text), Single (Maybe Text), Single Bool)])
   case rows of
-    [(Single evidenceStatus, Single customerReference, Single notes)] -> do
+    [(Single evidenceStatus, Single customerReference, Single notes, Single receiptAttached)] -> do
       instructions <- liftIO loadBankTransferInstructions
       pure $ Just Routes.PublicEventTicketBankTransferDTO
         { Routes.instructions = instructions
@@ -1765,6 +1767,7 @@ loadBankTransferView runtime = do
         , Routes.currency = trvCurrency runtime
         , Routes.evidenceStatus = evidenceStatus
         , Routes.customerReference = customerReference
+        , Routes.receiptAttached = receiptAttached
         -- Only a rejection reason is buyer-facing; approval notes stay internal.
         , Routes.reviewNotes = if evidenceStatus == "rejected" then notes else Nothing
         }
@@ -1883,17 +1886,23 @@ submitPublicEventTicketBankTransferEvidence
   -> Routes.PublicEventTicketBankTransferEvidenceRequest
   -> AppM Routes.PublicEventTicketCheckoutResponse
 submitPublicEventTicketBankTransferEvidence rawEventId rawOrderId mLookupToken
-    Routes.PublicEventTicketBankTransferEvidenceRequest{ Routes.customerReference = suppliedReference } = do
+    Routes.PublicEventTicketBankTransferEvidenceRequest
+      { Routes.customerReference = suppliedReference, Routes.receipt = suppliedReceipt } = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
   customerReference <- either throwError pure $
     validateBankTransferReference suppliedReference
+  receiptUpload <- traverse (\receipt -> do
+    validated <- either (throwError . badRequest) pure (Receipt.validateReceipt receipt)
+    Receipt.prepareReceipt rawOrderId validated) suppliedReceipt
+  let receiptKey = fmap fst receiptUpload
   now <- liftIO getCurrentTime
   terms <- runDB (loadManualTransferTerms (tpcOrderKey context))
     >>= maybe (throwError (conflict "Bank transfer is not available for this event")) pure
   outcome <- runDB $ do
     rows <- rawSql
       "SELECT evidence.id::text, evidence.status, evidence.customer_reference,\
-      \ evidence.submitted_by, attempt.id::text, runtime.manual_submitter_party_id\
+      \ evidence.submitted_by, attempt.id::text, runtime.manual_submitter_party_id,\
+      \ evidence.evidence_object_key\
       \ FROM commerce_manual_payment_evidence evidence\
       \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
       \ JOIN event_ticket_checkout_runtime runtime ON runtime.checkout_id = evidence.checkout_id\
@@ -1905,21 +1914,23 @@ submitPublicEventTicketBankTransferEvidence rawEventId rawOrderId mLookupToken
       [PersistText (Checkout.checkoutReferenceId (tpcCheckout context))]
       :: SqlPersistT IO
         [( Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
-         , Single Text, Single (Maybe Int64)
+         , Single Text, Single (Maybe Int64), Single (Maybe Text)
          )]
     case rows of
       [( Single evidenceId, Single status, Single existingReference
-       , Single existingSubmitter, Single attemptId, Single mSubmitter
+       , Single existingSubmitter, Single attemptId, Single mSubmitter, Single existingReceipt
        )] -> case mSubmitter of
         Nothing -> pure (Left "Select bank transfer before submitting evidence")
         Just submitterId
           | status `elem` ["submitted", "under_review"]
               && existingReference == Just customerReference
+              && existingReceipt == receiptKey
               && existingSubmitter == Just submitterId -> pure (Right ())
           | status == "approved" -> pure (Right ())
           | status `elem` ["submitted", "under_review"] ->
               pure (Left "Different transfer evidence is already under review")
           | status `elem` ["awaiting_evidence", "rejected"] -> do
+              forM_ receiptUpload (liftIO . snd)
               when (status == "rejected") $
                 Checkout.recordManualPaymentSelection (tpcCheckout context)
                   (Checkout.PaymentAttemptReference attemptId)
@@ -1928,11 +1939,12 @@ submitPublicEventTicketBankTransferEvidence rawEventId rawOrderId mLookupToken
                   now
               rawExecute
                 "UPDATE commerce_manual_payment_evidence\
-                \ SET customer_reference = ?, submitted_amount_minor = ?, currency = ?,\
+                \ SET customer_reference = ?, evidence_object_key = ?, submitted_amount_minor = ?, currency = ?,\
                 \ submitted_at = ?, submitted_by = ?, status = 'submitted',\
                 \ reviewed_by = NULL, reviewed_at = NULL, review_notes = NULL\
                 \ WHERE id = ?::uuid"
                 [ PersistText customerReference
+                , maybe PersistNull PersistText receiptKey
                 , PersistInt64 (tpcAmountMinor context)
                 , PersistText (tpcCurrency context)
                 , PersistUTCTime now

@@ -491,9 +491,17 @@ export function buildMigrationBatchSql(migrations, options = {}) {
       `SELECT NOT EXISTS (SELECT 1 FROM public.tdf_schema_migration WHERE migration_id = ${sqlLiteral(entry.id)}) AS ${applyVariable} \\gset`,
       `\\if :${applyVariable}`,
       `\\echo Applying migration ${entry.id}`,
-      entry.source,
+      // The ledger row and the migration's effects commit together: the row is
+      // inserted inside a transaction opened here, a migration's own BEGIN only
+      // warns, and its COMMIT (or the trailing one, for files without their own
+      // transaction) commits both. A failure anywhere leaves neither. Every
+      // manifest file ends with its COMMIT and uses no statement that refuses a
+      // transaction block (checked by production-release.test.mjs).
+      'BEGIN;',
       'INSERT INTO public.tdf_schema_migration (migration_id, checksum, source_commit)',
       `VALUES (${sqlLiteral(entry.id)}, ${sqlLiteral(entry.checksum)}, ${sqlLiteral(sourceCommit)});`,
+      entry.source,
+      'COMMIT;',
       '\\else',
       `\\echo Already applied ${entry.id}`,
       '\\endif',
@@ -516,7 +524,9 @@ export function buildMigrationBatchSql(migrations, options = {}) {
     "SELECT pg_advisory_unlock(hashtextextended('tdf-production-schema-migrations', 0));",
     '\\else',
     '\\echo Another production schema migration is active; refusing to wait',
-    '\\quit 3',
+    // psql's \quit takes no exit status (a numeric argument is ignored with a
+    // warning and the batch exited 0); an SQL error under ON_ERROR_STOP exits 3.
+    'DO $lock$ BEGIN RAISE EXCEPTION \'Another production schema migration is active; refusing to wait\'; END $lock$;',
     '\\endif',
     '',
   ].join('\n\n');
@@ -689,11 +699,13 @@ ROLLBACK;
 // from source and fails if a newly called function is missing here.
 export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
   'music_can(bigint,bigint,text)',
+  'music_checkout_payment_attempt_allowed(uuid)',
   'music_check_ddex_export(uuid)',
   'music_check_ddex_operation(uuid,uuid,uuid,text)',
   'music_check_submission(uuid)',
   'music_create_release_correction(uuid,uuid,bigint)',
   'music_merge_party_identifiers(jsonb,jsonb)',
+  'music_minor_units_json(bigint)',
   'music_preview_matches(uuid)',
   'music_preview_spec(bigint,bigint,bigint)',
   'music_public_asset_accessible(uuid,text)',
@@ -1921,6 +1933,35 @@ BEGIN
        OR actual.is_nullable <> expected.is_nullable
   ) THEN
     RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
+    WHERE t.tgrelid=to_regclass('public.commerce_ledger_transaction')
+      AND t.tgname='trg_commerce_ledger_header_immutable'
+      AND p.oid=to_regprocedure('public.commerce_protect_posted_ledger_header()')
+      AND t.tgenabled IN ('O','A') AND NOT t.tgisinternal
+      AND t.tgtype=19 AND t.tgqual IS NULL AND t.tgattr=''::int2vector
+      AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND p.proconfig @> ARRAY['search_path=pg_catalog']::text[]
+      AND NOT p.prosecdef AND p.prorettype='trigger'::regtype
+  ) THEN
+    RAISE EXCEPTION 'Posted ledger header immutability guard is missing or changed';
+  END IF;
+  -- Replaying an older CREATE OR REPLACE FUNCTION can discard proconfig while
+  -- leaving its migration receipt and trigger binding intact. Inspect both
+  -- installed lookup boundaries instead of trusting those receipts.
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid=to_regprocedure('public.commerce_validate_ledger_posting()')
+      AND proconfig @> ARRAY['search_path=pg_catalog, public, pg_temp']::text[]
+      AND NOT prosecdef AND prorettype='trigger'::regtype
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid=to_regprocedure('public.commerce_protect_posted_ledger()')
+      AND proconfig @> ARRAY['search_path=pg_catalog, public, pg_temp']::text[]
+      AND NOT prosecdef AND prorettype='trigger'::regtype
+  ) THEN
+    RAISE EXCEPTION 'Ledger trigger trusted lookup settings are missing or changed';
   END IF;
   FOREACH commerce_table IN ARRAY ARRAY[
     'commerce_checkout_session',

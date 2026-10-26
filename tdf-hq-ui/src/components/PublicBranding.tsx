@@ -2,11 +2,15 @@ import SignupMobileInvitation from '../mobile/SignupMobileInvitation';
 import MobilePromo from '../mobile/MobilePromo';
 import { useMobileTelemetry } from '../mobile/telemetry';
 import { useTranslation } from 'react-i18next';
-import { Box, Button, Container, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Container, Drawer, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import type { ReactNode } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { lazyWithReload as lazy } from '../utils/lazyWithReload';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -21,6 +25,8 @@ import {
   rememberInstagramTraffic,
 } from '../utils/instagramTraffic';
 
+const FeatureMenu = lazy(() => import('./SidebarNav'));
+
 const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.search', to: '/buscar' },
   { label: 'authEntry.events', to: EVENTS_PATH },
@@ -31,7 +37,6 @@ const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.shop', to: '/marketplace' },
   { label: 'Domo', to: '/domo-del-pululahua' },
   { label: 'authEntry.book', to: '/reservar' },
-  { label: 'DJ Booth', to: '/dj-booth' },
   { label: 'authEntry.releases', to: '/records' },
 ] as const;
 
@@ -53,6 +58,8 @@ export default function PublicBranding({
   const { t } = useTranslation();
   const { session } = useSession();
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [featureMenuOpen, setFeatureMenuOpen] = useState(false);
+  useEffect(() => { setFeatureMenuOpen(false); }, [session?.partyId]);
   const location = useLocation();
   const [showInstagramEntryLinks, setShowInstagramEntryLinks] = useState(() => {
     const referrer = typeof document === 'undefined' ? '' : document.referrer;
@@ -79,7 +86,6 @@ export default function PublicBranding({
   const footerPrimaryAction = useMemo<FooterAction>(() => {
     if (
       location.pathname.startsWith('/reservar') ||
-      location.pathname.startsWith('/dj-booth') ||
       location.pathname.startsWith('/domo-del-pululahua')
     ) {
       return { label: t('authEntry.whatsappBookings'), kind: 'external', value: STUDIO_WHATSAPP_URL };
@@ -98,9 +104,6 @@ export default function PublicBranding({
   const footerSecondaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
       return { label: t('authEntry.signInAutofill'), kind: 'route', value: contextualLoginPath };
-    }
-    if (location.pathname.startsWith('/dj-booth')) {
-      return { label: t('authEntry.generalBooking'), kind: 'route', value: '/reservar' };
     }
     if (location.pathname.startsWith('/domo-del-pululahua')) {
       return { label: t('authEntry.bookStudio'), kind: 'route', value: '/reservar' };
@@ -161,6 +164,7 @@ export default function PublicBranding({
       {showHeader && (
         <Box
           component="header"
+          data-navigation-sticky-header={stickyHeader ? 'true' : undefined}
           sx={{
             borderBottom: '1px solid',
             borderColor: 'divider',
@@ -174,6 +178,17 @@ export default function PublicBranding({
           <Container maxWidth="xl">
             <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} useFlexGap sx={{ flexWrap: 'wrap' }}>
               <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
+                {session && (
+                  <Tooltip title={t('authEntry.featureMenu')}>
+                    <IconButton
+                      aria-label={t('authEntry.featureMenu')}
+                      aria-haspopup="dialog"
+                      aria-expanded={featureMenuOpen}
+                      onClick={() => setFeatureMenuOpen(true)}
+                      sx={{ minWidth: 44, minHeight: 44 }}
+                    ><MenuIcon /></IconButton>
+                  </Tooltip>
+                )}
                 <Box
                   component={RouterLink}
                   to="/tdf"
@@ -223,6 +238,7 @@ export default function PublicBranding({
               </Stack>
               <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5 }} sx={{ maxWidth: '100%', minWidth: 0 }}>
                 <MarketplaceCartButton />
+                <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44, display: { md: 'none' } }}><SearchIcon /></IconButton>
                 {session ? (
                   <SessionMenu />
                 ) : showLoginButton && (
@@ -274,6 +290,27 @@ export default function PublicBranding({
             </Stack>
           </Container>
         </Box>
+      )}
+      {session && featureMenuOpen && (
+        <Drawer
+          anchor="left"
+          open
+          onClose={() => setFeatureMenuOpen(false)}
+          PaperProps={{
+            role: 'dialog', 'aria-modal': true, 'aria-label': t('authEntry.featureMenu'),
+            // The mobile sidebar is fixed-position and does not size its parent.
+            sx: { width: { xs: 260, md: 240 }, overflow: 'hidden' },
+          }}
+        >
+          <IconButton
+            aria-label={t('authEntry.closeFeatureMenu')}
+            onClick={() => setFeatureMenuOpen(false)}
+            sx={{ position: 'absolute', top: 4, right: 4, zIndex: (theme) => theme.zIndex.drawer + 1, minWidth: 44, minHeight: 44 }}
+          ><CloseIcon /></IconButton>
+          <Suspense fallback={<CircularProgress aria-label={t('authEntry.featureMenu')} sx={{ m: 4 }} />}>
+            <FeatureMenu open onNavigate={() => setFeatureMenuOpen(false)} />
+          </Suspense>
+        </Drawer>
       )}
       <Container
         component="main"

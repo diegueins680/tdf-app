@@ -33,10 +33,17 @@ export function prepareHetznerRelease({ contract, receipt, provenance, now = Dat
   }
   requireFact(snapshot.containers.db.volume === 'tdf_production_postgres_data', 'Wrong production database volume');
   const observedFlags = snapshot.containers.api.booleanConfiguration;
-  requireFact(observedFlags && Object.values(observedFlags).every(value => ['true', 'false'].includes(value)),
-    'Invalid observed flag state');
-  requireFact(observedFlags.RUN_MIGRATIONS === 'false' && observedFlags.RESET_DB === 'false'
-    && observedFlags.SEED_DB === 'false', 'Unsafe automatic schema or destructive runtime flag');
+  // Preserve the collector's raw observations: individual backend parsers have
+  // different whitespace/default rules, so this is not an effective-state claim.
+  requireFact(observedFlags && Object.entries(observedFlags).every(([name, value]) => {
+    if (typeof value !== 'string' || value.length > 256) return false;
+    const spelling = value.trim().toLowerCase();
+    const cors = /^(?:ALLOW_ALL_ORIGINS|CORS_ALLOW_ALL_ORIGINS|CORS_DISABLE_DEFAULTS|DISABLE_DEFAULT_CORS)$/.test(name);
+    return /^(?:true|false|1|0|yes|no|on|off)?$/.test(spelling) || (cors && spelling === '*');
+  }), 'Invalid observed flag state');
+  const explicitlyFalse = value => typeof value === 'string' && /^(?:false|0|no|off)$/i.test(value.trim());
+  requireFact(explicitlyFalse(observedFlags.RUN_MIGRATIONS) && explicitlyFalse(observedFlags.RESET_DB)
+    && explicitlyFalse(observedFlags.SEED_DB), 'Unsafe automatic schema or destructive runtime flag');
   const migrations = reconcileMigrationLedger(contract, database.migrations);
   return {
     schemaVersion: 1, status: 'prepared-not-authorized', executionAllowed: false,
@@ -59,13 +66,19 @@ export function prepareHetznerRelease({ contract, receipt, provenance, now = Dat
       providerAccounts: database.providerAccounts ?? null, socialRuntime: database.socialRuntime ?? null },
     requiredCorsConfiguration: { ALLOW_ALL_ORIGINS: 'false', CORS_DISABLE_DEFAULTS: 'true',
       ALLOWED_ORIGINS: 'https://www.tdfrecords.net,https://tdfrecords.net' },
+    policyBlockers: [{ requirement: 'OPS-INBOUND-CAPTURE-001',
+      status: 'retention-policy-unresolved', scope: 'operations-inbound-capture-activation',
+      productionRolloutAllowed: false,
+      reason: 'Explicit product decision: capture only with Operations enabled; define retention before rollout. Permanent sender identifiers in event/audit records are not approved by merging the guard.' }],
     remainingGates: [
+      'Fresh exact-artifact formal assurance: no refuted mandatory P0 or stale proven claim; enumerate every unproven critical obligation and require authenticated owner risk acceptance',
       'Current exact-head review, all quality gates, normal merge and post-merge CI',
       'Registry image digest and embedded version bound to merged source; compatible reviewed recovery image',
       'Exclusive release lock; recheck runtime identity, ledger, effective Compose configuration and provider/feature flags',
       'Drain all old writers, including background workers; do not treat a stop request as proof of drainage',
       'Preserve and verify legacy /app/uploads under the writer fence; provision the private host bind with the image user ownership before replacing the API container',
       'Consistent database, public assets and private uploads backup; actual isolated restore and schema/content verification',
+      'Define and verify Operations inbound-capture retention, deletion and backup handling before activation; a disabled rollout must verify the flag stays false and the guard is installed',
       'Apply reviewed pending migrations and verify full schema; preserve operator provider/feature choices',
       'Restricted canary with external effects disabled, enforcing CORS configuration and exact source version',
       'Route traffic, verify backend/frontend/mobile compatibility, live flags, ledger and safe smoke tests',

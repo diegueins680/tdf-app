@@ -1,0 +1,795 @@
+{
+  "startedAt": "2026-10-25T22:15:48.572705+00:00",
+  "finishedAt": "2026-10-25T22:21:01.495743+00:00",
+  "executionPassed": true,
+  "reportSha256": "e6b5103d435a777e14dee625c746e3ca68b893899b5e307244e01fa21e023626",
+  "metrics": {
+    "crossSolverInputsExpected": 41,
+    "crossSolverInputsMatched": 41,
+    "independentlyCheckedDistinctInputs": 12,
+    "certificateObligations": {
+      "PROVEN": 14,
+      "REFUTED": 0,
+      "UNPROVEN": 0,
+      "NOT_APPLICABLE": 0
+    }
+  },
+  "crossSolver": [
+    {
+      "id": "arithmetic:capture-safety",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a"
+    },
+    {
+      "id": "arithmetic:capture-admission",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030"
+    },
+    {
+      "id": "arithmetic:capture-witness-0",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0"
+    },
+    {
+      "id": "arithmetic:capture-witness-1",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f"
+    },
+    {
+      "id": "arithmetic:capture-legacy-counterexample",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8"
+    },
+    {
+      "id": "arithmetic:refund-safety",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a"
+    },
+    {
+      "id": "arithmetic:refund-admission",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030"
+    },
+    {
+      "id": "arithmetic:refund-witness-0",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0"
+    },
+    {
+      "id": "arithmetic:refund-witness-1",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f"
+    },
+    {
+      "id": "arithmetic:refund-legacy-counterexample",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8"
+    },
+    {
+      "id": "authorization:strict-admin",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "7fc3e60bbba531afc47b543e41978f668b1ea0d693b36afe295f713154b4296e"
+    },
+    {
+      "id": "authorization:module-access",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "b501d1aa1ee540182d45946adae64be2dd961b1018bc4c63cc191edd0731d0f6"
+    },
+    {
+      "id": "authorization:ingestion-admission",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "33bc931447fac518c2660bdc38614b10a9f0c3dcbea488537e8bdba7f43a90bf"
+    },
+    {
+      "id": "authorization:cardinality-nonnegative",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "538c1648575c93dcf01c97ad2acf74e6ac86bbb0c8bc09225e0d298dfb7a3915"
+    },
+    {
+      "id": "authorization:cardinality-zero",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c"
+    },
+    {
+      "id": "authorization:cardinality-sum",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "f7354ee4a94da5df4c7055469e6e717351460ed89f8955df2c45685ad1c4e3dc"
+    },
+    {
+      "id": "authorization:strict-admin-witness-true",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "70b2a1205bbe7f4f5cdb8c8a17ff9dd57ac60ee96fbc0265e0ed63bf9b251ea0"
+    },
+    {
+      "id": "authorization:strict-admin-witness-false",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "eeaed47cf2849128d81eee8543f1488f2538ec607e5f1054314300b199e0fe6d"
+    },
+    {
+      "id": "authorization:module-access-witness-true",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "b69a30273b6417f139fbad50f0f06566ee5bb85ab9d585602afc888cf18f9b04"
+    },
+    {
+      "id": "authorization:module-access-witness-false",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "513953eccb5de4ec24b36f2a755007c915d0967c5dc276715d798a73b9b9594e"
+    },
+    {
+      "id": "authorization:ingestion-admission-witness-true",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "727d41a67f48c39ccf6f2dce096eb46bd1568c19bd72bc7307a5e86f1ae13243"
+    },
+    {
+      "id": "authorization:ingestion-admission-witness-false",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "e812df3fef5cadd0a37fafb4cbc760ec34443a4a2fbd514c753711a987df551c"
+    },
+    {
+      "id": "authorization:control-drop-coherence",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "1aa33b1d244326d8ee1d79787f3fe5ec5e762adc228f422d56296efb6ee6e3cd"
+    },
+    {
+      "id": "authorization:control-admit-operational-role",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "c0eb0fafc11e007470c645ccab64665f20e44bc8e23b0fc3323361796c046e59"
+    },
+    {
+      "id": "authorization:control-allow-zero-identity",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "0dc3e705e2041bdb5a58f01562167fb6a0f6b581e434df1f3ec959e8da6a7b33"
+    },
+    {
+      "id": "authorization:control-drop-module-grant",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "e9f92c4f12111b7c5984b4c5c2f8300976eaff22b07ef83767ea678231e221e4"
+    },
+    {
+      "id": "authorization:control-module-implies-admin",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "7b7b07ad81bd0f453b589ed24e4dca7a6e29f01d6f96bff8bbfe4b28891af912"
+    },
+    {
+      "id": "recovery:window-equivalence",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "0eaf4d81ea08baff7a1fee36724590647fad2d9451c316d7b9e1dc90076232f3"
+    },
+    {
+      "id": "recovery:schema-correspondence",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "6ce0edc16b6585748c551b0e3f2f39e0b8ec6b2b6a931f40d6eb9f385b1e2f88"
+    },
+    {
+      "id": "recovery:issuance-admission",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "f06b27694c3a5ffd9ea9e8ca124d07869f0dca809705a4d04d103e106b054dbe"
+    },
+    {
+      "id": "recovery:issuance-exact",
+      "expected": "unsat",
+      "actual": [
+        "unsupported",
+        "unsat"
+      ],
+      "matched": true,
+      "sha256": "43a56c1e5385f426bf415d5f46658a1b364a552fb2d8afa2bdd65f3319660d99"
+    },
+    {
+      "id": "recovery:witness-0-0",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "4e6a8d78e1319e57b40f42b97f9f1e135dfac1283aa76bb60f7d3268399a90b9"
+    },
+    {
+      "id": "recovery:witness-0-899",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "092874565efa8d1bf7fcde8aef1a23f1fd6945b98adc9ea14d560dded7696118"
+    },
+    {
+      "id": "recovery:witness-9223372036854774907-0",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "5e06c2fa0197b355f0732c263cdb9285cfc3a73a472a0a6c3ba0467798389757"
+    },
+    {
+      "id": "recovery:witness-9223372036854774907-899",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "57c3d882e4bc67cf89eb9f7093a2ce472c3d38510dba98d7aca99b13f4d183e0"
+    },
+    {
+      "id": "recovery:witness-overflow-rejection",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "3133dccb8735eb77f646b547ef2574ecc854d2327620d46a8d38b81f41db9d55"
+    },
+    {
+      "id": "recovery:control-inclusive-deadline",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "fbdbdd1c6dc83f045527dd24b4131ca7ca84889884d93871d530ff129473836e"
+    },
+    {
+      "id": "recovery:control-future-issuance",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "ac99cecccaef4c4e243272a9f5474ad11f0d3ac023e1a8533db4afb1c3234414"
+    },
+    {
+      "id": "recovery:control-validator-lifetime",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "8eaee02d8eeaf4e73202a21fbfe11f5af08f8dc349248636235bd0d5b9f17050"
+    },
+    {
+      "id": "recovery:control-database-lifetime",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "bf333432149c853d3b8d22fb84afe72b46c4eb23472e619eced03c5dd3e48829"
+    },
+    {
+      "id": "recovery:control-issuance-lifetime",
+      "expected": "sat",
+      "actual": [
+        "unsupported",
+        "sat"
+      ],
+      "matched": true,
+      "sha256": "cfd0154fac07d92d6320df2df02035cf8afd022248f13b240d83f61dd1bde1b0"
+    }
+  ],
+  "certificates": [
+    {
+      "id": "arithmetic:capture-safety",
+      "status": "PROVEN",
+      "input": "arithmetic/capture-safety.smt2",
+      "inputSha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "proof": "arithmetic/capture-safety.cpc",
+      "proofSha256": "733f3cf148043673151f38f26a036db8968837e5a0c800d8fe0d31fb92f0958d",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "sourceObligationIds": [
+        "SYS-MONEY-001:safety"
+      ],
+      "requirementIds": [
+        "SYS-MONEY-001"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "arithmetic:capture-admission",
+      "status": "PROVEN",
+      "input": "arithmetic/capture-admission.smt2",
+      "inputSha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "proof": "arithmetic/capture-admission.cpc",
+      "proofSha256": "df55db605c2b2debad7e700f3280865aa1d670a569460106cf85b72decd73827",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "sourceObligationIds": [
+        "SYS-MONEY-001:admission"
+      ],
+      "requirementIds": [
+        "SYS-MONEY-001"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "arithmetic:refund-safety",
+      "status": "PROVEN",
+      "input": "arithmetic/refund-safety.smt2",
+      "inputSha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "proof": "arithmetic/capture-safety.cpc",
+      "proofSha256": "733f3cf148043673151f38f26a036db8968837e5a0c800d8fe0d31fb92f0958d",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "reusedFrom": "arithmetic:capture-safety",
+      "sourceObligationIds": [
+        "SYS-MONEY-002:safety"
+      ],
+      "requirementIds": [
+        "SYS-MONEY-002"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "arithmetic:refund-admission",
+      "status": "PROVEN",
+      "input": "arithmetic/refund-admission.smt2",
+      "inputSha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "proof": "arithmetic/capture-admission.cpc",
+      "proofSha256": "df55db605c2b2debad7e700f3280865aa1d670a569460106cf85b72decd73827",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "reusedFrom": "arithmetic:capture-admission",
+      "sourceObligationIds": [
+        "SYS-MONEY-002:admission"
+      ],
+      "requirementIds": [
+        "SYS-MONEY-002"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "authorization:strict-admin",
+      "status": "PROVEN",
+      "input": "authorization/strict-admin.smt2",
+      "inputSha256": "7fc3e60bbba531afc47b543e41978f668b1ea0d693b36afe295f713154b4296e",
+      "proof": "authorization/strict-admin.cpc",
+      "proofSha256": "6a9d0560efde2e415fd0cd639a1480e5188f7e643f557a39c24088cd643941df",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "sourceObligationIds": [
+        "AUTH-ARTIST-INVITE-001:strict-admin"
+      ],
+      "supportingLemma": false,
+      "requirementIds": [
+        "AUTH-ARTIST-INVITE-001"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "authorization:module-access",
+      "status": "PROVEN",
+      "input": "authorization/module-access.smt2",
+      "inputSha256": "b501d1aa1ee540182d45946adae64be2dd961b1018bc4c63cc191edd0731d0f6",
+      "proof": "authorization/module-access.cpc",
+      "proofSha256": "590a1722452b972f0081a9ef68e7b63d48abef8707fe49475f2bd5ebd8e182ca",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "sourceObligationIds": [
+        "AUTH-REGISTRY-001:module-access"
+      ],
+      "supportingLemma": false,
+      "requirementIds": [
+        "AUTH-REGISTRY-001"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "authorization:ingestion-admission",
+      "status": "PROVEN",
+      "input": "authorization/ingestion-admission.smt2",
+      "inputSha256": "33bc931447fac518c2660bdc38614b10a9f0c3dcbea488537e8bdba7f43a90bf",
+      "proof": "authorization/ingestion-admission.cpc",
+      "proofSha256": "fbf0835294398dd41f1aaa14d68737cbd94e82999beb87f283644069accdad8d",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "sourceObligationIds": [
+        "AUTH-REGISTRY-001:ingestion-admission"
+      ],
+      "supportingLemma": false,
+      "requirementIds": [
+        "AUTH-REGISTRY-001"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "authorization:cardinality-nonnegative",
+      "status": "PROVEN",
+      "input": "authorization/cardinality-nonnegative.smt2",
+      "inputSha256": "538c1648575c93dcf01c97ad2acf74e6ac86bbb0c8bc09225e0d298dfb7a3915",
+      "proof": "authorization/cardinality-nonnegative.cpc",
+      "proofSha256": "dd0b1ead689baf94c341215206664ff11b0b4623e29b0cc7460da04298d276f5",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "sourceObligationIds": [],
+      "supportingLemma": true,
+      "requirementIds": [
+        "AUTH-ARTIST-INVITE-001",
+        "AUTH-REGISTRY-001"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "authorization:cardinality-zero",
+      "status": "PROVEN",
+      "input": "authorization/cardinality-zero.smt2",
+      "inputSha256": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c",
+      "proof": "authorization/cardinality-zero.cpc",
+      "proofSha256": "87ebddefa8bbad0434ea99411914051f998a4353e7ff1a339571d9b114813de8",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "sourceObligationIds": [],
+      "supportingLemma": true,
+      "requirementIds": [
+        "AUTH-ARTIST-INVITE-001",
+        "AUTH-REGISTRY-001"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "authorization:cardinality-sum",
+      "status": "PROVEN",
+      "input": "authorization/cardinality-sum.smt2",
+      "inputSha256": "f7354ee4a94da5df4c7055469e6e717351460ed89f8955df2c45685ad1c4e3dc",
+      "proof": "authorization/cardinality-sum.cpc",
+      "proofSha256": "f546ed981d1e82be75a00667917874616c34a3e0ebca712be04adaa53203902e",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "sourceObligationIds": [],
+      "supportingLemma": true,
+      "requirementIds": [
+        "AUTH-ARTIST-INVITE-001",
+        "AUTH-REGISTRY-001"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "recovery:window-equivalence",
+      "status": "PROVEN",
+      "input": "recovery/window-equivalence.smt2",
+      "inputSha256": "0eaf4d81ea08baff7a1fee36724590647fad2d9451c316d7b9e1dc90076232f3",
+      "proof": "recovery/window-equivalence.cpc",
+      "proofSha256": "94189b0c17f64421929daef0e07b5758d2711c0cb425e1df6a5a87fc21e6b7e1",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "sourceObligationIds": [
+        "ID-SESSION-003:window-equivalence"
+      ],
+      "supportingLemma": false,
+      "requirementIds": [
+        "ID-SESSION-003"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "recovery:schema-correspondence",
+      "status": "PROVEN",
+      "input": "recovery/schema-correspondence.smt2",
+      "inputSha256": "6ce0edc16b6585748c551b0e3f2f39e0b8ec6b2b6a931f40d6eb9f385b1e2f88",
+      "proof": "recovery/schema-correspondence.cpc",
+      "proofSha256": "0d5c3c72e6b8b5eb6cf3952cc3ba89cc4ab5a4525bcb6215210f8062d3f8c0d7",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "sourceObligationIds": [
+        "ID-SESSION-003:schema-correspondence"
+      ],
+      "supportingLemma": false,
+      "requirementIds": [
+        "ID-SESSION-003"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "recovery:issuance-admission",
+      "status": "PROVEN",
+      "input": "recovery/issuance-admission.smt2",
+      "inputSha256": "f06b27694c3a5ffd9ea9e8ca124d07869f0dca809705a4d04d103e106b054dbe",
+      "proof": "recovery/issuance-admission.cpc",
+      "proofSha256": "cdb670203447440e3b5272c6f9f3331da7df41214c016d182c77732a5f828029",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "sourceObligationIds": [
+        "ID-SESSION-003:issuance-admission"
+      ],
+      "supportingLemma": false,
+      "requirementIds": [
+        "ID-SESSION-003"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    },
+    {
+      "id": "recovery:issuance-exact",
+      "status": "PROVEN",
+      "input": "recovery/issuance-exact.smt2",
+      "inputSha256": "43a56c1e5385f426bf415d5f46658a1b364a552fb2d8afa2bdd65f3319660d99",
+      "proof": "recovery/issuance-exact.cpc",
+      "proofSha256": "fde6fa78f94e03913d89dbf60fb3266d4c18d3878eb36079c4da17fcffe2ea2e",
+      "checkerOutput": "correct\n",
+      "checkerExitCode": 0,
+      "scope": "Independent CPC refutation of the exact referenced SMT assertion; conditional source correspondence remains unchanged",
+      "sourceObligationIds": [
+        "ID-SESSION-003:issuance-exact"
+      ],
+      "supportingLemma": false,
+      "requirementIds": [
+        "ID-SESSION-003"
+      ],
+      "category": "independently-checked-CPC",
+      "risk": "P0"
+    }
+  ],
+  "toolchain": {
+    "configurationSha256": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
+    "platform": "darwin-x86_64",
+    "binaries": {
+      "cvc5": "8aecc6b9ab633258acd22b834cba829c1291c9df7a4183cc82181788bc8eaecb",
+      "ethos": "3ba180485afb39b5f30dc0db54254141f7fbc1f1666f3ed16184abe3fa9f8492"
+    },
+    "signatures": {
+      "Cpc.eo": "d13767eb873649c9f40482c99242c42081cf25308962f11c1981ce8e878770ad",
+      "expert/CpcExpert.eo": "bdb08d6f35db596d9c74447511cb0a67c656a040623c22a055121e1aeb21006f",
+      "expert/rules/ArithExt.eo": "5496695cf3b5f4db8f03588fc8c76574066fd97d66826bd9fa60921a114215c8",
+      "expert/rules/ArraysExt.eo": "8b3e505ebf74ddace2777c41316b880081118ae126e209116a8ae1649fd413a8",
+      "expert/rules/QuantifiersExpert.eo": "55bfe2e1ac3bcc96dfcbc73daa48de217fb7bf9db383bfbb37d2d921deaadc97",
+      "expert/rules/RewritesExpert.eo": "b4ad110fd2ab313fc6b4dc1db81b92e7fa37eef40ec4fb394982cf939c1a62ec",
+      "expert/rules/SetsExt.eo": "9e8a07e9da6314dd5b8e6ca81f070d28b204c9dcfd010fcdc29f8ad193ba437e",
+      "expert/rules/Transcendentals.eo": "9687bb7650677fdd6600ec8a6dde27d78783dee4cf64ff2d57933bd30d18ee57",
+      "expert/theories/ArithExt.eo": "e14f3cea37aa123e3a2cd38916a476e145e1a5ceb0780de72dbaff434ebef0f3",
+      "expert/theories/ArraysExt.eo": "737f110ef55aa396566f743ca2427c6d23e322973e9f1b6bb68dcbd5ff3f6c77",
+      "expert/theories/Bags.eo": "7da90f0ff72bc451ec1c0a3cf11781d15ab70643e4c483fe81dd8f80a6dc8ee3",
+      "expert/theories/FiniteFields.eo": "c5b127e46b191f00c75d1d85fc614530dc9caece8c21a7a860cb3dcb28a3221a",
+      "expert/theories/FloatingPoints.eo": "93079bc820a8dc190b31f4e6be8ffe413a3622f608d4e32dcc1cc9f187b45811",
+      "expert/theories/Nullables.eo": "e22e8f0c3130d36197920958857dd8c294072caf72af0adb21a053d84c1c8bc3",
+      "expert/theories/SepLogic.eo": "febd3a64b754fad27bdc9852b714e87645ae366e6cd734c534d8747be9c1bc1d",
+      "expert/theories/SetsExt.eo": "3bf3377767f20a88a8a3d8cb4e72558ce201e81bbf9a217bddc648a52b8a38e5",
+      "expert/theories/Transcendentals.eo": "162ef90f20abe9c9fe1b2a5e3cd8758633ebc43aecc3d4d92417865b2b6735ec",
+      "programs/AciNorm.eo": "66ab9a368d82892237d1a72a74e75202f79c993952ad4d4528eba7ba390f5f4a",
+      "programs/Arith.eo": "097bb17888fc657b13ea2cd5bd67a0b3afa30161d7e343d3052d51ef289cdbc9",
+      "programs/BitVectors.eo": "229465f2488b4f190fffd857f49105699d58ab7778f38107f25b15ef074f59e6",
+      "programs/Bitblasting.eo": "458e1e3083ec490c5d6eb94382da478bd825db0f461ad44f619850923cd46947",
+      "programs/Datatypes.eo": "84e24a98dcd2e2620e98f3759ebd0e1e36941335c3266d8d0612e4091de0286e",
+      "programs/DistinctValues.eo": "64a9f4307c382651362e0b38e36962aaca83cf2949b095ea8dece101033ad11a",
+      "programs/Nary.eo": "170477989330e70f4faee5640bcb8e356ca0f576b6bc393eda19e2fcf2502d99",
+      "programs/PolyNorm.eo": "4fc6537f7cae8c12dcd301cd0b228d4d5407e232348805b5175726aa9ca8ef83",
+      "programs/Quantifiers.eo": "16c1df0740fb13b61c1a572c0890190d42939fbe5daf3ab9c0c1e1217ca3989e",
+      "programs/Strings.eo": "5751baba973cd7aa6edf1ad402442c8ec569ab7176b3156f11ad091e82a3b420",
+      "programs/Utils.eo": "1e143a23cc38b3d8ae82379bb6670f9d39580ebe6b2a703aff3dea88c23a12da",
+      "rules/Arith.eo": "17f46d9d6aa24a5b3af56549e1b6d1b97eb9801941d8cb7fe2cecf8fc972bea6",
+      "rules/ArithBvConv.eo": "cd352c8dfcf440bc7dbacb0923c1f50daa87780d50921fafe88c1e0ef7fa5147",
+      "rules/Arrays.eo": "25ab88d9ff813251d8040819308a7c429aff24088bf615e073206892ad09cff1",
+      "rules/BitVectors.eo": "a03968ee5791774d422b4ee6fa0d6fa65a8ea6a87529e064ec51280ffbfb7d31",
+      "rules/Booleans.eo": "f4d4e6942eb0c1a1b577bf07060bfedf283e6f25456dd20d127645ca2113ae82",
+      "rules/Builtin.eo": "ef5a3a9f4abadf9f19304f7074a2ce7fc96bdd35d89bfe8a9c8ebe0606982c90",
+      "rules/Datatypes.eo": "164a7e6d16c798620041dbe4c786a5f680365b28f6562053abf88d423ffa5152",
+      "rules/Quantifiers.eo": "b87309c2de0b5f0ceec2b3ba34ee5bdfafa5b5f7f18d737a38ce0ed9de513f85",
+      "rules/Rewrites.eo": "3de9e84915cb0387412e669d9403474f0f14c9f4746a0fd858d288009c55f79e",
+      "rules/Sets.eo": "0903dd5ab928bfb7bad57fc8ec9080a9cfd59a433172e9de9c182e41129b1221",
+      "rules/Strings.eo": "3eae0ba1a1340d942561cb04aef4886c4e7bc6007c5e6accc855ea97ccf97c08",
+      "rules/Uf.eo": "4a9ed4f6b3eba78ef82a59773c0f4b60507dee00d35577a5597b23b3d6190fe8",
+      "theories/Arith.eo": "3834226540bba0c741ea63de0344fc3255135aa542347ecd67586a4cb02ed3dd",
+      "theories/ArithBvConv.eo": "05fcdf74c797ad8c2087fb9005a462608b35ea1aaf27f94d1fbc9ad5424a7d70",
+      "theories/Arrays.eo": "aaaf8e1b811c7711dcc102271bc911cb2d97ad41ac9bb7da5903d868b7f4789a",
+      "theories/BitVectors.eo": "9a4dd5abaff20be2a048e4da69558145f47d98dd655b8dfb799af27abc641e83",
+      "theories/Builtin.eo": "8e2d97257aefdbffc2955da63a0a35666f535f4d6d0f7b7f75378cad99199d7a",
+      "theories/Datatypes.eo": "880f57565db9fb2a59dc3a6e3d3e0133eee55773dea39f0f77249c57f14b1983",
+      "theories/Ints.eo": "237da42cbf00996532a921772d33998a8dfa500f24c6dfc81121a211d1b0eddd",
+      "theories/Quantifiers.eo": "c8723077df95d264cea72f3c1dbcb8b34959452e5926f26a69d5c7bd8ab40c62",
+      "theories/Reals.eo": "d0e67e757a8232f2b5583abe7d7941c6d18e3c33c1ff37efa176157c2be42b0f",
+      "theories/Sets.eo": "d1dd145a7e41b72e53d89733cd57378dfcc19b2e7cf61cf58a253527a686617a",
+      "theories/Strings.eo": "9b92523b67acf53c4b8b6e5e3065c2032edda2f2a7b8ba625cec1986440dabb0"
+    },
+    "versions": {
+      "cvc5": "cvc5 1.4.2 [git 282d5e0 on branch HEAD]\ncompiled as a unrestricted build with GCC version Apple LLVM 17.0.0 (clang-1700.0.13.5) on Oct  8 2026 02:02:02\n\nCopyright (c) 2009-2026 by the authors and their institutional\naffiliations listed at https://cvc5.github.io/people.html\n\ncvc5 is open-source and is covered by the BSD license (modified).\n\nTHIS SOFTWARE IS PROVIDED AS-IS, WITHOUT ANY WARRANTIES.\nUSE AT YOUR OWN RISK.\n\nThis version of cvc5 is linked against the following non-(L)GPL'ed\nthird party libraries.\n\n  CaDiCaL - Simplified Satisfiability Solver\n  See https://github.com/arminbiere/cadical for copyright information.\n\n  Editline Library\n  See https://thrysoee.dk/editline\n  for copyright information.\n\n  SymFPU - The Symbolic Floating Point Unit\n  See https://github.com/martin-cs/symfpu/tree/main for copyright information.\n\nThis version of cvc5 is linked against the following third party\nlibraries covered by the LGPLv3 license.\nSee licenses/lgpl-3.0.txt for more information.\n\n  GMP - Gnu Multi Precision Arithmetic Library\n  See http://gmplib.org for copyright information.\n\n  LibPoly polynomial library\n  See https://github.com/SRI-CSL/libpoly for copyright and\n  licensing information.\n\ncvc5 is statically linked against these libraries. To recompile\nthis version of cvc5 with different versions of these libraries\nfollow the instructions on https://github.com/cvc5/cvc5/blob/main/INSTALL.md\n\nSee the file COPYING (distributed with the source code, and with\nall binaries) for the full cvc5 copyright, licensing, and (lack of)\nwarranty information.\n\n",
+      "ethos": "This is ethos version 0.2.5.\n\n     tracing : no\n"
+    },
+    "host": {
+      "python": "3.13.5",
+      "platform": "macOS-12.7.6-x86_64-i386-64bit-Mach-O",
+      "buildDependencies": {
+        "CMAKE_CXX_COMPILER": {
+          "path": "/usr/bin/c++",
+          "sha256": "fe38fea56d944c3b7e9df10617b1fa5432d7b75cc346d7eacb607d083ea11711"
+        },
+        "GMP_LIBRARIES": {
+          "path": "/usr/local/lib/libgmp.dylib",
+          "sha256": "c7a5048a4502c6a24052bf23bc7eef0f431a7d97f9f94ac7ef35afd3735bb6e1"
+        },
+        "GMP_INCLUDE_DIR": {
+          "path": "/usr/local/include/gmp.h",
+          "sha256": "57d9b3264206f94d63db1da4910b864ca822b23e7f0cd499db749b745732b79e"
+        }
+      },
+      "cmake": "cmake version 4.2.3\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
+      "compiler": "Apple clang version 14.0.0 (clang-1400.0.29.202)\nTarget: x86_64-apple-darwin21.6.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n"
+    },
+    "limitations": "Compiler, system GMP, operating system and hardware remain trusted; archive pins are not a reproducible-build proof."
+  },
+  "limitations": "Formula refutations only. Source translation, Ethos/CPC rules, compilers, GMP and host remain trusted. No implementation/refinement status or release permission is promoted.",
+  "sourceCandidate": "f8f3d4d3d1de06c5444be238f8b3ed84ee6a3528",
+  "provenanceDigest": "8607ef16a795c07fbea77cc3f8279dbb2001044c59fd928e0592552eaa5f32fc"
+}

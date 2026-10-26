@@ -50,3 +50,20 @@ real-money transaction is part of this repair. Retain the admission migration
 across application rollback; do not rewrite evidence or disable validation to
 revert the application. Follow the existing protected review/FIFO merge and
 separate production release prerequisites.
+
+## Current-main integration, 26 October
+
+The integration candidate retains all222 migrations from ledger candidate
+`f3e3217ac12a04be2a221ee6ac8bea67875d46c5` in order, appending only the
+original provider migration as223. PR551 is merged; PR621 remains a dependency
+until protected admission completes. Earlier209-schema evidence above retains its
+historical identity and does not qualify this composition. Fresh compiled
+provider/refund and complete-schema verification is required before publication.
+
+The former Python matrix used22 optimization-sensitive assertions, including
+SQL transition calls. An independent extracted-helper control reproduces three
+false accepts under Python -O: wrong SQLSTATE, wrong guard message and a changed
+rollback snapshot. Explicit failure branches preserve every check and operation
+under optimization. The canonical runner executes four harness controls normally
+and with -O, then the actual PostgreSQL matrix with -O. These synthetic helper
+controls establish harness detection, separately from database behavior.

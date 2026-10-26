@@ -135,11 +135,14 @@ def denied(db, domain, checkout, due):
     try:
         settle(db, checkout, due)
     except psycopg2.Error as error:
-        assert error.pgcode == 'P0001', (domain, error.pgcode, error.diag.message_primary)
-        assert error.diag.message_primary == (
-            DOMAINS[domain] + ' checkout cannot become paid without bound verified payment evidence'), error
+        if not (error.pgcode == 'P0001'):
+            raise AssertionError((domain, error.pgcode, error.diag.message_primary))
+        if not (error.diag.message_primary == (
+            DOMAINS[domain] + ' checkout cannot become paid without bound verified payment evidence')):
+            raise AssertionError(error)
         execute(db, 'ROLLBACK TO SAVEPOINT denied')
-        assert snapshot(db, checkout) == before
+        if not (snapshot(db, checkout) == before):
+            raise AssertionError('Provider boundary check failed: snapshot(db, checkout) == before')
         return
     raise AssertionError('Invalid evidence admitted: ' + domain)
 
@@ -150,10 +153,13 @@ def matrix():
         for provider in PROVIDERS:
             with connect() as db:
                 checkout, due = evidence(db, domain, provider)
-                assert settle(db, checkout, due) == 1
+                if not (settle(db, checkout, due) == 1):
+                    raise AssertionError('Provider boundary check failed: settle(db, checkout, due) == 1')
                 paid = snapshot(db, checkout)
-                assert settle(db, checkout, due) == 0
-                assert snapshot(db, checkout) == paid
+                if not (settle(db, checkout, due) == 0):
+                    raise AssertionError('Provider boundary check failed: settle(db, checkout, due) == 0')
+                if not (snapshot(db, checkout) == paid):
+                    raise AssertionError('Provider boundary check failed: snapshot(db, checkout) == paid')
                 db.rollback()
                 count += 1
             for variant in NEGATIVES:
@@ -165,9 +171,11 @@ def matrix():
                         if variant.startswith('binding_'):
                             expected_error = 'Provider binding does not match its payment attempt'
                         else:
-                            assert variant in ('attempt_amount', 'attempt_currency', 'attempt_environment'), (variant, error)
+                            if not (variant in ('attempt_amount', 'attempt_currency', 'attempt_environment')):
+                                raise AssertionError((variant, error))
                             expected_error = 'Payment attempt does not match checkout environment, amount, or currency'
-                        assert error.pgcode == 'P0001' and error.diag.message_primary == expected_error, (variant, error)
+                        if not (error.pgcode == 'P0001' and error.diag.message_primary == expected_error):
+                            raise AssertionError((variant, error))
                         execute(db, 'ROLLBACK TO SAVEPOINT fixture')
                     else:
                         denied(db, domain, checkout, due)
@@ -179,7 +187,8 @@ def matrix():
                 with connect() as db:
                     checkout, due = evidence(db, domain, provider, variant)
                     if variant is None:
-                        assert settle(db, checkout, due) == 1
+                        if not (settle(db, checkout, due) == 1):
+                            raise AssertionError('Provider boundary check failed: settle(db, checkout, due) == 1')
                     else:
                         denied(db, domain, checkout, due)
                     db.rollback()
@@ -202,7 +211,8 @@ def pricing():
               JOIN commerce_checkout_line_item l ON l.checkout_id=c.id
               JOIN event_ticket_checkout_runtime r ON r.checkout_id=c.id WHERE c.id=%s::uuid''',
               (fee, tax, checkout))
-            assert consistent, (fee, tax)
+            if not (consistent):
+                raise AssertionError((fee, tax))
             db.rollback()
     print('Commercial fee/tax snapshot consistency: 4 cases passed', flush=True)
 
@@ -228,7 +238,8 @@ def races():
                                 return changed
                             except psycopg2.errors.SerializationFailure:
                                 worker.rollback()
-                                assert isolation == 'REPEATABLE READ'
+                                if not (isolation == 'REPEATABLE READ'):
+                                    raise AssertionError("Provider boundary check failed: isolation == 'REPEATABLE READ'")
                                 changed = settle(worker, checkout, due)
                                 worker.commit()
                                 return changed
@@ -246,19 +257,25 @@ def races():
                                 if blocked:
                                     break
                                 time.sleep(.02)
-                            assert blocked, 'No observed PostgreSQL blocking'
-                            assert not future.done()
-                            assert settle(holder, checkout, due) == 1
+                            if not (blocked):
+                                raise AssertionError('No observed PostgreSQL blocking')
+                            if not (not future.done()):
+                                raise AssertionError('Provider boundary check failed: not future.done()')
+                            if not (settle(holder, checkout, due) == 1):
+                                raise AssertionError('Provider boundary check failed: settle(holder, checkout, due) == 1')
                             holder.commit()
                             released = True
                         finally:
                             if not released:
                                 holder.rollback()
-                        assert future.result(timeout=10) == 0
+                        if not (future.result(timeout=10) == 0):
+                            raise AssertionError('Provider boundary check failed: future.result(timeout=10) == 0')
                     with connect() as replay:
                         paid = snapshot(replay, checkout)
-                        assert settle(replay, checkout, due) == 0
-                        assert snapshot(replay, checkout) == paid
+                        if not (settle(replay, checkout, due) == 0):
+                            raise AssertionError('Provider boundary check failed: settle(replay, checkout, due) == 0')
+                        if not (snapshot(replay, checkout) == paid):
+                            raise AssertionError('Provider boundary check failed: snapshot(replay, checkout) == paid')
                         for table, column, expected in (
                             ('service_booking_checkout_runtime', 'fulfillment_status', 'confirmed'),
                             ('event_ticket_checkout_runtime', 'payment_status', 'paid'),
@@ -269,7 +286,8 @@ def races():
                                     'course_registration_checkout_runtime', 'domo_event_quote_runtime').index(table):
                                 result = one(replay, sql.SQL('SELECT {} FROM {} WHERE checkout_id=%s::uuid').format(
                                     sql.Identifier(column), sql.Identifier(table)), (checkout,))
-                                assert result == expected, result
+                                if not (result == expected):
+                                    raise AssertionError(result)
                     count += 1
                 finally:
                     holder.close()
@@ -305,18 +323,22 @@ def controls():
             execute(db, migration[begin:end].replace(
                 'AND operation.provider_reference = binding.merchant_reference', ''))
             checkout, due = evidence(db, 'service_booking', provider, 'reference')
-            assert settle(db, checkout, due) == 1, 'Reference mutation control was vacuous'
+            if not (settle(db, checkout, due) == 1):
+                raise AssertionError('Reference mutation control was vacuous')
             db.rollback()
     print('Original guard and reference mutation controls: 10 expected failures witnessed', flush=True)
 
 
 if __name__ == '__main__':
     with connect() as db:
-        assert one(db, 'SELECT current_database()') == 'tdf_provider_retry_test'
+        if not (one(db, 'SELECT current_database()') == 'tdf_provider_retry_test'):
+            raise AssertionError("Provider boundary check failed: one(db, 'SELECT current_database()') == 'tdf_provider_retry_test'")
         expected = __import__('json').loads((ROOT / 'scripts/production-migrations.json').read_text())['migrations']
-        assert one(db, 'SELECT count(*) FROM tdf_schema_migration') == len(expected)
+        if not (one(db, 'SELECT count(*) FROM tdf_schema_migration') == len(expected)):
+            raise AssertionError("Provider boundary check failed: one(db, 'SELECT count(*) FROM tdf_schema_migration') == len(expected)")
         revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
-        assert one(db, 'SELECT bool_and(source_commit=%s) FROM tdf_schema_migration', (revision,))
+        if not (one(db, 'SELECT bool_and(source_commit=%s) FROM tdf_schema_migration', (revision,))):
+            raise AssertionError("Provider boundary check failed: one(db, 'SELECT bool_and(source_commit=%s) FROM tdf_schema_migration', (revision,))")
     matrix()
     pricing()
     races()

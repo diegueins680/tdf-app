@@ -250,11 +250,13 @@ export function canAccessPath(
   path: string,
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
+  featureFlags?: readonly string[],
 ): boolean {
   const registryDecision = evaluatePathAccess(path, {
     authenticated: true,
     roles,
     modules,
+    featureFlags,
   });
   if (registryDecision) {
     return registryDecision.state === 'allowed';

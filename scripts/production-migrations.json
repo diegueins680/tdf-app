@@ -1042,6 +1042,51 @@
       "introducedBy": "9edcb9460afd79aaa7040221ccae1c72cb14a795"
     },
     {
+      "id": "2026-10-11_operations_failure_replay",
+      "path": "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
+      "introducedBy": "17f55075cb16ea5fbf5079c7bc290896b3ecc979"
+    },
+    {
+      "id": "2026-10-13_operations_inbound_capture_policy",
+      "path": "tdf-hq/sql/2026-10-13_operations_inbound_capture_policy.sql",
+      "introducedBy": "6ac5f68cc76479ba5d19dd9243d872b341291549"
+    },
+    {
+      "id": "2026-10-11_music_publication_isolation",
+      "path": "tdf-hq/sql/2026-10-11_music_publication_isolation.sql",
+      "introducedBy": "598de30e3e1bf47b9f37cea86bd73f5b65eb5fac"
+    },
+    {
+      "id": "2026-10-12_music_upload_rebind",
+      "path": "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+      "introducedBy": "3f71add5783d9aefe818686abf4ee1c37ef6092b"
+    },
+    {
+      "id": "2026-10-13_community_search_indexes",
+      "path": "tdf-hq/sql/2026-10-13_community_search_indexes.sql",
+      "introducedBy": "08f3bcf50319983193d37ccec87d1c664c8ef21d"
+    },
+    {
+      "id": "2026-10-14_directory_event_search_alias_sync",
+      "path": "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
+      "introducedBy": "7c74b3c3e14f53870ee8a09ba6fcc80bc645e251"
+    },
+    {
+      "id": "2026-10-13_chat_message_notifications",
+      "path": "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
+      "introducedBy": "1be9d0d7dba613ced9cfe553529a5445b000ecf9"
+    },
+    {
+      "id": "2026-10-15_music_payment_outcome_consistency",
+      "path": "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
+      "introducedBy": "8ad5722fa885c1970b20c57449eed4fc54d088eb"
+    },
+    {
+      "id": "2026-10-15_music_exact_minor_units",
+      "path": "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql",
+      "introducedBy": "4fc88645f511d4c70aca2b969ec412081664978d"
+    },
+    {
       "id": "2026-10-12_ledger_posting_integrity",
       "path": "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
       "introducedBy": "0fc94499f6a9e007abc990be8cff8a32cacad19b"
@@ -1060,6 +1105,31 @@
       "id": "2026-10-15_checkout_terms_historical_identity",
       "path": "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql",
       "introducedBy": "2af5a662f3e7acca133e154d0c890114f3436177"
+    },
+    {
+      "id": "2026-10-16_ledger_entry_write_fence",
+      "path": "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
+      "introducedBy": "493d40252f48643a14ce47c5328a13844f3b837f"
+    },
+    {
+      "id": "2026-10-22_checkout_terms_history_append_only",
+      "path": "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql",
+      "introducedBy": "5f32d4054a35bc76e7505ed4f83f1b6480130d25"
+    },
+    {
+      "id": "2026-10-24_ledger_guard_namespace",
+      "path": "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
+      "introducedBy": "9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391"
+    },
+    {
+      "id": "2026-10-25_directory_saved_search_parity",
+      "path": "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+      "introducedBy": "eb2f71d62740783369a6eb2a6d35fc024484cb71"
+    },
+    {
+      "id": "2026-10-25_ledger_posted_header",
+      "path": "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
+      "introducedBy": "5cc26ad46c958a029ec4539c60cc1ca77fec1d01"
     },
     {
       "id": "2026-10-16_provider_domain_payment_binding",

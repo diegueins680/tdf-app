@@ -102,6 +102,9 @@ test('preparation records current drift and required CORS repair without enablin
   assert.deepEqual(args, before, 'Observational input is immutable');
   assert.equal(plan.executionAllowed, false);
   assert.equal(plan.status, 'prepared-not-authorized');
+  assert.deepEqual(plan.policyBlockers.map(x => [x.requirement, x.status, x.productionRolloutAllowed]),
+    [['OPS-INBOUND-CAPTURE-001', 'retention-policy-unresolved', false]]);
+  assert.ok(plan.remainingGates.some(x => x.includes('retention, deletion and backup')));
   assert.deepEqual(plan.counts, { applied: 1, pending: 1 });
   assert.equal(plan.observedFlags.ALLOW_ALL_ORIGINS, 'true');
   assert.equal(plan.requiredCorsConfiguration.ALLOW_ALL_ORIGINS, 'false');
@@ -115,6 +118,29 @@ test('preparation records current drift and required CORS repair without enablin
   assert.ok(plan.remainingGates.some(x => x.includes('actual isolated restore')));
   assert.ok(plan.remainingGates.some(x => x.includes('all old writers')));
   assert.equal(plan.observedPrivateUploads, null, 'Missing observation remains unknown');
+});
+
+test('preparation accepts collector spellings without changing raw observations or enabling destructive flags', async () => {
+  for (const raw of ['yes', ' ON ', '0', ' false ', '', 'TRUE']) {
+    const args = await input();
+    args.receipt.snapshot.containers.api.booleanConfiguration.EVENT_DISCOVERY_ENABLED = raw;
+    const plan = prepareHetznerRelease(args);
+    assert.equal(plan.observedFlags.EVENT_DISCOVERY_ENABLED, raw);
+    assert.equal(plan.executionAllowed, false);
+  }
+  const args = await input();
+  args.receipt.snapshot.containers.api.booleanConfiguration.ALLOW_ALL_ORIGINS = ' * ';
+  args.receipt.snapshot.containers.api.booleanConfiguration.RUN_MIGRATIONS = ' false ';
+  assert.equal(prepareHetznerRelease(args).observedFlags.ALLOW_ALL_ORIGINS, ' * ');
+  for (const raw of ['yes', 'true', '1', 'on', '', ' ']) {
+    args.receipt.snapshot.containers.api.booleanConfiguration.RUN_MIGRATIONS = raw;
+    assert.throws(() => prepareHetznerRelease(args), /Unsafe automatic schema/);
+  }
+  args.receipt.snapshot.containers.api.booleanConfiguration.RUN_MIGRATIONS = 'false';
+  for (const raw of ['*', 'private-value', 'true\0', ' '.repeat(257)]) {
+    args.receipt.snapshot.containers.api.booleanConfiguration.EVENT_DISCOVERY_ENABLED = raw;
+    assert.throws(() => prepareHetznerRelease(args), /Invalid observed flag/);
+  }
 });
 
 test('preparation preserves missing and present upload mounts without granting deployment', async () => {

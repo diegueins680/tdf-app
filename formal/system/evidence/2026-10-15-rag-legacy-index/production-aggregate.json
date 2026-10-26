@@ -1,0 +1,27 @@
+{
+  "observedAt": "2026-10-15T03:49:58.993497+00:00",
+  "sourceRevision": "2be6675cbec3d94b6ecb5ca08bee96a0a13c949e",
+  "collectorSha256": "5ae47f442f22033847fa7b7b7f1e21e1eabe73e3d600b258302c1334b416767c",
+  "transmittedSha256": "0e0c9bc65b6a907c781014e7b64725da0443685c45732fcbac9d355b28cc36b5",
+  "query": "BEGIN READ ONLY;\nSELECT json_build_object('database',current_database(),'role',current_user,'readOnly',current_setting('transaction_read_only'),'localConnection',inet_server_addr() IS NULL,'totalChunks',count(*),'courseChunks',count(*) FILTER (WHERE source='course'),'nonCourseChunks',count(*) FILTER (WHERE source IS DISTINCT FROM 'course'),'latestRefresh',max(updated_at),'latestNonCourseRefresh',max(updated_at) FILTER (WHERE source IS DISTINCT FROM 'course')) FROM public.rag_chunk;\nROLLBACK;",
+  "result": {
+    "backend": {
+      "name": "tdf-hq",
+      "commit": "7ab344400d0878838b9b12742ca4cc5cd7f38f94",
+      "version": "0.1.0.0"
+    },
+    "migrationCount": 188,
+    "index": {
+      "database": "tdf_hq",
+      "role": "tdf_catalog_inventory",
+      "readOnly": "on",
+      "localConnection": true,
+      "totalChunks": 56,
+      "courseChunks": 19,
+      "nonCourseChunks": 37,
+      "latestRefresh": "2026-09-29T07:14:57.831181+00:00",
+      "latestNonCourseRefresh": "2026-09-29T07:14:57.831181+00:00"
+    }
+  },
+  "scope": "Read-only aggregate counts/timestamps only; no RAG content, source IDs, metadata, credentials or provider calls."
+}

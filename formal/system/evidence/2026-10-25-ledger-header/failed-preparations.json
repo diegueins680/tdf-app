@@ -1,0 +1,29 @@
+[
+  {
+    "name": "snapshot-cast",
+    "classification": "HARNESS_OR_ENVIRONMENT_FAILURE",
+    "countedAsPass": false,
+    "reason": "Prototype harness needed an explicit PostgreSQL internal char-to-text cast; corrected without changing the invariant.",
+    "artifact": "failed-preparation-snapshot-cast.gz",
+    "rawSha256": "eed3fa60ba03fae23157d0582b3be8945367a82fe6014982dd07ded6aed522fe",
+    "storedSha256": "223c29f5edc689dd5441d1c3b0cbc89bce33db0d2d5ba2e8cacbd0acca38b3fe"
+  },
+  {
+    "name": "occupied-port",
+    "classification": "HARNESS_OR_ENVIRONMENT_FAILURE",
+    "countedAsPass": false,
+    "reason": "Setup refused an occupied port before creating a cluster; a fresh unoccupied loopback port was selected.",
+    "artifact": "failed-preparation-occupied-port.gz",
+    "rawSha256": "2e6fa7ccd847b99acc7f225d876ad6cb81fe4a05f50ce1c6e0ac1b66d527c919",
+    "storedSha256": "136cb0ebfc1dbc23664eb19fac948a89e15746aa232d68a4844111bcd770f6ec"
+  },
+  {
+    "name": "missing-locked-node-dependencies",
+    "classification": "HARNESS_OR_ENVIRONMENT_FAILURE",
+    "countedAsPass": false,
+    "reason": "Repository checks could not import yaml before the frozen Node dependency install; no test was skipped to accept this result.",
+    "artifact": "failed-preparation-missing-locked-node-dependencies.gz",
+    "rawSha256": "51c65643514769258d3348276edbdac6ec35ab17d56e032b4ca467d8f8c00fd4",
+    "storedSha256": "2c15ceabf639db916c6cf04a29f511b33fb7937eee0f0ebe1bcff51d8e182934"
+  }
+]

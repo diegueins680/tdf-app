@@ -3,8 +3,8 @@
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "reconciliation": {
-    "preservedDecisions": 1167,
-    "reviewedByPolicy": 157,
+    "preservedDecisions": 1176,
+    "reviewedByPolicy": 147,
     "removedStaleDecisions": 0,
     "reviewBatch": "deterministic-policy-v3",
     "consolidatedMainRetirements": {
@@ -323,6 +323,212 @@
           "successorReason": "Reviewed current generated mirror retains strict-admin concealment and adds authenticated account-deletion discovery; full main predecessor decision remains in its concurrentReviewHistory."
         }
       ]
+    },
+    "publicUxMainIntegration": "docs/catalog-persistence/public-ux-main-reconciliation-20261021.json",
+    "runtimeMainRefresh": "docs/catalog-persistence/runtime-main-refresh-20261021.json",
+    "formalPreparedIntegration": "docs/catalog-persistence/formal-prepared-reconciliation-20261022.json",
+    "musicCurrentMainIntegration": {
+      "document": "docs/catalog-persistence/music-current-main-reconciliation-20261023.json",
+      "currentManifestDecisionId": "3f336173e03f10fc023c",
+      "retiredManifestIds": [
+        "e60cbdb9121493f47fa6",
+        "a8128668e1b74b7c0ae4"
+      ]
+    },
+    "ticketReceiptPreview": {
+      "sourceRevision": "2f8235008c1d9a23b0fe4143e469082cdff285c6",
+      "retiredId": "620eb81ffe787eca6636",
+      "replacementId": "48cbf22770303d844cdc",
+      "previousMethodCount": 71,
+      "currentMethodCount": 72,
+      "preservedPreviousDecision": true,
+      "newSyntheticFixtureId": "134cf0fa5a9bb176f981",
+      "scope": "Technical API method names and synthetic test DTO only; no product, payment or release approval."
+    },
+    "ledgerReadinessIntegration": "docs/catalog-persistence/ledger-readiness-reconciliation-20261021.json",
+    "ledgerSnapshotReadinessIntegration": "docs/catalog-persistence/ledger-snapshot-readiness-reconciliation-20261021.json",
+    "ledgerCombinedIntegration": "docs/catalog-persistence/ledger-combined-reconciliation-20261022.json",
+    "termsHistoryAppendOnly": "docs/catalog-persistence/terms-history-append-only-reconciliation-20261022.json",
+    "ledgerMusicMainIntegration": {
+      "document": "docs/catalog-persistence/ledger-music-main-reconciliation-20261023.json",
+      "currentManifestDecisionId": "a1eb1e750e7543b88fe1",
+      "retiredManifestIds": [
+        "3f336173e03f10fc023c",
+        "2b073f20afd2f3798b1e"
+      ]
+    },
+    "featureMenuCoverage20261025": {
+      "sourceMain": "512d590e902760130f54ca2927620c001a754b85",
+      "successors": [
+        [
+          "e4c7ffe2a8fc0a5752d0",
+          "e1630a13682bf0fee90d"
+        ],
+        [
+          "b180210a3602cfc0bf52",
+          "300853c537ba6401822a"
+        ],
+        [
+          "9fca63dce34f8900c6a4",
+          "a00fcee87036af5dfa95"
+        ],
+        [
+          "ef8764c4421158cb1be7",
+          "ce1e609baf902df58b08"
+        ],
+        [
+          "d98b80c87ee6f14c72ec",
+          "dfea445b31325dad4cf6"
+        ]
+      ],
+      "reason": "Only five reviewed source fingerprints changed: four additive navigation groups and a session featureFlags fixture. All classifications, persistence obligations and audit policies are preserved."
+    },
+    "directorySavedSearchParity": {
+      "sourceMain": "9a927fa390066f43cc27c872800bf1b0412e166e",
+      "reason": "The active migration registry fingerprint gains one additive entry. Preserve the prior reviewed213-entry decision as history and classify its214-entry successor without changing existing migration authority.",
+      "decisions": [
+        {
+          "id": "3f336173e03f10fc023c",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P0-cutover",
+          "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+          "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decisions",
+          "reviewBatch": "music-current-main-integration-20261023",
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3,
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 213
+          }
+        }
+      ],
+      "previousDecisionCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+      "protectedMainManifestCanonicalSha256": "7b3616b6095436eb7eb46038d6ccaa289ff4cb22e602960c06d971bf915add86",
+      "successorDecisionId": "c94cd70c1272ec9ede1b"
+    },
+    "directoryFinancialMainIntegration": {
+      "sourceMain": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+      "sourceAlertBranch": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+      "protectedMainMigrationCount": 220,
+      "protectedMainManifestCanonicalSha256": "c025cf3d2ab92f64bfb92d3656384d7fe0da6919457440d3c24301d7f6b8f232",
+      "currentDecisionId": "8229b8202552298c955e",
+      "reason": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
+      "decisions": [
+        {
+          "id": "c94cd70c1272ec9ede1b",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P0-cutover",
+          "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+          "justification": "The 214-entry deployment execution registry preserves protected main 9a927fa390066f43cc27c872800bf1b0412e166e as its exact 213-entry prefix and appends one non-geographic directory saved-search parity migration. All213 shared entry objects, introduction anchors and historical SQL bytes remain unchanged. The new introduction anchor is eb2f71d62740783369a6eb2a6d35fc024484cb71; subsequent unpublished candidate corrections are reviewed separately. Disposable full-prefix/replay, exact rollback/reapply and authenticated application qualification are separate evidence; this classification authorizes no production application or activation.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decisions",
+          "reviewBatch": "directory-saved-search-parity-20261025",
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3,
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 214
+          }
+        },
+        {
+          "id": "b7cc47848f3f9882770f",
+          "classification": "security-system-registry",
+          "disposition": "retain-reviewed-deployment-manifest",
+          "specializedModel": "production migration manifest and applied migration ledger",
+          "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+          "justification": "The 220-entry deployment execution registry preserves all 219 migration objects and historical SQL bytes from financial parent 59df1dd2a17952b906cf89d1c5502725d51239e1 as its exact ordered prefix, then adds only the ledger relation-lookup guard introduced by ancestor 9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391. This technical review preserves earlier immutable catalog provenance and authorizes no production execution, provider activation or runtime privilege change. Full-schema controls and independent PR review remain separate obligations.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decisions",
+          "reviewBatch": "ledger-namespace-technical-review-20261025",
+          "sourceReviewReferences": [
+            {
+              "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+              "sourceEntry": {
+                "id": "3f336173e03f10fc023c"
+              },
+              "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+              "sourceEntry": {
+                "id": "2b073f20afd2f3798b1e"
+              },
+              "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+              "sourceEntry": {
+                "id": "a1eb1e750e7543b88fe1"
+              },
+              "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            }
+          ],
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3,
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 220
+          }
+        }
+      ],
+      "preservedDecisionCanonicalSha256": {
+        "3f336173e03f10fc023c": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+        "c94cd70c1272ec9ede1b": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+        "b7cc47848f3f9882770f": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28"
+      },
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+          "sourceEntry": {
+            "id": "b7cc47848f3f9882770f"
+          },
+          "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+          "sourceEntry": {
+            "id": "c94cd70c1272ec9ede1b"
+          },
+          "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ]
+    },
+    "ledgerHeaderImmutability": "docs/catalog-persistence/ledger-header-reconciliation-20261025.json",
+    "ledgerHeaderMainIntegration": {
+      "document": "docs/catalog-persistence/ledger-header-main-reconciliation-20261025.json",
+      "mainParent": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+      "headerParent": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
+      "currentDecisionId": "6ff395b6131079017c9d"
+    },
+    "providerDomainMainIntegration": {
+      "document": "docs/catalog-persistence/provider-domain-main-reconciliation-20261026.json",
+      "ledgerParent": "f3e3217ac12a04be2a221ee6ac8bea67875d46c5",
+      "providerParent": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
+      "currentDecisionId": "2634b239375f2ad309ba"
     }
   },
   "decisions": [
@@ -373,7 +579,7 @@
         "kind": "object-registry",
         "name": "publicEvent",
         "valueCount": 11,
-        "consumerCount": 129,
+        "consumerCount": 131,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -459,21 +665,6 @@
       "risk": "Changing required fixture keys could silently weaken deterministic audit-artifact validation.",
       "justification": "These values are closed JSON property names asserted by a repository test, not selectable or reportable business data.",
       "reviewed": true
-    },
-    {
-      "id": "cf264a325e5b4853ecac",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the synthetic child command can invalidate the bounded readiness-wait regression.",
-      "justification": "Node CLI arguments deliberately start a stalled synthetic child to verify timeout and process cleanup. This is test-process plumbing, not a selectable service catalog.",
-      "reviewed": true,
-      "evidence": {
-        "file": "scripts/__tests__/test-process-session.test.mjs",
-        "line": 33
-      },
-      "reviewBatch": "checkout-session-readiness-2026-10-14"
     },
     {
       "id": "0acedcade971c9b35eca",
@@ -1921,19 +2112,19 @@
       "reviewed": true
     },
     {
-      "id": "620eb81ffe787eca6636",
+      "id": "48cbf22770303d844cdc",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
+      "risk": "Changing authenticated method dispatch can redirect commands or expose private transfer evidence; server event ownership and authorization remain authoritative.",
+      "justification": "SocialEventsAPI contains 72 typed transport methods after adding getManualPaymentReceipt for the existing event/order-scoped authenticated receipt read. The 71 previously reviewed method names are preserved. These keys dispatch implementation endpoints; they are not editable product choices, payment states or a persisted business catalog.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "ticket-credit-notes-2026-10-06",
+      "reviewBatch": "ticket-receipt-preview-2026-10-24",
       "evidence": {
         "file": "tdf-hq-ui/src/api/socialEvents.ts",
-        "line": 577
+        "line": 580
       },
       "mergedDecision": {
         "id": "c69afb90768a2e78770a",
@@ -1949,6 +2140,38 @@
         "evidence": {
           "file": "tdf-hq-ui/src/api/socialEvents.ts",
           "line": 576
+        }
+      },
+      "previousDecision": {
+        "id": "620eb81ffe787eca6636",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+        "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
+        "reviewed": true,
+        "reviewMethod": "successor-of-reviewed-decision",
+        "reviewBatch": "ticket-credit-notes-2026-10-06",
+        "evidence": {
+          "file": "tdf-hq-ui/src/api/socialEvents.ts",
+          "line": 577
+        },
+        "mergedDecision": {
+          "id": "c69afb90768a2e78770a",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+          "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decision",
+          "reviewBatch": "ticket-tax-invoices-2026-10-06",
+          "evidence": {
+            "file": "tdf-hq-ui/src/api/socialEvents.ts",
+            "line": 576
+          }
         }
       }
     },
@@ -2177,8 +2400,8 @@
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "React Query key segments are client cache mechanics and do not enumerate business values. Same three keys as reviewed decision 79e7466c1f722b842262, moved unchanged from EventRsvpControls.tsx to a module the shell carousel can share.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
         "line": 2,
@@ -2191,26 +2414,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "1c608b378ca85918019d"
           },
           "sourceEntryCanonicalSha256": "653b016fff9a84868f3e27a92948ba059a67c1636dab20ad95430ab1c5890e68",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "1c608b378ca85918019d"
-          },
-          "sourceEntryCanonicalSha256": "495b5f5a252fcb489989d231599009d9f61448286a68b3571a1baffdcca08e07",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -2249,16 +2461,6 @@
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "content_category, tag",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "7a64750714562d66a881",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "service_category, service_offering, booking_type",
       "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
@@ -2337,34 +2539,82 @@
       }
     },
     {
-      "id": "1a20aae8bb74a6df248f",
+      "id": "2a0d6d57a51e35d91376",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
+      "justification": "Canonical typed notification destination registry; chat_thread uses a validated positive safe thread identity, selects only an authorized existing conversation and never accepts an arbitrary URL. Generated into Mobile.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/components/notificationTarget.ts",
         "line": 14
       },
-      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewBatch": "chat-notification-destination-2026-10-13",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
-        "id": "d8058e9fe53556cbf690",
+        "id": "1a20aae8bb74a6df248f",
         "classification": "security-system-registry",
         "disposition": "canonical-contract",
         "specializedModel": "notification_destination_registry",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+        "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
         "reviewed": true,
         "evidence": {
           "file": "tdf-hq-ui/src/components/notificationTarget.ts",
           "line": 14
         },
-        "reviewBatch": "universal-interactions-2026-09-28"
+        "reviewBatch": "music-release-platform-sync-2026-10-07",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "d8058e9fe53556cbf690",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+            "line": 14
+          },
+          "reviewBatch": "universal-interactions-2026-09-28"
+        }
+      },
+      "mergedSourceDecision": {
+        "id": "2a0d6d57a51e35d91376",
+        "classification": "security-system-registry",
+        "disposition": "canonical-contract",
+        "specializedModel": "notification_destination_registry",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+          "line": 14
+        },
+        "reviewBatch": "music-release-platform-sync-2026-10-07",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "d8058e9fe53556cbf690",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+            "line": 14
+          },
+          "reviewBatch": "universal-interactions-2026-09-28"
+        },
+        "previousFingerprint": "1a20aae8bb74a6df248f"
       }
     },
     {
@@ -2478,13 +2728,13 @@
       "reviewed": true
     },
     {
-      "id": "8ea9381b405e317f5e7f",
+      "id": "d6b3102f762f66266bf0",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "navigation_item",
       "priority": "P3-retain",
       "risk": "Changing UI constants could break rendering or user experience.",
-      "justification": "Reviewed public header navigation: the TDF Mobile entry now carries its entry surface (surface=nav) so the landing attributes the visit and the click is measured as interest. Still client routes and localized labels only; distribution state keeps coming from the validated manifest.",
+      "justification": "The public header preserves the current-main search and event links and removes the dedicated DJ booth entry. DJ booth remains an ordinary service in the general booking catalog. These navigation routes and localized labels do not grant service availability or pricing authority.",
       "reviewed": true,
       "previousDecision": {
         "id": "7804604c0af849751309",
@@ -2514,20 +2764,114 @@
             "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
             "reviewed": true
           }
-        },
-        "evidence": {
-          "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
-          "line": 23
-        },
-        "reviewBatch": "events-nav-carousel-2026-10-08",
-        "reviewMethod": "successor-of-reviewed-decision"
+        }
       },
       "evidence": {
         "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
         "line": 23
       },
-      "reviewBatch": "events-nav-carousel-2026-10-08",
-      "reviewMethod": "successor-of-reviewed-decision"
+      "reviewBatch": "public-booking-queue-20261014",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "concurrentNavigationReviews": [
+        {
+          "id": "8ea9381b405e317f5e7f",
+          "classification": "dynamic-business-catalog",
+          "disposition": "retain-in-code",
+          "specializedModel": "navigation_item",
+          "priority": "P3-retain",
+          "risk": "Changing UI constants could break rendering or user experience.",
+          "justification": "Reviewed public header navigation: the TDF Mobile entry now carries its entry surface (surface=nav) so the landing attributes the visit and the click is measured as interest. Still client routes and localized labels only; distribution state keeps coming from the validated manifest.",
+          "reviewed": true,
+          "previousDecision": {
+            "id": "7804604c0af849751309",
+            "classification": "dynamic-business-catalog",
+            "disposition": "retain-in-code",
+            "specializedModel": "navigation_item",
+            "priority": "P3-retain",
+            "risk": "Changing UI constants could break rendering or user experience.",
+            "justification": "Reviewed public header navigation adds a single Eventos entry pointing to the canonical /social/eventos route (public agenda for visitors, events workspace for signed-in users). It holds client routes and localized labels only; event visibility and RSVP authority remain server-side.",
+            "reviewed": true,
+            "previousDecision": {
+              "id": "d24fc428c18f60568996",
+              "classification": "dynamic-business-catalog",
+              "disposition": "retain-in-code",
+              "specializedModel": "navigation_item",
+              "priority": "P3-retain",
+              "risk": "Changing UI constants could break rendering or user experience.",
+              "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
+              "reviewed": true,
+              "previousDecision": {
+                "id": "f9819fa4b81bdd8f3f21",
+                "classification": "dynamic-business-catalog",
+                "disposition": "retain-in-code",
+                "specializedModel": "navigation_item",
+                "priority": "P3-retain",
+                "risk": "Changing UI constants could break rendering or user experience.",
+                "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
+                "reviewed": true
+              }
+            },
+            "evidence": {
+              "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+              "line": 23
+            },
+            "reviewBatch": "events-nav-carousel-2026-10-08",
+            "reviewMethod": "successor-of-reviewed-decision"
+          },
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+            "line": 23
+          },
+          "reviewBatch": "events-nav-carousel-2026-10-08",
+          "reviewMethod": "successor-of-reviewed-decision"
+        },
+        {
+          "id": "d788513cb3b232039b94",
+          "classification": "dynamic-business-catalog",
+          "disposition": "retain-in-code",
+          "specializedModel": "navigation_item",
+          "priority": "P3-retain",
+          "risk": "Changing UI constants could break rendering or user experience.",
+          "justification": "Reviewed public header navigation drops the dedicated DJ Booth entry: DJ booth practice is an ordinary service offering chosen inside /reservar, so the header keeps one booking entry. It still holds client routes and localized labels only; service availability and pricing remain server-side catalog data.",
+          "reviewed": true,
+          "previousDecision": {
+            "id": "7804604c0af849751309",
+            "classification": "dynamic-business-catalog",
+            "disposition": "retain-in-code",
+            "specializedModel": "navigation_item",
+            "priority": "P3-retain",
+            "risk": "Changing UI constants could break rendering or user experience.",
+            "justification": "Reviewed public header navigation adds a single Eventos entry pointing to the canonical /social/eventos route (public agenda for visitors, events workspace for signed-in users). It holds client routes and localized labels only; event visibility and RSVP authority remain server-side.",
+            "reviewed": true,
+            "previousDecision": {
+              "id": "d24fc428c18f60568996",
+              "classification": "dynamic-business-catalog",
+              "disposition": "retain-in-code",
+              "specializedModel": "navigation_item",
+              "priority": "P3-retain",
+              "risk": "Changing UI constants could break rendering or user experience.",
+              "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
+              "reviewed": true,
+              "previousDecision": {
+                "id": "f9819fa4b81bdd8f3f21",
+                "classification": "dynamic-business-catalog",
+                "disposition": "retain-in-code",
+                "specializedModel": "navigation_item",
+                "priority": "P3-retain",
+                "risk": "Changing UI constants could break rendering or user experience.",
+                "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
+                "reviewed": true
+              }
+            }
+          },
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+            "line": 23
+          },
+          "reviewBatch": "public-booking-service-picker-2026-10-12",
+          "reviewMethod": "successor-of-reviewed-decision"
+        }
+      ]
     },
     {
       "id": "915967d05f3593fea628",
@@ -2596,16 +2940,6 @@
       "reviewed": true
     },
     {
-      "id": "e4c7ffe2a8fc0a5752d0",
-      "classification": "security-system-registry",
-      "disposition": "consumer-update",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P3-consumer",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
-    },
-    {
       "id": "d0b457848a6b6c374e45",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
@@ -2613,52 +2947,6 @@
       "priority": "P3-consumer",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
       "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
-    },
-    {
-      "id": "b180210a3602cfc0bf52",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "9fca63dce34f8900c6a4",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "line": 163
-      },
-      "reviewBatch": "events-nav-carousel-2026-10-08",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "daaade88abcc60232974",
-        "classification": "dynamic-business-catalog",
-        "disposition": "migrate-and-remove-authority-from-code",
-        "specializedModel": "navigation_item, navigation_item_permission",
-        "priority": "P1-cross-platform",
-        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-        "reviewed": true
-      }
-    },
-    {
-      "id": "ef8764c4421158cb1be7",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
     },
     {
@@ -2708,16 +2996,6 @@
     },
     {
       "id": "c388c94cfce1b0e865b0",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "d98b80c87ee6f14c72ec",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
@@ -3135,6 +3413,21 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "9c81a0d1656a3da224d8",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Unsupported profile kinds would expose filters the search handler cannot fulfill.",
+      "justification": "Subset of existing directory profile_kind schema values accepted by the profileKind query contract: artist, band, project, person. Genres and cities are loaded from server taxonomies. No new profile taxonomy is introduced.",
+      "reviewed": true,
+      "reviewBatch": "community-discovery-2026-10-13",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "line": 47
+      }
     },
     {
       "id": "4b7c1b246f49b4bf7fdf",
@@ -4875,7 +5168,7 @@
         "kind": "object-registry",
         "name": "sessionMock",
         "valueCount": 5,
-        "consumerCount": 127,
+        "consumerCount": 129,
         "exactDuplicateIds": [
           "a86872972efe04fbd789",
           "032010c2e0452a17c57c",
@@ -5435,7 +5728,7 @@
         "kind": "jsx-option-values",
         "name": "JSX value attributes",
         "valueCount": 5,
-        "consumerCount": 62,
+        "consumerCount": 61,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "37947a8e810836a21c9a"
@@ -5459,7 +5752,7 @@
         "kind": "jsx-option-values",
         "name": "JSX value attributes",
         "valueCount": 14,
-        "consumerCount": 241,
+        "consumerCount": 238,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -5839,7 +6132,7 @@
       "reviewBatch": "deterministic-policy-v3",
       "evidence": {
         "file": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-        "line": 833,
+        "line": 767,
         "kind": "object-registry",
         "name": "bookingPayload",
         "valueCount": 10,
@@ -6224,14 +6517,30 @@
       "reviewed": true
     },
     {
-      "id": "30eacf4605aa4c213248",
+      "id": "792f0717242ca974abe2",
       "classification": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "external_provider, external_provider_code",
       "priority": "P2-domain",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
+      "justification": "The TDF platform landing removes its dedicated DJ Booth card because DJ booth practice is booked through the general /reservar form like every other service offering. The remaining cards are marketing copy with client routes; the authoritative service list stays in the persisted service_offering catalog.",
+      "reviewed": true,
+      "previousDecision": {
+        "id": "30eacf4605aa4c213248",
+        "classification": "governed-reference-data",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "external_provider, external_provider_code",
+        "priority": "P2-domain",
+        "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+        "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+        "reviewed": true
+      },
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "line": 289
+      },
+      "reviewBatch": "public-booking-service-picker-2026-10-12",
+      "reviewMethod": "successor-of-reviewed-decision"
     },
     {
       "id": "8961d748fb7093a3ac06",
@@ -7294,7 +7603,7 @@
         "kind": "openapi-enum",
         "name": "MerchProductStatus",
         "valueCount": 7,
-        "consumerCount": 158,
+        "consumerCount": 160,
         "exactDuplicateIds": [
           "ab22a28a6c1f13d36e93"
         ],
@@ -7347,7 +7656,7 @@
         "kind": "openapi-enum",
         "name": "MerchIssueStatus",
         "valueCount": 7,
-        "consumerCount": 136,
+        "consumerCount": 138,
         "exactDuplicateIds": [
           "be1f72b6a12dba445b47",
           "282b46a9f2d482e2e13a"
@@ -7375,7 +7684,7 @@
         "kind": "openapi-enum",
         "name": "MerchRefundStatus",
         "valueCount": 6,
-        "consumerCount": 249,
+        "consumerCount": 250,
         "exactDuplicateIds": [
           "53eb977c438f2629bf40",
           "015ddf4475d1e02f496a"
@@ -7402,7 +7711,7 @@
         "kind": "openapi-enum",
         "name": "MerchSettlementStatus",
         "valueCount": 6,
-        "consumerCount": 197,
+        "consumerCount": 194,
         "exactDuplicateIds": [
           "4f748f0a512f9deb694a",
           "7d45ba63a043428fa3f0"
@@ -7555,16 +7864,6 @@
       "reviewed": true
     },
     {
-      "id": "2b2fe601e00052bd7a21",
-      "classification": "security-system-registry",
-      "disposition": "retain-as-versioned-redaction-projection",
-      "specializedModel": "commerce_reconciliation_exception",
-      "priority": "P0-security",
-      "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
-      "justification": "Reviewed the five creReason response tokens against loadReconciliationEntries.safeReason, actual exception emitters and the generated contract. Only four known stored exception types are mapped; every other value becomes unrecognized. This output-only redaction vocabulary cannot mutate workflow, post money or release a hold. Contract parity, legacy-private-reason and closed-approval regressions cover this boundary; ADR 0125 records its limits.",
-      "reviewed": true
-    },
-    {
       "id": "4080f92d3868198965e6",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -7662,7 +7961,7 @@
         "kind": "openapi-enum",
         "name": "OnboardingIntent",
         "valueCount": 6,
-        "consumerCount": 102,
+        "consumerCount": 104,
         "exactDuplicateIds": [
           "dc2478eb86deaac6aed4",
           "9ebf2e096eeddbecfa52",
@@ -7720,7 +8019,7 @@
         "kind": "openapi-enum",
         "name": "Role",
         "valueCount": 31,
-        "consumerCount": 334,
+        "consumerCount": 335,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "fffe489557d71ad441fc",
@@ -10593,7 +10892,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 93,
+        "consumerCount": 95,
         "exactDuplicateIds": [
           "dc2478eb86deaac6aed4",
           "9ebf2e096eeddbecfa52",
@@ -10651,7 +10950,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 236,
+        "consumerCount": 239,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "b5cf352ce0b028fa7f58"
@@ -10675,7 +10974,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 79,
+        "consumerCount": 81,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "daa37fcffc0e8bd8a2ed"
@@ -10691,8 +10990,8 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 85,
@@ -10705,26 +11004,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "6f23d79c58cb6df8789b"
           },
           "sourceEntryCanonicalSha256": "b52255140128fa2ec5471117a439a07aade7fe065fc67e6505009936b31913f2",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "6f23d79c58cb6df8789b"
-          },
-          "sourceEntryCanonicalSha256": "c95fa0fc58b6a73a7e8510191ec9dc72ea85a9f72c583ab30f4faac53f4d6654",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -10847,7 +11135,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 158,
+        "consumerCount": 160,
         "exactDuplicateIds": [
           "df4db7e4f0142896d690"
         ],
@@ -10874,7 +11162,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 223,
+        "consumerCount": 226,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "466bc208eb4fdfa1d8c2",
@@ -10943,7 +11231,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 46,
+        "consumerCount": 47,
         "exactDuplicateIds": [
           "84b896cbe258f816048c"
         ],
@@ -10996,7 +11284,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 105,
+        "consumerCount": 106,
         "exactDuplicateIds": [
           "c2530dae2f9a5c20f9c9"
         ],
@@ -11117,7 +11405,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 9,
-        "consumerCount": 276,
+        "consumerCount": 277,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11161,7 +11449,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 8,
-        "consumerCount": 229,
+        "consumerCount": 226,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "29477a732e910fa947a8",
@@ -11254,7 +11542,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 93,
+        "consumerCount": 94,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11276,7 +11564,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 52,
+        "consumerCount": 53,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11320,7 +11608,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 136,
+        "consumerCount": 138,
         "exactDuplicateIds": [
           "cb78a7beeb769986f90c",
           "282b46a9f2d482e2e13a"
@@ -11348,7 +11636,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 134,
+        "consumerCount": 136,
         "exactDuplicateIds": [
           "b353ecdfc08e2a005034"
         ],
@@ -11374,7 +11662,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 197,
+        "consumerCount": 194,
         "exactDuplicateIds": [
           "29477a732e910fa947a8",
           "7d45ba63a043428fa3f0"
@@ -11402,7 +11690,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 180,
+        "consumerCount": 181,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "30a381d06cc0d1594f1c"
@@ -11426,7 +11714,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 197,
+        "consumerCount": 198,
         "exactDuplicateIds": [
           "2281d810a9d407c3857d"
         ],
@@ -11581,7 +11869,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 112,
+        "consumerCount": 113,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "fcc83a1bc147933d21b3"
@@ -11605,7 +11893,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 75,
+        "consumerCount": 79,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11649,8 +11937,8 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql",
         "line": 26,
@@ -11663,26 +11951,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "1fc12a91554dc9bed3fa"
           },
           "sourceEntryCanonicalSha256": "ce738b4b558615760c2e498c6388e46b048e618d326a16f6bcda1a935f8c7f86",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "1fc12a91554dc9bed3fa"
-          },
-          "sourceEntryCanonicalSha256": "8d937aa270faa6fdc8f5989e0a8e751f4da15b790194076d4b7ceec25ae87608",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -11842,7 +12119,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 138,
+        "consumerCount": 139,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "6cf3c47175b7c9af19d0",
@@ -11947,7 +12224,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 236,
+        "consumerCount": 237,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "76645902bce3902042f9",
@@ -11972,7 +12249,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 46,
+        "consumerCount": 47,
         "exactDuplicateIds": [
           "0c575e3bf3fa4309062a"
         ],
@@ -12021,7 +12298,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 197,
+        "consumerCount": 198,
         "exactDuplicateIds": [
           "9053eecad03f9b4e6349"
         ],
@@ -12048,7 +12325,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 112,
+        "consumerCount": 113,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "f99ba8fe6f37a8606d3d",
@@ -12088,8 +12365,8 @@
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 795,
@@ -12102,26 +12379,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "7a90f90edc7d99b665c5"
           },
           "sourceEntryCanonicalSha256": "ee63211d0b714f10a636b6731e38ca30dde6e808106713c6f84ed42113db6c09",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "7a90f90edc7d99b665c5"
-          },
-          "sourceEntryCanonicalSha256": "9d8a422e39d2d470f1c5d0ab73d798edf10ed4af1f38b05f87f4aec942bd6c6e",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -12178,8 +12444,8 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 831,
@@ -12192,26 +12458,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "3a40512bc891a8863306"
           },
           "sourceEntryCanonicalSha256": "9108605f74f60cdcf7502309f1f0c5d4e54af658f83e987c8ca8294607d5bf2f",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "3a40512bc891a8863306"
-          },
-          "sourceEntryCanonicalSha256": "e8b883146acd346d9114b3e82b37d5814dfbfaafb17dbd6207caafa211e34e33",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -12448,7 +12703,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 82,
+        "consumerCount": 85,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12470,7 +12725,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 85,
+        "consumerCount": 86,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12541,7 +12796,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 84,
+        "consumerCount": 80,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12585,7 +12840,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 84,
+        "consumerCount": 86,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12651,7 +12906,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 61,
+        "consumerCount": 63,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12802,7 +13057,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 148,
+        "consumerCount": 149,
         "exactDuplicateIds": [
           "7c7e2e150ed59b1e3fc2",
           "d14b4c467d704c72df48",
@@ -12828,7 +13083,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 186,
+        "consumerCount": 189,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12850,7 +13105,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 228,
+        "consumerCount": 229,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12872,7 +13127,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 97,
+        "consumerCount": 98,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12886,8 +13141,8 @@
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 60,
@@ -12902,26 +13157,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "aaa716ca68fa3cb0b09b"
           },
           "sourceEntryCanonicalSha256": "e52d544f1a23c10805e0ec4697fc46e7bcec932ed2ec3d8a510077e40332d2ff",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "aaa716ca68fa3cb0b09b"
-          },
-          "sourceEntryCanonicalSha256": "489471b12184cc23f28eb542b7cee7240e60430156954d62d6bab14fc7d60246",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -12934,8 +13178,8 @@
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 64,
@@ -12950,26 +13194,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "65992320958643fcd97a"
           },
           "sourceEntryCanonicalSha256": "fe06b9339f31c93a8ef7b241db87ea8954184c2abee5d404142ce5c772a6195b",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "65992320958643fcd97a"
-          },
-          "sourceEntryCanonicalSha256": "06d284917958fe2342325bcfe49a9297b2da7c4fe5bfb07f23f52380c72f121c",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -12990,7 +13223,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 73,
+        "consumerCount": 74,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13004,8 +13237,8 @@
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 78,
@@ -13018,26 +13251,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "6c4dac47f8f0aa7ae2f7"
           },
           "sourceEntryCanonicalSha256": "1e6149d6f234c7b6e0b501aa977b24ae2de78b5da54d4cfa0580968de44caff8",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "6c4dac47f8f0aa7ae2f7"
-          },
-          "sourceEntryCanonicalSha256": "f494b62870c712d04db5dfd4115775eb6a7f6704394f4222eb84cab7a8715e74",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -13080,7 +13302,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 41,
+        "consumerCount": 42,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13146,7 +13368,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 81,
+        "consumerCount": 78,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13168,7 +13390,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 69,
+        "consumerCount": 70,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13190,7 +13412,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 93,
+        "consumerCount": 97,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13226,8 +13448,8 @@
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 197,
@@ -13240,26 +13462,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "c7c992c00a1accaa7929"
           },
           "sourceEntryCanonicalSha256": "8d22497154c04040ca1e12e3f617f6f6ec708734558776c0ce2e95fac52313bb",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "c7c992c00a1accaa7929"
-          },
-          "sourceEntryCanonicalSha256": "584e323c296d441ca122d17917a722e06d3a2b1e26edd0247a5d152269648b54",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -13302,7 +13513,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 138,
+        "consumerCount": 140,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13324,7 +13535,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 51,
+        "consumerCount": 47,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13368,7 +13579,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 8,
-        "consumerCount": 208,
+        "consumerCount": 205,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13390,7 +13601,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 200,
+        "consumerCount": 201,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13456,7 +13667,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 88,
+        "consumerCount": 90,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13470,8 +13681,8 @@
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "restored-source-specific-review",
-      "reviewBatch": "payments-repair-20261015",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "media-consolidation-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 355,
@@ -13484,26 +13695,15 @@
       },
       "supersededReviews": [
         {
-          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceRevision": "da3b4f191f00742bf95a8e20f2bc932f3b9c6371",
           "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceFileSha256": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
           "sourceEntry": {
             "id": "94ef7a0afcd84f143948"
           },
           "sourceEntryCanonicalSha256": "5d1d1c15d3b85e91e6b72af71ea8477c742b123feb65d65fe054a1de81cd5433",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
-        },
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "94ef7a0afcd84f143948"
-          },
-          "sourceEntryCanonicalSha256": "9f6600b75b670153ff54e578192c17354c08955588d413910465c9d57c708d8e",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+          "reason": "Complete source-specific review preserved in immutable ancestor; no recursive copying or production application implied."
         }
       ]
     },
@@ -13572,7 +13772,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 36,
+        "consumerCount": 39,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -15129,7 +15329,7 @@
         "kind": "haskell-list",
         "name": "terminalIssueStatuses",
         "valueCount": 3,
-        "consumerCount": 133,
+        "consumerCount": 135,
         "exactDuplicateIds": [
           "04a2bfe3f922f36836d2"
         ],
@@ -15913,7 +16113,7 @@
         "kind": "haskell-list",
         "name": "issueStatuses",
         "valueCount": 7,
-        "consumerCount": 135,
+        "consumerCount": 137,
         "exactDuplicateIds": [
           "cb78a7beeb769986f90c",
           "be1f72b6a12dba445b47"
@@ -15941,7 +16141,7 @@
         "kind": "haskell-list",
         "name": "refundStatuses",
         "valueCount": 6,
-        "consumerCount": 248,
+        "consumerCount": 249,
         "exactDuplicateIds": [
           "6e49e1dd9002b9a384f9",
           "53eb977c438f2629bf40"
@@ -15968,7 +16168,7 @@
         "kind": "haskell-list",
         "name": "settlementStatuses",
         "valueCount": 6,
-        "consumerCount": 196,
+        "consumerCount": 193,
         "exactDuplicateIds": [
           "29477a732e910fa947a8",
           "4f748f0a512f9deb694a"
@@ -16302,7 +16502,7 @@
         "kind": "haskell-list",
         "name": "recognizedSocialEventCapabilityCodes",
         "valueCount": 3,
-        "consumerCount": 20,
+        "consumerCount": 21,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -16627,7 +16827,7 @@
         "kind": "object-registry",
         "name": "Events",
         "valueCount": 30,
-        "consumerCount": 211,
+        "consumerCount": 213,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -17581,19 +17781,19 @@
       "reviewed": true
     },
     {
-      "id": "9de842d0529aa06faf6b",
+      "id": "4beaac5c476079656a0a",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
+      "justification": "Generated Mobile notification destination registry adds chat_thread with the same validated numeric identity and canonical web route as the web resolver; arbitrary URL navigation remains rejected.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-mobile/src/navigation/notificationTarget.ts",
         "line": 15
       },
-      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewBatch": "chat-notifications-2026-10-13",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
         "id": "2c23d0fa2bac40b01a98",
@@ -17609,6 +17809,93 @@
           "line": 15
         },
         "reviewBatch": "universal-interactions-2026-09-28"
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "cf723a45e24c7f9a8dd8300d4b7f199b261b5363",
+          "sourceDecisionId": "9de842d0529aa06faf6b",
+          "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
+          "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
+        }
+      ],
+      "mergedSourceDecision": {
+        "id": "4beaac5c476079656a0a",
+        "classification": "security-system-registry",
+        "disposition": "canonical-contract",
+        "specializedModel": "notification_destination_registry",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Pinned Mobile retains the reviewed notification destination allowlist and adds chat_thread with a positive-safe-integer threadId and /chat fallback. These client routes grant no thread access; recipient and thread membership remain backend authorities. Arbitrary URL navigation remains excluded.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+          "line": 15
+        },
+        "reviewBatch": "booking-mobile-pin-consolidation-2026-10-15",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "9de842d0529aa06faf6b",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+            "line": 15
+          },
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "2c23d0fa2bac40b01a98",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+              "line": 15
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          }
+        },
+        "mergedSourceDecision": {
+          "id": "4beaac5c476079656a0a",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Mobile main adds chat_thread to the existing notification destination allowlist, resolving to the canonical same-origin thread path. Existing destinations are preserved; the six notification response regressions pass. This is routing authority, not an editable business catalog.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+            "line": 15
+          },
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "2c23d0fa2bac40b01a98",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+              "line": 15
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          },
+          "previousFingerprint": "9de842d0529aa06faf6b"
+        }
       }
     },
     {
@@ -17682,50 +17969,409 @@
       "reviewed": true
     },
     {
+      "id": "3b552ac5c12256abe0b4",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
-      "risk": "Migration order, immutable ancestry and checksums govern persisted consent and payment state.",
-      "justification": "Ordered209 manifest retains the exact previous208 entries and appends provider-domain payment binding. Prior SQL bytes and introduction commits are preserved. The full209 batch applied and replayed on disposable PostgreSQL16.15; the independent provider/domain matrix and witnessed concurrent retry controls passed. This technical registry classification does not authorize production application or provider activation.",
+      "risk": "Changing this sweep domain without changing the startup verifier and its policy note can leave a production capability-gate state unverified, so a later container start fails without a test having said so.",
+      "justification": "The three states (missing, disabled, enabled) are the exhaustive domain of one revenue_feature_flag row that the startup-gates sweep varies per asserted flag. It is a finite test domain copied from the verifier's rule shape, not a selectable catalog or a production source of authority.",
       "reviewed": true,
+      "reviewMethod": "source-review-2026-10-12",
+      "reviewBatch": "startup-gates-2026-10-12",
+      "evidence": {
+        "file": "scripts/__tests__/startup-gates-postgres.mjs",
+        "line": 40
+      }
+    },
+    {
+      "id": "de09a0cde54a8f757ce1",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Incomplete browser coverage or version drift could admit an invalid CI environment; this list cannot be replaced by editable business data.",
+      "justification": "These are fake browser factory keys in launch-failure and cleanup controls. They address only the fixed Chromium/Firefox/WebKit test matrix, not a selectable application catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-22",
+      "reviewBatch": "browser-ci-image-2026-10-22",
+      "evidence": {
+        "file": "scripts/__tests__/playwright-image.test.mjs",
+        "line": 68
+      }
+    },
+    {
+      "id": "5da1800a82705df02018",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Incomplete browser coverage or version drift could admit an invalid CI environment; this list cannot be replaced by editable business data.",
+      "justification": "These exact npm package identities must share the pinned image version. They are fixed dependency identifiers for CI validation, not selectable business values or application authority.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-22",
+      "reviewBatch": "browser-ci-image-2026-10-22",
+      "evidence": {
+        "file": "scripts/verify-playwright-image.mjs",
+        "line": 7
+      }
+    },
+    {
+      "id": "c03b7e29a37c1a410589",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-versioned-redaction-projection",
+      "specializedModel": "commerce_reconciliation_exception",
+      "priority": "P0-security",
+      "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
+      "justification": "Reviewed all six creReason response tokens against loadReconciliationEntries.safeReason and actual exception emitters. The new server-authored music_paid_closed_order marks verified money with closed fulfillment for review, without granting an entitlement or financial-release authority. Five known stored reasons map to allowlisted outputs; unknown values remain unrecognized. The OpenAPI, generated web/mobile clients and Spanish/English administrative label agree. SQL, HTTP and panel regressions cover the new case; ADR0125 compatibility addendum preserves all privacy and read-only boundaries.",
+      "reviewed": true,
+      "reviewBatch": "music-payment-outcome-2026-10-15",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "2b2fe601e00052bd7a21",
+        "classification": "security-system-registry",
+        "disposition": "retain-as-versioned-redaction-projection",
+        "specializedModel": "commerce_reconciliation_exception",
+        "priority": "P0-security",
+        "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
+        "justification": "Reviewed the five creReason response tokens against loadReconciliationEntries.safeReason, actual exception emitters and the generated contract. Only four known stored exception types are mapped; every other value becomes unrecognized. This output-only redaction vocabulary cannot mutate workflow, post money or release a hold. Contract parity, legacy-private-reason and closed-approval regressions cover this boundary; ADR 0125 records its limits.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "134cf0fa5a9bb176f981",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Treating this synthetic DTO fixture as production authority could weaken private-receipt and payment-review regressions.",
+      "justification": "The payment object is a synthetic TicketManualPaymentDTO fixture used only by EventManualPaymentsPanel tests. Its field keys represent the existing transport contract and exercise private receipt viewing, legacy records, errors and preview cleanup. They are not selectable customer values, a persisted catalog or payment authority.",
+      "reviewed": true,
+      "reviewBatch": "ticket-receipt-preview-2026-10-24",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
+        "line": 15
+      }
+    },
+    {
+      "id": "cf264a325e5b4853ecac",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the synthetic child command can invalidate the bounded readiness-wait regression.",
+      "justification": "Node CLI arguments deliberately start a stalled synthetic child to verify timeout and process cleanup. This is test-process plumbing, not a selectable service catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/__tests__/test-process-session.test.mjs",
+        "line": 33
+      },
+      "reviewBatch": "checkout-session-readiness-2026-10-14"
+    },
+    {
+      "id": "2634b239375f2ad309ba",
+      "classification": "security-system-registry",
+      "disposition": "retain-reviewed-deployment-manifest",
+      "specializedModel": "production migration manifest and applied migration ledger",
+      "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+      "justification": "The 223-entry deployment registry preserves the complete 222-entry ledger candidate f3e3217ac12a04be2a221ee6ac8bea67875d46c5 prefix, including all221 protected-main migrations and the original posted-header migration, and appends only the provider/domain admission migration introduced by456be073c944dd3d76eb9e3c2169fe7fbb4041ef. Historical SQL bodies and introduction ancestors are unchanged. Both222-entry and209-entry source reviews are retained by canonical hashes. This technical review grants no provider activation, production execution or waiver of current-head CI, independent review and protected merge admission.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "provider-domain-main-technical-review-20261026",
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+          "sourceEntry": {
+            "id": "3f336173e03f10fc023c"
+          },
+          "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+          "sourceEntry": {
+            "id": "2b073f20afd2f3798b1e"
+          },
+          "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+          "sourceEntry": {
+            "id": "a1eb1e750e7543b88fe1"
+          },
+          "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+          "sourceEntry": {
+            "id": "b7cc47848f3f9882770f"
+          },
+          "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+          "sourceEntry": {
+            "id": "c94cd70c1272ec9ede1b"
+          },
+          "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "55915aedf0e4e356a5bca766cdc09b7077f9d0d567523b4d496ad9c5bacb09f0",
+          "sourceEntry": {
+            "id": "8229b8202552298c955e"
+          },
+          "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "881e0be06afb973c1200beb4213e72ae4bad53478e3fab280189c650a55d3b75",
+          "sourceEntry": {
+            "id": "9ada14767bee1662f97d"
+          },
+          "sourceEntryCanonicalSha256": "6528ab5a8a23254d2e4ad4222e392f7f8f052b9f2818ef6e9eb8fc3a461a7003",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "f3e3217ac12a04be2a221ee6ac8bea67875d46c5",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "529f4972e422295562c0a67e1101346a97b2549ee0544072b69476c80edd0503",
+          "sourceEntry": {
+            "id": "6ff395b6131079017c9d"
+          },
+          "sourceEntryCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "be3b04226bda54e2dd6abdaddd434039ef7b457defe59942ec49dbed98013a73",
+          "sourceEntry": {
+            "id": "a70a9a4dd05ce44e950b"
+          },
+          "sourceEntryCanonicalSha256": "018a1dc08aafe97b3af2257fe2ad24bac9a8f47f724975df0eec07e729ba8058",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 209,
-        "consumerCount": 75,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
+        "valueCount": 223
       },
-      "id": "a70a9a4dd05ce44e950b",
-      "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "provider-domain-binding-20261016",
-      "supersededReviews": [
-        {
-          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
-          "sourceEntry": {
-            "id": "b925d71997a7d98258c3"
-          },
-          "sourceEntryCanonicalSha256": "ac4a765b99a58d3822b254948aa19ff4266f0cc6fe23c1e67fc37000a41c1696",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+      "previousDecisionReferences": {
+        "document": "docs/catalog-persistence/provider-domain-main-reconciliation-20261026.json",
+        "ledgerId": "6ff395b6131079017c9d",
+        "providerId": "a70a9a4dd05ce44e950b"
+      }
+    },
+    {
+      "id": "e1630a13682bf0fee90d",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-consumer",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.test.tsx",
+        "line": 10
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "e4c7ffe2a8fc0a5752d0",
+        "classification": "security-system-registry",
+        "disposition": "consumer-update",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-consumer",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "300853c537ba6401822a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 142
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "b180210a3602cfc0bf52",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "a00fcee87036af5dfa95",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 166
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "9fca63dce34f8900c6a4",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+          "line": 163
         },
-        {
-          "sourceRevision": "9d7551353a7c278cd0937eb57d04a94241318d42",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "2c7ef4935c5cdc4399d38ab143423edcdcc4d8b64e6affc54604f0a1ccab3bef",
-          "sourceEntry": {
-            "id": "627709d9858d72128d2f"
-          },
-          "sourceEntryCanonicalSha256": "5ad0540b85150ab309aaff528bd28daff3390c32e6e69a5a3d0765624921a743",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Retain exact previous 208-entry technical classification as provenance; current manifest appends one additive guard."
+        "reviewBatch": "events-nav-carousel-2026-10-08",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "daaade88abcc60232974",
+          "classification": "dynamic-business-catalog",
+          "disposition": "migrate-and-remove-authority-from-code",
+          "specializedModel": "navigation_item, navigation_item_permission",
+          "priority": "P1-cross-platform",
+          "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+          "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+          "reviewed": true
         }
-      ]
+      }
+    },
+    {
+      "id": "ce1e609baf902df58b08",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 190
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "ef8764c4421158cb1be7",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "dfea445b31325dad4cf6",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 251
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "d98b80c87ee6f14c72ec",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "0c91e00629e658db782f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing these protocol states can re-enable automatic cookie restoration or misrepresent unconfirmed server logout.",
+      "justification": "LogoutStatus is the identity-free browser logout/revocation protocol, not selectable booking or community catalog data. The four fixed states must work offline before any server request. Lexical overlaps such as pending/confirmed with booking sources are not consumers of this TypeScript type. Public display copy remains localized independently.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/session/logoutIntent.ts",
+        "line": 6,
+        "name": "LogoutStatus",
+        "kind": "literal-union",
+        "values": [
+          "cleared",
+          "pending",
+          "unconfirmed",
+          "confirmed"
+        ],
+        "contract": "formal/system/logout-intent.md"
+      }
+    },
+    {
+      "id": "f99008422acf37ce04d4",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "session_role_refresh_fixture",
+      "priority": "P3-consumer",
+      "risk": "A synthetic role fixture must never become an independent production grant source.",
+      "justification": "Reviewed Customer-to-Artist grant fixture used only by same-party draft-preservation tests. It consumes the existing backend role registry and does not define, seed or extend production privileges.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
+        "line": 116,
+        "name": "roles",
+        "kind": "array",
+        "values": [
+          "Customer",
+          "Artist"
+        ],
+        "contract": "formal/system/logout-intent.md"
+      }
     }
   ]
 }

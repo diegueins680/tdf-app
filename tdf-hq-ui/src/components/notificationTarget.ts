@@ -14,6 +14,7 @@ export function notificationTargetPath(notification: NotificationDTO): string | 
   switch (notification.nTargetType) {
     case 'interaction_target': return key ? `/conversacion/target/${key}` : null;
     case 'interaction_comment': return key ? `/conversacion/comment/${key}` : null;
+    case 'chat_thread': return activity ? `/chat?threadId=${activity}` : null;
     case 'party_profile': return id ? `/perfil/${id}` : null;
     case 'feature_access_request': return id ? `/solicitudes-acceso?request=${id}` : null;
     case 'event_logistics': return id ? `/social/eventos/${id}/logistica${activity ? `?activity=${activity}` : ''}` : null;
@@ -32,6 +33,7 @@ export function notificationTargetPath(notification: NotificationDTO): string | 
 
 export function notificationFallbackPath(notification: NotificationDTO): string {
   const kind = notification.nTargetType;
+  if (kind === 'chat_thread') return '/chat';
   if (kind === 'feature_access_request') return '/solicitudes-acceso';
   if (kind?.startsWith('directory_')) return '/mis-clasificados';
   if (kind === 'internal_feedback_report') return '/feedback/interno';

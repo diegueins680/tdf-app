@@ -49,8 +49,8 @@ which posting, the entry rule and the foreign key all read by. Posted
 transactions found unbalanced or empty, and reversed transactions with a self,
 draft or reversed target, cause migration to fail before replacing guards.
 History must be reconciled explicitly; the migration does not alter amounts.
-Validation and guard installation hold table locks against concurrent writers. No Haskell change. Rollback restores the 2026-08-13 functions and
-triggers. Decision in AUTHORITY-069.
+Validation and guard installation hold table locks against concurrent writers. No Haskell change. The historical rollback restores the 2026-08-13 functions and
+triggers and must not be used for application rollback after integrity guards are installed. Decision in AUTHORITY-069.
 
 ## Model
 
@@ -109,3 +109,20 @@ checkout-line migrations before exercising its actual payment and refund stores.
 This prevents that integration gate from silently omitting the new constraints.
 Its reduced domain fixtures do not establish compatibility with every production
 domain trigger; see `docs/payments/consolidation-2026-10-15.md` for that boundary.
+
+## Snapshot refinement follow-up (2026-10-16)
+
+The lock-only entry fence above is insufficient for an older REPEATABLE READ
+snapshot. A real two-session regression posted an unbalanced transaction on the
+#551 head. The additive `2026-10-16_ledger_entry_write_fence.sql` physically
+updates the parent row without changing its timestamp value. READ COMMITTED
+posting validates refreshed entries; stale snapshot writers abort with 40001.
+The historical migration is unchanged. Retain this forward-compatible guard
+through application rollback.
+
+The detailed refinement ledger, reproducible cases, negative controls, source
+identities and unresolved obligations are in
+[ledger-refinement-2026-10-16.md](ledger-refinement-2026-10-16.md).
+`LedgerPosting.tla` treats posting as atomic and does not model PostgreSQL
+snapshots; passing it never established this missing implementation refinement.
+SYS-MONEY-003 remains PARTIAL.
