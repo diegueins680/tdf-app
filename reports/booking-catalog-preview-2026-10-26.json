@@ -1,0 +1,64 @@
+{
+  "before": {
+    "observedAt": "2026-10-26T23:16:22.089Z",
+    "base": "https://e6d9de67.tdf-app.pages.dev",
+    "source": "8bdafbeb059cf4a53ce1a07580479cd1957b882d",
+    "entry": "/assets/index-DJ6v7a5l.js",
+    "sha256": "a123eaf1fd1560609adfda9f22a26f4e5b6b10134ea9647477e36c26009fa069"
+  },
+  "after": {
+    "observedAt": "2026-10-26T23:16:58.377Z",
+    "base": "https://e6d9de67.tdf-app.pages.dev",
+    "source": "8bdafbeb059cf4a53ce1a07580479cd1957b882d",
+    "entry": "/assets/index-DJ6v7a5l.js",
+    "sha256": "a123eaf1fd1560609adfda9f22a26f4e5b6b10134ea9647477e36c26009fa069"
+  },
+  "exitCode": 0,
+  "scope": "Actual immutable Cloudflare preview artifact; all business/session APIs synthetic, all external traffic and business writes blocked. No production or persistence claim.",
+  "stats": {
+    "startTime": "2026-10-26T23:16:23.793Z",
+    "duration": 34488.454,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "pr": 636,
+  "candidate": "8bdafbeb059cf4a53ce1a07580479cd1957b882d",
+  "sourceBase": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "sourceInputsMatchCommittedCandidate": true,
+  "hostedUiCI": {
+    "run": 40416891311,
+    "job": 121901775415,
+    "status": "SUCCESS",
+    "checkout": "8ed127805da264c7493b1340b4a6d9232c7f0c86",
+    "checkoutTree": "3175931a1ea7708784117f6f028cc2855f306826",
+    "candidateTree": "3175931a1ea7708784117f6f028cc2855f306826",
+    "wholeTreeIdentityVerified": true,
+    "suites": 308,
+    "tests": 3516,
+    "gzipInitialJsBytes": 336472,
+    "preloads": 5,
+    "fullWorkflowStatusAtObservation": "IN_PROGRESS; persona-web-e2e remains running"
+  },
+  "delivery": {
+    "implemented": true,
+    "testedLocally": true,
+    "actualCandidatePreviewVerified": true,
+    "draftPR": true,
+    "merged": false,
+    "productionDeployed": false,
+    "productionVerified": false
+  },
+  "protectedMainObservation": {
+    "sha": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+    "reason": "PR596 merged at23:10:30UTC; the tested636candidate remains based on2e. Its CI/preview is not relabeled as a test on this newer main. Gallery628still waits625 and has not changed source."
+  },
+  "evidenceSha256": {
+    "reports/booking-catalog-preview-evidence-20261026/recovered-phone.png": "3f6cca578b7f580a10e55e861ebed84fb35fa2ccdf52536b75234c0e3b2938c3",
+    "reports/booking-catalog-preview-evidence-20261026/recovered-desktop.png": "2df7e023915b59bea72387ec65aa33376a4b715c6b943bedf0ac5e6a3384f63b",
+    "reports/booking-catalog-preview-evidence-20261026/browser-results.json": "85622275fa98932f1a55e309f3aaed2fb1fe7a875b6f9f0d9cd6334fd6a20556",
+    "reports/booking-catalog-preview-evidence-20261026/verify-hosted.mjs": "17505bea856be80ae1573b21029da992902a3d6f3685d0ac0cf996a765972ded",
+    "reports/booking-catalog-preview-evidence-20261026/playwright.config.mjs": "26282479c4590096feeb6b08f41a3d7136b1ec3d68fcce4fb8130f397acca961"
+  }
+}
