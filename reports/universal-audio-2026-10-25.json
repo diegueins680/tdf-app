@@ -476,8 +476,8 @@
     "backendSqlMigrationDependenciesMobile": "byte-identical to integration baseline",
     "qualification": "earlier executions retain their original source identities; combined candidate CI pending"
   },
-  "latestIntegrationBaseline": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
-  "latestRequirementCount": 141,
+  "latestIntegrationBaseline": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+  "latestRequirementCount": 142,
   "lastQualifiedPlaybackHead": {
     "sha": "464d49dcdf9b72c6670cb4bb6ea1716d6b7e3429",
     "ci": "https://github.com/diegueins680/tdf-app/actions/runs/40265417111",
@@ -492,5 +492,12 @@
     "reviewId": 5647112905,
     "reviewSubmittedAt": "2026-10-26T03:46:11Z",
     "limitation": "this evidence retains its exact head identity; current-main refresh requires fresh checks/review"
+  },
+  "latestMainPreservation": {
+    "requirements": 142,
+    "catalogDecisions": 1330,
+    "newAudioTechnicalDecisions": 9,
+    "backendSqlManifestDependenciesMobile": "byte-identical to current main",
+    "privacyLogoutImplementation": "retained from mergedPR616"
   }
 }

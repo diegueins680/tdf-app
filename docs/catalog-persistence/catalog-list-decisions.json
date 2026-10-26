@@ -18272,6 +18272,50 @@
       }
     },
     {
+      "id": "0c91e00629e658db782f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing these protocol states can re-enable automatic cookie restoration or misrepresent unconfirmed server logout.",
+      "justification": "LogoutStatus is the identity-free browser logout/revocation protocol, not selectable booking or community catalog data. The four fixed states must work offline before any server request. Lexical overlaps such as pending/confirmed with booking sources are not consumers of this TypeScript type. Public display copy remains localized independently.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/session/logoutIntent.ts",
+        "line": 6,
+        "name": "LogoutStatus",
+        "kind": "literal-union",
+        "values": [
+          "cleared",
+          "pending",
+          "unconfirmed",
+          "confirmed"
+        ],
+        "contract": "formal/system/logout-intent.md"
+      }
+    },
+    {
+      "id": "f99008422acf37ce04d4",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "session_role_refresh_fixture",
+      "priority": "P3-consumer",
+      "risk": "A synthetic role fixture must never become an independent production grant source.",
+      "justification": "Reviewed Customer-to-Artist grant fixture used only by same-party draft-preservation tests. It consumes the existing backend role registry and does not define, seed or extend production privileges.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
+        "line": 116,
+        "name": "roles",
+        "kind": "array",
+        "values": [
+          "Customer",
+          "Artist"
+        ],
+        "contract": "formal/system/logout-intent.md"
+      }
+    },
+    {
       "id": "9f4017ded51fb378d543",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
