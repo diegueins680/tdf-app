@@ -80,7 +80,11 @@ try {
     'scripts/__tests__/fixtures/catalog-production-source-fixture.sql']) {
     command('psql', [...psqlArgs, '-f', join(root, relative)]);
   }
-  const sourceRevision = command('git', ['rev-parse', 'HEAD'], { cwd: root });
+  // Only the read-only Git call needs CI's exact-checkout trust configuration.
+  // Database and renderer children retain their credential-scrubbed environment.
+  const sourceRevision = command('git', ['rev-parse', 'HEAD'], {
+    cwd: root, env: { ...env, ...(process.env.HOME ? { HOME: process.env.HOME } : {}) },
+  });
   const batch = command(process.execPath, ['scripts/render-production-migration-batch.mjs'], {
     cwd: root, env: { ...env, SOURCE_COMMIT: sourceRevision }, maxBuffer: 64 * 1024 * 1024,
   });
