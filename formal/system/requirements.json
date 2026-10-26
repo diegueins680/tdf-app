@@ -11931,6 +11931,97 @@
       "evidence": "Dated local reproduction and qualification receipts, final candidate source hashes and hosted checks."
     },
     {
+      "id": "AUTH-LOGOUT-001",
+      "title": "Retain explicit browser logout intent through network failure and reload",
+      "statement": "Explicit browser logout must suppress automatic cookie and descriptor restoration until fresh interactive authentication, distinguish unconfirmed server revocation, and reject stale session adoption callbacks.",
+      "property": "Active local logout intent implies no automatic account restoration; late callbacks do not own later logout/login revisions.",
+      "domain": "AUTH",
+      "authority": "User-authorized value activation sprint: prioritize reproducible privacy and authentication blockers before human pilot.",
+      "source": "Isolated real browser/API/PostgreSQL failed logout reproduction; journeys A/B logout and return.",
+      "contract": "formal/system/logout-intent.md",
+      "actors": [
+        "Browser user",
+        "Server session owner"
+      ],
+      "preconditions": [
+        "Same-origin browser application and storage; existing server authentication remains authoritative."
+      ],
+      "inputs": [
+        "Explicit logout",
+        "Revocation result or deadline",
+        "Reload",
+        "Fresh interactive authentication",
+        "Storage events"
+      ],
+      "state": {
+        "localIntent": [
+          "cleared",
+          "pending",
+          "unconfirmed",
+          "confirmed"
+        ],
+        "revision": "Identity-free per-transition ownership revision"
+      },
+      "allowedTransitions": [
+        "Logout -> persisted intent and local anonymous state",
+        "Revocation response -> confirmed or unconfirmed under same revision",
+        "Fresh interactive authentication -> new cleared revision",
+        "Other-tab logout -> local anonymous state"
+      ],
+      "forbiddenTransitions": [
+        "Active intent -> automatic cookie or descriptor restoration",
+        "Stale authentication callback -> clear later logout intent",
+        "Old logout completion -> overwrite fresh login revision",
+        "Network failure -> claim server revocation"
+      ],
+      "effects": [
+        "Bounded explicit logout request; no automatic retry; existing cache epoch invalidation."
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/session/SessionContext.tsx",
+        "tdf-hq-ui/src/api/session.ts",
+        "tdf-hq-ui/src/api/client.ts",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/api/drive.ts",
+        "tdf-hq-ui/src/api/inventory.ts",
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/session/logoutIntent.test.ts",
+        "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
+        "tdf-hq-ui/src/api/logoutIntent.test.ts",
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Revision, storage, bootstrap, unsigned transport, XHR refusal and deadline regression controls; native optimized browser with actual API and disposable PostgreSQL.",
+      "evidence": "Pre-fix native reproduction retained; current candidate execution receipts qualified separately from CI, review, merge and deployment.",
+      "historicalStatus": "new",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for scoped local controls; production and human acceptance remain unverified.",
+      "ambiguity": [
+        "Offline server revocation, accepted requests, cross-document Set-Cookie ordering, raw transports outside scoped clients, native devices and external providers are not certified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped implementation and executable checks; full distributed session safety and production acceptance are not proved."
+      },
+      "authorization": "Existing server session, ownership, role and origin authorization remain authoritative.",
+      "privacy": "Persist only revision and confirmation status, no identity or credentials.",
+      "concurrency": "Captured revision and existing synchronous account epoch reject obsolete UI adoption; no cross-client linearizability claim.",
+      "idempotency": "No automatic logout replay; explicit retry remains separate.",
+      "failure": "Server revocation remains unconfirmed on network, deadline or non-success response.",
+      "recovery": "Explicit bounded retry or fresh interactive login; retain unsigned public reads.",
+      "observability": "Record outcome booleans only; no cookie, token or personal-data diagnostics."
+    },
+    {
       "id": "PAY-LEDGER-HEADER-001",
       "title": "Posted ledger identity, source and audit headers are immutable",
       "statement": "An UPDATE whose existing commerce ledger transaction is posted or reversed must preserve every column value except status and reversal_of. Draft edits and value-preserving writes remain permitted; lifecycle transitions retain their independent existing validators.",

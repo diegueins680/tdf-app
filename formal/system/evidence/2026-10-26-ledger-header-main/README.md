@@ -44,3 +44,5 @@ Replay the preceding dossier's canonical commands on this committed source and
 a newly owned disposable _test database; they now consume the 222-entry manifest.
 Local driver paths/ports describe this machine. CI, current-head independent
 approval, normal-merge ancestry and production approval remain separate gates.
+
+Current-main admission: `logout-main-integration.json` records integration of protected main `1c9c833cc1ba62b47822fca3c20e14e86cf28daa`. Financial SQL, runtime harnesses, bounded model inputs, backend sources/tests and Stack inputs are byte-identical to the qualified source. Scoped evidence is reused with its original identity; fresh final-head CI and independent review remain required. The original scorecard is a dated snapshot, not a claim about the added logout requirement.
