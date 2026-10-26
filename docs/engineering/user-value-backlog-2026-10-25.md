@@ -7,7 +7,7 @@ disponible para usuarios son hitos separados.
 
 ## Base y alcance de la observación
 
-- `main` protegido observado: `a1dcb77fafbc66cd786b7f4249a3c8027bb64990`.
+- `main` protegido observado: `b732efd65de23e5b97f3f619a2242397c64965c3` (actualización23:41UTC).
 - Inspección productiva de solo lectura del 25/oct, 08:13:07 UTC:
   `/private/tmp/tdf-user-value-runtime-20261025.json`. Versión pública del backend:
   `4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`; 213 migraciones registradas.
@@ -55,24 +55,32 @@ tras controles negativos y ejecución descartable (85→91).
 
 | Orden | Trabajo existente o nuevo | Categoría | A/G/V/J/E/C/R/T | P | Estado y acción |
 | --- | --- | --- | --- | --- | --- |
-| 1, seleccionado | Evitar guardar borradores ajenos/sin lectura propia y revocar callbacks al cambiar credenciales | S0 | 4/5/4/5/5/4/4/4 | 91 | DEFECTIVE en la base; #607 combina epoch síncrono, lectura propia y caché. 3369 pruebas / 300 suites, build, lint y runtime combinado pasan; resta CI/revisión del head definitivo, merge y despliegue. |
-| 2 | Preservar términos aceptados, ledger y capturas inciertas | S0 | 3/5/5/5/5/3/2/2 | 86 | BLOCKED. Reutilizar #551, sin promover #555/#569 por separado ni activar proveedores. |
-| 3 | Subir portada con sesión HttpOnly válida | S1 | 3/4/4/5/5/5/4/3 | 83 | COMPLETE para el transporte web cookie-only: #605 integrado como `9a927fa3` y publicado, con fixture de navegador verificado. Google real no certificado por esta prueba. |
-| Entregado | Reflejar foto guardada en Comunidad | S1 | 4/3/4/5/5/5/4/3 | 81 | COMPLETE en el alcance de invalidación web: #604 integrado como `512d590e` y assets publicados verificados. Browser real con API sintética; no afirma upload ni escritura productiva real. |
-| 4 | Abrir comprobantes privados desde gestión de entradas | S1 | 3/4/4/5/5/3/2/3 | 79 | BLOCKED para release. #603 integrado como `089dce6b`, backend productivo4dac; falta configuración privada durable y admisión de nuevo diario, y el assurance exacto sigue BLOCKED. |
-| 5 | Alertas guardadas respetan filtros no geográficos | S1 | 2/3/3/4/5/2/3/2 | 64 | DEFECTIVE confirmado en 27 casos PostgreSQL,10 discrepancias válidas. Reparación compartida en curso; radio sigue BLOCKED por centro/privacidad. |
-| 6 | Correo/push de chat controlado por destinatario | S1 | 3/3/4/4/3/1/1/1 | 60 | BLOCKED para entrega; UNIMPLEMENTED el alcance externo #577, pendiente consentimiento, adaptadores y dispositivos. |
-| 7 | Habilitación explícita del club de un artista nuevo | S1 | 2/2/4/4/5/1/2/1 | 59 | UNIMPLEMENTED en #606; falta ese camino de contenido. El follow funciona y existen enlaces públicos alternativos. Nunca provisionar por GET ni crear miembros/contactos sin consentimiento. |
-| 8 | Ciclo completo de recuperación, expiración y vuelta al intento | S1 | 4/4/3/3/2/1/1/0 | 58 | PARTIAL, sin defecto adicional reproducido. Conservar ST-001 y el transporte existente. |
+| 1 | Salida explícita sin restaurar cuenta anterior, revocación recuperable y borradores propios | S0 | 4/5/4/5/5/3/2/3 | 87 | PARTIAL. #616 head9e96: tres hallazgos conocidos corregidos; QA independiente64/9 y reintento API/PG213 en f9 con identidad preservada. Falta revisión vigente/integración/publicación. |
+| 2 | Preservar términos aceptados, ledger y capturas inciertas | S0 | 3/5/5/5/5/3/2/2 | 86 | BLOCKED por gates. #551 listo enfa5a, responsable existente activo; no duplicar #555/#569/#612/#617 ni activar proveedores. |
+| 3, ejecutable seleccionado | Admitir siguiente release conservando diario y exclusión global | S0, dependencia de entrega | 3/5/4/4/5/2/2/2 | 79 | PARTIAL local. El diario terminal impide la siguiente admisión; nueva initialize_next append-only, CAS y nonce único, pruebas y modelo separados. Sin uso productivo autorizado por esta implementación. |
+| 4 | Entregar comprobantes privados y reparación de pagos ya integrados | S1 / gates S0 | 3/4/4/5/5/3/2/3 | 79 | BLOCKED para release. #603/#609 enmain; imagen000cf construida. API4dac no incluye arreglo; almacenamiento privado durable, coordinador y assurance exacto siguen pendientes. |
+| 5 | Alertas guardadas respetan filtros no geográficos | S1 | 2/3/3/4/5/2/3/2 | 64 | PARTIAL. #61477c, composición local01854565 sobreb732; esperar main real tras551/611 para publicar una única composición final. No usar resultados HTTP8b2 como ejecución de todo backend nuevo. |
+| 6 | Correo/push de chat controlado por destinatario | S1 | 3/3/4/4/3/1/1/1 | 60 | BLOCKED para entrega externa #577 por consentimiento, adaptadores y calificación de dispositivos; avisos internos ya existen. |
+| 7 | Habilitación explícita del club de un artista nuevo | S1 | 2/2/4/4/5/1/2/1 | 59 | UNIMPLEMENTED en alcance #606. Follow existente y enlaces públicos no completan provisionamiento consentido. |
+| 8 | Ciclo completo de recuperación, expiración y vuelta al intento | S1 | 4/4/3/3/2/1/1/0 | 58 | PARTIAL, sin defecto adicional reproducido; conservar ST-001. |
+| Entregado | Baseline/propietario/epoch de perfiles #607 | S0 histórico | 4/5/4/5/5/4/4/4 | 91 | COMPLETE en alcance web: integrado cfe75 y publicado,3369tests/300suites y recorrido aislado API/PG213. No es prueba universal entre documentos. |
+| Entregado | Subida cookie-only #605 y refresco de foto #604 | S1 | — | — | COMPLETE para los alcances web probados e integrados. Google real no certificado por fixtures. |
+| Entregado | Navegación completa #610 | S1 | — | — | COMPLETE en alcance de menú: main/webb732,109destinos frente74, escritorio/móvil con JS publicado y API/sesión sintéticos. Sin uplift medido. |
 
-La selección no cambia la cola FIFO de integración: #604 está integrado;
-#605 precede a #607. No tocar drafts financieros ni #608 para alterar la admisión. El controlador `scripts/merge-admission.py` admite un único PR no
-draft de menor número. Protección observada: 20 contextos, checks estrictos,
-aprobación independiente, descarte de revisiones obsoletas, administradores
-sujetos a protección y resolución de conversaciones. Nunca convertir esta
-priorización en una excepción a esos controles.
+Las puntuaciones siguen siendo hipótesis ordinales; no hay incidencia productiva,
+conteo de usuarios afectados ni mejora de conversión medida. La prioridad S0 de
+sucesión del diario corresponde a una dependencia de entrega segura, no a un
+incidente de pérdida de datos demostrado. Los dos primeros trabajos tienen
+responsables activos y controles externos pendientes; por eso se selecciona la
+siguiente dependencia ejecutable sin abrir implementaciones paralelas.
 
-## Hallazgo seleccionado: borradores de perfiles sin base propia
+La cola FIFO observada es #551→#611→#614→#616. #611 necesita revisión independiente
+posterior a2d872; la aprobación21:18 reasignada por GitHub no es una nueva revisión.
+Conservar todos los drafts y las protecciones:20contextos, checks estrictos,
+aprobación independiente, descarte de obsoletas, administradores sujetos a
+protección y conversaciones resueltas. Esta prioridad no introduce excepciones.
+
+## Hallazgo entregado: borradores de perfiles sin base propia
 
 **Actor e intención.** Un fan o artista abre su perfil para cambiar un dato
 conservando el resto de su información. En un dispositivo compartido, cambia de
@@ -114,18 +122,15 @@ del servidor ni se afirma que hayan ocurrido pérdidas en cuentas reales.
    de browser/API/PostgreSQL se registran después de ejecutarse, sin promover
    pruebas de UI a evidencia de persistencia real.
 
-**Implementación/validación/entrega.** En curso; consultar el informe JSON
-acompañante. El responsable de la reparación completa SHA, comandos, resultados,
-PR, merge y despliegue. No se reclaman pruebas ni beneficio observado antes de
-registrar sus recibos.
+**Implementación/validación/entrega.** #607 integrado como `cfe75b18786c18d18fb2fc806f843a95e029aeb0` y publicado. El informe JSON de entrega conserva3369pruebas/300suites, recorrido sintético API/PG213, identidad del bundle y límites de la observación. La revisión posterior de logout pertenece a #616 y no reabre el alcance ya entregado de perfiles.
 
 ## Estado de los siete recorridos de la misión
 
 | Recorrido | Clasificación | Evidencia, disponibilidad y límites |
 | --- | --- | --- |
 | Registro, autenticación y recuperación | PARTIAL | Login/sesión y deadlines existen; #594 está en `main`. ST-001 mantiene pendientes ciclo de reset/expiración/inbox y retorno al intento en la plataforma objetivo. La prueba de login no completa recuperación. |
-| Perfil de artista, publicación y compartir | DEFECTIVE | Hallazgo de borrador seleccionado; subida cookie-only #605 y refresco #604 tienen solución existente pendiente. No confundir un fallback de imagen o una foto reparada individualmente con corrección general. |
-| Descubrimiento, seguimiento e interacción fan | PARTIAL | #576 ya integrado; la búsqueda canónica y el seguimiento persistido tienen evidencia previa aislada. Inconsistencia de foto/caché sigue en #604. Primer valor de onboarding, favorito y follow social son métricas distintas. |
+| Perfil de artista, publicación y compartir | PARTIAL | #604/#605/#607 integrados/publicados en sus alcances de foto, transporte cookie y baseline/epoch; no completan por sí solos publicación, Google real, compartir ni verificación de todos los dispositivos. |
+| Descubrimiento, seguimiento e interacción fan | PARTIAL | #576 ya integrado; la búsqueda canónica y el seguimiento persistido tienen evidencia previa aislada. La invalidación de foto/caché de #604 está entregada. Primer valor de onboarding, favorito y follow social son métricas distintas. |
 | Comunidad, notificaciones y mensajería | PARTIAL | #578 ya integra avisos internos y respuestas. Correo/push de #577 no está completado. `social_v2_runtime.enabled=false` en la observación: no certificar V2 disponible ni activar la bandera. |
 | Música, vídeo, eventos y contenidos | PARTIAL / BLOCKED por subcapacidad | Descubrimiento y contenido existente no implican compra/distribución disponible. Las cinco banderas `music_releases.*` están desactivadas; distribución/merch comercial también. #514 conserva condiciones antes de activar releases. |
 | Reservas, clases, entradas y compras | PARTIAL / BLOCKED por subcapacidad | Entradas y marketplace tienen banderas activas; clases, service bookings y Domo comercial están cerrados. #603 completa revisión de comprobantes; #551/#596 contienen dependencias financieras. No hacer cobros reales para verificar. |
@@ -326,3 +331,35 @@ diario anterior completados sin admisión revisada de otro nonce y assurance
 exacto de `089dce6b`/`9a927fa3` `BLOCKED` sin riesgos aceptados. Hay imagen `089dce6b` probada y cero
 migraciones pendientes, pero no equivalen a permiso ni preparación de release.
 No se cambió configuración, storage, contenedores, flags ni diario productivo.
+
+## Incremento de siguiente admisión del diario
+
+**Problema:** el diario productivo observado19:03 conserva25registros completos;
+`initialize` rechaza un nuevo nonce incluso después de completar las doce fases.
+El contrato reconoce esta admisión futura como obligación separada. #495 y #600
+no implementan sucesión terminal y no se encontró responsable activo registrado
+para este incremento en la revisión de GitHub. No se ha borrado ni modificado ese
+diario, instalado un coordinador ni cambiado el backend productivo.
+
+**Aceptación:** conservar todos los bytes de los25registros v1 y el inode del
+mismo lock; publicar el plan sucesor al final de la cadena global solo con
+terminal completo, hash de punta exacto y nonce nunca usado; impedir sucesión
+sobre pendiente/temporal/corrupción; envenenar el handle tras IO incierto; conservar
+posibles escrituras históricas y rechazar competencia, replays y handles heredados.
+El límite128releases falla cerrado y no autoriza rotación ni borrado. Cada efecto
+nuevo se vincula exclusivamente a su plan/nonce y sigue requiriendo intención
+durable y observación correspondiente.
+
+**Verificación local:**22pruebas de filesystem/procesos pasan normal y Python-O,
+incluyendo tres releases completos, dos procesos competidores, muerte durante
+publicación y los tres puntos de fsync. Modelo adicional TLC:2configuraciones
+positivas,8mutaciones de guardias y1testigo de tres releases completos; se mantiene
+intacto el modelo anterior. Verificación canónica completa y revisión independiente
+se registran al terminar. Estos resultados no prueban refinamiento de Python,
+durabilidad del hardware, efectos externos, liveness ni corrección total.
+
+**Valor esperado:** permitir preparar entregas siguientes sin abandonar exclusión
+e historial. Beneficio observado limitado a datos y procesos descartables; sin
+entrega productiva, tiempo al usuario ni conversión medidos. Resta PR enfocado,
+CI/revisión/admisión y coordinación protegida. La configuración privada de
+comprobantes y las restricciones formales/de release siguen independientes.
