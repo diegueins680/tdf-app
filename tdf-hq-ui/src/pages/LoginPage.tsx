@@ -1,6 +1,7 @@
+import { getLogoutRevision, getLogoutStatus, hasLogoutIntent, ownsLogoutRevision, subscribeLogoutIntent } from '../session/logoutIntent';
 import { authErrorMessage } from '../utils/authErrorMessage';
 import { logger } from '../utils/logger';
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
 import {
   Alert,
   Autocomplete,
@@ -193,7 +194,8 @@ export default function LoginPage() {
   const [googleCreating, setGoogleCreating] = useState(false);
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
-  const { session, loading, login } = useSession();
+  const { session, loading, login, logout } = useSession();
+  const logoutStatus = useSyncExternalStore(subscribeLogoutIntent, getLogoutStatus, () => 'cleared' as const);
   const navigate = useNavigate();
   const location = useLocation();
   const artistInvitation = useMemo(() => readArtistInvitation(location.search), [location.search]);
@@ -403,6 +405,7 @@ export default function LoginPage() {
   );
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const authRevision = getLogoutRevision();
     setFormError(null);
 
     if (servicePreparing) {
@@ -426,6 +429,7 @@ export default function LoginPage() {
         username: normalizedIdentifier,
         password: normalizedPassword,
       });
+      if (!ownsLogoutRevision(authRevision)) return;
       const nextSession = await resolveAuthenticatedSession({
         username: normalizedIdentifier,
         displayName,
@@ -436,6 +440,7 @@ export default function LoginPage() {
       });
       const targetPath = resolvePostAuthPath(requestedIntent, nextSession.roles, nextSession.modules, redirectPath);
 
+      if (!ownsLogoutRevision(authRevision)) return;
       login(nextSession, { remember: rememberDevice });
       if (requestedIntent) {
         void persistOnboardingIntentWithRetry(
@@ -500,6 +505,7 @@ export default function LoginPage() {
       // Account creation happens from the signup dialog or from the explicit
       // "create my account with Google" choice offered after a login-card
       // attempt finds no TDF account for this Google identity.
+      const authRevision = getLogoutRevision();
       const creatingAccount = signupDialogOpen || createAccount;
       // The Google login contract cannot claim an existing artist. Keep the
       // selected claim in the email signup form, including late popup callbacks.
@@ -545,6 +551,7 @@ export default function LoginPage() {
         });
         setGoogleLinkToken(null);
         setGoogleLinkAccount({ username: '', password: '' });
+        if (!ownsLogoutRevision(authRevision)) return;
         const nextSession = await resolveAuthenticatedSession({
           username: fallbackUsername,
           displayName: fallbackName,
@@ -556,6 +563,7 @@ export default function LoginPage() {
         const activeIntent = signupDialogOpen ? signupIntent : requestedIntent;
         setGoogleCreating(false);
         const googleTargetPath = resolvePostAuthPath(activeIntent, nextSession.roles, nextSession.modules, redirectPath);
+        if (!ownsLogoutRevision(authRevision)) return;
         login(nextSession, { remember: rememberDevice });
         if (activeIntent && !signupDialogOpen) {
           void persistOnboardingIntentWithRetry(
@@ -781,6 +789,7 @@ export default function LoginPage() {
   };
 
   const handleSignupSubmit = async () => {
+    const authRevision = getLogoutRevision();
     if (servicePreparing) {
       setSignupFeedback({ type: 'error', message: servicePreparingMessage });
       return;
@@ -818,6 +827,7 @@ export default function LoginPage() {
     try {
       const response = await signupMutation.mutateAsync(payload);
       const effectiveRoles = deriveEffectiveRoles(response.roles);
+      if (!ownsLogoutRevision(authRevision)) return;
       const nextSession = await resolveAuthenticatedSession({
         username: payload.email,
         displayName: payload.firstName || payload.email,
@@ -829,6 +839,7 @@ export default function LoginPage() {
       const targetPath = claimArtistId === null
         ? resolvePostAuthPath(signupIntent, nextSession.roles, nextSession.modules, redirectPath)
         : `/artista/crear?claimArtistId=${claimArtistId}`;
+      if (!ownsLogoutRevision(authRevision)) return;
       login(nextSession, { remember: rememberDevice });
       captureGrowthEvent(analytics, 'signup_completed', {
         route: '/login',
@@ -857,12 +868,14 @@ export default function LoginPage() {
   const [invitationRedemptionError, setInvitationRedemptionError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!session || !artistInvitation || sessionHasArtistAccess || !invitationRedemptionKey) return;
+    if (!session || hasLogoutIntent() || !artistInvitation || sessionHasArtistAccess || !invitationRedemptionKey) return;
+    const authRevision = getLogoutRevision();
     if (invitationRedemptionAttemptRef.current === invitationRedemptionKey) return;
     invitationRedemptionAttemptRef.current = invitationRedemptionKey;
     setInvitationRedemptionError(null);
     void redeemArtistInvitation(artistInvitation, session.apiToken)
       .then((snapshot) => {
+        if (!ownsLogoutRevision(authRevision)) return;
         login({
           username: snapshot.username,
           displayName: snapshot.displayName,
@@ -870,7 +883,7 @@ export default function LoginPage() {
           modules: snapshot.modules,
           partyId: snapshot.partyId,
           apiToken: session.apiToken,
-        }, { remember: rememberDevice });
+        }, { remember: rememberDevice, refreshExistingSession: true });
       })
       .catch((error: unknown) => {
         setInvitationRedemptionError(
@@ -1112,6 +1125,13 @@ export default function LoginPage() {
                   {t('authEntry.rememberHint')}
                 </Typography>
 
+                {(logoutStatus === 'pending' || logoutStatus === 'unconfirmed') && (
+                  <Alert severity="warning" action={logoutStatus === 'unconfirmed' ? (
+                    <Button color="inherit" onClick={logout}>{t('authEntry.retryLogout')}</Button>
+                  ) : undefined}>
+                    {t(logoutStatus === 'pending' ? 'authEntry.logoutPending' : 'authEntry.logoutUnconfirmed')}
+                  </Alert>
+                )}
                 {formError && <Alert severity="warning">{formError}</Alert>}
 
                 <Stack spacing={1}>

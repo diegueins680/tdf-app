@@ -1,3 +1,4 @@
+import { getLogoutRevision, hasLogoutIntent, ownsLogoutRevision } from '../session/logoutIntent';
 import { Alert, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import EditIcon from '@mui/icons-material/Edit';
@@ -54,16 +55,17 @@ export default function ArtistOnboardingPage() {
   const [activationError, setActivationError] = useState<string | null>(null);
 
   const activateProfile = async () => {
-    if (!session?.partyId || flight.current === generation || !isCurrent() || claimArtistId !== null) return;
+    if (hasLogoutIntent() || !session?.partyId || flight.current === generation || !isCurrent() || claimArtistId !== null) return;
+    const authRevision = getLogoutRevision();
     flight.current = generation;
     const partyId = session.partyId;
     setActivating(true);
     setActivationError(null);
     try {
       await Fans.activateMyArtistProfile();
-      if (!isCurrent()) return;
+      if (!isCurrent() || !ownsLogoutRevision(authRevision)) return;
       const refreshed = await get<SessionResponseDTO>('/session');
-      if (!isCurrent()) return;
+      if (!isCurrent() || !ownsLogoutRevision(authRevision)) return;
       if (refreshed?.partyId !== partyId || !refreshed.roles?.includes('Artist')) {
         throw new Error('No pudimos confirmar tu acceso de artista. Inténtalo de nuevo.');
       }
@@ -73,6 +75,7 @@ export default function ArtistOnboardingPage() {
       }
       login({ ...refreshed, apiToken: session.apiToken }, {
         remember,
+        refreshExistingSession: true,
       });
       navigate('/mi-artista');
     } catch (error) {
