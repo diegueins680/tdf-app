@@ -12284,6 +12284,95 @@
         "classification": "PARTIAL",
         "reason": "Scoped SQL tests and finite model checking do not discharge complete implementation/refinement obligations; independent review and production approval remain required."
       }
+    },
+    {
+      "id": "MEDIA-MUSIC-DISCOVERY-001",
+      "title": "Authorized recording-title search and paginated public release discovery",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "The public music release catalog searches canonical recording titles only through a currently authorized stream or preview asset for that recording and release version, while retaining existing release/artist matching, public visibility, artist filters and stable release identity. Web listeners can navigate beyond the first 24 authorized release cards; search and page URL state remain consistent and obsolete query responses cannot replace current results.",
+      "authority": "Explicit user universal audio implementation directive, 2026-10-25, sections 9, 13, 17 and P1; independent release review remains required.",
+      "source": "docs/music-releases/catalog-track-search.md; docs/music-releases/catalog-discovery-delivery-2026-10-25.md",
+      "contract": "formal/system/music-catalog-discovery.md",
+      "property": "A recording-title search match implies a same-recording/version stream or preview satisfying music_public_asset_accessible at query time; EXISTS preserves release row identity. With a stable result set, page p shows at most 24 rows at offset (p-1)*24 and uses one authorized sentinel row for next-page availability; older query results cannot replace the current query.",
+      "actors": [
+        "Public listener",
+        "Signed-in listener",
+        "Backend public release query"
+      ],
+      "preconditions": [
+        "The existing public music feature gate and trusted edge-territory derivation apply.",
+        "Existing music public views, delivery authorization predicates and directory_normalize_text are deployed.",
+        "Cross-page coverage assumes the authorized result set does not change between offset requests."
+      ],
+      "inputs": [
+        "Search text, optional artist party ID, limit and offset, trusted edge territory",
+        "URL q/page parameters and pagination/search/retry actions",
+        "Authorized public release summaries and asynchronous query outcomes"
+      ],
+      "state": {
+        "boundary": "Public release retrieval and MusicCatalogPage query/page state",
+        "database": "Existing published release view, release tracks, canonical recordings, assets and availability/rights predicates",
+        "client": "Deferred query/page pair, query-key-specific pending/result/error state, URL navigation history"
+      },
+      "allowedTransitions": [
+        "Change search -> reset to page one -> request current deferred query/page",
+        "Request success -> display up to 24 unique release cards; authorized row 25 enables next page",
+        "Page selection -> update URL page while retaining query; browser back -> restore prior URL state",
+        "Request failure -> explicit retry or previous-page navigation; superseded result -> remain outside current query view"
+      ],
+      "forbiddenTransitions": [
+        "A hidden recording title makes an otherwise visible release match without a currently authorized same-recording/version delivery asset.",
+        "Matching multiple renditions duplicates the release SQL result row.",
+        "An empty normalized query becomes a match-all wildcard for a nonempty unrelated raw query.",
+        "An obsolete query response replaces visible results for the current query.",
+        "Advancing by 25 skips the sentinel release that should be the next page first row."
+      ],
+      "effects": [
+        "Read-only release-level search results using stable published_at DESC/id ordering",
+        "URL-backed catalog navigation, bounded visible rows, loading/error/empty feedback and retry controls"
+      ],
+      "authorization": "Retain requirePublicFeature, trusted edge territory, music_public_release and existing availability rules; the added canonical recording-title branch requires music_public_asset_accessible for the matched recording/version. Playback still independently authorizes the selected asset.",
+      "privacy": "Introduce no matched-track metadata, media credentials or new response fields. The new recording-title branch cannot use an unauthorized hidden track as a search signal; this is not a fresh proof of every existing public metadata or cache policy.",
+      "concurrency": "Query/page are deferred together; request cancellation and query-key identity reject obsolete results. Offset pagination has no snapshot guarantee during concurrent publication, withdrawal or rights changes.",
+      "idempotency": "Search and page requests are read-only; repeating a request against an unchanged authorized catalog returns the same ordered release identities.",
+      "failure": "Failed requests expose retry and disable next-page navigation using stale success data. Empty later pages retain the previous-page action. Invalid page values fall back to page one and invalid client limit/offset arguments are rejected.",
+      "recovery": "Retry the current authorized request or navigate to a previous page. Application-source rollback requires no schema or asset mutation.",
+      "observability": "Focused PostgreSQL runtime groups and authorization mutation control, rendered page regressions, API-client contracts and dedicated backend CI invocation; operational search latency and production release evidence remain separate.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs"
+      ],
+      "interactions": [
+        "MEDIA-MUSIC-RELEASE-001",
+        "MEDIA-MUSIC-ASSET-001",
+        "MEDIA-MUSIC-PLAYER-001"
+      ],
+      "tests": [
+        "scripts/test-music-catalog-search.mjs",
+        "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
+        "e2e/web/music-catalog-discovery.spec.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Deterministic PostgreSQL integration/security controls execute the actual handler SQL literal and authoritative predicates, including a deliberate missing-authorization mutant. Component/API contracts exercise pagination and stale responses. These tests do not execute compiled HTTP routing or prove Haskell parameter ordering; no mathematical proof or formal model is claimed.",
+      "evidence": "Original SQL baseline/candidate runs and source identities in docs/music-releases/catalog-track-search.md; exact combined-candidate tests, hosted CI, independent review and release receipts remain separate.",
+      "status": "specified and implemented",
+      "confidence": "Scoped finite SQL and client contract evidence; no whole-platform catalog completeness or target-environment acceptance claim.",
+      "ambiguity": [
+        "The SQL extractor substitutes its own parameter list; compiled Haskell binding and HTTP-route integration require separate verification.",
+        "Offset pagination can miss or repeat rows across requests when the catalog changes; no snapshot cursor is implemented.",
+        "Universal /buscar, typo tolerance, richer credits/genre/aliases, non-release sources and historical reconciliation remain incomplete.",
+        "Representative-catalog query plans, p95 latency, physical assistive technology and production deployment remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused authorized recording search and release pagination are implemented with finite SQL/security/client regression coverage. Full HTTP binding, current candidate hosted checks, independent review and deployed acceptance remain separate obligations; no mathematical proof or universal catalog completion is established."
+      }
     }
   ]
 }
