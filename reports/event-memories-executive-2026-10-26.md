@@ -1,6 +1,6 @@
 # TDF Records — Informe ejecutivo de recuerdos de eventos
 
-Corte de esta continuación: 26 de octubre de 2026, 22:28 UTC. **Implementado y probado parcialmente, publicado para revisión; sin integración protegida, despliegue productivo ni invitaciones reales de esta entrega. El objetivo integral continúa pendiente.**
+Corte de esta continuación: 26 de octubre de 2026, 23:25 UTC. **Implementado y probado parcialmente, publicado para revisión; sin integración protegida, despliegue productivo ni invitaciones reales de esta entrega. El objetivo integral continúa pendiente.**
 
 ## 1. Diagnóstico y capacidades reutilizadas
 
@@ -31,7 +31,7 @@ Los archivos de este flujo tienen enlaces públicos; no se ofrece almacenamiento
 
 ## 4. PRs, commits e integración
 
-El sucesor de validación usa la rama `test/event-memory-signup-publication-20261026`, primera fuente `f03478ba9` y adaptador CI `733288f96` sobre4d. Cambia únicamente el runner, helper de navegador, asociaciones formales y evidencia; preserva el head revisable de#632. No se incorpora ni se acredita un main posterior a la preparación069/78fa.
+El sucesor de validación usa la rama `test/event-memory-signup-publication-20261026`, primera fuente `f03478ba9`, adaptador CI `733288f96` y reparación de credenciales `43e1a8f10` sobre4d. Cambia únicamente el runner, helper de navegador, asociaciones formales y evidencia; preserva el head revisable de#632. No se incorpora ni se acredita un main posterior a la preparación069/78fa.
 
 | Entrega | Estado acreditado |
 | --- | --- |
@@ -41,12 +41,22 @@ El sucesor de validación usa la rama `test/event-memory-signup-publication-2026
 | [Texto móvil #172](https://github.com/diegueins680/TDF-mobile/pull/172) | `f5197c69`, CI satisfactorio; revisión solicitada, auto-merge desactivado |
 | [Audio móvil #173](https://github.com/diegueins680/TDF-mobile/pull/173) | `6d0b109`, validación y ambos builds satisfactorios; revisión independiente pendiente |
 | [Autoría móvil #174](https://github.com/diegueins680/TDF-mobile/pull/174) | `41a68b7`, 759 pruebas/101 suites y ambos builds satisfactorios; listo para revisión, sin aprobación ni auto-merge |
+| [Registro/publicación #635](https://github.com/diegueins680/tdf-app/pull/635) | Fuente `43e1a8f10`, pruebas reales SCRAM satisfactorias; CI final y revisión independiente pendientes |
 | [Entrada pública](https://github.com/diegueins680/tdf-app/tree/fix/event-memory-public-entry-20261026) | Core `87c3ed194`, base `069fac6`; calificado localmente, pendiente de revisión independiente e integración |
 | Preparación monorepo | Rama `integrate/event-memories-main-78fa-20261026`: merge normal `a95bc6745` con main `78fa351b` (#621 sobre #620); runner calificado `3a17a9f86` |
 
 La nueva preparación incorpora las reparaciones protegidas del reproductor y las identidades/cabeceras contables. Conserva **los 145 requisitos de main exactos más cuatro propios: 149**, el prefijo protegido de 222 migraciones más las cuatro originales: **226**, y todos los bytes SQL/ancestros de introducción. El pin móvil de esta preparación sigue `7000df1d`; las calificaciones posteriores #172–#174 conservan sus identidades separadas y requieren integración nativa revisada. No se alteraron #608/#615 ni ramas ajenas para sustituir revisiones pendientes. El checkout original divergente se conserva.
 
 ## 5. Pruebas ejecutadas y resultados
+
+La ejecución alojada anterior de#635, head `46aca1786` y checkout real `8b9d49139` (árbol completo idéntico), terminó: **29 checks satisfactorios/8 jobs omitidos**. Su [runner Linux](event-memory-source-evidence-20261025/signup-hosted-46-qualification.json) compiló con Stack/GHC9.10.3 y pasó ocho casos RACI más el flujo de recuerdos con PostgreSQL17/pgvector Docker:122 peticiones/19 grupos/269 hashes/11 comprobaciones de navegador. Conserva versión y binario Linux propios; el reporte declara metadatos generados y no acredita una release limpia. Esta ejecución antecede a la corrección de credenciales43 y no valida ese cambio.
+
+La revisión automática de [#635](https://github.com/diegueins680/tdf-app/pull/635) detectó un fallo real del adaptador local: fuera de GitHub Actions no reenviaba la contraseña explícita del fixture. Se corrigió en `f627070c0` y se hizo no interactiva la conexión en `43e1a8f10`. El [resultado actual con SCRAM](event-memory-source-evidence-20261025/signup-password-qualification.json) usa un PostgreSQL16 propio que exige contraseña: rechaza una incorrecta; el código antiguo733 es rechazado al no reenviarla; el actual pasa **122 peticiones / 19 grupos / 269 hashes / 11 comprobaciones de navegador**, incluido registro, imagen y reinicio real, sin roles añadidos al usuario nuevo. [HTTP](event-memory-source-evidence-20261025/signup-password-http-results.json), [navegador](event-memory-source-evidence-20261025/signup-password-browser-results.json) y [captura](event-memory-source-evidence-20261025/signup-password-phone.png). No es Docker alojado ni producción.
+
+Pasan **doce controles del runner/credenciales**, ocho de historial y catálogo estricto JSON/CSV1347. El código antiguo falla los dos controles nuevos esperados (tres pasan/dos fallan). Se conserva un primer intento negativo agotado a60s y un fallo de setup por dependencias; no se cuentan como pases. Un control de catálogo sufrió `ENOSPC`; tras retirar solo temporales propios ya inactivos, sus ocho casos pasan sin cambiar aserciones.
+
+**La calidad completa local del head43 no está acreditada**: se bloqueó en el fixture SSH de `hetzner-restore.test.mjs`, sin red real; se detuvo exclusivamente su árbol propio y se guardó [el resultado no calificado](event-memory-source-evidence-20261025/signup-password-local-quality-stall.json). Su causa no se estableció. El CI Linux del head final debe ejecutar la validación canónica completa; no se elimina ni relaja ese control. Los pases globales anteriores conservan sus fuentes y no aprueban el cambio posterior.
+
 
 El [adaptador y prueba actuales733](event-memory-source-evidence-20261025/signup-ci-qualification.json) pasan localmente **las dos selecciones de navegador**: Chrome150 y Chromium147 incluido, cada una con **122 peticiones directas / 19 grupos / 269 hashes / 11 comprobaciones de navegador**. Los269 archivos coinciden con el commit durante ambas ejecuciones. La cuenta nueva no recibe roles del fixture, conserva el destino, publica una imagen decodificable, la recupera tras reinicio y mantiene invitacionesfalse; el servidor rechaza lectura privada y gestión de campaña. Pasan calidad completa del repositorio, JSON/CSV estrictos1347, siete controles del runner y ocho de historial. [Chrome](event-memory-source-evidence-20261025/signup-ci-local-http-results.json), [Chromium](event-memory-source-evidence-20261025/signup-ci-native-http-results.json). Son ejecuciones Darwin/PG16; activar localmente las ramas de selección de CI no equivale a ejecutar el adaptador Docker alojado.
 
