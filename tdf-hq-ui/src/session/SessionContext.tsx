@@ -1,3 +1,4 @@
+import { beginLogoutIntent, clearLogoutIntent, finishLogoutIntent, getLogoutRevision, hasLogoutIntent, subscribeLogoutIntent, trackLogoutRequest } from './logoutIntent';
 import { logger } from '../utils/logger';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
@@ -22,6 +23,7 @@ export interface SessionUser {
 
 export interface LoginOptions {
   remember?: boolean;
+  refreshExistingSession?: boolean;
 }
 
 type SessionStorageScope = 'local' | 'session';
@@ -168,7 +170,7 @@ function readStoredSessionFrom(storage: Storage | undefined): SessionUser | null
 }
 
 function readStoredSession(): { session: SessionUser | null; scope: SessionStorageScope } {
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined' || hasLogoutIntent()) {
     currentSession = null;
     return { session: null, scope: 'local' };
   }
@@ -213,14 +215,16 @@ interface SessionProviderProps {
   children: ReactNode;
 }
 
-const initialStoredState = readStoredSession();
 export const SESSION_BOOTSTRAP_TIMEOUT_MS = 12_000;
 
 export function SessionProvider({ children }: SessionProviderProps) {
+  const [initialStoredState] = useState(readStoredSession);
   const [session, setSession] = useState<SessionUser | null>(initialStoredState.session);
   const [loading, setLoading] = useState(true);
   const [persistScope, setPersistScope] = useState<SessionStorageScope>(initialStoredState.scope);
   const sessionVersionRef = useRef(0);
+  const adoptingLocalSession = useRef(false);
+  const pendingLogoutTarget = useRef<{ revision: string; token: string | null } | null>(null);
 
   const updateSessionState = useCallback((next: SessionUser | null) => {
     reconcileSessionPersonalData(currentSession?.partyId, next?.partyId);
@@ -234,6 +238,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
     setLoading(false);
     updateSessionState(null);
     transientApiToken = null;
+    pendingLogoutTarget.current = null;
   }, [updateSessionState]);
 
   useEffect(() => {
@@ -252,6 +257,22 @@ export function SessionProvider({ children }: SessionProviderProps) {
   }, [clearLocalSessionState]);
 
   useEffect(() => {
+    let revision = getLogoutRevision();
+    return subscribeLogoutIntent(() => {
+      const next = getLogoutRevision();
+      // A different document may already have cleared its logout intent by
+      // logging in again before this tab receives either storage event. Any
+      // unseen auth revision invalidates our old account/cache occurrence.
+      if (next !== revision && !adoptingLocalSession.current) clearLocalSessionState();
+      revision = next;
+    });
+  }, [clearLocalSessionState]);
+
+  useEffect(() => {
+    if (hasLogoutIntent()) {
+      clearLocalSessionState();
+      return undefined;
+    }
     let cancelled = false;
     const versionAtStart = sessionVersionRef.current;
 
@@ -265,7 +286,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
     void (async () => {
       try {
         const snapshot = await loadSessionSnapshot(controller ? { signal: controller.signal } : {});
-        if (cancelled || versionAtStart !== sessionVersionRef.current) return;
+        if (cancelled || hasLogoutIntent() || versionAtStart !== sessionVersionRef.current) return;
 
         advanceAuthSessionEpoch();
         if (!snapshot) {
@@ -309,22 +330,45 @@ export function SessionProvider({ children }: SessionProviderProps) {
       cancelled = true;
       if (timeout) clearTimeout(timeout);
     };
-  }, [updateSessionState]);
+  }, [clearLocalSessionState, updateSessionState]);
 
   const login = useCallback((user: SessionUser, options?: LoginOptions) => {
+    const next = normalizeSessionUser(user);
+    if (options?.refreshExistingSession) {
+      // Role grants do not create another credential occurrence. Keep the
+      // current party's drafts and do not log out its other tabs.
+      if (hasLogoutIntent() || currentSession?.partyId == null
+        || next.partyId !== currentSession.partyId
+        || normalizeApiToken(next.apiToken) !== normalizeApiToken(currentSession.apiToken)) return;
+    } else {
+      // This document adopts the authenticated result below. Remote revisions
+      // still invalidate their old scopes; never reconcile through null here.
+      adoptingLocalSession.current = true;
+      try { clearLogoutIntent(); } finally { adoptingLocalSession.current = false; }
+    }
+    pendingLogoutTarget.current = null;
     sessionVersionRef.current += 1;
     advanceAuthSessionEpoch();
     setPersistScope(options?.remember === false ? 'session' : 'local');
     setLoading(false);
-    updateSessionState(normalizeSessionUser(user));
+    updateSessionState(next);
     transientApiToken = null;
   }, [updateSessionState]);
 
   const logout = useCallback(() => {
+    const apiToken = getStoredSessionToken() ?? pendingLogoutTarget.current?.token ?? null;
+    const revision = beginLogoutIntent();
     clearLocalSessionState();
-    void logoutSessionRequest().catch((error) => {
-      logger.warn('Failed to clear server session', error);
+    // Retain only in memory and only for revocation; never restore it as login.
+    pendingLogoutTarget.current = { revision, token: apiToken };
+    const request = logoutSessionRequest(apiToken ?? undefined).then(() => {
+      finishLogoutIntent(revision, true);
+      if (pendingLogoutTarget.current?.revision === revision) pendingLogoutTarget.current = null;
+    }, () => {
+      finishLogoutIntent(revision, false);
+      logger.warn('Server sign-out is unconfirmed');
     });
+    trackLogoutRequest(request);
   }, [clearLocalSessionState]);
 
   const setApiToken = useCallback((token: string | null) => {
@@ -420,6 +464,7 @@ export function useSession(): SessionContextValue {
 }
 
 export function getStoredSessionToken(): string | null {
+  if (hasLogoutIntent()) return null;
   if (currentSession?.apiToken) {
     return currentSession.apiToken;
   }

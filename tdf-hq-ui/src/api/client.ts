@@ -1,3 +1,4 @@
+import { hasLogoutIntent } from '../session/logoutIntent';
 import { logger } from '../utils/logger';
 import { fetchWithDeadline, RequestTimeoutError } from './requestDeadline';
 import { buildAuthorizationHeader } from './authHeader';
@@ -126,7 +127,12 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   try {
     const authHeader = buildAuthorizationHeader();
+    const signedOut = hasLogoutIntent();
     const headers = buildRequestHeaders(init.headers, authHeader);
+    if (signedOut) {
+      headers.delete('Authorization');
+      headers.delete('X-Api-Token');
+    }
     if (shouldSetJsonContentType(headers, init.body)) {
       headers.set('Content-Type', 'application/json');
     }
@@ -136,7 +142,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     try {
       ({ res, raw } = await fetchWithDeadline(joinRequestUrl(API_BASE, path), {
         ...init,
-        credentials: 'include',
+        credentials: signedOut ? 'omit' : 'include',
         headers,
       }, async (response) => ({
         res: response,

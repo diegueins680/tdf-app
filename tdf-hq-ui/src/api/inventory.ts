@@ -1,3 +1,4 @@
+import { assertNoLogoutIntent } from '../session/logoutIntent';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { del, get, patch, post } from './client';
 import { buildAuthorizationHeader } from './authHeader';
@@ -71,6 +72,7 @@ async function uploadAssetPhotoToPath(
   file: File,
   options: AssetUploadOptions = {},
 ): Promise<DriveFileInfo> {
+  assertNoLogoutIntent();
   const base = resolveApiBase();
   const authHeader = buildAuthorizationHeader();
 
