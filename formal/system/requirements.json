@@ -12385,7 +12385,8 @@
         "scripts/test-event-memory-source-browser.mjs",
         "scripts/test-event-raci-browser.sh",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
-        ".github/workflows/event-raci-browser.yml"
+        ".github/workflows/event-raci-browser.yml",
+        "scripts/__tests__/event-memory-http-password.test.mjs"
       ],
       "formalModels": [],
       "verification": "Parser/signature/author-boundary tests, HTTP and browser journeys must be independently executed; no blanket completion claim."

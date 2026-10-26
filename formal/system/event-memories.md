@@ -136,3 +136,10 @@ Artifacts include only synthetic result JSON and selected screenshots, excluding
 credentials/configuration and raw backend logs. None of these tests send email,
 push or real event invitations. Local direct-run success does not prove that the
 CI adapter has executed; its hosted result must be recorded separately.
+
+An explicitly supplied fixture password is forwarded to the database clients
+in native/Docker mode outside GitHub Actions as well. A passwordless native
+invocation receives no inherited ambient PostgreSQL password, while an explicit
+empty fixture password fails before allocation. Regressions must exercise the
+first client invocation and a real password-protected disposable PostgreSQL
+instance; a successful trust-authentication run cannot establish this property.

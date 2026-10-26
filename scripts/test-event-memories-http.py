@@ -14,7 +14,10 @@ assert port.isdigit() and 0<int(port)<65536
 role='postgres' if ci and not native else os.environ.get('TDF_TEST_NATIVE_POSTGRES_USER','postgres' if ci else 'macpro')
 assert role.replace('_','').isalnum()
 env={k:v for k,v in os.environ.items() if k in ('HOME','PATH','USER','LOGNAME','SHELL','LANG','LC_CTYPE','TZ','TMPDIR')}
-if ci:env['PGPASSWORD']=os.environ['TDF_TEST_POSTGRES_PASSWORD']
+if ci or (native and 'TDF_TEST_POSTGRES_PASSWORD' in os.environ):
+ fixture_password=os.environ.get('TDF_TEST_POSTGRES_PASSWORD')
+ assert fixture_password,'An explicit nonempty fixture database password is required'
+ env['PGPASSWORD']=fixture_password
 env['TDF_TEST_BUNDLED_BROWSER']='1' if ci else '0'
 db='tdf_event_memories_http_test';routing=['-h',host,'-p',port,'-U',role]
 api_port='18886';origin='http://127.0.0.1:'+api_port

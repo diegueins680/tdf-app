@@ -12386,7 +12386,8 @@
         "scripts/test-event-memory-source-browser.mjs",
         "scripts/test-event-raci-browser.sh",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
-        ".github/workflows/event-raci-browser.yml"
+        ".github/workflows/event-raci-browser.yml",
+        "scripts/__tests__/event-memory-http-password.test.mjs"
       ],
       "formalModels": [],
       "verification": "Parser/signature/author-boundary tests, HTTP and browser journeys must be independently executed; no blanket completion claim."
@@ -13072,9 +13073,10 @@
     "scripts/__tests__/directory-saved-search-http.mjs": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
     "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "76cf3c7aaeed689164a94da6d79b6297b5bf84b95ef05782436c46c84e93e636",
+    "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
-    "scripts/__tests__/event-raci-browser-runner.test.mjs": "38cbe5de24c03b9aae121eed6ffc5d23d7db44ccd839a5018adc5b83e162d271",
+    "scripts/__tests__/event-raci-browser-runner.test.mjs": "0a036a388afece87cf55c150dfac92e411ffcc4c82e76301f502b8c288d9c657",
     "scripts/__tests__/event-raci-editor-context-runner.test.mjs": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": "186495b321cdc2ac067af786a72dffa740b289eb1ac22429c1d6e5c14ce85a9c",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
@@ -13220,7 +13222,7 @@
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
-    "scripts/test-event-memories-http.py": "a4fad1e0048800059ea25d69e4799d14d4671c186956f63209a1d7bfecf9faf2",
+    "scripts/test-event-memories-http.py": "088bd778744ec262fa850a90e78e33b02b01725270074756bcc5c9cc2cdbfca7",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
     "scripts/test-event-memory-signup-browser.mjs": "53325a4eec001efb223ce5a3913518b7a8dd658dea6ea8f2d19f46df0fca2a86",
     "scripts/test-event-memory-source-browser.mjs": "83f22ccfa3a209280c6752cda13c6932635362b9681147cab6476813f77eaa7a",
@@ -24645,6 +24647,12 @@
         "relationship": "tests"
       }
     ],
+    "scripts/__tests__/event-memory-http-password.test.mjs": [
+      {
+        "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/sql/2026-10-25_event_memory_invitations.sql": [
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
@@ -26148,6 +26156,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-1b7bb866d486da44",
+      "path": "scripts/__tests__/event-memory-http-password.test.mjs",
+      "sha256": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d42db507e3322402",
       "path": "scripts/__tests__/event-operations-http-runner.test.mjs",
       "sha256": "bc34fbc137e5ca800f4ebdcd7f58b1e3c5879898c51fb972e49c42aabaacee6e",
@@ -26192,7 +26212,7 @@
     {
       "id": "SURFACE-39a576584c31ee3c",
       "path": "scripts/__tests__/event-raci-browser-runner.test.mjs",
-      "sha256": "38cbe5de24c03b9aae121eed6ffc5d23d7db44ccd839a5018adc5b83e162d271",
+      "sha256": "0a036a388afece87cf55c150dfac92e411ffcc4c82e76301f502b8c288d9c657",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29725,7 +29745,7 @@
     {
       "id": "SURFACE-92e34e327b523dc8",
       "path": "scripts/test-event-memories-http.py",
-      "sha256": "a4fad1e0048800059ea25d69e4799d14d4671c186956f63209a1d7bfecf9faf2",
+      "sha256": "088bd778744ec262fa850a90e78e33b02b01725270074756bcc5c9cc2cdbfca7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54233,7 +54253,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8a4295504a50dd088a55d6dc23cfa4c55c7d43221483827b8ccb0d8ab15cb0f1",
+      "sourceSha256": "9fbe3924a92bc6735bbaa569dafd5e3434bb9a69c54623521c1d55a2fc7bf27e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -54261,7 +54281,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8a4295504a50dd088a55d6dc23cfa4c55c7d43221483827b8ccb0d8ab15cb0f1",
+      "sourceSha256": "9fbe3924a92bc6735bbaa569dafd5e3434bb9a69c54623521c1d55a2fc7bf27e",
       "definition": {
         "states": [
           "absent",
@@ -54291,7 +54311,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8a4295504a50dd088a55d6dc23cfa4c55c7d43221483827b8ccb0d8ab15cb0f1",
+      "sourceSha256": "9fbe3924a92bc6735bbaa569dafd5e3434bb9a69c54623521c1d55a2fc7bf27e",
       "definition": {
         "export": [
           "queued",
