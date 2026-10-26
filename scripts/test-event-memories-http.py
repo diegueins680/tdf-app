@@ -24,6 +24,7 @@ if a.source_moderation:runtime_paths+=['tdf-hq/src/TDF/Interactions/API.hs','tdf
 if a.browser:runtime_paths+=['scripts/test-event-memory-source-browser.mjs','tdf-hq-ui/src/components/events/EventMemoryModeration.tsx','tdf-hq-ui/src/api/eventMemoryModeration.ts','tdf-hq-ui/src/pages/SocialEventDetailPage.tsx']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/api/socialEvents.ts','tdf-hq-ui/src/api/client.ts','tdf-hq-ui/src/api/eventMemoryInvitations.ts']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/components/PublicBranding.tsx','tdf-hq-ui/src/features/interactions/InteractionPanel.tsx']
+if a.browser:runtime_paths+=['scripts/test-event-memory-signup-browser.mjs','tdf-hq-ui/src/pages/LoginPage.tsx','tdf-hq-ui/src/api/auth.ts','tdf-hq-ui/src/api/session.ts','tdf-hq-ui/src/utils/loginRouting.ts','tdf-hq-ui/src/utils/roles.ts','tdf-hq-ui/src/utils/signupFields.ts','tdf-hq/src/TDF/ServerAuth.hs','tdf-hq/src/TDF/DTO.hs']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/routes/EventCommunityEntry.tsx','tdf-hq-ui/src/routes/publicRoutes.tsx','tdf-hq-ui/src/routes/protectedRoutes.tsx','tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx','tdf-hq-ui/src/routes/AppRoutes.tsx','tdf-hq-ui/src/routes/AppShell.tsx']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/session/useSessionOwner.ts','tdf-hq-ui/src/session/useOwnedSessionDraft.ts','tdf-hq-ui/src/session/authEvents.ts','tdf-hq-ui/src/session/SessionContext.tsx','tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx','tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts']
 # Bind the actual complete schema, including protected-main successors, rather
@@ -328,6 +329,7 @@ try:
   assert sql("SELECT jsonb_object_agg(signature,md5(pg_get_functiondef(signature::regprocedure))) FROM (SELECT signature FROM event_memory_moderation_authority UNION SELECT unnest(ARRAY['event_memory_source_context(uuid,bigint)','event_memory_source_reports(bigint,bigint,uuid,integer)','event_memory_source_command(bigint,uuid,uuid,jsonb)'])) definitions")==authority_after_install
   record('Source rollback refuses after actual committed evidence and retains all installed privacy authorities')
  if a.browser:
+  assert sql("SELECT count(*) FROM party WHERE lower(primary_email)='memory.newcomer@persona.test'")=='0','The browser signup identity must not already exist'
   # Explicit synthetic fan grants for the actual product UI, never production.
   sql(f"INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version) SELECT actor,id,'bootstrap',true,now(),1 FROM security_role CROSS JOIN (VALUES({owner}::bigint),({participant}::bigint)) a(actor) WHERE code='fan' ON CONFLICT DO NOTHING")
   browser_config=out/'browser-input.json';browser_config.write_text(json.dumps({'api':origin,'eventId':'919143001','output':str(out),'accounts':[{'email':'memory.owner@persona.test','password':'synthetic-memory-password-141'},{'email':'memory.participant@persona.test','password':'synthetic-memory-password-141'}]}));browser_config.chmod(0o600)
@@ -342,6 +344,17 @@ try:
   assert driver.returncode==0,'Integrated browser failed; see its private evidence/log'
   report['browser']=json.loads((out/'browser-results.json').read_text());assert report['browser']['status']=='PASS'
   record('Actual desktop/phone product UI signs in, publishes, reports, hides and restores against this PostgreSQL/API instance')
+  newcomer=report['browser']['newAccount'];actor=newcomer['partyId'];ident=newcomer['momentId'];asset_path=newcomer['assetPath']
+  assert isinstance(actor,int) and not isinstance(actor,bool) and actor>0 and str(ident).isdigit()
+  assert asset_path.startswith('/assets/serve/') and '..' not in asset_path
+  assert sql(f"SELECT count(*) FROM event_moment WHERE id={int(ident)} AND event_id=919143001 AND author_party_id='{actor}'")=='1'
+  assert sql("SELECT count(*) FROM party WHERE lower(primary_email)='memory.newcomer@persona.test'")=='1'
+  stop();start()
+  persisted=request('/social-events/events/919143001/moments?extended',owner_token)[0]
+  assert any(str(m['emId'])==str(ident) and str(m['emAuthorPartyId'])==str(actor) for m in persisted)
+  data=request(asset_path)[0];assert data==png and hashlib.sha256(data).hexdigest()==newcomer['assetSha256']
+  report['newAccountPersistence']={'partyId':actor,'momentId':str(ident),'assetSha256':hashlib.sha256(data).hexdigest(),'survivesRealApiRestart':True,'fixtureRoleGrants':0}
+  record('Browser-created account and its first photograph persist in PostgreSQL and durable storage across a real API restart without fixture role grants')
  assert json.loads(sql("SELECT coalesce(jsonb_agg(migration_id ORDER BY migration_id),'[]'::jsonb) FROM tdf_schema_migration"))==expected_migration_ids,'The migration ledger changed during the actual HTTP/browser execution'
  assert report['runtimeSources']==runtime_sources(),'Runtime sources changed during the HTTP execution'
  assert report['binarySha256']==hashlib.sha256(binary.read_bytes()).hexdigest(),'Candidate binary changed during the HTTP execution'

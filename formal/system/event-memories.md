@@ -109,3 +109,16 @@ event target, including query attribution and the selected anchor. The legacy
 `/eventos/:id` alias keeps its existing sanitizer, which strips query and hash
 from authentication return targets. These navigation
 links neither perform an interaction nor grant notification consent.
+
+
+## Registration and first publication verification
+
+The disposable real API/browser lane must cover a fresh mobile-browser account:
+public invitation, publish intent, visible account terms, signup, exact return to
+the composer, actual image upload, server-acknowledged publication, reload by
+author and another account, and persistence across a real API restart. The new
+identity must not exist before UI signup and receives no fixture role grants.
+Signup must request no marketing consent; memory invitation preferences must
+remain disabled before and after publication. Authentication for this public
+event must grant neither private-event reads nor organizer campaign access.
+Synthetic browser cases never establish real recipient eligibility or consent.

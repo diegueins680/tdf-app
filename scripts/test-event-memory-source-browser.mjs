@@ -4,6 +4,7 @@ import { createServer } from 'node:net';
 import { readFileSync, writeFileSync, openSync, closeSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { verifyNewAccountPublication } from './test-event-memory-signup-browser.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const config = JSON.parse(readFileSync(process.argv[2], 'utf8'));
@@ -39,6 +40,7 @@ try {
   }
   browser = await chromium.launch({ channel: 'chrome', headless: true });
   const contexts = [await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'es-EC', timezoneId: 'America/Guayaquil', reducedMotion: 'reduce' }),
+    await browser.newContext({ ...devices['Pixel 7'], locale: 'es-EC', timezoneId: 'America/Guayaquil', reducedMotion: 'reduce' }),
     await browser.newContext({ ...devices['Pixel 7'], locale: 'es-EC', timezoneId: 'America/Guayaquil', reducedMotion: 'reduce' })];
   for (const context of contexts) await context.route('**/*', async (route) => {
     const url = new URL(route.request().url());
@@ -218,6 +220,7 @@ try {
     if (!(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1))) throw new Error('Horizontal overflow');
     await card(page).screenshot({ path: path.join(output, index === 0 ? 'source-desktop.png' : 'source-phone.png') });
   }
+  await verifyNewAccountPublication({ context: contexts[2], owner, config, origin, output, result });
   result.status = 'PASS';
 } catch (error) {
   result.status = 'FAIL'; result.error = String(error);

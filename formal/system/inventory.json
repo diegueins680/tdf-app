@@ -464,6 +464,7 @@
       "scripts/test-event-ingestion-boundaries.sh",
       "scripts/test-event-memories-http.py",
       "scripts/test-event-memories.sh",
+      "scripts/test-event-memory-signup-browser.mjs",
       "scripts/test-event-memory-source-browser.mjs",
       "scripts/test-event-memory-source-moderation.sh",
       "scripts/test-event-memory-source-permissions.py",
@@ -5378,7 +5379,7 @@
     {
       "id": "SURFACE-92e34e327b523dc8",
       "path": "scripts/test-event-memories-http.py",
-      "sha256": "441f247225a291c873b8d8f285c8cf5276124ff8c9bd59cc4764b7535cc75b31",
+      "sha256": "212d9f83d54041406620604641238b98917fdd1774a273a02fd59afae696dfe5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5388,9 +5389,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-772229db6e521a51",
+      "path": "scripts/test-event-memory-signup-browser.mjs",
+      "sha256": "53325a4eec001efb223ce5a3913518b7a8dd658dea6ea8f2d19f46df0fca2a86",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f6d09097c41b38d4",
       "path": "scripts/test-event-memory-source-browser.mjs",
-      "sha256": "6f2d0ca23d8bc5224762d251bbe590d97cd590b61ef5acf191029d8b698f14f3",
+      "sha256": "a104d59804051a557766cff3f05651ffed3551ac47d78511763b21bfd702f5df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27080,7 +27087,7 @@
     },
     {
       "path": "formal/system/event-memories.md",
-      "sha256": "946a8a8c97b8b100850f941b99f02bdaf4a1b2d8748a3fef02500817447da9cb",
+      "sha256": "2eec20282b188ca7ccc756482f80c24918100dc117cd5b5ffb9252553d378a6c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27528,7 +27535,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "1fbc4890bbbfcb8dfde0f0bdb48edd217d6352698c52751f8cdbf68a91c6f8cb",
+      "sha256": "be09bf97b30f2290e4719fe55b18d4e32856d8993787720dc618c3bf1e93947b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

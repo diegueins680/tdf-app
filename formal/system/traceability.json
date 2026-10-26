@@ -12381,7 +12381,9 @@
         "tdf-hq-ui/src/routes/EventCommunityEntry.test.tsx",
         "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-        "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx"
+        "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
+        "scripts/test-event-memory-signup-browser.mjs",
+        "scripts/test-event-memory-source-browser.mjs"
       ],
       "formalModels": [],
       "verification": "Parser/signature/author-boundary tests, HTTP and browser journeys must be independently executed; no blanket completion claim."
@@ -13214,9 +13216,10 @@
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
-    "scripts/test-event-memories-http.py": "441f247225a291c873b8d8f285c8cf5276124ff8c9bd59cc4764b7535cc75b31",
+    "scripts/test-event-memories-http.py": "212d9f83d54041406620604641238b98917fdd1774a273a02fd59afae696dfe5",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
-    "scripts/test-event-memory-source-browser.mjs": "6f2d0ca23d8bc5224762d251bbe590d97cd590b61ef5acf191029d8b698f14f3",
+    "scripts/test-event-memory-signup-browser.mjs": "53325a4eec001efb223ce5a3913518b7a8dd658dea6ea8f2d19f46df0fca2a86",
+    "scripts/test-event-memory-source-browser.mjs": "a104d59804051a557766cff3f05651ffed3551ac47d78511763b21bfd702f5df",
     "scripts/test-event-memory-source-moderation.sh": "3d25115a7c4767df9537e4c4112ccad2ab88eada159a577925c8665206f0be29",
     "scripts/test-event-memory-source-permissions.py": "97d8944b7f043879ca56fa4503027195ed99fbf2482ea874634bbbdcdb67d30c",
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
@@ -24605,6 +24608,22 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-event-memory-signup-browser.mjs": [
+      {
+        "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-event-memory-source-browser.mjs": [
+      {
+        "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SOCIAL-EVENT-MODERATION-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/sql/2026-10-25_event_memory_invitations.sql": [
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
@@ -24736,12 +24755,6 @@
       }
     ],
     "scripts/test-event-memory-source-moderation.sh": [
-      {
-        "requirement": "SOCIAL-EVENT-MODERATION-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/test-event-memory-source-browser.mjs": [
       {
         "requirement": "SOCIAL-EVENT-MODERATION-001",
         "relationship": "tests"
@@ -29682,7 +29695,7 @@
     {
       "id": "SURFACE-92e34e327b523dc8",
       "path": "scripts/test-event-memories-http.py",
-      "sha256": "441f247225a291c873b8d8f285c8cf5276124ff8c9bd59cc4764b7535cc75b31",
+      "sha256": "212d9f83d54041406620604641238b98917fdd1774a273a02fd59afae696dfe5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29712,11 +29725,27 @@
       ]
     },
     {
-      "id": "SURFACE-f6d09097c41b38d4",
-      "path": "scripts/test-event-memory-source-browser.mjs",
-      "sha256": "6f2d0ca23d8bc5224762d251bbe590d97cd590b61ef5acf191029d8b698f14f3",
+      "id": "SURFACE-772229db6e521a51",
+      "path": "scripts/test-event-memory-signup-browser.mjs",
+      "sha256": "53325a4eec001efb223ce5a3913518b7a8dd658dea6ea8f2d19f46df0fca2a86",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f6d09097c41b38d4",
+      "path": "scripts/test-event-memory-source-browser.mjs",
+      "sha256": "a104d59804051a557766cff3f05651ffed3551ac47d78511763b21bfd702f5df",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "SOCIAL-EVENT-MODERATION-001",
           "relationship": "tests"
@@ -54171,7 +54200,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1fbc4890bbbfcb8dfde0f0bdb48edd217d6352698c52751f8cdbf68a91c6f8cb",
+      "sourceSha256": "be09bf97b30f2290e4719fe55b18d4e32856d8993787720dc618c3bf1e93947b",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -54199,7 +54228,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1fbc4890bbbfcb8dfde0f0bdb48edd217d6352698c52751f8cdbf68a91c6f8cb",
+      "sourceSha256": "be09bf97b30f2290e4719fe55b18d4e32856d8993787720dc618c3bf1e93947b",
       "definition": {
         "states": [
           "absent",
@@ -54229,7 +54258,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1fbc4890bbbfcb8dfde0f0bdb48edd217d6352698c52751f8cdbf68a91c6f8cb",
+      "sourceSha256": "be09bf97b30f2290e4719fe55b18d4e32856d8993787720dc618c3bf1e93947b",
       "definition": {
         "export": [
           "queued",

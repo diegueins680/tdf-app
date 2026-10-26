@@ -12380,7 +12380,9 @@
         "tdf-hq-ui/src/routes/EventCommunityEntry.test.tsx",
         "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-        "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx"
+        "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
+        "scripts/test-event-memory-signup-browser.mjs",
+        "scripts/test-event-memory-source-browser.mjs"
       ],
       "formalModels": [],
       "verification": "Parser/signature/author-boundary tests, HTTP and browser journeys must be independently executed; no blanket completion claim."
