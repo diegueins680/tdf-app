@@ -1,0 +1,8 @@
+init PASS
+start PASS
+create PASS
+canonical-provider-fixture-prelude PASS
+installed-namespace-settings PASS
+actual-store-expiry-with-namespace PASS
+drop PASS
+stop PASS

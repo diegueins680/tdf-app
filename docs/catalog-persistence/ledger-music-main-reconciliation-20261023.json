@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "previousFinancialHead": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+  "actualProtectedMain": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+  "mergeBase": "030365aabfb46c14e2962e054cf3b22192cda1a8",
+  "canonicalObjectCountsBeforeDiscovery": {
+    "formal/system/requirements.json": 135,
+    "formal/system/authority-decisions.json": 89,
+    "formal/system/research.json": 77,
+    "docs/catalog-persistence/catalog-list-decisions.json": 1328
+  },
+  "canonicalCompatibleFieldsPreserved": true,
+  "protectedPrefixEntries": 213,
+  "combinedEntries": 219,
+  "protectedPrefixCanonicalSha256": "7b3616b6095436eb7eb46038d6ccaa289ff4cb22e602960c06d971bf915add86",
+  "combinedManifestCanonicalSha256": "dd0d929bef8dfe4a0b6050a1e74e882f8da2c897863ff9f08f0b7b55702bcd51",
+  "financialSuffix": [
+    {
+      "id": "2026-10-12_ledger_posting_integrity",
+      "path": "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
+      "introducedBy": "0fc94499f6a9e007abc990be8cff8a32cacad19b",
+      "sqlSha256": "9ccec46d936ceca2c1feb8155b1ef61444fb273898b7f5a3e5b307f4713d4648"
+    },
+    {
+      "id": "2026-10-12_checkout_line_snapshot_fixed",
+      "path": "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql",
+      "introducedBy": "ba43d3f9537cde1a2993aaaf7520b30f8985255a",
+      "sqlSha256": "f7ded18142a59ffb07b03acfe212d73f1d2a71c4541d0467ef883881c21ffe47"
+    },
+    {
+      "id": "2026-10-13_checkout_policy_terms_identity",
+      "path": "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql",
+      "introducedBy": "4880a5cd8497a822d23adf08de76d9b4c90bb862",
+      "sqlSha256": "517423a780f237199ae96c02e9b2416d0326ccaab03c1e0905f0822fdd2602af"
+    },
+    {
+      "id": "2026-10-15_checkout_terms_historical_identity",
+      "path": "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql",
+      "introducedBy": "2af5a662f3e7acca133e154d0c890114f3436177",
+      "sqlSha256": "00b7c64e01179838ab5fe5696ece38f0a6285f1c6db7ac08d64efd274424a05e"
+    },
+    {
+      "id": "2026-10-16_ledger_entry_write_fence",
+      "path": "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
+      "introducedBy": "493d40252f48643a14ce47c5328a13844f3b837f",
+      "sqlSha256": "af468bf34bbfe36bfc6e3321a02ff71875d1ac49d7351a23fb607568de1d643f"
+    },
+    {
+      "id": "2026-10-22_checkout_terms_history_append_only",
+      "path": "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql",
+      "introducedBy": "5f32d4054a35bc76e7505ed4f83f1b6480130d25",
+      "sqlSha256": "27c2a344d5b0f88fd9757dff720c692e55564d9fb3df5531ed22f38aaafb2694"
+    }
+  ],
+  "allParentMigrationEntriesSqlAndIntroductionAncestorsPreserved": true,
+  "historicalManifestMapEntrySources": [
+    {
+      "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+      "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+      "sourceFileSha256": "df16758f8f343611744e076101f7889a6dbf47d17aeec762ca6a92cfe97079e1",
+      "entryIdentity": "7578a30aa3cc5aa23870",
+      "sourceEntryCanonicalSha256": "339ea9630bb0def56ae0cf7bbd968ce2d5559dcef1c6dc0c9065febfe0e4cf46",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+      "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+      "sourceFileSha256": "84bffd541d2ab0d7086f295fe229213f678f48c8302351431e1ffc80a07f73f3",
+      "entryIdentity": "7578a30aa3cc5aa23870",
+      "sourceEntryCanonicalSha256": "df36744232de1d7f87c0945fe39e81a5b1e9e5d5206bb927299cdc18e9d18ca5",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+      "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+      "sourceFileSha256": "64e0df232a051282b85726ed0a30a0a21569e4ab4717f3ad611d9b558f803b73",
+      "entryIdentity": "7578a30aa3cc5aa23870",
+      "sourceEntryCanonicalSha256": "7ed7ed05ef66b00722f09122d2c9c111060550a419cd6db2b246f003258029dd",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+      "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+      "sourceFileSha256": "8d1683fee8299180edb5aa6a6459045741f3ee95dd25576a8748e4bfafb71f8b",
+      "entryIdentity": "7578a30aa3cc5aa23870",
+      "sourceEntryCanonicalSha256": "96a04cea53aebd59ffd30b9bbcc978bdc9100a950e57c0d38134785a58c8f410",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    }
+  ],
+  "proofContextReview": {
+    "source": "tdf-hq/tdf-hq.cabal",
+    "reviewedAgainst": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+    "previousSha256": "c2242ebae6256d64325bbe38c157f6d616710f65ee4f6fc1addd26ae0803bac1",
+    "currentSha256": "e4cf4c1626e449ef68438c548bd98fb2abea824ef89e3036be3e87233267ee05",
+    "change": "Add only TDF.LedgerPostingSpec to the protected-main test module list. Removing that exact line reproduces protected main; both existing MusicRelease.Money registrations are retained.",
+    "semanticReview": "The new test module exports spec and uses existing SQL/Persistent/Hspec and disposable database guards. Runtime component bindings, source paths, dependencies, compiler/CPP options, Stack/lock, authorization/RoleEnum/ingestion, ServerAuth and recovery SQL are byte-identical to protected main. Conditional translators, assumptions and obligation claims are unchanged.",
+    "qualification": "Requires fresh scoped solver, replay/mutation and independent CPC qualification. No full implementation/refinement or financial release status is promoted."
+  },
+  "scope": "Source reconciliation only; fresh discovery, combined application/SQL/model/proof/client checks and independent review remain required. No production execution, activation, recovery or retention-policy authority is inferred.",
+  "currentManifestDecisionId": "a1eb1e750e7543b88fe1",
+  "retiredManifestDecisions": [
+    {
+      "id": "3f336173e03f10fc023c",
+      "replacementId": "a1eb1e750e7543b88fe1",
+      "sources": [
+        {
+          "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+          "sourceEntry": {
+            "id": "3f336173e03f10fc023c"
+          },
+          "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "reason": "The protected 213-entry prefix and six original financial suffix entries form a new ordered 219-entry registry. Earlier approvals retain their original fingerprints and execution scopes."
+    },
+    {
+      "id": "2b073f20afd2f3798b1e",
+      "replacementId": "a1eb1e750e7543b88fe1",
+      "sources": [
+        {
+          "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+          "sourceEntry": {
+            "id": "2b073f20afd2f3798b1e"
+          },
+          "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "reason": "The protected 213-entry prefix and six original financial suffix entries form a new ordered 219-entry registry. Earlier approvals retain their original fingerprints and execution scopes."
+    }
+  ],
+  "activeCatalogDecisions": 1327
+}
