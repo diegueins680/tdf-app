@@ -724,6 +724,7 @@
       "tdf-hq-ui/src/api/label.ts",
       "tdf-hq-ui/src/api/liveSessions.test.ts",
       "tdf-hq-ui/src/api/liveSessions.ts",
+      "tdf-hq-ui/src/api/logoutIntent.test.ts",
       "tdf-hq-ui/src/api/marketplace.test.ts",
       "tdf-hq-ui/src/api/marketplace.ts",
       "tdf-hq-ui/src/api/merch.test.ts",
@@ -1292,12 +1293,15 @@
       "tdf-hq-ui/src/session/SessionContext.test.ts",
       "tdf-hq-ui/src/session/SessionContext.tsx",
       "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx",
+      "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
       "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
       "tdf-hq-ui/src/session/SessionProviders.test.tsx",
       "tdf-hq-ui/src/session/SessionProviders.tsx",
       "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx",
       "tdf-hq-ui/src/session/SessionQueryProvider.tsx",
       "tdf-hq-ui/src/session/authEvents.ts",
+      "tdf-hq-ui/src/session/logoutIntent.test.ts",
+      "tdf-hq-ui/src/session/logoutIntent.ts",
       "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts",
       "tdf-hq-ui/src/session/onboardingIntentRecovery.ts",
       "tdf-hq-ui/src/test/accessibility.ts",
@@ -6530,7 +6534,7 @@
     {
       "id": "SURFACE-2a14b72d994c2399",
       "path": "tdf-hq-ui/src/api/auth.ts",
-      "sha256": "6ad0e27b011ff0d4293a1af6c7dfa6c038cd6829c947837d492a26e89734ca0f",
+      "sha256": "c2f502db09c6082917f0a796be6258b780a7086329565aea55c3d4661f7e15bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6608,7 +6612,7 @@
     {
       "id": "SURFACE-2e3549439fba7b8e",
       "path": "tdf-hq-ui/src/api/client.ts",
-      "sha256": "6b0d3de4ec299b7f44e4c2ef295efe97b0977f81288379c9aa4af4c0fac5cd92",
+      "sha256": "c1a35d37d170cdf684226758a5fb024b1040545d8404c0f6d77e58e644e165fc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6680,7 +6684,7 @@
     {
       "id": "SURFACE-10856a58d8da5733",
       "path": "tdf-hq-ui/src/api/drive.ts",
-      "sha256": "27e9d44e0bfa36c763b79e57731b118168b77bf0ac051790903693208fe0d2a3",
+      "sha256": "58ddf0aba81ae1ca1cf67d400b6826cca57aab890a7120dd48efe28aa49c8e7c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6848,7 +6852,7 @@
     {
       "id": "SURFACE-4f584dc31d92ebd7",
       "path": "tdf-hq-ui/src/api/inventory.ts",
-      "sha256": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
+      "sha256": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6879,6 +6883,12 @@
       "id": "SURFACE-cbf077a3da6bbf4a",
       "path": "tdf-hq-ui/src/api/liveSessions.ts",
       "sha256": "5774b06d8592a7c392959bfb888cd359520cd5a7232f3ccde10de5e6c1f4be2f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c7a9306039571e52",
+      "path": "tdf-hq-ui/src/api/logoutIntent.test.ts",
+      "sha256": "5366999e451b40e12be270e6db4ec4142761877b23aacf111733b5babbc5c66c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7142,7 +7152,7 @@
     {
       "id": "SURFACE-e999a12d43def7e6",
       "path": "tdf-hq-ui/src/api/session.ts",
-      "sha256": "f9c1e71ee476a7551fb6a5dd093c8c9776e525d113af0451bde93aebaf910e90",
+      "sha256": "4b3fccc0019fa402a84982b83b569fc47e4342f71dd70e2ddaaee7f327f3c372",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8516,13 +8526,13 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "10ee86e9b01c50a6222c2f24291d812964a7552ea778ebe53054b9012ea9b84e",
+      "sha256": "d886e1ac1352a582a8b44e658d47ee8681328c928379869a338d3144965cdb92",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "915ced996ce7903c55e27831791a239ab07441784d70dd1975ce85daaad57e89",
+      "sha256": "a95c1358ae8817800742f6e9a7e0505e8d10efc6aa7ee0421cf9840436f2a3e7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8738,13 +8748,13 @@
     {
       "id": "SURFACE-211c2d4c89fbcb63",
       "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
-      "sha256": "ce9b473b5065b522e50d926baa63510290331badd7b668c4916191bfce5378f1",
+      "sha256": "70b99414c406650748af71ecad6998afe4821ef5beaab6f6f46e7f11c9d9f821",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a22dcf6e94d1d682",
       "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
-      "sha256": "8f3da99899ffe2f026ffb82ccb08d3dc2ef3143dc9f51955e6f7877fc051ac7c",
+      "sha256": "041214548bf3ebf562aae5c17fa5d90008469e1c13dc8fd88c0e3d1ee609bfd5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9356,13 +9366,13 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "c79edb524886802dfbedd61fbc97614a0fe4ba4414708c2482ffa1856d2bad0c",
+      "sha256": "29cbe90efd800dfa0b84334f8e40d1df1c3019d9230311eda67577db67bccaad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "a4fa1f33977e120b61299d94f3b9853e220f25ddc0c854e9329fa288d120f443",
+      "sha256": "41bba4678c5386a6a1f0bc6104ab214ae4c4ac12d44d1b7eaa0130b8b1f13c6d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9770,7 +9780,7 @@
     {
       "id": "SURFACE-e9006bbb523fee68",
       "path": "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
-      "sha256": "9bec5512454b24b594edcc260416d843a4dec5ec36597c0628fc740a9aeed1c1",
+      "sha256": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10280,7 +10290,7 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "8cb425bcd28933e0482bee404607a6ed275d75b3810a42b207e8edd930037037",
+      "sha256": "31ad1065781ceee0927d9809041e5fe374a54210feeacca396c5c22ad13d42ca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10290,9 +10300,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6996ecfbe844e690",
+      "path": "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
+      "sha256": "6d28d26c28078996f37d16bb00ea2e12f9af21e2583ed52cd9f1c6f5c9368777",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d936df90f5c3e6d3",
       "path": "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
-      "sha256": "e65e006555671cc6a07a415a85226bbbb5ad4f3972934527498d52216848ecd0",
+      "sha256": "6fb0daa60ae3fbe7d6603fb252ee661d308ec2e38ff12a96d94adabaea22e7f7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10323,6 +10339,18 @@
       "id": "SURFACE-3acc1be5abd0e8e7",
       "path": "tdf-hq-ui/src/session/authEvents.ts",
       "sha256": "7eb5599167ba8a097912f600c0b88a472c9d56e98b0115bba05aa3734249e977",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7f18c38ef360a0ae",
+      "path": "tdf-hq-ui/src/session/logoutIntent.test.ts",
+      "sha256": "e6d15a80229ee6728882d44e717d955160a597d1f9f3a3ca6ebb0fef2509f1e1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-319cda255d94c59c",
+      "path": "tdf-hq-ui/src/session/logoutIntent.ts",
+      "sha256": "abad265a1a074073f4785ddc134df91fe7e1ab5774c49d171690f2e60eeff733",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26764,6 +26792,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/logout-intent.md",
+      "sha256": "c51b42b9d549bacf56a9230837638ef4cfba7d7d6a8468f32ec554b8be7702c3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/manual-bank-transfer.md",
       "sha256": "daf3d55dcd3b4939203d8052aa518901830cad64e68525e7dc471600884578a1",
       "authority": "inferred",
@@ -27059,7 +27094,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "85e110ee61aeb2e27ae17d3cc2eeaee1f1222ce9fbee4859f9c6ab46592a46e5",
+      "sha256": "3d8634b166c04ddee95a3d94d9d6b3173df2b1d4991958dcdd60ab1b502d3986",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
