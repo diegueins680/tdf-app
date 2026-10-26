@@ -382,7 +382,8 @@
         ]
       ],
       "reason": "Only five reviewed source fingerprints changed: four additive navigation groups and a session featureFlags fixture. All classifications, persistence obligations and audit policies are preserved."
-    }
+    },
+    "ledgerHeaderImmutability": "docs/catalog-persistence/ledger-header-reconciliation-20261025.json"
   },
   "decisions": [
     {
@@ -17922,15 +17923,15 @@
       "reviewBatch": "checkout-session-readiness-2026-10-14"
     },
     {
-      "id": "b7cc47848f3f9882770f",
+      "id": "9ada14767bee1662f97d",
       "classification": "security-system-registry",
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "The 220-entry deployment execution registry preserves all 219 migration objects and historical SQL bytes from financial parent 59df1dd2a17952b906cf89d1c5502725d51239e1 as its exact ordered prefix, then adds only the ledger relation-lookup guard introduced by ancestor 9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391. This technical review preserves earlier immutable catalog provenance and authorizes no production execution, provider activation or runtime privilege change. Full-schema controls and independent PR review remain separate obligations.",
+      "justification": "The 221-entry deployment execution registry preserves all 220 migration objects and historical SQL bytes from protected main 917806ff9c8d455a01bfb8a29c80d6ff353e0e0b as its exact ordered prefix. The only addition is the posted ledger header guard introduced by ancestor 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Full-schema apply/replay, ordinary-role mutations, witnessed posting/header races and guard-removal controls qualify the unchanged SQL. This technical source review retains the previous complete decision and source references; it grants no production execution, provider activation, runtime privilege change or independent PR approval.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "ledger-namespace-technical-review-20261025",
+      "reviewBatch": "ledger-header-technical-review-20261025",
       "sourceReviewReferences": [
         {
           "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
@@ -17961,6 +17962,16 @@
           },
           "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "43c7adba83ab8c1554c944ea99871b8a9c406c3b",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+          "sourceEntry": {
+            "id": "b7cc47848f3f9882770f"
+          },
+          "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "evidence": {
@@ -17968,7 +17979,12 @@
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 220
+        "valueCount": 221
+      },
+      "previousDecisionReference": {
+        "document": "docs/catalog-persistence/ledger-header-reconciliation-20261025.json",
+        "id": "b7cc47848f3f9882770f",
+        "canonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28"
       }
     },
     {

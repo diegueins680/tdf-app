@@ -3,6 +3,7 @@
   "artifact-hashes.json": "0ae171fd3d18657c59bf2d2b30bf1ea82cd0648968ce76ed5f96718a64f29309",
   "assurance-report-metrics.json": "2df689f8c17e296919ae89f58584bcd87a7e013271f518c1b4b7fc1303eff082",
   "assurance-report.tar.gz": "107991b00ed39be42b0704b658bea84259d36f43ee41a1bdca62576b0eb590c8",
+  "catalog-followup.json": "39ebef88a934481efe1d076eec04217a957dff485e7af0f1719e644636b3226c",
   "differential-create.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
   "differential-drop.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
   "differential-full220-apply-replay.log.gz": "72c22ff340a3e11f6ab4aca8a765aba9322661dbf9bcebbdb8216e05f462372f",

@@ -352,12 +352,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "b7cc47848f3f9882770f",
+      "currentId": "9ada14767bee1662f97d",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 220,
-      "change": "The 220-entry deployment execution registry preserves all 219 migration objects and historical SQL bytes from financial parent 59df1dd2a17952b906cf89d1c5502725d51239e1 as its exact ordered prefix, then adds only the ledger relation-lookup guard introduced by ancestor 9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391. This technical review preserves earlier immutable catalog provenance and authorizes no production execution, provider activation or runtime privilege change. Full-schema controls and independent PR review remain separate obligations.",
+      "valueCount": 221,
+      "change": "The 221-entry deployment execution registry preserves all 220 migration objects and historical SQL bytes from protected main 917806ff9c8d455a01bfb8a29c80d6ff353e0e0b as its exact ordered prefix. The only addition is the posted ledger header guard introduced by ancestor 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Full-schema apply/replay, ordinary-role mutations, witnessed posting/header races and guard-removal controls qualify the unchanged SQL. This technical source review retains the previous complete decision and source references; it grants no production execution, provider activation, runtime privilege change or independent PR approval.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -520,6 +520,17 @@
           },
           "sourceEntryCanonicalSha256": "ddcb71c2b853a84719e1fffe73b7cc872aa94901f30f8b26a28e3a139fcb6c85",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "43c7adba83ab8c1554c944ea99871b8a9c406c3b",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "42d813e3d10f9a965a7139131082ba4c8c78f3cd823d183030b932c5bbaafdb5",
+          "sourceEntry": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "46deb4f238272a122238b751e1a181319fb6530abcb231baff74289732a3a854",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete predecessor review retained in immutable ancestor and the retirement record; avoid recursive copying."
         }
       ],
       "previousCurrentIds": [
@@ -527,7 +538,8 @@
         "a8128668e1b74b7c0ae4",
         "3f336173e03f10fc023c",
         "2b073f20afd2f3798b1e",
-        "a1eb1e750e7543b88fe1"
+        "a1eb1e750e7543b88fe1",
+        "b7cc47848f3f9882770f"
       ]
     }
   ]
