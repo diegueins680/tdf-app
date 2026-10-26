@@ -19,7 +19,7 @@ if ci or (native and 'TDF_TEST_POSTGRES_PASSWORD' in os.environ):
  assert fixture_password,'An explicit nonempty fixture database password is required'
  env['PGPASSWORD']=fixture_password
 env['TDF_TEST_BUNDLED_BROWSER']='1' if ci else '0'
-db='tdf_event_memories_http_test';routing=['-h',host,'-p',port,'-U',role]
+db='tdf_event_memories_http_test';routing=['-h',host,'-p',port,'-U',role,'-w']
 api_port='18886';origin='http://127.0.0.1:'+api_port
 opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
 runtime_paths=['tdf-hq/src/TDF/API/SocialEventsAPI.hs','tdf-hq/src/TDF/DTO/SocialEventsDTO.hs',
