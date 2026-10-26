@@ -44,7 +44,8 @@ const optionalImageSource = (value: string | null | undefined): string | undefin
 
 export default function FanClubPage() {
   const { artistId } = useParams();
-  const artistIdNum = parseInt(firstNonEmptyString(artistId, '0'), 10);
+  const artistIdNum = Number(firstNonEmptyString(artistId, '0'));
+  const validArtistId = /^\d+$/.test(artistId ?? '') && Number.isSafeInteger(artistIdNum) && artistIdNum > 0;
   const { session } = useSession();
   const isAuthenticated = Boolean(session);
   const [tab, setTab] = useLocalValue(0);
@@ -60,39 +61,45 @@ export default function FanClubPage() {
   const loginPath = useMemo(() => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`), [location]);
 
   const clubQuery = useQuery({
-    queryKey: ['fan-club', artistIdNum, isAuthenticated ? 'auth' : 'public'],
+    queryKey: ['fan-club', validArtistId ? artistIdNum : 'invalid', isAuthenticated ? 'auth' : 'public'],
     queryFn: () => isAuthenticated ? Fans.getMyClub(artistIdNum) : Fans.getClub(artistIdNum),
-    enabled: artistIdNum > 0,
+    enabled: validArtistId,
   });
+
+  const clubReady = validArtistId && Boolean(clubQuery.data);
+  const clubErrorStatus = typeof clubQuery.error === 'object' && clubQuery.error !== null && 'status' in clubQuery.error
+    ? clubQuery.error.status
+    : undefined;
+  const clubLoadFailed = validArtistId && !clubQuery.data && clubErrorStatus !== 404;
 
   const feedQuery = useQuery({
     queryKey: ['fan-club-feed', artistIdNum],
     queryFn: () => Fans.listClubFeed(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 0 && isAuthenticated,
+    enabled: clubReady && tab === 0 && isAuthenticated,
   });
 
   const postsQuery = useQuery({
     queryKey: ['fan-club-posts', artistIdNum],
     queryFn: () => Fans.listClubPosts(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 1 && isAuthenticated,
+    enabled: clubReady && tab === 1 && isAuthenticated,
   });
 
   const memoriesQuery = useQuery({
     queryKey: ['fan-club-memories', artistIdNum],
     queryFn: () => Fans.listClubMemories(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 2 && isAuthenticated,
+    enabled: clubReady && tab === 2 && isAuthenticated,
   });
 
   const eventsQuery = useQuery({
     queryKey: ['fan-club-events', artistIdNum, isAuthenticated ? 'auth' : 'public'],
     queryFn: () => isAuthenticated ? Fans.listClubEvents(artistIdNum) : Fans.getClubEvents(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 3,
+    enabled: clubReady && tab === 3,
   });
 
   const electionsQuery = useQuery({
     queryKey: ['fan-club-elections', artistIdNum],
     queryFn: () => Fans.listClubElections(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 4 && isAuthenticated,
+    enabled: clubReady && tab === 4 && isAuthenticated,
   });
 
   const club = clubQuery.data;
@@ -103,7 +110,7 @@ export default function FanClubPage() {
   const inboxQuery = useQuery({
     queryKey: ['fan-club-inbox', artistIdNum],
     queryFn: () => Fans.listClubInbox(artistIdNum),
-    enabled: artistIdNum > 0 && isAuthenticated && canManageClub && tab === 5,
+    enabled: clubReady && isAuthenticated && canManageClub && tab === 5,
   });
 
   useEffect(() => {
@@ -123,11 +130,26 @@ export default function FanClubPage() {
       ) : !club ? (
         <EmptyState
           icon={<GroupsIcon fontSize="large" />}
-          title="Club no encontrado"
-          description="Este artista aún no tiene un club de fans activo."
-          actionLabel="Volver a la comunidad"
-          actionHref="/fans"
-        />
+          title={clubLoadFailed ? 'No pudimos cargar el club' : 'Club no disponible'}
+          description={clubLoadFailed
+            ? 'No pudimos comprobar su disponibilidad. Revisa tu conexión e inténtalo de nuevo.'
+            : validArtistId
+              ? 'Consulta el perfil público del artista o sigue explorando en Comunidad.'
+              : 'El enlace no identifica un club válido.'}
+          actionLabel={clubLoadFailed ? 'Reintentar' : validArtistId ? 'Ver perfil del artista' : 'Volver a la comunidad'}
+          actionHref={clubLoadFailed ? undefined : validArtistId ? `/artista/${artistIdNum}` : '/fans'}
+          actionOnClick={clubLoadFailed ? () => { void clubQuery.refetch(); } : undefined}
+        >
+          {(clubErrorStatus === 401 || clubErrorStatus === 403) && (
+            <Button component={RouterLink} to={loginPath}>Ingresar de nuevo</Button>
+          )}
+          {clubLoadFailed && validArtistId && (
+            <Button component={RouterLink} to={`/artista/${artistIdNum}`}>Ver perfil del artista</Button>
+          )}
+          {(clubLoadFailed || validArtistId) && (
+            <Button component={RouterLink} to="/fans">Volver a la comunidad</Button>
+          )}
+        </EmptyState>
       ) : (
         <Stack spacing={3}>
           <Card>

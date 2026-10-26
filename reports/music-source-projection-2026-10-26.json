@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "LOCAL_SOURCE_AND_METADATA_TESTED_PENDING_HOSTED_REVIEW",
+  "status": "SOURCE_TESTED_CURRENT_MAIN_METADATA_VALIDATED_PENDING_HOSTED_REVIEW",
   "scope": "Four public-listening source projections; finite SQL/policy agreement only",
   "baseline": "3af768dacd95c1223975c62da3ce8088bed89b47",
   "branch": "fix/music-source-availability-20261026",
@@ -10,8 +10,8 @@
     "contract": "formal/system/music-source-projection.md",
     "classification": "PARTIAL",
     "mathematicalProof": false,
-    "preservedMainRequirements": 142,
-    "totalRequirements": 143,
+    "preservedMainRequirements": 143,
+    "totalRequirements": 144,
     "preservedMainCatalogDecisions": 1330,
     "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
     "structurallyMappedSourcePaths": [
@@ -72,40 +72,44 @@
     "sourceCommit": "ade78b5ab11ba297cf419a96012032ebf289820d"
   },
   "metadataValidation": {
+    "integrationBaseline": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
     "passed": 25,
     "commands": [
       {
         "command": "python3 scripts/test-requirement-declarations.py",
         "passed": 9,
         "exitCode": 0,
-        "log": "/private/tmp/tdf-audio-source-metadata-declarations-20261026.log",
+        "log": "/private/tmp/tdf-audio-source-ed9-metadata-declarations-20261026.log",
         "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
       },
       {
         "command": "python3 scripts/test-specification-inventory.py",
         "passed": 6,
         "exitCode": 0,
-        "log": "/private/tmp/tdf-audio-source-metadata-inventory-20261026.log",
-        "sha256": "160691d7d836e3450c7cc816b628280e08e91511bafdab0f3e4f89acc438b33d"
+        "log": "/private/tmp/tdf-audio-source-ed9-metadata-inventory-20261026.log",
+        "sha256": "85670be38e3b6c019234b44f686ec665583478d85214e15d228fed8ba0872cd9"
       },
       {
         "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
         "passed": 10,
         "exitCode": 0,
-        "log": "/private/tmp/tdf-audio-source-metadata-conformance-20261026.log",
-        "sha256": "13b02df1e466853414cbce3b5ea038d5639e1e0d1775a0268a529b674f872ab5"
+        "log": "/private/tmp/tdf-audio-source-ed9-metadata-conformance-20261026.log",
+        "sha256": "be86705dd26ab4c8828dd8f4776d1ae4aa61a09b8f4ef719fcd0b793519156c5"
       }
     ],
     "freshness": [
       "specification-inventory.py --check PASS",
-      "specification-conformance.py --check PASS",
-      "git diff --check PASS"
+      "specification-conformance.py --check PASS"
     ],
-    "sourcePreservation": "All142main requirement objects exact; scoped row143; all5source inputs exactade78; Mobileactuald832pin",
-    "unrunBoundary": "No new-specification-surfaces execution counted here; committed source admission belongs release/integration qualification."
+    "preservation": "Exact143main objects+unchanged SOURCE144; exact1330main decisions; inherited main613files exact; all5source hashes unchanged",
+    "earlyWhitespaceCheck": {
+      "outcome": "not admitted as final validation",
+      "reason": "Ran before concurrent catalog regeneration finished; generated conflict markers remained; final whitespace check repeated after writers completed."
+    },
+    "unrunBoundary": "No new-specification-surfaces test counted here; committed-source admission/compiledStack/HTTP belong integration qualification."
   },
   "catalogValidation": {
-    "outcome": "PASS after exact Mobile initialization",
+    "outcome": "PASS on current main ed9 integration",
     "candidateCount": 1330,
     "unreviewed": 0,
     "stale": 0,
@@ -113,7 +117,7 @@
     "csvReport": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
     "baselineDecisionObjectsPreserved": 1330,
     "newDecisions": 0,
-    "scope": "Complete actual pinned Mobile source and tracked5source paths; incomplete initial scan explicitly not admitted"
+    "scope": "Actual pinned Mobile and tracked5source paths; incomplete original scan not admitted"
   },
   "implementationBoundary": [
     "getPublicRelease",
@@ -171,5 +175,61 @@
       "correction": "Discard incomplete-scope result; rerun with actual pinned Mobile initialized",
       "artifact": "/private/tmp/tdf-audio-source-catalog-audit-20261026.json"
     }
-  ]
+  ],
+  "integrationBaseline": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+  "historicalMetadataValidationAt3af": {
+    "passed": 25,
+    "commands": [
+      {
+        "command": "python3 scripts/test-requirement-declarations.py",
+        "passed": 9,
+        "exitCode": 0,
+        "log": "/private/tmp/tdf-audio-source-metadata-declarations-20261026.log",
+        "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
+      },
+      {
+        "command": "python3 scripts/test-specification-inventory.py",
+        "passed": 6,
+        "exitCode": 0,
+        "log": "/private/tmp/tdf-audio-source-metadata-inventory-20261026.log",
+        "sha256": "160691d7d836e3450c7cc816b628280e08e91511bafdab0f3e4f89acc438b33d"
+      },
+      {
+        "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+        "passed": 10,
+        "exitCode": 0,
+        "log": "/private/tmp/tdf-audio-source-metadata-conformance-20261026.log",
+        "sha256": "13b02df1e466853414cbce3b5ea038d5639e1e0d1775a0268a529b674f872ab5"
+      }
+    ],
+    "freshness": [
+      "specification-inventory.py --check PASS",
+      "specification-conformance.py --check PASS",
+      "git diff --check PASS"
+    ],
+    "sourcePreservation": "All142main requirement objects exact; scoped row143; all5source inputs exactade78; Mobileactuald832pin",
+    "unrunBoundary": "No new-specification-surfaces execution counted here; committed source admission belongs release/integration qualification."
+  },
+  "mainRefresh": {
+    "method": "normal merge",
+    "sourceMetadataCheckpoint": "bc819dc938be3abff9861284052e36206ff2c48f",
+    "protectedMain": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+    "preservedMainRequirements": 143,
+    "additionalUnchangedRequirement": "MEDIA-MUSIC-SOURCES-001",
+    "totalRequirements": 144,
+    "preservedMainCatalogDecisions": 1330,
+    "newCatalogDecisions": 0,
+    "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "sourceFiveHashesUnchanged": true,
+    "retainedNewMainRequirement": "COMM-CLUB-001",
+    "conflicts": [
+      "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+      "docs/catalog-persistence/reports/static-list-inventory.json",
+      "formal/system/inventory.json",
+      "formal/system/requirements.json",
+      "formal/system/traceability.json"
+    ],
+    "scope": "SourceSQLqualification stays tied to actualade78/base3af; newmain metadata-only integration does not establish a fresh SQL/build/HTTP or deployment run.",
+    "metadataChecks": "143main+SOURCE144 and1330catalog preservation,25metadata regressions,fresh generation andstrictJSON/CSV passed; no newSQL/build/HTTP execution relabeling"
+  }
 }

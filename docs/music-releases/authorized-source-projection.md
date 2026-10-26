@@ -32,8 +32,10 @@ inputs, the publication fixture and the actual baseline/candidate/scope logs.
 
 The contract is
 [music-source-projection.md](../../formal/system/music-source-projection.md), owned
-by `MEDIA-MUSIC-SOURCES-001`. All 142 main requirement objects remain exact;
-the new scoped requirement makes 143 total. All 1,330 main catalog decisions are
+by `MEDIA-MUSIC-SOURCES-001`. The original source-baseline metadata retained all
+142 main requirement objects plus the scoped requirement, for 143 total. The
+current-main refresh below retains 143 main objects plus the same scoped
+requirement, for 144 total. All 1,330 main catalog decisions are
 retained. Inventory, traceability and catalog classifications are checked
 separately after this recorded source freeze; their outputs establish structural
 coverage and freshness, not a test pass or authorization proof.
@@ -65,3 +67,26 @@ full compiled Stack build, current-head hosted checks, independent review and
 production deployment are not established by these local controls. The
 application rollback is documented; no target-environment rollback drill was
 performed. No production business writes are performed.
+
+## Current-main metadata reconciliation
+
+Source qualification remains tied to actual source commit
+`ade78b5ab11ba297cf419a96012032ebf289820d` and its original baseline
+`3af768dacd95c1223975c62da3ce8088bed89b47`. Metadata was checkpointed at
+`bc819dc938be3abff9861284052e36206ff2c48f`, then normally merged with protected
+main `ed9eb9a1600f0a827e002bb2ab64a608f8352b2c`, which includes the fan-club
+read-recovery integration.
+
+All 143 current-main requirement objects, including every field of
+`COMM-CLUB-001`, are retained exactly. The original `MEDIA-MUSIC-SOURCES-001`
+object is appended unchanged, for 144 total. The complete 1,330-decision catalog
+file is unchanged from main; no new source-fixture decision was needed. The
+five source qualification inputs and pinned Mobile source
+`d832bb3057dd03d44c0f35eea05be9f36320429d` remain unchanged.
+
+Only the canonical requirement registry and four generated inventory/catalog
+reports conflicted; those artifacts are reconciled from the actual combined
+sources. Metadata and strict catalog checks are repeated after the normal merge.
+No source SQL, build, HTTP, playback or deployment result is relabeled as a new
+execution. The versioned report separates source-baseline evidence from the
+current integration baseline and its metadata validation.

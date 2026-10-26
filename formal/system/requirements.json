@@ -12038,6 +12038,82 @@
       "observability": "Record outcome booleans only; no cookie, token or personal-data diagnostics."
     },
     {
+      "id": "COMM-CLUB-001",
+      "title": "Recover fan-club reads without claiming false unavailability",
+      "statement": "A club read failure other than confirmed404 remains a recoverable load failure, not evidence of club absence. The reader can explicitly retry without losing the artist, deep link or session boundary. A missing club offers the existing public artist profile; invalid identifiers never select a different artist. Dependent content is requested only after a valid readable club is available.",
+      "domain": "COMM",
+      "actors": [
+        "Public fan",
+        "Authenticated fan",
+        "Artist"
+      ],
+      "preconditions": [
+        "Existing read endpoints and their authorization remain authoritative; public profile navigation grants no private-club access."
+      ],
+      "inputs": [
+        "Artist route identifier",
+        "Club read result or error status",
+        "Current session",
+        "Deep-link search/hash",
+        "Explicit retry"
+      ],
+      "state": {
+        "club": [
+          "loading",
+          "readable",
+          "not-found",
+          "read-failed",
+          "invalid-link"
+        ]
+      },
+      "allowedTransitions": [
+        "Loading -> readable after successful authorized read.",
+        "Failed read -> explicit retry -> current server outcome.",
+        "Confirmed404 -> public artist profile or Comunidad.",
+        "401/403 -> login preserving pathname, search and hash.",
+        "Readable cached club -> retain visible data during failed background refresh."
+      ],
+      "forbiddenTransitions": [
+        "503/network/timeout/401/403 -> assert artist has no active club.",
+        "Invalid or unsafe numeric identifier -> query another club.",
+        "Missing/unread club -> eagerly fetch its protected content.",
+        "Read or fallback navigation -> create club, membership, follow, post, message or notification."
+      ],
+      "effects": [
+        "Read-only recovery and existing-route navigation; no backend, API, database, provider or feature-flag change."
+      ],
+      "authorization": "Existing public/authenticated endpoints retain their checks. No fallback from a failed private API read to a public API response under the same cache key. Login preserves the requested route.",
+      "privacy": "Never display raw server/network diagnostics or credentials. Public artist links expose only the existing public-profile route.",
+      "concurrency": "Successful cached data remains usable while React Query refreshes. Club readiness gates dependent requests. Session cache isolation remains the shared provider responsibility.",
+      "idempotency": "Retry repeats only the club GET; no relationship or content mutation is introduced.",
+      "failure": "Unconfirmed availability is shown as a load failure with retry; a confirmed404 is not a claim that an artist never enabled a club.",
+      "recovery": "Retry reuses the current route query; users can visit the public artist page or Comunidad.",
+      "observability": "Actual component tests distinguish statuses, verify request ordering and preserve deep links. Browser/API/DB fixture receipts retain their source identities.",
+      "source": "User-authorized activation sprint; issue606 missing-club reproduction and new actual-component non404 negative controls.",
+      "implementation": [
+        "tdf-hq-ui/src/pages/FanClubPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "High for tested component transitions; production deployment and human comprehension remain unverified.",
+      "ambiguity": [
+        "This requirement does not provision new clubs or prove existing-club posting ownership, provider content delivery or human usability."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped component and isolated runtime evidence required; no whole-system refinement, deployed-version or human-pilot claim."
+      },
+      "critical": false,
+      "authority": "Activation journey B7/B8 failure recovery, truthful availability and issue606 acceptance criteria.",
+      "property": "Only confirmed404 can select missing-club UI; non404 read failure remains retryable and preserves artist context.",
+      "contract": "formal/system/fan-club-read-recovery.md",
+      "verification": "Component regression and pre-change negative controls; isolated browser on real API/PostgreSQL for unavailable/new-artist and recovery states.",
+      "evidence": "Exact source qualification receipts; synthetic data excluded from VAR, conversion and retention."
+    },
+    {
       "id": "MEDIA-MUSIC-SOURCES-001",
       "domain": "MEDIA",
       "title": "Authorized public-listening source projection in release detail and personal music collections",
