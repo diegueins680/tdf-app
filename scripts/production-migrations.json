@@ -1122,6 +1122,11 @@
       "introducedBy": "9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391"
     },
     {
+      "id": "2026-10-25_directory_saved_search_parity",
+      "path": "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+      "introducedBy": "eb2f71d62740783369a6eb2a6d35fc024484cb71"
+    },
+    {
       "id": "2026-10-25_ledger_posted_header",
       "path": "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
       "introducedBy": "5cc26ad46c958a029ec4539c60cc1ca77fec1d01"

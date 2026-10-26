@@ -24,6 +24,13 @@ schema USAGE and ledger-header SELECT/UPDATE can change `transaction_type`,
 CREATE, table ownership or superuser permission is needed. This loses the
 original source/reconciliation anchor; it is not evidence of a duplicate charge.
 
+The same ordinary-role counterexample was reproduced on protected main
+`e938c72ba4b87010214f6838f06bfac45a0f45c0`, with its complete 221-migration
+schema. The combined candidate preserves that exact prefix and appends this
+header guard as migration 222. Its fresh qualification is recorded separately
+in `formal/system/evidence/2026-10-26-ledger-header-main/`; the earlier receipts
+retain their original source identities.
+
 The additive `2026-10-25_ledger_posted_header.sql` migration installs a BEFORE
 UPDATE trigger comparing the old and new header projections with null-safe
 `IS DISTINCT FROM`. Only the two separately validated lifecycle columns are

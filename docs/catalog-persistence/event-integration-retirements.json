@@ -678,16 +678,20 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "9ada14767bee1662f97d",
-      "reason": "The 220-entry deployment execution registry preserves all 219 migration objects and historical SQL bytes from financial parent 59df1dd2a17952b906cf89d1c5502725d51239e1 as its exact ordered prefix, then adds only the ledger relation-lookup guard introduced by ancestor 9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391. This technical review preserves earlier immutable catalog provenance and authorizes no production execution, provider activation or runtime privilege change. Full-schema controls and independent PR review remain separate obligations.",
+      "replacementId": "6ff395b6131079017c9d",
+      "reason": "The 222-entry deployment registry preserves the complete 221-entry protected main e938c72ba4b87010214f6838f06bfac45a0f45c0 prefix, including saved-alert migration eb2f71d62740783369a6eb2a6d35fc024484cb71, and appends only the posted-header guard introduced by 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Both independently developed 221-entry predecessor reviews are retained with exact canonical hashes and source references. Historical SQL and introduction SHAs are unchanged. This is a technical source review; current-head CI, independent PR approval and production authorization remain separate requirements.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
-        "id": "b7cc47848f3f9882770f",
-        "valueCount": 220,
-        "sourceRevision": "ledger-namespace-technical-review-20261025",
-        "justification": "The 220-entry deployment execution registry preserves all 219 migration objects and historical SQL bytes from financial parent 59df1dd2a17952b906cf89d1c5502725d51239e1 as its exact ordered prefix, then adds only the ledger relation-lookup guard introduced by ancestor 9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391. This technical review preserves earlier immutable catalog provenance and authorizes no production execution, provider activation or runtime privilege change. Full-schema controls and independent PR review remain separate obligations."
+        "id": "6ff395b6131079017c9d",
+        "valueCount": 222,
+        "reviewBatch": "directory-financial-main-integration-20261026",
+        "sourceParents": [
+          "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+          "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc"
+        ],
+        "justification": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations."
       },
-      "change": "The 220-entry deployment execution registry preserves all 219 migration objects and historical SQL bytes from financial parent 59df1dd2a17952b906cf89d1c5502725d51239e1 as its exact ordered prefix, then adds only the ledger relation-lookup guard introduced by ancestor 9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391. This technical review preserves earlier immutable catalog provenance and authorizes no production execution, provider activation or runtime privilege change. Full-schema controls and independent PR review remain separate obligations.",
+      "change": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -850,6 +854,37 @@
           },
           "sourceEntryCanonicalSha256": "66f056496b56853abe1a701ca2f379e181fe4d8360beafa763b53e807df80647",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "460a86438e3fd6c3c675b5481174571100659685",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "8d1683fee8299180edb5aa6a6459045741f3ee95dd25576a8748e4bfafb71f8b",
+          "sourceEntry": {
+            "originalDecision.id": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "96a04cea53aebd59ffd30b9bbcc978bdc9100a950e57c0d38134785a58c8f410",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Preserve the exact reviewed213-entry current pointer before advancing to the separately reviewed214-entry successor; no retired fingerprint becomes an active approval."
+        },
+        {
+          "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "1d6e60e96b365c20cb5d36b6cf492288791aa26cef366bbaefc55b3212bf405d",
+          "sourceEntry": {
+            "originalDecision.id": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "4329a6553b10f4c2d434c29e4afa1214010439a7366159db595b514d5727117a",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "066fc0a0181227407cb7c4c2885c47a141114dd8cb8746a456874676566b2e9a",
+          "sourceEntry": {
+            "originalDecision.id": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "72d70add24fede5a1636ce159e168d993455c41ddb11a52e2333e5e3da63c776",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "previousReplacementIds": [
@@ -857,14 +892,11 @@
         "a8128668e1b74b7c0ae4",
         "3f336173e03f10fc023c",
         "2b073f20afd2f3798b1e",
-        "a1eb1e750e7543b88fe1"
-      ],
-      "replacementHistory": [
-        {
-          "replacementId": "b7cc47848f3f9882770f",
-          "sourceRevision": "43c7adba83ab8c1554c944ea99871b8a9c406c3b",
-          "successorEvidence": "docs/catalog-persistence/ledger-header-reconciliation-20261025.json"
-        }
+        "a1eb1e750e7543b88fe1",
+        "c94cd70c1272ec9ede1b",
+        "b7cc47848f3f9882770f",
+        "8229b8202552298c955e",
+        "9ada14767bee1662f97d"
       ]
     }
   ]
