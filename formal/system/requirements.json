@@ -10419,7 +10419,7 @@
       "title": "Every published service is selectable from the first step of the public booking form",
       "domain": "BOOK",
       "statement": "The public booking form at /reservar shows the service selector on its first step (contact) as well as on the schedule step, listing every active offering returned by the public service catalog (recording, voice, podcast, mixing, mastering, rehearsal, DJ booth practice, classes, event production, ...). DJ booth practice is an ordinary offering: there is no dedicated booking page, header entry, Instagram entry link, platform or commerce card for it. The legacy /dj-booth and /reservar/dj-booth URLs redirect to /reservar with the DJ booth service preselected and tracking parameters preserved; a ?servicio= or ?service= query preselects a service without locking the selector. The legacy DJ booth feature remains addressable for compatibility but is absent from feature search on web and Mobile. Legacy DJ URLs remove conflicting service parameters before selecting DJ booth.",
-      "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link.",
+      "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link. Product owner UX execution mission, continued 2026-10-26: actionable recovery from temporary failures while preserving form data and backend booking authority.",
       "source": "tdf-hq-ui public booking form, public navigation and landing links",
       "contract": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
       "actors": [
@@ -10445,7 +10445,8 @@
       "allowedTransitions": [
         "catalog loading -> first active offering selected",
         "first active offering selected -> visitor-selected offering (any step before confirmation)",
-        "/dj-booth -> /reservar?servicio=dj-booth-practice (replace navigation, query and hash preserved)"
+        "/dj-booth -> /reservar?servicio=dj-booth-practice (replace navigation, query and hash preserved)",
+        "catalog unavailable -> visitor-triggered catalog retry -> available service selection, or another recoverable unavailable state without leaving the page"
       ],
       "forbiddenTransitions": [
         "Service selector hidden until the schedule step",
@@ -10461,8 +10462,8 @@
       "privacy": "No personal data in the redirect beyond the tracking parameters already present in the inbound URL.",
       "concurrency": "Catalog refetches keep the visitor's selection when the offering is still active and fall back to the first active offering otherwise. Changing the service synchronously clears the previous quote and terms acceptance. New availability requests clear stale pricing; aborted responses and cancellations cannot overwrite a newer quote.",
       "idempotency": "Re-selecting the same offering is a no-op; the redirect is replace-navigation.",
-      "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps.",
-      "recovery": "Reloading the page refetches the catalog.",
+      "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps. Retrying does not create a booking, checkout or payment, and the form remains disabled while an unavailable catalog is being refetched.",
+      "recovery": "The catalog-unavailable notice provides an explicit retry of GET /services/catalog/public without reloading the page or clearing contact edits, the service query parameter or the current step. The retry button is disabled while fetching. Another failure or empty response retains the retry action; a nonempty successful response restores normal service selection and form progression. Reloading the page also refetches the catalog.",
       "observability": "Existing booking and API telemetry; no new events.",
       "property": "AllActiveOfferingsSelectableOnContactStep and LegacyDjBoothUrlRedirects",
       "implementation": [
@@ -10483,10 +10484,11 @@
         "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
-        "tdf-mobile/__tests__/featureRegistry.test.ts"
+        "tdf-mobile/__tests__/featureRegistry.test.ts",
+        "e2e/web/booking-catalog-recovery.spec.mjs"
       ],
       "formalModels": [],
-      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression.",
+      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression. Error and empty-catalog component regressions preserve edited contacts across a pending retry and another empty response before success, keep the form gated, retain query-based service selection, and assert no booking/checkout calls. Browser fixtures cover keyboard retry and restored schedule progression with all business writes blocked.",
       "evidence": "Local Jest execution (PublicBookingPage, publicRoutes, PublicBranding suites)",
       "status": "specified and implemented",
       "critical": false,
