@@ -730,6 +730,28 @@ isLeft (Right _) = False
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
+    describe "served music credential cache boundary" $ do
+        forM_ ["GET", "HEAD"] $ \method ->
+            it ("protects the actual public asset-access route before UUID parsing for " <> show method) $ do
+                let env = Env (error "TEST_ONLY_UNUSED_DATABASE") (marketplaceTestConfig False)
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    original <- NotificationHTTP.parseRequest
+                        ("http://127.0.0.1:" <> show port <> "/music/assets/not-a-uuid/access")
+                    response <- NotificationHTTP.httpLbs
+                        (original { NotificationHTTP.method = method }) manager
+                    statusCode (NotificationHTTP.responseStatus response) `shouldBe` 400
+                    lookup "Cache-Control" (NotificationHTTP.responseHeaders response)
+                        `shouldBe` Just "private, no-store"
+        it "leaves catalog validation responses outside the credential cache policy" $ do
+            let env = Env (error "TEST_ONLY_UNUSED_DATABASE") (marketplaceTestConfig False)
+            testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                request <- NotificationHTTP.parseRequest
+                    ("http://127.0.0.1:" <> show port <> "/music/releases?limit=not-an-int")
+                response <- NotificationHTTP.httpLbs request manager
+                statusCode (NotificationHTTP.responseStatus response) `shouldBe` 400
+                lookup "Cache-Control" (NotificationHTTP.responseHeaders response) `shouldBe` Nothing
     describe "live database readiness" $ do
         it "returns503 rather than success when the handler cannot acquire its database" $ do
             let env = Env (error "PRIVATE_DATABASE_CONNECTION_DETAILS") (marketplaceTestConfig False)

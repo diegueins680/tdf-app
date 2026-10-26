@@ -12373,6 +12373,87 @@
         "classification": "PARTIAL",
         "reason": "Focused authorized recording search and release pagination are implemented with finite SQL/security/client regression coverage. Full HTTP binding, current candidate hosted checks, independent review and deployed acceptance remain separate obligations; no mathematical proof or universal catalog completion is established."
       }
+    },
+    {
+      "id": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+      "title": "Private non-storable responses for music bearer credentials",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "The eight inventoried music credential operations emit exactly one Cache-Control: private, no-store response header, including GET/HEAD aliases and success or denial responses; unrelated operations and all non-cache headers, status and body remain unchanged.",
+      "authority": "Explicit universal audio implementation directive sections 13, 14 and 17, plus scoped credential-cache implementation instruction 2026-10-26; independent release review remains required.",
+      "source": "docs/music-releases/credential-cache-control.md",
+      "contract": "formal/system/music-credential-cache.md",
+      "property": "For an inventoried method and decoded path, replace all case-insensitive Cache-Control headers with one private/no-store directive. The transformation is idempotent, preserves other response/request data, and is identity for every other request.",
+      "actors": [
+        "Public listener",
+        "Authorized uploader or downloader",
+        "Canonical WAI application and boot response boundary"
+      ],
+      "preconditions": [
+        "Request handling uses Server.mkApp or the canonical boot wrapper.",
+        "WAI method/path/header representations and compliant cache handling are trusted.",
+        "The operation inventory is reviewed when credential endpoints change."
+      ],
+      "inputs": [
+        "Request method, decoded pathInfo and query parameters",
+        "Response status, headers and body from routing, authorization, startup or exception handling"
+      ],
+      "state": {
+        "boundary": "Request-local response transformation; no database or session state",
+        "routeInventory": "Eight music credential operations plus HEAD for their GET routes",
+        "publication": "Existing authorization, feature gates and credential lifetimes remain authoritative"
+      },
+      "allowedTransitions": [
+        "Inventoried response -> one private/no-store directive, otherwise identical response",
+        "Unrelated request -> unchanged response",
+        "Nested transformation -> same single directive"
+      ],
+      "forbiddenTransitions": [
+        "Music bearer credential response remains publicly cacheable through an inventoried route alias.",
+        "A conflicting duplicate Cache-Control survives the transformation.",
+        "Catalog/library/payment responses or other headers/status/body are changed by this scoped policy."
+      ],
+      "effects": [
+        "Replace only the Cache-Control header for inventoried music credential operations."
+      ],
+      "authorization": "The boundary grants no access and does not alter existing feature, territory, ownership, entitlement, upload or DDEX predicates.",
+      "privacy": "Music signed credentials should not be stored by compliant browser/shared HTTP caches. Previously issued grants, storage/CDN object caching and unrelated private response policies remain outside this change.",
+      "concurrency": "The transformation has no shared mutable state and does not consume or replace the response stream.",
+      "idempotency": "Filtering all Cache-Control instances before adding one directive makes nested application/boot boundaries idempotent.",
+      "failure": "Apply the same header transformation to matched denied, startup and exception responses without changing their status, body or recovery semantics.",
+      "recovery": "Application-only rollback requires no data or schema changes but reintroduces the missing cache instruction; existing credential expiry remains unchanged.",
+      "observability": "Focused WAI/Servant and application-route tests plus separate exact-candidate HTTP response-header receipts; no credential logging is added.",
+      "implementation": [
+        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/tdf-hq.cabal"
+      ],
+      "interactions": [
+        "MEDIA-MUSIC-RELEASE-001",
+        "MEDIA-MUSIC-ASSET-001",
+        "MEDIA-MUSIC-PLAYER-001"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/MusicCredentialCacheMain.hs"
+      ],
+      "formalModels": [],
+      "verification": "Focused canonical Stack run passed42 examples with zero failures against the actual WAI boundary and public Servant router. The three registered actual mkApp cases and fresh candidate HTTP checks remain separate. No mathematical proof, S3 signature enforcement or cache-provider conformance claim.",
+      "evidence": "reports/music-credential-cache-2026-10-26.json; historical actual 5f HTTP baseline with absent header, not credential-byte delivery or a demonstrated disclosure.",
+      "status": "specified and implemented",
+      "confidence": "Scoped implementation; candidate runtime, CI, independent review and deployment remain separate gates.",
+      "ambiguity": [
+        "No new/future credential endpoint is automatically covered without inventory review.",
+        "Noncompliant caches, previous stored responses, media-object/CDN caching and unauthorized redistribution are not solved by this response header.",
+        "No current-candidate compiled HTTP or production acceptance is claimed before its own receipt."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped response boundary and42 finite WAI/public-router examples pass in canonical Stack. Actual mkApp cases, aggregate/current-candidate HTTP checks, CI, independent review and deployment remain pending; this is not formal proof or global cache-policy verification."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -13416,7 +13497,7 @@
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "747e6690b4d78c456eee1359075a728fb6b13ee5cdf1590a7e746c94ee9b9277",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
-    "tdf-hq/src/TDF/App/Boot.hs": "57c86179cffe22308c646d23eb781b4bfd0da4222e75da16f0d4fe4fe3424c27",
+    "tdf-hq/src/TDF/App/Boot.hs": "4d28306ae9a5bd326061fc83320069a58b871c1eeb14b6a341d4e4a88ac0dfee",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
@@ -13461,6 +13542,7 @@
     "tdf-hq/src/TDF/Models.hs": "92315ba9a595e5d6a106c5430371433927c3923535e2aebfc939f00442c9b45e",
     "tdf-hq/src/TDF/ModelsExtra.hs": "c6ce1dcd223e1ab57d26d980f41359abb5c020f765d1d8cf1726e2a564298da2",
     "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs": "1c3b5fae0cc4e5f4605aea8a1a0118badcafb8d83dbef671fce27f6cbf3d65d2",
+    "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs": "69301329d82629dd98495bc6d921a7c63cc10a6a5785cb49e705d0aa8ffa555d",
     "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs": "4dec7b8d3065fb925231203efe76181a645eb3701b3560b635eb364ece867677",
     "tdf-hq/src/TDF/MusicRelease/Domain.hs": "0f22bc111131e3a52d3d68bd6d9614c4b1005dd51dae59ac9fea1b92f0b7a193",
     "tdf-hq/src/TDF/MusicRelease/Money.hs": "009e99d0b79677e2eb8c3c8753db3f5842b142adcebef509e1093aee27abec49",
@@ -13476,7 +13558,7 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
-    "tdf-hq/src/TDF/Server.hs": "b1c687b40ba9a09dc3c824ddc16b493d333c48e6224b3194f821d7d52e8637c2",
+    "tdf-hq/src/TDF/Server.hs": "79a3008b96d6814bdeb78f3648a7c83ae9782f9518206a4068504fd3becf5d37",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
@@ -13520,13 +13602,14 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "1427f603a60bed8c4d0a9bd70d51e9e65bddb7785f50ba798e24d87bc012fafb",
+    "tdf-hq/tdf-hq.cabal": "ffa96645979f3a6953a35088c3319c9c6ad2adbdd45bfef9a203836016d85869",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
+    "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "f30f9a0f0d0672bc72e4bb20a4d32733951a50786620e15fe7cd9ec3d798c449",
+    "tdf-hq/test/Spec.hs": "5ea594d34202f994fc86259f841832e6a41e7fc750046b14499e1c9336036ebd",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -13552,6 +13635,7 @@
     "tdf-hq/test/TDF/InvoiceWorkerSpec.hs": "bff4993ffb5608afabf5cc04b6fb27d06036c61a78600334fc72800ee68379f7",
     "tdf-hq/test/TDF/LedgerPostingSpec.hs": "b709ea453c050a6af2df6c14f61c3d490a5923cc2d90e6935f9d6a3b91b1d28e",
     "tdf-hq/test/TDF/MetaRedeliverySpec.hs": "e1e1dcf22068ce44f41ea985d546235c844e468cdfe35a23ff297d6d0b8782b4",
+    "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs": "0902bc7c7ce5cec1921b1ff25693b7ac2bc98a3dbf8b74f7982f549d247e4ffc",
     "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
     "tdf-hq/test/TDF/MusicPurchaseSpec.hs": "dd6fa335332f1f475089b6b9b389a81124822c08d8a6d9c5b39e458a8b2d74e2",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
@@ -13567,7 +13651,7 @@
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
-    "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
+    "tdf-hq/test/TDF/ServerSpec.hs": "1e5817c4ed4c9a733fdc37c32b653c28c5048ddd7366208c0dc15e52819abebb",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "cb09f7d95767960ee7afd642fcf260f311a8de34bdb3aed3d97411e8ff7088bb",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
@@ -14534,6 +14618,10 @@
       {
         "requirement": "PRIV-RAG-002",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API.hs": [
@@ -14615,6 +14703,10 @@
       },
       {
         "requirement": "COURSE-ENROLL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
         "relationship": "tests"
       }
     ],
@@ -15552,6 +15644,10 @@
       {
         "requirement": "PAY-MUSIC-MONEY-WIRE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/check-build-trust.mjs": [
@@ -16023,6 +16119,10 @@
       },
       {
         "requirement": "DEPLOY-VERSION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
         "relationship": "tests"
       }
     ],
@@ -18595,6 +18695,10 @@
       },
       {
         "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
         "relationship": "implementation"
       }
     ],
@@ -24097,6 +24201,24 @@
     "e2e/web/music-catalog-discovery.spec.mjs": [
       {
         "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs": [
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs": [
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/MusicCredentialCacheMain.hs": [
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
         "relationship": "tests"
       }
     ]
@@ -42648,7 +42770,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "57c86179cffe22308c646d23eb781b4bfd0da4222e75da16f0d4fe4fe3424c27",
+      "sha256": "4d28306ae9a5bd326061fc83320069a58b871c1eeb14b6a341d4e4a88ac0dfee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42661,6 +42783,10 @@
         },
         {
           "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
           "relationship": "implementation"
         }
       ]
@@ -43753,6 +43879,18 @@
       ]
     },
     {
+      "id": "SURFACE-a1ed5e92fc4d243e",
+      "path": "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
+      "sha256": "69301329d82629dd98495bc6d921a7c63cc10a6a5785cb49e705d0aa8ffa555d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7a9c237235b1ed69",
       "path": "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
       "sha256": "4dec7b8d3065fb925231203efe76181a645eb3701b3560b635eb364ece867677",
@@ -44043,7 +44181,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "b1c687b40ba9a09dc3c824ddc16b493d333c48e6224b3194f821d7d52e8637c2",
+      "sha256": "79a3008b96d6814bdeb78f3648a7c83ae9782f9518206a4068504fd3becf5d37",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44124,6 +44262,10 @@
         },
         {
           "requirement": "PRIV-RAG-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
           "relationship": "implementation"
         }
       ]
@@ -45071,7 +45213,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "1427f603a60bed8c4d0a9bd70d51e9e65bddb7785f50ba798e24d87bc012fafb",
+      "sha256": "ffa96645979f3a6953a35088c3319c9c6ad2adbdd45bfef9a203836016d85869",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45100,6 +45242,10 @@
         },
         {
           "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
           "relationship": "implementation"
         }
       ]
@@ -45140,6 +45286,18 @@
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-RELEASE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d95951135775b873",
+      "path": "tdf-hq/test/MusicCredentialCacheMain.hs",
+      "sha256": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
           "relationship": "tests"
         }
       ]
@@ -45213,7 +45371,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "f30f9a0f0d0672bc72e4bb20a4d32733951a50786620e15fe7cd9ec3d798c449",
+      "sha256": "5ea594d34202f994fc86259f841832e6a41e7fc750046b14499e1c9336036ebd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45270,6 +45428,10 @@
         },
         {
           "requirement": "DEPLOY-VERSION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
           "relationship": "tests"
         }
       ]
@@ -45719,6 +45881,18 @@
       ]
     },
     {
+      "id": "SURFACE-d7d438e63b2b6932",
+      "path": "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
+      "sha256": "0902bc7c7ce5cec1921b1ff25693b7ac2bc98a3dbf8b74f7982f549d247e4ffc",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-ec903fb64a682e18",
       "path": "tdf-hq/test/TDF/MusicPublicationSpec.hs",
       "sha256": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
@@ -45994,7 +46168,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
+      "sha256": "1e5817c4ed4c9a733fdc37c32b653c28c5048ddd7366208c0dc15e52819abebb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46027,6 +46201,10 @@
         },
         {
           "requirement": "COURSE-ENROLL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
           "relationship": "tests"
         }
       ]
@@ -51859,7 +52037,8 @@
     "MEDIA-DRIVE-002",
     "COMMUNITY-PROFILE-001",
     "AUTH-LOGOUT-001",
-    "MEDIA-MUSIC-DISCOVERY-001"
+    "MEDIA-MUSIC-DISCOVERY-001",
+    "MEDIA-MUSIC-CREDENTIAL-CACHE-001"
   ],
   "stateMachines": [
     {
@@ -52978,7 +53157,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "229b8ef5dfe2506d09d4ba5f3d8932fd0cebca44807891b7baba66efd26db304",
+      "sourceSha256": "c9c076eb0d3a399ae7bc1c78132c6210c39296f1ea90de581fe525fea1bc7ada",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -53006,7 +53185,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "229b8ef5dfe2506d09d4ba5f3d8932fd0cebca44807891b7baba66efd26db304",
+      "sourceSha256": "c9c076eb0d3a399ae7bc1c78132c6210c39296f1ea90de581fe525fea1bc7ada",
       "definition": {
         "states": [
           "absent",
@@ -53036,7 +53215,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "229b8ef5dfe2506d09d4ba5f3d8932fd0cebca44807891b7baba66efd26db304",
+      "sourceSha256": "c9c076eb0d3a399ae7bc1c78132c6210c39296f1ea90de581fe525fea1bc7ada",
       "definition": {
         "export": [
           "queued",
@@ -75312,7 +75491,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 146,
+    "PARTIAL": 147,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

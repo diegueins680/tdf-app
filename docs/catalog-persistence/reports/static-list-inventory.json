@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T16:46:58.780Z",
+  "generatedAt": "2026-10-26T19:00:56.500Z",
   "repositoryRoot": ".",
-  "filesScanned": 2398,
+  "filesScanned": 2401,
   "candidateCount": 1339,
   "byClassification": {
     "dynamic-business-catalog": 863,
@@ -4408,7 +4408,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 1072,
+      "consumerCount": 1073,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -4696,7 +4696,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 1072,
+      "consumerCount": 1073,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -6816,7 +6816,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1072,
+      "consumerCount": 1073,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -7606,7 +7606,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 22,
+      "consumerCount": 23,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
@@ -7617,7 +7617,8 @@
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -24154,7 +24155,7 @@
       "lines": [
         1118
       ],
-      "consumerCount": 24,
+      "consumerCount": 25,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -24166,7 +24167,8 @@
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -38734,7 +38736,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 373,
+      "consumerCount": 375,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -39018,7 +39020,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 379,
+      "consumerCount": 381,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -44244,7 +44246,7 @@
       "lines": [
         4451
       ],
-      "consumerCount": 237,
+      "consumerCount": 238,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -44290,12 +44292,12 @@
         "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
         "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
         "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
         "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
         "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
         "tdf-hq/test/TDF/Server/EventResearchSpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
-        "tdf-hq/test/TDF/ServerAdminSpec.hs",
-        "tdf-hq/test/TDF/ServerAuthSpec.hs"
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -44707,7 +44709,7 @@
       "lines": [
         4460
       ],
-      "consumerCount": 237,
+      "consumerCount": 238,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -44753,12 +44755,12 @@
         "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
         "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
         "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
         "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
         "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
         "tdf-hq/test/TDF/Server/EventResearchSpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
-        "tdf-hq/test/TDF/ServerAdminSpec.hs",
-        "tdf-hq/test/TDF/ServerAuthSpec.hs"
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -52010,7 +52012,7 @@
       "lines": [
         147
       ],
-      "consumerCount": 1095,
+      "consumerCount": 1096,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -52420,7 +52422,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 123,
+      "consumerCount": 124,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -52466,12 +52468,12 @@
         "tdf-hq/test/MusicDdexCreditsFixtureMain.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
-        "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql",
-        "tdf-hq/test/integration/directory_event_search_sync.sql"
+        "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
@@ -53527,7 +53529,7 @@
       "lines": [
         402
       ],
-      "consumerCount": 1074,
+      "consumerCount": 1075,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -55224,7 +55226,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 22,
+      "consumerCount": 23,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
@@ -55235,7 +55237,8 @@
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -55308,7 +55311,7 @@
       "lines": [
         59
       ],
-      "consumerCount": 22,
+      "consumerCount": 23,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
@@ -55319,7 +55322,8 @@
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -59544,7 +59548,7 @@
         198,
         213
       ],
-      "consumerCount": 296,
+      "consumerCount": 298,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -61843,7 +61847,7 @@
       "lines": [
         158
       ],
-      "consumerCount": 169,
+      "consumerCount": 170,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -62033,7 +62037,7 @@
       "lines": [
         17
       ],
-      "consumerCount": 443,
+      "consumerCount": 445,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -65298,7 +65302,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1080,
+      "consumerCount": 1081,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -66942,7 +66946,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 495,
+      "consumerCount": 497,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -67679,7 +67683,7 @@
       "lines": [
         103
       ],
-      "consumerCount": 44,
+      "consumerCount": 46,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql",
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
@@ -67691,6 +67695,7 @@
         "tdf-hq/src/TDF/API/RecordsIngestion.hs",
         "tdf-hq/src/TDF/Config.hs",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
+        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
@@ -67698,6 +67703,7 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/ServerProposals.hs",
         "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "webConsumers": [
@@ -68053,7 +68059,7 @@
       "lines": [
         726
       ],
-      "consumerCount": 44,
+      "consumerCount": 46,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql",
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
@@ -68065,6 +68071,7 @@
         "tdf-hq/src/TDF/API/RecordsIngestion.hs",
         "tdf-hq/src/TDF/Config.hs",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
+        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
@@ -68072,6 +68079,7 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/ServerProposals.hs",
         "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "webConsumers": [
@@ -70651,13 +70659,15 @@
       "lines": [
         237
       ],
-      "consumerCount": 11,
+      "consumerCount": 13,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
         "tdf-hq/src/TDF/API/DDEX.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
@@ -78468,7 +78478,7 @@
       "lines": [
         10697
       ],
-      "consumerCount": 934,
+      "consumerCount": 935,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -81871,7 +81881,7 @@
       "lines": [
         13866
       ],
-      "consumerCount": 1073,
+      "consumerCount": 1074,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -82876,7 +82886,7 @@
       "lines": [
         14268
       ],
-      "consumerCount": 1073,
+      "consumerCount": 1074,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -84927,7 +84937,7 @@
         16729,
         16781
       ],
-      "consumerCount": 1072,
+      "consumerCount": 1073,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -85722,7 +85732,7 @@
       "lines": [
         16822
       ],
-      "consumerCount": 24,
+      "consumerCount": 25,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
@@ -85733,7 +85743,8 @@
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -86077,7 +86088,7 @@
       "lines": [
         17778
       ],
-      "consumerCount": 309,
+      "consumerCount": 310,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/docs/openapi/interactions.yaml",
@@ -86689,7 +86700,7 @@
       "lines": [
         18275
       ],
-      "consumerCount": 929,
+      "consumerCount": 930,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -86978,7 +86989,7 @@
       "lines": [
         18278
       ],
-      "consumerCount": 38,
+      "consumerCount": 40,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
         "tdf-hq/src/TDF/API.hs",
@@ -86987,6 +86998,7 @@
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/Config.hs",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
+        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs",
@@ -86994,6 +87006,7 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerProposals.hs",
         "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
         "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
@@ -87064,7 +87077,7 @@
       "lines": [
         18318
       ],
-      "consumerCount": 1079,
+      "consumerCount": 1080,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -102620,7 +102633,7 @@
       "lines": [
         277
       ],
-      "consumerCount": 170,
+      "consumerCount": 171,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -114784,7 +114797,7 @@
       "lines": [
         149
       ],
-      "consumerCount": 23,
+      "consumerCount": 24,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
@@ -114794,7 +114807,8 @@
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -118777,7 +118791,7 @@
       "lines": [
         206
       ],
-      "consumerCount": 238,
+      "consumerCount": 239,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -135140,7 +135154,7 @@
       "lines": [
         562
       ],
-      "consumerCount": 170,
+      "consumerCount": 171,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -137237,7 +137251,7 @@
       "lines": [
         335
       ],
-      "consumerCount": 178,
+      "consumerCount": 179,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -140210,7 +140224,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "automaticMigrationPlans",
-      "line": 287,
+      "line": 288,
       "values": [
         "core",
         "cms",
@@ -140226,7 +140240,7 @@
       "valueCount": 10,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        287
+        288
       ],
       "consumerCount": 20,
       "backendConsumers": [
@@ -140797,7 +140811,7 @@
       "lines": [
         65
       ],
-      "consumerCount": 165,
+      "consumerCount": 167,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -140835,6 +140849,7 @@
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Cron.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
+        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
         "tdf-hq/src/TDF/Profiles/Artist.hs",
         "tdf-hq/src/TDF/Routes/Courses.hs",
@@ -140847,8 +140862,7 @@
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/EventResearch.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-        "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs"
+        "tdf-hq/src/TDF/Server/Merch.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
@@ -145081,7 +145095,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MetaChannel",
-      "line": 2531,
+      "line": 2532,
       "values": [
         "MetaInstagram",
         "MetaFacebook"
@@ -145089,7 +145103,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        2531
+        2532
       ],
       "consumerCount": 4,
       "backendConsumers": [
@@ -145123,7 +145137,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "calendarEventStatuses",
-      "line": 4780,
+      "line": 4781,
       "values": [
         "confirmed",
         "tentative",
@@ -145132,7 +145146,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        4780
+        4781
       ],
       "consumerCount": 58,
       "backendConsumers": [
@@ -145227,7 +145241,7 @@
       "domain": "academy-courses",
       "kind": "haskell-list",
       "name": "courseFollowUpTypeOptions",
-      "line": 6110,
+      "line": 6111,
       "values": [
         "note",
         "call",
@@ -145240,7 +145254,7 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        6110
+        6111
       ],
       "consumerCount": 114,
       "backendConsumers": [
@@ -145395,7 +145409,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MarketplaceCartKind",
-      "line": 16501,
+      "line": 16502,
       "values": [
         "MarketplaceCartSale",
         "MarketplaceCartRental"
@@ -145403,7 +145417,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        16501
+        16502
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -146672,7 +146686,7 @@
       "lines": [
         1525
       ],
-      "consumerCount": 22,
+      "consumerCount": 23,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
@@ -146682,7 +146696,8 @@
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -149373,7 +149388,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 747,
+      "line": 748,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -149385,7 +149400,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        747
+        748
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -152215,7 +152230,7 @@
       "lines": [
         1197
       ],
-      "consumerCount": 1072,
+      "consumerCount": 1073,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
