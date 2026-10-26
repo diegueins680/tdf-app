@@ -143,3 +143,39 @@ unchanged. Ordered metadata and exact-head CI/release checks are separate gates.
 No production or other active music-search branch is changed by this correction.
 
 The CI-only metadata refresh passed 36 declaration/inventory/conformance/admission regression tests and strict catalog JSON/CSV scans with 1,341 entries and no unreviewed/stale decisions. Normative 148 requirement objects and complete 1,341 decisions/222 migrations remain exact. Freshness, source preservation and immutable post-commit admission are tracked separately in the current report; fresh exact-head hosted CI including WebKit remains required.
+
+## Provider-domain protected-main reconciliation
+
+This normal merge advances the published cart-test successor
+`45316a1039eff89b0cca7bee15934bfcf16a725f` to actual protected main
+`c66a65a10a8e5e48f89172d61f6f57fb81697896`. All 148 main requirement objects,
+including `PAY-DOMAIN-BINDING-001`, remain exact. The unchanged credential-cache
+requirement makes 149 total. The complete 1,341-decision main catalog and its
+retirement history, plus the 223-entry production manifest, remain byte-exact.
+No migration is applied or new credential policy introduced by this refresh.
+
+The eight qualified cache runtime/test files remain exact 43b. The cart test
+remains exact c86a with its original nine-case local result and scope limitations;
+no browser run or fresh WebKit pass is inferred. All prior runtime/proof/CI/cart
+packets remain unchanged. Their earlier 976-file identity review describes
+45316 and its prior source context only: current main adds provider-domain SQL
+and modifies `ProviderRetrySpec`, so current whole-backend identity is FALSE.
+Merged application inputs excluding SQL/tests remain exact 45316, including the
+cache handlers, Cabal and Stack inputs. This compares the merged worktree, not
+raw c66, with the qualified branch. Git-derived version/time metadata is still
+build-specific, and no historical binary is retagged as this new candidate.
+
+Original 45 compiled/54 HTTP evidence remains qualified at 43b/full222. The historical
+147-row aggregate context, append-only proof pins/history and release BLOCKED
+verdict remain unchanged; no new aggregate SMT or implementation-refinement
+proof is claimed for the 149-row composition. No local Stack, PostgreSQL, SMT,
+cache browser or full 223-runtime qualification is repeated by this metadata task.
+
+Required final metadata and source-admission checks are recorded separately from
+execution evidence. Current-main conflict resolution permits required new-head
+hosted CI, including WebKit; it is not a waiver or an old-head rerun. Current
+independent review, protected integration and deployment acceptance remain gates.
+This baseline is pinned to c66, not a claim about a later main advance. No
+production flag, payment behavior, original master or other worktree is changed.
+
+The new composition passed 36 metadata regression cases, 45 CI-selection/pipeline checks and both generated-client freshness checks. Strict catalog JSON/CSV checks passed with 1,341 candidates/rows and no stale/unreviewed decision. These 45 CI-policy tests are separate from the historical 45 compiled cache cases. Final ordered freshness and committed source admission remain recorded separately; no current-head runtime or full223 execution is inferred.

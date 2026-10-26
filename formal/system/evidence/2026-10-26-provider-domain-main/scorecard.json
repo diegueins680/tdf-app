@@ -1,0 +1,112 @@
+{
+  "qualifiedSource": "cb7773790f15099933b92b184cfb50d7cf20c8aa",
+  "requirements": {
+    "total": 144,
+    "critical": 116,
+    "financialCritical": 20,
+    "authorizationCritical": 12
+  },
+  "providerDomain": {
+    "requirement": "PAY-DOMAIN-BINDING-001",
+    "assurance": "TESTED",
+    "modelChecking": "UNKNOWN",
+    "wholeImplementationEquivalence": "UNPROVEN",
+    "migrationCount": 223,
+    "matrixCases": 224,
+    "witnessedRaces": 16,
+    "databaseMutationControls": 10,
+    "commercialSnapshotCases": 4,
+    "compiledDiscoveredCases": 317,
+    "compiledExecutedCases": 317,
+    "compiledFailures": 0,
+    "compiledPending": 0,
+    "businessAdmissionDefectsCorrectedInCandidate": 1,
+    "businessDomains": 4,
+    "newProviderRails": 2
+  },
+  "verificationSystem": {
+    "optimizedHarnessFalseAcceptCounterexamples": 3,
+    "resolvedInCandidate": 3,
+    "optimizationSensitiveChecksRepaired": 22,
+    "helperControlsNormal": 4,
+    "helperControlsOptimized": 4,
+    "initialFullSchemaFailureCases": 3,
+    "fixturePreconditionsCorrected": 3,
+    "newUnpaidRefundCase": 1,
+    "accidentalReportSourceDriftDetected": true
+  },
+  "aggregate": {
+    "examples": 4039,
+    "failures": 0,
+    "externalRunnerPending": 21
+  },
+  "delivery": {
+    "pr": 596,
+    "state": "DRAFT",
+    "dependency": 621,
+    "currentHeadCI": "Required",
+    "independentApproval": "Required",
+    "productionOperations": false
+  },
+  "backlog": [
+    "Merge621 through protected FIFO admission before independent596 admission.",
+    "Fresh final-head full-schema hosted checks and independent review; normal merge preserving456be073c944dd3d76eb9e3c2169fe7fbb4041ef.",
+    "Full SQL/application refinement, arbitrary schedules, provider/merchant environment correspondence and real external charge idempotency remain unresolved.",
+    "Review runtime privileges, function namespace policy, authorization changes, settlement recovery and provider webhook authenticity beyond this admission boundary."
+  ],
+  "proofReportSource": "1bca8b216d5cf1f41b053ca5c02c189760fe6eaf",
+  "proofMetrics": {
+    "requirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 144,
+      "NOT_APPLICABLE": 0
+    },
+    "requirementsWithDeclaredAmbiguityEntries": 134,
+    "obligationsByCategory": {
+      "implementation": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 144,
+        "NOT_APPLICABLE": 0
+      },
+      "refinement": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 144,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-authorization-SMT": {
+        "PROVEN": 3,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-recovery-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      }
+    }
+  },
+  "criticalCompleteRequirementAssurance": {
+    "PROVEN": 0,
+    "UNPROVEN": 116
+  },
+  "financialCompleteRequirementAssurance": {
+    "PROVEN": 0,
+    "UNPROVEN": 20
+  },
+  "authorizationCompleteRequirementAssurance": {
+    "PROVEN": 0,
+    "UNPROVEN": 12
+  },
+  "scopeNotice": "Native317 execution is cb777; fresh assurance report/repository quality are clean1bca8b216. Evidence-only publication preserves those exact identities. Conditional SMT claims do not prove provider admission or complete requirements."
+}
