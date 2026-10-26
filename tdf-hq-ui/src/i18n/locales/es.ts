@@ -360,6 +360,7 @@ const es = {
       paymentFailed: 'Error en el pago',
       paymentUnclear: 'No se pudo confirmar el estado del pago. Por favor contacta con soporte.',
       unavailable: 'El pago no está disponible ahora. No se reservó ninguna entrada. Inténtalo de nuevo más tarde.',
+      cardUnavailable: 'El pago con tarjeta no está disponible en este momento. Inténtalo de nuevo más tarde.',
       paymentIntent: 'Error al crear la intención de pago',
       unexpected: 'Ocurrió un error inesperado',
       termsRequired: 'Acepta los términos y la política de reembolso para continuar.',
