@@ -494,14 +494,29 @@ export const uploadMusicAsset = async (options: UploadMusicAssetOptions): Promis
   }
 };
 
+export interface MusicPublicCatalogPage {
+  limit?: number;
+  offset?: number;
+  signal?: AbortSignal;
+}
+
 export const musicReleases = {
   listMine: (artistPartyId?: number) => get<MusicReleaseSummary[]>(apiPath(`/studio/releases${artistPartyId ? `?artistPartyId=${artistPartyId}` : ''}`)),
-  listPublic: (query = '', artistPartyId?: number) => {
+  listPublic: (query = '', artistPartyId?: number, page?: MusicPublicCatalogPage) => {
     const params = new URLSearchParams();
     if (query.trim()) params.set('q', query.trim());
     if (artistPartyId) params.set('artistPartyId', String(artistPartyId));
+    if (page?.limit !== undefined) {
+      if (!Number.isSafeInteger(page.limit) || page.limit < 1 || page.limit > 100) throw new RangeError('Catalog limit must be an integer from 1 to 100.');
+      params.set('limit', String(page.limit));
+    }
+    if (page?.offset !== undefined) {
+      if (!Number.isSafeInteger(page.offset) || page.offset < 0) throw new RangeError('Catalog offset must be a nonnegative safe integer.');
+      params.set('offset', String(page.offset));
+    }
     const suffix = params.toString();
-    return get<MusicPublicReleaseSummary[]>(apiPath(`/releases${suffix ? `?${suffix}` : ''}`));
+    const path = apiPath(`/releases${suffix ? `?${suffix}` : ''}`);
+    return page?.signal ? get<MusicPublicReleaseSummary[]>(path, { signal: page.signal }) : get<MusicPublicReleaseSummary[]>(path);
   },
   getPublic: (slug: string) => get<MusicPublicRelease>(apiPath(`/releases/${encodeURIComponent(slug)}`)),
   getAssetAccess: (assetId: string) => get<MusicAssetAccess>(apiPath(`/assets/${assetId}/access`)),

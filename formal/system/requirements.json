@@ -4699,7 +4699,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4790,7 +4790,8 @@
         "tdf-hq-ui/src/i18n/locales/es.ts",
         "tdf-hq-ui/src/i18n/locales/fr.ts",
         "tdf-hq-ui/src/i18n/locales/pt.ts",
-        "tdf-hq-ui/src/utils/checkoutStripe.ts"
+        "tdf-hq-ui/src/utils/checkoutStripe.ts",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
@@ -4818,7 +4819,7 @@
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
       ],
-      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation.",
+      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted.",
       "evidence": "Incoming review/test evidence is historical; final consolidated candidate must rerun.",
       "status": "specified and implemented",
       "critical": true,
@@ -12288,6 +12289,182 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Scoped SQL tests and finite model checking do not discharge complete implementation/refinement obligations; independent review and production approval remain required."
+      }
+    },
+    {
+      "id": "MEDIA-MUSIC-DISCOVERY-001",
+      "title": "Authorized recording-title search and paginated public release discovery",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "The public music release catalog searches canonical recording titles only through a currently authorized stream or preview asset for that recording and release version, while retaining existing release/artist matching, public visibility, artist filters and stable release identity. Web listeners can navigate beyond the first 24 authorized release cards; search and page URL state remain consistent and obsolete query responses cannot replace current results.",
+      "authority": "Explicit user universal audio implementation directive, 2026-10-25, sections 9, 13, 17 and P1; independent release review remains required.",
+      "source": "docs/music-releases/catalog-track-search.md; docs/music-releases/catalog-discovery-delivery-2026-10-25.md",
+      "contract": "formal/system/music-catalog-discovery.md",
+      "property": "A recording-title search match implies a same-recording/version stream or preview satisfying music_public_asset_accessible at query time; EXISTS preserves release row identity. With a stable result set, page p shows at most 24 rows at offset (p-1)*24 and uses one authorized sentinel row for next-page availability; older query results cannot replace the current query.",
+      "actors": [
+        "Public listener",
+        "Signed-in listener",
+        "Backend public release query"
+      ],
+      "preconditions": [
+        "The existing public music feature gate and trusted edge-territory derivation apply.",
+        "Existing music public views, delivery authorization predicates and directory_normalize_text are deployed.",
+        "Cross-page coverage assumes the authorized result set does not change between offset requests."
+      ],
+      "inputs": [
+        "Search text, optional artist party ID, limit and offset, trusted edge territory",
+        "URL q/page parameters and pagination/search/retry actions",
+        "Authorized public release summaries and asynchronous query outcomes"
+      ],
+      "state": {
+        "boundary": "Public release retrieval and MusicCatalogPage query/page state",
+        "database": "Existing published release view, release tracks, canonical recordings, assets and availability/rights predicates",
+        "client": "Deferred query/page pair, query-key-specific pending/result/error state, URL navigation history"
+      },
+      "allowedTransitions": [
+        "Change search -> reset to page one -> request current deferred query/page",
+        "Request success -> display up to 24 unique release cards; authorized row 25 enables next page",
+        "Page selection -> update URL page while retaining query; browser back -> restore prior URL state",
+        "Request failure -> explicit retry or previous-page navigation; superseded result -> remain outside current query view"
+      ],
+      "forbiddenTransitions": [
+        "A hidden recording title makes an otherwise visible release match without a currently authorized same-recording/version delivery asset.",
+        "Matching multiple renditions duplicates the release SQL result row.",
+        "An empty normalized query becomes a match-all wildcard for a nonempty unrelated raw query.",
+        "An obsolete query response replaces visible results for the current query.",
+        "Advancing by 25 skips the sentinel release that should be the next page first row."
+      ],
+      "effects": [
+        "Read-only release-level search results using stable published_at DESC/id ordering",
+        "URL-backed catalog navigation, bounded visible rows, loading/error/empty feedback and retry controls"
+      ],
+      "authorization": "Retain requirePublicFeature, trusted edge territory, music_public_release and existing availability rules; the added canonical recording-title branch requires music_public_asset_accessible for the matched recording/version. Playback still independently authorizes the selected asset.",
+      "privacy": "Introduce no matched-track metadata, media credentials or new response fields. The new recording-title branch cannot use an unauthorized hidden track as a search signal; this is not a fresh proof of every existing public metadata or cache policy.",
+      "concurrency": "Query/page are deferred together; request cancellation and query-key identity reject obsolete results. Offset pagination has no snapshot guarantee during concurrent publication, withdrawal or rights changes.",
+      "idempotency": "Search and page requests are read-only; repeating a request against an unchanged authorized catalog returns the same ordered release identities.",
+      "failure": "Failed requests expose retry and disable next-page navigation using stale success data. Empty later pages retain the previous-page action. Invalid page values fall back to page one and invalid client limit/offset arguments are rejected.",
+      "recovery": "Retry the current authorized request or navigate to a previous page. Application-source rollback requires no schema or asset mutation.",
+      "observability": "Focused PostgreSQL runtime groups and authorization mutation control, rendered page regressions, API-client contracts and dedicated backend CI invocation; operational search latency and production release evidence remain separate.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs"
+      ],
+      "interactions": [
+        "MEDIA-MUSIC-RELEASE-001",
+        "MEDIA-MUSIC-ASSET-001",
+        "MEDIA-MUSIC-PLAYER-001"
+      ],
+      "tests": [
+        "scripts/test-music-catalog-search.mjs",
+        "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
+        "e2e/web/music-catalog-discovery.spec.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Deterministic PostgreSQL integration/security controls execute the actual handler SQL literal and authoritative predicates, including a deliberate missing-authorization mutant. Component/API contracts exercise pagination and stale responses. These tests do not execute compiled HTTP routing or prove Haskell parameter ordering; no mathematical proof or formal model is claimed.",
+      "evidence": "Original SQL baseline/candidate runs and source identities in docs/music-releases/catalog-track-search.md; exact combined-candidate tests, hosted CI, independent review and release receipts remain separate.",
+      "status": "specified and implemented",
+      "confidence": "Scoped finite SQL and client contract evidence; no whole-platform catalog completeness or target-environment acceptance claim.",
+      "ambiguity": [
+        "The SQL extractor substitutes its own parameter list; compiled Haskell binding and HTTP-route integration require separate verification.",
+        "Offset pagination can miss or repeat rows across requests when the catalog changes; no snapshot cursor is implemented.",
+        "Universal /buscar, typo tolerance, richer credits/genre/aliases, non-release sources and historical reconciliation remain incomplete.",
+        "Representative-catalog query plans, p95 latency, physical assistive technology and production deployment remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused authorized recording search and release pagination are implemented with finite SQL/security/client regression coverage. Full HTTP binding, current candidate hosted checks, independent review and deployed acceptance remain separate obligations; no mathematical proof or universal catalog completion is established."
+      }
+    },
+    {
+      "id": "MEDIA-MUSIC-LEGACY-001",
+      "title": "Legacy release native media and contextual external-provider actions",
+      "domain": "MEDIA",
+      "critical": true,
+      "authority": "User universal audio implementation directive2026-10-25, selection/state integrity and targeted legacy-source continuation2026-10-26; independent release review remains required.",
+      "source": "docs/music-releases/legacy-provider-actions-2026-10-26.md",
+      "contract": "formal/system/legacy-release-playback.md",
+      "statement": "The existing legacy release feed distinguishes candidate direct media from known Spotify/YouTube provider pages and Google Drive HTML/share views before issuing native playback commands. Known provider actions use explicit contextual links; artist profiles never masquerade as a selected release recording. Dialog opening/canceling preserves the current TDF session; actual provider-link activation pauses its global player through the existing takeover event while retaining selection and position.",
+      "property": "Native dispatch rejects known provider pages, non-HTTP schemes and URL userinfo before emitting a stable legacy release command with artist attribution. Provider navigation emits no native selection, labels artist context, and pauses only on link activation. Classification does not prove audio MIME, availability, rights or successful playback.",
+      "actors": [
+        "Listener using the legacy release feed",
+        "Artist supplying an existing release link",
+        "Existing global player and external platform"
+      ],
+      "preconditions": [
+        "Legacy release and artist IDs refer to persisted entities; source metadata is supplied through existing authorized reads.",
+        "The existing global player is mounted for native commands and the external-link takeover listener.",
+        "Provider permissions, browser policies and actual media availability remain independently authoritative."
+      ],
+      "inputs": [
+        "Legacy release metadata and uploaded/direct URL map",
+        "Release streaming fields and optional artist-level provider fallback",
+        "Listen action, provider-dialog dismissal and actual link activation"
+      ],
+      "state": {
+        "boundary": "ReleasePlaybackAction classifier and FanHub provider dialog",
+        "outcomes": [
+          "native candidate",
+          "contextual provider navigation",
+          "no action"
+        ],
+        "globalPlayer": "Existing selected track and playback position; no new engine is created"
+      },
+      "allowedTransitions": [
+        "Listen direct release resource -> one global PLAYER_LOAD_TRACK_EVENT with stable release identity",
+        "Listen known provider page -> labeled provider dialog without native selection",
+        "Open/cancel provider dialog -> preserve global playback intent, selection and position",
+        "Activate primary/middle provider link -> existing RADIO_TAKEOVER_EVENT pauses global player, then normal external navigation",
+        "Only artist profile fallback available -> explicitly contextual artist navigation"
+      ],
+      "forbiddenTransitions": [
+        "Known provider HTML page is dispatched as native audio.",
+        "An arbitrary artist-level direct resource is presented as the chosen release recording.",
+        "Non-HTTP scheme or URL username/password reaches native selection or provider action.",
+        "Opening/canceling the provider dialog pauses the current global session.",
+        "Feed announces successful playback before the engine confirms playback."
+      ],
+      "effects": [
+        "Native command or contextual provider dialog/link",
+        "Accurate listener-facing action feedback and retained artist attribution",
+        "Existing global-player pause bridge on actual external link activation"
+      ],
+      "authorization": "The frontend source adapter grants no rights, ownership or backend permission. Existing release publication, delivery/provider permissions and user authorization retain authority. A candidate HTTP(S) reference can still be unavailable or unauthorized.",
+      "privacy": "Reject URL userinfo; preserve direct signed-reference bytes without logging them. No provider fetch/extraction proxy, credential collection or new analytics is added. Existing direct-URL persistence/expiry and provider permissions remain separate obligations.",
+      "concurrency": "Classification and action selection are synchronous. Provider dialog is dismissed on viewer change; takeover pauses only the current mounted global session. No global exclusion across embedded players, radio/broadcast tests, external tabs or operating-system audio is established.",
+      "idempotency": "Each native helper invocation emits one command; classification and dialog operations do not mutate stored assets. Repeated provider-link activation may repeat an existing pause signal, not a provider playback command.",
+      "failure": "Invalid candidates are rejected or skipped within existing precedence; no supported action exposes the existing unavailable-link feedback. Native decode/network failures and external-provider failures remain controlled by their existing engines/platforms.",
+      "recovery": "Listener may close the dialog, resume the retained TDF selection, or supply a valid release reference through the existing authorized save flow. Application-source rollback needs no schema or data reversal.",
+      "observability": "Source-bound helper/rendered/PlayerProvider command-state tests and declared artifact hashes. No provider playback, native decoder or production-observability result is inferred from command tests.",
+      "implementation": [
+        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+        "e2e/web/legacy-provider-playback.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Finite tests execute actual source helpers, FanHub/ReleaseFeed actions and PlayerProvider state with explicit API/UI/media doubles. URL and event-payload controls are not a MIME/rights oracle, real browser decoding, external service acceptance or mathematical proof.",
+      "evidence": "reports/legacy-provider-actions-2026-10-26.json binds source6f9b192cd6d0b4652b9e3342e4e7db392082fd64 and local receipt/log hashes; exact current candidate CI, review and release acceptance are separate.",
+      "status": "specified and implemented",
+      "confidence": "Local finite command/state evidence; real-media/provider behavior remains unverified.",
+      "ambiguity": [
+        "Unknown HTTP(S) resources and redirects may be HTML, missing, unsupported or unauthorized; source classification cannot establish media MIME/rights.",
+        "Provider click pause does not prove a new tab opened or provider playback began; external continuity and cross-tab audio exclusion are not claimed.",
+        "Embedded streaming components, radio/broadcast/microphone tests and other audio owners remain outside this bridge.",
+        "Real native browser/media and target-environment acceptance, physical accessibility and deployed behavior remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Targeted source classification and contextual action behavior are implemented and covered by local helper/rendered command-state regressions. No theorem, native decoder or external-provider acceptance is established; current-head CI, independent review and target release evidence remain required."
       }
     }
   ]

@@ -60,7 +60,8 @@ import { Records, type RecordsResourceDTO } from '../api/records';
 import {
   buildReleaseStreamUpdatePayload,
   dispatchReleaseToRadio,
-  resolveReleaseAudioUrl,
+  resolveReleasePlaybackAction,
+  type ExternalReleasePlayback,
   type ReleaseFeedItem,
 } from '../features/releases/ReleasePlayerActions';
 import { useReleaseFeed, type ReleaseFeedArtist } from '../features/releases/useReleaseFeed';
@@ -77,6 +78,7 @@ import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { firstNonEmptyString } from '../utils/stringValues';
 import { musicReleases, type MusicPublicReleaseSummary } from '../api/musicReleases';
 import { useTranslation } from 'react-i18next';
+import { RADIO_TAKEOVER_EVENT } from '../player/types';
 import { useFanHubOnboarding } from '../features/fans/useFanHubOnboarding';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
@@ -453,6 +455,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [pendingUploadRelease, setPendingUploadRelease] = useState<ReleaseFeedItem | null>(null);
   const [uploadingReleaseId, setUploadingReleaseId] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [externalPlayback, setExternalPlayback] = useState<(ExternalReleasePlayback & { title: string; artist: string }) | null>(null);
+  useEffect(() => { setExternalPlayback(null); }, [viewerId]);
   const [feedLimit, setFeedLimit] = useState(4);
   const [artistEditorOpen, setArtistEditorOpen] = useState(() => focusArtist);
   const targetArtists = useMemo<ReleaseFeedArtist[]>(() => {
@@ -597,13 +601,18 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   };
 
   const handlePlayRelease = (release: ReleaseFeedItem) => {
-    const audioUrl = resolveReleaseAudioUrl(release, releaseAudioMap, streamingFallbacks.get(release.arArtistId));
-    if (!audioUrl) {
+    setExternalPlayback(null);
+    const action = resolveReleasePlaybackAction(release, releaseAudioMap, streamingFallbacks.get(release.arArtistId));
+    if (!action) {
       setUploadError('Este lanzamiento todavía no tiene un enlace de audio. Sube el máster o pega un enlace.');
       return;
     }
     setUploadError(null);
-    dispatchReleaseToRadio(release, audioUrl);
+    if (action.kind === 'provider') {
+      setExternalPlayback({ ...action, title: release.arTitle, artist: release.artistName });
+      return;
+    }
+    dispatchReleaseToRadio(release, action.url);
   };
 
   const handleSaveReleaseLink = async () => {
@@ -2203,6 +2212,26 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         {!isHomeManagerView && hubShortcutSections}
       </Stack>
       </Box>
+      <Dialog open={externalPlayback !== null} onClose={() => setExternalPlayback(null)} aria-labelledby="external-release-playback-title">
+        <DialogTitle id="external-release-playback-title">{externalPlayback?.context === 'artist'
+          ? `Perfil de ${externalPlayback.artist} en ${externalPlayback.provider}`
+          : `Escuchar en ${externalPlayback?.provider ?? ''}`}</DialogTitle>
+        <DialogContent>
+          <Typography>{externalPlayback?.context === 'artist'
+            ? 'Este enlace abre el perfil del artista; no identifica una pista de este lanzamiento.'
+            : `${externalPlayback?.title ?? ''} · ${externalPlayback?.artist ?? ''}`}</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            La reproducción y sus controles estarán en la plataforma externa.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setExternalPlayback(null)} sx={{ minHeight: 44 }}>Cerrar</Button>
+          {externalPlayback && <Button component="a" href={externalPlayback.url} target="_blank" rel="noopener noreferrer" variant="contained"
+            onClick={() => window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT))}
+            onAuxClick={(event) => { if (event.button === 1) window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT)); }}
+            aria-label={`Abrir en ${externalPlayback.provider} (nueva pestaña)`} sx={{ minHeight: 44 }}>Abrir en {externalPlayback.provider}</Button>}
+        </DialogActions>
+      </Dialog>
       <Dialog open={loginPromptOpen} onClose={() => setLoginPromptOpen(false)}>
         <DialogTitle>Inicia sesión para seguir artistas</DialogTitle>
         <DialogContent>
