@@ -9,12 +9,19 @@ parser.add_argument('--source',required=True)
 parser.add_argument('--expected-source',required=True)
 parser.add_argument('--binary',required=True)
 args=parser.parse_args()
-plan={'mode':args.mode,'humanParticipants':0,'productionWrites':False,'providersUsed':False,'fixtureSetup':'One fictional artist and six fictional fans; follow/unfollow committed-response loss, failed confirmation reads, pre-commit failures and cross-context return. No club provisioning.','ports':{'postgres':55534,'api':18714,'web':4257},'scope':'Optimized candidate web and qualified native fe179 API with disposable221-schema PostgreSQL. Successful POST/DELETE responses are discarded after commit; separate pre-commit aborts and confirmation503s exercise failures. Artist/auth/club backend unchanged; receipt backend and real providers excluded.'}
+plan={'mode':args.mode,'humanParticipants':0,'productionWrites':False,'providersUsed':False,'fixtureSetup':'One fictional artist and six fictional fans; follow/unfollow committed-response loss, failed confirmation reads, pre-commit failures and cross-context return. No club provisioning.','ports':{'postgres':55534,'api':18714,'web':4257},'scope':'Optimized candidate web and qualified native fe179 API with disposable222-schema PostgreSQL. Successful POST/DELETE responses are discarded after commit; separate pre-commit aborts and confirmation503s exercise failures. Artist/auth/club backend unchanged; receipt backend and real providers excluded.'}
 if args.mode=='plan':print(json.dumps(plan,indent=2,ensure_ascii=False));sys.exit(0)
 assert args.mode=='rehearsal','This isolated verification harness has no human mode'
 root=Path(args.source).resolve();binary=Path(args.binary).resolve()
 assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()==args.expected_source,'Source differs from explicitly selected revision'
-subprocess.run(['git','diff','--exit-code','fe179de45d9b0e085bb7cd2f00a9704991fa1652',args.expected_source,'--','tdf-hq'],cwd=root,check=True,stdout=subprocess.DEVNULL)
+# SQL is applied by the fixture runner, not compiled into this compatibility
+# executable. All other backend inputs must still match its qualified source.
+subprocess.run(['git','diff','--exit-code','fe179de45d9b0e085bb7cd2f00a9704991fa1652',args.expected_source,'--','tdf-hq',':(exclude)tdf-hq/sql/**'],cwd=root,check=True,stdout=subprocess.DEVNULL)
+schema_authority='78fa351b469c1d2031df3232204dd722ac480e3b'
+subprocess.run(['git','merge-base','--is-ancestor',schema_authority,args.expected_source],cwd=root,check=True)
+subprocess.run(['git','diff','--exit-code',schema_authority,args.expected_source,'--','scripts/production-migrations.json','tdf-hq/sql'],cwd=root,check=True,stdout=subprocess.DEVNULL)
+assert len(json.loads((root/'scripts/production-migrations.json').read_text())['migrations'])==222,'Unexpected schema authority cardinality'
+
 assert not subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],cwd=root,text=True).strip(),'Source has tracked modifications'
 assert hashlib.sha256(binary.read_bytes()).hexdigest()=='cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a','Unexpected compatibility binary'
 assert sys.platform=='darwin' and Path('/usr/bin/sandbox-exec').exists(),'Requires validated Darwin network isolation; no unrestricted fallback'
@@ -23,7 +30,7 @@ out=Path(tempfile.mkdtemp(prefix='tdf-follow-response-runtime-20261026-',dir='/p
 print(str(out),flush=True)
 env={k:v for k,v in os.environ.items() if k in ['HOME','PATH','USER','LOGNAME','SHELL','LANG','LC_CTYPE','TZ','TMPDIR']};env['PATH']='/usr/local/opt/postgresql@16/bin:'+env['PATH'];env.update(PGHOST='127.0.0.1',PGPORT='55534',PGUSER=os.getlogin(),PGPASSFILE=str(out/'no-passfile'),CI='false')
 db='tdf_follow_response_20261026_test';url='postgresql://'+env['PGUSER']+'@127.0.0.1:55534/'+db
-report={'plan':plan,'startedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),'sourceTree':subprocess.check_output(['git','rev-parse','HEAD^{tree}'],cwd=root,text=True).strip(),'binaryRevision':'fe179de45d9b0e085bb7cd2f00a9704991fa1652','steps':[],'cleanup':{},'status':'running'}
+report={'plan':plan,'startedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),'sourceTree':subprocess.check_output(['git','rev-parse','HEAD^{tree}'],cwd=root,text=True).strip(),'binaryRevision':'fe179de45d9b0e085bb7cd2f00a9704991fa1652','schemaAuthority':schema_authority,'migrationCount':222,'steps':[],'cleanup':{},'status':'running'}
 procs=[];started=created=False
 http=urllib.request.build_opener(urllib.request.ProxyHandler({}))
 def save():(out/'results.json').write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n')
@@ -66,8 +73,8 @@ try:
  run('init',['initdb','-D',str(out/'cluster'),'--username='+env['PGUSER'],'--encoding=UTF8','--locale=en_US.UTF-8','--auth=trust'])
  run('start',['pg_ctl','-D',str(out/'cluster'),'-l',str(out/'postgres.log'),'-o','-p 55534 -h 127.0.0.1 -k '+str(out/'socket'),'start']);started=True
  run('create',['createdb','--template=template0',db]);created=True
- run('full221-schema',['node','scripts/test-music-integration-rehearsal.mjs'],{'TDF_MUSIC_REHEARSAL_DATABASE_URL':url})
- assert scalar('SELECT count(*) FROM tdf_schema_migration')=='221'
+ run('full222-schema',['node','scripts/test-music-integration-rehearsal.mjs'],{'TDF_MUSIC_REHEARSAL_DATABASE_URL':url})
+ assert scalar('SELECT count(*) FROM tdf_schema_migration')=='222'
  config=out/'vite.mjs'
  config.write_text("import {loadConfigFromFile,mergeConfig} from "+json.dumps(str(root/'node_modules/vite/dist/node/index.js'))+";\nconst loaded=await loadConfigFromFile({command:'build',mode:'production'},"+json.dumps(str(root/'tdf-hq-ui/vite.config.ts'))+");\nexport default mergeConfig(loaded.config,"+json.dumps({'root':str(root/'tdf-hq-ui'),'envDir':str(out/'empty-env'),'build':{'outDir':str(out/'build'),'emptyOutDir':False},'preview':{'host':'127.0.0.1','port':4257,'strictPort':True}})+");\n")
  webenv={'VITE_API_BASE':'http://127.0.0.1:18714','VITE_POSTHOG_KEY':'','VITE_GOOGLE_CLIENT_ID':''}

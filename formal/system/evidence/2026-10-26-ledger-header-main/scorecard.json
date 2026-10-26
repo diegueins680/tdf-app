@@ -1,0 +1,110 @@
+{
+  "generatedAt": "2026-10-26T04:33:32.376686+00:00",
+  "qualifiedSource": "db2ec17c1fc2cd934d523a434fa833d286900a2c",
+  "protectedMain": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+  "migrationCount": 222,
+  "protectedMigrationPrefixCount": 221,
+  "requirements": {
+    "total": 142,
+    "critical": 114,
+    "financialCritical": 19,
+    "authorizationCritical": 11,
+    "conformance": {
+      "PARTIAL": 142
+    }
+  },
+  "proofMetrics": {
+    "requirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 142,
+      "NOT_APPLICABLE": 0
+    },
+    "requirementsWithDeclaredAmbiguityEntries": 132,
+    "obligationsByCategory": {
+      "implementation": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 142,
+        "NOT_APPLICABLE": 0
+      },
+      "refinement": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 142,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-authorization-SMT": {
+        "PROVEN": 3,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-recovery-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      }
+    }
+  },
+  "ledgerHeader": {
+    "requirement": "PAY-LEDGER-HEADER-001",
+    "database": "TESTED",
+    "model": "BOUNDED_VERIFIED",
+    "distinctBusinessCounterexamplesResolvedInCandidate": 1,
+    "protectedFieldMutations": 16,
+    "installedStartupMutationsRejected": 4,
+    "witnessedHeaderRaces": 3,
+    "snapshotPositiveCases": 30,
+    "snapshotNegativeControls": 7,
+    "modelDistinctStates": 48,
+    "modelGeneratedStates": 138,
+    "modelControls": 1,
+    "wholeImplementationEquivalence": "UNPROVEN"
+  },
+  "stack": {
+    "freshCurrentSourceBuild": true,
+    "aggregateExamples": 4039,
+    "failures": 0,
+    "pendingExternalRunnerCases": 21,
+    "realDatabaseLedgerExamples": 10,
+    "realDatabasePending": 0
+  },
+  "delivery": {
+    "pr": 621,
+    "state": "OPEN",
+    "finalHeadCI": "Required after evidence publication",
+    "independentReview": "Required on final head",
+    "productionOperations": false
+  },
+  "prioritizedBacklog": [
+    {
+      "priority": "P0",
+      "obligation": "Final-head independent approval, required CI and current-main admission before merging621."
+    },
+    {
+      "priority": "P0",
+      "obligation": "Reconcile PlaceToPay/PayPhone domain-validation PR596 with merged551 and the current immutable migration prefix; qualify provider/retry/webhook boundaries."
+    },
+    {
+      "priority": "P0",
+      "obligation": "Establish deployed runtime/DDL privilege policy and production correspondence before sensitive migration or activation."
+    },
+    {
+      "priority": "P1",
+      "obligation": "Discharge complete implementation/refinement and unbounded recovery/liveness obligations."
+    }
+  ],
+  "limitations": [
+    "Finite SQL schedules and model bounds are separate from mathematical implementation equivalence.",
+    "Local SMT obligations are conditional; no new local independent CPC replay is claimed.",
+    "Earlier dated receipts retain their original source identities."
+  ]
+}

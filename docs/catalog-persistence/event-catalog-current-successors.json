@@ -352,12 +352,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "8229b8202552298c955e",
+      "currentId": "6ff395b6131079017c9d",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 221,
-      "change": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
+      "valueCount": 222,
+      "change": "The 222-entry deployment registry preserves the complete 221-entry protected main e938c72ba4b87010214f6838f06bfac45a0f45c0 prefix, including saved-alert migration eb2f71d62740783369a6eb2a6d35fc024484cb71, and appends only the posted-header guard introduced by 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Both independently developed 221-entry predecessor reviews are retained with exact canonical hashes and source references. Historical SQL and introduction SHAs are unchanged. This is a technical source review; current-head CI, independent PR approval and production authorization remain separate requirements.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
@@ -551,6 +551,26 @@
           },
           "sourceEntryCanonicalSha256": "6b6bab0b74b772b0ba73cd535f80a15669f8d76361bf8eb71070847a702f8e65",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "0781fe749d852505dfec130b5373a4163a20c90fa82bea42eeabedbd2e9d3260",
+          "sourceEntry": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "112f5ebf1c5195bc059835f58689f407b6c5e13acf2ce8167afc97ae428b4b38",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "97afb8872444b3a58853c36e2120fa4e2a01f75e468135434fab66777c1a0317",
+          "sourceEntry": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870"
+          },
+          "sourceEntryCanonicalSha256": "32cd5ae343876f255c2af30e9af955c720c9b541a495ac92ebb4e96538741d09",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "previousCurrentIds": [
@@ -560,7 +580,9 @@
         "2b073f20afd2f3798b1e",
         "a1eb1e750e7543b88fe1",
         "c94cd70c1272ec9ede1b",
-        "b7cc47848f3f9882770f"
+        "b7cc47848f3f9882770f",
+        "8229b8202552298c955e",
+        "9ada14767bee1662f97d"
       ]
     }
   ]
