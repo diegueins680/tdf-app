@@ -9,28 +9,29 @@ parser.add_argument('--source',required=True)
 parser.add_argument('--expected-source',required=True)
 parser.add_argument('--binary',required=True)
 args=parser.parse_args()
-plan={'mode':args.mode,'humanParticipants':0,'productionWrites':False,'providersUsed':False,'fixtureSetup':'One fictional artist and six fictional fans; follow/unfollow committed-response loss, failed confirmation reads, pre-commit failures and cross-context return. No club provisioning.','ports':{'postgres':55534,'api':18714,'web':4257},'scope':'Optimized candidate web and qualified native fe179 API with disposable222-schema PostgreSQL. Successful POST/DELETE responses are discarded after commit; separate pre-commit aborts and confirmation503s exercise failures. Artist/auth/club backend unchanged; receipt backend and real providers excluded.'}
+plan={'mode':args.mode,'humanParticipants':0,'productionWrites':False,'providersUsed':False,'fixtureSetup':'One fictional artist and six fictional fans; follow/unfollow committed-response loss, failed confirmation reads, pre-commit failures and cross-context return. No club provisioning.','ports':{'postgres':55534,'api':18714,'web':4257},'scope':'Optimized candidate web and qualified native 1dd657a API with disposable222-schema PostgreSQL. Successful POST/DELETE responses are discarded after commit; separate pre-commit aborts and confirmation503s exercise failures. Artist/auth/club backend unchanged; receipt backend and real providers excluded.'}
 if args.mode=='plan':print(json.dumps(plan,indent=2,ensure_ascii=False));sys.exit(0)
 assert args.mode=='rehearsal','This isolated verification harness has no human mode'
 root=Path(args.source).resolve();binary=Path(args.binary).resolve()
 assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()==args.expected_source,'Source differs from explicitly selected revision'
-# SQL is applied by the fixture runner, not compiled into this compatibility
-# executable. All other backend inputs must still match its qualified source.
-subprocess.run(['git','diff','--exit-code','fe179de45d9b0e085bb7cd2f00a9704991fa1652',args.expected_source,'--','tdf-hq',':(exclude)tdf-hq/sql/**'],cwd=root,check=True,stdout=subprocess.DEVNULL)
-schema_authority='78fa351b469c1d2031df3232204dd722ac480e3b'
+# The pinned executable was built through canonical Stack from the source below.
+# Every backend input, including SQL, must match; the ordered schema is also bound
+# independently to its protected-main authority. Never relabel the native /version.
+subprocess.run(['git','diff','--exit-code','1dd657aca9186b9c4a1b0116826223b6eca03c86',args.expected_source,'--','tdf-hq'],cwd=root,check=True,stdout=subprocess.DEVNULL)
+schema_authority='2e01bbe1263e8761fa2692bd951f828c01142449'
 subprocess.run(['git','merge-base','--is-ancestor',schema_authority,args.expected_source],cwd=root,check=True)
 subprocess.run(['git','diff','--exit-code',schema_authority,args.expected_source,'--','scripts/production-migrations.json','tdf-hq/sql'],cwd=root,check=True,stdout=subprocess.DEVNULL)
 assert len(json.loads((root/'scripts/production-migrations.json').read_text())['migrations'])==222,'Unexpected schema authority cardinality'
 
 assert not subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],cwd=root,text=True).strip(),'Source has tracked modifications'
-assert hashlib.sha256(binary.read_bytes()).hexdigest()=='cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a','Unexpected compatibility binary'
+assert hashlib.sha256(binary.read_bytes()).hexdigest()=='daa75566f3ac69f1cd52f388d9813c590d1442fc2ade15e0c7102580d6fdb37e','Unexpected compatibility binary'
 assert sys.platform=='darwin' and Path('/usr/bin/sandbox-exec').exists(),'Requires validated Darwin network isolation; no unrestricted fallback'
 assert subprocess.check_output(['node','--version'],text=True).strip()=='v22.14.0','Use pinned Node22.14.0 before creating resources'
 out=Path(tempfile.mkdtemp(prefix='tdf-follow-response-runtime-20261026-',dir='/private/tmp'));os.chmod(out,0o700)
 print(str(out),flush=True)
 env={k:v for k,v in os.environ.items() if k in ['HOME','PATH','USER','LOGNAME','SHELL','LANG','LC_CTYPE','TZ','TMPDIR']};env['PATH']='/usr/local/opt/postgresql@16/bin:'+env['PATH'];env.update(PGHOST='127.0.0.1',PGPORT='55534',PGUSER=os.getlogin(),PGPASSFILE=str(out/'no-passfile'),CI='false')
 db='tdf_follow_response_20261026_test';url='postgresql://'+env['PGUSER']+'@127.0.0.1:55534/'+db
-report={'plan':plan,'startedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),'sourceTree':subprocess.check_output(['git','rev-parse','HEAD^{tree}'],cwd=root,text=True).strip(),'binaryRevision':'fe179de45d9b0e085bb7cd2f00a9704991fa1652','schemaAuthority':schema_authority,'migrationCount':222,'steps':[],'cleanup':{},'status':'running'}
+report={'plan':plan,'startedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),'sourceTree':subprocess.check_output(['git','rev-parse','HEAD^{tree}'],cwd=root,text=True).strip(),'binaryRevision':'1dd657aca9186b9c4a1b0116826223b6eca03c86','schemaAuthority':schema_authority,'migrationCount':222,'steps':[],'cleanup':{},'status':'running'}
 procs=[];started=created=False
 http=urllib.request.build_opener(urllib.request.ProxyHandler({}))
 def save():(out/'results.json').write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n')
