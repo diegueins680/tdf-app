@@ -1042,6 +1042,7 @@
       "tdf-hq-ui/src/pages/AdsInboxPage.tsx",
       "tdf-hq-ui/src/pages/AppearanceModeCatalogPage.test.ts",
       "tdf-hq-ui/src/pages/AppearanceModeCatalogPage.tsx",
+      "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
       "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
       "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
       "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
@@ -1325,6 +1326,8 @@
       "tdf-hq-ui/src/utils/__tests__/serviceTypesStore.test.ts",
       "tdf-hq-ui/src/utils/accessControl.test.ts",
       "tdf-hq-ui/src/utils/accessControl.ts",
+      "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts",
+      "tdf-hq-ui/src/utils/artistEnrichmentReview.ts",
       "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
       "tdf-hq-ui/src/utils/artistFallbacks.ts",
       "tdf-hq-ui/src/utils/artistFollowIntent.ts",
@@ -3230,7 +3233,7 @@
     {
       "id": "SURFACE-f6500b8addb3b248",
       "path": "scripts/__tests__/artist-enrichment.test.mjs",
-      "sha256": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
+      "sha256": "1279298dc4cd6c11107577ac67d85df7931d67497060338948aaf82c8363df01",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3866,7 +3869,7 @@
     {
       "id": "SURFACE-ae1fc3f773e478bd",
       "path": "scripts/artist-enrichment.mjs",
-      "sha256": "df64d9cdd92fb41e66f1ac33dcc137eab5245a1e0e9a834065a4f363707c383d",
+      "sha256": "40fa05c40650b4fbdc94ab06533481e93391a402cf8f40332d3a598aa7cd9e7d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8808,9 +8811,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-667d36e152a1aba4",
+      "path": "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
+      "sha256": "33b3ffcac89df7788cd7888c6bc63a41e3fd708615f5b46af9f174dc808d8224",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7d1cdc171a244d93",
       "path": "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
-      "sha256": "923f72c77a82ef34dc9b94b7d42fa9084b3c9ff2ab82dbf2c0d7905d1d3fcd70",
+      "sha256": "d4c78364465efb2470458c71eabb7e90ce7943aa6005852aae064c352e6b0005",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10503,6 +10512,18 @@
       "id": "SURFACE-74c667377a8a66f7",
       "path": "tdf-hq-ui/src/utils/accessControl.ts",
       "sha256": "4550fd019b3553b00074186bf7e1614e9209c97cb4c94c5a485cb1ea102536c2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6b4c28fb8a720e4d",
+      "path": "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts",
+      "sha256": "b7a7422e67a3b5b9c8e6576adb0cd6b85499d2f5411b74cec1b0b658394d2777",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-25dc9d897d7829c5",
+      "path": "tdf-hq-ui/src/utils/artistEnrichmentReview.ts",
+      "sha256": "f4b507724bc41be6f64d46f10b2f775316f7bc9ea139e7f0c8261a79fe926aae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19289,7 +19310,7 @@
     },
     {
       "path": "docs/artist-enrichment-runbook.md",
-      "sha256": "cd4358a48e594fdb4b96d3814cb7f1e9c21e09ef1da87f22d1006a6e5564a7ad",
+      "sha256": "ca9048fc7127144f831667d69d4ba1184698f8205ba9bd0f8eed96179347ac40",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27374,7 +27395,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a60d928b211c49fae8c466f88c0be189d234bba697b928b584420546a566b431",
+      "sha256": "c0e69db6e468db65100e05306e73eac35d5f7bca48abe96ac451348c853a98f4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
