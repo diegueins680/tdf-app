@@ -64,7 +64,7 @@ try {
           if (fault === 'before') return route.abort('failed');
           if (fault === 'after') {
             const response = await route.fetch();
-            assert.equal(response.status(), r.method() === 'POST' ? 200 : 204);
+            assert.equal(response.status(), 200); // Existing Servant Delete '[JSON] NoContent contract.
             row.droppedCommittedResponses.push({ method: r.method(), status: response.status() });
             if (failNextRead) { unavailableRead = true; failNextRead = false; }
             return route.abort('failed');
