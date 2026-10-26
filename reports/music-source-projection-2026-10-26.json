@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "status": "LOCAL_SOURCE_AND_METADATA_TESTED_PENDING_HOSTED_REVIEW",
+  "scope": "Four public-listening source projections; finite SQL/policy agreement only",
+  "baseline": "3af768dacd95c1223975c62da3ce8088bed89b47",
+  "branch": "fix/music-source-availability-20261026",
+  "targetBranch": "main",
+  "formal": {
+    "requirement": "MEDIA-MUSIC-SOURCES-001",
+    "contract": "formal/system/music-source-projection.md",
+    "classification": "PARTIAL",
+    "mathematicalProof": false,
+    "preservedMainRequirements": 142,
+    "totalRequirements": 143,
+    "preservedMainCatalogDecisions": 1330,
+    "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "structurallyMappedSourcePaths": [
+      "tdf-hq/src/TDF/Server/MusicRelease.hs",
+      "scripts/test-music-source-projection.mjs",
+      ".github/workflows/ci.yml",
+      "scripts/ci-change-scope.mjs",
+      "scripts/__tests__/ci-change-scope.test.mjs"
+    ]
+  },
+  "sourceQualification": {
+    "capturedAt": "2026-10-26T05:56:41.236841+00:00",
+    "baselineCommit": "3af768dacd95c1223975c62da3ce8088bed89b47",
+    "worktree": "/private/tmp/tdf-audio-source-availability-20261026",
+    "sourceHashes": {
+      "tdf-hq/src/TDF/Server/MusicRelease.hs": "9b001e5a36c2dde75a8df89e898992815765451f39d6a25cdb167dde9ec74bea",
+      "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      ".github/workflows/ci.yml": "7d7dbe3a796cd0b218ee720950ad40131ac95bf21a4042352bd5a80f12b83685",
+      "scripts/ci-change-scope.mjs": "abf7c6b2653cb13d1798d3aa066023f6586f6fbb0ad91ff506556fef01749be8",
+      "scripts/__tests__/ci-change-scope.test.mjs": "e411ba86db22b662de37bdb3992428bca0169bf3a37134657387b411013de3e5"
+    },
+    "publicationFixtureHash": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
+    "logs": {
+      "/private/tmp/tdf-audio-source-baseline-20261026.log": "a79c0d813558297c55859673eb212a2825358e46b4808021e9ce7f812673af1f",
+      "/private/tmp/tdf-audio-source-candidate-binding-20261026.log": "4d6dd0d5246d55051b51562205c6d5e64212372e17c1a44773ebce83ca735c76",
+      "/private/tmp/tdf-audio-source-ci-selection-20261026.log": "19fa65c4e9f687a36afe14253880dfe8032a33af476110208404d20025660067"
+    },
+    "baselineAgreementFailures": [
+      "FAIL: getPublicRelease: preview-only listener must receive no denied full rendition",
+      "FAIL: getPublicRelease: EC must receive no US-only sources",
+      "FAIL: getPublicRelease: every emitted source agrees with delivery policy",
+      "FAIL: getPublicRelease: every emitted source agrees with delivery policy",
+      "FAIL: listFavorites: preview-only listener must receive no denied full rendition",
+      "FAIL: listFavorites: every emitted source agrees with delivery policy",
+      "FAIL: listPlaylists: preview-only listener must receive no denied full rendition",
+      "FAIL: listPlaylists: every emitted source agrees with delivery policy",
+      "FAIL: listPlaybackHistory: preview-only listener must receive no denied full rendition",
+      "FAIL: listPlaybackHistory: every emitted source agrees with delivery policy"
+    ],
+    "detectedPolicyMutants": [
+      "PASS mutant: getPublicRelease removal of source authorization is detected",
+      "PASS mutant: listFavorites removal of source authorization is detected",
+      "PASS mutant: listPlaylists removal of source authorization is detected",
+      "PASS mutant: listPlaybackHistory removal of source authorization is detected"
+    ],
+    "bindingContract": "Actual Haskell list extracted; whitelisted expression mapping used for SQL; omitted and reordered argument mutations asserted for each of four corrected handlers. Lexical translation, not compiled HTTP proof.",
+    "bindingMutationControls": 8,
+    "nodeVersion": "v24.13.1",
+    "psqlVersion": "psql (PostgreSQL) 18.2",
+    "postgresServerVersion": "16.13 (Homebrew)",
+    "remainingOwnedDatabases": 0,
+    "ciSelectionTestsPassed": 17,
+    "runtimeExitCode": 0,
+    "clusterStopped": true,
+    "scope": "Sources array policy only; metadata, identities, available boolean, publication, API shape and migrations preserved; no real HTTP/storage/production/full-build assertion",
+    "listenerPresent": false,
+    "cleanupVerifiedAt": "2026-10-26T05:56:43.067663+00:00",
+    "sourceCommit": "ade78b5ab11ba297cf419a96012032ebf289820d"
+  },
+  "metadataValidation": {
+    "passed": 25,
+    "commands": [
+      {
+        "command": "python3 scripts/test-requirement-declarations.py",
+        "passed": 9,
+        "exitCode": 0,
+        "log": "/private/tmp/tdf-audio-source-metadata-declarations-20261026.log",
+        "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
+      },
+      {
+        "command": "python3 scripts/test-specification-inventory.py",
+        "passed": 6,
+        "exitCode": 0,
+        "log": "/private/tmp/tdf-audio-source-metadata-inventory-20261026.log",
+        "sha256": "160691d7d836e3450c7cc816b628280e08e91511bafdab0f3e4f89acc438b33d"
+      },
+      {
+        "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+        "passed": 10,
+        "exitCode": 0,
+        "log": "/private/tmp/tdf-audio-source-metadata-conformance-20261026.log",
+        "sha256": "13b02df1e466853414cbce3b5ea038d5639e1e0d1775a0268a529b674f872ab5"
+      }
+    ],
+    "freshness": [
+      "specification-inventory.py --check PASS",
+      "specification-conformance.py --check PASS",
+      "git diff --check PASS"
+    ],
+    "sourcePreservation": "All142main requirement objects exact; scoped row143; all5source inputs exactade78; Mobileactuald832pin",
+    "unrunBoundary": "No new-specification-surfaces execution counted here; committed source admission belongs release/integration qualification."
+  },
+  "catalogValidation": {
+    "outcome": "PASS after exact Mobile initialization",
+    "candidateCount": 1330,
+    "unreviewed": 0,
+    "stale": 0,
+    "jsonReport": "docs/catalog-persistence/reports/static-list-inventory.json",
+    "csvReport": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+    "baselineDecisionObjectsPreserved": 1330,
+    "newDecisions": 0,
+    "scope": "Complete actual pinned Mobile source and tracked5source paths; incomplete initial scan explicitly not admitted"
+  },
+  "implementationBoundary": [
+    "getPublicRelease",
+    "listFavorites",
+    "listPlaylists",
+    "listPlaybackHistory"
+  ],
+  "preservedSemantics": [
+    "Existing track/release/saved-row identity,title,ordering and personal ownership",
+    "available indicates resolved public version; no playable-source guarantee",
+    "No credentials added; later access repeats authorization"
+  ],
+  "limits": [
+    "No actual media bytes,MIME,storage existence or decoder acceptance",
+    "No whole metadata/privacy or authorization theorem",
+    "No compiled HTTP binding or target-environment acceptance established by this draft",
+    "No newrevocation bound for existing credentials",
+    "No production,performanceSLO or deployment claim"
+  ],
+  "integration": {
+    "pr": null,
+    "ci": "not established",
+    "review": "pending",
+    "merge": "not performed",
+    "deployment": null,
+    "productionWrites": 0,
+    "migrations": 0,
+    "newInfrastructure": false
+  },
+  "sourceCommit": "ade78b5ab11ba297cf419a96012032ebf289820d",
+  "sourceQualificationReceiptSha256": "ea223d5f6e1d3d3f0a29be2274f6e754278690a71fa15b9515856e028d3f7abd",
+  "sourceAndLogHashesVerified": true,
+  "verification": {
+    "realSqlSurfacesPassed": 4,
+    "sourcePolicyRemovalControls": 4,
+    "bindingArgumentMutationControls": 8,
+    "ciSelectionTestsPassed": 17,
+    "classification": "TESTED finite PostgreSQL/lexical/scope controls; no theorem or actual HTTP/bytes proof",
+    "fullCompiledStackBuild": "PENDING current-candidate CI",
+    "actualHttpHandler": "UNVERIFIED",
+    "nativeMediaOrStorageBytes": "UNVERIFIED",
+    "performanceSlo": "UNMEASURED",
+    "rollback": "Application source reversal documented; target-environment drill NOT_RUN"
+  },
+  "setupAttempts": [
+    {
+      "action": "Initialize exact pinned Mobile checkout",
+      "initialOutcome": "Sandbox denied Git module directory creation; approved escalation succeeded",
+      "countsAsProductFailure": false
+    },
+    {
+      "action": "Initial catalog audit",
+      "initialOutcome": "Ran before Mobile clone completed;0unreviewed and101stale from incomplete source coverage",
+      "admittedAsValidation": false,
+      "correction": "Discard incomplete-scope result; rerun with actual pinned Mobile initialized",
+      "artifact": "/private/tmp/tdf-audio-source-catalog-audit-20261026.json"
+    }
+  ]
+}
