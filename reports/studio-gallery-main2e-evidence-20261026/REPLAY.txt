@@ -1,0 +1,5 @@
+Published preparation branch: prepare/studio-gallery-main-20261026 at7fc9d9729018dda268e16845a797b2467b8d30fd.
+Use Node22.14.0, install locked dependencies, initialize exactd832Mobilepin for specification gates.
+Run bash scripts/quality-ui.sh, then Playwright public-welcome.spec.mjs on chromium-desktop/chromium-phone/android-chrome-small/firefox-critical.
+Observer config here changes only absolute checkout/output paths, local preview port4288 and those4projects/serviceWorkersblock. Adjust paths on another machine. API fixtures are in the exact public test file and all external traffic is blocked.
+Do not relabel the old c219hosted/WebKit evidence as an execution on this preparation or future public source. No merge/production/backend/human outcome claimed.

@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-26",
+  "observedAt": "2026-10-26T22:24:08.815766+00:00",
+  "pr": 628,
+  "publishedPRHeadUnchanged": "c219279b33ce13337f71ddee8d14171f5adfc069",
+  "preparedHead": "7fc9d9729018dda268e16845a797b2467b8d30fd",
+  "preparedBranch": "prepare/studio-gallery-main-20261026",
+  "protectedMainComposed": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "preparationPublished": true,
+  "preparedPreviewVerified": false,
+  "composition": "Normal merge; no source rewrite. Every gallery runtime/test/photo byte matches approvedc219. Entire protected main147requirement register preserved except exact prior UX-WELCOME-001extension; all1341main catalog decisions/outer history preserved plus exact approvedPHOTOSdecision. Backend/API/SQL/dependencies/pin match protectedmain.",
+  "inputsSha256": {
+    "tdf-hq-ui/src/components/StudioGallery.tsx": "20cea2f374e690a0f3b65115628b2e76cfc080e31a96ac93cc5dfb2ab3e630b6",
+    "tdf-hq-ui/src/components/StudioGallery.test.tsx": "fc58e06828af223b5bb382b87d7fb26f76240d058af7e699cf3cc1dbc3487af3",
+    "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": "2819d1faed38a5727f09f8b7085553ad10e00954da29e4c149ceded3fb339232",
+    "e2e/web/public-welcome.spec.mjs": "5102a2614b4f1ba3f9f94a8f65666e1610cfdb7172513ee8edf938028142c494",
+    "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+    "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41"
+  },
+  "qualification": {
+    "node": "22.14.0",
+    "fullUiQuality": "PASS",
+    "suites": 309,
+    "tests": 3517,
+    "lint": "PASS",
+    "types": "PASS",
+    "optimizedBuild": "PASS",
+    "gzipInitialJsBytes": 336468,
+    "preloads": 5,
+    "entry": "/assets/index-B_361jhe.js",
+    "entrySha256": "1e47fb13ec3312d4edef9f87e26e573b6c4813b3a56cac0add79da14faa27e2b",
+    "entryEmbedsPreparedHead": true,
+    "browserCases": 32,
+    "browserEvidence": "reports/studio-gallery-main2e-evidence-20261026/browser-results.json",
+    "strictCatalogCandidates": 1342,
+    "unreviewed": 0,
+    "stale": 0,
+    "catalogControls": 8,
+    "canonicalInventoryAndConformance": "PASS",
+    "mappedMaterialSurfaces": 4,
+    "privateUiLogSha256": "2df56ddb0478e3cfd6e961fe612c8493f4d13d5cfeb5bfbdce6a5349862adba3"
+  },
+  "delivery": {
+    "implemented": true,
+    "testedThisCompositionLocally": true,
+    "preparedBranchPublished": true,
+    "sourcePRUpdated": false,
+    "merged": false,
+    "productionDeployed": false,
+    "productionVerified": false
+  },
+  "nextStep": "Preserve approved source while625/626/627 advance. Compose actual final protected main once before updating628; qualify final head, obtain fresh independent review if head changes, satisfy all20protected gates, merge normally and verify actual published behavior. This preparation grants no admission or deployment authority.",
+  "limits": [
+    "Local32cases are ChromeDesktop,Pixel7emulation,360pxAndroidChromeemulation,Firefox. No newWebKit or physical-device execution.",
+    "APIs/session/business data are synthetic; no production state writes, human usability, provider or activation outcome claim.",
+    "Earlier c219hosted566+22/10/25results and its first twoWebKitfailures retain their original source and cannot be relabeled as7fc9runs."
+  ]
+}
