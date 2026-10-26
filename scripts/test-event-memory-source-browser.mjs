@@ -137,9 +137,9 @@ try {
     // Check retained DOM and the real authenticated API, rather than mistaking that
     // accessibility isolation for source deletion or a successful hide.
     await expect(owner.getByRole('region', { name: /^Publicación de /, includeHidden: true }).filter({ hasText: caption })).toHaveCount(1);
-    const authorization = (await hidden.request().allHeaders())['authorization'];
-    expect(Boolean(authorization?.startsWith('Bearer '))).toBe(true);
-    const unchanged = await owner.request.get(`${config.api}/social-events/events/${config.eventId}/moments?extended`, { headers: { Authorization: authorization } });
+    // APIRequestContext shares this isolated browser's HttpOnly session cookie.
+    // Cookie-only sessions deliberately need no JS-readable bearer token.
+    const unchanged = await owner.request.get(`${config.api}/social-events/events/${config.eventId}/moments?extended`);
     expect(unchanged.status()).toBe(200);
     expect(await unchanged.json()).toEqual(expect.arrayContaining([expect.objectContaining({ emCaption: caption })]));
     await owner.getByRole('button', { name: 'Cancelar', exact: true }).click();
