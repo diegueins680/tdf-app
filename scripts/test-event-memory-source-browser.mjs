@@ -137,7 +137,7 @@ try {
     // Check retained DOM and the real authenticated API, rather than mistaking that
     // accessibility isolation for source deletion or a successful hide.
     await expect(owner.getByRole('region', { name: /^Publicación de /, includeHidden: true }).filter({ hasText: caption })).toHaveCount(1);
-    const authorization = hidden.request().headers()['authorization'];
+    const authorization = (await hidden.request().allHeaders())['authorization'];
     expect(Boolean(authorization?.startsWith('Bearer '))).toBe(true);
     const unchanged = await owner.request.get(`${config.api}/social-events/events/${config.eventId}/moments?extended`, { headers: { Authorization: authorization } });
     expect(unchanged.status()).toBe(200);
