@@ -412,6 +412,7 @@ spec = do
         notificationInboxSpec
         notificationIdentityInboxSpec
         reconciliationTransactionSpec
+        fullDomainQuerySpec
         hostedServiceOrderSpec
         closedCheckoutEvidenceSpec
         captureReplaySpec
@@ -622,9 +623,7 @@ spec = do
           it "normalizes the exact contact replay without requiring an unexpired payable state" $ \pool ->
             withRecoveryEnvironment $ do
               (creation, operation, request) <- replayFixture pool Checkout.ProviderPayPhone
-              runSqlPool (rawExecute
-                "UPDATE commerce_checkout_session SET status='paid' WHERE id=?::uuid"
-                [PersistText (Checkout.checkoutReferenceId (Checkout.pacCheckout creation))]) pool
+              closeCheckout pool creation "paid"
               setOperationState pool operation "succeeded" "succeeded"
               recovered <- replayHandler pool creation request
                 { pscBuyerPhone = Just " 991234567 ", pscBuyerCountryCode = Just " 593 " }
@@ -2269,10 +2268,11 @@ ticketLedgerSpec :: SpecWith ConnectionPool
 ticketLedgerSpec = describe "ticket capture ledger" $
   forM_ [(0,0),(0,261),(100,0),(100,261)] $ \(fee,tax) ->
     it ("conserves money and replays once with fee/tax " <> show (fee,tax)) $ \pool -> do
-      payment <- captureFixtureForDomain "event_ticket_order" "capture" Checkout.AttemptProcessing pool Checkout.ProviderPayPal
-      runSqlPool (rawExecute
-        "INSERT INTO event_ticket_checkout_runtime(checkout_id,platform_fee_minor,organizer_payable_minor,tax_minor) VALUES (?::uuid,?,?,?)"
-        [captureCheckoutParameter payment,PersistInt64 fee,PersistInt64 (12515-fee-tax),PersistInt64 tax]) pool
+      [Single checkoutId] <- runSqlPool (rawSql
+        "SELECT payment_test.checkout('event_ticket_order',?,?)::text"
+        [PersistInt64 fee,PersistInt64 tax]) pool
+      creation <- checkoutCreation pool Checkout.ProviderPayPal checkoutId
+      payment <- captureFixtureFromCheckout creation "capture" Checkout.AttemptProcessing pool Checkout.ProviderPayPal
       runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
       entries <- runSqlPool (rawSql
         "SELECT entry.account_code,entry.amount_minor FROM commerce_ledger_entry entry JOIN commerce_ledger_transaction txn ON txn.id=entry.transaction_id WHERE txn.source_id=? ORDER BY entry.account_code"
@@ -2316,26 +2316,19 @@ ticketLedgerSpec = describe "ticket capture ledger" $
               , Refund.vrOccurredAt = Checkout.vpOccurredAt payment
               , Refund.vrCorrelationId = "ticket-refund-" <> T.pack (show index)
               }
-        -- A changed component snapshot must roll back even though verification
-        -- advances the intent before ledger posting. Restore only this synthetic
-        -- fixture after proving the denial; production policies are immutable.
-        if index == 1 then do
+        -- The full schema refuses a changed fee snapshot at its write boundary.
+        -- An unrelated error is not accepted as evidence of this protection.
+        when (index == 1) $ do
           beforeDenied <- runSqlPool (captureSnapshot payment) pool
-          runSqlPool (rawExecute
+          denied <- try (runSqlPool (rawExecute
             "UPDATE event_ticket_checkout_runtime SET platform_fee_minor=platform_fee_minor+1,\
             \ organizer_payable_minor=organizer_payable_minor-1 WHERE checkout_id=?::uuid"
-            [captureCheckoutParameter payment]) pool
-          denied <- try (runSqlPool (Refund.recordVerifiedRefund completion) pool)
-            :: IO (Either IOException (Either Text Bool))
-          denied `shouldSatisfy` isLeft
+            [captureCheckoutParameter payment]) pool) :: IO (Either SqlError ())
+          case denied of
+            Left problem -> sqlErrorMsg problem `shouldBe`
+              "Event ticket checkout snapshot is immutable after creation"
+            Right _ -> expectationFailure "Mutable ticket fee snapshot was accepted"
           runSqlPool (captureSnapshot payment) pool `shouldReturn` beforeDenied
-          runSqlPool (Refund.loadRefund (Refund.rrReference refund)) pool
-            >>= ((`shouldBe` Just "processing") . fmap Refund.rrStatus)
-          runSqlPool (rawExecute
-            "UPDATE event_ticket_checkout_runtime SET platform_fee_minor=platform_fee_minor-1,\
-            \ organizer_payable_minor=organizer_payable_minor+1 WHERE checkout_id=?::uuid"
-            [captureCheckoutParameter payment]) pool
-        else pure ()
         runSqlPool (Refund.recordVerifiedRefund completion) pool `shouldReturn` Right True
         replays <- concurrently (replicate 4 (runSqlPool (Refund.recordVerifiedRefund completion) pool))
         replays `shouldBe` replicate 4 (Right False)
@@ -2412,10 +2405,18 @@ captureReplaySpec = describe "verified capture replay integrity" $
           , "UPDATE commerce_checkout_session SET status='paid',paid_minor=total_minor WHERE id=?::uuid"
           , "UPDATE commerce_payment_attempt SET status='succeeded' WHERE checkout_id=?::uuid"] $ \corrupt -> do
           payment <- captureFixture pool provider
-          runSqlPool (rawExecute corrupt [captureCheckoutParameter payment]) pool
-          snapshot <- runSqlPool (captureSnapshot payment) pool
-          runSqlPool (Checkout.recordVerifiedPayment payment) pool >>= (`shouldSatisfy` isLeft)
-          runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+          if "status='paid'" `T.isInfixOf` corrupt then do
+            denied <- try (runSqlPool (rawExecute corrupt [captureCheckoutParameter payment]) pool)
+              :: IO (Either SqlError ())
+            case denied of
+              Left problem -> sqlErrorMsg problem `shouldBe`
+                "Service booking checkout cannot become paid without bound verified payment evidence"
+              Right _ -> expectationFailure "Unverified paid checkout was accepted"
+          else do
+            runSqlPool (rawExecute corrupt [captureCheckoutParameter payment]) pool
+            snapshot <- runSqlPool (captureSnapshot payment) pool
+            runSqlPool (Checkout.recordVerifiedPayment payment) pool >>= (`shouldSatisfy` isLeft)
+            runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
 
       it "preserves successful and closed attempt evidence during binding replay" $ \pool -> do
         payment <- captureFixture pool provider
@@ -2487,23 +2488,47 @@ captureFixtureForDomainWithLines domain resourceType stage amounts =
 captureFixtureForDomainWithOrder
   :: Text -> Text -> Checkout.PaymentAttemptStage -> [Int64] -> Maybe Text -> ConnectionPool
   -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment
-captureFixtureForDomainWithOrder domain resourceType stage amounts domainOrder pool provider = do
+captureFixtureForDomainWithOrder domain requestedResourceType stage amounts domainOrder pool provider = do
   seed <- newCheckoutWithOrder domain amounts domainOrder pool
+  captureFixtureFromCheckout seed requestedResourceType stage pool provider
+
+captureFixtureFromCheckout :: Checkout.PaymentAttemptCreation -> Text -> Checkout.PaymentAttemptStage
+  -> ConnectionPool -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment
+captureFixtureFromCheckout seed requestedResourceType stage pool provider = do
   let creation = seed { Checkout.pacProvider = provider }
       method = case provider of
         Checkout.ProviderPayPal -> MethodPayPalWallet
         Checkout.ProviderPayPhone -> MethodPayPhoneWallet
         _ -> MethodCard
       checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
-      domainReference = maybe checkoutId id domainOrder
+      resourceType = case (provider, requestedResourceType) of
+        (Checkout.ProviderDatafast, "payment") -> "checkout"
+        (Checkout.ProviderDatafast, "capture") -> "checkout"
+        (Checkout.ProviderPayPal, "payment") -> "capture"
+        (Checkout.ProviderPlaceToPay, "payment") -> "session"
+        (Checkout.ProviderPayPhone, "payment") -> "sale"
+        _ -> requestedResourceType
+  [Single domainReference] <- runSqlPool (rawSql
+    "SELECT domain_order_id FROM commerce_checkout_session WHERE id=?::uuid"
+    [PersistText checkoutId]) pool
   attempt <- runSqlPool (Runtime.beginPaymentAttemptForMethod method creation) pool >>= requireRight
   let resource = "synthetic-capture-" <> Checkout.paymentAttemptReferenceId attempt
+      boundReference = if provider `elem` [Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone]
+        then providerReference provider checkoutId else domainReference
+  when (provider `elem` [Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone]) $
+    runSqlPool (rawExecute
+      "INSERT INTO commerce_provider_operation(payment_attempt_id,provider,environment,merchant_account_ref,\
+      \ provider_reference,operation,idempotency_key,request_sha256,provider_resource_id,status,outcome_certainty,started_at)\
+      \ VALUES (?::uuid,?,'sandbox',?,?,'create',?,repeat('a',64),?,'processing','ambiguous',NOW())"
+      [PersistText (Checkout.paymentAttemptReferenceId attempt),PersistText (Checkout.paymentProviderText provider),
+       PersistText (Checkout.pacMerchantRef creation),PersistText boundReference,
+       PersistText (Checkout.pacIdempotencyKey creation),PersistText resource]) pool
   _ <- runSqlPool (Checkout.bindProviderResource Checkout.ProviderBindingCreation
     { Checkout.pbcAttempt = attempt, Checkout.pbcCheckout = Checkout.pacCheckout creation
     , Checkout.pbcProvider = provider, Checkout.pbcEnvironment = Checkout.CheckoutSandbox
     , Checkout.pbcMerchantRef = Checkout.pacMerchantRef creation, Checkout.pbcResourceType = resourceType
     , Checkout.pbcProviderResource = resource, Checkout.pbcResourcePath = Nothing
-    , Checkout.pbcOrderReference = domainReference, Checkout.pbcAmountMinor = 12515
+    , Checkout.pbcOrderReference = boundReference, Checkout.pbcAmountMinor = 12515
     , Checkout.pbcCurrency = "USD", Checkout.pbcStage = stage
     , Checkout.pbcOccurredAt = Checkout.pacCreatedAt creation
     , Checkout.pbcCorrelationId = "synthetic-capture-binding" }) pool >>= requireRight
@@ -2512,7 +2537,7 @@ captureFixtureForDomainWithOrder domain resourceType stage amounts domainOrder p
     , Checkout.vpProvider = provider, Checkout.vpEnvironment = Checkout.CheckoutSandbox
     , Checkout.vpMerchantRef = Checkout.pacMerchantRef creation, Checkout.vpResourceType = resourceType
     , Checkout.vpProviderResource = resource, Checkout.vpProviderResourcePath = Nothing
-    , Checkout.vpOrderReference = domainReference, Checkout.vpProviderReference = domainReference
+    , Checkout.vpOrderReference = domainReference, Checkout.vpProviderReference = boundReference
     , Checkout.vpAmountMinor = 12515, Checkout.vpCurrency = "USD"
     , Checkout.vpEvidence = "server_to_server", Checkout.vpOccurredAt = Checkout.pacCreatedAt creation
     , Checkout.vpCorrelationId = "synthetic-capture-verification" }
@@ -2666,6 +2691,30 @@ serviceOrderSnapshot pool payment = runSqlPool (rawSql
   \ FROM service_storefront_order_status_change h WHERE h.order_id=o.id))::text\
   \ FROM service_storefront_order o WHERE o.id=?::uuid"
   [PersistText (Execution.bppDomainOrderId payment)]) pool
+
+-- Actual adapter parsing and query application across each production domain.
+-- SQL builders create accepted commercial/runtime snapshots, never paid flags.
+fullDomainQuerySpec :: SpecWith ConnectionPool
+fullDomainQuerySpec = describe "full-schema domain query settlement" $
+  forM_ ["service_booking", "event_ticket_order", "course_registration", "domo_event_quote"] $ \domain ->
+    forM_ [Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone] $ \provider ->
+      it (T.unpack domain <> " settles and replays " <> show provider) $ \pool -> do
+        [Single checkoutId] <- runSqlPool (rawSql "SELECT payment_test.checkout(?)::text"
+          [PersistText domain]) pool
+        creation <- checkoutCreation pool provider checkoutId
+        let now = Checkout.pacCreatedAt creation
+        (_, operation, _) <- prepareReplayCreation pool creation
+        payment <- bindReconciliationFixture pool creation operation
+          (providerReference provider checkoutId)
+        result <- parsedQuery payment Adapter.AdapterSucceeded
+        runSqlPool (Reconciliation.applyQueryResult payment result "domain-query" now) pool
+          `shouldReturn` Right Reconciliation.ReconciliationProcessed
+        assertPaymentPosted pool payment
+        paid <- runSqlPool (paymentSnapshot payment) pool
+        outcomes <- concurrently (replicate 4 (runSqlPool
+          (Reconciliation.applyQueryResult payment result "domain-query-replay" now) pool))
+        outcomes `shouldBe` replicate 4 (Right Reconciliation.ReconciliationProcessed)
+        runSqlPool (paymentSnapshot payment) pool `shouldReturn` paid
 
 reconciliationTransactionSpec :: SpecWith ConnectionPool
 reconciliationTransactionSpec = describe "authoritative query transaction ownership" $ do
@@ -3041,7 +3090,7 @@ assertPaymentPosted pool payment = do
     \ JOIN commerce_payment_intent intent ON intent.id=attempt.payment_intent_id WHERE attempt.id=?::uuid"
     [paymentAttemptParameter payment]) pool
     :: IO [(Single Text, Single Text, Single Text, Single Int64, Single Int64, Single Int64, Single Int64)]
-  rows `shouldBe` [(Single "paid", Single "succeeded", Single "captured", Single 12515, Single 1, Single 1, Single 1)]
+  rows `shouldBe` [(Single "paid", Single "succeeded", Single "captured", Single (Execution.bppAmountMinor payment), Single 1, Single 1, Single 1)]
 
 digestText :: Text -> Text
 digestText value = TE.decodeUtf8
@@ -3059,7 +3108,30 @@ replayFixtureWithMerchant :: Text -> Text -> ConnectionPool -> Checkout.PaymentP
   -> IO (Checkout.PaymentAttemptCreation, Execution.ProviderOperationRecord, PaymentSessionCreateDTO)
 replayFixtureWithMerchant domain merchant pool provider = do
   seed <- newCheckoutForDomain domain pool
-  let creation = seed { Checkout.pacProvider = provider, Checkout.pacMerchantRef = merchant }
+  prepareReplayCreation pool (seed { Checkout.pacProvider = provider, Checkout.pacMerchantRef = merchant })
+
+checkoutCreation :: ConnectionPool -> Checkout.PaymentProvider -> Text -> IO Checkout.PaymentAttemptCreation
+checkoutCreation pool provider checkoutId = do
+  [Single amount] <- runSqlPool (rawSql
+    "SELECT total_minor FROM commerce_checkout_session WHERE id=?::uuid" [PersistText checkoutId]) pool
+  now <- getCurrentTime
+  pure Checkout.PaymentAttemptCreation
+    { Checkout.pacCheckout = Checkout.CheckoutReference checkoutId
+    , Checkout.pacProvider = provider
+    , Checkout.pacEnvironment = Checkout.CheckoutSandbox
+    , Checkout.pacOperation = Checkout.OperationCreate
+    , Checkout.pacAmountMinor = amount
+    , Checkout.pacCurrency = "USD"
+    , Checkout.pacMerchantRef = "synthetic-provider-retry-merchant"
+    , Checkout.pacIdempotencyKey = "attempt-" <> checkoutId
+    , Checkout.pacCreatedAt = now
+    , Checkout.pacCorrelationId = "provider-fixture-" <> checkoutId
+    }
+
+prepareReplayCreation :: ConnectionPool -> Checkout.PaymentAttemptCreation
+  -> IO (Checkout.PaymentAttemptCreation, Execution.ProviderOperationRecord, PaymentSessionCreateDTO)
+prepareReplayCreation pool creation = do
+  let provider = Checkout.pacProvider creation
       checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
       method = if provider == Checkout.ProviderPayPhone then MethodPayPhoneWallet else MethodCard
       phone = if provider == Checkout.ProviderPayPhone then Just "991234567" else Nothing
@@ -3081,23 +3153,38 @@ replayFixtureWithMerchant domain merchant pool provider = do
     -- Reconstruct the OLD persisted byte format independently of the new helper.
     , Execution.popRequestSha256 = digestText (T.intercalate "|"
         [checkoutId, Checkout.paymentProviderText provider, pscPaymentMethod request
-        , pscPaymentMethod request, reference, "12515", "USD"
+        , pscPaymentMethod request, reference, T.pack (show (Checkout.pacAmountMinor creation)), "USD"
         , maybe "" id phone, maybe "" id country])
     , Execution.popOccurredAt = Checkout.pacCreatedAt creation
     }) pool >>= requireRight
   pure (creation, operation, request)
 
 closeCheckout :: ConnectionPool -> Checkout.PaymentAttemptCreation -> Text -> IO ()
-closeCheckout pool creation status = runSqlPool (rawExecute
-  "UPDATE commerce_checkout_session SET status=?,expires_at=NOW()-INTERVAL '1 hour'\
-  \ WHERE id=?::uuid"
-  [PersistText status, PersistText (Checkout.checkoutReferenceId (Checkout.pacCheckout creation))]) pool
+closeCheckout pool creation status = do
+  -- Paid/settled recovery states require the same bound query evidence as a
+  -- real checkout; no direct unverified paid fixture is allowed.
+  when (status `elem` ["paid", "refunded", "disputed"]) $ do
+    let checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+    [Single attemptId] <- runSqlPool (rawSql
+      "SELECT id::text FROM commerce_payment_attempt WHERE checkout_id=?::uuid"
+      [PersistText checkoutId]) pool
+    operation <- runSqlPool (Execution.loadAuthorizedCreateOperation checkoutId attemptId
+      (digestText checkoutId) recoveryEncryptionKey) pool >>= requireRight
+    payment <- bindReconciliationFixture pool creation operation
+      (providerReference (Checkout.pacProvider creation) checkoutId)
+    result <- parsedQuery payment Adapter.AdapterSucceeded
+    runSqlPool (Reconciliation.applyQueryResult payment result "fixture-paid" notificationTime)
+      pool `shouldReturn` Right Reconciliation.ReconciliationProcessed
+  runSqlPool (rawExecute
+    "UPDATE commerce_checkout_session SET status=?,expires_at=NOW()-INTERVAL '1 hour'\
+    \ WHERE id=?::uuid"
+    [PersistText status, PersistText (Checkout.checkoutReferenceId (Checkout.pacCheckout creation))]) pool
 
 -- Synthetic stored provider outcomes, not remote sandbox results.
 setOperationState :: ConnectionPool -> Execution.ProviderOperationRecord -> Text -> Text -> IO ()
 setOperationState pool operation status certainty = runSqlPool (rawExecute
   "UPDATE commerce_provider_operation SET status=?,outcome_certainty=?,started_at=NOW(),\
-  \ provider_resource_id='synthetic-recovery',redirect_url_ciphertext=pgp_sym_encrypt(?,?)\
+  \ provider_resource_id=COALESCE(provider_resource_id,'synthetic-recovery'),redirect_url_ciphertext=pgp_sym_encrypt(?,?)\
   \ WHERE id=?::uuid"
   [PersistText status, PersistText certainty
   , PersistText "https://checkout-test.placetopay.ec/session/synthetic-recovery"
@@ -3298,19 +3385,36 @@ newCheckoutWithOrder domain amounts domainOrder pool = do
   checkoutId <- toText <$> nextRandom
   now <- getCurrentTime
   runSqlPool (do
+    orderReference <- case (domain, domainOrder) of
+      ("event_ticket_order", Nothing) -> do
+        [Single orderKey] <- rawSql "SELECT payment_test.ticket_order()" []
+        pure (T.pack (show (orderKey :: Int64)))
+      _ -> pure (maybe checkoutId id domainOrder)
+    gross <- if domain == "event_ticket_order"
+      then do
+        [Single value] <- rawSql
+          "SELECT tier.price_cents*orders.quantity FROM event_ticket_order orders\
+          \ JOIN event_ticket_tier tier ON tier.id=orders.tier_id WHERE orders.id=?::bigint"
+          [PersistText orderReference]
+        pure value
+      else pure (12515 :: Int64)
     rawExecute
       "INSERT INTO commerce_checkout_session(id,domain_type,domain_order_id,status,environment,\
-    \ currency,subtotal_minor,total_minor,customer_email,lookup_token_hash,idempotency_key,expires_at)\
-    \ VALUES (?::uuid,?,?,'awaiting_payment','sandbox','USD',12515,12515,\
+    \ currency,subtotal_minor,discount_minor,total_minor,customer_email,lookup_token_hash,idempotency_key,expires_at)\
+    \ VALUES (?::uuid,?,?,'awaiting_payment','sandbox','USD',?,?,12515,\
     \ 'synthetic@example.test',?,?,?)"
-      [PersistText checkoutId, PersistText domain, PersistText (maybe checkoutId id domainOrder), PersistText checkoutId, PersistText checkoutId,
-        PersistUTCTime (addUTCTime 1800 now)]
+      [PersistText checkoutId, PersistText domain, PersistText orderReference, PersistInt64 gross, PersistInt64 (gross-12515),
+        PersistText checkoutId, PersistText checkoutId, PersistUTCTime (addUTCTime 1800 now)]
     forM_ (zip [1..] amounts) $ \(lineNumber, amount) -> rawExecute
       "INSERT INTO commerce_checkout_line_item(checkout_id,line_number,product_type,product_id,\
-      \ product_version,description,quantity,unit_amount_minor,subtotal_minor,total_minor,snapshot)\
-      \ VALUES (?::uuid,?,?,?,'synthetic-v1','Provider retry fixture',1,?,?,?,'{}'::jsonb)"
+      \ product_version,description,quantity,unit_amount_minor,subtotal_minor,discount_minor,total_minor,snapshot)\
+      \ VALUES (?::uuid,?,?,?,'synthetic-v1','Provider retry fixture',1,?,?,?,?,'{}'::jsonb)"
       ([PersistText checkoutId, PersistInt64 lineNumber, PersistText domain, PersistText checkoutId]
-        <> replicate 3 (PersistInt64 amount))
+        <> [PersistInt64 (if domain == "event_ticket_order" then gross else amount),
+            PersistInt64 (if domain == "event_ticket_order" then gross else amount),
+            PersistInt64 (if domain == "event_ticket_order" then gross-amount else 0),PersistInt64 amount])
+    when (domain == "event_ticket_order" && domainOrder == Nothing) $
+      attachTicketRuntime checkoutId orderReference 0 0
     ) pool
   pure Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = Checkout.CheckoutReference checkoutId
@@ -3324,6 +3428,14 @@ newCheckoutWithOrder domain amounts domainOrder pool = do
     , Checkout.pacCreatedAt = now
     , Checkout.pacCorrelationId = "provider-retry-test-" <> checkoutId
     }
+
+attachTicketRuntime :: Text -> Text -> Int64 -> Int64 -> SqlPersistT IO ()
+attachTicketRuntime checkoutId orderReference fee tax = do
+  attached <- rawSql
+    "SELECT 1::bigint FROM payment_test.ticket_runtime(?::uuid,?::bigint,?,?)"
+    [PersistText checkoutId,PersistText orderReference,PersistInt64 fee,PersistInt64 tax]
+    :: SqlPersistT IO [Single Int64]
+  unless (attached == [Single 1]) $ liftIO (fail "Ticket runtime fixture was not attached")
 
 begin :: ConnectionPool -> Checkout.PaymentAttemptCreation
   -> IO (Either Text Checkout.PaymentAttemptReference)
@@ -3377,11 +3489,24 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
         `shouldReturn` [Single (if provider == Checkout.ProviderPayPal then 1 else 0 :: Int64)]
 
   it "rejects a runtime order with no succeeded payment instead of guessing its refund provider" $ \pool -> do
-    (_,eventKey,orderKey,_) <- ticketAllocationFixtureWithPayment Checkout.ProviderPayPal False pool
+    -- Model a paid legacy order before a canonical runtime is attached. An
+    -- unpaid fixture stops at the earlier400 check and never tests this fence.
+    (_,eventKey,orderKey,_) <- ticketAllocationFixtureWithLegacyPaid True Checkout.ProviderPayPal "capture" False pool
     let (_,request) = socialRefundHandlers (AuthedUser (toSqlKey 1) [Admin] mempty Nothing Nothing)
     result <- runHandler (runReaderT (request (T.pack (show (fromSqlKey eventKey))) (T.pack (show (fromSqlKey orderKey)))
       (TD.RefundRequestDTO Nothing (Just 4172))) (Env pool (error "Unverified refund must stop locally")))
     either errHTTPCode (const 200) result `shouldBe` 409
+    either errBody (const "") result `shouldBe` "Refund requires one unambiguous verified payment provider"
+    runSqlPool (rawSql "SELECT count(*) FROM ticket_refund_request WHERE order_id=?"
+      [PersistInt64 (fromSqlKey orderKey)]) pool `shouldReturn` [Single (0 :: Int64)]
+
+  it "rejects an unpaid runtime order before attempting provider selection" $ \pool -> do
+    (_,eventKey,orderKey,_) <- ticketAllocationFixtureWithPayment Checkout.ProviderPayPal False pool
+    let (_,request) = socialRefundHandlers (AuthedUser (toSqlKey 1) [Admin] mempty Nothing Nothing)
+    result <- runHandler (runReaderT (request (T.pack (show (fromSqlKey eventKey))) (T.pack (show (fromSqlKey orderKey)))
+      (TD.RefundRequestDTO Nothing (Just 4172))) (Env pool (error "Unpaid refund must stop locally")))
+    either errHTTPCode (const 200) result `shouldBe` 400
+    either errBody (const "") result `shouldBe` "Only paid orders can be refunded"
     runSqlPool (rawSql "SELECT count(*) FROM ticket_refund_request WHERE order_id=?"
       [PersistInt64 (fromSqlKey orderKey)]) pool `shouldReturn` [Single (0 :: Int64)]
 
@@ -3415,8 +3540,7 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
       let code = "transfer-refund-" <> Checkout.checkoutReferenceId (Checkout.vpCheckout payment)
       runSqlPool (do
         rawExecute "UPDATE event_ticket_tier SET allow_transfers=true WHERE event_id=?" [PersistInt64 (fromSqlKey eventKey)]
-        rawExecute "WITH policy AS (INSERT INTO event_ticket_checkout_policy(event_id,transfer_deadline) VALUES (?,now()+interval '1 hour') RETURNING id) UPDATE event_ticket_checkout_runtime SET policy_id=policy.id FROM policy WHERE order_id=?"
-          [PersistInt64 (fromSqlKey eventKey),PersistInt64 (fromSqlKey orderKey)]) pool
+        ) pool
       let proposal = TM.TicketTransfer first (Just "1") Nothing (Just "recipient@example.invalid")
             (Just "Synthetic") "pending" code Nothing (Just (addUTCTime 1800 now)) Nothing now now
       let reserve = do
@@ -3842,16 +3966,21 @@ ticketAllocationFixtureWithPayment provider = ticketAllocationFixtureWithResourc
 
 ticketAllocationFixtureWithResource :: Checkout.PaymentProvider -> Text -> Bool -> ConnectionPool
   -> IO (Checkout.VerifiedPayment,TM.SocialEventId,TM.EventTicketOrderId,[TM.EventTicketId])
-ticketAllocationFixtureWithResource provider resourceType verified pool = do
+ticketAllocationFixtureWithResource = ticketAllocationFixtureWithLegacyPaid False
+
+ticketAllocationFixtureWithLegacyPaid :: Bool -> Checkout.PaymentProvider -> Text -> Bool -> ConnectionPool
+  -> IO (Checkout.VerifiedPayment,TM.SocialEventId,TM.EventTicketOrderId,[TM.EventTicketId])
+ticketAllocationFixtureWithLegacyPaid legacyPaid provider resourceType verified pool = do
   (eventKey,tierKey,orderKey) <- runSqlPool (do
-    [Single eventKey] <- rawSql
-      "INSERT INTO social_event(organizer_party_id,title,start_time,created_at,updated_at) VALUES ('1','Synthetic refund fixture',now()+interval '1 day',now(),now()) RETURNING id" []
-    [Single tierKey] <- rawSql
-      "INSERT INTO event_ticket_tier(event_id,code,name,price_cents,currency,quantity_total,quantity_sold,is_active,created_at,updated_at) VALUES (?,'test','Test',4172,'USD',20,3,true,now(),now()) RETURNING id"
-      [PersistInt64 (fromSqlKey eventKey)]
-    [Single orderKey] <- rawSql
-      "INSERT INTO event_ticket_order(event_id,tier_id,buyer_party_id,buyer_name,buyer_email,quantity,amount_cents,currency,status,purchased_at,created_at,updated_at) VALUES (?,?,'1','Synthetic','synthetic@example.invalid',3,12515,'USD','paid',now(),now(),now()) RETURNING id"
-      [PersistInt64 (fromSqlKey eventKey),PersistInt64 (tierKey :: Int64)]
+    [Single orderKey] <- rawSql "SELECT payment_test.ticket_order(3)" []
+    -- Historical legacy paid state is permitted only before runtime creation;
+    -- retain the canonical paid-transition guard throughout this setup.
+    when legacyPaid $ rawExecute
+      "UPDATE event_ticket_order SET status='paid',purchased_at=NOW() WHERE id=?"
+      [PersistInt64 (fromSqlKey orderKey)]
+    [(Single eventKey,Single tierKey)] <- rawSql
+      "SELECT event_id,tier_id FROM event_ticket_order WHERE id=?"
+      [PersistInt64 (fromSqlKey orderKey)]
     pure (eventKey,tierKey,orderKey)) pool
   payment <- captureFixtureForDomainWithOrder "event_ticket_order" resourceType Checkout.AttemptProcessing [12515]
     (Just (T.pack (show (fromSqlKey orderKey)))) pool provider
@@ -3866,11 +3995,13 @@ ticketAllocationFixtureWithResource provider resourceType verified pool = do
         [PersistInt64 (fromSqlKey eventKey),PersistInt64 tierKey,PersistInt64 (fromSqlKey orderKey),
          PersistText (Checkout.checkoutReferenceId (Checkout.vpCheckout payment) <> T.pack (show index))]
       pure key
-    rawExecute
-      "INSERT INTO event_ticket_checkout_runtime(checkout_id,platform_fee_minor,organizer_payable_minor,tax_minor,order_id,event_id,currency,checkout_total_minor) VALUES (?::uuid,0,12515,0,?,?,'USD',12515)"
-      [captureCheckoutParameter payment,PersistInt64 (fromSqlKey orderKey),PersistInt64 (fromSqlKey eventKey)]
+    attachTicketRuntime (Checkout.checkoutReferenceId (Checkout.vpCheckout payment))
+      (T.pack (show (fromSqlKey orderKey))) 0 0
     pure tickets) pool
-  when verified $ runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+  when verified $ do
+    runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+    _ <- runSqlPool (Social.finalizePaidTicketOrder (Checkout.vpOccurredAt payment) orderKey) pool
+    pure ()
   pure (payment,eventKey,orderKey,tickets)
 
 -- A signed refund/reversal is not terminally ignored merely because its
@@ -3930,6 +4061,9 @@ latePaypalRefundSpec = describe "out-of-order PayPal refunds" $
       -- helper without replaying the dead-letter webhook or duplicating its SQL.
       let payment = unbound { Checkout.vpResourceType="capture", Checkout.vpProviderResource=capture }
       runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+      -- The payment store synchronizes canonical payment state; the real
+      -- fulfillment operation completes the paid/issued admission precondition.
+      _ <- runSqlPool (Social.finalizePaidTicketOrder notificationTime orderKey) pool
       admitted <- runSqlPool (Admission.admitTicket "1" eventKey
         (Admission.AdmissionById ticket) notificationTime) pool
       fmap (TM.eventTicketStatus . entityVal) admitted `shouldBe` Left Admission.AdmissionPaymentReview
