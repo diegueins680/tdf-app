@@ -468,3 +468,61 @@ acredita disponibilidad de la versión anterior. Se detuvieron únicamente Metro
 propio y el PostgreSQL sintético (sin DB de fixture restante) y se retiraron los
 tres enlaces temporales propios conservando sus destinos. No se tocaron los
 servicios compartidos, las ramas ajenas ni el checkout original divergente.
+
+
+## Preparación A123 y audio nativo — continuación del 26/oct
+
+Se integró normalmente #619 (`a1238fbf6`) en la preparación **39aa065e3**,
+preservando exactamente sus **144 requisitos**, más cuatro de recuerdos (**148**).
+Pasan catálogo estricto JSON/CSV **1336**, inventario/trazabilidad, `quality:repo`,
+y web Node 22.14.0: **3501 pruebas / 309 suites**, lint, tipos y build
+(**335777 bytes gzip**, cinco preloads). Backend/SQL/contratos, pin móvil anterior
+y dependencias siguen byte-idénticos al runtime 262, con 225 migraciones.
+
+El [recibo A123](event-memory-source-evidence-20261025/a123-main-preparation.json)
+y los [resultados reales](event-memory-source-evidence-20261025/a123-http-browser-results.json)
+registran fuente **e3d3f6521**, 120 peticiones del runner, 17 grupos y 24 hashes.
+El navegador verifica ahora **cinco recorridos**, incluido un expectedVersion
+incompatible inyectado una sola vez: la API real devuelve 409, el recuerdo sigue
+disponible para la sesión autorizada y cancelar/recargar/decidir nuevamente
+produce un 200 real. Ocultar/restaurar exige confirmación HTTP y cierre del diálogo.
+La sesión por cookie HttpOnly se conserva; no se exige un bearer legible en JS.
+Hay capturas de [escritorio](event-memory-source-evidence-20261025/a123-source-desktop.png)
+y [vista móvil](event-memory-source-evidence-20261025/a123-source-phone.png).
+
+Se conserva el [historial de intentos](event-memory-source-evidence-20261025/a123-browser-attempt-history.json).
+La primera ejecución observó un conflicto válido, pero el harness confundía
+la ocultación accesible del fondo por MUI Dialog con ausencia de la tarjeta.
+Las iteraciones posteriores corrigieron el fault injection, el alcance accesible
+y la verificación con cookie. Una ejecución modificada durante su curso fue
+rechazada por la guardia de hashes; no se cuenta como éxito. La calificación
+válida es únicamente **v8**, con ambas fuentes congeladas y limpieza confirmada.
+No se cambió el backend ni se relajó su autorización para superar la prueba.
+
+El [PR móvil #173](https://github.com/diegueins680/TDF-mobile/pull/173), head
+**6d0b109**, añade selector/publicación de MP3/M4A/WAV/OGG/FLAC mediante el endpoint
+existente. Usa solo DocumentPicker 14.0.8, copia a caché, validación de metadatos,
+25 MB y barreras de sesión/editor. El archivo se anuncia como público y el botón
+lo confirma explícitamente; eventos privados no ofrecen esa carga. No hay
+nuevo servicio, grabación ni consentimiento de comunicaciones.
+
+Pasan **722 pruebas / 99 suites**, release, catorce controles locales de artefactos,
+autolinking y bundle. El nuevo runtime `1.0.1-interactions-audio.1` queda separado
+de binarios anteriores. CocoaPods bloqueado, **APK Android** y **app iOS Simulator**
+pasan en CI. Se descargaron ambos y se verificaron el módulo nativo y runtime.
+Su checkout real es **f1c0519**, merge de GitHub cuyo árbol **e408ce85** coincide
+exactamente con el head 6d0b109. [Recibo CI](event-memory-source-evidence-20261025/mobile-native-audio-ci-20261026.json),
+[APK](event-memory-source-evidence-20261025/mobile-audio-android-artifact.json) y
+[simulador](event-memory-source-evidence-20261025/mobile-audio-ios-artifact.json).
+No son un dispositivo físico ni publicación en tiendas. Precisión: Linux ejecutó
+13 de 14 controles de artefactos, con un skip macOS; los 14 sí pasaron localmente
+en macOS. En #172 eran 11 ejecutados de 12, con ese mismo skip.
+
+Durante esta calificación main avanzó a **3c25a9de**, fusión de #620, fiabilidad
+del reproductor. No está incluido en esta preparación A123; debe reconciliarse
+antes del root final y no se modifica la rama de su autor. #615 sigue sin revisión
+independiente y #608 en borrador. La [consulta pública 08:07 UTC](event-memory-source-evidence-20261025/public-readonly-after-native-audio-20261026.json)
+solo acredita disponibilidad: evento/salud/versión 200, DB ok, backend **4dac175d**.
+No hubo despliegue/escritura productiva ni cambio de estado del evento 141.
+Elegibles con consentimiento y excluidos siguen no establecidos; intentadas,
+enviadas, entregadas y fallidas reales de esta entrega: **0/0/0/0**.
