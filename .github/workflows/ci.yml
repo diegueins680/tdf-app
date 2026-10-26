@@ -397,6 +397,11 @@ jobs:
           node --test scripts/__tests__/music-test-database.test.mjs
           npm run test:music-worker-runtime
 
+      - name: Verify authorized music catalog recording search
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_search_test
+        run: node scripts/test-music-catalog-search.mjs
+
       - name: Verify public and library music rendition availability
         env:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test

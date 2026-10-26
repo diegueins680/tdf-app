@@ -143,6 +143,19 @@ This source filter does not establish universal audio discovery,
 complete private-metadata isolation, native decoder success, immediate revocation
 of issued delivery credentials or production acceptance.
 
+## Current-main composition boundary
+
+The local normal merge with protected
+`9b7aa4648d4158f6da84fbb5e794267cd4953177` retains the current main catalog
+search and each complete qualified source-projection function, including its
+parameter list. The whole combined handler has changed and receives a new
+fingerprint; original source-wide hashes are historical. The unchanged SQL
+runner still uses the relevant 14-file SQL fixture and a trusted lexical
+translation, not a full 222-entry production-schema or compiled HTTP test.
+The merged workflow and CI-selector contracts retain both independent runners.
+Current-run PostgreSQL, metadata and release evidence must retain their own
+source/tool identities; no old execution is relabeled as a new candidate run.
+
 ## Full canonical financial-main qualification
 
 The next normal composition retains protected main

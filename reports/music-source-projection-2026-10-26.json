@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "SOURCE_TESTED_CURRENT_MAIN_METADATA_VALIDATED_PENDING_HOSTED_REVIEW",
+  "status": "POST624_METADATA_QUALIFIED_UNPUBLISHED_RELEASE_GATES_PENDING",
   "scope": "Four public-listening source projections; finite SQL/policy agreement only",
   "baseline": "3af768dacd95c1223975c62da3ce8088bed89b47",
   "branch": "fix/music-source-availability-20261026",
@@ -10,9 +10,9 @@
     "contract": "formal/system/music-source-projection.md",
     "classification": "PARTIAL",
     "mathematicalProof": false,
-    "preservedMainRequirements": 144,
-    "totalRequirements": 145,
-    "preservedMainCatalogDecisions": 1330,
+    "preservedMainRequirements": 147,
+    "totalRequirements": 148,
+    "preservedMainCatalogDecisions": 1341,
     "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
     "structurallyMappedSourcePaths": [
       "tdf-hq/src/TDF/Server/MusicRelease.hs",
@@ -146,7 +146,7 @@
     "pr": null,
     "ci": "Pending exact-candidate hosted checks after parent publication",
     "review": "fresh independent review required on published candidate",
-    "merge": "Normal local merge of protected main78fa351; no protected-main merge or deployment by this task",
+    "merge": "Local normal merge of protected post624 main2e; no protected-main write or publication by this task",
     "deployment": null,
     "productionWrites": 0,
     "migrations": 0,
@@ -181,7 +181,7 @@
       "artifact": "/private/tmp/tdf-audio-source-catalog-audit-20261026.json"
     }
   ],
-  "integrationBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "integrationBaseline": "2e01bbe1263e8761fa2692bd951f828c01142449",
   "historicalMetadataValidationAt3af": {
     "passed": 25,
     "commands": [
@@ -369,6 +369,216 @@
       "mergedCIContracts": "cf67b28f2447d117bf0eb386f313b2a7b0ff236ac7761af5ed50df2e28fa1cf8"
     },
     "initialConformanceAttempt": "Read unresolved generated inventory JSON during merge and failed before tests; retained initial failure, regenerated inventory/traceability in dependency order, then10/10 passed without changing guards."
+  },
+  "protectedCatalogStripeReconciliation": {
+    "integrationBaseline": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+    "previousPublishedCandidate": "ac396190351fc8b26279cc1f2611c1eff34ce271",
+    "method": "Normal merge of actual protected main; no unapproved624/633 or other candidate graft",
+    "mainRequirementsPreservedExactly": 146,
+    "ownRequirementPreservedExactly": "MEDIA-MUSIC-SOURCES-001",
+    "totalRequirements": 147,
+    "wholeMainCatalogDecisionObjects": 1339,
+    "wholeMainMigrationManifestEntries": 222,
+    "currentSourceHashes": {
+      "tdf-hq/src/TDF/Server/MusicRelease.hs": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
+      "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      ".github/workflows/ci.yml": "de616a8748d411f6d673a22d59d8d9d3fd2ca73ab74dd703191836cdaaa1ff30",
+      "scripts/ci-change-scope.mjs": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+      "scripts/__tests__/ci-change-scope.test.mjs": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a"
+    },
+    "wholeHandlerChanged": true,
+    "handlerChangeReason": "Protected main adds recording-title search in listPublicReleases; its complete function block is preserved byte-exact from9b alongside all four qualified source-projection functions fromac. The whole handler is not represented as unchanged.",
+    "qualifiedFunctionBlockHashes": {
+      "getPublicRelease": "c9944e210fd5339d6a8619954a3bfd2baa478d26eb546fb4df9942a6edd01e47",
+      "listFavorites": "03aaf404888b5fa9fd5e58e0defba24137d55e97269e60f5c52e18ff9124e22a",
+      "listPlaylists": "34beaf8343533406957d60cf840508fa302ad4458f5b45eb0c0dd135fc14b65f",
+      "listPlaybackHistory": "8ffcb37edadf52245399f903b4d7091ad7234c4212a5b50d521f679fe07637ac"
+    },
+    "runnerBytesUnchanged": true,
+    "ciResolution": "Both dedicated catalog-search and source-projection steps, both runner-only backend selectors and every other protected-main CI entry are retained.",
+    "ciContracts": {
+      "passed": 46,
+      "failed": 0,
+      "node": "22.14.0",
+      "logSha256": "513778f5346f5eeea8c5193ac76051d1d087a56a5146135b8c853b14907e026e"
+    },
+    "runtimeSQL": {
+      "status": "PASS_SCOPED_SQL_ONLY",
+      "startedAt": "2026-10-26T20:26:52.589241+00:00",
+      "finishedAt": "2026-10-26T20:27:00.578930+00:00",
+      "sourceSha256": {
+        "tdf-hq/src/TDF/Server/MusicRelease.hs": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
+        "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0"
+      },
+      "selectedFixtureSqlFiles": 14,
+      "full222Schema": false,
+      "compiledHttp": false,
+      "node": "22.14.0",
+      "postgresMajor": 16,
+      "projectionGroups": [
+        "CHECKED controls: getPublicRelease authorized full/preview, stale-preview exclusion, territorial positive, metadata identity, delivery agreement",
+        "CHECKED controls: listFavorites authorized full/preview, stale-preview exclusion, territorial positive, metadata identity, delivery agreement",
+        "CHECKED controls: listPlaylists authorized full/preview, stale-preview exclusion, territorial positive, metadata identity, delivery agreement",
+        "CHECKED controls: listPlaybackHistory authorized full/preview, stale-preview exclusion, territorial positive, metadata identity, delivery agreement"
+      ],
+      "detectedPolicyMutants": [
+        "PASS mutant: getPublicRelease removal of source authorization is detected",
+        "PASS mutant: listFavorites removal of source authorization is detected",
+        "PASS mutant: listPlaylists removal of source authorization is detected",
+        "PASS mutant: listPlaybackHistory removal of source authorization is detected"
+      ],
+      "bindingMutationControls": 8,
+      "bindingScope": "Actual adjacent Haskell list is lexically translated; omitted/reordered argument controls are asserted for each corrected function. No Haskell/Persistent execution.",
+      "cleanup": {
+        "ownedDatabasesRemoved": true,
+        "clusterStopped": true,
+        "portClosed": true
+      },
+      "newOwnedCluster": true,
+      "oldClusterUntouched": true,
+      "receiptSha256": "7d486404a41acdadab2d62eb1255187f1efadad8f12a189a3e5cc7aedc22b403",
+      "logSha256": "4d6dd0d5246d55051b51562205c6d5e64212372e17c1a44773ebce83ca735c76",
+      "scope": "Actual extracted SQL and adjacent Haskell binding translation on historical selected-migration fixture; not full222/compiled HTTP/storage/production. New ownedPG16 cluster; older search cluster untouched.",
+      "executionContext": "Pending normal merge of ac396190 and protected9b; handler/runner working-source hashes recorded before/after. Not relabeled as a committed-head or full-schema execution."
+    },
+    "qualification": {
+      "metadata36": {
+        "passed": 36,
+        "failedAfterPrerequisiteCorrection": 0,
+        "firstAttemptPassed": 26,
+        "initialConformanceCasesExecuted": 0,
+        "correctedConformancePassed": 10,
+        "initialAttemptReceiptSha256": "b7a771fb5351e9ef019d39645f663643ea8f81d5a0c6df16e6c81ba8ab37a55d",
+        "correctedConformanceLogSha256": "adeb2e9298fefe8eb886ec9d232ed05486db01cc2b832f8c09f6452b9e437995",
+        "scope": "26 unchanged cases passed initially; the10 conformance cases were rerun only after resolving generated inventory. Initial failed import retained."
+      },
+      "strictCatalogJson": {
+        "status": "PASS",
+        "candidateCount": 1339,
+        "unreviewed": 0,
+        "stale": 0
+      },
+      "strictCatalogCsv": {
+        "status": "PASS",
+        "rows": 1339,
+        "unreviewed": 0,
+        "stale": 0
+      },
+      "freshness": {
+        "inventory": true,
+        "traceability": true
+      },
+      "committedSourceAdmission": "PENDING",
+      "initialMetadataAttempt": {
+        "declarations": 9,
+        "inventory": 6,
+        "sourceAdmissionRegressions": 11,
+        "conformanceCasesExecuted": 0,
+        "outcome": "Conformance module imported unresolved generated inventory before regeneration completed; initial failure retained, only its10cases rerun after generation, no test/guard changes."
+      },
+      "generatedClients": {
+        "count": 2,
+        "drift": false,
+        "mobilePin": "d832bb3057dd03d44c0f35eea05be9f36320429d"
+      }
+    },
+    "release": {
+      "pushed": false,
+      "independentNewReview": false,
+      "mergedToMain": false,
+      "deployed": false,
+      "existingAcReview": "Unchanged; local preparation does not authorize publication or approve a new candidate."
+    },
+    "protectedMainCatalogFunctionHash": "d0cfc976903fdc9bb88eabf4f6b33ca0b58ba301bf524e06917869f357b16fba"
+  },
+  "historicalTopLevelFormalSummary": {
+    "requirement": "MEDIA-MUSIC-SOURCES-001",
+    "contract": "formal/system/music-source-projection.md",
+    "classification": "PARTIAL",
+    "mathematicalProof": false,
+    "preservedMainRequirements": 144,
+    "totalRequirements": 145,
+    "preservedMainCatalogDecisions": 1330,
+    "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "structurallyMappedSourcePaths": [
+      "tdf-hq/src/TDF/Server/MusicRelease.hs",
+      "scripts/test-music-source-projection.mjs",
+      ".github/workflows/ci.yml",
+      "scripts/ci-change-scope.mjs",
+      "scripts/__tests__/ci-change-scope.test.mjs"
+    ]
+  },
+  "protectedLegacyMainReconciliation": {
+    "main": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "fromCandidate": "62f9d4f874eed1cd5ac94f60194f289d426c4a94",
+    "method": "Normal merge of actual protected post624 main; no unapproved625/633 or other branch graft",
+    "preservedMainRequirementsExactly": 147,
+    "ownRequirementUnchanged": "MEDIA-MUSIC-SOURCES-001",
+    "requirementsTotal": 148,
+    "wholeMainCatalogDecisionObjects": 1341,
+    "wholeMainMigrationManifestEntries": 222,
+    "allFiveQualifiedSourceHashesUnchanged": true,
+    "sourceHashes": {
+      "tdf-hq/src/TDF/Server/MusicRelease.hs": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
+      "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      ".github/workflows/ci.yml": "de616a8748d411f6d673a22d59d8d9d3fd2ca73ab74dd703191836cdaaa1ff30",
+      "scripts/ci-change-scope.mjs": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+      "scripts/__tests__/ci-change-scope.test.mjs": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a"
+    },
+    "fourCompleteQualifiedProjectionFunctionHashes": {
+      "getPublicRelease": "c9944e210fd5339d6a8619954a3bfd2baa478d26eb546fb4df9942a6edd01e47",
+      "listFavorites": "03aaf404888b5fa9fd5e58e0defba24137d55e97269e60f5c52e18ff9124e22a",
+      "listPlaylists": "34beaf8343533406957d60cf840508fa302ad4458f5b45eb0c0dd135fc14b65f",
+      "listPlaybackHistory": "8ffcb37edadf52245399f903b4d7091ad7234c4212a5b50d521f679fe07637ac"
+    },
+    "mainCatalogFunctionByteExact": true,
+    "mainCatalogFunctionSha256": "d0cfc976903fdc9bb88eabf4f6b33ca0b58ba301bf524e06917869f357b16fba",
+    "runtimeDisposition": "No PG or Stack repetition: all five complete source inputs and authoritative SQL/fixture bytes remain unchanged. Prior owned-PG execution retains its original source/time/selected-fixture scope; not relabeled as a new runtime.",
+    "qualification": {
+      "metadataRegressions": {
+        "passed": 36,
+        "failed": 0,
+        "groups": [
+          9,
+          6,
+          10,
+          11
+        ],
+        "receiptSha256": "8c0b9e286446de271b6ab464b8f5d25e8ccbb3236cc3e8116b69a8463ba2af0c"
+      },
+      "scopeContracts": {
+        "passed": 46,
+        "failed": 0,
+        "node": "22.14.0",
+        "logSha256": "fa01782f45f073a1ab730edf25f08e1e851d6633436fa6695d24befde29b6b8b"
+      },
+      "strictCatalogJson": {
+        "status": "PASS",
+        "candidates": 1341,
+        "unreviewed": 0,
+        "stale": 0
+      },
+      "strictCatalogCsv": {
+        "status": "PASS",
+        "rows": 1341,
+        "unreviewed": 0,
+        "stale": 0
+      },
+      "runtimeDependencyPreservation": {
+        "qualifiedSourceCommit": "62f9d4f874eed1cd5ac94f60194f289d426c4a94",
+        "main": "2e01bbe1263e8761fa2692bd951f828c01142449",
+        "sqlGitTree": "b0839c67de7991294d0fae18f30391c4d4a58d3c",
+        "allSqlBytesUnchanged": true,
+        "helperAndFixtureHashesUnchanged": {
+          "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
+          "scripts/lib/music-test-database.mjs": "b63039bc86ab6dd58a17cd7448bf26ad439e27e23a0c7ab7b67b3eca94d7ebaf",
+          "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8"
+        }
+      },
+      "freshness": "Final check after all writers finish",
+      "sourceAdmission": "Immutable check after parent performs normal merge commit"
+    },
+    "publication": "Local preparation only; oldremoteac review untouched, no push/review request/mainwrite/production operation."
   },
   "fullSchemaQualification": {
     "source": "7187e17af15a46495aa6ebf388717eed6322f4d7",
