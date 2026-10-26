@@ -18592,6 +18592,36 @@
         "name": "release",
         "valueCount": 8
       }
+    },
+    {
+      "id": "b79cd312b41d5645e457",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P2-compatibility",
+      "risk": "Changing exact host classification may send a provider HTML/share page to native audio or mislabel external navigation. This list confers no authorization or provider-payment authority.",
+      "justification": "Individually reviewed exact spotify.link and spoti.fi host literals used only by the legacy playback URL adapter. They are fixed parsing/routing compatibility cases, not selectable business providers, rights declarations, payment rails or an editable catalog. Original link targets remain unchanged and external playback is not claimed.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+        "line": 46
+      },
+      "reviewBatch": "legacy-provider-actions-2026-10-26"
+    },
+    {
+      "id": "a08e3450ef31db632d8d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture shape drift can invalidate command/state regressions; this synthetic session must not be treated as a production grant or a new role registry.",
+      "justification": "Individually reviewed username, partyId, roles and modules keys of the synthetic fan session in FanHubPage.playback.test.tsx. These mirror existing test/session DTO shape and are not user-selectable security policy, persisted roles or production business data. This decision applies only to this exact fixture fingerprint.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+        "line": 7
+      },
+      "reviewBatch": "legacy-provider-actions-2026-10-26"
     }
   ]
 }

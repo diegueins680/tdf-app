@@ -82,7 +82,7 @@ active decisions. These are reducer dispatch mechanics; no domain catalog or
 permissions become client-controlled. Other decisions/reconciliation history
 remain unchanged.
 
-Current integration baseline: normal merge of protected main
+Historical integration checkpoint: normal merge of protected main
 `78fa351b469c1d2031df3232204dd722ac480e3b`, after playback PR #620 and
 ledger-header PR #621. The P0 foundation is already merged; this privacy change
 will be reviewed as a focused PR targeting main. Canonical requirements total
@@ -100,7 +100,7 @@ qualify unrelated inherited main changes. Exact committed-source admission,
 current privacy CI/review and production acceptance remain separate gates.
 
 
-Protected-main reconciliation (2026-10-26): this branch normally merges
+Historical protected-main reconciliation (2026-10-26): this branch normally merges
 `9b7aa4648d4158f6da84fbb5e794267cd4953177`, containing the protected discovery
 PR #622 and Stripe PR #623 changes. It does not incorporate pending legacy,
 source-availability or credential-cache feature heads. Current requirements total
@@ -119,3 +119,23 @@ it does not relabel historical browser, build or production results. The inherit
 API module change is limited to catalog list pagination; asset-access resolution
 and the player/session runtime are unchanged. Current-candidate hosted checks,
 fresh independent review and production acceptance remain separate gates.
+
+
+Latest protected-main reconciliation (2026-10-26): the target is now
+`2e01bbe1263e8761fa2692bd951f828c01142449`, after legacy-audio PR #624 merged
+through the protected process. The earlier main checkpoints above retain their
+historical identities. This normal merge preserves all six `b6259692` qualified
+runtime/test hashes and the package graph/lock. Canonical requirements total 148:
+146 foreign main objects are exact, PLAYER differs only by its authorized
+SessionProviders mapping append, and PRIVACY is unchanged. All 1,341 main catalog
+objects remain active or in exact append-only history: 1,340 unchanged active
+reviews, the exact old queue review archived, and its existing reviewed successor.
+The two inherited legacy technical reviews and all main reconciliation fields
+are preserved. The 222-entry manifest is byte-identical to main.
+
+The fresh 9b unit qualification remains 86/86 in eight suites; these unchanged
+source inputs do not justify relabeling or repeating historical native/browser
+results. This refresh checks canonical metadata, strict catalog lineage/freshness
+and prepared source mappings. Immutable descendant admission follows the root's
+normal merge commit. No review request, feature-head merge, deployment or
+production acceptance is implied by this preparation.
