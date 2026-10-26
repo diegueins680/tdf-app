@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "POST624_METADATA_QUALIFIED_UNPUBLISHED_RELEASE_GATES_PENDING",
+  "status": "QUALIFIED_SOURCE_CONTROLS_PROVIDER_MAIN_METADATA_REFRESH_PENDING_EXACT_HEAD_CI",
   "scope": "Four public-listening source projections; finite SQL/policy agreement only",
   "baseline": "3af768dacd95c1223975c62da3ce8088bed89b47",
   "branch": "fix/music-source-availability-20261026",
@@ -181,7 +181,7 @@
       "artifact": "/private/tmp/tdf-audio-source-catalog-audit-20261026.json"
     }
   ],
-  "integrationBaseline": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "integrationBaseline": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
   "historicalMetadataValidationAt3af": {
     "passed": 25,
     "commands": [
@@ -579,5 +579,81 @@
       "sourceAdmission": "Immutable check after parent performs normal merge commit"
     },
     "publication": "Local preparation only; oldremoteac review untouched, no push/review request/mainwrite/production operation."
+  },
+  "protectedProviderDomainMainReconciliation": {
+    "method": "Normal merge of actual protected main; no unapproved branch graft",
+    "previousHead": "52aa82ea70ed1e2b3dc26180977d9a0b838dea59",
+    "main": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+    "mainRequirementsPreservedExactly": 148,
+    "unchangedOwnSourcesRequirement": true,
+    "mergedRequirementCount": 149,
+    "wholeMainDecisionsPreservedExactly": 1341,
+    "mainProviderRetirementHistoryPreserved": true,
+    "productionMigrationManifestEntries": 223,
+    "productionMigrationManifestByteExactMain": true,
+    "runtimeApiUiSourceFilesUnchangedFrom52aa": 1039,
+    "sourceHashes": {
+      "tdf-hq/src/TDF/Server/MusicRelease.hs": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
+      "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      "scripts/ci-change-scope.mjs": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+      "scripts/__tests__/ci-change-scope.test.mjs": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
+      ".github/workflows/ci.yml": "834142e79aed673d4ba12ec7ca78e0b302d877dee72f97761fcd9e1e0f124190",
+      "tdf-hq/src/TDF/API/MusicRelease.hs": "fdf3cf3710f04a251d71092cf4da21dbb1ff23541553936b24fbf2157f3b949d"
+    },
+    "fourNonWorkflowSourceInputsByteExact52aa": true,
+    "workflowDisposition": "Current-main apt dependency python3-psycopg2 inherited; both catalog-search and source-projection PostgreSQL steps retained. The historical five-input receipt is not wholly byte-identical because the workflow legitimately changes.",
+    "sourceQualificationDisposition": "Original3af/ade78 and later combined-handler selected14-migration PostgreSQL/lexical receipts retain actual execution identities. No Stack/PostgreSQL/HTTP/browser rerun and no full223 schema or delivery claim.",
+    "newMainSourceChanges": "Provider-domain SQL and ProviderRetrySpec inherited exactly from protected main; this reconciliation does not requalify them or claim unchanged whole-backend source.",
+    "metadataValidation": {
+      "metadataTests": {
+        "passed": 36,
+        "failed": 0,
+        "suites": [
+          9,
+          6,
+          10,
+          11
+        ]
+      },
+      "ciSelectionPipelineContracts": {
+        "passed": 46,
+        "failed": 0,
+        "node": "22.14.0",
+        "logSha256": "fd076d21a23ca6e863ed3f6f3a9992efe71f11e002b4f767cdf8cae0edb063b4"
+      },
+      "strictCatalog": {
+        "jsonExitCode": 0,
+        "csvExitCode": 0,
+        "candidateCount": 1341,
+        "csvRows": 1341,
+        "stale": 0,
+        "unreviewed": 0
+      },
+      "generatedApi": {
+        "clients": 2,
+        "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+        "status": "PASS"
+      },
+      "normative149ObjectsWhole1341MainCatalogAnd223Manifest": "PRESERVED_EXACTLY",
+      "finalFreshness": "PASS after final ordered inventory/conformance generation",
+      "sourceAdmission": "Prepared working-tree PASS for 5 paths versus c66; immutable committed gate pending root merge commit",
+      "runtimeReruns": 0
+    },
+    "release": "Required exact-head CI, independent review, protected integration and deployed acceptance remain gates. No push or production action by this metadata task.",
+    "applicationInputEquivalence": {
+      "comparison": "Current uncommitted626+c66 merged working tree versus qualified52aa parent; NOT raw c66 versus52aa",
+      "oldHead": "52aa82ea70ed1e2b3dc26180977d9a0b838dea59",
+      "main": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+      "nonTestNonSqlBackendPathsByteExact": 382,
+      "wholeBackendSourceIdentity": false,
+      "changedBackendPaths": [
+        "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "compiledIdentityLimit": "Version.hs uses -fforce-recomp, gitHash and compilation time. Same source does not make an old binary attest a newHEAD; no build/run claimed here.",
+      "runtimeApiUiSrcUnchanged": true,
+      "cabalStackAppSourceInputsUnchanged": true,
+      "privateReceiptSha256": "de79b84d73e2f7d90d594bf7c26ddb23ff6df573a76caea89ed1e83e11fbe4f4"
+    }
   }
 }

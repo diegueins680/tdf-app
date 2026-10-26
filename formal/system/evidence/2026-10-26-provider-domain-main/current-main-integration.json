@@ -1,0 +1,16 @@
+{
+  "protectedMain": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "providerParent": "bb2b00d69c80d31e17fbe7997083486414a14194",
+  "previousNativeQualification": "cb7773790f15099933b92b184cfb50d7cf20c8aa",
+  "nativeResult": {
+    "examples": 317,
+    "failures": 0,
+    "pending": 0
+  },
+  "changedBackendModulesSinceNative": [
+    "tdf-hq/src/TDF/Server/MusicRelease.hs",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+  ],
+  "scope": "Prior native317 evidence retains its original identity. Current main changes MusicRelease and SocialEventsHandlers; this composition requires fresh compiled provider/refund CI. The inherited saved-search checkpoint repair corrects the observed previous backend CI failure. Empty Hspec discovery now fails explicitly.",
+  "productionOperations": false
+}
