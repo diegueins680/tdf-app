@@ -12267,7 +12267,8 @@
       "tests": [
         "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts",
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "e2e/web/artist-follow.spec.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -12306,6 +12307,7 @@
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
+    "e2e/web/artist-follow.spec.mjs": "540fda97e2d352ce4e8319d85f21f12dd097968b3d7edd0689a7ca419dad5eb8",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
     "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
@@ -23943,6 +23945,12 @@
         "requirement": "COMM-FOLLOW-RECOVERY-001",
         "relationship": "tests"
       }
+    ],
+    "e2e/web/artist-follow.spec.mjs": [
+      {
+        "requirement": "COMM-FOLLOW-RECOVERY-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -24222,9 +24230,14 @@
     {
       "id": "SURFACE-21d4d7e18c516e29",
       "path": "e2e/web/artist-follow.spec.mjs",
-      "sha256": "90c4d55b7ca37e5698c2414d3ff4d7436c4ab7a22cc624d8716f0a256df5fd7e",
+      "sha256": "540fda97e2d352ce4e8319d85f21f12dd097968b3d7edd0689a7ca419dad5eb8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMM-FOLLOW-RECOVERY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-7f4616a1f534ab50",
@@ -49943,7 +49956,6 @@
     "SURFACE-fe7afb5c9c916e52",
     "SURFACE-b18780932504c8a1",
     "SURFACE-b6a53fc19d550b31",
-    "SURFACE-21d4d7e18c516e29",
     "SURFACE-99efca801c54dd18",
     "SURFACE-e442d994f4a6caf5",
     "SURFACE-84f7b910bd4577fb",
@@ -52753,7 +52765,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e0c1d805314501e7b1e092afcbb6f53426d4d4469446ea3c27b447cf7ce56a3d",
+      "sourceSha256": "a30be83ee92f355ba1fc0188f84e1638443c0157c38f0cd9dc7cfec1f0d6cb1e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -52781,7 +52793,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e0c1d805314501e7b1e092afcbb6f53426d4d4469446ea3c27b447cf7ce56a3d",
+      "sourceSha256": "a30be83ee92f355ba1fc0188f84e1638443c0157c38f0cd9dc7cfec1f0d6cb1e",
       "definition": {
         "states": [
           "absent",
@@ -52811,7 +52823,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e0c1d805314501e7b1e092afcbb6f53426d4d4469446ea3c27b447cf7ce56a3d",
+      "sourceSha256": "a30be83ee92f355ba1fc0188f84e1638443c0157c38f0cd9dc7cfec1f0d6cb1e",
       "definition": {
         "export": [
           "queued",

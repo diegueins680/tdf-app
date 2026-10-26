@@ -1,6 +1,6 @@
 {
   "status": "PARTIAL",
-  "updatedAt": "2026-10-26T08:10:00.475287+00:00",
+  "updatedAt": "2026-10-26T15:26:28.783230+00:00",
   "pr": "https://github.com/diegueins680/tdf-app/pull/627",
   "priority": "P1",
   "userImpact": "El servidor guarda la relación, pero una respuesta perdida dejaba el botón en Seguir y mostraba error. El usuario no podía confirmar su primer valor.",
@@ -48,7 +48,7 @@
     "lint": "PASS",
     "generatedClients": "PASS (exact Mobile d832)",
     "specificationInventoryAndTraceability": "PASS",
-    "changedSurfaceAdmission": "PASS: eight material surfaces",
+    "changedSurfaceAdmission": "Nine surfaces: eight web plus existing keyboard-consent E2E; requirement mapping regenerated.",
     "catalog": "PASS:1339 unchanged currentmain decisions,0unreviewed",
     "formalRepositoryGate": "PASS; existing warnings retained; no universal refinement claim",
     "actualRuntime": "activation-follow-response-2026-10-26/runtime-main3c.json",
@@ -83,7 +83,17 @@
     "combinedTypecheck": "PASS",
     "combinedLint": "PASS",
     "inheritedPlayerModel": "PASS:5controls",
-    "combinedFormalRepositoryGate": "PASS; inherited warning debt unchanged; no universal proof claim."
+    "combinedFormalRepositoryGate": "PASS; inherited warning debt unchanged; no universal proof claim.",
+    "hostedWebTests": {
+      "head": "d17946ac9f72bfd9b826ec21814dc855feab2385",
+      "tests": 3479,
+      "suites": 306,
+      "jobId": 121464285084,
+      "conclusion": "success",
+      "checkout": "3cb465df2ffe8a8e879229225a97970980ce72e3",
+      "tree": "bf34a73d6f99ea0482bee333fb30e50b5d1d77b4"
+    },
+    "hostedPersonaRepair": "activation-follow-response-2026-10-26/ci-persona-repair.json"
   },
   "measurement": {
     "firstValueAuthority": "Only the existing server-evidence completion endpoint; six newlyCompleted:true receipts for six fictional fans, later refollow receipts:false. No direct analytics from GET.",
@@ -96,11 +106,11 @@
   },
   "integration": {
     "status": "PARTIAL",
-    "state": "Protectedmain3c incorporated by normal merge25e; final hostedCI/review/admission still pending, no merge or deployment627.",
+    "state": "Prior d179 approved independently but quality failed on stale E2E error copy. Test-only correction and fresh final-head CI/review required; no merge or deployment627.",
     "rollback": "Revert web change through protected workflow; no migrations.",
     "base": "3c25a9de56345a8fccea4c1320b0548fed37a334",
     "qualifiedCombinedSource": "25e9943e1ac4cbfd0214267735c9d95f3d82c9d8",
-    "scope": "Only eight own material web surfaces differ from main3c; current144 main requirement objects and1339 decisions preserved exactly."
+    "scope": "Eight own material web surfaces unchanged from d179; one existing E2E expectation corrected. Current144 main requirement objects and1339 catalog decisions preserved."
   },
   "deployment": {
     "status": "NOT TESTED",

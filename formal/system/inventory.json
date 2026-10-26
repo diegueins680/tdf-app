@@ -2816,7 +2816,7 @@
     {
       "id": "SURFACE-21d4d7e18c516e29",
       "path": "e2e/web/artist-follow.spec.mjs",
-      "sha256": "90c4d55b7ca37e5698c2414d3ff4d7436c4ab7a22cc624d8716f0a256df5fd7e",
+      "sha256": "540fda97e2d352ce4e8319d85f21f12dd097968b3d7edd0689a7ca419dad5eb8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27276,7 +27276,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e0c1d805314501e7b1e092afcbb6f53426d4d4469446ea3c27b447cf7ce56a3d",
+      "sha256": "a30be83ee92f355ba1fc0188f84e1638443c0157c38f0cd9dc7cfec1f0d6cb1e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

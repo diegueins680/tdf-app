@@ -12266,7 +12266,8 @@
       "tests": [
         "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts",
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "e2e/web/artist-follow.spec.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
