@@ -46,3 +46,5 @@ Local driver paths/ports describe this machine. CI, current-head independent
 approval, normal-merge ancestry and production approval remain separate gates.
 
 Current-main admission: `logout-main-integration.json` records integration of protected main `1c9c833cc1ba62b47822fca3c20e14e86cf28daa`. Financial SQL, runtime harnesses, bounded model inputs, backend sources/tests and Stack inputs are byte-identical to the qualified source. Scoped evidence is reused with its original identity; fresh final-head CI and independent review remain required. The original scorecard is a dated snapshot, not a claim about the added logout requirement.
+
+Release-journal admission: `release-journal-main-integration.json` records protected main `3af768dacd95c1223975c62da3ce8088bed89b47`. All financial inputs and backend source/tests/build inputs still match qualified db2. The full formal runner now also contains the independently developed release-journal models; previous whole-portfolio checks and certificates retain their earlier source identities. Fresh final-head execution/review remains required.
