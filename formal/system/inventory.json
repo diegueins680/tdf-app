@@ -3253,7 +3253,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "c95c36e8dd5bd2e15c38999f86f05e33c2a5cee096141db132b855be6a713ae7",
+      "sha256": "51dfd59c5f1a2c70a16e7acb552711a7806e90f39af21a6c0ace4e3c4f1da8c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3955,7 +3955,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "84da33d7f0b87eba2a126db681bb0127abe666871de48f05a0b14746f1d967ae",
+      "sha256": "56dd35bfe3648d8732b28ed6066e118cf743e58093fef5657b031dada0a1112e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20759,7 +20759,7 @@
     },
     {
       "path": "docs/music-releases/catalog-discovery-delivery-2026-10-25.md",
-      "sha256": "6bd994c98d7a36bd8afec4e3b6e6eb2b84ebc85737467374f707d1467880279d",
+      "sha256": "790896cb8053b993712c5cb8f80af39f98a9b5b5b71d04bbee22d28d302695bd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27269,7 +27269,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "bfe8c6df9dc5b2a4a8c3d7088f878f05ef03bc38cc2f644acbbd0ebdb83a6b2b",
+      "sha256": "65c38c69f9e0211c379c8cd4570c91f5385533a49516eefc9e926e5ea670c0d8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

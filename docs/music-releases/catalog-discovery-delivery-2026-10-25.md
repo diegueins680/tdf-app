@@ -104,3 +104,7 @@ established by this refresh. Exact result boundaries remain recorded in
 ## Journal integration baseline
 
 The following normal refresh retains playback `7de7c292753565ae6ea64c57dd9aa4b97e330b6d` and protected main `3af768dacd95c1223975c62da3ce8088bed89b47` (release-journal #618). All 142 foundation requirement objects remain exact plus the unchanged discovery requirement. This refresh changes no audio/search/page implementation; 106 combined player/catalog/client/logout regressions in eight suites passed after the prior privacy integration. Exact new-head CI and review remain required.
+
+## Runner-only CI selection
+
+Review of candidate `cd1c3a7e16d95954d255aaf2d090387998d67819` found that editing only the new catalog SQL runner did not select backend verification. The scope classifier now explicitly includes that runner; all 17 scope tests pass. Its regression is mapped to the existing discovery requirement. Runtime query, page, API and SQL-runner bytes remain unchanged; fresh hosted checks and review apply to the final candidate.

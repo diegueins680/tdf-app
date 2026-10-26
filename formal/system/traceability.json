@@ -12103,7 +12103,8 @@
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs"
       ],
       "interactions": [
         "MEDIA-MUSIC-RELEASE-001",
@@ -12114,7 +12115,8 @@
         "scripts/test-music-catalog-search.mjs",
         "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
         "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
-        "e2e/web/music-catalog-discovery.spec.mjs"
+        "e2e/web/music-catalog-discovery.spec.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs"
       ],
       "formalModels": [],
       "verification": "Deterministic PostgreSQL integration/security controls execute the actual handler SQL literal and authoritative predicates, including a deliberate missing-authorization mutant. Component/API contracts exercise pagination and stale responses. These tests do not execute compiled HTTP routing or prove Haskell parameter ordering; no mathematical proof or formal model is claimed.",
@@ -12506,7 +12508,7 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": "eb30521a370a81c42fb49e9a106baf79fa7d4e8a52ce9a3bee2a5dcef4e7054a",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
-    "scripts/__tests__/ci-change-scope.test.mjs": "c95c36e8dd5bd2e15c38999f86f05e33c2a5cee096141db132b855be6a713ae7",
+    "scripts/__tests__/ci-change-scope.test.mjs": "51dfd59c5f1a2c70a16e7acb552711a7806e90f39af21a6c0ace4e3c4f1da8c7",
     "scripts/__tests__/ci-pipeline.test.mjs": "76ec02976468affc43319d2d77b4461ac6304a89065f9fe3ce483ca819b49760",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
@@ -12572,7 +12574,7 @@
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
-    "scripts/ci-change-scope.mjs": "84da33d7f0b87eba2a126db681bb0127abe666871de48f05a0b14746f1d967ae",
+    "scripts/ci-change-scope.mjs": "56dd35bfe3648d8732b28ed6066e118cf743e58093fef5657b031dada0a1112e",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
@@ -13988,6 +13990,10 @@
       {
         "requirement": "SYS-API-002",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/integration/ledger_posting_balance.sql": [
@@ -14071,6 +14077,10 @@
       },
       {
         "requirement": "SYS-STATE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
         "relationship": "tests"
       }
     ],
@@ -24831,7 +24841,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "c95c36e8dd5bd2e15c38999f86f05e33c2a5cee096141db132b855be6a713ae7",
+      "sha256": "51dfd59c5f1a2c70a16e7acb552711a7806e90f39af21a6c0ace4e3c4f1da8c7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24844,6 +24854,10 @@
         },
         {
           "requirement": "SYS-STATE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "tests"
         }
       ]
@@ -26116,7 +26130,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "84da33d7f0b87eba2a126db681bb0127abe666871de48f05a0b14746f1d967ae",
+      "sha256": "56dd35bfe3648d8732b28ed6066e118cf743e58093fef5657b031dada0a1112e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26125,6 +26139,10 @@
         },
         {
           "requirement": "SYS-API-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -52456,7 +52474,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bfe8c6df9dc5b2a4a8c3d7088f878f05ef03bc38cc2f644acbbd0ebdb83a6b2b",
+      "sourceSha256": "65c38c69f9e0211c379c8cd4570c91f5385533a49516eefc9e926e5ea670c0d8",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -52484,7 +52502,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bfe8c6df9dc5b2a4a8c3d7088f878f05ef03bc38cc2f644acbbd0ebdb83a6b2b",
+      "sourceSha256": "65c38c69f9e0211c379c8cd4570c91f5385533a49516eefc9e926e5ea670c0d8",
       "definition": {
         "states": [
           "absent",
@@ -52514,7 +52532,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bfe8c6df9dc5b2a4a8c3d7088f878f05ef03bc38cc2f644acbbd0ebdb83a6b2b",
+      "sourceSha256": "65c38c69f9e0211c379c8cd4570c91f5385533a49516eefc9e926e5ea670c0d8",
       "definition": {
         "export": [
           "queued",

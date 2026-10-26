@@ -344,5 +344,14 @@
     },
     "currentHeadHostedCI": "pending",
     "deployment": "not performed"
+  },
+  "ciSelectionCorrection": {
+    "baselineHead": "cd1c3a7e16d95954d255aaf2d090387998d67819",
+    "baseline": "runner-only edits incorrectly selected backend=false",
+    "correction": "exact catalog SQL runner path selects real PostgreSQL backend validation",
+    "scopeTestsPassed": 17,
+    "log": "/private/tmp/tdf-audio-discovery-ci-scope-20261026.log",
+    "sourceRuntimeChanged": false,
+    "currentCandidateHostedCI": "pending"
   }
 }
