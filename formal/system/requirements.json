@@ -8472,7 +8472,9 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "scripts/test-player-session-model.mjs"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-PLAYER-001",
       "title": "Single persistent web player and public music pages",
@@ -8480,8 +8482,8 @@
       "critical": true,
       "statement": "One PlayerProvider owns a single HTMLAudioElement mounted above all navigation. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. The legacy radio widget is hidden on /musica routes; playback analytics use a stable identity with retry-safe ingestion.",
       "authority": "Unreviewed recovered local implementation; ADR-004 and playback-identity.md in docs/music-releases/",
-      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md",
-      "contract": "docs/music-releases/native-player-verification.md",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md",
+      "contract": "formal/system/player-session.md",
       "property": "At most one audio element plays; a queued item is played only after a fresh authorization for its asset id.",
       "actors": [
         "Public listener",
@@ -8550,7 +8552,9 @@
         "tdf-hq-ui/src/utils/musicPreviewRange.ts",
         "tdf-hq/sql/2026-09-16_music_playback_identity.sql",
         "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql",
-        "tdf-mobile/src/navigation/notificationTarget.ts"
+        "tdf-mobile/src/navigation/notificationTarget.ts",
+        "playwright.music-native.config.mjs",
+        ".github/workflows/ci.yml"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -8574,13 +8578,15 @@
         "e2e/web/music-player.spec.mjs",
         "e2e/web/music-player-native.spec.mjs",
         "e2e/web/music-player-integration.spec.mjs",
-        "e2e/web/fixtures/native-music-setup.mjs"
+        "e2e/web/fixtures/native-music-setup.mjs",
+        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx"
       ],
-      "verification": "Vitest unit tests, Playwright native and integration specs against local API/PostgreSQL/S3",
-      "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md",
+      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified.",
+      "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
       "confidence": "Medium: browser evidence local only.",
       "ambiguity": [
-        "Legacy radio consumers are kept behind compatibility until all are validated."
+        "Legacy radio consumers are kept behind compatibility until all are validated.",
+        "Single authoritative canonical music player does not establish exclusive ownership of provider iframes, legacy radio previews, other tabs or operating-system audio."
       ],
       "conformance": {
         "classification": "PARTIAL",
