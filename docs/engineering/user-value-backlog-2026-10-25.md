@@ -7,7 +7,7 @@ disponible para usuarios son hitos separados.
 
 ## Base y alcance de la observación
 
-- `main` protegido observado: `b732efd65de23e5b97f3f619a2242397c64965c3` (actualización23:41UTC).
+- `main` protegido observado: `5114fe95ac8e328b58162a8dcae5c9015a47ce09` (actualización26/oct UTC).
 - Inspección productiva de solo lectura del 25/oct, 08:13:07 UTC:
   `/private/tmp/tdf-user-value-runtime-20261025.json`. Versión pública del backend:
   `4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`; 213 migraciones registradas.
@@ -56,9 +56,9 @@ tras controles negativos y ejecución descartable (85→91).
 | Orden | Trabajo existente o nuevo | Categoría | A/G/V/J/E/C/R/T | P | Estado y acción |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Salida explícita sin restaurar cuenta anterior, revocación recuperable y borradores propios | S0 | 4/5/4/5/5/3/2/3 | 87 | PARTIAL. #616 head9e96: tres hallazgos conocidos corregidos; QA independiente64/9 y reintento API/PG213 en f9 con identidad preservada. Falta revisión vigente/integración/publicación. |
-| 2 | Preservar términos aceptados, ledger y capturas inciertas | S0 | 3/5/5/5/5/3/2/2 | 86 | BLOCKED por gates. #551 listo enfa5a, responsable existente activo; no duplicar #555/#569/#612/#617 ni activar proveedores. |
-| 3, ejecutable seleccionado | Admitir siguiente release conservando diario y exclusión global | S0, dependencia de entrega | 3/5/4/4/5/2/2/2 | 79 | PARTIAL local. El diario terminal impide la siguiente admisión; nueva initialize_next append-only, CAS y nonce único, pruebas y modelo separados. Sin uso productivo autorizado por esta implementación. |
-| 4 | Entregar comprobantes privados y reparación de pagos ya integrados | S1 / gates S0 | 3/4/4/5/5/3/2/3 | 79 | BLOCKED para release. #603/#609 enmain; imagen000cf construida. API4dac no incluye arreglo; almacenamiento privado durable, coordinador y assurance exacto siguen pendientes. |
+| 2 | Preservar términos aceptados, ledger y capturas inciertas | S0 | 3/5/5/5/5/3/2/2 | 86 | BLOCKED por gates. #551 integrado normalmente como5114 tras aprobación vigente de fa5a y20controles; entrega backend pendiente de release. No duplicar #555/#569/#612/#617 ni activar proveedores. |
+| 3, ejecutable seleccionado | Admitir siguiente release conservando diario y exclusión global | S0, dependencia de entrega | 3/5/4/4/5/2/2/2 | 79 | PARTIAL para entrega. #618 d682 está publicado y aprobado en ese head; composición LOCAL con main5114 conserva su código y extiende la base financiera. Se espera el main final de611/614/616 para publicar una única reconciliación. Sin uso productivo autorizado. |
+| 4 | Entregar comprobantes privados y reparación de pagos ya integrados | S1 / gates S0 | 3/4/4/5/5/3/2/3 | 79 | BLOCKED para release. #603/#609/#551 enmain. La imagen5114 está en construcción;000cf queda histórica por los tres módulos y siete migraciones nuevas. API4dac no incluye las reparaciones; almacenamiento privado durable, coordinador y assurance exacto siguen pendientes. |
 | 5 | Alertas guardadas respetan filtros no geográficos | S1 | 2/3/3/4/5/2/3/2 | 64 | PARTIAL. #61477c, composición local01854565 sobreb732; esperar main real tras551/611 para publicar una única composición final. No usar resultados HTTP8b2 como ejecución de todo backend nuevo. |
 | 6 | Correo/push de chat controlado por destinatario | S1 | 3/3/4/4/3/1/1/1 | 60 | BLOCKED para entrega externa #577 por consentimiento, adaptadores y calificación de dispositivos; avisos internos ya existen. |
 | 7 | Habilitación explícita del club de un artista nuevo | S1 | 2/2/4/4/5/1/2/1 | 59 | UNIMPLEMENTED en alcance #606. Follow existente y enlaces públicos no completan provisionamiento consentido. |
@@ -74,8 +74,9 @@ incidente de pérdida de datos demostrado. Los dos primeros trabajos tienen
 responsables activos y controles externos pendientes; por eso se selecciona la
 siguiente dependencia ejecutable sin abrir implementaciones paralelas.
 
-La cola FIFO observada es #551→#611→#614→#616. #611 necesita revisión independiente
-posterior a2d872; la aprobación21:18 reasignada por GitHub no es una nueva revisión.
+La cola FIFO observada es #611→#614→#616→#618, después del merge protegido de551.
+#611 fue reconciliado por su responsable como f5b9413 con main5114; necesita CI y
+revisión independiente de ese head. La aprobación21:18 reasignada no es una nueva revisión.
 Conservar todos los drafts y las protecciones:20contextos, checks estrictos,
 aprobación independiente, descarte de obsoletas, administradores sujetos a
 protección y conversaciones resueltas. Esta prioridad no introduce excepciones.
@@ -363,3 +364,20 @@ e historial. Beneficio observado limitado a datos y procesos descartables; sin
 entrega productiva, tiempo al usuario ni conversión medidos. Resta PR enfocado,
 CI/revisión/admisión y coordinación protegida. La configuración privada de
 comprobantes y las restricciones formales/de release siguen independientes.
+
+## Composición financiera protegida del26/oct UTC
+
+#551 ya está integrado como5114, con padresb732 yfa5a y árbol idéntico al aprobado.
+La API pública observada a02:00UTC sigue4dac; no hay nuevo backend entregado.
+El esquema objetivo ahora contiene220migraciones, con prefijo213 intacto.
+#614 deberá conservar las220 y añadir su alerta como221, mantener las cinco
+actualizaciones financieras de requisitos y la procedencia revisada del catálogo.
+Su composición localfe179 valida68casosSQL/16UTC/7planes y espera el nuevo binario
+para ejecutar107HTTP; los resultados anteriores mantienen su identidad histórica.
+
+La composición LOCAL de618 con5114 mantiene el código Python, las22pruebas y el
+modelo de sucesión idénticos al d682 revisado. Las22pruebas pasan de nuevo normal y
+con optimización;139objetos canónicos permanecen exactos de main y solo se extiende
+DEPLOY-JOURNAL-001. No se atribuye a este nuevo conjunto el CI anterior ni una
+aprobación posterior aún inexistente. Se espera la base final de la cola para
+publicar una sola actualización y aplicar sus controles y revisión vigentes.

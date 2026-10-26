@@ -1,0 +1,36 @@
+{
+  "observedAt": "2026-10-26T02:13:12.395287+00:00",
+  "scope": "Local composition only; remote618 remains approved d682 while FIFO stabilizes.",
+  "parents": [
+    "d68241d83f251c0fb9d2dc344a76f93076cdb9a5",
+    "5114fe95ac8e328b58162a8dcae5c9015a47ce09"
+  ],
+  "inputSha256": {
+    "ops/hetzner/release-journal.py": "1c9dccb95894a676582e27acee4f8191225dcbd33a776f773e12fc322289635d",
+    "scripts/test-release-journal.py": "3af0e8451aeb8d2e1948174b0184f6131c58529674b1711aa0468d5dc75bb679",
+    "scripts/verify-event-operations-formal.sh": "7201b7403faf3a7fe3b22edaf3b8c8600e63e85b53d693ba24f1671defe2a213",
+    "formal/system/requirements.json": "24c60771f3a080fb0da949bbd99f6585f37343a31f183037a6f8988982f050dd",
+    "scripts/production-migrations.json": "6b125a762a48305ccd0c948db1817e8dd0490092819e55254dcb78946c44d8be"
+  },
+  "requirements": {
+    "count": 140,
+    "mainObjectsExactExcept": [
+      "DEPLOY-JOURNAL-001"
+    ],
+    "ownJournalRequirementExactFrom": "d68241d83f251c0fb9d2dc344a76f93076cdb9a5"
+  },
+  "journalImplementationAndTestsExactFrom": "d68241d83f251c0fb9d2dc344a76f93076cdb9a5",
+  "manifestEntries": 220,
+  "manifestExactMain": true,
+  "validation": {
+    "normalTests": 22,
+    "optimizedTests": 22,
+    "normalLog": "/private/tmp/tdf-journal-post551-tests-20261026.log",
+    "optimizedLog": "/private/tmp/tdf-journal-post551-tests-optimized-20261026.log",
+    "formalScriptDelta": "Only original15lines succession block added to main; main financial invocation lines retained.",
+    "historicalEvidence": "d682/05abc local/hosted reports retain their original source identities; no complete combined-branch CI or runtime execution claim."
+  },
+  "published": false,
+  "productionMutation": false,
+  "releaseAuthorized": false
+}

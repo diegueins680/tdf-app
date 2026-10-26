@@ -111,6 +111,10 @@ run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant Re
 run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
 run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
 
+run_tlc LedgerNamespace.tla LedgerNamespace.cfg ledger-namespace
+run_negative_tlc LedgerNamespacePosting.cfg ledger-namespace-posting 'Invariant PostedBalanced is violated' LedgerNamespace.tla
+run_negative_tlc LedgerNamespaceEntry.cfg ledger-namespace-entry 'Invariant PostedBalanced is violated' LedgerNamespace.tla
+
 run_tlc MigrationLedger.tla MigrationLedger.cfg migration-ledger
 run_negative_tlc MigrationLedgerRecordAfterCommit.cfg migration-ledger-record-after-commit 'Invariant EffectsRecorded is violated' MigrationLedger.tla
 run_negative_tlc MigrationLedgerBatchUnchecked.cfg migration-ledger-batch-unchecked 'Invariant NoRunPastDrift is violated' MigrationLedger.tla
@@ -339,6 +343,12 @@ expect_counterexample() {
   echo "Expected mutation counterexample: ${config}: ${invariant}"
   printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc LedgerPosting.tla LedgerPosting.cfg ledger-posting
+run_negative_tlc LedgerPostingReverserMutable.cfg ledger-posting-reverser-mutable 'Invariant ReversedByPosted is violated' LedgerPosting.tla
+run_negative_tlc LedgerPostingAppend.cfg ledger-posting-append 'Invariant PostedImmutable is violated' LedgerPosting.tla
+run_negative_tlc LedgerPostingUnvalidated.cfg ledger-posting-unvalidated 'Invariant PostedBalanced is violated' LedgerPosting.tla
+run_negative_tlc LedgerPostingReopen.cfg ledger-posting-reopen 'Invariant PostedHistory is violated' LedgerPosting.tla
+run_negative_tlc LedgerPostingInsertPosted.cfg ledger-posting-insert-posted 'Invariant PostedBalanced is violated' LedgerPosting.tla
 run_tlc MusicPublication.tla MusicPublication.cfg music-publication
 run_negative_tlc MusicPublicationBatch.cfg music-publication-batch 'Temporal properties were violated' MusicPublication.tla
 run_negative_tlc MusicPublicationReplacedOnly.cfg music-publication-replaced-only 'Invariant OnlyInvalidFails is violated' MusicPublication.tla
@@ -359,6 +369,13 @@ run_tlc WorkerCompletionEvidence.tla WorkerCompletionEvidence.cfg worker-complet
 expect_counterexample WorkerCompletionEvidenceFailed.cfg CompletedHasNoFailedItems worker-completion-failed WorkerCompletionEvidence.tla
 expect_counterexample WorkerCompletionEvidenceUnacknowledged.cfg SuccessfulReturnHasEvidence worker-completion-unacknowledged WorkerCompletionEvidence.tla
 run_tlc ProviderRetryAdmission.tla ProviderRetryAdmission.cfg provider-retry-admission
+run_tlc TicketCaptureClassification.tla TicketCaptureClassification.cfg ticket-capture-classification
+expect_counterexample TicketCaptureClassificationUnsafeReadback.cfg UnresolvedCaptureFenced ticket-capture-readback TicketCaptureClassification.tla
+expect_counterexample TicketCaptureClassificationUnsafeResponse.cfg UnresolvedCaptureFenced ticket-capture-response TicketCaptureClassification.tla
+expect_counterexample TicketCaptureClassificationBindingMismatch.cfg UnresolvedCaptureFenced ticket-capture-binding TicketCaptureClassification.tla
+run_tlc TicketCaptureFence.tla TicketCaptureFence.cfg ticket-capture-fence
+expect_counterexample TicketCaptureFenceStaleRead.cfg CommittedUncertaintyFencesAdmission ticket-capture-stale-read TicketCaptureFence.tla
+expect_counterexample TicketCaptureFenceUnlockedWriter.cfg CommittedUncertaintyFencesAdmission ticket-capture-unlocked-writer TicketCaptureFence.tla
 run_tlc PaymentIntentExpiry.tla PaymentIntentExpiry.cfg payment-intent-expiry
 expect_counterexample PaymentIntentExpiryRequest.cfg ExpiredAdmissionDenied payment-intent-expiry-request PaymentIntentExpiry.tla
 expect_counterexample PaymentIntentExpiryTransaction.cfg ExpiredAdmissionDenied payment-intent-expiry-transaction PaymentIntentExpiry.tla
@@ -457,6 +474,20 @@ run_negative_tlc CheckoutCancellationPaymentUnsafe.cfg checkout-payment-unsafe '
 run_negative_tlc CheckoutReadinessUnavailable.cfg checkout-unavailable 'Invariant ReadyBeforeReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessStale.cfg checkout-stale 'Invariant CurrentReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessDuplicate.cfg checkout-duplicate 'Invariant SingleCurrentFlight is violated' CheckoutReadiness.tla
+run_tlc CheckoutSnapshot.tla CheckoutSnapshot.cfg checkout-snapshot
+run_negative_tlc CheckoutSnapshotLateLines.cfg checkout-snapshot-late-lines 'Invariant SnapshotFixed is violated' CheckoutSnapshot.tla
+run_negative_tlc CheckoutSnapshotUnvalidated.cfg checkout-snapshot-unvalidated 'Invariant CommittedSum is violated' CheckoutSnapshot.tla
+run_negative_tlc CheckoutSnapshotMutableTerms.cfg checkout-snapshot-mutable-terms 'Invariant TermsFixed is violated' CheckoutSnapshot.tla
+run_tlc TermsIdentityUpgrade.tla TermsIdentityUpgrade.cfg terms-identity-upgrade
+run_tlc TermsIdentityHistory.tla TermsIdentityHistory.cfg terms-identity-history
+expect_counterexample TermsIdentityHistoryLiveOnly.cfg HistoricalIdentityPreserved terms-identity-history-live-only TermsIdentityHistory.tla
+expect_counterexample TermsIdentityHistoryDelete.cfg AppendOnlyHistory terms-identity-history-delete TermsIdentityHistory.tla
+expect_counterexample TermsIdentityHistoryUpdate.cfg AppendOnlyHistory terms-identity-history-update TermsIdentityHistory.tla
+expect_counterexample TermsIdentityHistoryTruncate.cfg AppendOnlyHistory terms-identity-history-truncate TermsIdentityHistory.tla
+run_negative_tlc TermsIdentityUpgradeUnfenced.cfg terms-identity-upgrade-unfenced 'Invariant InstalledHistoryValid is violated' TermsIdentityUpgrade.tla
+run_negative_tlc TermsIdentityUpgradeEarlyUnlock.cfg terms-identity-upgrade-early-unlock 'Invariant InstalledHistoryValid is violated' TermsIdentityUpgrade.tla
+run_negative_tlc TermsIdentityUpgradeUnchecked.cfg terms-identity-upgrade-unchecked 'Invariant InstalledHistoryValid is violated' TermsIdentityUpgrade.tla
+
 run_tlc DriveReplay.tla DriveReplay.cfg drive-replay
 run_tlc DriveReplay.tla DriveReplayCrossFolder.cfg drive-replay-cross-folder
 run_negative_tlc DriveReplayCrossFolderObjects.cfg drive-replay-cross-folder-objects 'Invariant SingleObject is violated' DriveReplay.tla

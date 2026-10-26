@@ -330,8 +330,8 @@
     },
     {
       "id": "SYS-MONEY-003",
-      "statement": "Ledger balance validation must compare exact per-currency sums, not modular Int64 sums.",
-      "authority": "approved",
+      "statement": "Ledger balance validation must compare exact per-currency sums, not modular Int64 sums; in the database a commerce ledger transaction is created as draft, posts only with entries that sum to zero in every currency, keeps its entries unchanged once posted, never returns to draft, and is reversed only by a posted transaction.",
+      "authority": "approved AUTHORITY-069",
       "source": "docs/adr/0104-immutable-financial-ledger.md",
       "property": "per-currency accumulated sum uses arbitrary precision",
       "contract": "formal/system/payment-arithmetic.md",
@@ -339,9 +339,15 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-        "tdf-hq/src/TDF/Commerce/RefundStore.hs"
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
+        "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
+        "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
+        "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
+        "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
+        "scripts/lib/production-release.mjs",
+        "scripts/ci-change-scope.mjs"
       ],
-      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control.",
+      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control. Bounded TLC model of ledger posting with five negative controls and the ledger-posting-postgresql spec against the fully migrated schema (formal/system/ledger-posting.md). Legacy-upgrade fixtures and witnessed two-session reversal races under READ COMMITTED and REPEATABLE READ run in scripts/__tests__/ledger-posting-upgrade.py. The canonical provider retry/refund harness applies both the ledger integrity and fixed-line snapshot migrations before its store integration cases; its reduced domain fixture does not establish every production-domain guard (docs/payments/consolidation-2026-10-15.md). Snapshot schedules in ledger-posting-snapshot.py test entry INSERT/UPDATE/DELETE before posting (blocked and already committed), post-first and writer rollback, across READ COMMITTED, REPEATABLE READ and SERIALIZABLE. Six lock-only mutation controls reproduce posted balance 1; these finite PostgreSQL tests do not discharge complete implementation/refinement obligations. Non-owner TEMP and caller-schema shadowing checks plus two lookup-removal controls exercise the installed guards; the finite LedgerNamespace model abstracts these lookup choices (formal/system/ledger-namespace.md). The startup schema verifier rejects missing, reordered or caller-controlled lookup settings, missing expected function signatures and SECURITY DEFINER drift for both installed ledger guards. Transaction-scoped full-schema mutations and a compatible extra-GUC case run through the actual rendered verifier; migration receipts remain unchanged. Changes to the installed schema verifier, ledger/provider/expiry runners and ledger regression harnesses must select backend=true, so the full-schema PostgreSQL controls are executed rather than silently skipped. The path-classifier regression checks nine affected paths against the real selector.",
       "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output; 2026-10-09 local PG16 run of ledger_posting_balance.sql via scripts/test-ticket-manual-review.sh.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -358,8 +364,26 @@
         "Inputs and valid domains are defined by formal/system/payment-arithmetic.md"
       ],
       "state": {
-        "boundary": "formal/system/payment-arithmetic.md",
-        "property": "per-currency accumulated sum uses arbitrary precision"
+        "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
+        "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
+        "states": [
+          "draft",
+          "posted",
+          "reversed"
+        ],
+        "transitions": [
+          {
+            "from": "draft",
+            "to": "posted",
+            "guard": "entries present and zero sum per currency"
+          },
+          {
+            "from": "posted",
+            "to": "reversed",
+            "guard": "reversal_of names another posted transaction"
+          }
+        ],
+        "initial": "draft"
       },
       "allowedTransitions": [
         "per-currency accumulated sum uses arbitrary precision"
@@ -372,25 +396,51 @@
       ],
       "authorization": "Retain the authorization boundary in the mapped contract; verification of a helper does not authorize an HTTP caller.",
       "privacy": "Do not put credentials or customer payloads in verification receipts.",
-      "concurrency": "No global interleaving guarantee follows from this requirement; bounds remain in the mapped contract.",
+      "concurrency": "Entry mutations physically update the parent row without changing created_at. A poster at READ COMMITTED validates the committed entries; an older REPEATABLE READ or SERIALIZABLE poster fails with SQLSTATE 40001. Post-first mutation attempts reject or serialize-fail. Whole-transaction retry is a separate caller obligation; no global interleaving or liveness proof is claimed.",
       "idempotency": "No additional runtime retry permission; repeat checks must bind to their actual inputs.",
-      "failure": "Reject the invalid operation or verification result as defined by the mapped contract.",
-      "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
+      "failure": "Reject the invalid operation or verification result as defined by the mapped contract. Database: SQLSTATE 23514 for creation in any status but draft, posting without entries or unbalanced in any currency, entries inserted/updated/deleted after posting, posted -> draft, draft -> reversed, reversal by a non-posted transaction, and any change of a reversed transaction. A referenced posted reverser cannot itself be reversed. Migration rejects existing empty/unbalanced posted rows and self, draft or reversed reversal targets before installing new guards. Stale snapshot posting or entry mutation may return SQLSTATE 40001; callers must roll back the whole transaction. The additive write-fence migration separately refuses empty or unbalanced posted/reversed history.",
+      "recovery": "Preserve existing evidence. Migration fails before replacing guards if posted history is empty or unbalanced or a reversed transaction lacks a distinct posted reverser. Reconcile the invalid history through an explicitly reviewed repair before retrying; the migration never silently changes ledger amounts or references.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
         "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
         "tdf-hq/test/integration/ledger_posting_balance.sql",
-        "scripts/test-ticket-manual-review.sh"
+        "scripts/test-ticket-manual-review.sh",
+        "scripts/test-ledger-posting.sh",
+        "tdf-hq/test/TDF/LedgerPostingSpec.hs",
+        "scripts/__tests__/ledger-posting-upgrade.py",
+        "tdf-hq/test/TDF/Test/DisposablePostgres.hs",
+        "scripts/__tests__/ledger-posting-snapshot.py",
+        "scripts/__tests__/ledger-posting-namespace.py",
+        "scripts/__tests__/ledger-startup-namespace.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs"
       ],
-      "formalModels": [],
-      "confidence": "high for stated local boundary; no system-wide completion claim",
+      "formalModels": [
+        "formal/event-operations/LedgerPosting.tla",
+        "formal/event-operations/LedgerPosting.cfg",
+        "formal/event-operations/LedgerPostingAppend.cfg",
+        "formal/event-operations/LedgerPostingUnvalidated.cfg",
+        "formal/event-operations/LedgerPostingReopen.cfg",
+        "formal/event-operations/LedgerPostingInsertPosted.cfg",
+        "formal/event-operations/LedgerPostingReverserMutable.cfg",
+        "formal/event-operations/LedgerNamespace.tla",
+        "formal/event-operations/LedgerNamespace.cfg",
+        "formal/event-operations/LedgerNamespacePosting.cfg",
+        "formal/event-operations/LedgerNamespaceEntry.cfg"
+      ],
+      "confidence": "Observed named PostgreSQL schedules and arithmetic vectors; no complete refinement, final hosted or deployed correspondence claim",
       "ambiguity": [
         "Full cross-system refinement and current deployed correspondence remain unverified.",
-        "The database validates balance only on draft -> posted; a transaction inserted as posted, or an entry appended after posting, is not rejected. No live writer does either."
+        "Production ledger drift remains unknown until pre-migration validation; invalid history blocks guard installation and requires reviewed reconciliation before retrying.",
+        "No writer uses 'reversed' today; the reversal rule bounds a future writer.",
+        "validateLedgerBalance (Haskell) has no runtime caller; the database rule is the enforced one.",
+        "Before 2026-10-12 the database validated balance only on draft -> posted, so a transaction inserted as posted or an entry appended after posting was not rejected; the ledger posting integrity migration closes both.",
+        "The #551 lock-only entry guard admitted stale-snapshot unbalanced postings under REPEATABLE READ. The additive 2026-10-16 write fence repairs the reproduced schedules; unbounded SQL/MVCC refinement, caller retry policy and deployed correspondence remain open.",
+        "Unqualified trigger lookup admitted non-owner TEMP shadowing on source 59df1dd2a17952b906cf89d1c5502725d51239e1. The additive namespace migration pins both functions; runtime trusted-schema privileges, owner/DDL bypass and deployed correspondence remain unverified.",
+        "Startup verification checks the installed trusted lookup settings and invoker boundary, not arbitrary trigger bodies or privileged DDL equivalence; a table owner can still disable or replace triggers."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Live writers and the posting trigger conform; the database does not reject transactions inserted as posted or entries appended after posting."
+        "reason": "A new stale-snapshot counterexample refutes the lock-only entry fence. The additive physical-write fence passes named PostgreSQL integration schedules and lock-removal controls. Complete implementation/refinement, hosted final-candidate qualification and deployed correspondence remain UNPROVEN; see formal/system/ledger-refinement-2026-10-16.md. Non-owner namespace counterexamples additionally require the additive trusted-lookup migration; finite controls and their remaining assumptions are recorded in formal/system/ledger-namespace.md."
       }
     },
     {
@@ -1822,11 +1872,11 @@
     {
       "id": "PAY-CHECKOUT-002",
       "title": "Immutable checkout payable snapshot correspondence",
-      "statement": "Every committed canonical checkout has at least one line whose exact payable sum equals its immutable parent payable total; preserve currency and monetary terms after creation.",
+      "statement": "Every committed canonical checkout has at least one line whose exact payable sum equals its immutable parent payable total; preserve currency and monetary terms after creation. Lines are created only in the transaction that creates their checkout: no line, whatever its amount, joins a committed checkout.",
       "domain": "PAY",
-      "authority": "inferred",
-      "source": "formal/system/checkout-arithmetic.md; tdf-hq/src/TDF/Server/Merch.hs; tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-      "property": "Nonempty line snapshot and exact numeric sum(line.total_minor)=checkout.total_minor; parent monetary fields immutable.",
+      "authority": "inferred; AUTHORITY-070",
+      "source": "formal/system/checkout-arithmetic.md; tdf-hq/src/TDF/Server/Merch.hs; tdf-hq/src/TDF/Commerce/CheckoutStore.hs; formal/system/checkout-snapshot.md",
+      "property": "Nonempty line snapshot and exact numeric sum(line.total_minor)=checkout.total_minor; parent monetary fields immutable; the line set of a committed checkout is the one it was committed with.",
       "contract": "formal/system/checkout-arithmetic.md",
       "actors": [
         "CheckoutStore adapter",
@@ -1848,44 +1898,59 @@
         ]
       },
       "allowedTransitions": [
-        "Create header and all lines in one transaction.",
+        "Create header and all lines in one transaction (subtransactions included).",
         "Advance lifecycle/payment/refund counters while preserving monetary terms."
       ],
       "forbiddenTransitions": [
         "Commit missing lines or mismatched/overflowing aggregate.",
-        "Rewrite parent currency or monetary terms."
+        "Rewrite parent currency or monetary terms.",
+        "Insert a line for a checkout that the inserting transaction did not create (committed by another transaction, only updated or upserted-without-insert by this one, uncommitted elsewhere, rolled back to a savepoint, or unknown)."
       ],
       "effects": [
-        "Deferred commit-time validation; reject without committed financial mutation."
+        "Deferred commit-time validation; reject without committed financial mutation.",
+        "A line for a checkout not created by the inserting transaction is refused at insert (SQLSTATE 23514)."
       ],
-      "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization.",
+      "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization. The 2026-10-12 registry is a transaction-local setting any SQL writer with INSERT privilege could set by hand: it guards against mistaken writers and is not a privilege boundary.",
       "privacy": "Synthetic tests use no real customer data or provider credentials.",
-      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable. A migration-created visible singleton fences pre-enforcement repeatable-read snapshots; SQLSTATE40001 requests retry.",
+      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable. A migration-created visible singleton fences pre-enforcement repeatable-read snapshots; SQLSTATE40001 requests retry. Since 2026-10-12 the header insert (an AFTER ROW trigger, so only rows actually inserted) records the checkout id in a transaction-local setting and a line is accepted only for a recorded id, so zero-total appends are closed whatever the isolation level, the order in which transactions began, or updates of the header; a creating transaction holding its uncommitted header is not waited on and still commits with its own lines.",
       "idempotency": "Deterministic arithmetic is repeatable for identical inputs; this adds no provider replay permission.",
-      "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch.",
-      "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence.",
+      "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch. A line for a checkout the transaction did not create is refused with SQLSTATE 23514 at insert.",
+      "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence. The 2026-10-12 rule has a rollback that leaves the 2026-10-04 rules in place; a line appended before it is not identifiable from the rows (xmin is re-stamped by header updates), only from audit and domain records.",
       "observability": "Record exact source SHA/hash, fixed QuickCheck seed, negative-control results and HTTP/database evidence without personal payloads.",
       "implementation": [
         "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
+        "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql",
+        "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql",
         "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "scripts/__tests__/checkout-amount-postgres.mjs",
-        "scripts/test-marketplace-contact-identity.sh"
+        "scripts/test-marketplace-contact-identity.sh",
+        "scripts/__tests__/test-process-session.test.mjs",
+        "scripts/lib/test-process-session.mjs"
       ],
-      "formalModels": [],
-      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls.",
-      "evidence": "checkout-amount-postgres-fence.log",
+      "formalModels": [
+        "formal/event-operations/CheckoutSnapshot.tla",
+        "formal/event-operations/CheckoutSnapshot.cfg",
+        "formal/event-operations/CheckoutSnapshotLateLines.cfg",
+        "formal/event-operations/CheckoutSnapshotUnvalidated.cfg",
+        "formal/event-operations/CheckoutSnapshotMutableTerms.cfg"
+      ],
+      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls. 2026-10-12: CheckoutSnapshot.tla (200 states, 85 distinct) with three single-guard controls checks that the guard implies the invariants; the PostgreSQL test exercises the mechanism: fixed-snapshot cases, a header update before the append, a session that began before the checkout was created, subtransactions, upserts that insert nothing or update the header, a header and line in one statement, two negative controls and the structural check of both new triggers. Interactive PostgreSQL test sessions reject spawn errors and early exits before readiness and bound stalled waits; focused child-process tests cover those failure paths.",
+      "evidence": "checkout-amount-postgres-fence.log; formal/system/checkout-snapshot.md",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "high within immutable/nonnegative schema assumptions; final hosted and deployed execution pending",
       "ambiguity": [
         "Privileged DDL, TRUNCATE and disabled triggers excluded.",
-        "Component subtotals intentionally differ for merchandise shipping."
+        "Component subtotals intentionally differ for merchandise shipping.",
+        "A line of total zero is a line: it may not join a committed checkout even though it leaves the sum unchanged (2026-10-12).",
+        "A header and its line in one statement (data-modifying CTE) is refused since 2026-10-12; no writer uses that shape.",
+        "The 2026-10-12 registry can be forged by any SQL writer via set_config; hostile SQL writers remain out of scope, as for disabled triggers."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local PG16 boundary, five negative controls and migration-era snapshot race pass; final PG17 CI and deployment pending."
+        "reason": "Local PG16 boundary, seven negative controls, migration-era snapshot race and the fixed line snapshot (mechanism tested, not modelled) pass; final PG17 CI and deployment pending."
       }
     },
     {
@@ -2761,7 +2826,8 @@
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/test-hetzner-inspection.py",
         "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/test-automatic-migrations-production-schema.sh"
       ],
       "critical": true
     },
@@ -3455,20 +3521,24 @@
       ],
       "authorization": "Current checkout lookup capability and provider/environment/method scope remain required; idempotency keys alone grant no authority.",
       "privacy": "Synthetic integration tests do not contact real providers or expose customer lookup capabilities.",
-      "concurrency": "Atomic transaction abstraction requires actual PostgreSQL row locks and rollback; separate integration tests must establish the implementation boundary.",
+      "concurrency": "Atomic transaction abstraction requires actual PostgreSQL row locks and rollback; separate integration tests must establish the implementation boundary. Ticket cross-rail admission reads capture uncertainty under the checkout lock, after the event sales lock; failure recording acquires checkout before attempt. A two-transaction finite model covers stale reads and unfenced writers, with a real PostgreSQL blocking-observation regression.",
       "idempotency": "Key domain is provider, merchant account, operation and key; exact replay additionally binds checkout, environment, amount and currency. Provider operation hashes retain additional request binding.",
-      "failure": "Ambiguous provider response retains original identity and blocks fresh-charge fallback pending reconciliation. Conflicting replay rejects without repairing historical evidence.",
+      "failure": "Ambiguous provider response retains original identity and blocks fresh-charge fallback pending reconciliation. Conflicting replay rejects without repairing historical evidence. Ticket capture fallback treats missing, unknown and refunded nested captures as unresolved; only explicit declined/failed captures establish no-charge. Completed captures with mismatched binding/money remain fenced pending reconciliation.",
       "recovery": "Reconcile the original operation; allow a fresh reference only after authoritative no-charge and current payable-state admission.",
       "observability": "Retain attempt/intent/provider operation identity and redacted reconciliation outcomes; exact candidate integration and bounded-model receipts.",
       "implementation": [
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs"
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-        "scripts/test-provider-retry-runtime.sh"
+        "scripts/test-provider-retry-runtime.sh",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs"
       ],
       "formalModels": [
         "formal/event-operations/ProviderRetryAdmission.tla",
@@ -3477,7 +3547,16 @@
         "formal/event-operations/ProviderRetryAdmissionDuplicate.cfg",
         "formal/event-operations/ProviderRetryAdmissionPayload.cfg",
         "formal/event-operations/ProviderRetryAdmissionClosed.cfg",
-        "formal/event-operations/ProviderRetryAdmissionLate.cfg"
+        "formal/event-operations/ProviderRetryAdmissionLate.cfg",
+        "formal/event-operations/TicketCaptureClassification.tla",
+        "formal/event-operations/TicketCaptureClassification.cfg",
+        "formal/event-operations/TicketCaptureClassificationUnsafeReadback.cfg",
+        "formal/event-operations/TicketCaptureClassificationUnsafeResponse.cfg",
+        "formal/event-operations/TicketCaptureClassificationBindingMismatch.cfg",
+        "formal/event-operations/TicketCaptureFence.tla",
+        "formal/event-operations/TicketCaptureFence.cfg",
+        "formal/event-operations/TicketCaptureFenceStaleRead.cfg",
+        "formal/event-operations/TicketCaptureFenceUnlockedWriter.cfg"
       ],
       "verification": "Bounded TLC positive and five named mutation counterexamples plus environment-enabled actual PostgreSQL provider retry integration.",
       "evidence": "Exact candidate formal and PostgreSQL integration logs; ordinary Hspec without integration environment is insufficient.",
@@ -9550,7 +9629,7 @@
       "domain": "LEGAL",
       "authority": "Product owner request 2026-10-07 ('Fix them': course terms never shown; mobile ticket checkout without terms)",
       "source": "tdf-app PR (fix/terms-consent-gaps); TDF-mobile PR (fix/terms-consent-gaps)",
-      "property": "No acceptance is recorded for a terms version that was not displayed.; Events with an approved ticket policy cannot hold seats on the legacy endpoint without the current accepted version.",
+      "property": "No acceptance is recorded for a terms version that was not displayed.; Events with an approved ticket policy cannot hold seats on the legacy endpoint without the current accepted version.; Within a course or event, a terms_version names exactly one terms text, so a replacement policy cannot reuse a version for different terms.",
       "contract": "tdf-hq/docs/openapi/api.yaml",
       "actors": [
         "Course registrant",
@@ -9588,10 +9667,10 @@
       ],
       "authorization": "Unchanged: public course registration and authenticated ticket purchase keep their existing guards.",
       "privacy": "Terms text is public policy content; no personal data added.",
-      "concurrency": "Policy is re-read at checkout; a concurrent policy change surfaces as 409 rather than binding stale terms.",
+      "concurrency": "Policy is re-read at checkout; a concurrent policy change surfaces as 409 rather than binding stale terms. Terms-identity migration locks both policy tables before preflight and retains the locks through atomic trigger installation; concurrent writers cannot introduce conflicting history in that interval.",
       "idempotency": "Accepted version is validated before the existing idempotent hold logic; replays with the same version behave as before.",
       "failure": "Missing ticket acceptance returns 400; stale version returns 409; clients reload the policy and clear acceptance.",
-      "recovery": "Buyer reviews the new terms and accepts again.",
+      "recovery": "Buyer reviews the new terms and accepts again. Retain append-only history guards during application rollback; this repair grants no history deletion or retention authorization.",
       "observability": "Haskell decode specs, web/mobile unit tests for display, gating and version binding.",
       "implementation": [
         "tdf-hq/src/TDF/Routes/Courses.hs",
@@ -9609,7 +9688,11 @@
         "tdf-mobile/app/ticketCheckout.tsx",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/client.ts",
-        "tdf-mobile/src/types/index.ts"
+        "tdf-mobile/src/types/index.ts",
+        "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql",
+        "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql",
+        "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql",
+        "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
@@ -9618,10 +9701,26 @@
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-mobile/__tests__/TicketCheckout.test.tsx",
-        "tdf-mobile/__tests__/apiClient.test.ts"
+        "tdf-mobile/__tests__/apiClient.test.ts",
+        "scripts/test-checkout-policy-terms-identity-migration.sh",
+        "scripts/test-checkout-terms-upgrade-concurrency.py",
+        "scripts/test-checkout-terms-history.sh",
+        "tdf-hq/test/integration/checkout_terms_history_identity.sql"
       ],
-      "formalModels": [],
-      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required.",
+      "formalModels": [
+        "formal/event-operations/TermsIdentityUpgrade.tla",
+        "formal/event-operations/TermsIdentityUpgrade.cfg",
+        "formal/event-operations/TermsIdentityUpgradeUnfenced.cfg",
+        "formal/event-operations/TermsIdentityUpgradeEarlyUnlock.cfg",
+        "formal/event-operations/TermsIdentityUpgradeUnchecked.cfg",
+        "formal/event-operations/TermsIdentityHistory.tla",
+        "formal/event-operations/TermsIdentityHistory.cfg",
+        "formal/event-operations/TermsIdentityHistoryLiveOnly.cfg",
+        "formal/event-operations/TermsIdentityHistoryDelete.cfg",
+        "formal/event-operations/TermsIdentityHistoryUpdate.cfg",
+        "formal/event-operations/TermsIdentityHistoryTruncate.cfg"
+      ],
+      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required. Database test of the terms-version identity triggers (scripts/test-checkout-policy-terms-identity-migration.sh). Scope-only course/event reassignment is checked against destination terms; matching and unused destination versions remain permitted. Independent guard-removal controls reproduce conflicting reassignments for each table. A controlled PostgreSQL barrier witnesses a conflicting writer after preflight and before trigger DDL for each table; the original migration admits both texts, while the fenced migration blocks and then rejects the writer. TermsIdentityUpgrade checks the finite two-scope upgrade boundary with three expected counterexamples; this does not prove whole checkout consent, arbitrary schedules or SQL refinement. Historical policy snapshots also fence version reuse after deleting the last live policy or editing it in place. Full-schema SQL checks cover course and event history, identical replay and a distinct new version. Independent old-guard controls admit the forbidden reuse; conflicting historical preflight controls fail closed. The finite history model covers two scopes, one version and two texts, not all production schedules. Both retained policy-history tables also reject UPDATE, DELETE and TRUNCATE while continuing to append legitimate snapshots. Six independent full-schema regressions expose the missing guards; six selective guard-removal controls require the named rejection and exact guard restoration. The finite model retains independent disclosed text so archive erasure cannot erase the invariant, with separate delete/update/truncate counterexamples.",
       "evidence": "Exact-revision CI receipt required before claiming conformance.",
       "status": "specified and implemented",
       "historicalStatus": "new",

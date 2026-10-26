@@ -115,6 +115,22 @@ test('production migration runner changes run backend and migration checks', () 
   });
 });
 
+test('ledger runtime and verification changes select the real PostgreSQL backend lane', () => {
+  for (const file of [
+    'scripts/lib/production-release.mjs',
+    'scripts/render-production-schema-verification.mjs',
+    'scripts/test-ledger-posting.sh',
+    'scripts/test-provider-retry-runtime.sh',
+    'scripts/verify-payment-intent-expiry.py',
+    'scripts/__tests__/ledger-posting-upgrade.py',
+    'scripts/__tests__/ledger-posting-snapshot.py',
+    'scripts/__tests__/ledger-posting-namespace.py',
+    'scripts/__tests__/ledger-startup-namespace.mjs',
+  ]) {
+    assert.equal(classifyChangedFiles([file]).backend, true, file);
+  }
+});
+
 test('root dependency changes cover every JavaScript consumer', () => {
   assert.deepEqual(classifyChangedFiles(['package-lock.json']), {
     repo: true,
