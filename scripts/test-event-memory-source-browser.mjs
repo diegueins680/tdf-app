@@ -93,16 +93,44 @@ try {
   await expect(review.getByText(caption, { exact: true })).toHaveCount(0);
   await expect(card(owner)).toBeVisible();
   result.assertions.push('Organizer closes the actual source report without removing the publication');
-  await card(owner).scrollIntoViewIfNeeded();
-  await card(owner).getByRole('button', { name: 'Ocultar recuerdo' }).focus(); await owner.keyboard.press('Enter');
-  await owner.getByRole('textbox', { name: 'Motivo' }).fill('Ocultación sintética reversible');
-  await owner.getByRole('button', { name: 'Confirmar', exact: true }).click();
+  const commandResponse = (page, operation) => page.waitForResponse((response) => {
+    const request = response.request();
+    if (request.method() !== 'POST' || !new URL(response.url()).pathname.endsWith('/commands')) return false;
+    return request.postDataJSON()?.command?.operation === operation;
+  });
+  const hideWithKeyboard = async () => {
+    await card(owner).scrollIntoViewIfNeeded();
+    await card(owner).getByRole('button', { name: 'Ocultar recuerdo' }).focus(); await owner.keyboard.press('Enter');
+    await owner.getByRole('textbox', { name: 'Motivo' }).fill('Ocultación sintética reversible');
+    const response = commandResponse(owner, 'source.hide');
+    await owner.getByRole('button', { name: 'Confirmar', exact: true }).click();
+    return response;
+  };
+  let hidden = await hideWithKeyboard();
+  if (hidden.status() === 409) {
+    // An offscreen cached summary may still carry the previous report version.
+    // Exercise the explicit recovery path; never replay a stale decision as if
+    // it succeeded or count a transient feed refetch as confirmed hiding.
+    await expect(owner.getByRole('dialog').getByRole('alert')).toContainText('El recuerdo cambió');
+    await expect(card(owner)).toBeVisible();
+    await owner.getByRole('button', { name: 'Cancelar', exact: true }).click();
+    await owner.reload(); await expect(card(owner)).toBeVisible();
+    hidden = await hideWithKeyboard();
+    result.assertions.push('A stale source decision is refused; explicit cancel/reload/review creates a fresh decision');
+  }
+  expect(hidden.status()).toBe(200);
+  await expect(owner.getByRole('dialog')).toHaveCount(0);
   await expect(card(owner)).toHaveCount(0);
   await participant.reload(); await expect(card(participant)).toHaveCount(0);
+  const openReview = owner.getByRole('button', { name: 'Revisar recuerdos', exact: true });
+  if (await openReview.count()) await openReview.click();
   await owner.getByRole('button', { name: 'Actualizar revisión' }).click();
   await review.getByRole('button', { name: 'Restaurar recuerdo' }).click();
   await owner.getByRole('textbox', { name: 'Motivo' }).fill('Restauración sintética verificada');
+  const restored = commandResponse(owner, 'source.restore');
   await owner.getByRole('button', { name: 'Confirmar', exact: true }).click();
+  expect((await restored).status()).toBe(200);
+  await expect(owner.getByRole('dialog')).toHaveCount(0);
   await expect(card(owner)).toBeVisible();
   await participant.reload(); await expect(card(participant)).toBeVisible();
   result.assertions.push('Keyboard hide denies both sessions after reload; scoped restoration restores the persisted source');
