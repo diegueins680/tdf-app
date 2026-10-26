@@ -26,6 +26,13 @@ reader navigates within the same artist page during recovery, retain that newer
 URL; the existing resume effect can clear only its current valid intent after
 membership is confirmed.
 
+Intent consumption is idempotent for each current navigation key. The write
+receipt and the settled-membership effect share that guard, so a delayed router
+commit cannot queue two replacements and invalidate the next explicit command.
+Successful writes and recovered writes obey the same rule; neither consumes an
+unrelated or mismatched intent. Component controls hold navigation pending
+through settlement, require one replacement, then confirm one explicit unfollow.
+
 A confirmed desired follow can invoke the existing onboarding completion
 handshake. That endpoint requires actual server event evidence; only its
 `newlyCompleted` receipt can emit first-value analytics. A GET alone is not a new

@@ -1,6 +1,6 @@
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMetaTags } from '../hooks/useMetaTags';
 import {
@@ -188,6 +188,7 @@ export default function ArtistPublicPage() {
   const hasToken = Boolean(session && safeArtistId(viewerId) && !sessionLoading);
   const mountedRef = useRef(true);
   const pendingRef = useRef(false);
+  const consumedResumeKeyRef = useRef<string | null>(null);
   const [recoveredCommand, setRecoveredCommand] = useState<FollowCommand | null>(null);
   useEffect(() => {
     mountedRef.current = true;
@@ -217,13 +218,18 @@ export default function ArtistPublicPage() {
   // A -> B -> A must not revive a receipt from the first profile/session lifetime.
   viewRef.current = { session, artistId, pathname: location.pathname, key: location.key, generation };
   const resumeFollow = hasToken && isArtistFollowResume(location.search, artistId);
-  const clearResume = () => {
+  const clearResume = useCallback(() => {
+    // The receipt and settled-query effect can run before navigation commits.
+    // Consume this location once so a second replacement cannot invalidate
+    // the next explicit follow command after the first replacement commits.
+    if (consumedResumeKeyRef.current === location.key) return;
+    consumedResumeKeyRef.current = location.key;
     const params = new URLSearchParams(location.search);
     params.delete('resume');
     params.delete('artistId');
     const search = params.toString();
     void navigate({ pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash }, { replace: true });
-  };
+  }, [location.hash, location.key, location.pathname, location.search, navigate]);
 
   const releasesQuery = useQuery({
     queryKey: ['public-artist-releases', artistId],
@@ -313,12 +319,8 @@ export default function ArtistPublicPage() {
   useEffect(() => {
     if (!resumeFollow || !isFollowing || !followsQuery.isSuccess || followsQuery.isFetching
       || getActiveSession() !== session || pendingRef.current) return;
-    const params = new URLSearchParams(location.search);
-    params.delete('resume');
-    params.delete('artistId');
-    const search = params.toString();
-    void navigate({ pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash }, { replace: true });
-  }, [followMutation.isPending, followsQuery.isFetching, followsQuery.isSuccess, isFollowing, location.hash, location.pathname, location.search, navigate, resumeFollow, session]);
+    clearResume();
+  }, [clearResume, followMutation.isPending, followsQuery.isFetching, followsQuery.isSuccess, isFollowing, resumeFollow, session]);
 
   const artist = artistQuery.data ?? null;
   const releases = releasesQuery.data ?? [];

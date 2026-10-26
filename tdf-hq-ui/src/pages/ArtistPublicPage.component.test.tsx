@@ -2,8 +2,9 @@ import { jest } from '@jest/globals';
 jest.unstable_mockModule('../features/interactions/InteractionPanel', () => ({ InteractionPanel: () => null }));
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act } from 'react';
-import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { act, useState } from 'react';
+import { Link, MemoryRouter, Route, Router, Routes, useLocation } from 'react-router-dom';
+import type { To } from 'react-router-dom';
 
 import type { ArtistProfileDTO, ArtistReleaseDTO, FanFollowDTO } from '../api/types';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
@@ -474,4 +475,64 @@ describe('ArtistPublicPage follow continuity', () => {
     view.unmount();view.queryClient.clear();
   });
 
+  it.each(['success', 'recovery'])('consumes one resume navigation before a subsequent unfollow (%s)', async (phase) => {
+    sessionMock = { username: 'fan', displayName: 'Fan', roles: ['customer'], modules: [], partyId: 42 };
+    const follow = { ffArtistId: 17, ffArtistName: 'Las Sintéticas', ffStartedAt: '2026-10-26T15:00:00Z' };
+    let rows: FanFollowDTO[] = [];
+    listFollowsMock.mockImplementation(async () => rows);
+    followMock.mockImplementationOnce(async () => {
+      rows = [follow];
+      if (phase === 'recovery') throw new TypeError('Synthetic response lost after commit');
+      return follow;
+    });
+    unfollowMock.mockImplementationOnce(async () => {
+      rows = [];
+      throw new TypeError('Synthetic unfollow response lost after commit');
+    });
+    const replace = jest.fn<(to: To) => void>();
+    let commitNavigation: (() => void) | undefined;
+    function DelayedNavigation() {
+      const [location, setLocation] = useState({ pathname: '/a/las-sinteticas', search: '?source=shared&resume=follow&artistId=17', hash: '#bio', state: null, key: 'original' });
+      replace.mockImplementation(to => {
+        if (typeof to === 'string') throw new Error('Expected structured local navigation');
+        commitNavigation = () => setLocation({
+          pathname: to.pathname ?? location.pathname, search: to.search ?? '', hash: to.hash ?? '', state: null, key: 'consumed',
+        });
+      });
+      const navigator = {
+        createHref: (to: To) => typeof to === 'string' ? to : (to.pathname ?? '') + (to.search ?? '') + (to.hash ?? ''),
+        go: jest.fn(), push: jest.fn(), replace,
+      };
+      return <Router location={location} navigator={navigator}>
+        <Routes><Route path="/a/:slugOrId" element={<><LocationProbe sameArtistDestination="/a/las-sinteticas?source=later#music" /><ArtistPublicPage /></>} /></Routes>
+      </Router>;
+    }
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    const view = render(<QueryClientProvider client={queryClient}><DelayedNavigation /></QueryClientProvider>);
+    try {
+      const button = await screen.findByRole('button', { name: 'Seguir ahora' });
+      await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
+      fireEvent.click(button);
+      const following = await screen.findByRole('button', { name: 'Dejar de seguir a Las Sintéticas' });
+      await waitFor(() => expect((following as HTMLButtonElement).disabled).toBe(false));
+      await waitFor(() => expect(replace).toHaveBeenCalled());
+      // Keep the first navigation pending across mutation settlement: receipt
+      // and effect must not queue two replacements of the same location.
+      expect(replace).toHaveBeenCalledTimes(1);
+      expect(followMock).toHaveBeenCalledTimes(1);
+      expect(captureFirstValueMock).toHaveBeenCalledTimes(1);
+      await act(async () => { commitNavigation!(); });
+      await waitFor(() => expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe('/a/las-sinteticas?source=shared#bio'));
+      const unfollow = screen.getByRole('button', { name: 'Dejar de seguir a Las Sintéticas' });
+      await waitFor(() => expect((unfollow as HTMLButtonElement).disabled).toBe(false));
+      fireEvent.click(unfollow);
+      const followAgain = await screen.findByRole('button', { name: 'Seguir a Las Sintéticas' });
+      await waitFor(() => expect((followAgain as HTMLButtonElement).disabled).toBe(false));
+      expect(unfollowMock).toHaveBeenCalledTimes(1);
+      expect(replace).toHaveBeenCalledTimes(1);
+      expect(captureFirstValueMock).toHaveBeenCalledTimes(1);
+    } finally {
+      view.unmount(); queryClient.clear(); unfollowMock.mockReset().mockResolvedValue(undefined);
+    }
+  });
 });

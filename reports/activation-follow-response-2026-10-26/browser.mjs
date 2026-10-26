@@ -35,6 +35,7 @@ const profile = await request('/fans/me/artist-profile', { token: artist.token }
 report.artistId = artist.partyId;
 const browser = await chromium.launch();
 const contexts = [];
+let currentPage = null;
 try {
   for (const surface of ['public', 'community']) {
     for (const scenario of ['lost-response', 'lost-response-read-fails', 'before-commit']) {
@@ -77,6 +78,7 @@ try {
         return route.continue();
       });
       const page = await context.newPage();
+      currentPage = page;
       page.on('response', async response => {
         if (response.url() === api + '/session/onboarding/complete' && response.ok()) {
           try { const value = await response.json(); row.firstValueReceipts.push({ newlyCompleted: value.newlyCompleted }); } catch { /* SQL and read-only API assertions remain mandatory. */ }
@@ -153,6 +155,25 @@ try {
     }
   }
   report.status = 'VERIFIED-isolated-only';
+} catch (error) {
+  report.status = 'FAILED';
+  report.failure = String(error);
+  // Capture only fictional fixture state, after an assertion fails. No extra
+  // waits/listeners are introduced into successful user actions.
+  if (currentPage) {
+    try {
+      report.failureSnapshot = await currentPage.evaluate(() => ({
+        url: location.href, historyKey: history.state?.key, body: document.body.innerText,
+        buttons: Array.from(document.querySelectorAll('button')).map(button => ({
+          label: button.getAttribute('aria-label') ?? button.textContent, disabled: button.disabled,
+        })),
+      }));
+      await currentPage.screenshot({ path: path.join(out, 'failure.png'), fullPage: true });
+      const response = await currentPage.context().request.get(api + '/fans/me/follows');
+      report.failureServerFollows = { status: response.status(), rows: response.ok() ? await response.json() : null };
+    } catch (captureError) { report.captureError = String(captureError); }
+  }
+  throw error;
 } finally {
   await Promise.allSettled(contexts.map(c => c.close()));
   await browser.close();

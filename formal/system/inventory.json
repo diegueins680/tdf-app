@@ -8842,7 +8842,7 @@
     {
       "id": "SURFACE-feace0cde60c7f70",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
-      "sha256": "07541f5e6982eaa14f346fab58d7a3691e0d3c356fb2355d8407578bc1098455",
+      "sha256": "ace8b67c3391736605ace8d1a41410228923a104396fbc8bdc0c46474c81abd3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8854,7 +8854,7 @@
     {
       "id": "SURFACE-f23ba2e5ecf07fe3",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
-      "sha256": "7c5cd4cbbeed5920eacc535d400bf9d6dca38e4a81b70976ccfbf8ba644c0879",
+      "sha256": "67b38059fc29238536f6708e94a3ac09dc3263117ee4e28c9b5c311a040d48b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26968,7 +26968,7 @@
     },
     {
       "path": "formal/system/follow-response-recovery.md",
-      "sha256": "a9fd70cc8e5798454be337c89db11aa5272232c9fb0ab422372cd80aa43a527c",
+      "sha256": "76e5d622985c6fc019bcfcf61839cfa6c8ef744d1edf772d1a52ea87efa00394",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
