@@ -18116,6 +18116,177 @@
         "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
         "reviewed": true
       }
+    },
+    {
+      "id": "9f4017ded51fb378d543",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 66,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "5d6ca895ee46d472088b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 70,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "287a15fa28ce3a802f32",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 94,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "21a4775e4e991fab585c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 98,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "da3c925244193e512096",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 101,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "15376e7ac130acda2c03",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 103,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "bb430040ffe050fde7c1",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 109,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "ad2d4ef653ed4693d760",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed [event label, successor state] tuple in the finite executable player model. Its pause/play/retry transition names and state fields encode safety checks and negative controls; they do not supply selectable product data or create a second persisted catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "scripts/test-player-session-model.mjs",
+        "line": 110,
+        "kind": "array",
+        "name": "<anonymous>",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "023bc70a0fb3d5948978",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these verification fixture fields or model transition tuples would invalidate the playback selection/recovery counterexamples.",
+      "justification": "Individually reviewed synthetic public-release DTO field names in a regression fixture; values are fixture identities and schema keys, never a shipped artist, release, genre or selectable business catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "universal-audio-2026-10-25",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
+        "line": 17,
+        "kind": "object-registry",
+        "name": "release",
+        "valueCount": 8
+      }
     }
   ]
 }

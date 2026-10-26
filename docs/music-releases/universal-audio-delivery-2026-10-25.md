@@ -148,3 +148,7 @@ Browser behavior references checked during implementation: [HTML media play and 
 ## Current-main reconciliation
 
 Protected main advanced to `5114fe95ac8e328b58162a8dcae5c9015a47ce09` through financial integration #551 during this delivery. The normal merge preserves every main requirement exactly except the intentional player requirement update retained from the original playback commit. Main backend, SQL, 220-entry migration manifest, dependencies and Mobile pin are unchanged by the playback delta. Only generated inventory/traceability conflicted and were regenerated. Earlier local tests remain tied to their original inputs; combined-candidate hosted checks are required.
+
+## First hosted qualification follow-up
+
+Head07f66 passed hosted UI/repository/API/migration/formal checks, but the catalog audit correctly rejected nine new verification tuples/fixture-field sets that were untracked during the original local scan. Each now has an individual technical-constant decision; all existing decisions are preserved. Native CI stopped before tests because the root installation container inherited a home owned by UID1001. Native preflight and tests now use its owned `/root` home; the identity/owner guard remains enforced. These are failed original gates requiring fresh-head execution, not waived checks.

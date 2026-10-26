@@ -18,7 +18,7 @@
     "e2e/web/music-player-native.spec.mjs": "c30ef37d2013401f3baffede88298930fa0795fb277d06c9167d3c9747fb55a0",
     "playwright.music-native.config.mjs": "d89a8b06cf0ac2b15c0acd6000325edb73b46a17cb6df8ecaa39c52b0cd772c7",
     "scripts/test-player-session-model.mjs": "cc1ae78132c81735e2c5562829b3b5a4a5660175dbcea9ae831f3a450eceed2d",
-    ".github/workflows/ci.yml": "50b13e833791b1d01414b0472a083c6e3d7203d8e23d582df0ed8c479d672843",
+    ".github/workflows/ci.yml": "7b0623e449d35d5fdf1d20743149d048497b16db9f1b9ba17845cface4a346f2",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e"
   },
   "verification": {
@@ -126,6 +126,17 @@
     "lint": {
       "exit": 0,
       "log": "/private/tmp/tdf-audio-lint-frozen.log"
+    },
+    "firstHostedFailures": {
+      "head": "07f66cdafdc73c508a169a0789cb36ee12de4bfe",
+      "catalog": "9 new model/fixture candidates require individual reviewed classification",
+      "native": "preflight UID0 inherited UID1001 home; no native cases ran",
+      "action": "classified nine technical model/fixture constants preserving all prior decisions; assigned root container its owned home; fresh candidate checks required"
+    },
+    "catalogAfterTrackingAndClassification": {
+      "candidates": 1337,
+      "status": "PASS",
+      "meaning": "nine individually classified finite model/fixture constants; all prior decisions unchanged"
     }
   },
   "performance": {

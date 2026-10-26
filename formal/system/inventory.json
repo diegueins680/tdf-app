@@ -2716,7 +2716,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "50b13e833791b1d01414b0472a083c6e3d7203d8e23d582df0ed8c479d672843",
+      "sha256": "7b0623e449d35d5fdf1d20743149d048497b16db9f1b9ba17845cface4a346f2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20822,7 +20822,7 @@
     },
     {
       "path": "docs/music-releases/universal-audio-delivery-2026-10-25.md",
-      "sha256": "ed767aae59003423dcd2a3716316f3bc7ba3d21317f7562f818bd17b11c7193e",
+      "sha256": "980195506509017fc8b838bbfebb91d1e3d8a3dd0c32f0a5d07189837c093608",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

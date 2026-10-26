@@ -268,9 +268,12 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends ffmpeg jq
       - name: Verify bundled Playwright browsers
+        env:
+          HOME: /root
         run: node scripts/verify-playwright-image.mjs
       - name: Decode real AAC and FLAC with controlled authorization failures
         env:
+          HOME: /root
           PLAYWRIGHT_ARTIFACT_DIR: artifacts/native-music
         run: npm run test:music-player-native
       - name: Preserve native audio test evidence
