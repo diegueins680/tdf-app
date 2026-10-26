@@ -14,8 +14,6 @@ module TDF.Services.Stripe
   , buildPaymentIntentForCustomerRequest
   , createPaymentIntentForTip
   , buildPaymentIntentRequest
-  , createTicketPaymentIntent
-  , buildTicketPaymentIntentRequest
   , buildRetrievePaymentIntentRequest
   , retrievePaymentIntent
   , cancelPaymentIntent
@@ -160,77 +158,14 @@ buildPaymentIntentRequest
   -> Text
   -> Maybe Text
   -> IO Request
-buildPaymentIntentRequest cfg mIdempotencyKey amountCents currency description mMetadata =
-  buildPaymentIntentRequestWithMethod
-    cfg mIdempotencyKey Nothing amountCents currency description mMetadata
-    "automatic_payment_methods[enabled]=true"
-
--- | Ticket checkout uses cards explicitly on the pinned service API version.
--- It must not depend on the account's automatic-payment-method configuration
--- having an eligible method. Card capability and currency support are still
--- required in Stripe. This does not confirm or charge the PaymentIntent.
---
--- Invariant: exactly one method-selection policy is sent; customer, immutable
--- metadata and the existing idempotency key are preserved for web and mobile.
-buildTicketPaymentIntentRequest
-  :: StripeConfig
-  -> Maybe Text  -- ^ Stable Stripe idempotency key, when supplied by the caller
-  -> Maybe Text  -- ^ Customer for native PaymentSheet; absent for web checkout
-  -> Int
-  -> Text
-  -> Text
-  -> Maybe Text
-  -> IO Request
-buildTicketPaymentIntentRequest cfg mIdempotencyKey mCustomer amount currency description metadata =
-  buildPaymentIntentRequestWithMethod
-    cfg mIdempotencyKey mCustomer amount currency description metadata
-    "payment_method_types[]=card"
-
--- | Create one unconfirmed ticket intent, without falling back or replaying a
--- failed provider POST. Invalid idempotency keys fail before manager allocation.
-createTicketPaymentIntent
-  :: StripeConfig
-  -> Maybe Text
-  -> Maybe Text
-  -> Int
-  -> Text
-  -> Text
-  -> Maybe Text
-  -> IO (Either Text Value)
-createTicketPaymentIntent cfg mIdempotencyKey mCustomer amount currency description metadata =
-  case traverse validateIdempotencyKey mIdempotencyKey of
-    Left validationError -> pure (Left validationError)
-    Right validKey -> withStripeManager $ \manager -> do
-      request <- buildTicketPaymentIntentRequest
-        cfg validKey mCustomer amount currency description metadata
-      response <- httpLbs request manager
-      pure $ decodeStripeResponse
-        (statusCode (responseStatus response))
-        (responseBody response)
-        "Failed to parse Stripe PaymentIntent response"
-        "Stripe API error"
-
-buildPaymentIntentRequestWithMethod
-  :: StripeConfig
-  -> Maybe Text
-  -> Maybe Text
-  -> Int
-  -> Text
-  -> Text
-  -> Maybe Text
-  -> ByteString
-  -> IO Request
-buildPaymentIntentRequestWithMethod cfg mIdempotencyKey mCustomer amountCents currency description mMetadata methodField = do
+buildPaymentIntentRequest cfg mIdempotencyKey amountCents currency description mMetadata = do
   initialRequest <- parseRequest "https://api.stripe.com/v1/payment_intents"
   let body = BS8.intercalate "&"
-        ([ "amount=" <> BS8.pack (show amountCents)
-         , "currency=" <> TE.encodeUtf8 (T.toLower currency)
-         ]
-         <> maybe [] (\customer -> ["customer=" <> urlEncode (TE.encodeUtf8 customer)]) mCustomer
-         <> [ "description=" <> urlEncode (TE.encodeUtf8 description)
-            , methodField
-            ])
-        <> maybe "" (\meta -> "&metadata[tdf_context]=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
+        [ "amount=" <> BS8.pack (show amountCents)
+        , "currency=" <> TE.encodeUtf8 (T.toLower currency)
+        , "description=" <> urlEncode (TE.encodeUtf8 description)
+        , "automatic_payment_methods[enabled]=true"
+        ] <> maybe "" (\meta -> "&metadata[tdf_context]=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
       idempotencyHeaders =
         maybe [] (\key -> [("Idempotency-Key", TE.encodeUtf8 key)]) mIdempotencyKey
   pure initialRequest
@@ -454,10 +389,26 @@ buildPaymentIntentForCustomerRequest
   -> Text
   -> Maybe Text
   -> IO Request
-buildPaymentIntentForCustomerRequest cfg mIdempotencyKey customerId amountCents currency description mMetadata =
-  buildPaymentIntentRequestWithMethod
-    cfg mIdempotencyKey (Just customerId) amountCents currency description mMetadata
-    "automatic_payment_methods[enabled]=true"
+buildPaymentIntentForCustomerRequest cfg mIdempotencyKey customerId amountCents currency description mMetadata = do
+  initialRequest <- parseRequest "https://api.stripe.com/v1/payment_intents"
+  let body = BS8.intercalate "&"
+        [ "amount=" <> BS8.pack (show amountCents)
+        , "currency=" <> TE.encodeUtf8 (T.toLower currency)
+        , "customer=" <> urlEncode (TE.encodeUtf8 customerId)
+        , "description=" <> urlEncode (TE.encodeUtf8 description)
+        , "automatic_payment_methods[enabled]=true"
+        ] <> maybe "" (\meta -> "&metadata[tdf_context]=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
+      idempotencyHeaders =
+        maybe [] (\key -> [("Idempotency-Key", TE.encodeUtf8 key)]) mIdempotencyKey
+  pure initialRequest
+    { method = "POST"
+    , requestHeaders =
+        [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+        , ("Content-Type", "application/x-www-form-urlencoded")
+        , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+        ] <> idempotencyHeaders
+    , requestBody = RequestBodyBS body
+    }
 
 -- | Create a Stripe Express payout account for an artist receiving tips.
 --

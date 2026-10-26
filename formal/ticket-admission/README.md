@@ -118,25 +118,26 @@ amount/currency before completion. Later approvals cannot submit another POST.
 
 ## Stripe ticket initialization boundary
 
-The ticket-specific Stripe request builder selects `payment_method_types[]=card`
-on the pinned `2026-04-22.dahlia` service API, without combining it with
-`automatic_payment_methods`. The web request omits customer; native PaymentSheet
-keeps its existing customer. Amount, currency, nested immutable ticket metadata
-and any existing idempotency key must survive request construction unchanged.
-Other payment flows retain their existing automatic-method selection. Creating
-an intent does not confirm payment, mark an order paid or issue a usable ticket.
+A provider initialization refusal must not expose raw Stripe response bodies,
+account/dashboard links or request diagnostics to the ticket buyer. The existing
+inventory rollback is preserved; its failure response is a bounded generic 503,
+and its log carries only order identity and an enumerated reason. The modal also
+filters legacy Stripe diagnostic text and HTTP 5xx responses, retains buyer
+input and leaves inventory conflicts actionable.
 
-`Stripe response decoding` Hspec cases include generated form round trips using
-an independent HTTP query parser, both customer/key modes, and invalid-key
-refusal before provider I/O. The modal tests reproduce a legacy raw Stripe error
-and HTTP 500/502/503 responses: buyer details remain available, no payment element
-or success is shown, and diagnostics stay out of the alert. Inventory conflicts
-remain actionable. Backend initialization failure retains the existing inventory
-rollback, returns a generic 503 and logs only order identity plus a bounded reason.
+`StripeCheckoutModal.test.tsx` reproduces the legacy raw response plus 500, 502
+and 503 responses; it requires the bounded translated alert, retained buyer
+fields, no payment element and no success callback. Its original-source negative
+control fails all four diagnostic cases. The inventory-conflict regression keeps
+an ordinary 409 visible. No new payment-method selection or provider POST retry
+is introduced: web/native customer binding, metadata, amounts and existing
+idempotency remain on the existing request path.
 
-These checks establish request and display boundaries, not Stripe acceptance,
-account capability, real capture, database rollback/concurrency correctness or
-native UI acceptance. An eligible card capability and supported currency are still
-required on the actual Stripe account. No provider account configuration is changed.
-The explicit-method contract must be revisited before a Stripe API version upgrade:
-newer API generations have different method-selection parameters.
+Account capability and payment-method display preference are distinct. An enabled
+display preference cannot make an unavailable payment capability usable. The
+account owner must resolve activation/verification in Stripe when required;
+changing request method types is not an account activation procedure. See
+[Stripe account readiness](https://docs.stripe.com/api/accounts/object) and
+[dynamic method eligibility](https://docs.stripe.com/payments/payment-methods/dynamic-payment-methods).
+These source/UI checks establish error boundaries, not Stripe acceptance,
+database rollback/concurrency correctness or a successful real capture.

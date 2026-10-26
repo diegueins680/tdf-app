@@ -5314,14 +5314,22 @@ socialEventsServer user =
                                 result <-
                                     liftIO $
                                         runStripeRequestSafely $
-                                            Stripe.createTicketPaymentIntent
-                                                stripeCfg
-                                                stripeIdempotencyKey
-                                                Nothing
-                                                finalAmountCents
-                                                currency
-                                                description
-                                                metadataJson
+                                            case stripeIdempotencyKey of
+                                                Nothing ->
+                                                    Stripe.createPaymentIntent
+                                                        stripeCfg
+                                                        finalAmountCents
+                                                        currency
+                                                        description
+                                                        metadataJson
+                                                Just idempotencyKey ->
+                                                    Stripe.createPaymentIntentWithIdempotencyKey
+                                                        stripeCfg
+                                                        idempotencyKey
+                                                        finalAmountCents
+                                                        currency
+                                                        description
+                                                        metadataJson
                                 either rollbackOrder handleLegacyPaymentIntent result
                             handleLegacyPaymentIntent paymentIntent = do
                                 (piId, clientSecret) <-
@@ -5362,14 +5370,24 @@ socialEventsServer user =
                                 piResult <-
                                     liftIO $
                                         runStripeRequestSafely $
-                                            Stripe.createTicketPaymentIntent
-                                                stripeCfg
-                                                stripeIdempotencyKey
-                                                (Just customerId)
-                                                finalAmountCents
-                                                currency
-                                                description
-                                                metadataJson
+                                            case stripeIdempotencyKey of
+                                                Nothing ->
+                                                    Stripe.createPaymentIntentForCustomer
+                                                        stripeCfg
+                                                        customerId
+                                                        finalAmountCents
+                                                        currency
+                                                        description
+                                                        metadataJson
+                                                Just idempotencyKey ->
+                                                    Stripe.createPaymentIntentForCustomerWithIdempotencyKey
+                                                        stripeCfg
+                                                        idempotencyKey
+                                                        customerId
+                                                        finalAmountCents
+                                                        currency
+                                                        description
+                                                        metadataJson
                                 either
                                     rollbackOrder
                                     (handleMobilePaymentIntent customerId ephemeralKeySecret publishableKey)
