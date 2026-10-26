@@ -97,3 +97,49 @@ main advances need their own reconciliation. Current-head CI, independent review
 protected merge and deployment acceptance remain separate release gates.
 
 The [independent source-preservation review](../../reports/music-credential-cache-source-review-post624-20261026.json) checks all 976 backend blobs and Git modes against the qualified source, alongside the original HTTP inputs, native paths, proof-context files and old evidence packet. This is a read-only source comparison, not a new build or execution.
+
+## Cart CI reliability correction after d765
+
+Original source `d7657f3daf7ee037703a327d840a67e29ac61099` failed persona run
+40404888561 on tested merge `7b33eee0`: 579 passed, 22 declared skips and one
+WebKit phone cart failure out of 602 cases. The downloaded artifact's actual
+SHA256 is `75d6a47be209899ba10ce34b28cce4f25d8b2edc2944c8be46458b2bc34e70b9`;
+the extracted trace confirms the final close at original line 172:64 was pending when
+the full 30s budget expired. Four synthetic cart API calls returned 200. Rendering
+root cause remains UNVERIFIED; this increment does not change product rendering.
+The [separate CI correction packet](../../reports/music-credential-cache-cart-ci-20261026/README.md)
+retains original results/logs/bounded trace, source assertions and all setup history.
+The full 70MB parent ZIP remains private, with actual verified identity recorded.
+
+The test now gives two coherent journeys separate unchanged 30s budgets. The first
+performs genuine add/open/close followed by actual reload and count/badge/layout
+checks in that same session. The second starts fresh, genuinely adds through UI,
+validates POST200/cart identity/quantity, then reloads/removes and checks empty state.
+All 44 original assertion/layout-call lines and original nonblank lines remain;
+the saved-cart outage/recovery case is unchanged. The full original eight-step
+drawer→reload→remove composition is no longer one same-session test. No forceclick,
+retry/skip/timeout relaxation, seeded successful persistence or rendering fix is
+claimed. Test-scope decomposition is explicit rather than a replay of failed d765.
+
+Root-confirmed stronger-v3 source `c86a9ccf` passed 9/9 across Chromium desktop,
+Chromium phone emulation and Firefox, with no skips/flakes/retries. Its exact QA
+receipt preserves a small cart-only prelaunch guard plus an eight-file in-run/post
+comparison; it does not fabricate an eight-file before-run capture. Local case
+durations 3.540–12.043s are functional observations, not SLOs. The earlier09b7 v2
+receipt qualified weaker 99f source before the additional first-journey reload and
+remains historical. Initial private-config cwd/ENOENT setup ran zero cases; its
+API-origin preflight correction occurred before any browser test, not as a product
+repair. Local WebKit installation is unsupported on macOS 12.7.6; its failure log
+is retained without a bypass. Fresh-candidate hosted CI including WebKit, current
+reviews and protected merge requirements remain mandatory, with no waiver.
+
+All 976 backend blobs/modes, the eight qualified cache files and old evidence/proof
+packets remain byte-exact to their qualified inputs. The 45 compiled/54 HTTP results
+retain source 43b; cache Stack/PostgreSQL/SMT/browser tests are not repeated. The
+historical 147-row aggregate assurance and append-only pins/history remain unchanged;
+implementation/refinement is still UNPROVEN and formal release BLOCKED. The 148
+normative requirements, complete 1341-decision file and 222-entry manifest remain
+unchanged. Ordered metadata and exact-head CI/release checks are separate gates.
+No production or other active music-search branch is changed by this correction.
+
+The CI-only metadata refresh passed 36 declaration/inventory/conformance/admission regression tests and strict catalog JSON/CSV scans with 1,341 entries and no unreviewed/stale decisions. Normative 148 requirement objects and complete 1,341 decisions/222 migrations remain exact. Freshness, source preservation and immutable post-commit admission are tracked separately in the current report; fresh exact-head hosted CI including WebKit remains required.

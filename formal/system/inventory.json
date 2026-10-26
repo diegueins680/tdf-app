@@ -2939,7 +2939,7 @@
     {
       "id": "SURFACE-c5e7e7710b072a8d",
       "path": "e2e/web/marketplace-cart.spec.mjs",
-      "sha256": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385",
+      "sha256": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20871,7 +20871,7 @@
     },
     {
       "path": "docs/music-releases/credential-cache-control.md",
-      "sha256": "61080cefe9bf2ba557d779c665bfc16ee892162b7186d467b775c8af67e70dd8",
+      "sha256": "b3a6af8072667815a72fd7fcc4078e2e07212dcfe1a58a2ff49872f82486850d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

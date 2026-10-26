@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "scope": "Current packet leaves except this self-referential manifest",
+  "files": {
+    "README.md": {
+      "bytes": 4376,
+      "sha256": "fae6f12f1d03d20f84804b3eca3e35be7d8028e15731a0a73aa3f4da48aa1874"
+    },
+    "cache-source-preservation.json": {
+      "bytes": 5825,
+      "sha256": "41ff0174f7ae7a889ebbe7fb1bc5cad40b5e0d4cdf3bce2cfc5ccad1b3bef3aa"
+    },
+    "cart-test-correction.tar.gz": {
+      "bytes": 101440,
+      "sha256": "fe7d40f3fadedec2c5587b633cba139896485ec5cb0309127df73228ac16db32"
+    },
+    "correction-member-hashes.json": {
+      "bytes": 5344,
+      "sha256": "4d2fbece509e3051af70409904c5f09e5990c1955bcc3a4db2091d749605cb26"
+    },
+    "d765-original-failure.tar.gz": {
+      "bytes": 2001192,
+      "sha256": "2734594e48a5e1a9c9f8da259d29e868d8ce695b421053cae9bc844c5b40fa41"
+    },
+    "historical-v2-receipt.json": {
+      "bytes": 14842,
+      "sha256": "09b7fc81c6fe5257fdaf540f9326e5cc0bce9e8c6cbbca60fb42623af015ae53"
+    },
+    "original-failure-member-hashes.json": {
+      "bytes": 4523,
+      "sha256": "ae6d55fc1ca5960c2648069b8c9bcbf1cbf59dc25e366e25024d2dcfabe1ddc7"
+    },
+    "original-failure-receipt.json": {
+      "bytes": 24469,
+      "sha256": "466a754c340b93a8b0741c92e33436a8d7fd5184cd1a69565eca94f06ce00dbc"
+    },
+    "qualification-summary.json": {
+      "bytes": 6703,
+      "sha256": "500e7a20731f8362c07e30dfcd2f29f51264e1a02e54b7123a99bcbf0a6174a0"
+    },
+    "qualified-v3-receipt.json": {
+      "bytes": 24530,
+      "sha256": "9377737ebcd41797b737aa5a9d6847ad69cb71d76729fd307183e4ea79efdb39"
+    }
+  }
+}
