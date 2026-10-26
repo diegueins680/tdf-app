@@ -135,5 +135,17 @@
     "productionWrites": false
   },
   "replayDirectory": "reports/account-recovery-evidence-20261026",
-  "publicationRule": "The containing final PR commit may add only sanitized evidence, replay files and derived catalog/formal metadata to72de. Material UI/backend/dependency/permission source equality must be checked before publication. Fresh final-head hosted CI and independent protected review remain required."
+  "publicationRule": "The containing final PR commit may add only sanitized evidence, replay files and derived catalog/formal metadata to72de. Material UI/backend/dependency/permission source equality must be checked before publication. Fresh final-head hosted CI and independent protected review remain required.",
+  "postWelcomeComposition": {
+    "observedAt": "2026-10-26T06:55:56.718938+00:00",
+    "protectedMain": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+    "previousPublishedHead": "bfa8f5b9b52a75b36806b5e5e979f08e37629597",
+    "mergeMethod": "normal merge",
+    "protectedRequirements": 144,
+    "requirementsScope": "All144 main objects exact except prior own implementation/test associations for AUTH-ENTRY-002; all normative fields retained.",
+    "sourceScope": "Own7 auth material files byteexact72de; all other UI/e2e material exact protectedmaina123. Backend/API/SQL221/dependencies/ops/models/Mobiled832 unchanged main.",
+    "derivedConflicts": "Only2catalog reports and formalinventory/traceability, canonically regenerated.",
+    "validation": "Fresh lint/types/combined regression and final-commit native rehearsal in progress; prior72de results keep their original execution identity.",
+    "release": "Fresh final-head CI/review/FIFO/merge/deployed verification required."
+  }
 }
