@@ -12181,7 +12181,7 @@
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/inspect-runtime.py": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
-    "ops/hetzner/isolated-application-canary.py": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
+    "ops/hetzner/isolated-application-canary.py": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
     "ops/hetzner/recovery-files.py": "09c07444444b498d9fe5f9696e8ebec9b3010cc2453c59e72de74ccd60cdcb84",
@@ -12364,7 +12364,7 @@
     "scripts/test-index-declarations.sh": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
-    "scripts/test-isolated-application-canary.py": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
+    "scripts/test-isolated-application-canary.py": "3b50fccf75e7ae6e11d2765b07b02154239a8ec8295022f7c3c6042c7a4b9078",
     "scripts/test-ledger-posting.sh": "b838a96f759e1d0650cd67180a1847649965f5aff5b17c57896a4988096d3cd9",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
@@ -23950,7 +23950,7 @@
     {
       "id": "SURFACE-cf51ae79e61fc20d",
       "path": "ops/hetzner/isolated-application-canary.py",
-      "sha256": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
+      "sha256": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28112,7 +28112,7 @@
     {
       "id": "SURFACE-b6d8e853f9192b94",
       "path": "scripts/test-isolated-application-canary.py",
-      "sha256": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
+      "sha256": "3b50fccf75e7ae6e11d2765b07b02154239a8ec8295022f7c3c6042c7a4b9078",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
