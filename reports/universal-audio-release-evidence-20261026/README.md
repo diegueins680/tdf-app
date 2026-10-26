@@ -9,3 +9,7 @@ The first failure was not a pass: the WebKit phone cart test exhausted its uncha
 ## Historical packet correction
 
 In `discovery-protected-merge.json`, `originalFailure.receipt` names the diagnosis JSON, but the adjacent `originalFailure.sha256` value `852e30d3a099976e89db574069784cefc57b56b5beb3ed3e380b0909e2e9c044` binds the browser ZIP (artifact12671562371). The diagnosis JSON archived as `discovery-first-failure.json` has digest `dd743a3ccc5a35e6fc4c57b728cf9fd3c48a180fb0910cc366c0547219128699`. The captured packet is byte-exact; this outer correction disambiguates the two artifacts. Both original artifacts remain separately bound in their detailed receipts.
+
+## Published legacy interface
+
+`legacy-published/` preserves normal protected merge624, its exact-head native guard, hosted qualification and two client probe attempts. Attempt1 blocked analytics requests but misclassified them as business writes; attempt2 corrects fixture origin routing without changing functional assertions or timeouts. Four cases pass against published2e with synthetic account/catalog/provider responses. No provider audio or real production media journey is claimed. Its own artifact-hashes.json binds all archived raw JSON/spec/config bytes; absolute local paths are historical provenance, not portable replay instructions.

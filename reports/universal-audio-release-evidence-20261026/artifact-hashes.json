@@ -3,5 +3,7 @@
   "discovery-controlled-repeat.json": "31dd3e6dcf5541512f66ece73e0f860f3f3492ebc504737af32687eb17f991a1",
   "discovery-protected-merge.json": "bacbb85a0735adfbb3aee750401e59eb687ee1209dd8b1bc9dd21b6f7f62451b",
   "published-client-conditional-results.json": "91bf5f4d9a874adb03a34702dff82ad60b3b80506f01f3ee8cfc581d14e4d36f",
-  "published-client-harness-provenance.json": "7ca55d00bffad7da031200441c490ab6f2e1a7e875d9ebebfe48611336f6b12b"
+  "published-client-harness-provenance.json": "7ca55d00bffad7da031200441c490ab6f2e1a7e875d9ebebfe48611336f6b12b",
+  "legacy-published-independent-review.json": "53780feee3e4f98109bbb291259e2a758823cbdf33fdb9ca01a54d7ef8bfbd61",
+  "legacy-published/artifact-hashes.json": "b6df7ac328511c99bfc92cd0dbecc3b5326fd53424e11d39ce2b0776d3a5f3c9"
 }
