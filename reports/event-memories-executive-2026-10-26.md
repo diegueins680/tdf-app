@@ -1,6 +1,6 @@
 # TDF Records — Informe ejecutivo de recuerdos de eventos
 
-Corte: 26 de octubre de 2026, 08:07 UTC. **Implementación parcial probada y publicada para revisión; sin integración protegida, despliegue ni invitaciones reales de esta entrega.** El objetivo completo sigue pendiente.
+Corte de esta continuación: 26 de octubre de 2026, 16:30 UTC. Última lectura pública: 16:16 UTC. **Implementación parcial probada y publicada para revisión; sin integración protegida, despliegue ni invitaciones reales de esta entrega.** El objetivo completo sigue pendiente.
 
 ## Diagnóstico y reutilización
 
@@ -13,6 +13,7 @@ El usuario confirmó que PATCH CULTURE Vol. 1, evento 141, se celebró y finaliz
 - Base #608: publicación y recuperación duradera de texto, imágenes, video/audio mediante las capacidades del evento; continuidad de autenticación, enlaces, interacciones y activación posterior. Campañas internas con preferencias explícitas, elegibilidad, deduplicación, límites/replay y como máximo un recordatorio, con configuración y agregados para el organizador. Correo/push/WhatsApp no se activan implícitamente.
 - #615: moderación de la fuente mediante interacciones existentes y migraciones aditivas. Corrige autorización permisiva ante organizador NULL y la carrera de revocación; mantiene locks de permisos hasta commit, control de versiones/replay, auditoría e historial. No reescribe SQL histórico ni elimina datos para hacer reversible una reparación.
 - Cadena móvil #168/#169/#170: carga y publicación remotas diferenciadas de borradores, validación de confirmaciones y barreras de cuenta/sesión/evento para operaciones tardías.
+- #174: edición y eliminación de publicaciones propias desde móvil mediante los endpoints existentes; control de versión exacta, confirmación explícita, respuesta validada y barreras de cuenta/sesión. No modifica permisos ni dependencias.
 - Nuevo #172: publicación escrita sin archivos cuando el backend confirma compatibilidad, lectura correcta de audio/texto y recuperación del texto ante errores. La lectura de capacidad no cambia preferencias. Ese cambio no añadía dependencia ni selector; #173 completa la selección de archivos de audio.
 
 ## Cambios revisables e integración
@@ -24,9 +25,10 @@ El usuario confirmó que PATCH CULTURE Vol. 1, evento 141, se celebró y finaliz
 | [Móvil #170](https://github.com/diegueins680/TDF-mobile/pull/170) | `7000df1d`, apilado sobre #169/#168; revisión pendiente |
 | [Texto/audio móvil #172](https://github.com/diegueins680/TDF-mobile/pull/172) | `f5197c69`, CI satisfactorio y revisión solicitada a tdfrecords; auto-merge desactivado |
 | [Audio móvil #173](https://github.com/diegueins680/TDF-mobile/pull/173) | `6d0b109`, 722 pruebas y builds APK/iOS Simulator satisfactorios; revisión independiente requerida |
+| [Autoría móvil #174](https://github.com/diegueins680/TDF-mobile/pull/174) | `41a68b7`, 759 pruebas / 101 suites locales y en CI; listo para revisión, builds de plataforma pendientes |
 | Preparación monorepo publicada | `39aa065e3` integra normalmente main `a1238fbf6` (#619); driver calificado `e3d3f6521` |
 
-Durante la verificación main avanzó a `3c25a9de`, fusión de #620 (fiabilidad del reproductor). Ese sucesor **no está incluido** en la preparación A123 y requiere reconciliación y checks afectados antes de promover #608. No se actualizaron #608/#615 para sustituir revisión pendiente ni se modificaron ramas ajenas. El checkout original divergente se conserva.
+Main avanzó a `78fa351b`, fusión de #621 (identidades y cabeceras del libro contable), sobre `3c25a9de`/#620 (fiabilidad del reproductor). Esos sucesores **no están incluidos** en la preparación A123 y requieren reconciliación y checks afectados antes de promover #608. El [recibo](event-memory-source-evidence-20261025/main-after-author-actions-20261026.json) distingue el main observado de la preparación congelada. No se actualizaron #608/#615 para sustituir revisión pendiente ni se modificaron ramas ajenas. El checkout original divergente se conserva.
 
 ## Pruebas y evidencia
 
@@ -38,7 +40,7 @@ Durante la verificación main avanzó a `3c25a9de`, fusión de #620 (fiabilidad 
 
 ## Producción e invitaciones del evento 141
 
-La [lectura pública de 08:07 UTC](event-memory-source-evidence-20261025/public-readonly-after-native-audio-20261026.json) responde HTTP 200 para evento/salud/versión y DB ok. Backend publicado: **4dac175d**, versión anterior. Es disponibilidad; no demuestra la funcionalidad nueva. No hubo migración, despliegue, cambio de estado del evento ni escritura productiva de esta entrega.
+La [lectura pública de 16:16 UTC](event-memory-source-evidence-20261025/public-readonly-after-author-actions-20261026.json) responde HTTP 200 para evento/salud/versión y DB ok. Backend publicado: **4dac175d**, versión anterior. Es disponibilidad; no demuestra la funcionalidad nueva. No hubo migración, despliegue, cambio de estado del evento ni escritura productiva de esta entrega.
 
 | Métrica de campaña real | Resultado acreditado |
 | --- | --- |
@@ -65,3 +67,14 @@ Los procesos y bases de pruebas propios quedaron detenidos/retirados; se conserv
 [Android](event-memory-source-evidence-20261025/mobile-audio-android-artifact.json) e [iOS Simulator](event-memory-source-evidence-20261025/mobile-audio-ios-artifact.json) fueron compilados y sus artefactos descargados/verificados: módulo nativo, runtime y árbol exacto del head. El checkout GitHub real f1c0519 tiene el mismo árbol e408ce85 que 6d0b109. Son artefactos aislados de pruebas, sin publicación en tiendas ni ejecución física. Los catorce controles locales pasaron; en CI Linux hubo trece ejecutados y un skip de plataforma. [Detalle CI](event-memory-source-evidence-20261025/mobile-native-audio-ci-20261026.json).
 
 La prueba web reforzada exige respuestas reales antes de declarar ocultamiento/restauración y ejecuta un 409 inyectado, lectura autorizada sin efectos y recuperación explícita. El primer fallo y los errores del harness se conservan; solo v8 califica ese recorrido. [Preparación y límites](event-memory-source-evidence-20261025/a123-main-preparation.json). No hay cambios productivos ni invitaciones reales; siguen pendientes las revisiones, main vigente, CI del root y controles de despliegue.
+
+
+## Edición y eliminación propias en móvil — #174
+
+El head final `41a68b776676e50e38d9de77cfb1dcda598ce7fe` añade acciones ES/EN para publicaciones remotas del autor. Reutiliza PUT/DELETE: la edición envía el timestamp sin perder microsegundos y conserva el texto ante 409; la eliminación exige confirmación y HTTP 204 antes de retirar la fila. Cambiar de sesión o desmontar la pantalla invalida callbacks y respuestas tardías. El aviso distingue borrar la publicación de revocar archivos públicos o copias externas. Los botones Cancelar reutilizan el área mínima existente, verificada como 60 × 44 píxeles CSS en la previsualización.
+
+El [recibo local final](event-memory-source-evidence-20261025/mobile-author-accessibility-local.json) registra **759 pruebas / 101 suites**, release:check y bundle/mapa Android con cuatro fuentes ejecutables exactas. El [recorrido visual](event-memory-source-evidence-20261025/mobile-author-preview-results.json) usa exclusivamente respuestas sintéticas y bloquea egress: editar, cancelar y eliminar después de 204 pasan. [Editor](event-memory-source-evidence-20261025/mobile-author-edit.png) y [confirmación](event-memory-source-evidence-20261025/mobile-author-delete-confirmation.png). Un worker QR preexistente bloqueado produce un error conocido conservado; no se acredita el escáner ni cero errores globales. Esta evidencia no es un dispositivo físico ni una integración con API real.
+
+La calificación original `41505ce` conserva su CI satisfactorio 40357472951 (759/101, 13 controles de artefactos ejecutados y un skip macOS en Linux, Doctor 17/17). Sus dos builds nativos pendientes se cancelaron tras ampliar el área táctil y **no cuentan como pases**. El [CI final 40359050881](https://github.com/diegueins680/TDF-mobile/actions/runs/40359050881) de `41a68b7` pasa: 759 pruebas / 101 suites, 13 controles de artefactos ejecutados y un skip macOS en Linux, Doctor 17/17. Android 40359055946 sigue en curso e iOS Simulator 40359061603 en cola al corte. #174 queda listo para revisión del código y se solicitó una vez a tdfrecords; no hay aprobación ni auto-merge. Las compilaciones y artefactos pendientes deben verificarse antes de integrar; los de #173 no se atribuyen al código nuevo. [Estados y evidencia exactos](event-memory-source-evidence-20261025/mobile-author-final-hosted-ci-20261026.json). Los 14 controles locales iniciales conservan su identidad; las fuentes nativas y de firma permanecen idénticas.
+
+No se han cambiado las preferencias ni los estados productivos, desplegado código o enviado invitaciones. Revisión independiente y entrega protegida continúan pendientes; elegibles/excluidos reales siguen sin establecerse y los envíos acreditados siguen en cero.
