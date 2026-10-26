@@ -1013,6 +1013,32 @@
       "conflict": "The paid projection grants an active entitlement even when its purchase update leaves a terminal order unchanged. Attempt failure also cancels the purchase despite the checkout adapter permitting subsequent verified payment. The old model omits these failed/closed histories.",
       "authority": "Existing separate payment-attempt, money and fulfillment states, the paid-order entitlement rule and the explicit user mandate to repair financial inconsistency. This is an integrity repair, not approval to activate music commerce or contact a provider.",
       "resolution": "Add a compatibility migration: failed attempts no longer cancel the purchase; verified money for closed fulfillment is retained with a checkout-linked reconciliation exception and audit, without an entitlement. Refuse contradictory pre-existing grants for explicit review rather than deleting history. Extend scoped SQL/model/concurrency/HTTP controls. Keep missing provider admission, uncertain transport and closed-checkout recovery explicit and commerce disabled. Preserve failed-payment retry quarantine with a checkout-locked admission function called before creation/replay in the music handler. Awaiting fulfillment is not permission to start another payment. Independent review also identified existing-binding replay and late binding/pending status reopening. Gate both attempt admission and existing binding lookup; persist the quarantine through attempt failure_code/status rather than trusting checkout status alone. Rolling back to application code that bypasses the helper requires commerce disabled; retaining the migration alone does not enforce handler admission."
+    },
+    {
+      "id": "AUTHORITY-069",
+      "sources": [
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
+        "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
+        "formal/system/payment-arithmetic.md"
+      ],
+      "conflict": "The 2026-08-13 ledger rules promised balanced, immutable posted transactions but validated only the draft -> posted change and protected entries only against update and delete: a posted transaction could gain entries, return to draft, or be inserted already posted or reversed with no entries. SYS-MONEY-003 named SQL ledger correctness an open obligation.",
+      "authority": "SYS-MONEY-003 and the ledger's own stated rule (posted entries are immutable; create a reversing transaction), which every writer already follows by inserting a draft, its entries, then posting.",
+      "resolution": "The posting trigger fires on insert and on status/reversal_of changes and refuses every path but draft creation, validated posting and reversal by a posted transaction; the entry trigger fires on insert too and locks the transaction row. Sums compare as numeric. Migration refuses drifted posted or invalid reversed transactions before installing guards; history must be reconciled explicitly. Referenced reversing transactions remain posted, with a physical no-value-change write on the target fencing concurrent reversals under snapshot isolation. No Haskell change; LedgerPosting.tla and the ledger-posting-postgresql spec are the evidence."
+    },
+    {
+      "id": "AUTHORITY-070",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/checkout-arithmetic.md",
+        "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server/Merch.hs"
+      ],
+      "conflict": "PAY-CHECKOUT-002 and the 2026-10-04 migration describe a nonempty immutable line snapshot, while the rules only froze existing lines and checked the sum: a zero-total line could be appended to a committed checkout by a later transaction. The 2026-10-04 note treats zero appends as preserving the invariant.",
+      "authority": "The requirement statement and the migration's own comment (an immutable line snapshot); both current writers create header and lines in one transaction, and refund allocation and receipts read the lines, so a line nobody paid for must not join a paid checkout.",
+      "resolution": "Lines are created only in the transaction that creates their checkout: tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql records each actually inserted checkout id (AFTER ROW trigger; an upsert that inserts nothing registers nothing) in a transaction-local setting and refuses a line whose checkout id is not recorded there (an xmin-age design was rejected in review: header updates re-stamp xmin and xid order is not commit order). The sum check, the frozen lines and terms of 2026-10-04 stay. The requirement statement, property and transitions say so; CheckoutSnapshot.tla with three controls checks the guard implies the invariants, and the extended PostgreSQL test exercises the mechanism. Haskell is unchanged. The registry is forgeable by any SQL writer and is a guard against mistaken writers, not a privilege boundary; a header and its line in one statement is no longer accepted."
     }
   ]
 }
