@@ -1,0 +1,5 @@
+Exact packet for synthetic welcome runtime source 7cf6c8000f7f42f3c8ea0a44daf213ff5b7b7dc3.
+Manifest records PREPARED state; completed public report is ../welcome-runtime-221-2026-10-26.json.
+The default plan starts no services. Execution requires Darwin sandbox-exec, existing dependencies, the retained hash-checked fe179 native executable, the exact source checked out separately, and free owned ports.
+Use manifest.command with --source pointing to the exact runtime source worktree; do not update expected hashes just to pass.
+No human mode, production writes, provider access or failed-logout qualification. Browser/runtime/loopback drivers are byte-identical to the earlier220 replay; only source/binary/schema guards changed.

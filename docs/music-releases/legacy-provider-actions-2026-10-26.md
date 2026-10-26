@@ -144,3 +144,23 @@ source-admission and strict catalog checks apply to the refreshed candidate.
 The previous review is historical and a fresh review is required after the
 new head is published. No production deployment, provider playback, migration
 or protected-main merge is established by this reconciliation.
+
+
+## Protected-main refresh after public welcome
+
+The candidate was normally reconciled from
+`0da6cd3356ac277169c31ea274ef5e60692cedf0` with protected main
+`a1238fbf6d98062904a4bd80d2f9df35ebc40706`, which adds the independently
+owned public welcome and exploration work. All 144 main requirement objects
+remain exact, followed by unchanged `MEDIA-MUSIC-LEGACY-001`, for 145 total.
+All 1,330 main catalog decisions and the two legacy technical decisions remain
+exact, for 1,332 total. Generated indexes and catalog reports are reconciled
+from these canonical rows and the actual pinned Mobile revision.
+
+The six legacy implementation/test inputs and browser test retain their seven
+qualified hashes from the preceding protected-main refresh. The existing
+49-unit/four-browser source qualification retains its original execution and
+bundle identity. This metadata reconciliation does not rerun or relabel it as
+a new build, browser run, provider playback or production acceptance. A fresh
+review must target the final published merge candidate; no push, protected-main
+merge, migration or deployment is performed by this refresh task.

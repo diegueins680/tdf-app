@@ -1,0 +1,34 @@
+{
+  "observedAt": "2026-10-26T04:45:55.060569+00:00",
+  "protectedPrivacyMerge": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+  "approvedPrivacySource": "42b9fbe8dbcd922755c4b23d85a55e030483d5cf",
+  "approvedAndMergedPrivacyTreesEqual": true,
+  "welcomePreparation": "ddfe893c16fa92cbc54b27a526d7a016bf67ad03",
+  "previousPreparation": "e9776fdfe7029de3ff9399cb284e1fbb5aa7b650",
+  "entirePreparationTreeUnchangedByProtectedMerge": true,
+  "preparationTree": "b75031c3693fc50dc11d9158cbfc04d2c5c1721d",
+  "protectedRequirementsPreservedExactly": 142,
+  "combinedRequirements": 143,
+  "onlyAdditionalRequirement": "UX-WELCOME-001",
+  "freshSourceAdmissionSurfaces": 12,
+  "freshInventoryAndTraceability": "PASS",
+  "existingExecutionEvidence": {
+    "executedSource": "ffa52950bc6157de4f1cd672742bdf97428b2a61",
+    "report": "reports/welcome-logout-integration-2026-10-26.json",
+    "uiTests": 213,
+    "uiSuites": 21,
+    "apiPostgres221WelcomePrivacy": "PASS",
+    "scope": "Existing executions retain ffa identity; application source is unchanged. No rerun or new compilation claimed."
+  },
+  "publishedPr619Head": "d8191612b1d8e185e997a4ecf72c2d23ed83fba9",
+  "nextDependency": 618,
+  "merged619": false,
+  "deployed619": false,
+  "previewObservation": {
+    "previewSource": "e9776fdfe7029de3ff9399cb284e1fbb5aa7b650",
+    "deploymentId": 7324185011,
+    "publicGetStatus": 302,
+    "publicBrowserVerificationPerformed": false,
+    "scope": "Redirect observed; no preview login or bypass attempted. Earlier d819 Cloudflare preview and local joint runtime evidence remain separate."
+  }
+}
