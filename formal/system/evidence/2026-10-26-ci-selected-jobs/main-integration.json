@@ -1,0 +1,59 @@
+{
+  "source": "76afcc5a5e4f5c000a2d331e03218bbbffe97033",
+  "protectedMain": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "allProtectedRequirementsPreserved": true,
+  "financialSourceAnd223ManifestUnchanged": true,
+  "requirementCount": 149,
+  "criticalRequirementCount": 119,
+  "proofMetrics": {
+    "requirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 149,
+      "NOT_APPLICABLE": 0
+    },
+    "requirementsWithDeclaredAmbiguityEntries": 138,
+    "obligationsByCategory": {
+      "implementation": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 149,
+        "NOT_APPLICABLE": 0
+      },
+      "refinement": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 149,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-authorization-SMT": {
+        "PROVEN": 3,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-recovery-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      }
+    }
+  },
+  "implementationEquivalence": "UNPROVEN",
+  "componentAssurance": "TESTED",
+  "rootQuality": {
+    "command": "npm run quality:repo",
+    "exitCode": 0,
+    "logSha256": "55c6af6d10addf80a9657d1a01f6a7d04a68b6c3563f2bb914c39c102d4a3a8c"
+  },
+  "initialQualityAttempt": "FAILED_ENVIRONMENT_ENOSPC; retained without counting as a property counterexample; same source/command passes after removal of owned stopped fixtures and unused compiler scratch.",
+  "matchedReportInputs": 1354,
+  "scope": "Evidence-only publication retains source76 identity. Fresh final-head hosted CI, independent review and strict/FIFO admission remain required."
+}
