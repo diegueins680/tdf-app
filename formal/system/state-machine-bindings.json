@@ -188,6 +188,12 @@
       "table": "music_ddex_export",
       "column": "status",
       "decision": "AUTHORITY-082"
+    },
+    "SYS-MONEY-003": {
+      "source": "formal/system/requirements.json",
+      "table": "commerce_ledger_transaction",
+      "column": "status",
+      "decision": "AUTHORITY-069"
     }
   },
   "unbound": {

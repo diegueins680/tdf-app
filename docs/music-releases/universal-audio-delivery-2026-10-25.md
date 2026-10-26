@@ -144,3 +144,7 @@ radio/preview engines need their own focused corrections. Do not activate the
 complete catalog/worker stack merely to make a frontend smoke test succeed.
 
 Browser behavior references checked during implementation: [HTML media play and errors](https://html.spec.whatwg.org/multipage/media.html#dom-media-play-dev), [Media Session action registration](https://w3c.github.io/mediasession/#dom-mediasession-setactionhandler). These define browser boundaries; they are not execution evidence.
+
+## Current-main reconciliation
+
+Protected main advanced to `5114fe95ac8e328b58162a8dcae5c9015a47ce09` through financial integration #551 during this delivery. The normal merge preserves every main requirement exactly except the intentional player requirement update retained from the original playback commit. Main backend, SQL, 220-entry migration manifest, dependencies and Mobile pin are unchanged by the playback delta. Only generated inventory/traceability conflicted and were regenerated. Earlier local tests remain tied to their original inputs; combined-candidate hosted checks are required.

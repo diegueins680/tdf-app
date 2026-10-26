@@ -18,7 +18,7 @@
     "e2e/web/music-player-native.spec.mjs": "c30ef37d2013401f3baffede88298930fa0795fb277d06c9167d3c9747fb55a0",
     "playwright.music-native.config.mjs": "d89a8b06cf0ac2b15c0acd6000325edb73b46a17cb6df8ecaa39c52b0cd772c7",
     "scripts/test-player-session-model.mjs": "cc1ae78132c81735e2c5562829b3b5a4a5660175dbcea9ae831f3a450eceed2d",
-    ".github/workflows/ci.yml": "79e95f59d40491773199590189c700b6a348be60424b0581c951a887340c3f33",
+    ".github/workflows/ci.yml": "50b13e833791b1d01414b0472a083c6e3d7203d8e23d582df0ed8c479d672843",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e"
   },
   "verification": {
@@ -445,5 +445,14 @@
     "legacy provider URLs and independent radio engines",
     "optional normalization,physical devices,complete WCAG and broadband SLO acceptance",
     "target deployment,real authorized upload/playback and rollback drill"
-  ]
+  ],
+  "integration": {
+    "base": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+    "normalMergeFrom": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+    "originalPlaybackCommit": "45183a12302a9802b2055e6b6c19afb26c5b4115",
+    "preservedMainRequirements": 140,
+    "playerRequirementRetainedExactly": true,
+    "backendSqlMigrationDependenciesMobile": "byte-identical to integration baseline",
+    "qualification": "earlier executions retain their original source identities; combined candidate CI pending"
+  }
 }
