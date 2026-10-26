@@ -12208,6 +12208,84 @@
       }
     },
     {
+      "id": "PAY-LEDGER-HEADER-001",
+      "title": "Posted ledger identity, source and audit headers are immutable",
+      "statement": "An UPDATE whose existing commerce ledger transaction is posted or reversed must preserve every column value except status and reversal_of. Draft edits and value-preserving writes remain permitted; lifecycle transitions retain their independent existing validators.",
+      "domain": "PAY",
+      "authority": "Explicit user mandate for immutable posted accounting records; accepted ADR-0104 immutable financial events and compensating corrections.",
+      "source": "docs/adr/0104-immutable-financial-ledger.md; formal/system/ledger-header.md",
+      "property": "OLD.status in {posted,reversed} and accepted UPDATE implies projection(NEW)=projection(OLD), where projection removes only status and reversal_of.",
+      "contract": "formal/system/ledger-header.md",
+      "actors": [
+        "Ordinary non-owner ledger-header writer",
+        "Posting runtime"
+      ],
+      "preconditions": [
+        "Registered posting, entry write-fence and namespace guards remain enabled; the lifecycle cannot reopen a draft.",
+        "The actor cannot modify trusted DDL, replace functions, bypass triggers or change replication mode."
+      ],
+      "inputs": [
+        "Old and proposed transaction rows",
+        "Current locked database row status"
+      ],
+      "state": {
+        "statuses": [
+          "draft",
+          "posted",
+          "reversed"
+        ],
+        "header": "All columns other than status and reversal_of"
+      },
+      "allowedTransitions": [
+        "Draft header edit.",
+        "Identical posted/reversed header update, including the entry parent-write fence.",
+        "Independently validated posted-to-reversed lifecycle transition."
+      ],
+      "forbiddenTransitions": [
+        "Changing a posted/reversed primary key, source identity or audit column.",
+        "Committing a draft-era source edit after a concurrent posting has committed."
+      ],
+      "effects": [
+        "Invalid header updates reject atomically; no financial history is rewritten."
+      ],
+      "authorization": "This integrity guard grants no caller, refund or payout authority. Ordinary non-owner fixtures have header SELECT/UPDATE, no entry UPDATE and no trusted-schema CREATE.",
+      "privacy": "Only synthetic owned disposable PostgreSQL fixtures; no customer or provider data.",
+      "concurrency": "A stale header writer must preserve the row after an observed posting lock wait. Named RC/RR/SERIALIZABLE schedules use pg_blocking_pids; PostgreSQL may serialize-fail a repeatable snapshot.",
+      "idempotency": "Preserve the original source-key anchor; this does not establish exactly-once provider charges or all caller replay behavior.",
+      "failure": "SQLSTATE 23514 for a differing posted header, or SQLSTATE 40001 for a conflicting repeatable snapshot; failed operations do not alter committed source attribution.",
+      "recovery": "Authorized compensating transactions; keep the additive guard through application rollback. Historical attribution repair and deployment retain separate approval.",
+      "observability": "Record exact Git/source hashes, tool versions, actual blocking witnesses and named negative controls.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
+        "scripts/lib/production-release.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/ledger-event-identity.mjs",
+        "scripts/__tests__/ledger-posting-snapshot.py",
+        "scripts/test-ledger-posting.sh",
+        "scripts/test-provider-retry-runtime.sh",
+        "scripts/test-directory-saved-search-parity.mjs"
+      ],
+      "formalModels": [
+        "formal/event-operations/LedgerHeader.tla",
+        "formal/event-operations/LedgerHeader.cfg",
+        "formal/event-operations/LedgerHeaderMutable.cfg"
+      ],
+      "verification": "Full registered schema ordinary-role SQL updates, rollback-scoped guard/startup mutations, witnessed posting/header races under three isolations, a guard-removal RC counterexample and a finite two-writer TLC model with a named mutation control. Backend and formal CI lanes enforce execution.",
+      "evidence": "formal/system/evidence/2026-10-26-ledger-header-main/ records current-main composition; formal/system/evidence/2026-10-25-ledger-header/ retains earlier source identities. Replay commands and limits: formal/system/ledger-header.md. Admit evidence only for its recorded relevant source hashes. Saved-search historical-prefix compatibility is tracked separately in formal/system/evidence/2026-10-26-saved-search-checkpoint/; original financial/model receipts retain their source identities.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "TESTED named SQL boundary and BOUNDED_VERIFIED finite abstraction; complete implementation equivalence remains UNKNOWN.",
+      "ambiguity": [
+        "No proof of arbitrary installed function bodies, whole-program refinement, all interleavings, liveness, owner/superuser resistance or deployed correspondence.",
+        "Status/reversal semantics and correction authority remain separate obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped SQL tests and finite model checking do not discharge complete implementation/refinement obligations; independent review and production approval remain required."
+      }
+    },
+    {
       "id": "MEDIA-MUSIC-PRIVACY-001",
       "domain": "MEDIA",
       "title": "Client listener ownership and latest-intent precedence for local playback state",

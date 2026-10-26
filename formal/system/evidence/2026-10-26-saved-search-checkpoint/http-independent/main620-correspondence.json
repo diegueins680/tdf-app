@@ -1,0 +1,79 @@
+{
+  "observedAt": "2026-10-26T15:36:22.778783+00:00",
+  "main": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+  "preparedParent": "b7053f9426d624f2fdaf8a9731389e8ef52e3bdf",
+  "scope": "Uncommitted isolated composition read against immutable parents; final commit identity and CI remain pending.",
+  "all144MainRequirementsExact": true,
+  "addedRequirements": [
+    "PAY-LEDGER-HEADER-001"
+  ],
+  "catalog": {
+    "total": 1339,
+    "mainObjectsPreserved": 1338,
+    "existingReviewedManifestSuccessor": "6ff395b6131079017c9d",
+    "retiredMainFingerprint": "8229b8202552298c955e"
+  },
+  "sourceCorrespondence": {
+    "mainClient": [
+      "tdf-hq-ui",
+      "e2e",
+      "tdf-mobile",
+      "package.json",
+      "package-lock.json",
+      "ops"
+    ],
+    "qualifiedBackend": [
+      "tdf-hq",
+      "scripts/test-directory-saved-search-parity.mjs",
+      "scripts/lib/production-release.mjs",
+      "scripts/production-migrations.json",
+      "scripts/__tests__/directory-saved-search-http.mjs",
+      "scripts/__tests__/directory-search-plan-parity.mjs",
+      "scripts/test-community-search.py"
+    ]
+  },
+  "mainMigrationPrefixUnchanged": 221,
+  "totalMigrations": 222,
+  "allMigrationIntroductionAncestors": true,
+  "newFinancialCode": false,
+  "newProductionWrites": false,
+  "verification": {
+    "repositoryQuality": {
+      "status": "PASS",
+      "log": "/private/tmp/tdf-ledger-checkpoint-main620-repo-20261026.log",
+      "sha256": "b6ffbb6fc5f48b1bb7f1f225cdffd8c134aa0ea26c3002452fdeddd96d7ad58d"
+    },
+    "catalogHistoryTests": {
+      "status": "PASS",
+      "log": "/private/tmp/tdf-ledger-checkpoint-main620-catalog-tests-20261026.log",
+      "sha256": "1a07daa4a8afa647b1cb81c76fc19b55da476e1829a292f8e7d38c55954c7b3c",
+      "passed": 8
+    },
+    "specificationInventory": "GENERATED_AND_CHECKED",
+    "traceability": "GENERATED_AND_CHECKED",
+    "sourceAdmission": "PENDING final immutable merge commit",
+    "firstOverbroadCatalogAssertion": {
+      "outcome": "REJECTED",
+      "reason": "Main221 manifest fingerprint has an already reviewed222 successor from B705; require 1338exactmain records and exact reviewed successor rather than1339unchanged records",
+      "applicationCodeChanged": false
+    },
+    "unsupportedAdmissionOption": {
+      "outcome": "CLI rejected --working-tree before checking source",
+      "recovery": "Use canonical --base/--head on final immutable commit",
+      "countedAsPassingAdmission": false
+    },
+    "strictCatalog": {
+      "status": "PASS",
+      "candidates": 1339,
+      "jsonAndCsvExitCode": 0,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "userOutcome": {
+    "problem": "Posted ledger source/audit identities can be rewritten despite balanced immutable entries; historical fixture setup also prevents final222 qualification from completing in CI.",
+    "expectedBenefit": "Keep authoritative reconciliation/replay anchors stable and restore complete startup qualification without relaxing final guards.",
+    "observedBenefit": "Original financial SQL/concurrency/mutant evidence retained at its actual source; independent B705 canonical222+107HTTP passes. No production financial benefit measured.",
+    "deployment": "NOT_PERFORMED",
+    "realFinancialTransactions": 0
+  }
+}

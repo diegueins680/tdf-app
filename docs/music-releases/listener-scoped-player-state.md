@@ -82,11 +82,19 @@ active decisions. These are reducer dispatch mechanics; no domain catalog or
 permissions become client-controlled. Other decisions/reconciliation history
 remain unchanged.
 
-Final integration baseline: normal merge of playback parent
-`2a7f1b67745e93bb4f0da7958200ca7b54dd5b40`, including protected main
-`a1238fbf6d98062904a4bd80d2f9df35ebc40706`. Canonical requirements total
-145: 143 foreign parent objects remain exact, the owned PLAYER object differs
-only by its authorized SessionProviders implementation append, and PRIVACY is
-new. All six corrected runtime/test fingerprints remain identical to `b6259692`.
-The earlier browser/build receipt predates this merge; it does not qualify
-unrelated inherited welcome/club files or replace exact integrated-candidate CI.
+Current integration baseline: normal merge of protected main
+`78fa351b469c1d2031df3232204dd722ac480e3b`, after playback PR #620 and
+ledger-header PR #621. The P0 foundation is already merged; this privacy change
+will be reviewed as a focused PR targeting main. Canonical requirements total
+146: 144 foreign main objects remain exact, the owned PLAYER object differs only
+by its SessionProviders implementation append, and PRIVACY is new. All six
+corrected runtime/test fingerprints remain identical to `b6259692`.
+
+The main catalog's new ledger-header reconciliation remains intact. All 1,339
+main decision objects are retained: 1,338 unchanged active records and the exact
+old queue review in history, plus its individually reviewed successor. The
+222-entry migration manifest is byte-identical to main; privacy adds no migration.
+
+The 86-test/27-browser receipt retains its original source identity and does not
+qualify unrelated inherited main changes. Exact committed-source admission,
+current privacy CI/review and production acceptance remain separate gates.

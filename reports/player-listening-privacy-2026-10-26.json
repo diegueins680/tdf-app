@@ -3,7 +3,7 @@
   "status": "IMPLEMENTED_COMMITTED_LOCALLY_TESTED_NOT_RELEASED",
   "branch": "fix/player-listening-identity-20261026",
   "initialPlaybackBaseline": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
-  "integrationBaseline": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
+  "integrationBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
   "scope": "Client-owned local listening state and latest user-intent precedence; no server/private-byte/secureerase/cross-tab proof",
   "audit": {
     "sourceBaseline": "3af768dacd95c1223975c62da3ce8088bed89b47",
@@ -99,10 +99,10 @@
     "other141InheritedRequirementObjectsExact": true,
     "ownedPlayerOtherFieldsExact": true,
     "proofStatus": "TESTED; no mathematical or model-checked identity claim",
-    "integrationInheritedRequirements": 144,
-    "integrationForeignParentObjectsExact": 143,
+    "integrationInheritedRequirements": 145,
+    "integrationForeignParentObjectsExact": 144,
     "integrationOwnedPlayerOnlyImplementationAppend": true,
-    "integrationTotalRequirements": 145
+    "integrationTotalRequirements": 146
   },
   "limits": [
     "Client identity readiness is not server authentication",
@@ -116,14 +116,16 @@
   ],
   "integration": {
     "pr": null,
-    "ci": "pending exact committed integrated candidate",
-    "merge": "Normal merge of2a7 prepared with all local metadata gates passed; actual merge commit recorded by git ancestry",
+    "ci": "Pending exact current privacy candidate; prior P0 foundation merged and green according to root release evidence",
+    "merge": "Normal merge of78fa prepared with local metadata gates passed; commit and exact committed-descendant source admission pending",
     "deployment": null,
     "productionWrites": 0,
     "serverMigrations": 0,
     "newMediaDependencies": false,
-    "normalMergeParent": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
-    "sourceQualificationBoundary": "b625 qualification predates parent merge; all six source hashes remain exact. New main welcome/club files are inherited,not requalified by the old browser receipt. Exact integrated-candidate checks and hosted CI remain required."
+    "normalMergeParent": "78fa351b469c1d2031df3232204dd722ac480e3b",
+    "sourceQualificationBoundary": "The86-test/27-browser receipt predates this main merge but all six qualified b625 runtime/test source hashes remain exact. It does not qualify unrelated inherited main changes or replace exact-candidate hosted CI.",
+    "p0MergedFoundation": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+    "target": "New focused privacy PR targetingmain; P0 already merged"
   },
   "requiredNativeIdentityCase": {
     "path": "e2e/web/music-player-native.spec.mjs",
@@ -1026,8 +1028,8 @@
     "all1339OriginalDecisionObjectsPreservedActiveOrHistory": true,
     "allOtherReconciliationFieldsExact": true
   },
-  "plannedIntegrationParent": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
-  "protectedMainBaseline": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "plannedIntegrationParent": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "protectedMainBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
   "preIntegrationMetadataValidation": {
     "sourceCommit": "b6259692c11c7b502b974cf6bee7d4ca189925f7",
     "status": "PASS",
@@ -1066,7 +1068,7 @@
     ]
   },
   "metadataValidation": {
-    "integrationParent": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
+    "integrationParent": "78fa351b469c1d2031df3232204dd722ac480e3b",
     "status": "PASS",
     "declarationsInventoryConformanceTests": 25,
     "additionalSurfaceGuardTests": 11,
@@ -1076,33 +1078,33 @@
         "command": "python3 scripts/test-requirement-declarations.py",
         "tests": 9,
         "result": "PASS",
-        "log": "/private/tmp/tdf-player-privacy-final-parent-metadata-declarations-20261026.log",
-        "sha256": "5684d13977a1f6829bcd5f644c72b35ab6f8d42951d571a5f230c4cc35a359f3"
+        "log": "/private/tmp/tdf-player-privacy-main78-metadata-declarations-20261026.log",
+        "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
       },
       {
         "command": "python3 scripts/test-specification-inventory.py",
         "tests": 6,
         "result": "PASS",
-        "log": "/private/tmp/tdf-player-privacy-final-parent-metadata-inventory-20261026.log",
-        "sha256": "da0aaad5f5ebcc8d1b02fcbafe214619caaba6bc31ceb3b4067d888286802e25"
+        "log": "/private/tmp/tdf-player-privacy-main78-metadata-inventory-20261026.log",
+        "sha256": "185bc6b98b5e5d79277ed5cf3b050f01a21888c5c3f7db83a702ab919e13752a"
       },
       {
         "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
         "tests": 10,
         "result": "PASS",
-        "log": "/private/tmp/tdf-player-privacy-final-parent-metadata-conformance-20261026.log",
-        "sha256": "bba5bc50afd90ea5d09fe4ad186afb37d5dcff983bfbc2e4b1717c2da92f3271"
+        "log": "/private/tmp/tdf-player-privacy-main78-metadata-conformance-20261026.log",
+        "sha256": "c3641e91a584663d8289424b8fb029e81fe07d6d9287f412f0d25f0878b57fd6"
       },
       {
         "command": "python3 scripts/test-new-specification-surfaces.py",
         "tests": 11,
         "result": "PASS",
-        "log": "/private/tmp/tdf-player-privacy-final-parent-metadata-surfaces-20261026.log",
-        "sha256": "578371a87275d8bcb9483075ee2bb7cc6cd4fae3e6fa8f3f9772c890ecb8fb63"
+        "log": "/private/tmp/tdf-player-privacy-main78-metadata-surfaces-20261026.log",
+        "sha256": "75f378eaa1addde234c3f1fd8d4e1e3a2a6fe6e7a7e7237d10dd2ce37c1f3b33"
       }
     ],
-    "finalFreshness": "PASS inventory --check and traceability --check; git diff --check PASS",
-    "preservationAssertions": "PASS145 requirements:143 foreign parent objects exact,owned PLAYER implementation append only,newPRIVACY identical to7056 checkpoint;1339 parent decision objects retained1338active+1fullhistory with1reviewed successor;all6 final source hashes exact"
+    "finalFreshness": "PASS inventory --check,traceability --check,and git diff --check",
+    "preservationAssertions": "PASS146 requirements:144 foreign main objects exact,PLAYER implementation append only,PRIVACY unchanged;all1339 main decisions retainedactive/history;newmain reconciliation exact;222-entry manifest byte-identical;all6b625 fingerprints unchanged"
   },
   "preIntegrationCatalogValidation": {
     "status": "PASS strictJSON/CSV zero unreviewed/stale",
@@ -1139,27 +1141,189 @@
     "supersededParentObjectsPreservedExactInHistory": 1,
     "activeSuccessorsIndividuallyReviewed": 1,
     "history": "docs/catalog-persistence/catalog-list-decisions.json reconciliation.privacyQueueRestoreSuccessor",
-    "integrationParent": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
+    "integrationParent": "78fa351b469c1d2031df3232204dd722ac480e3b",
     "commands": [
       {
         "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format json --output docs/catalog-persistence/reports/static-list-inventory.json --fail-on-unreviewed",
         "result": "PASS exit0",
-        "log": "/private/tmp/tdf-player-privacy-final-parent-catalog-json-20261026.log",
+        "log": "/private/tmp/tdf-player-privacy-main78-catalog-json-20261026.log",
         "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "artifact": "docs/catalog-persistence/reports/static-list-inventory.json",
-        "artifactSha256": "ee1f3bfa0faa0542868773ef8cd553e499d40b5648cf4e72eb31b2328b84b90f"
+        "artifactSha256": "25bd1bae6efbd5a2f6a2ec98943c4ffa755c4f1d2a6f28df3620efd0b5f493ea"
       },
       {
         "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv --fail-on-unreviewed",
         "result": "PASS exit0",
-        "log": "/private/tmp/tdf-player-privacy-final-parent-catalog-csv-20261026.log",
+        "log": "/private/tmp/tdf-player-privacy-main78-catalog-csv-20261026.log",
         "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "artifact": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
-        "artifactSha256": "ee61542038f0f39242fc39913e36b48861fceb73f0c041ed00a4090f7df764c0"
+        "artifactSha256": "ceb6eb709c1ebabd4f7b017e1c608603956e65ac6a8dc71d06baa6dd057f43df"
       }
     ],
-    "sourceSixFingerprintsRemainQualified": true,
-    "all1339OriginalParentDecisionsPreservedActiveOrHistory": true,
-    "allOtherReconciliationFieldsExact": true
+    "all1339MainDecisionObjectsPreservedActiveOrHistory": true,
+    "allNewMainReconciliationFieldsExact": true
+  },
+  "historicalIntegrationBaselines": [
+    {
+      "base": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
+      "protectedMain": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+      "metadataValidation": {
+        "integrationParent": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
+        "status": "PASS",
+        "declarationsInventoryConformanceTests": 25,
+        "additionalSurfaceGuardTests": 11,
+        "total": 36,
+        "commands": [
+          {
+            "command": "python3 scripts/test-requirement-declarations.py",
+            "tests": 9,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-player-privacy-final-parent-metadata-declarations-20261026.log",
+            "sha256": "5684d13977a1f6829bcd5f644c72b35ab6f8d42951d571a5f230c4cc35a359f3"
+          },
+          {
+            "command": "python3 scripts/test-specification-inventory.py",
+            "tests": 6,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-player-privacy-final-parent-metadata-inventory-20261026.log",
+            "sha256": "da0aaad5f5ebcc8d1b02fcbafe214619caaba6bc31ceb3b4067d888286802e25"
+          },
+          {
+            "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+            "tests": 10,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-player-privacy-final-parent-metadata-conformance-20261026.log",
+            "sha256": "bba5bc50afd90ea5d09fe4ad186afb37d5dcff983bfbc2e4b1717c2da92f3271"
+          },
+          {
+            "command": "python3 scripts/test-new-specification-surfaces.py",
+            "tests": 11,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-player-privacy-final-parent-metadata-surfaces-20261026.log",
+            "sha256": "578371a87275d8bcb9483075ee2bb7cc6cd4fae3e6fa8f3f9772c890ecb8fb63"
+          }
+        ],
+        "finalFreshness": "PASS inventory --check and traceability --check; git diff --check PASS",
+        "preservationAssertions": "PASS145 requirements:143 foreign parent objects exact,owned PLAYER implementation append only,newPRIVACY identical to7056 checkpoint;1339 parent decision objects retained1338active+1fullhistory with1reviewed successor;all6 final source hashes exact"
+      },
+      "catalogValidation": {
+        "status": "PASS strictJSON/CSV zero unreviewed/stale",
+        "finalActiveDecisions": 1339,
+        "unchangedActiveParentObjects": 1338,
+        "supersededParentObjectsPreservedExactInHistory": 1,
+        "activeSuccessorsIndividuallyReviewed": 1,
+        "history": "docs/catalog-persistence/catalog-list-decisions.json reconciliation.privacyQueueRestoreSuccessor",
+        "integrationParent": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
+        "commands": [
+          {
+            "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format json --output docs/catalog-persistence/reports/static-list-inventory.json --fail-on-unreviewed",
+            "result": "PASS exit0",
+            "log": "/private/tmp/tdf-player-privacy-final-parent-catalog-json-20261026.log",
+            "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "artifact": "docs/catalog-persistence/reports/static-list-inventory.json",
+            "artifactSha256": "ee1f3bfa0faa0542868773ef8cd553e499d40b5648cf4e72eb31b2328b84b90f"
+          },
+          {
+            "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv --fail-on-unreviewed",
+            "result": "PASS exit0",
+            "log": "/private/tmp/tdf-player-privacy-final-parent-catalog-csv-20261026.log",
+            "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "artifact": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+            "artifactSha256": "ee61542038f0f39242fc39913e36b48861fceb73f0c041ed00a4090f7df764c0"
+          }
+        ],
+        "sourceSixFingerprintsRemainQualified": true,
+        "all1339OriginalParentDecisionsPreservedActiveOrHistory": true,
+        "allOtherReconciliationFieldsExact": true
+      },
+      "scope": "Historical prior parent integration evidence; not relabeled as latest main execution."
+    }
+  ],
+  "migrations": {
+    "count": 222,
+    "manifestSha256": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+    "exactMainManifestBytes": true,
+    "privacyMigrations": 0,
+    "scope": "Inherited migration manifest remains unchanged; no migration execution claimed."
+  },
+  "sourceAdmission": {
+    "status": "PASS prepared-tree six mappings/fingerprints; committed-descendant check pending",
+    "base": "78fa351b469c1d2031df3232204dd722ac480e3b",
+    "preparedReceipt": "/private/tmp/tdf-player-privacy-main78-prepared-source-admission-20261026.json",
+    "preparedReceiptSha256": "a6ddc275790cf7717a70b813b02daf4e935d48ff9e347097abd4009f072d3f0d",
+    "mappedChangedSurfaces": [
+      "e2e/web/music-player-native.spec.mjs",
+      "tdf-hq-ui/src/App.tsx",
+      "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+      "tdf-hq-ui/src/player/PlayerProvider.tsx",
+      "tdf-hq-ui/src/player/queue.ts",
+      "tdf-hq-ui/src/session/SessionProviders.tsx"
+    ],
+    "exactPostCommitCommand": "python3 scripts/check-new-specification-surfaces.py --base 78fa351b469c1d2031df3232204dd722ac480e3b --head HEAD",
+    "scope": "Existing canonical checker validate_changed_paths applied to prepared working-tree bytes and mappings. No committed-descendant admission or semantic/refinement proof; normal committed checker remains required after merge commit."
+  },
+  "parentReleaseSnapshot": {
+    "scope": "Historical parent P0 release snapshot supplied by root release engineer; NOT new privacy runtime qualification,backend activation or real production music acceptance. Local artifact hashes and named harness outcome fields independently checked while preparing privacy metadata.",
+    "p0": {
+      "pr": "https://github.com/diegueins680/tdf-app/pull/620",
+      "mergedAtUtc": "2026-10-26T07:51:49Z",
+      "mergeCommit": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+      "approvedCandidate": "2a7f1b67745e93bb4f0da7958200ca7b54dd5b40",
+      "requiredChecks": 20,
+      "checksStatus": "ROOT_REPORTED_ALL_PASS",
+      "ci": "https://github.com/diegueins680/tdf-app/actions/runs/40284481007",
+      "freshReview": {
+        "reviewer": "TDfrecords",
+        "submittedAtUtc": "2026-10-26T07:25:59Z",
+        "state": "APPROVED root-reported fresh review"
+      }
+    },
+    "publishedParentClient": {
+      "rootObservedHttpStatus": 200,
+      "bundle": "https://www.tdfrecords.net/assets/index-BbZYQAQh.js",
+      "bundleSha256": "c26ca054054eb8f7e03a19c37e608bb02c9733dea22dd0b83128abdae431878c",
+      "embeddedCommit": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+      "results": "/private/tmp/tdf-audio-published-client-20261026/results.json",
+      "resultsSha256": "91bf5f4d9a874adb03a34702dff82ad60b3b80506f01f3ee8cfc581d14e4d36f",
+      "finishedAt": "2026-10-26T15:26:20.006Z",
+      "status": "VERIFIED-published-Chromium-native-decoding-with-synthetic-business-and-media",
+      "cases": [
+        {
+          "mode": "desktop",
+          "selectedRecordingOnly": true,
+          "playbackPersistsAcrossNavigation": true,
+          "nativePause": true,
+          "nativeResume": true,
+          "nextTrackDecodes": true,
+          "pageErrors": []
+        },
+        {
+          "mode": "mobile-web",
+          "selectedRecordingOnly": true,
+          "playbackPersistsAcrossNavigation": true,
+          "nativePause": true,
+          "nativeResume": true,
+          "nextTrackDecodes": true,
+          "pageErrors": []
+        }
+      ],
+      "harnessScope": "Production music_releases.public remains false. This is a counterfactual client-only check with synthetic successful catalog/access responses, not a delivered real-user music journey. Published canonical web with all API/auth/catalog/delivery metadata intercepted synthetic. Media bytes are injected silent WAV fixtures decoded by the real Chromium engine. No media prototype, playback clock or play/pause method replaced. External requests blocked. No real account, rights/territory authorization, provider, CDN transport, physical device or native-store acceptance claim.",
+      "syntheticSilentWavSha256": "7f81ab7656af6047b5324dece71b552ff3b24534c920e727c321cdff8f99845d",
+      "productionBusinessWrites": false,
+      "provenanceDirectory": "/private/tmp/tdf-audio-published-client-20261026",
+      "priorHarnessFailure": "Original separate-owner probe was PARTIAL due to a harness ReferenceError. Root corrected its own copy to pass the argument explicitly; no application code changed. This corrected harness result does not erase the original failure."
+    },
+    "productionReadonlySnapshot": {
+      "path": "/private/tmp/tdf-audio-production-readonly-20261026-v1.json",
+      "sha256": "da5321c6332fb6c40c5be0ae3f7d939644edefe74051b816600829f1887475a0",
+      "observedAt": "2026-10-26T07:06:13.603Z",
+      "inspectorSourceRevision": "744e75fcd2d0ec74e988436b2ccbad7c9cea5eaa",
+      "sourceWorktreeDirty": false,
+      "apiCommit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+      "appliedMigrationCount": 213,
+      "musicFlags": "All music_releases.* FALSE per root read-only inspection; published harness also records public music disabled. No activation performed or inferred."
+    },
+    "actualAuthorizedUploadToPlayback": "UNVERIFIED",
+    "backendMusicActivation": "NOT_PERFORMED_OR_CLAIMED"
   }
 }
