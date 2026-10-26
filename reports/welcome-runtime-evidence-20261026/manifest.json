@@ -1,0 +1,43 @@
+{
+  "preparedAt": "2026-10-26T02:46:53.793977+00:00",
+  "status": "PREPARED-NOT-EXECUTED",
+  "source": "/private/tmp/tdf-welcome-main-integration-20261026",
+  "expectedSource": "600db4d99b576aeda53bac416a2644545f3d9ed3",
+  "binary": "/private/tmp/tdf-activation-220-binary-20261026/tdf-hq-exe",
+  "binarySha256": "577f3c1e045e73a8d8489ee557d7b5f856f59fa9d729d3b83cc1b8ef96cbbc6a",
+  "binaryQualifiedSource": "f9ee2199273471a12cfb95da95bc5503fe51ac79",
+  "ports": {
+    "postgres": 55578,
+    "api": 18819,
+    "web": 4289
+  },
+  "database": "tdf_welcome_20261026_test",
+  "originalPacketSha256": {
+    "runtime.mjs": "9b97cdb8bf81fc094c5ad8dd7694a606aef79fb5d68c97dd360e6cb32d9ca8a4",
+    "rehearsal.mjs": "11baebc6db2baf65e9f113d1c43d21e8345d70a7e48003b15f9802dcbcbe24e0",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "copySha256": {
+    "run.py": "6d2ad7bcc61de405762631a003c87c6b519123206ea25cce0040c53aff8c323e",
+    "runtime.mjs": "2d29b9c010771040d793519baf38ffb70927dea53467bc2bafbfece343dfa156",
+    "rehearsal.mjs": "30fb75c9bcb7b91c4a41656f3b1c88716afd83224dac71be422bae4ba0102063",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "scope": "Synthetic public welcome and positive artist/fan activation only. Original persistence/upload/save-recovery/successful-logout assertions retained. No 616 failed-logout assertions, no human or provider claim; manual privacy hold remains.",
+  "sourceWorktreeStatusObserved": [
+    "?? node_modules",
+    "?? tdf-hq-ui/node_modules"
+  ],
+  "command": [
+    "python3",
+    "/private/tmp/tdf-welcome-runtime-20261026/run.py",
+    "--mode",
+    "rehearsal",
+    "--source",
+    "/private/tmp/tdf-welcome-main-integration-20261026",
+    "--expected-source",
+    "600db4d99b576aeda53bac416a2644545f3d9ed3",
+    "--binary",
+    "/private/tmp/tdf-activation-220-binary-20261026/tdf-hq-exe"
+  ]
+}

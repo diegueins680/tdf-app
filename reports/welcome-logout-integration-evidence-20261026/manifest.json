@@ -1,0 +1,40 @@
+{
+  "preparedAt": "2026-10-26T04:32:48.831897+00:00",
+  "status": "PREPARED-NOT-EXECUTED",
+  "source": "/private/tmp/tdf-welcome-main-integration-20261026",
+  "expectedSource": "ffa52950bc6157de4f1cd672742bdf97428b2a61",
+  "welcomeSource": "d8191612b1d8e185e997a4ecf72c2d23ed83fba9",
+  "publishedPrivacySource": "42b9fbe8dbcd922755c4b23d85a55e030483d5cf",
+  "protectedBase": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+  "binary": "/private/tmp/tdf-alert-parity-repro-20261025/bin-post551/tdf-hq-exe",
+  "binaryQualifiedSource": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+  "binarySha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+  "originalPrivacyDriverSha256": "df5dd2e15d9fb9c902543142e80b63c06b453bb769c25e692884f9a33bf8437d",
+  "sourceWorktreeStatusObserved": [
+    "?? node_modules",
+    "?? tdf-hq-ui/node_modules"
+  ],
+  "copySha256": {
+    "run.py": "b4f9c92a9b848c84e18e2c8f7b9994f44668b29288ed24d152698a80ba406f6f",
+    "runtime.mjs": "2d29b9c010771040d793519baf38ffb70927dea53467bc2bafbfece343dfa156",
+    "rehearsal.mjs": "016a5c0e9bf158b27a1fc4e4358f9955ed3e95d49adcafc2dd17376bff879eda",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "changesFromPriorPackets": "Owner privacy driver unchanged except local runtime import, additional anonymous welcome navigation/photo/anchors and fan welcome screenshots, plus separate welcome result. Full privacy/draft assertion blocks preserved byte-for-byte. Own221 runner preserves isolation/cleanup and adds published42 ancestry/source guards, Node22 guard and privacy outcome capture.",
+  "humanParticipants": 0,
+  "productionWrites": false,
+  "manualMode": false,
+  "humanPilotHeld": true,
+  "command": [
+    "python3",
+    "/private/tmp/tdf-welcome-logout-runtime-20261026/run.py",
+    "--mode",
+    "rehearsal",
+    "--source",
+    "/private/tmp/tdf-welcome-main-integration-20261026",
+    "--expected-source",
+    "ffa52950bc6157de4f1cd672742bdf97428b2a61",
+    "--binary",
+    "/private/tmp/tdf-alert-parity-repro-20261025/bin-post551/tdf-hq-exe"
+  ]
+}

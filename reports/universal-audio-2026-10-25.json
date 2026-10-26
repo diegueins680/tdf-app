@@ -532,5 +532,46 @@
     "receipt": "/private/tmp/tdf-player-account-audit-20261026/receipt.json",
     "receiptSha256": "d07311da523daad8996b8719654994b37ebf3c115fb3410e75c71ae05c0dd61b",
     "remediation": "separate owner-scoped listening-state increment in progress; retain device preferences, reject mismatched/untagged queues"
+  },
+  "finalIntegrationBaseline": {
+    "main": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+    "mainRequirementCount": 144,
+    "foreignMainObjectsExact": 143,
+    "intentionalOwnedPlayerContractDelta": true,
+    "catalog": "all1330main objects unchanged plus9reviewed audio technical constants",
+    "backendSQLManifestDependenciesMobile": "byte-identical main;221migrations",
+    "audioRuntime": "unchanged from fully qualified7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+    "previousFullyQualifiedCI": {
+      "head": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+      "runId": 40274900753,
+      "conclusion": "success",
+      "nativeJob": 121416409080,
+      "passedNativePlusRegressionCases": 40,
+      "realMediaCases": 35,
+      "declaredMockedCases": 5,
+      "log": "/private/tmp/tdf-audio-native-7de-hosted.log"
+    },
+    "newCandidateCIReview": "required after publication",
+    "deployment": "not performed",
+    "focusedCombined": {
+      "testsPassed": 90,
+      "suites": 6,
+      "runtime": "Node22.14.0",
+      "log": "/private/tmp/tdf-audio-final-main-focused.log",
+      "scope": "player/page/client/logout/personal-data regressions on final main reconciliation; not owner-isolation fix"
+    }
+  },
+  "currentProductionReadOnlyObservation": {
+    "observedAt": "2026-10-26T07:06:13.603Z",
+    "collectorSource": "744e75fcd2d0ec74e988436b2ccbad7c9cea5eaa",
+    "collectorWorktreeDirty": false,
+    "backendCommit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+    "migrationCount": 213,
+    "localPrivateReceipt": "/private/tmp/tdf-audio-production-readonly-20261026-v1.json",
+    "receiptSha256": "da5321c6332fb6c40c5be0ae3f7d939644edefe74051b816600829f1887475a0",
+    "readOnly": true,
+    "businessWrites": 0,
+    "readinessClaim": false,
+    "publicProbes": "health200 dbok/statusok; music/releases404; cause not established"
   }
 }
