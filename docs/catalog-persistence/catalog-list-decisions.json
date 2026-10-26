@@ -345,6 +345,18 @@
       "newSyntheticFixtureId": "134cf0fa5a9bb176f981",
       "scope": "Technical API method names and synthetic test DTO only; no product, payment or release approval."
     },
+    "ledgerReadinessIntegration": "docs/catalog-persistence/ledger-readiness-reconciliation-20261021.json",
+    "ledgerSnapshotReadinessIntegration": "docs/catalog-persistence/ledger-snapshot-readiness-reconciliation-20261021.json",
+    "ledgerCombinedIntegration": "docs/catalog-persistence/ledger-combined-reconciliation-20261022.json",
+    "termsHistoryAppendOnly": "docs/catalog-persistence/terms-history-append-only-reconciliation-20261022.json",
+    "ledgerMusicMainIntegration": {
+      "document": "docs/catalog-persistence/ledger-music-main-reconciliation-20261023.json",
+      "currentManifestDecisionId": "a1eb1e750e7543b88fe1",
+      "retiredManifestIds": [
+        "3f336173e03f10fc023c",
+        "2b073f20afd2f3798b1e"
+      ]
+    },
     "featureMenuCoverage20261025": {
       "sourceMain": "512d590e902760130f54ca2927620c001a754b85",
       "successors": [
@@ -398,6 +410,112 @@
       "previousDecisionCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
       "protectedMainManifestCanonicalSha256": "7b3616b6095436eb7eb46038d6ccaa289ff4cb22e602960c06d971bf915add86",
       "successorDecisionId": "c94cd70c1272ec9ede1b"
+    },
+    "directoryFinancialMainIntegration": {
+      "sourceMain": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+      "sourceAlertBranch": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+      "protectedMainMigrationCount": 220,
+      "protectedMainManifestCanonicalSha256": "c025cf3d2ab92f64bfb92d3656384d7fe0da6919457440d3c24301d7f6b8f232",
+      "currentDecisionId": "8229b8202552298c955e",
+      "reason": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
+      "decisions": [
+        {
+          "id": "c94cd70c1272ec9ede1b",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P0-cutover",
+          "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+          "justification": "The 214-entry deployment execution registry preserves protected main 9a927fa390066f43cc27c872800bf1b0412e166e as its exact 213-entry prefix and appends one non-geographic directory saved-search parity migration. All213 shared entry objects, introduction anchors and historical SQL bytes remain unchanged. The new introduction anchor is eb2f71d62740783369a6eb2a6d35fc024484cb71; subsequent unpublished candidate corrections are reviewed separately. Disposable full-prefix/replay, exact rollback/reapply and authenticated application qualification are separate evidence; this classification authorizes no production application or activation.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decisions",
+          "reviewBatch": "directory-saved-search-parity-20261025",
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3,
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 214
+          }
+        },
+        {
+          "id": "b7cc47848f3f9882770f",
+          "classification": "security-system-registry",
+          "disposition": "retain-reviewed-deployment-manifest",
+          "specializedModel": "production migration manifest and applied migration ledger",
+          "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+          "justification": "The 220-entry deployment execution registry preserves all 219 migration objects and historical SQL bytes from financial parent 59df1dd2a17952b906cf89d1c5502725d51239e1 as its exact ordered prefix, then adds only the ledger relation-lookup guard introduced by ancestor 9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391. This technical review preserves earlier immutable catalog provenance and authorizes no production execution, provider activation or runtime privilege change. Full-schema controls and independent PR review remain separate obligations.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decisions",
+          "reviewBatch": "ledger-namespace-technical-review-20261025",
+          "sourceReviewReferences": [
+            {
+              "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+              "sourceEntry": {
+                "id": "3f336173e03f10fc023c"
+              },
+              "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+              "sourceEntry": {
+                "id": "2b073f20afd2f3798b1e"
+              },
+              "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+              "sourceEntry": {
+                "id": "a1eb1e750e7543b88fe1"
+              },
+              "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            }
+          ],
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3,
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 220
+          }
+        }
+      ],
+      "preservedDecisionCanonicalSha256": {
+        "3f336173e03f10fc023c": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+        "c94cd70c1272ec9ede1b": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+        "b7cc47848f3f9882770f": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28"
+      },
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+          "sourceEntry": {
+            "id": "b7cc47848f3f9882770f"
+          },
+          "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+          "sourceEntry": {
+            "id": "c94cd70c1272ec9ede1b"
+          },
+          "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ]
     }
   },
   "decisions": [
@@ -2809,32 +2927,6 @@
       "reviewed": true
     },
     {
-      "id": "e1630a13682bf0fee90d",
-      "classification": "security-system-registry",
-      "disposition": "consumer-update",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P3-consumer",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/SidebarNav.test.tsx",
-        "line": 10
-      },
-      "reviewBatch": "feature-menu-coverage-2026-10-25",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "e4c7ffe2a8fc0a5752d0",
-        "classification": "security-system-registry",
-        "disposition": "consumer-update",
-        "specializedModel": "navigation_item, navigation_item_permission",
-        "priority": "P3-consumer",
-        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-        "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-        "reviewed": true
-      }
-    },
-    {
       "id": "d0b457848a6b6c374e45",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
@@ -2843,100 +2935,6 @@
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
       "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
       "reviewed": true
-    },
-    {
-      "id": "300853c537ba6401822a",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "line": 142
-      },
-      "reviewBatch": "feature-menu-coverage-2026-10-25",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "b180210a3602cfc0bf52",
-        "classification": "dynamic-business-catalog",
-        "disposition": "migrate-and-remove-authority-from-code",
-        "specializedModel": "navigation_item, navigation_item_permission",
-        "priority": "P1-cross-platform",
-        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-        "reviewed": true
-      }
-    },
-    {
-      "id": "a00fcee87036af5dfa95",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "line": 166
-      },
-      "reviewBatch": "feature-menu-coverage-2026-10-25",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "9fca63dce34f8900c6a4",
-        "classification": "dynamic-business-catalog",
-        "disposition": "migrate-and-remove-authority-from-code",
-        "specializedModel": "navigation_item, navigation_item_permission",
-        "priority": "P1-cross-platform",
-        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-        "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target.",
-        "reviewed": true,
-        "evidence": {
-          "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-          "line": 163
-        },
-        "reviewBatch": "events-nav-carousel-2026-10-08",
-        "reviewMethod": "successor-of-reviewed-decision",
-        "previousDecision": {
-          "id": "daaade88abcc60232974",
-          "classification": "dynamic-business-catalog",
-          "disposition": "migrate-and-remove-authority-from-code",
-          "specializedModel": "navigation_item, navigation_item_permission",
-          "priority": "P1-cross-platform",
-          "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-          "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-          "reviewed": true
-        }
-      }
-    },
-    {
-      "id": "ce1e609baf902df58b08",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "line": 190
-      },
-      "reviewBatch": "feature-menu-coverage-2026-10-25",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "ef8764c4421158cb1be7",
-        "classification": "dynamic-business-catalog",
-        "disposition": "migrate-and-remove-authority-from-code",
-        "specializedModel": "navigation_item, navigation_item_permission",
-        "priority": "P1-cross-platform",
-        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-        "reviewed": true
-      }
     },
     {
       "id": "3a83c9975e291400c7d5",
@@ -2992,32 +2990,6 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
-    },
-    {
-      "id": "dfea445b31325dad4cf6",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "line": 251
-      },
-      "reviewBatch": "feature-menu-coverage-2026-10-25",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "d98b80c87ee6f14c72ec",
-        "classification": "dynamic-business-catalog",
-        "disposition": "migrate-and-remove-authority-from-code",
-        "specializedModel": "navigation_item, navigation_item_permission",
-        "priority": "P1-cross-platform",
-        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-        "reviewed": true
-      }
     },
     {
       "id": "61e76da1f53c6a0f9414",
@@ -18054,25 +18026,6 @@
       }
     },
     {
-      "id": "c94cd70c1272ec9ede1b",
-      "classification": "genuine-technical-constant",
-      "disposition": "explicit-allowlist",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P0-cutover",
-      "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
-      "justification": "The 214-entry deployment execution registry preserves protected main 9a927fa390066f43cc27c872800bf1b0412e166e as its exact 213-entry prefix and appends one non-geographic directory saved-search parity migration. All213 shared entry objects, introduction anchors and historical SQL bytes remain unchanged. The new introduction anchor is eb2f71d62740783369a6eb2a6d35fc024484cb71; subsequent unpublished candidate corrections are reviewed separately. Disposable full-prefix/replay, exact rollback/reapply and authenticated application qualification are separate evidence; this classification authorizes no production application or activation.",
-      "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "directory-saved-search-parity-20261025",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 214
-      }
-    },
-    {
       "id": "134cf0fa5a9bb176f981",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -18085,6 +18038,237 @@
       "evidence": {
         "file": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
         "line": 15
+      }
+    },
+    {
+      "id": "cf264a325e5b4853ecac",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the synthetic child command can invalidate the bounded readiness-wait regression.",
+      "justification": "Node CLI arguments deliberately start a stalled synthetic child to verify timeout and process cleanup. This is test-process plumbing, not a selectable service catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/__tests__/test-process-session.test.mjs",
+        "line": 33
+      },
+      "reviewBatch": "checkout-session-readiness-2026-10-14"
+    },
+    {
+      "id": "8229b8202552298c955e",
+      "classification": "security-system-registry",
+      "disposition": "retain-reviewed-deployment-manifest",
+      "specializedModel": "production migration manifest and applied migration ledger",
+      "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+      "justification": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "directory-financial-main-integration-20261026",
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+          "sourceEntry": {
+            "id": "3f336173e03f10fc023c"
+          },
+          "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+          "sourceEntry": {
+            "id": "2b073f20afd2f3798b1e"
+          },
+          "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+          "sourceEntry": {
+            "id": "a1eb1e750e7543b88fe1"
+          },
+          "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+          "sourceEntry": {
+            "id": "b7cc47848f3f9882770f"
+          },
+          "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+          "sourceEntry": {
+            "id": "c94cd70c1272ec9ede1b"
+          },
+          "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 221
+      }
+    },
+    {
+      "id": "e1630a13682bf0fee90d",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-consumer",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.test.tsx",
+        "line": 10
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "e4c7ffe2a8fc0a5752d0",
+        "classification": "security-system-registry",
+        "disposition": "consumer-update",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-consumer",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "300853c537ba6401822a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 142
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "b180210a3602cfc0bf52",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "a00fcee87036af5dfa95",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 166
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "9fca63dce34f8900c6a4",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+          "line": 163
+        },
+        "reviewBatch": "events-nav-carousel-2026-10-08",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "daaade88abcc60232974",
+          "classification": "dynamic-business-catalog",
+          "disposition": "migrate-and-remove-authority-from-code",
+          "specializedModel": "navigation_item, navigation_item_permission",
+          "priority": "P1-cross-platform",
+          "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+          "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+          "reviewed": true
+        }
+      }
+    },
+    {
+      "id": "ce1e609baf902df58b08",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 190
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "ef8764c4421158cb1be7",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "dfea445b31325dad4cf6",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 251
+      },
+      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "d98b80c87ee6f14c72ec",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
       }
     }
   ]

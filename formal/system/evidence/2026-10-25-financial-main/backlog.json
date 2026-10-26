@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "sourceCandidate": "b71ac3fad0fc86195ceea87c09c45b16847875f8",
+  "prioritization": "Business impact, severity, exposure, dependency centrality and feasibility; uncertainty and verification cost remain explicit. This is not a numerical correctness percentage.",
+  "obligations": [
+    {
+      "id": "BKP-FIN-ADMISSION-001",
+      "priority": "P0",
+      "status": "PARTIAL",
+      "requirementIds": ["SYS-MONEY-003", "PAY-RETRY-001", "PAY-CHECKOUT-002", "LEGAL-CONSENT-001"],
+      "task": "Finish final-head CI and independent protected-main review of financial PR #551; merge normally only when every applicable gate is satisfied.",
+      "evidence": "The qualified candidate closes concrete financial and verification counterexamples; its prior children passed independent review and CI. Their merge into the draft is not a main merge or deployment.",
+      "confidence": "High for the named executed boundaries; full requirements remain unproven.",
+      "blocker": "Fresh final-head protected-main checks and approval."
+    },
+    {
+      "id": "BKP-LEDGER-IDENTITY-001",
+      "priority": "P0",
+      "status": "UNKNOWN",
+      "requirementIds": ["SYS-MONEY-003", "PAY-RETRY-001"],
+      "task": "Establish intended posted transaction-header/source-key immutability and test its relationship to payment/refund replay and reconciliation.",
+      "evidence": "The posting trigger targets status/reversal changes. Posted entry immutability and balance do not by themselves establish immutable header attribution or causal exactly-once posting.",
+      "confidence": "Unconfirmed concern; no additional product defect is counted. Require authoritative rules and concrete executable counterexamples before repair.",
+      "verification": "Owned full-schema role tests, actual store replays and a source-key state model; do not infer duplicate charges from header mutability alone."
+    },
+    {
+      "id": "BKP-FIN-FAULTS-001",
+      "priority": "P0",
+      "status": "PARTIAL",
+      "requirementIds": ["PAY-RETRY-001"],
+      "task": "Extend capture/refund/reconciliation fault injection across crashes, out-of-order provider events and whole-transaction serialization retries.",
+      "evidence": "Observed store schedules, unknown-outcome fences and provider fixture retries cover named cases; they are not all-provider, unbounded recovery or settlement equivalence.",
+      "confidence": "Existing finite safety evidence; liveness and complete cross-service correspondence remain unresolved."
+    },
+    {
+      "id": "BKP-AUTH-PRIVILEGES-001",
+      "priority": "P0",
+      "status": "UNKNOWN",
+      "requirementIds": ["SYS-MONEY-003"],
+      "task": "Obtain authoritative runtime/DDL role and trusted-schema privilege evidence, and audit actor/tenant ownership and concurrent revocation at protected operations.",
+      "evidence": "The namespace counterexample uses a non-owner without public CREATE. Production role policy and table-owner bypass are not established by that fixture or by three selected authorization predicates.",
+      "confidence": "Explicit environmental gap; no production privilege audit was performed."
+    },
+    {
+      "id": "BKP-CI-COVERAGE-001",
+      "priority": "P1",
+      "status": "PARTIAL",
+      "requirementIds": ["SYS-MONEY-003", "SYS-API-002"],
+      "task": "Extend affected-property selection and evidence validation to other financial harness families and their dependencies; independently test omitted-path and stale-artifact mutations.",
+      "evidence": "The nine declared ledger/schema/provider/expiry paths are regression-protected. They are not an exhaustive dependency graph for all root scripts or all critical properties.",
+      "confidence": "High for the named selector cases; broader coverage remains unverified."
+    },
+    {
+      "id": "BKP-MUSIC-FIXTURE-001",
+      "priority": "P1",
+      "status": "UNKNOWN",
+      "requirementIds": [],
+      "task": "Audit the duplicated legacy Music fixture URL guards against the shared parsed-authority guard, including credential/userinfo, query, port and redirected-host cases.",
+      "evidence": "The owned authenticated URL was rejected before connection; publication and purchase helpers use different prefix grammars. The canonical wrapper separately validates its destination.",
+      "confidence": "No new product defect counted; verify exact acceptance and no-connection behavior before changing a safety control."
+    },
+    {
+      "id": "BKP-DEPLOY-DRIFT-001",
+      "priority": "P0",
+      "status": "UNKNOWN",
+      "requirementIds": ["SYS-MONEY-003"],
+      "task": "Before a separately approved financial rollout, validate actual historical ledger state, migration/backup safety and the compatible recovery image; retain additive ledger guards through application rollback.",
+      "evidence": "Fresh and synthetic legacy fixtures do not establish production data integrity. Invalid posted history must block migration, not be silently rewritten.",
+      "confidence": "No deployed correspondence, historical reconstruction or production restore claim."
+    }
+  ]
+}
