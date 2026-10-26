@@ -204,7 +204,11 @@ remains outside the sequential observation boundary.
 
 The [release intent journal](../../formal/system/release-journal.md) persists ordered
 intent and rejects uncertain retries in one fixed global control directory. It
-does not yet coordinate or verify production effects.
+admits a subsequent release only through a separate terminal-tip compare-and-set,
+appending the fresh plan without changing historical records or the permanent
+lock. Pending state and partial publication continue to block admission. It
+does not yet coordinate or verify production effects; source integration does
+not authorize invoking this library against the production journal.
 
 The guarded routine Hetzner release executor remains an open implementation and
 verification obligation. Direct invocation of `scripts/production-release.mjs`
