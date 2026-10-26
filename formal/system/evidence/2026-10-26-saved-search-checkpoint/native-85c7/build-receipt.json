@@ -1,0 +1,15 @@
+{
+  "source": "85c7c4b32906ed6e2e63627e2854a9e78625d115",
+  "command": [
+    "stack",
+    "build",
+    "--force-dirty",
+    "tdf-hq:exe:tdf-hq-exe"
+  ],
+  "exitCode": 0,
+  "stack": "3.7.1",
+  "ghc": "9.10.3",
+  "resolver": "lts-24.42",
+  "binarySha256": "3f4591db8f8567db16a327f89b10f1c04ab1fe9dfa998ef9defd9f7e6248c9dc",
+  "logSha256": "ca48179521a3925e2d0f6e17e3a5b206d4946a11b4ba9919441a90ccaf0d1406"
+}
