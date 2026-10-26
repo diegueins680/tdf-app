@@ -26,3 +26,7 @@ The existing `BOOK-SERVICE-PICKER-001` failure/recovery contract is extended exp
 6. The new warning and button pass scoped axe serious/critical checks; the scheduling page fits 320 CSS pixels. Browser coverage is synthetic and does not establish human usability, provider correctness or production task success.
 
 Test and delivery receipts are recorded separately with source identities. Implemented, tested, merged, deployed and production-verified remain distinct states.
+
+## Safari resize verification
+
+The first full CI reported 593 passes, 22 skips and one WebKit desktop overflow failure. Its trace and screenshot still show the desktop stepper immediately after resizing to 320px. The test now waits for the existing mobile step label before applying the unchanged zero-overflow assertion. No application code, tolerance, timeout, retry policy or other assertion changed. The original failure and local requalification retain separate source identities in reports/booking-catalog-safari-2026-10-26.json; fresh Linux WebKit CI remains required.
