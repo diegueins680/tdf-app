@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "Focused P1 release catalog search/pagination; universal search mission incomplete",
-  "foundation": "6e61811c6cac3da153cd47a28ad05a7b3923b7d7",
+  "foundation": "464d49dcdf9b72c6670cb4bb6ea1716d6b7e3429",
   "baseline": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
   "combinedInitialCommit": "99ca66b07a7c9ef851d2dfb80199025b3307fc19",
   "sourceFingerprints": {
@@ -249,5 +249,11 @@
     "merge": "not performed",
     "deployment": "not performed",
     "productionBusinessWrites": 0
+  },
+  "foundationRefresh": {
+    "normalMerge": true,
+    "preservedRequirements": 140,
+    "additionalRequirement": "MEDIA-MUSIC-DISCOVERY-001",
+    "sqlRunnerAndHandler": "unchanged from integrated four-group PostgreSQL execution"
   }
 }

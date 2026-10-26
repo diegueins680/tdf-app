@@ -8633,7 +8633,8 @@
         "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql",
         "tdf-mobile/src/navigation/notificationTarget.ts",
         "playwright.music-native.config.mjs",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "scripts/run-native-audio-tests.sh"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",

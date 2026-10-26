@@ -8634,7 +8634,8 @@
         "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql",
         "tdf-mobile/src/navigation/notificationTarget.ts",
         "playwright.music-native.config.mjs",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "scripts/run-native-audio-tests.sh"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -11944,7 +11945,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "8eb5cbab123f4ae31c196f4b4f5d22b2d8d027db7613dcfa702889bdefd23343",
+    ".github/workflows/ci.yml": "7dc896f92976373583e9bac97b0d9e1ca4f34a6b4f72c70b809b14fd9c4c4910",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -12275,7 +12276,7 @@
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/inspect-runtime.py": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
-    "ops/hetzner/isolated-application-canary.py": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
+    "ops/hetzner/isolated-application-canary.py": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
     "ops/hetzner/recovery-files.py": "09c07444444b498d9fe5f9696e8ebec9b3010cc2453c59e72de74ccd60cdcb84",
@@ -12426,6 +12427,7 @@
     "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
     "scripts/run-music-release-worker-once.sh": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
     "scripts/run-music-release-worker.sh": "521e52bb3b059c86c17765100957bacbfcf66d1575978b710bc6dc22e916cc5b",
+    "scripts/run-native-audio-tests.sh": "89be3522a4c6fb7e4352bc8799edb2aee64de19dac7a95d67efe144395ed48aa",
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -12459,7 +12461,7 @@
     "scripts/test-index-declarations.sh": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
-    "scripts/test-isolated-application-canary.py": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
+    "scripts/test-isolated-application-canary.py": "3b50fccf75e7ae6e11d2765b07b02154239a8ec8295022f7c3c6042c7a4b9078",
     "scripts/test-ledger-posting.sh": "b838a96f759e1d0650cd67180a1847649965f5aff5b17c57896a4988096d3cd9",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
@@ -21163,6 +21165,12 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/run-native-audio-tests.sh": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/player/PlayerProvider.test.tsx": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
@@ -23346,7 +23354,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "8eb5cbab123f4ae31c196f4b4f5d22b2d8d027db7613dcfa702889bdefd23343",
+      "sha256": "7dc896f92976373583e9bac97b0d9e1ca4f34a6b4f72c70b809b14fd9c4c4910",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24132,7 +24140,7 @@
     {
       "id": "SURFACE-cf51ae79e61fc20d",
       "path": "ops/hetzner/isolated-application-canary.py",
-      "sha256": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
+      "sha256": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27097,6 +27105,18 @@
       ]
     },
     {
+      "id": "SURFACE-5ecb45f4a99c5361",
+      "path": "scripts/run-native-audio-tests.sh",
+      "sha256": "89be3522a4c6fb7e4352bc8799edb2aee64de19dac7a95d67efe144395ed48aa",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-e62b469d42a02d7a",
       "path": "scripts/scan-music-legacy-releases.sh",
       "sha256": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
@@ -28294,7 +28314,7 @@
     {
       "id": "SURFACE-b6d8e853f9192b94",
       "path": "scripts/test-isolated-application-canary.py",
-      "sha256": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
+      "sha256": "3b50fccf75e7ae6e11d2765b07b02154239a8ec8295022f7c3c6042c7a4b9078",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51820,7 +51840,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "23fa4d1c294d7cb1373c60f31e9498b349914132054aac823ae30815e455205a",
+      "sourceSha256": "5a217bea09995d995fc5f40a2e8eef471bad07d6787b34d308387c16ad4bf248",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -51848,7 +51868,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "23fa4d1c294d7cb1373c60f31e9498b349914132054aac823ae30815e455205a",
+      "sourceSha256": "5a217bea09995d995fc5f40a2e8eef471bad07d6787b34d308387c16ad4bf248",
       "definition": {
         "states": [
           "absent",
@@ -51878,7 +51898,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "23fa4d1c294d7cb1373c60f31e9498b349914132054aac823ae30815e455205a",
+      "sourceSha256": "5a217bea09995d995fc5f40a2e8eef471bad07d6787b34d308387c16ad4bf248",
       "definition": {
         "export": [
           "queued",

@@ -356,6 +356,7 @@
       "scripts/run-instagram-follower-invite-2026-09-09.sh",
       "scripts/run-music-release-worker-once.sh",
       "scripts/run-music-release-worker.sh",
+      "scripts/run-native-audio-tests.sh",
       "scripts/scan-music-legacy-releases.sh",
       "scripts/set-loop-github-polling.mjs",
       "scripts/social/ApiContractSpec.hs",
@@ -2720,7 +2721,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "8eb5cbab123f4ae31c196f4b4f5d22b2d8d027db7613dcfa702889bdefd23343",
+      "sha256": "7dc896f92976373583e9bac97b0d9e1ca4f34a6b4f72c70b809b14fd9c4c4910",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3110,7 +3111,7 @@
     {
       "id": "SURFACE-cf51ae79e61fc20d",
       "path": "ops/hetzner/isolated-application-canary.py",
-      "sha256": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
+      "sha256": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4698,6 +4699,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-5ecb45f4a99c5361",
+      "path": "scripts/run-native-audio-tests.sh",
+      "sha256": "89be3522a4c6fb7e4352bc8799edb2aee64de19dac7a95d67efe144395ed48aa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-e62b469d42a02d7a",
       "path": "scripts/scan-music-legacy-releases.sh",
       "sha256": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
@@ -5456,7 +5463,7 @@
     {
       "id": "SURFACE-b6d8e853f9192b94",
       "path": "scripts/test-isolated-application-canary.py",
-      "sha256": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
+      "sha256": "3b50fccf75e7ae6e11d2765b07b02154239a8ec8295022f7c3c6042c7a4b9078",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20675,7 +20682,7 @@
     },
     {
       "path": "docs/music-releases/catalog-discovery-delivery-2026-10-25.md",
-      "sha256": "09509e259043b33ed21f3be0d49a8c3080a90df9be995e0feeeb6aaf7c9fba7c",
+      "sha256": "d88c45eb72a4c017770492835570aaa7122bef9e84b9f24890ef226bf436e42e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20864,7 +20871,7 @@
     },
     {
       "path": "docs/music-releases/universal-audio-delivery-2026-10-25.md",
-      "sha256": "980195506509017fc8b838bbfebb91d1e3d8a3dd0c32f0a5d07189837c093608",
+      "sha256": "ba0735704e15181d78885a338f3f78593777b4303038e2fbc9cb5f52de735586",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27094,7 +27101,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "23fa4d1c294d7cb1373c60f31e9498b349914132054aac823ae30815e455205a",
+      "sha256": "5a217bea09995d995fc5f40a2e8eef471bad07d6787b34d308387c16ad4bf248",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
