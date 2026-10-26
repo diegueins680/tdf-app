@@ -1,6 +1,6 @@
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMetaTags } from '../hooks/useMetaTags';
 import {
@@ -26,6 +26,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Fans } from '../api/fans';
+import { reconcileFollowState } from '../features/fans/reconcileFollowState';
 import { musicReleases, type MusicPublicReleaseSummary } from '../api/musicReleases';
 import type { ArtistReleaseDTO } from '../api/types';
 import { getActiveSession, useSession } from '../session/SessionContext';
@@ -53,6 +54,7 @@ interface FollowCommand {
   resume: boolean;
   isCurrent: () => boolean;
   ownsProfile: () => boolean;
+  ownsSession: () => boolean;
 }
 
 type ArtistPublicPageDisplayContract = Readonly<{
@@ -186,6 +188,7 @@ export default function ArtistPublicPage() {
   const hasToken = Boolean(session && safeArtistId(viewerId) && !sessionLoading);
   const mountedRef = useRef(true);
   const pendingRef = useRef(false);
+  const [recoveredCommand, setRecoveredCommand] = useState<FollowCommand | null>(null);
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
@@ -247,6 +250,28 @@ export default function ArtistPublicPage() {
     return followsQuery.data?.some((follow) => follow.ffArtistId === artistId) ?? false;
   }, [artistId, followsQuery.data]);
 
+  const acceptConfirmedState = (command: FollowCommand) => {
+    if (!command.ownsProfile()) return;
+    if (!command.wasFollowing) {
+      // The completion endpoint checks actual server event evidence and only
+      // its newlyCompleted receipt can emit first-value analytics.
+      void captureFirstValueOnce(getAnalyticsClient(), command.viewerId, 'artist_followed', undefined, command.ownsProfile)
+        .catch(() => undefined);
+    }
+    if (command.resume && !command.wasFollowing) clearResume();
+  };
+
+  const recoverFollow = async (command: FollowCommand) => {
+    const following = await reconcileFollowState(qc, command);
+    if (following === null) return;
+    void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+    void qc.invalidateQueries({ queryKey: ['public-artist', command.segment] });
+    if (following !== command.wasFollowing && command.ownsProfile()) {
+      setRecoveredCommand(command);
+      acceptConfirmedState(command);
+    }
+  };
+
   const followMutation = useMutation({
     mutationFn: async (command: FollowCommand) => {
       if (!command.isCurrent()) throw new Error('Follow context changed');
@@ -261,13 +286,9 @@ export default function ArtistPublicPage() {
       void qc.invalidateQueries({ queryKey: ['fan-follows', command.viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
       void qc.invalidateQueries({ queryKey: ['public-artist', command.segment] });
-      if (!command.isCurrent()) return;
-      if (!command.wasFollowing) {
-        void captureFirstValueOnce(getAnalyticsClient(), command.viewerId, 'artist_followed', undefined, command.ownsProfile)
-          .catch(() => undefined);
-      }
-      if (command.resume && !command.wasFollowing) clearResume();
+      acceptConfirmedState(command);
     },
+    onError: (_error, command) => recoverFollow(command),
     onSettled: () => { pendingRef.current = false; },
   });
 
@@ -283,7 +304,8 @@ export default function ArtistPublicPage() {
     pendingRef.current = true;
     followMutation.mutate({
       artistId, viewerId, segment, wasFollowing: isFollowing, resume: resumeFollow,
-      ownsProfile, isCurrent: () => ownsProfile() && viewRef.current.key === key,
+      ownsProfile, ownsSession: () => getActiveSession() === session,
+      isCurrent: () => ownsProfile() && viewRef.current.key === key,
     });
   };
 
@@ -295,7 +317,7 @@ export default function ArtistPublicPage() {
     params.delete('artistId');
     const search = params.toString();
     void navigate({ pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash }, { replace: true });
-  }, [followsQuery.isFetching, followsQuery.isSuccess, isFollowing, location.hash, location.pathname, location.search, navigate, resumeFollow, session]);
+  }, [followMutation.isPending, followsQuery.isFetching, followsQuery.isSuccess, isFollowing, location.hash, location.pathname, location.search, navigate, resumeFollow, session]);
 
   const artist = artistQuery.data ?? null;
   const releases = releasesQuery.data ?? [];
@@ -497,15 +519,22 @@ export default function ArtistPublicPage() {
             )}
             {hasToken && followsQuery.isError && (
               <Alert severity="warning" action={(
-                <Button onClick={() => { void followsQuery.refetch(); }} color="inherit" size="small">
+                <Button onClick={() => {
+                  const command = followMutation.variables;
+                  if (followMutation.isError && command?.ownsProfile()) {
+                    if (pendingRef.current) return;
+                    pendingRef.current = true;
+                    void recoverFollow(command).finally(() => { pendingRef.current = false; });
+                  } else void followsQuery.refetch();
+                }} color="inherit" size="small" disabled={followMutation.isPending || followsQuery.isFetching}>
                   {t('artistFollow.retry')}
                 </Button>
               )}>
                 {t('artistFollow.stateError')}
               </Alert>
             )}
-            {followMutation.isError && followMutation.variables?.isCurrent() && (
-              <Alert severity="error">{t('artistFollow.resumeError', { artist: artist.apDisplayName })}</Alert>
+            {followMutation.isError && followMutation.variables !== recoveredCommand && followMutation.variables?.isCurrent() && (
+              <Alert severity="error">{t('artistFollow.changeError')}</Alert>
             )}
             {canClaim && (
               <Alert

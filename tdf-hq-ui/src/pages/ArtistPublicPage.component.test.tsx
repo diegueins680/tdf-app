@@ -65,6 +65,7 @@ jest.unstable_mockModule('react-i18next', () => ({
       'artistFollow.resumeError': `No pudimos seguir a ${options?.artist ?? ''}. Revisa tu conexión e inténtalo de nuevo.`,
       'artistFollow.stateError': 'No pudimos comprobar si sigues a este artista.',
       'artistFollow.retry': 'Reintentar',
+      'artistFollow.changeError': 'No pudimos confirmar el cambio de seguimiento. Comprueba tu conexión y vuelve a intentarlo.',
     })[key] ?? key,
   }),
 }));
@@ -261,7 +262,7 @@ describe('ArtistPublicPage follow continuity', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Seguir ahora' }));
 
     expect(await screen.findByText(
-      'No pudimos seguir a Las Sintéticas. Revisa tu conexión e inténtalo de nuevo.',
+      'No pudimos confirmar el cambio de seguimiento. Comprueba tu conexión y vuelve a intentarlo.',
     )).toBeTruthy();
     expect(captureFirstValueMock).not.toHaveBeenCalled();
     expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe(
@@ -372,4 +373,69 @@ describe('ArtistPublicPage follow continuity', () => {
         : '/a/las-sinteticas?resume=follow&artistId=17');
     view.queryClient.clear();
   });
+
+  it.each([false, true])('reconciles the server state when a committed follow change loses its response (wasFollowing=%s)', async (wasFollowing) => {
+    sessionMock = { username: 'fan', displayName: 'Fan', roles: ['customer'], modules: [], partyId: 42 };
+    const follow = { ffArtistId: 17, ffArtistName: 'Las Sintéticas', ffStartedAt: '2026-10-26T06:00:00Z' };
+    let serverFollowing = wasFollowing;
+    listFollowsMock.mockImplementation(async () => serverFollowing ? [follow] : []);
+    const loseResponse = async () => { serverFollowing = !wasFollowing; throw new TypeError('Synthetic response lost after commit'); };
+    if (wasFollowing) unfollowMock.mockImplementationOnce(loseResponse);
+    else followMock.mockImplementationOnce(loseResponse);
+    const view = renderPage('/a/las-sinteticas?source=shared#bio');
+    const before = await screen.findByRole('button', { name: wasFollowing ? 'Dejar de seguir a Las Sintéticas' : 'Seguir a Las Sintéticas' });
+    await waitFor(() => expect((before as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(before);
+    await waitFor(() => expect(listFollowsMock).toHaveBeenCalledTimes(2));
+    const after = await screen.findByRole('button', { name: wasFollowing ? 'Seguir a Las Sintéticas' : 'Dejar de seguir a Las Sintéticas' });
+    await waitFor(() => expect((after as HTMLButtonElement).disabled).toBe(false));
+    expect(followMock).toHaveBeenCalledTimes(wasFollowing ? 0 : 1);
+    expect(unfollowMock).toHaveBeenCalledTimes(wasFollowing ? 1 : 0);
+    expect(captureFirstValueMock).toHaveBeenCalledTimes(wasFollowing ? 0 : 1);
+    expect(screen.queryByText('No pudimos confirmar el cambio de seguimiento. Comprueba tu conexión y vuelve a intentarlo.')).toBeNull();
+    expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe('/a/las-sinteticas?source=shared#bio');
+    view.unmount(); view.queryClient.clear();
+  });
+
+
+  it('retries an unconfirmed membership read without replaying the committed write', async () => {
+    sessionMock = { username: 'fan', displayName: 'Fan', roles: ['customer'], modules: [], partyId: 42 };
+    const follow = { ffArtistId: 17, ffArtistName: 'Las Sintéticas', ffStartedAt: '2026-10-26T06:00:00Z' };
+    listFollowsMock.mockResolvedValueOnce([]).mockRejectedValueOnce(new TypeError('Synthetic read offline')).mockResolvedValue([follow]);
+    followMock.mockRejectedValueOnce(new TypeError('Synthetic response lost'));
+    const view = renderPage('/a/las-sinteticas?source=shared&resume=follow&artistId=17#bio');
+    const followButton = await screen.findByRole('button', { name: 'Seguir ahora' });
+    await waitFor(() => expect((followButton as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(followButton);
+    const retry = await screen.findByRole('button', { name: 'Reintentar' });
+    await waitFor(() => expect((retry as HTMLButtonElement).disabled).toBe(false));
+    expect((followButton as HTMLButtonElement).disabled).toBe(true);
+    await act(async () => { fireEvent.click(retry); fireEvent.click(retry); });
+    await screen.findByRole('button', { name: 'Dejar de seguir a Las Sintéticas' });
+    await waitFor(() => expect(screen.queryByText('No pudimos confirmar el cambio de seguimiento. Comprueba tu conexión y vuelve a intentarlo.')).toBeNull());
+    expect(followMock).toHaveBeenCalledTimes(1); expect(unfollowMock).not.toHaveBeenCalled();
+    expect(listFollowsMock).toHaveBeenCalledTimes(3); expect(captureFirstValueMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe('/a/las-sinteticas?source=shared#bio');
+    view.unmount(); view.queryClient.clear();
+  });
+
+  it('does not confirm an old account response or emit its first value after a session switch', async () => {
+    sessionMock = { username: 'fan', displayName: 'Fan', roles: ['customer'], modules: [], partyId: 42 };
+    let finishRead!: (value: Awaited<ReturnType<typeof listFollowsMock>>) => void;
+    listFollowsMock.mockResolvedValueOnce([]).mockImplementationOnce(() => new Promise(resolve => { finishRead = resolve; })).mockResolvedValue([]);
+    followMock.mockRejectedValueOnce(new TypeError('Synthetic response lost'));
+    const view = renderPage('/a/las-sinteticas?resume=follow&artistId=17');
+    const button = await screen.findByRole('button', { name: 'Seguir ahora' });
+    await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));fireEvent.click(button);
+    await waitFor(() => expect(finishRead).toBeDefined());
+    sessionMock = { ...sessionMock, partyId: 99, username: 'another-account' };view.refreshSession();
+    await waitFor(() => expect(listFollowsMock).toHaveBeenCalledTimes(3));
+    await act(async () => { finishRead([{ ffArtistId: 17, ffArtistName: 'Las Sintéticas', ffStartedAt: '2026-10-26T06:00:00Z' }]); });
+    expect(view.queryClient.getQueryData(['fan-follows', 42])).toEqual([]);
+    expect(view.queryClient.getQueryData(['fan-follows', 99])).toEqual([]);
+    expect(captureFirstValueMock).not.toHaveBeenCalled();expect(followMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe('/a/las-sinteticas?resume=follow&artistId=17');
+    view.unmount();view.queryClient.clear();
+  });
+
 });

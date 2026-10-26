@@ -939,6 +939,8 @@
       "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
       "tdf-hq-ui/src/features/fans/FollowedArtists.tsx",
       "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx",
+      "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts",
+      "tdf-hq-ui/src/features/fans/reconcileFollowState.ts",
       "tdf-hq-ui/src/features/fans/useFanHubOnboarding.ts",
       "tdf-hq-ui/src/features/fans/useFanProfile.ts",
       "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
@@ -8179,6 +8181,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6156c0be63c3a382",
+      "path": "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts",
+      "sha256": "782a11f3d42cf616f73e42f872468efabd2b40ee902a5d66a9fc7cb449b98db4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9b68581d6bb83cb7",
+      "path": "tdf-hq-ui/src/features/fans/reconcileFollowState.ts",
+      "sha256": "e88364850fb7660faa7a731f35754d05e097036a549c7207682356c5a10392d1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c87c5ab9df1f3ac",
       "path": "tdf-hq-ui/src/features/fans/useFanHubOnboarding.ts",
       "sha256": "ce14853573bee0015ac9e0627e5560c57cb697d221c6437f23914a80ac814797",
@@ -8571,13 +8585,13 @@
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "498365b7aa8b9990059bbb5fc14ea259b3754df38a8df187f33e8cc99b2850bb",
+      "sha256": "8c4200b764a689dc68395e9986fa04b1499e3a00009607d5e7f57efea0c29be1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "39fa2c7f117979998b30743472893389b28ee84132ef32d9af981cecba034194",
+      "sha256": "1e2dc6585ab2e6e663a1e4909f37a76f3fa11061b8019d032b25eaae9eb6921f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8775,7 +8789,7 @@
     {
       "id": "SURFACE-feace0cde60c7f70",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
-      "sha256": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
+      "sha256": "8c8952f17baae317f568bc8002c8e9f54f85983333ec838858187a6d97c3eaa2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8787,7 +8801,7 @@
     {
       "id": "SURFACE-f23ba2e5ecf07fe3",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
-      "sha256": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
+      "sha256": "69d4451fc969e774d057e991ae08f1cfb32ef853ed7f8e87f973148b4c6e2cb2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9135,7 +9149,7 @@
     {
       "id": "SURFACE-843ecd90497b82eb",
       "path": "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-      "sha256": "d2554fe091549fbb6f64a905279e676cec7d67949f20116c11b95fa726945c35",
+      "sha256": "3ccbe5b9fea851f81f67be2e9ec3e6fe49aae4ab597cf76ea7e4913789424751",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9153,7 +9167,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "cb9e20aee2a63bc385ae3339045a0409133cd86c16f5e82313ebc4eb47d5ae19",
+      "sha256": "65105fc75e42eb1a441bf521bf1749d7f6be6b1dfdc8d927b9f758bf1fcf4528",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26639,7 +26653,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "d6a69e6ead4e12ce86b7754232faf2f9b845b48e54545a52e1e44c0f48abbfa2",
+      "sha256": "6f1b3b7d1ff09033060f84241bfe18d32d4ded79e87476cd216bc8b0b9d31bf8",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -26815,6 +26829,13 @@
     {
       "path": "formal/system/fixture-routing.md",
       "sha256": "d32d54490e8c2c32235c49367b5a75c054c7aa3f441801d6e7cf7ea72291cfbd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/follow-response-recovery.md",
+      "sha256": "eac892deaa5d9a41f09671ac976e2def1304abe5ef0cf9956f64d8065c8b3a66",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27213,7 +27234,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "1697665158257c3fda4a31ffedb9a32dfe0d481774aa66a3baefe22f40553733",
+      "sha256": "43032905239f1550579f056b86c02eeea04b869df84c6bfa16b338e117a0f4b7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

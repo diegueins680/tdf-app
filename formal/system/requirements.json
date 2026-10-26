@@ -12198,6 +12198,86 @@
         "classification": "PARTIAL",
         "reason": "Focused implementation; production release, human comprehension, complete media assets and measured user outcomes remain separate obligations."
       }
+    },
+    {
+      "id": "COMM-FOLLOW-RECOVERY-001",
+      "title": "Recover uncertain follow responses through current server membership",
+      "statement": "After a follow or unfollow has an ambiguous response, the current authenticated occurrence reads server membership before confirming the requested state. Recovery never repeats the write. Unknown membership remains unknown, offers a read retry, and prevents blind toggles. A late result cannot confirm another account or profile lifetime. Only the existing evidence-checked onboarding completion receipt can emit first-value analytics.",
+      "domain": "COMM",
+      "actors": [
+        "Authenticated fan",
+        "Artist following another artist"
+      ],
+      "preconditions": [
+        "Existing follow/unfollow and membership APIs retain backend ownership, authorization and transactional event rules."
+      ],
+      "inputs": [
+        "Captured account occurrence and artist identifier",
+        "Follow or unfollow result",
+        "Fresh membership response",
+        "Explicit read retry"
+      ],
+      "state": {
+        "confirmation": [
+          "pending-write",
+          "pending-read",
+          "confirmed-current-state",
+          "unknown"
+        ]
+      },
+      "allowedTransitions": [
+        "Ambiguous write -> one fresh membership GET for the captured current account.",
+        "Successful read -> display current server membership, including unchanged state after a write failed before commit.",
+        "Failed read -> unknown -> explicit read retry.",
+        "Confirmed newly followed state -> existing server-evidence onboarding completion handshake."
+      ],
+      "forbiddenTransitions": [
+        "Ambiguous response -> automatic follow/unfollow replay.",
+        "Unknown or in-flight membership -> blind toggle.",
+        "Account change during read -> cache or confirm old response.",
+        "Unconfirmed read or stale local membership -> assert desired relationship exists.",
+        "Membership GET -> emit first-value analytics without server completion evidence."
+      ],
+      "effects": [
+        "Refresh existing account-scoped membership cache and related artist reads; clear only confirmed current-profile follow intent."
+      ],
+      "authorization": "Capture the exact SessionUser occurrence; guard before and after the fresh read and before write/first-value handoff. Backend authorization remains authoritative.",
+      "privacy": "No tokens or raw diagnostics in UI or receipts. Existing SessionProviders client isolation remains in force; this change adds no credentials or persisted personal data.",
+      "concurrency": "Coalesce repeated clicks while the write and confirmation read settle. Cancel superseded account-key queries, explicitly invalidate without a refetch, then fetch fresh once with no automatic retry. Guard queryFn before returning data so a retired occurrence cannot cache its response.",
+      "idempotency": "Never replay POST/DELETE in response recovery. Existing server onboarding completion newlyCompleted receipt controls analytics emission.",
+      "failure": "An unavailable read returns unknown, preserves the unconfirmed state and exposes a read retry; a fresh unchanged state never fabricates success.",
+      "recovery": "Public profile and Comunidad reuse the same read helper. Explicit retry repeats the GET only; preserve unrelated URL search and hash.",
+      "observability": "Pre-change component and real API/PostgreSQL counterexamples; actual-component success, failure, account-switch and repeated-click controls; exact-source isolated browser receipts.",
+      "source": "User-authorized activation journeys A8/A9 and B5/B6/B8; response-loss counterexample after actual API200 and PostgreSQL commit.",
+      "implementation": [
+        "tdf-hq-ui/src/features/fans/reconcileFollowState.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped component transitions only; exact-source browser/API/database qualification, protected integration and production delivery are separate gates.",
+      "ambiguity": [
+        "Membership reads establish current state, not that this request created a new relationship. Pre-existing and synthetic relationships are excluded from VAR.",
+        "Cross-device concurrency can change state after a read. Durable exactly-once analytics and backend session revocation are outside this change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Executable component invariants and isolated response-loss evidence do not establish universal refinement, production delivery, human comprehension or real-user value."
+      },
+      "critical": false,
+      "authority": "Activation sprint graceful network failure recovery and authoritative first-value measurement.",
+      "property": "An uncertain response is resolved only by a fresh authorized server read under the captured occurrence, with zero recovery writes.",
+      "contract": "formal/system/follow-response-recovery.md",
+      "verification": "Shared-helper and actual-page regression controls, pre-change negative controls, isolated real HTTP/PostgreSQL response-loss tests.",
+      "evidence": "Source-bound receipts retain actual web/API/SQL identity and exclude fixtures from activation metrics."
     }
   ]
 }

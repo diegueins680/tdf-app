@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T05:56:54.762Z",
+  "generatedAt": "2026-10-26T07:42:51.203Z",
   "repositoryRoot": ".",
   "filesScanned": 2390,
   "candidateCount": 1330,
@@ -5568,7 +5568,7 @@
       "lines": [
         84
       ],
-      "consumerCount": 321,
+      "consumerCount": 322,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -53400,7 +53400,7 @@
       "domain": "studio-services-booking",
       "kind": "object-registry",
       "name": "sessionMock",
-      "line": 20,
+      "line": 24,
       "values": [
         "username",
         "displayName",
@@ -53411,7 +53411,7 @@
       "valueCount": 5,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        20
+        24
       ],
       "consumerCount": 130,
       "backendConsumers": [
@@ -53758,7 +53758,7 @@
       "domain": "fan-social",
       "kind": "array",
       "name": "<anonymous>",
-      "line": 722,
+      "line": 756,
       "values": [
         "{label=Slug público, ready}",
         "{label=Bio, ready}",
@@ -53769,7 +53769,7 @@
       "valueCount": 5,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        722
+        756
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -53794,7 +53794,7 @@
       "domain": "fan-social",
       "kind": "array",
       "name": "<anonymous>",
-      "line": 746,
+      "line": 780,
       "values": [
         "{title=Lanzamientos, description=Publica, corrige enlaces de audio y revisa pendientes del sello., to=/label/releases, label=Abrir lanzamientos}",
         "{title=Artistas, description=Edita perfiles, activos y enlaces desde el módulo del sello., to=/label/artistas, label=Ir a artistas}",
@@ -53804,7 +53804,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        746
+        780
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -149393,7 +149393,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 537,
+      "consumerCount": 538,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",

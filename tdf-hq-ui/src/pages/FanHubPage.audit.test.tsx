@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { act } from 'react';
+import { act, type ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
@@ -7,12 +7,16 @@ import { MemoryRouter } from 'react-router-dom';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 import type { OnboardingProgressDTO, OnboardingCompletionResultDTO } from '../api/session';
 import type { SessionUser } from '../session/SessionContext';
+import type { ArtistProfileDTO, FanFollowDTO } from '../api/types';
 import es from '../i18n/locales/es';
 
 const loadOnboardingProgressMock = jest.fn<(apiToken?: string) => Promise<OnboardingProgressDTO>>();
 const completeOnboardingProgressMock = jest.fn<() => Promise<unknown>>();
-const listArtistsMock = jest.fn(async () => []);
-const listFollowsMock = jest.fn(async () => []);
+const listArtistsMock = jest.fn<() => Promise<ArtistProfileDTO[]>>(async () => []);
+const listFollowsMock = jest.fn<() => Promise<FanFollowDTO[]>>(async () => []);
+const followMock = jest.fn<(artistId: number) => Promise<FanFollowDTO>>();
+const unfollowMock = jest.fn<(artistId: number) => Promise<void>>();
+const captureFirstValueMock = jest.fn(async () => false);
 const listMyClubsMock = jest.fn(async () => []);
 const releaseFeedRefetchMock = jest.fn(async () => undefined);
 const profileRefetchMock = jest.fn(async () => undefined);
@@ -35,7 +39,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => es.fanHubOnboarding[key.replace('fanHubOnboarding.', '') as keyof typeof es.fanHubOnboarding] ?? key }),
+  useTranslation: () => ({ t: (key: string) => es.fanHubOnboarding[key.replace('fanHubOnboarding.', '') as keyof typeof es.fanHubOnboarding] ?? (key === 'artistFollow.changeError' ? es.artistFollow.changeError : key) }),
 }));
 
 jest.unstable_mockModule('../api/session', () => ({
@@ -51,8 +55,8 @@ jest.unstable_mockModule('../api/fans', () => ({
     getMyArtistProfile: jest.fn(async () => null),
     updateMyArtistProfile: jest.fn(),
     requestMyFanRole: jest.fn(),
-    follow: jest.fn(),
-    unfollow: jest.fn(),
+    follow: followMock,
+    unfollow: unfollowMock,
   },
 }));
 
@@ -118,11 +122,11 @@ jest.unstable_mockModule('../analytics/posthog', () => ({
   getAnalyticsClient: () => ({ capture: jest.fn() }),
 }));
 jest.unstable_mockModule('../analytics/onboardingProgress', () => ({
-  captureFirstValueOnce: jest.fn(async () => false),
+  captureFirstValueOnce: captureFirstValueMock,
 }));
 
 jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({ default: () => null }));
-jest.unstable_mockModule('../components/LazyPaginatedList', () => ({ default: () => null }));
+jest.unstable_mockModule('../components/LazyPaginatedList', () => ({ default: ({ items, renderItems }: { items: unknown[]; renderItems: (items: unknown[]) => ReactNode }) => renderItems(items) }));
 jest.unstable_mockModule('../components/StreamingPlayer', () => ({ default: () => null }));
 jest.unstable_mockModule('../features/releases/ReleaseFeed', () => ({ ReleaseFeed: () => null }));
 jest.unstable_mockModule('../features/fans/FanProfileEditor', () => ({ FanProfileEditor: () => null }));
@@ -178,8 +182,9 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     };
     loadOnboardingProgressMock.mockReset().mockResolvedValue(eligibleProgress);
     completeOnboardingProgressMock.mockReset().mockResolvedValue(completedReceipt);
-    listArtistsMock.mockClear();
-    listFollowsMock.mockClear();
+    listArtistsMock.mockReset().mockResolvedValue([]);
+    listFollowsMock.mockReset().mockResolvedValue([]);
+    followMock.mockReset();unfollowMock.mockReset();captureFirstValueMock.mockClear();
     listMyClubsMock.mockClear();
   });
 
@@ -421,4 +426,91 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     expect(screen.queryByText('Primeros pasos')).toBeNull();
     expect(completeOnboardingProgressMock).toHaveBeenCalledTimes(1);
   });
+
+  it.each([false, true])('reconciles the community card after an uncertain committed change (wasFollowing=%s)', async wasFollowing => {
+    const artist: ArtistProfileDTO = { apArtistId: 17, apDisplayName: 'Artista ficticio', apSlug: 'artista-ficticio', apGenreIds: [], apFollowerCount: 0, apHasUserAccount: true };
+    const follow = { ffArtistId: 17, ffArtistName: artist.apDisplayName, ffStartedAt: '2026-10-26T06:00:00Z' };
+    let serverFollowing = wasFollowing;
+    listArtistsMock.mockReset().mockResolvedValue([artist]);
+    listFollowsMock.mockReset().mockImplementation(async () => serverFollowing ? [follow] : []);
+    captureFirstValueMock.mockClear();followMock.mockReset();unfollowMock.mockReset();
+    const loseResponse = async () => { serverFollowing = !wasFollowing; throw new TypeError('Synthetic response lost after commit'); };
+    if (wasFollowing) unfollowMock.mockImplementationOnce(loseResponse);else followMock.mockImplementationOnce(loseResponse);
+    const view = renderPage();
+    const buttons = await screen.findAllByRole('button', { name: wasFollowing ? 'Siguiendo' : 'Seguir', exact: true });
+    const button = buttons[buttons.length - 1]!;
+    await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
+    await act(async () => { fireEvent.click(button);fireEvent.click(button); });
+    await waitFor(() => expect(listFollowsMock).toHaveBeenCalledTimes(2));
+    const after = await screen.findAllByRole('button', { name: wasFollowing ? 'Seguir' : 'Siguiendo', exact: true });
+    await waitFor(() => expect(after.some(node => !(node as HTMLButtonElement).disabled)).toBe(true));
+    expect(followMock).toHaveBeenCalledTimes(wasFollowing ? 0 : 1);expect(unfollowMock).toHaveBeenCalledTimes(wasFollowing ? 1 : 0);
+    expect(captureFirstValueMock).toHaveBeenCalledTimes(wasFollowing ? 0 : 1);
+    view.unmount();view.queryClient.clear();
+  });
+
+  it('does not submit a community follow before its current state is known', async () => {
+    const artist: ArtistProfileDTO = { apArtistId: 17, apDisplayName: 'Artista ficticio', apGenreIds: [], apFollowerCount: 0, apHasUserAccount: true };
+    listArtistsMock.mockReset().mockResolvedValue([artist]);followMock.mockReset();unfollowMock.mockReset();
+    let failRead!: (reason: Error) => void;
+    listFollowsMock.mockReset().mockImplementation(() => new Promise((_resolve, reject) => { failRead = reject; }));
+    const view = renderPage();const buttons = await screen.findAllByRole('button', { name: 'Seguir', exact: true });
+    expect(buttons.every(node => (node as HTMLButtonElement).disabled)).toBe(true);
+    fireEvent.click(buttons[buttons.length - 1]!);expect(followMock).not.toHaveBeenCalled();
+    await act(async () => { failRead(new TypeError('Synthetic state unavailable')); });
+    expect(screen.getAllByRole('button', { name: 'Seguir', exact: true }).every(node => (node as HTMLButtonElement).disabled)).toBe(true);
+    expect(followMock).not.toHaveBeenCalled();expect(unfollowMock).not.toHaveBeenCalled();view.unmount();view.queryClient.clear();
+  });
+
+  it('keeps a failed-before-commit change retryable without fabricating a relationship', async () => {
+    const artist: ArtistProfileDTO = { apArtistId: 17, apDisplayName: 'Artista ficticio', apGenreIds: [], apFollowerCount: 0, apHasUserAccount: true };
+    listArtistsMock.mockResolvedValue([artist]);followMock.mockRejectedValue(new TypeError('Synthetic request never reached server'));
+    const view = renderPage();const buttons = await screen.findAllByRole('button', { name: 'Seguir', exact: true });
+    await waitFor(() => expect((buttons[buttons.length - 1] as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(buttons[buttons.length - 1]!);
+    await screen.findByText(es.artistFollow.changeError);
+    await waitFor(() => expect(listFollowsMock).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole('button', { name: 'Siguiendo', exact: true })).toBeNull();
+    expect(followMock).toHaveBeenCalledTimes(1);expect(captureFirstValueMock).not.toHaveBeenCalled();
+    view.unmount();view.queryClient.clear();
+  });
+
+  it('explicitly retries an unavailable confirmation read without repeating a committed follow', async () => {
+    const artist: ArtistProfileDTO = { apArtistId: 17, apDisplayName: 'Artista ficticio', apGenreIds: [], apFollowerCount: 0, apHasUserAccount: true };
+    const follow = { ffArtistId: 17, ffArtistName: artist.apDisplayName, ffStartedAt: '2026-10-26T06:00:00Z' };
+    listArtistsMock.mockResolvedValue([artist]);
+    listFollowsMock.mockResolvedValueOnce([]).mockRejectedValueOnce(new TypeError('Synthetic confirmation read unavailable')).mockResolvedValue([follow]);
+    followMock.mockRejectedValue(new TypeError('Synthetic response lost after commit'));
+    const view = renderPage();const buttons = await screen.findAllByRole('button', { name: 'Seguir', exact: true });
+    await waitFor(() => expect((buttons[buttons.length - 1] as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(buttons[buttons.length - 1]!);
+    await screen.findByText(es.artistFollow.changeError);
+    const retry = await screen.findByRole('button', { name: 'Reintentar', exact: true });
+    await act(async () => { fireEvent.click(retry);fireEvent.click(retry); });
+    await screen.findByRole('button', { name: 'Siguiendo', exact: true });
+    await waitFor(() => expect(screen.queryByText(es.artistFollow.changeError)).toBeNull());
+    expect(followMock).toHaveBeenCalledTimes(1);expect(listFollowsMock).toHaveBeenCalledTimes(3);
+    expect(captureFirstValueMock).toHaveBeenCalledTimes(1);view.unmount();view.queryClient.clear();
+  });
+
+  it('does not confirm the old community follow after an account switch during recovery', async () => {
+    const artist: ArtistProfileDTO = { apArtistId: 17, apDisplayName: 'Artista ficticio', apGenreIds: [], apFollowerCount: 0, apHasUserAccount: true };
+    const follow = { ffArtistId: 17, ffArtistName: artist.apDisplayName, ffStartedAt: '2026-10-26T06:00:00Z' };
+    let completeRead!: (rows: FanFollowDTO[]) => void;
+    listArtistsMock.mockResolvedValue([artist]);listFollowsMock.mockResolvedValueOnce([])
+      .mockImplementationOnce(() => new Promise(resolve => { completeRead = resolve; })).mockResolvedValue([]);
+    followMock.mockRejectedValue(new TypeError('Synthetic response lost after commit'));
+    const view = renderPage();const buttons = await screen.findAllByRole('button', { name: 'Seguir', exact: true });
+    await waitFor(() => expect((buttons[buttons.length - 1] as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(buttons[buttons.length - 1]!);
+    await waitFor(() => expect(listFollowsMock).toHaveBeenCalledTimes(2));
+    sessionMock = { ...sessionMock!, username: 'other-43', partyId: 43 };view.rerenderPage();
+    await act(async () => { completeRead([follow]); });
+    await waitFor(() => expect(listFollowsMock).toHaveBeenCalledTimes(3));
+    expect(view.queryClient.getQueryData(['fan-follows', 42])).toEqual([]);
+    expect(view.queryClient.getQueryData(['fan-follows', 43])).toEqual([]);
+    expect(captureFirstValueMock).not.toHaveBeenCalled();
+    expect(screen.queryByText(es.artistFollow.changeError)).toBeNull();view.unmount();view.queryClient.clear();
+  });
+
 });
