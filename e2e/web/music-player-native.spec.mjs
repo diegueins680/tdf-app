@@ -7,10 +7,11 @@ const trackId = (i) => `33000000-0000-4000-8000-00000000000${i}`;
 const recordingId = (i) => `44000000-0000-4000-8000-00000000000${i}`;
 const assetId = (i, q) => `55000000-0000-4000-8000-0000000000${i}${q}`;
 const qualities = ['low', 'high', 'lossless'];
+const previewAssetId = '55000000-0000-4000-8000-000000000099';
 
-async function prepare(page) {
+async function prepare(page, { previewFallback = false } = {}) {
   const fixture = JSON.parse(process.env.TDF_NATIVE_MUSIC_FIXTURE);
-  const events = [], deniedNetwork = [];
+  const events = [], deniedNetwork = [], assetRequests = [];
   const summary = { id: releaseId, versionId, versionNumber: 1, artistPartyId: 101,
     slug: 'audio-nativo-sintetico', kind: 'album', title: 'Audio nativo sintético',
     displayArtist: 'Fixture TDF', releaseAtUtc: '2026-09-13T00:00:00Z', publishedAt: '2026-09-13T00:00:01Z',
@@ -27,7 +28,15 @@ async function prepare(page) {
       territoryMode: 'include', territories: ['EC'], startsAt: null, endsAt: null,
       listeningPolicy: 'full', downloadPolicy: 'none', purchasable: false, priceMinor: null, currency: null }],
   };
-  // Metadata/auth are explicitly synthetic. Media bytes are never intercepted.
+  if (previewFallback) {
+    release.tracks[0].sources = [release.tracks[0].sources[1], {
+      assetId: previewAssetId, role: 'preview_audio', mediaType: fixture.files.low.mediaType,
+      technicalMetadata: { bitrate_kbps: 96, loudness_lufs: -14 },
+    }];
+    release.availability[0].listeningPolicy = 'preview';
+  }
+  // Metadata/auth are explicitly synthetic. Successful media bytes come from
+  // the real loopback server; individual tests may inject HTTP delivery errors.
   await page.route('**/*', async (route) => {
     const url = new URL(route.request().url());
     if (!['http:', 'https:'].includes(url.protocol)) return route.continue();
@@ -44,6 +53,11 @@ async function prepare(page) {
     }
     const id = url.pathname.match(/^\/music\/assets\/([^/]+)\/access$/)?.[1];
     if (id) {
+      assetRequests.push(id);
+      if (previewFallback && id === assetId(1, 1)) return route.fulfill({ status: 403, json: { error: 'fixture permits preview only' } });
+      if (previewFallback && id === previewAssetId) return route.fulfill({ json: { ...fixture.files.low,
+        url: `${fixture.endpoint}/media/first/low?preview=1`,
+        expiresAt: new Date(Date.now() + 600000).toISOString(), acceptRanges: true } });
       for (const i of [1, 2]) for (const [q, quality] of qualities.entries()) if (id === assetId(i, q)) {
         return route.fulfill({ json: { ...fixture.files[quality],
           url: `${fixture.endpoint}/media/${i === 1 ? 'first' : 'second'}/${quality}`,
@@ -57,12 +71,24 @@ async function prepare(page) {
   // Observe native events only: do not patch prototypes, clocks or play/pause.
   await page.addInitScript(() => {
     globalThis.__nativeMediaEvents = [];
+    globalThis.__nativeSelectionTimings = [];
+    window.addEventListener('tdf-player-load-track', (event) => {
+      globalThis.__nativeSelectionTimings.push({ trackId: event.detail.track.id,
+        selectedAt: performance.now(), ordinal: globalThis.__nativeSelectionTimings.length + 1 });
+    });
     for (const type of ['playing', 'pause', 'timeupdate', 'seeking', 'seeked', 'ended', 'error', 'loadedmetadata']) {
       document.addEventListener(type, (event) => {
-        if (event.target instanceof HTMLAudioElement) globalThis.__nativeMediaEvents.push({
+        if (!(event.target instanceof HTMLAudioElement)) return;
+        globalThis.__nativeMediaEvents.push({
           type, trusted: event.isTrusted, time: event.target.currentTime,
           source: event.target.currentSrc, error: event.target.error?.code ?? null,
         });
+        const selection = globalThis.__nativeSelectionTimings.at(-1);
+        if (type === 'playing' && event.isTrusted && selection && selection.startedAt === undefined) {
+          selection.startedAt = performance.now();
+          selection.selectionToPlayingMs = selection.startedAt - selection.selectedAt;
+          selection.source = event.target.currentSrc;
+        }
       }, true);
     }
   });
@@ -75,7 +101,7 @@ async function prepare(page) {
   await expect.poll(() => audio.evaluate((a) => a.currentTime), { message: 'Native decoder must advance the real media clock', timeout: 15000 }).toBeGreaterThan(0.5);
   await expect(player.getByRole('button', { name: 'Pausar' })).toBeVisible();
   await audio.evaluate((a) => { globalThis.__originalNativeAudio = a; });
-  return { player, audio, events, fixture, deniedNetwork };
+  return { player, audio, events, fixture, deniedNetwork, assetRequests };
 }
 
 async function seek(player, value) {
@@ -106,6 +132,9 @@ test.afterEach(async ({ page }, testInfo) => {
   if (!page || page.isClosed()) return;
   const observations = await page.evaluate(() => ({
     events: globalThis.__nativeMediaEvents ?? [],
+    // Browser-monotonic event samples, not a p95 or healthy-broadband SLO.
+    // Ordinal does not establish CDN/browser cache residency.
+    selectionTimings: globalThis.__nativeSelectionTimings ?? [],
     audio: [...document.querySelectorAll('audio')].map((a) => ({
       src: a.currentSrc, time: a.currentTime, duration: a.duration, paused: a.paused,
       error: a.error?.code, readyState: a.readyState, aac: a.canPlayType('audio/mp4'), flac: a.canPlayType('audio/flac'),
@@ -267,4 +296,97 @@ test('@critical PW-MUSIC-NATIVE-04 compact options are keyboard accessible and c
   await player.getByRole('button', { name: 'Reproducir', exact: true }).press('Space');
   await expect.poll(() => audio.evaluate((a) => !a.paused && a.currentTime > 0)).toBe(true);
   await expect(page.locator('audio')).toHaveCount(1);
+});
+
+
+test('@critical PW-MUSIC-NATIVE-05 denied full access falls back to real preview of the selected recording and enforces its cap', async ({ page }) => {
+  const { player, audio, fixture, assetRequests } = await prepare(page, { previewFallback: true });
+  expect(assetRequests).toEqual([assetId(1, 1), previewAssetId]);
+  await expect(player.getByText('Pista nativa 1', { exact: true })).toBeVisible();
+  await expect.poll(() => audio.evaluate((a) => a.currentSrc)).toContain('/media/first/low?preview=1');
+  expect(await page.evaluate(() => globalThis.__nativeMediaEvents.some(
+    (event) => event.type === 'playing' && event.trusted && event.source.includes('preview=1')))).toBe(true);
+
+  // The page's normal preview cap is 30s and this pipeline fixture is 24s.
+  // Exercise the same engine contract with an explicit short cap, retaining
+  // real AAC decoding, trusted native timeupdate, and the selected recording.
+  await page.evaluate(({ fullAssetId, previewId, selectedTrackId, selectedRecordingId, selectedReleaseId, selectedVersionId, mediaType }) => {
+    window.dispatchEvent(new CustomEvent('tdf-player-load-track', { detail: {
+      track: { id: selectedTrackId, recordingId: selectedRecordingId, releaseId: selectedReleaseId,
+        releaseVersionId: selectedVersionId, title: 'Pista nativa 1', artist: 'Fixture TDF', previewEndMs: 1750,
+        sources: [{ url: '', assetId: fullAssetId, quality: 'high', mediaType, preview: false },
+          { url: '', assetId: previewId, quality: 'low', mediaType, preview: true }] },
+      autoplay: true, startPositionMs: 0,
+    } }));
+  }, { fullAssetId: assetId(1, 1), previewId: previewAssetId, selectedTrackId: trackId(1),
+    selectedRecordingId: recordingId(1), selectedReleaseId: releaseId, selectedVersionId: versionId,
+    mediaType: fixture.files.low.mediaType });
+  await expect.poll(() => audio.evaluate((a) => a.paused && a.currentTime >= 1.75 && a.currentTime < 3)).toBe(true);
+  await expect(player.getByRole('button', { name: 'Reproducir', exact: true })).toBeVisible();
+  await expect(player.getByText('Pista nativa 1', { exact: true })).toBeVisible();
+  expect(await audio.evaluate((a) => a === globalThis.__originalNativeAudio && !a.error)).toBe(true);
+  await expect(page.locator('audio')).toHaveCount(1);
+});
+
+test('@critical PW-MUSIC-NATIVE-06 an expired delivery URL reauthorizes real media without replacing the selection or its position', async ({ page }, testInfo) => {
+  const { player, audio, fixture } = await prepare(page);
+  await seek(player, 8);
+  const before = await audio.evaluate((a) => a.currentTime);
+  let authorizations = 0, deniedDeliveries = 0;
+  await page.route(`**/music/assets/${assetId(1, 0)}/access`, (route) => {
+    authorizations += 1;
+    return route.fulfill({ json: { ...fixture.files.low,
+      url: `${fixture.endpoint}/media/first/low?grant=${authorizations === 1 ? 'expired' : 'fresh'}`,
+      expiresAt: new Date(Date.now() + 600000).toISOString(), acceptRanges: true } });
+  });
+  await page.route(`${fixture.endpoint}/media/first/low?grant=expired`, (route) => {
+    deniedDeliveries += 1;
+    return route.fulfill({ status: 403, headers: { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' }, body: 'expired fixture grant' });
+  });
+  const options = await openOptions(page, player);
+  await options.getByRole('combobox', { name: 'Calidad de audio' }).click();
+  await page.getByRole('option', { name: 'Baja', exact: true }).click();
+  await expect.poll(() => authorizations, { timeout: 15000 }).toBe(2);
+  await expect.poll(() => audio.evaluate((a) => a.currentSrc), { timeout: 15000 }).toContain('grant=fresh');
+  await expect.poll(() => audio.evaluate((a) => a.readyState)).toBeGreaterThanOrEqual(1);
+  await options.getByRole('button', { name: 'Cerrar opciones' }).click();
+  await expect(player.getByRole('button', { name: 'Pausar', exact: true })).toBeVisible();
+  await expect.poll(() => audio.evaluate((a) => !a.paused && a.currentTime > 8)).toBe(true);
+  expect(authorizations).toBe(2);
+  expect(deniedDeliveries).toBeGreaterThanOrEqual(1);
+  await expect(player.getByText('Pista nativa 1', { exact: true })).toBeVisible();
+  expect(await audio.evaluate((a) => a === globalThis.__originalNativeAudio && !a.error)).toBe(true);
+  expect(await page.evaluate(() => globalThis.__nativeMediaEvents.some(
+    (event) => event.type === 'error' && event.trusted && event.source.includes('grant=expired') && [2, 4].includes(event.error)))).toBe(true);
+  await testInfo.attach('expired-delivery-recovery.json', { body: JSON.stringify({ before, after: await audio.evaluate((a) => a.currentTime),
+    authorizations, deniedDeliveries, limitation: 'Controlled HTTP403 during a playing quality change; not a live CDN/network-switch measurement.' }), contentType: 'application/json' });
+});
+
+test('@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two automatic retries', async ({ page }) => {
+  const { player, audio, fixture } = await prepare(page);
+  let authorizations = 0;
+  await page.route(`**/music/assets/${assetId(1, 0)}/access`, (route) => {
+    authorizations += 1;
+    return route.fulfill({ json: { ...fixture.files.low,
+      url: `${fixture.endpoint}/media/first/low?grant=permanently-expired&attempt=${authorizations}`,
+      expiresAt: new Date(Date.now() + 600000).toISOString(), acceptRanges: true } });
+  });
+  await page.route(`${fixture.endpoint}/media/first/low?grant=permanently-expired*`, (route) => route.fulfill({ status: 403,
+    headers: { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' }, body: 'expired fixture grant' }));
+  const options = await openOptions(page, player);
+  await options.getByRole('combobox', { name: 'Calidad de audio' }).click();
+  await page.getByRole('option', { name: 'Baja', exact: true }).click();
+  await expect.poll(() => authorizations, { timeout: 15000 }).toBe(3);
+  await options.getByRole('button', { name: 'Cerrar opciones' }).click();
+  await expect(player.getByRole('status')).toContainText('La fuente dejó de estar disponible.');
+  // An observation window longer than the next exponential-backoff interval
+  // detects an unintended fourth attempt without replacing browser timers.
+  const terminalAt = Date.now();
+  await expect.poll(() => {
+    expect(authorizations).toBe(3);
+    return Date.now() - terminalAt;
+  }, { timeout: 7000, intervals: [250, 500, 1000] }).toBeGreaterThan(4500);
+  expect(authorizations).toBe(3);
+  await expect(player.getByText('Pista nativa 1', { exact: true })).toBeVisible();
+  expect(await audio.evaluate((a) => a === globalThis.__originalNativeAudio && a.paused)).toBe(true);
 });
