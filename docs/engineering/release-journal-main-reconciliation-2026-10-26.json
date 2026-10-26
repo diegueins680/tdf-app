@@ -1,0 +1,92 @@
+{
+  "observedAt": "2026-10-26T04:46:44.434808+00:00",
+  "scope": "Final source composition after actual protected616 merge; previous runs retain their source identities. Publication and nativeCI/review remain separate gates.",
+  "parents": [
+    "faea1864c059b6482b58079b58fc8fe5fc23cbce",
+    "1c9c833cc1ba62b47822fca3c20e14e86cf28daa"
+  ],
+  "protectedMain": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+  "requirements": {
+    "count": 142,
+    "mainObjectsExactExcept": [
+      "DEPLOY-JOURNAL-001"
+    ],
+    "mainObjectsPreservedExactly": 141,
+    "ownJournalRequirementExactFrom": "d68241d83f251c0fb9d2dc344a76f93076cdb9a5"
+  },
+  "manifestEntries": 221,
+  "manifestExactMain": true,
+  "journalImplementationTestsAndModelsExactFrom": "d68241d83f251c0fb9d2dc344a76f93076cdb9a5",
+  "webAuthAndMainApplicationSource": "Byte exact protected616main; source mutation limited to original journal library/test/formal runner, contracts and derived metadata.",
+  "priorPost614Composition": {
+    "observedAt": "2026-10-26T03:49:57.098749+00:00",
+    "scope": "Local composition after protected614 merge; no push until616 final protected main.",
+    "parents": [
+      "589cfce4f46152885f37b760e8da48f2abaabd95",
+      "e938c72ba4b87010214f6838f06bfac45a0f45c0"
+    ],
+    "requirements": {
+      "count": 141,
+      "mainObjectsExactExcept": [
+        "DEPLOY-JOURNAL-001"
+      ],
+      "ownJournalRequirementExactFrom": "d68241d83f251c0fb9d2dc344a76f93076cdb9a5"
+    },
+    "manifestEntries": 221,
+    "manifestExactMain": true,
+    "journalImplementationAndTestsExactFrom": "d68241d83f251c0fb9d2dc344a76f93076cdb9a5",
+    "previousFinancialComposition": {
+      "observedAt": "2026-10-26T02:13:12.395287+00:00",
+      "scope": "Local composition only; remote618 remains approved d682 while FIFO stabilizes.",
+      "parents": [
+        "d68241d83f251c0fb9d2dc344a76f93076cdb9a5",
+        "5114fe95ac8e328b58162a8dcae5c9015a47ce09"
+      ],
+      "inputSha256": {
+        "ops/hetzner/release-journal.py": "1c9dccb95894a676582e27acee4f8191225dcbd33a776f773e12fc322289635d",
+        "scripts/test-release-journal.py": "3af0e8451aeb8d2e1948174b0184f6131c58529674b1711aa0468d5dc75bb679",
+        "scripts/verify-event-operations-formal.sh": "7201b7403faf3a7fe3b22edaf3b8c8600e63e85b53d693ba24f1671defe2a213",
+        "formal/system/requirements.json": "24c60771f3a080fb0da949bbd99f6585f37343a31f183037a6f8988982f050dd",
+        "scripts/production-migrations.json": "6b125a762a48305ccd0c948db1817e8dd0490092819e55254dcb78946c44d8be"
+      },
+      "requirements": {
+        "count": 140,
+        "mainObjectsExactExcept": [
+          "DEPLOY-JOURNAL-001"
+        ],
+        "ownJournalRequirementExactFrom": "d68241d83f251c0fb9d2dc344a76f93076cdb9a5"
+      },
+      "journalImplementationAndTestsExactFrom": "d68241d83f251c0fb9d2dc344a76f93076cdb9a5",
+      "manifestEntries": 220,
+      "manifestExactMain": true,
+      "validation": {
+        "normalTests": 22,
+        "optimizedTests": 22,
+        "normalLog": "/private/tmp/tdf-journal-post551-tests-20261026.log",
+        "optimizedLog": "/private/tmp/tdf-journal-post551-tests-optimized-20261026.log",
+        "formalScriptDelta": "Only original15lines succession block added to main; main financial invocation lines retained.",
+        "historicalEvidence": "d682/05abc local/hosted reports retain their original source identities; no complete combined-branch CI or runtime execution claim."
+      },
+      "published": false,
+      "productionMutation": false,
+      "releaseAuthorized": false
+    },
+    "currentExecutionScope": "No new journal runtime invocation: source and test bytes unchanged. Normal22/optimized22 execution remains bound589; exact final source admission/indices rechecked separately.",
+    "published": false,
+    "productionMutation": false,
+    "releaseAuthorized": false
+  },
+  "verificationScope": "Fresh final-tree repository/catalog/surface checks run after this source is committed. Existing22normal/22optimized runs at589 and fulloldformal d682/05abc retain their original identities; no old pass relabeled. HostedCI must qualify the final currenthead.",
+  "historicalRuntimeReceipts": [
+    "/private/tmp/tdf-journal-post551-tests-20261026.log",
+    "/private/tmp/tdf-journal-post551-tests-optimized-20261026.log"
+  ],
+  "publicationTarget": "Existing PR618/branchfix/release-journal-succession-20261025; fast-forward only, no forced history rewrite.",
+  "releaseBlockers": [
+    "Private receipt storage/canary/coordinated recovery and operator authority still required.",
+    "Existing621postedledgerheader defect remains absent from currentmain; preserve original fix and next additive migration rather than weakening controls.",
+    "Complete implementation/refinement obligations remainUNPROVEN; no authenticated exact-artifact risk disposition observed."
+  ],
+  "productionMutation": false,
+  "releaseAuthorized": false
+}

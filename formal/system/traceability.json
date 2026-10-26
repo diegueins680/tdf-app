@@ -6505,7 +6505,8 @@
         "Canonical source/runtime/image/manifest/recipient plan",
         "Release nonce",
         "Ordered stage and exact-target hash",
-        "Context-bound protected observation hash"
+        "Context-bound protected observation hash",
+        "Expected terminal record digest for separate next-release admission"
       ],
       "state": {
         "states": [
@@ -6523,14 +6524,17 @@
       },
       "allowedTransitions": [
         "Initialize once -> ready",
-        "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete"
+        "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete",
+        "Sequence-complete -> separate compare-and-set admission of fresh nonce and plan -> ready, preserving history and permanent lock"
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
         "Replay an unresolved intent or initialize another nonce",
         "Skip, duplicate or reorder stages",
         "Treat receipt hash as validation of external effect",
-        "Restore old database over possible new writes"
+        "Restore old database over possible new writes",
+        "Admit a successor before terminal completion, with stale tip or reused nonce",
+        "Delete/rotate/reset historical records or replace the permanent lock to admit a successor"
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6538,11 +6542,11 @@
       ],
       "authorization": "Caller must authorize target and effect; the journal is not deployment authority or an external-effect verifier.",
       "privacy": "Only digests, fixed phase names, sequence and nonce recorded; no raw secret, target document or exception output.",
-      "concurrency": "Nonblocking flock while live; one fixed global journal prevents new nonce bypass after parent death even if external child survives. Noncooperating privileged writers and alternate control directories are excluded.",
-      "idempotency": "No effect replay API; even terminal journal cannot be reinitialized. Future rotation/recovery requires separate admission.",
+      "concurrency": "Nonblocking flock on permanent global inode while live; per-handle append mutex plus publication-time expected-tip checks serialize mutations shared by threads. Pending reservation survives process death. Noncooperating privileged writers, alternate directories and context closure while callers remain active are excluded.",
+      "idempotency": "No effect replay API; initialize still rejects any nonempty journal. Separate initialize_next requires complete terminal prefix, exact expected tip and nonce absent from all retained history; repeated or competing admissions reject.",
       "failure": "Unresolved intent, invalid observation or publication leftover blocks progress. IO failure poisons current handle; fresh open syncs directory before reading a valid recorded prefix.",
-      "recovery": "Explicit operator recovery and terminal rotation remain unimplemented; retain records and preserve all possible writes from database restart intent onward.",
-      "observability": "Sequence, pending stage, plan/targets/observation hashes and conservative newWritesPossible; sequenceComplete does not certify external effects.",
+      "recovery": "Explicit pending-intent/operator recovery and integrated coordinator remain unimplemented. Append-only terminal succession preserves prior bytes and conservative write possibility; it never authorizes database rollback.",
+      "observability": "Current release status, completed predecessors, latest global record digest and conservative history-wide newWritesPossible; sequenceComplete and a matching tip do not certify current external effects or release authorization.",
       "implementation": [
         "ops/hetzner/release-journal.py",
         "scripts/verify-event-operations-formal.sh"
@@ -6556,14 +6560,26 @@
         "formal/event-operations/ReleaseJournal.cfg",
         "formal/event-operations/ReleaseJournalNoIntent.cfg",
         "formal/event-operations/ReleaseJournalNewNonce.cfg",
-        "formal/event-operations/ReleaseJournalWrongObservation.cfg"
+        "formal/event-operations/ReleaseJournalWrongObservation.cfg",
+        "formal/event-operations/ReleaseJournalSuccession.cfg",
+        "formal/event-operations/ReleaseJournalSuccession.tla",
+        "formal/event-operations/ReleaseJournalSuccessionDiscardHistory.cfg",
+        "formal/event-operations/ReleaseJournalSuccessionForgetWrites.cfg",
+        "formal/event-operations/ReleaseJournalSuccessionNoIntent.cfg",
+        "formal/event-operations/ReleaseJournalSuccessionPending.cfg",
+        "formal/event-operations/ReleaseJournalSuccessionReusedNonce.cfg",
+        "formal/event-operations/ReleaseJournalSuccessionStaleTip.cfg",
+        "formal/event-operations/ReleaseJournalSuccessionTwo.cfg",
+        "formal/event-operations/ReleaseJournalSuccessionUnlocked.cfg",
+        "formal/event-operations/ReleaseJournalSuccessionWitness.cfg",
+        "formal/event-operations/ReleaseJournalSuccessionWrongObservation.cfg"
       ],
       "status": "specified and implemented",
       "confidence": "Real temporary filesystem, crash/child and fault-injection controls; no production coordinator claim.",
       "ambiguity": [
-        "Effect validators, fixed global directory admission, terminal rotation, operator recovery and deployment coordinator remain open."
+        "Effect validators, fixed global directory admission, operator recovery, exact-artifact release controls and deployment coordinator remain open."
       ],
-      "verification": "Actual process death, lock contention, fsync errors and invalid journal/observation controls.",
+      "verification": "Actual process death, two competing processes, preserved legacy prefix/lock inode, fsync fault injection, nonce/tip checks and invalid journal/observation controls. Original and additional finite models remain separate from implementation/refinement proof.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Ordering library exists; integrated coordinator and production deployment/recovery are not implemented."
@@ -12265,6 +12281,18 @@
     "formal/event-operations/ReleaseJournal.tla": "410051abec97d69e67108e5fa38e134f876b6db2e3725bf6eafb58011bfc1f87",
     "formal/event-operations/ReleaseJournalNewNonce.cfg": "b257d1d115ba36d72a5ff06cbfd5d44e5fb66056d5f17bcb902d3e66b2a771d1",
     "formal/event-operations/ReleaseJournalNoIntent.cfg": "144b75a0e86827f26227eff588d81733cd0ad4fdb815b805954a07807b85646b",
+    "formal/event-operations/ReleaseJournalSuccession.cfg": "16cf95a44f8cf746facff4b5924a32c55819beaf9c277e4c8126e505e7c353eb",
+    "formal/event-operations/ReleaseJournalSuccession.tla": "d309f03befa784b1b67ee0bc2314b7ffb4c8cca285151bd04bc6e5a650028e94",
+    "formal/event-operations/ReleaseJournalSuccessionDiscardHistory.cfg": "94114427040e5cbbd3cdd110390cffc6f26a43c4bfc6c1f05eb360bdbc5e6023",
+    "formal/event-operations/ReleaseJournalSuccessionForgetWrites.cfg": "fb593e372ee02f266ab2857dde67275f012d0156e9f30088c087495e7194e28b",
+    "formal/event-operations/ReleaseJournalSuccessionNoIntent.cfg": "24b35a90937b8ad95e1645b338a718342ae0bed31682bfe91ee7eba420a0db2d",
+    "formal/event-operations/ReleaseJournalSuccessionPending.cfg": "483b31416adfada15e8f43d7cac265ea2d86477ce2f9995f3f67bd0005121626",
+    "formal/event-operations/ReleaseJournalSuccessionReusedNonce.cfg": "19dfb4d1f36821c274ab0adb2fb1e2bca3af40d1d7d71e1ffe04b1c2bb3e6126",
+    "formal/event-operations/ReleaseJournalSuccessionStaleTip.cfg": "e97b7eb1c8ca5b5f9a86632fbf84854a4da5a08bc148f7a6b746e21c74b4e505",
+    "formal/event-operations/ReleaseJournalSuccessionTwo.cfg": "64797b3dc40b4db719913c15f70e45fcef37c30ccaf7b854e015b256f97f9d7d",
+    "formal/event-operations/ReleaseJournalSuccessionUnlocked.cfg": "dca1f0c19e49b53e79ea80ae1ad7cbc2ace4deaddb8c6acf1f6ce1bfc5377b5d",
+    "formal/event-operations/ReleaseJournalSuccessionWitness.cfg": "8a7bd00ee4ba9a15666f9be61f26c5b864bd87aab7f6ed989e96e571a36ccc03",
+    "formal/event-operations/ReleaseJournalSuccessionWrongObservation.cfg": "1f9ec729d8c499e6cdbb41bce43763e2b58b4c3d48352bda402c92d45fb56560",
     "formal/event-operations/ReleaseJournalWrongObservation.cfg": "8c4354d72c48d62a3ba9c39eaf3abe5508ebc947d55b39f5aa5b57d65067c99f",
     "formal/event-operations/RestoreIsolation.cfg": "6f9c62a5027891b6bf9aad2bc2f6befb7ddfb2b20a4b12f2fe748d4a402ff0e2",
     "formal/event-operations/RestoreIsolation.tla": "0c96b73de882cd3a1c22d13e187a911fc2fe066c3878343917f1331f6da45282",
@@ -12364,7 +12392,7 @@
     "ops/hetzner/recovery-files.py": "09c07444444b498d9fe5f9696e8ebec9b3010cc2453c59e72de74ccd60cdcb84",
     "ops/hetzner/recovery-tools.json": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
     "ops/hetzner/rehearse-postgres-restore.py": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
-    "ops/hetzner/release-journal.py": "bc23f81802b6b4aa554b430c3ec9ee27161e6f8843d3ae9bc460b4d20f861634",
+    "ops/hetzner/release-journal.py": "1c9dccb95894a676582e27acee4f8191225dcbd33a776f773e12fc322289635d",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
@@ -12586,7 +12614,7 @@
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
     "scripts/test-recovery-time-postgres.sh": "34703ff50f843b680b065aaf1538092c77ed56c8385865676cf8b8ef922f2d73",
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
-    "scripts/test-release-journal.py": "498c638af45f323fa86f9b98819fda85768dc7d173d3ce969922b8beaa570e32",
+    "scripts/test-release-journal.py": "3af0e8451aeb8d2e1948174b0184f6131c58529674b1711aa0468d5dc75bb679",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
@@ -12612,7 +12640,7 @@
     "scripts/verify-auth-predicates.py": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "2bc3fbe4aabb93c47b6f0aa713efaeb6b0672f5339a83e01229ae15e040114d5",
+    "scripts/verify-event-operations-formal.sh": "7201b7403faf3a7fe3b22edaf3b8c8600e63e85b53d693ba24f1671defe2a213",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -18634,6 +18662,78 @@
         "relationship": "formalModels"
       }
     ],
+    "formal/event-operations/ReleaseJournalSuccession.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalSuccession.tla": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalSuccessionDiscardHistory.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalSuccessionForgetWrites.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalSuccessionNoIntent.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalSuccessionPending.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalSuccessionReusedNonce.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalSuccessionStaleTip.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalSuccessionTwo.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalSuccessionUnlocked.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalSuccessionWitness.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ReleaseJournalSuccessionWrongObservation.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-mobile/src/api/client.ts": [
       {
         "requirement": "MOB-ONBOARD-001",
@@ -24372,7 +24472,7 @@
     {
       "id": "SURFACE-d640099eda9235a7",
       "path": "ops/hetzner/release-journal.py",
-      "sha256": "bc23f81802b6b4aa554b430c3ec9ee27161e6f8843d3ae9bc460b4d20f861634",
+      "sha256": "1c9dccb95894a676582e27acee4f8191225dcbd33a776f773e12fc322289635d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29170,7 +29270,7 @@
     {
       "id": "SURFACE-aa3bbdb52a0727dd",
       "path": "scripts/test-release-journal.py",
-      "sha256": "498c638af45f323fa86f9b98819fda85768dc7d173d3ce969922b8beaa570e32",
+      "sha256": "3af0e8451aeb8d2e1948174b0184f6131c58529674b1711aa0468d5dc75bb679",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29609,7 +29709,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "2bc3fbe4aabb93c47b6f0aa713efaeb6b0672f5339a83e01229ae15e040114d5",
+      "sha256": "7201b7403faf3a7fe3b22edaf3b8c8600e63e85b53d693ba24f1671defe2a213",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52082,7 +52182,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b59683d1cfd2b9d1dc78ce56f7a5111256eda1111f203f75984786661d99e049",
+      "sourceSha256": "7bacd7dce080404002e9434d7d6c349f5a30b1d5b4637f13d1da85ac0ba9faf5",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -52110,7 +52210,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b59683d1cfd2b9d1dc78ce56f7a5111256eda1111f203f75984786661d99e049",
+      "sourceSha256": "7bacd7dce080404002e9434d7d6c349f5a30b1d5b4637f13d1da85ac0ba9faf5",
       "definition": {
         "states": [
           "absent",
@@ -52140,7 +52240,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b59683d1cfd2b9d1dc78ce56f7a5111256eda1111f203f75984786661d99e049",
+      "sourceSha256": "7bacd7dce080404002e9434d7d6c349f5a30b1d5b4637f13d1da85ac0ba9faf5",
       "definition": {
         "export": [
           "queued",
