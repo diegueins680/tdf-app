@@ -139,6 +139,9 @@ jobs:
       - name: Verify completion client model wiring
         run: node --test scripts/__tests__/event-task-completion-client.test.mjs
 
+      - name: Check bounded player selection and recovery with negative controls
+        run: node --test scripts/test-player-session-model.mjs
+
       - name: Download pinned formal tools
         shell: bash
         run: |

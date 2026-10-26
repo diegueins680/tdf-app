@@ -1,0 +1,75 @@
+{
+  "observedAt": "2026-10-26T15:30:48.719990+00:00",
+  "status": "PASS_SCOPED_CANONICAL_SQL_AND107_HTTP",
+  "source": "b7053f9426d624f2fdaf8a9731389e8ef52e3bdf",
+  "tree": "7a69ed40a31a9d38356b486d4bef20eb72ee0381",
+  "qualificationStartedAt": "2026-10-26T07:45:33.984511+00:00",
+  "qualificationFinishedAt": "2026-10-26T07:46:35.990227+00:00",
+  "qualifiedBase": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "currentMainNotIncluded": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+  "canonicalExitCode": 0,
+  "migrations": 222,
+  "unchangedMainPrefix": 221,
+  "httpRequests": 107,
+  "canonicalSourceHashes": {
+    "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
+    "scripts/__tests__/directory-saved-search-http.mjs": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
+    "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529"
+  },
+  "compiledSource": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+  "actualExecutableSha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+  "newCompilation": false,
+  "compiledInputsByteExact": [
+    "tdf-hq/src",
+    "tdf-hq/app",
+    "tdf-hq/tdf-hq.cabal",
+    "tdf-hq/stack.yaml",
+    "tdf-hq/stack.yaml.lock"
+  ],
+  "driverMeasuredProvenance": {
+    "qualificationSourceCommit": "b7053f9426d624f2fdaf8a9731389e8ef52e3bdf",
+    "compiledCommit": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+    "binarySha256": "7dd859378456c9528459523250c1c8ab4ce4d7060d6fa85408cd961be7e04176",
+    "sourceDirectorySha256": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
+    "scope": "Compiled identity is measured without deployment overrides; local source/binary correspondence is bounded by recorded hashes and real HTTP assertions; CI requires exact HEAD"
+  },
+  "driverBinaryHashIsTestWrapper": true,
+  "testWrapperSha256": "7dd859378456c9528459523250c1c8ab4ce4d7060d6fa85408cd961be7e04176",
+  "networkIsolation": {
+    "policy": "Local-machine destinations only; services separately bound to literal127.0.0.1",
+    "externalTcpControl": "api.github.com:443, handshake only, no application data",
+    "externalAllowedOutsideDeniedInsideSandbox": true,
+    "externalAddressRetained": false
+  },
+  "apiLoopbackVerified": true,
+  "cleanup": {
+    "apiListenerClosed": true,
+    "databaseRemoved": true,
+    "clusterStopped": true,
+    "postgresListenerClosed": true
+  },
+  "originalOverallReceiptRemainsFailed": true,
+  "additionalObserver": {
+    "status": "FAILED_AFTER_CANONICAL_PASS",
+    "reason": "PostgreSQL ambiguous text || internal char operator; observer omitted explicit tgenabled::text cast",
+    "schemaWitnessMeasuredByThisRun": null,
+    "canonicalAssertionsUnchanged": true,
+    "noPassingTestsReplayed": true
+  },
+  "productionOperations": false,
+  "futureCurrentHeadCiAndReviewStillRequired": true,
+  "evidence": {
+    "canonicalLog": {
+      "path": "/private/tmp/tdf-ledger-checkpoint-http-root-20261026-q_v4jw1i/canonical-sql-http.log",
+      "sha256": "d8c02b03a9e8ac7ce78217e651a3eb9bb7ab39de066be6595677038ff2c4bb1a"
+    },
+    "originalReceipt": {
+      "path": "/private/tmp/tdf-ledger-checkpoint-http-root-20261026-q_v4jw1i/results.json",
+      "sha256": "f014feebdc8220318c2469451f46899b74a70cdb62ab6bd0a122fbb850e77323"
+    },
+    "outerExecutionLog": {
+      "path": "/private/tmp/tdf-ledger-checkpoint-http-protocol-root-20261026/execution-v2.log",
+      "sha256": "28559c1fbb1abeb56b61caa52794709536119e7016f2606f8003f64d79530e29"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "pattern": "\\[\\d+\\]\\s+ERROR:\\s+Posted ledger header immutability guard is missing or changed\\s*$",
+  "actualErrorLines": [
+    "2026-10-26 00:57:47.670 -05 [61103] ERROR:  Posted ledger header immutability guard is missing or changed"
+  ],
+  "logSha256": "c6745cda913e30772d27e6ccd30626e25f6fe129aea32b54fff0d749df1f7980",
+  "statementOnlyNegativeControl": false
+}

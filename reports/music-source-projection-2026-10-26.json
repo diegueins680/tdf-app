@@ -144,9 +144,9 @@
   ],
   "integration": {
     "pr": null,
-    "ci": "pending exact refreshed-candidate publication and hosted checks",
+    "ci": "Pending exact-candidate hosted checks after parent publication",
     "review": "fresh independent review required on published candidate",
-    "merge": "Normal local merge of protected main a1238; no protected-main merge or publication by this task",
+    "merge": "Normal local merge of protected main78fa351; no protected-main merge or deployment by this task",
     "deployment": null,
     "productionWrites": 0,
     "migrations": 0,
@@ -181,7 +181,7 @@
       "artifact": "/private/tmp/tdf-audio-source-catalog-audit-20261026.json"
     }
   ],
-  "integrationBaseline": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "integrationBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
   "historicalMetadataValidationAt3af": {
     "passed": 25,
     "commands": [
@@ -305,5 +305,69 @@
     "baselineDecisionObjectsPreserved": 1330,
     "newDecisions": 0,
     "scope": "Actual pinned Mobile and tracked5source paths; incomplete original scan not admitted"
+  },
+  "protectedMainPlaybackLedgerRefresh20261026": {
+    "main": "78fa351b469c1d2031df3232204dd722ac480e3b",
+    "fromCandidate": "744e75fcd2d0ec74e988436b2ccbad7c9cea5eaa",
+    "method": "normal merge",
+    "preservedMainRequirementsExactly": 145,
+    "ownRequirementPreservedExactly": "MEDIA-MUSIC-SOURCES-001",
+    "requirementsTotal": 146,
+    "mainCatalogDecisionsExactly": 1339,
+    "candidateCatalogDecisions": 1339,
+    "mainMigrationManifestEntries": 222,
+    "currentSourceHashes": {
+      "tdf-hq/src/TDF/Server/MusicRelease.hs": "9b001e5a36c2dde75a8df89e898992815765451f39d6a25cdb167dde9ec74bea",
+      "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      ".github/workflows/ci.yml": "4f17df9d98e7935ba5d85df64a0e0d05b043169239076a6fbcb7f9977ef06534",
+      "scripts/ci-change-scope.mjs": "abf7c6b2653cb13d1798d3aa066023f6586f6fbb0ad91ff506556fef01749be8",
+      "scripts/__tests__/ci-change-scope.test.mjs": "e411ba86db22b662de37bdb3992428bca0169bf3a37134657387b411013de3e5"
+    },
+    "sourceHashChangesFromHistoricalQualification": [
+      ".github/workflows/ci.yml"
+    ],
+    "runtimeEvidence": "Historical original-source qualification retained. No fresh runtime SQL,UI/browser,build or production result claimed by this refresh.",
+    "verification": {
+      "metadataRegressions": {
+        "passed": 36,
+        "failed": 0,
+        "groups": [
+          9,
+          6,
+          10,
+          11
+        ]
+      },
+      "strictCatalogJson": {
+        "status": "PASS",
+        "count": 1339
+      },
+      "strictCatalogCsv": {
+        "status": "PASS",
+        "rows": 1339
+      },
+      "finalFreshness": "Exact final generation/check follows this metadata update; external final receipt retains results",
+      "sourceAdmission": "Working-source and immutable committed-tree checks required after final generation/commit",
+      "mergedCIContracts": {
+        "passed": 45,
+        "failed": 0,
+        "files": [
+          "scripts/__tests__/ci-change-scope.test.mjs",
+          "scripts/__tests__/ci-pipeline.test.mjs"
+        ],
+        "node": "22.14.0",
+        "scope": "Actual merged workflow and current CI-selection contracts. Does not rerun PostgreSQL,compiled backend,HTTP or media."
+      }
+    },
+    "validationLogHashes": {
+      "declarations": "7c758af7411e05fc2e6c4fb89045f7a03d9a5957d5305092903a23a66373d034",
+      "inventory": "59e4db8cbcaeaa60db59804296aa55a1055ac56c31280b70ece7d567017d0cbd",
+      "conformance": "af72141acc6d6860b77f514354bcf3d491a43e0693c20a141d9d8d8082efcf7f",
+      "admission": "1bfb3ff819331f70e418e6e32b0e1b869c27ae1f619acc5030aa8a7cd7b13a62",
+      "catalogJson": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "catalogCsv": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mergedCIContracts": "cf67b28f2447d117bf0eb386f313b2a7b0ff236ac7761af5ed50df2e28fa1cf8"
+    },
+    "initialConformanceAttempt": "Read unresolved generated inventory JSON during merge and failed before tests; retained initial failure, regenerated inventory/traceability in dependency order, then10/10 passed without changing guards."
   }
 }

@@ -110,3 +110,26 @@ The actual PostgreSQL receipts stay tied to source baseline `3af768d` and source
 commit `ade78b5`; they are not relabeled as execution of this merge. No new SQL,
 compiled build, actual HTTP, browser/storage playback or deployment result is
 claimed. Exact published-head CI and independent review remain required.
+
+
+## Protected playback and ledger main reconciliation
+
+This normal merge advances `744e75fcd2d0ec74e988436b2ccbad7c9cea5eaa` to protected main
+`78fa351b469c1d2031df3232204dd722ac480e3b`. It preserves all 145 main requirement objects
+and unchanged `MEDIA-MUSIC-SOURCES-001`, for 146 total. The inherited production
+migration manifest has 222 entries and is unchanged; no migration is applied.
+
+The complete 1,339-decision main catalog file is retained byte-for-byte. The
+SQL handler and PostgreSQL runner retain hashes `9b001e5a...` and `be8d5865...`;
+the two CI-scope inputs also retain their original bytes. The merged CI workflow
+changes legitimately to inherit protected playback and ledger checks, so the
+five-input historical receipt is not represented as wholly unchanged. Current
+CI-selection and pipeline contracts are executed against that merged workflow.
+Original finite PostgreSQL/lexical evidence retains its original source/runtime
+identity; no fresh SQL, compiled HTTP or media-byte test is claimed here.
+
+Generated inventory, traceability, strict catalog and source-admission checks
+qualify the combined metadata independently of runtime evidence. Fresh exact-head
+hosted checks and independent review remain required after publication. No push,
+review request, protected-main merge or production deployment is made by this
+refresh task.
