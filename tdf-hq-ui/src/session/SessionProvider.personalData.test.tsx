@@ -105,4 +105,42 @@ describe('SessionProvider personal-data boundary', () => {
     expect(window.sessionStorage.getItem('tdf-public-booking-profile')).toBeNull();
     expect(sessionControls?.session).toBeNull();
   });
+
+  it('preserves the current party drafts during a role refresh without publishing a new login revision', async () => {
+    const { getLogoutRevision } = await import('./logoutIntent');
+    const { getAuthSessionEpoch } = await import('./authEvents');
+    await act(async () => sessionControls?.login({ username: 'first', displayName: 'First', roles: ['Customer'], partyId: 42 }));
+    writeSessionPersonalData('tdf-marketplace-buyer', 'same-party buyer');
+    writeSessionPersonalData('tdf-public-booking-profile', 'same-party booking');
+    const revision = getLogoutRevision(); const epoch = getAuthSessionEpoch();
+    await act(async () => sessionControls?.login({ username: 'first', displayName: 'First', roles: ['Customer', 'Artist'], partyId: 42 }, { refreshExistingSession: true }));
+    expect(window.sessionStorage.getItem('tdf-marketplace-buyer')).toBe('same-party buyer');
+    expect(window.sessionStorage.getItem('tdf-public-booking-profile')).toBe('same-party booking');
+    expect(sessionControls?.session?.roles).toEqual(['customer', 'artist']);
+    expect(getLogoutRevision()).toBe(revision);
+    expect(getAuthSessionEpoch()).toBeGreaterThan(epoch);
+  });
+
+  it('preserves drafts on same-party interactive reauthentication while advancing the login revision', async () => {
+    const { getLogoutRevision } = await import('./logoutIntent');
+    await act(async () => sessionControls?.login({ username: 'first', displayName: 'First', roles: [], partyId: 42 }));
+    writeSessionPersonalData('tdf-marketplace-buyer', 'same-party buyer');
+    const revision = getLogoutRevision();
+    await act(async () => sessionControls?.login({ username: 'first', displayName: 'First', roles: ['Artist'], partyId: 42, apiToken: 'fresh-fictional-token' }));
+    expect(window.sessionStorage.getItem('tdf-marketplace-buyer')).toBe('same-party buyer');
+    expect(getLogoutRevision()).not.toBe(revision);
+  });
+
+  it.each(['party', 'token', 'logout'])('cannot use a refresh to cross the %s boundary', async (boundary) => {
+    await act(async () => sessionControls?.login({ username: 'first', displayName: 'First', roles: [], partyId: 42, apiToken: 'first-fictional-token' }));
+    if (boundary === 'logout') await act(async () => sessionControls?.logout());
+    await act(async () => sessionControls?.login({ username: 'first', displayName: 'First', roles: ['Artist'], partyId: boundary === 'party' ? 84 : 42, apiToken: boundary === 'token' ? 'different-fictional-token' : 'first-fictional-token' }, { refreshExistingSession: true }));
+    if (boundary === 'logout') expect(sessionControls?.session).toBeNull();
+    else {
+      expect(sessionControls?.session?.partyId).toBe(42);
+      expect(sessionControls?.session?.roles).toEqual([]);
+      expect(sessionControls?.session?.apiToken).toBe('first-fictional-token');
+    }
+  });
+
 });

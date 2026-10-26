@@ -1,0 +1,11 @@
+init PASS
+start PASS
+create PASS
+full220-apply-replay PASS
+manifest-cardinality PASS
+repaired-startup-verifier-with-controls PASS
+original-verifier-regression-rejects EXPECTED REJECTION
+guards-after-original-control PASS
+repaired-startup-final-restoration PASS
+drop PASS
+stop PASS

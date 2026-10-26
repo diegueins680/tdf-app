@@ -311,11 +311,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Install native build dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 pkg-config git curl ca-certificates ffmpeg jq libxml2-utils perl unzip zip
+          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 pkg-config git curl ca-certificates ffmpeg jq libxml2-utils perl unzip zip lsof
 
       - name: Trust the exact container checkout for evidence Git reads
         # Container paths resolve to /__w while checkout may trust the host alias.
@@ -516,6 +518,16 @@ jobs:
           TDF_DISCOVERY_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: python3 scripts/test-community-search.py
 
+      - name: Verify saved-search alert and public query parity
+        env:
+          PGPASSWORD: postgres
+          TDF_DIRECTORY_ALERT_PARITY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_directory_alert_parity_test
+          TDF_DIRECTORY_ALERT_PARITY_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: |
+          createdb -h postgres -U postgres tdf_directory_alert_parity_test
+          trap 'dropdb -h postgres -U postgres tdf_directory_alert_parity_test' EXIT
+          node scripts/test-directory-saved-search-parity.mjs
+
       - name: Verify directory artist listings and canonical preview images
         env:
           PGPASSWORD: postgres
@@ -551,6 +563,7 @@ jobs:
           sh scripts/test-credential-lifecycle.sh
           sh scripts/test-ticket-manual-review-concurrency.sh
           sh scripts/test-whatsapp-consent.sh
+          sh scripts/test-ledger-posting.sh
           sh scripts/test-music-publication.sh
           sh scripts/test-index-declarations.sh
           sh scripts/test-interaction-write-budget.sh
@@ -568,6 +581,11 @@ jobs:
         env:
           TDF_CHECKOUT_AMOUNT_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: node scripts/__tests__/checkout-amount-postgres.mjs
+
+      - name: Verify terms identities survive policy deletion and edits
+        env:
+          TDF_TERMS_HISTORY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-checkout-terms-history.sh
 
       - name: Verify music purchase payment record, entitlement and download limits
         env:
@@ -955,6 +973,8 @@ jobs:
 
       - name: Rehearse course checkout runtime migration
         run: ./scripts/test-course-checkout-runtime-migration.sh
+      - name: Verify checkout policy terms identity migration
+        run: ./scripts/test-checkout-policy-terms-identity-migration.sh
 
       - name: Rehearse Domo quote and deposit checkout runtime migration
         run: ./scripts/test-domo-quote-checkout-runtime-migration.sh

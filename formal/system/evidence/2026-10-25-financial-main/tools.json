@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-10-25T23:24:27.694369+00:00",
+  "observationPhase": "After execution; pinned JAR hashes were also checked by the formal runner before executing. Host/compiler/tool trust remains an assumption.",
+  "python": "Python 3.13.5",
+  "node": "v24.13.1",
+  "stack": "3.7.1",
+  "ghc": "9.10.3 as observed in Stack compilation output",
+  "resolver": "lts-24.42",
+  "postgres": "postgres (PostgreSQL) 16.13 (Homebrew)",
+  "java": "openjdk version \"21.0.12.1\" 2026-08-18 LTS\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode)",
+  "z3-solver": "4.13.3.0",
+  "PyYAML": "6.0.3",
+  "formalJars": {
+    "TLA tools1.7.2": {
+      "sha256": "fa18543e44ed5974a85bd2c60c0dc16620ae117680ea8e693d2691999ed90b22"
+    },
+    "Alloy6.2.0": {
+      "sha256": "6b8c1cb5bc93bedfc7c61435c4e1ab6e688a242dc702a394628d9a9801edb78d"
+    }
+  },
+  "pythonOptimizationLevel": 0
+}

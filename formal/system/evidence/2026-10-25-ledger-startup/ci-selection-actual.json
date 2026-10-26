@@ -1,0 +1,37 @@
+{
+  "scopes": {
+    "repo": true,
+    "ui": true,
+    "mobile": true,
+    "backend": true,
+    "contracts": true,
+    "migrations": true
+  },
+  "files": [
+    "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+    "docs/catalog-persistence/reports/static-list-inventory.json",
+    "formal/system/evidence/2026-10-25-ledger-startup/README.md",
+    "formal/system/evidence/2026-10-25-ledger-startup/assurance-report.md",
+    "formal/system/evidence/2026-10-25-ledger-startup/baseline-counterexample.json",
+    "formal/system/evidence/2026-10-25-ledger-startup/certificate-receipt.json",
+    "formal/system/evidence/2026-10-25-ledger-startup/original-verifier-rejected.log",
+    "formal/system/evidence/2026-10-25-ledger-startup/postgres-driver.py",
+    "formal/system/evidence/2026-10-25-ledger-startup/postgres-receipt.json",
+    "formal/system/evidence/2026-10-25-ledger-startup/postgres.log",
+    "formal/system/evidence/2026-10-25-ledger-startup/production-release.log",
+    "formal/system/evidence/2026-10-25-ledger-startup/quality.log",
+    "formal/system/evidence/2026-10-25-ledger-startup/receipt.json",
+    "formal/system/evidence/2026-10-25-ledger-startup/startup-mutations.log",
+    "formal/system/inventory.json",
+    "formal/system/ledger-namespace.md",
+    "formal/system/requirements.json",
+    "formal/system/traceability.json",
+    "scripts/__tests__/ci-change-scope.test.mjs",
+    "scripts/__tests__/ledger-startup-namespace.mjs",
+    "scripts/ci-change-scope.mjs",
+    "scripts/lib/production-release.mjs",
+    "scripts/test-ledger-posting.sh",
+    "scripts/test-provider-retry-runtime.sh"
+  ],
+  "fallback": false
+}
