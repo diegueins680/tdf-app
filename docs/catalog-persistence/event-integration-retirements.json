@@ -678,18 +678,18 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "6ff395b6131079017c9d",
-      "reason": "The 222-entry deployment registry preserves the complete 221-entry protected main e938c72ba4b87010214f6838f06bfac45a0f45c0 prefix, including saved-alert migration eb2f71d62740783369a6eb2a6d35fc024484cb71, and appends only the posted-header guard introduced by 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Both independently developed 221-entry predecessor reviews are retained with exact canonical hashes and source references. Historical SQL and introduction SHAs are unchanged. This is a technical source review; current-head CI, independent PR approval and production authorization remain separate requirements.",
+      "replacementId": "2634b239375f2ad309ba",
+      "reason": "The 223-entry deployment registry preserves the complete 222-entry ledger candidate f3e3217ac12a04be2a221ee6ac8bea67875d46c5 prefix, including all221 protected-main migrations and the original posted-header migration, and appends only the provider/domain admission migration introduced by456be073c944dd3d76eb9e3c2169fe7fbb4041ef. Historical SQL bodies and introduction ancestors are unchanged. Both222-entry and209-entry source reviews are retained by canonical hashes. This technical review grants no provider activation, production execution or waiver of current-head CI, independent review and protected merge admission.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
-        "id": "6ff395b6131079017c9d",
-        "valueCount": 222,
-        "reviewBatch": "directory-financial-main-integration-20261026",
+        "id": "2634b239375f2ad309ba",
+        "valueCount": 223,
+        "reviewBatch": "provider-domain-main-technical-review-20261026",
         "sourceParents": [
-          "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
-          "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc"
+          "f3e3217ac12a04be2a221ee6ac8bea67875d46c5",
+          "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd"
         ],
-        "justification": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations."
+        "justification": "The 223-entry deployment registry preserves the complete 222-entry ledger candidate f3e3217ac12a04be2a221ee6ac8bea67875d46c5 prefix, including all221 protected-main migrations and the original posted-header migration, and appends only the provider/domain admission migration introduced by456be073c944dd3d76eb9e3c2169fe7fbb4041ef. Historical SQL bodies and introduction ancestors are unchanged. Both222-entry and209-entry source reviews are retained by canonical hashes. This technical review grants no provider activation, production execution or waiver of current-head CI, independent review and protected merge admission."
       },
       "change": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
       "sourceReviewReferences": [
@@ -896,7 +896,9 @@
         "c94cd70c1272ec9ede1b",
         "b7cc47848f3f9882770f",
         "8229b8202552298c955e",
-        "9ada14767bee1662f97d"
+        "9ada14767bee1662f97d",
+        "6ff395b6131079017c9d",
+        "a70a9a4dd05ce44e950b"
       ]
     }
   ]

@@ -1,0 +1,47 @@
+{
+  "baseline": {
+    "source": "f9e77b73f6ff12ea5f5d892e6386751678fa65a0",
+    "claim": "Both live shell orchestration controls reject the missing expiry verifier; all external tools are inert stubs, not evidence of store semantics.",
+    "runs": [
+      {
+        "optimized": false,
+        "exitCode": 1,
+        "logSha256": "dea36194fca1d21c072a6c0046ab8f1c1d6fb2a31ab982ca82118b72ab5e0106",
+        "twoWiringFailuresObserved": true
+      },
+      {
+        "optimized": true,
+        "exitCode": 1,
+        "logSha256": "b22964343f417fb3211af458f0288377ccb8febe34618a966a615265b38aff8e",
+        "twoWiringFailuresObserved": true
+      }
+    ]
+  },
+  "correction": "Restore the actual standalone expiry verifier before the compiled suite and retain both pre-existing empty rollback/reapply rehearsals. New inert orchestration controls require expiry-before-suite ordering and propagation of a sentinel verifier failure.",
+  "correctedWorkingTreeControls": {
+    "normal": {
+      "tests": 6,
+      "failures": 0
+    },
+    "optimized": {
+      "tests": 6,
+      "failures": 0
+    },
+    "sourceSha256": {
+      "scripts/test-provider-domain-harness.py": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
+      "scripts/test-provider-retry-runtime.sh": "6e9f3db759644af6ba162685d6a48aac8a0b8a1b7a25b123e88cfc2f345eabbc"
+    }
+  },
+  "limits": [
+    "Inert orchestration proves wiring only. Actual store/clock semantics still require the restored native7-case probe and three expected-failure clock mutations.",
+    "The prior f9 build was intentionally interrupted before editing because review established a real verification regression; it is not a qualified build.",
+    "Two earlier inert controls failed during stub setup; retained separately and not counted as business or wiring counterexamples."
+  ],
+  "review": "https://github.com/diegueins680/tdf-app/pull/596#discussion_r4383120250",
+  "repositoryQuality": {
+    "command": "npm run quality:repo",
+    "exitCode": 0,
+    "sourceScope": "corrective working tree before publication; source file hashes recorded above",
+    "logSha256": "b207539523845a420d33954c7f5f8d886101f0c196ca9f6a4e5f31176c4ec668"
+  }
+}

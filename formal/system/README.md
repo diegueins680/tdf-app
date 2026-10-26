@@ -137,6 +137,8 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 - [profile-editing-baseline.md](profile-editing-baseline.md): fan and artist edits require an owned successful profile read, isolate account generations and preserve dirty drafts through background reads.
 
+- [provider-domain-binding.md](provider-domain-binding.md): exact durable PlaceToPay/PayPhone admission across the four checkout domains, full-schema fixtures and PostgreSQL controls.
+
 ## Authority and conflict resolution
 
 1. Explicit approved product decisions, with their activation scope and recorded

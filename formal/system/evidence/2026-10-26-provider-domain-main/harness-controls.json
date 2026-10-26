@@ -1,0 +1,52 @@
+{
+  "historicalSource": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
+  "historicalHarnessSha256": "9251e824f6c7811914a39a38147723dd23ac8cf5eb9d319a2baa1b88be651975",
+  "candidateHarnessSha256": "dde27908fb2bebe25c14c022cc2bf7cc123e03b4236d94e43971699272c9ba77",
+  "controlSha256": "48ff5e6b2a6d995e78d4be732bcf006b7ea2b42a9f76d7a7d2e167eda2e6f1e6",
+  "python": "3.13.5 (v3.13.5:6cb20a219a8, Jun 11 2025, 12:23:45) [Clang 16.0.0 (clang-1600.0.26.6)]",
+  "results": [
+    {
+      "name": "old-normal",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/private/tmp/tdf-provider-harness-controls-20261026/test-provider-domain-harness.py"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "logSha256": "44825f24cdbd1bcc73113cc0e880161c602c66296af8171cc29ead1360391377"
+    },
+    {
+      "name": "old-optimized",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-O",
+        "/private/tmp/tdf-provider-harness-controls-20261026/test-provider-domain-harness.py"
+      ],
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "logSha256": "c7bb651e833785561e23a48725a9f114407861c40d97767230b9177c7e365f0e"
+    },
+    {
+      "name": "candidate-normal",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/private/tmp/tdf-provider-domain-current-main-20261026/scripts/test-provider-domain-harness.py"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "logSha256": "bd0b3a0129c340bbbda7ba9481f5a5ee2c63fbce13388e075a7285e381743b02"
+    },
+    {
+      "name": "candidate-optimized",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-O",
+        "/private/tmp/tdf-provider-domain-current-main-20261026/scripts/test-provider-domain-harness.py"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "logSha256": "6bdff07fdc138a5a5f4194affc0c860a207398c8c95f4ca6da6a15c0bae861b2"
+    }
+  ],
+  "claim": "The previous rejection helper accepts wrong SQLSTATE, wrong guard message and changed rollback snapshot under Python optimization; corrected explicit checks reject each. This isolates harness behavior and is not a PostgreSQL implementation proof."
+}
