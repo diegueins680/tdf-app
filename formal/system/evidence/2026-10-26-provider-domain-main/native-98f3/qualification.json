@@ -1,0 +1,39 @@
+{
+  "source": "98f3ed230d2bcc87971d9e7c9b2083bd1cb9700d",
+  "protectedMainAtQualification": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "propertyAssurance": {
+    "PAY-DOMAIN-BINDING-001": "TESTED: finite SQL/application admission cases at the recorded schema and schedules",
+    "PAY-INTENT-EXPIRY-001": "TESTED: real store expiry boundary, two witnessed lock-wait isolations and three clock mutations"
+  },
+  "completeImplementationEquivalence": "UNPROVEN",
+  "migrationEntries": 223,
+  "metrics": {
+    "matrixCases": 224,
+    "snapshotCases": 4,
+    "witnessedRaces": 16,
+    "negativeControls": 10,
+    "compiledDiscovered": 317,
+    "compiledExecuted": 317,
+    "compiledFailures": 0,
+    "compiledPending": 0,
+    "intendedExpiryExamples": 7,
+    "clockMutantsRejected": 3,
+    "normalHarnessControls": 6,
+    "optimizedHarnessControls": 6
+  },
+  "productionOperations": false,
+  "deliveryAtMeasurement": {
+    "pr": 596,
+    "state": "OPEN",
+    "head": "98f3ed230d2bcc87971d9e7c9b2083bd1cb9700d",
+    "independentReviewer": "tdfrecords",
+    "approvedAt": "2026-10-26T22:37:11Z",
+    "codexReview": "No major issues at98f3ed230",
+    "hostedCI": "PENDING: required checks not replaced by this local qualification"
+  },
+  "limits": [
+    "Finite synthetic database cases; real provider HTTP, production data, arbitrary schedules, liveness and external exactly-once charges are not proven.",
+    "Retain original SQL ancestry and normal merge. No deployment or provider activation.",
+    "Historical cb777/f9/037 evidence retains its original source identity."
+  ]
+}
