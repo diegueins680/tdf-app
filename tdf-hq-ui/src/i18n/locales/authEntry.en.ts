@@ -1,5 +1,8 @@
 // Public arrival, authentication and recovery copy.
 export default {
+  logoutPending: 'You signed out of this app. We are confirming sign-out with the server.',
+  logoutUnconfirmed: 'You signed out of this app, but server sign-out is unconfirmed. Retry when connected.',
+  retryLogout: 'Retry sign-out',
   featureMenu: 'Feature menu',
   closeFeatureMenu: 'Close feature menu',
   claimReviewAfterSignup: 'Create your own account. You can then submit an access claim for the selected profile for review; signing up does not grant ownership.',

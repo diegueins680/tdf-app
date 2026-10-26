@@ -11853,6 +11853,183 @@
       }
     },
     {
+      "id": "DIR-SAVED-SEARCH-001",
+      "title": "Saved alerts share public non-geographic eligibility",
+      "statement": "Saved-search alerts and public directory queries share typed non-geographic and entity/derivation predicates, preserve public ranking/facets, reject unsafe new filters, and tolerate unsupported historical filters without broadening or aborting index updates.",
+      "domain": "DIR",
+      "authority": "Product owner user-value completion instruction 2026-10-25; existing directory saved-search contract and issue534.",
+      "source": "docs/music-directory/functional-spec.md saved-search section; issue534; docs/directory/saved-search-parity.md",
+      "property": "For valid non-geographic filters, a public eligible changed canonical indexed result matches its saved alert exactly once per version; invalid/unsupported filters never broaden a match.",
+      "contract": "docs/directory/saved-search-parity.md",
+      "actors": [
+        "Authenticated directory user",
+        "Public directory visitor",
+        "Directory document projector"
+      ],
+      "preconditions": [
+        "The complete reviewed migration prefix and additive parity migration are applied.",
+        "Saved alerts opt in and their frequency is not off."
+      ],
+      "inputs": [
+        "Typed public query filters",
+        "Saved canonical JSON",
+        "Canonical public search documents and aliases",
+        "Result source version"
+      ],
+      "state": {
+        "savedQuery": [
+          "valid-non-geographic",
+          "invalid",
+          "unsupported-geographic"
+        ],
+        "delivery": [
+          "absent",
+          "internal-notification-created"
+        ]
+      },
+      "allowedTransitions": [
+        "Valid query plus eligible new/modified version -> one internal notification.",
+        "Same version replay -> unchanged.",
+        "Unsupported radius removed -> valid alert save."
+      ],
+      "forbiddenTransitions": [
+        "Ignored non-geographic filter -> irrelevant notification.",
+        "Literal all/artist alias mismatch -> lost eligible notification.",
+        "Malformed historical cast -> unrelated document write abort.",
+        "New saved exact coordinates -> persisted payload.",
+        "Same result version -> duplicate delivery."
+      ],
+      "effects": [
+        "Use the same scalar SQL predicates for public and saved matching.",
+        "Preserve valid saved JSON/hash/name/history and public scoring/facets/cursor.",
+        "Unsupported geographic alerts stay unavailable with explicit new-request error."
+      ],
+      "authorization": "Existing authenticated actor owns saved searches; public/canonical visibility remains required for notification eligibility; no new grants or endpoints.",
+      "privacy": "Reject new saved exact coordinates and unknown/nested canonical fields; no historical payload rewrite or external provider activation.",
+      "concurrency": "Existing unique saved-search/result/version delivery fence and transactional notification are retained; no global worker/concurrency proof is claimed.",
+      "idempotency": "Existing saved-search actor/request identity and query hashes are preserved; same-version trigger replay cannot create a second delivery.",
+      "failure": "Invalid new filters return400; radius-enabled alerts return an actionable400; historical malformed/unsupported filters yield no-match without propagating known conversion errors.",
+      "recovery": "Remove unsupported/invalid filters and retry using the same existing endpoint; reviewed rollback restores the exact previous trigger with compatible previous backend.",
+      "observability": "Synthetic SQL/HTTP and plan receipts; minimized validation reasons; no profile payloads or credentials added to logs.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+        "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql",
+        "scripts/test-directory-saved-search-parity.mjs",
+        "scripts/__tests__/directory-saved-search-http.mjs",
+        "scripts/__tests__/directory-search-plan-parity.mjs",
+        "scripts/test-community-search.py",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Source-confirmed defect with real PostgreSQL negative characterization and candidate parity controls; hosted/deployed and physical-device evidence remain separate.",
+      "ambiguity": [
+        "Geographic saved-alert centers require an explicit privacy-compatible product contract; radius-only saved queries cannot be evaluated geographically."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded non-geographic repair; geographic delivery remains unsupported and release/deployed correspondence require independent review and gates."
+      },
+      "verification": "Full-schema PostgreSQL trigger/notification tests, protected input validation, rollback/reapply, shipped query/plan comparison and real authenticated HTTP lane; no mathematical proof claimed.",
+      "evidence": "Dated local reproduction and qualification receipts, final candidate source hashes and hosted checks."
+    },
+    {
+      "id": "AUTH-LOGOUT-001",
+      "title": "Retain explicit browser logout intent through network failure and reload",
+      "statement": "Explicit browser logout must suppress automatic cookie and descriptor restoration until fresh interactive authentication, distinguish unconfirmed server revocation, and reject stale session adoption callbacks.",
+      "property": "Active local logout intent implies no automatic account restoration; late callbacks do not own later logout/login revisions.",
+      "domain": "AUTH",
+      "authority": "User-authorized value activation sprint: prioritize reproducible privacy and authentication blockers before human pilot.",
+      "source": "Isolated real browser/API/PostgreSQL failed logout reproduction; journeys A/B logout and return.",
+      "contract": "formal/system/logout-intent.md",
+      "actors": [
+        "Browser user",
+        "Server session owner"
+      ],
+      "preconditions": [
+        "Same-origin browser application and storage; existing server authentication remains authoritative."
+      ],
+      "inputs": [
+        "Explicit logout",
+        "Revocation result or deadline",
+        "Reload",
+        "Fresh interactive authentication",
+        "Storage events"
+      ],
+      "state": {
+        "localIntent": [
+          "cleared",
+          "pending",
+          "unconfirmed",
+          "confirmed"
+        ],
+        "revision": "Identity-free per-transition ownership revision"
+      },
+      "allowedTransitions": [
+        "Logout -> persisted intent and local anonymous state",
+        "Revocation response -> confirmed or unconfirmed under same revision",
+        "Fresh interactive authentication -> new cleared revision",
+        "Other-tab logout -> local anonymous state"
+      ],
+      "forbiddenTransitions": [
+        "Active intent -> automatic cookie or descriptor restoration",
+        "Stale authentication callback -> clear later logout intent",
+        "Old logout completion -> overwrite fresh login revision",
+        "Network failure -> claim server revocation"
+      ],
+      "effects": [
+        "Bounded explicit logout request; no automatic retry; existing cache epoch invalidation."
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/session/SessionContext.tsx",
+        "tdf-hq-ui/src/api/session.ts",
+        "tdf-hq-ui/src/api/client.ts",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/api/drive.ts",
+        "tdf-hq-ui/src/api/inventory.ts",
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/session/logoutIntent.test.ts",
+        "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
+        "tdf-hq-ui/src/api/logoutIntent.test.ts",
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
+        "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Revision, storage, bootstrap, unsigned transport, XHR refusal and deadline regression controls; native optimized browser with actual API and disposable PostgreSQL.",
+      "evidence": "Pre-fix native reproduction retained; current candidate execution receipts qualified separately from CI, review, merge and deployment.",
+      "historicalStatus": "new",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for scoped local controls; production and human acceptance remain unverified.",
+      "ambiguity": [
+        "Offline server revocation, accepted requests, cross-document Set-Cookie ordering, raw transports outside scoped clients, native devices and external providers are not certified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped implementation and executable checks; full distributed session safety and production acceptance are not proved."
+      },
+      "authorization": "Existing server session, ownership, role and origin authorization remain authoritative.",
+      "privacy": "Persist only revision and confirmation status, no identity or credentials.",
+      "concurrency": "Captured revision and existing synchronous account epoch reject obsolete UI adoption; no cross-client linearizability claim.",
+      "idempotency": "No automatic logout replay; explicit retry remains separate.",
+      "failure": "Server revocation remains unconfirmed on network, deadline or non-success response.",
+      "recovery": "Explicit bounded retry or fresh interactive login; retain unsigned public reads.",
+      "observability": "Record outcome booleans only; no cookie, token or personal-data diagnostics."
+    },
+    {
       "id": "MEDIA-MUSIC-DISCOVERY-001",
       "title": "Authorized recording-title search and paginated public release discovery",
       "domain": "MEDIA",
@@ -11945,7 +12122,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "7dc896f92976373583e9bac97b0d9e1ca4f34a6b4f72c70b809b14fd9c4c4910",
+    ".github/workflows/ci.yml": "aa9498a53191d37c81437847943c5241c9e00aa0c70143e36044561a46e843e9",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -11953,7 +12130,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "2df15e168c1c66982d4bdd62a25c06fb43fe8593c45dc032ed8bcb2576437f14",
+    "docs/catalog-persistence/catalog-list-decisions.json": "c3961a5f03e3252d529ab17649083deacc18dbdbf8c701f981e55fecadd58803",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -12298,7 +12475,7 @@
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "7d3fd93e543c62399aa573908553998cc70c6606edc39b31c2120bc24d2f196d",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "eb30521a370a81c42fb49e9a106baf79fa7d4e8a52ce9a3bee2a5dcef4e7054a",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "c95c36e8dd5bd2e15c38999f86f05e33c2a5cee096141db132b855be6a713ae7",
@@ -12307,6 +12484,8 @@
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
+    "scripts/__tests__/directory-saved-search-http.mjs": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
+    "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "76cf3c7aaeed689164a94da6d79b6297b5bf84b95ef05782436c46c84e93e636",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
@@ -12415,7 +12594,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "6b125a762a48305ccd0c948db1817e8dd0490092819e55254dcb78946c44d8be",
+    "scripts/production-migrations.json": "01dea8601b27c2b4ae58f321c5d997c209b3bfc438e542e33e63e0198f903bb7",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
@@ -12450,9 +12629,10 @@
     "scripts/test-checkout-policy-terms-identity-migration.sh": "ceded6be2927dfcb777863190ea62779d58c3637e706d48c6dce5a58b97096c1",
     "scripts/test-checkout-terms-history.sh": "237e633cf0bc7e6efd3317e6dfeeddc2f43a2fd948fbae7888e0ee371324f922",
     "scripts/test-checkout-terms-upgrade-concurrency.py": "7f0d4db4046fa61057d2198469529b92bdeb9b05cf0b55233f8a047e042ba504",
-    "scripts/test-community-search.py": "62fc49fb26bc0eb3e986d25e001c686eb196ab29a5d275221ce44203ae3b7cb7",
+    "scripts/test-community-search.py": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
+    "scripts/test-directory-saved-search-parity.mjs": "f4d9e034b9c1c80ce8a526224897079a06158baf8856f92b1dbc199f1baa9365",
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -12579,14 +12759,14 @@
     "tdf-hq-ui/src/api/accountDeletion.ts": "7d9983a96e95229e1ecf8a2470712214ad62ce525a206a0cb0a8c5ff3a3805ff",
     "tdf-hq-ui/src/api/artistInvitations.ts": "22b382c361b9ee99744c24a7ebb2888ac7037482cc607460a84a353614937a17",
     "tdf-hq-ui/src/api/auth.test.ts": "ae5de69adf0ca516180ce0078770eb6654bfa2ca617b1c8c2a9762108f7b8bf7",
-    "tdf-hq-ui/src/api/auth.ts": "6ad0e27b011ff0d4293a1af6c7dfa6c038cd6829c947837d492a26e89734ca0f",
+    "tdf-hq-ui/src/api/auth.ts": "c2f502db09c6082917f0a796be6258b780a7086329565aea55c3d4661f7e15bb",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "e926290d808f7fed23fe6c52cf24ced83ebdfb77212787ce44b3a85860558d84",
-    "tdf-hq-ui/src/api/client.ts": "6b0d3de4ec299b7f44e4c2ef295efe97b0977f81288379c9aa4af4c0fac5cd92",
+    "tdf-hq-ui/src/api/client.ts": "c1a35d37d170cdf684226758a5fb024b1040545d8404c0f6d77e58e644e165fc",
     "tdf-hq-ui/src/api/courses.ts": "bd43900434c1133d46a41ad0270c6e14c5ff1183f238e360a287d797853c87e6",
     "tdf-hq-ui/src/api/directory.test.ts": "ee9c96a31856a1945af7e3f238974a43533d8ebf7f32f0cdadea2dcf834fa9ed",
     "tdf-hq-ui/src/api/directory.ts": "6d1b860759bb5841d85ff693ddfe7580cb56561eb9614f8eaef01f07c424fdc3",
-    "tdf-hq-ui/src/api/drive.ts": "27e9d44e0bfa36c763b79e57731b118168b77bf0ac051790903693208fe0d2a3",
+    "tdf-hq-ui/src/api/drive.ts": "58ddf0aba81ae1ca1cf67d400b6826cca57aab890a7120dd48efe28aa49c8e7c",
     "tdf-hq-ui/src/api/drive.upload.test.ts": "7ae7828b0917f8ee4f03f630a5932bff0098b498b0f5ff7fde96b90f7682f033",
     "tdf-hq-ui/src/api/eventTickets.test.ts": "a411fe9ca5267672db4db1ec3481aecd3fda6d8a19bc913c0885db2eb65ea541",
     "tdf-hq-ui/src/api/eventTickets.ts": "9ed3528a555397f16261758e2fe98aa6b57348ffbda8ed45b6ac629daeaeb736",
@@ -12594,9 +12774,10 @@
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
     "tdf-hq-ui/src/api/generated/types.ts": "76df1aac037bdab83262a65de0ca428adae659d7d3b7bd6927730cc91353339c",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
-    "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
+    "tdf-hq-ui/src/api/inventory.ts": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
     "tdf-hq-ui/src/api/invoices.ts": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
+    "tdf-hq-ui/src/api/logoutIntent.test.ts": "5366999e451b40e12be270e6db4ec4142761877b23aacf111733b5babbc5c66c",
     "tdf-hq-ui/src/api/musicReleases.money.test.ts": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
     "tdf-hq-ui/src/api/musicReleases.pagination.test.ts": "e1b83d693a268efebd2121a899cf6fa422d39994895425abddb68054056b652e",
     "tdf-hq-ui/src/api/musicReleases.ts": "6c1ae9c62c2c4cdb51ba8e94bc5086d3c54e6a2cfd323c14da1d7d74f3c6ca6e",
@@ -12607,7 +12788,7 @@
     "tdf-hq-ui/src/api/parties.ts": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
     "tdf-hq-ui/src/api/requestDeadline.ts": "f8294c115c2638bb82dc0f61ad5f2e4a63018b3d17490d1a7ee1f64d56080a99",
     "tdf-hq-ui/src/api/session.test.ts": "b00e52d37736c2f913029b4ebd6d327b488b4fb00515e7be468f4788c0bf775e",
-    "tdf-hq-ui/src/api/session.ts": "f9c1e71ee476a7551fb6a5dd093c8c9776e525d113af0451bde93aebaf910e90",
+    "tdf-hq-ui/src/api/session.ts": "4b3fccc0019fa402a84982b83b569fc47e4342f71dd70e2ddaaee7f327f3c372",
     "tdf-hq-ui/src/api/socialEvents.ts": "3824f428b65edc40080c73f42638cd328470c9f390f4ebf732a2dbfe23fe3b42",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
@@ -12687,8 +12868,8 @@
     "tdf-hq-ui/src/i18n/index.ts": "53c26394ae54a6dd8fbfd91429e0300bf5b2d324d7e66f48179e283f7fc832e5",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
-    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "10ee86e9b01c50a6222c2f24291d812964a7552ea778ebe53054b9012ea9b84e",
-    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "915ced996ce7903c55e27831791a239ab07441784d70dd1975ce85daaad57e89",
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "d886e1ac1352a582a8b44e658d47ee8681328c928379869a338d3144965cdb92",
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "a95c1358ae8817800742f6e9a7e0505e8d10efc6aa7ee0421cf9840436f2a3e7",
     "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
     "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "1b14577b1d260ec8c9b65ca2c6939c3db85e20e043d835e5efc1c0183cbc059f",
     "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "dd0ccec28420756aad3a3f52fe1e6e749f6d79caba0974977d96f3e69fd5e58d",
@@ -12707,6 +12888,8 @@
     "tdf-hq-ui/src/pages/AccessRequestsPage.tsx": "e91af15d7cab50fb347441fb220f365c694a43b888624582ff2314667506432c",
     "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": "e8128e5d24e1540cfd8e2accbb17d74941f2867957feb3cc8edb6723dab2b541",
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
+    "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx": "70b99414c406650748af71ecad6998afe4821ef5beaab6f6f46e7f11c9d9f821",
+    "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx": "041214548bf3ebf562aae5c17fa5d90008469e1c13dc8fd88c0e3d1ee609bfd5",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
     "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "545402d0b86ef118c857130ef91a28c4e5a9fc90d4df25c914395aa81241c894",
@@ -12736,8 +12919,8 @@
     "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": "071f7a3d488fd88687cffda5cb6c4a505018aaec8380c51e88c3f73560d28371",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx": "c7ee179cb1dd5e0326054d9cc06d6f0c433ecd48b7620a9b25d0ae278ade6218",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": "b3d9afb2fcef5772f8397011443b084abf8d65e47b9ff4ac2187bca2a027c14a",
-    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "c79edb524886802dfbedd61fbc97614a0fe4ba4414708c2482ffa1856d2bad0c",
-    "tdf-hq-ui/src/pages/LoginPage.tsx": "a4fa1f33977e120b61299d94f3b9853e220f25ddc0c854e9329fa288d120f443",
+    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "29cbe90efd800dfa0b84334f8e40d1df1c3019d9230311eda67577db67bccaad",
+    "tdf-hq-ui/src/pages/LoginPage.tsx": "41bba4678c5386a6a1f0bc6104ab214ae4c4ac12d44d1b7eaa0130b8b1f13c6d",
     "tdf-hq-ui/src/pages/MarketplacePage.tsx": "b129902039b0dca4eba1ed7077c2a61d7909da0a02bcb4eca2c35650c07cd102",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
     "tdf-hq-ui/src/pages/MobileAppPage.tsx": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
@@ -12758,6 +12941,7 @@
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "2aa258dc66bffa06a09bc3581cc0d1c1342b512504cbd6f897854c79c0caeece",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
+    "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "6d8f0f2af34f9312217af92971c67e977ec63403ffdef45ed9c908fcf1720c49",
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "839aadb02473f36fa6650e13c588852d5bf41fae3524f6675b8a3fe509e39cb5",
@@ -12785,13 +12969,17 @@
     "tdf-hq-ui/src/routes/protectedRoutes.tsx": "7b30fe9684172ea1ce741dfa17b650a75e30d7f04bfbfa1a6e6b8134db4f1761",
     "tdf-hq-ui/src/routes/publicRoutes.test.tsx": "b1d51f44ec9320845ae9fe0027eec9f45e088ae3b3d15b991f986e31448bbb5c",
     "tdf-hq-ui/src/routes/publicRoutes.tsx": "0f6ffdb7a973c5e0f419dd9dce384e326d82a4e8615a61deb4e713bc39e84629",
-    "tdf-hq-ui/src/session/SessionContext.tsx": "8cb425bcd28933e0482bee404607a6ed275d75b3810a42b207e8edd930037037",
+    "tdf-hq-ui/src/session/SessionContext.tsx": "31ad1065781ceee0927d9809041e5fe374a54210feeacca396c5c22ad13d42ca",
     "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx": "d73f62bb5fd41d238f3b9b894dc9e935a525e51885dfd75b6c0efe1b7fd2a2f4",
+    "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx": "6d28d26c28078996f37d16bb00ea2e12f9af21e2583ed52cd9f1c6f5c9368777",
+    "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx": "6fb0daa60ae3fbe7d6603fb252ee661d308ec2e38ff12a96d94adabaea22e7f7",
     "tdf-hq-ui/src/session/SessionProviders.test.tsx": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
     "tdf-hq-ui/src/session/SessionProviders.tsx": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
     "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx": "5109459ac552aec840246f08366bf65ec95a0fe26579b7664cee39dcfdae6250",
     "tdf-hq-ui/src/session/SessionQueryProvider.tsx": "a210c0bdf2b574603474abe4c839e7a6bed0d3b3c4eff9fc679495ad41a0e74b",
     "tdf-hq-ui/src/session/authEvents.ts": "7eb5599167ba8a097912f600c0b88a472c9d56e98b0115bba05aa3734249e977",
+    "tdf-hq-ui/src/session/logoutIntent.test.ts": "e6d15a80229ee6728882d44e717d955160a597d1f9f3a3ca6ebb0fef2509f1e1",
+    "tdf-hq-ui/src/session/logoutIntent.ts": "abad265a1a074073f4785ddc134df91fe7e1ab5774c49d171690f2e60eeff733",
     "tdf-hq-ui/src/styles/navigation.css": "772cc716f647a8ae280e4c2f8f0bb0756cd2dd436e744a30b15c952ac0fa18cd",
     "tdf-hq-ui/src/theme/AppThemeProvider.tsx": "840ccaf4c10eab5b8f5bbd570f65687c82332fbcdbc4d7e6e7804732e78d0a1a",
     "tdf-hq-ui/src/theme/appTheme.ts": "8a154a8624caf86c6fc881a2571f808b3207d406719d564155ed7b2b0374a00e",
@@ -12933,6 +13121,8 @@
     "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql": "af468bf34bbfe36bfc6e3321a02ff71875d1ac49d7351a23fb607568de1d643f",
     "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql": "27c2a344d5b0f88fd9757dff720c692e55564d9fb3df5531ed22f38aaafb2694",
     "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql": "3f0cf2121f5de8bc3074c0d7d1eddaf1fb8217d3d46895ae5b0e92070da9ec05",
+    "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql": "673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4",
+    "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql": "15c50b43f1f1b5591abdacb89cbca6b6db52fb792ca973f31c13c5a67f91e019",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "edb5bfd1fb3d4dab6a9d635e1de23d02c323df9e9d1047c231e2220dfd01f238",
@@ -13009,7 +13199,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "ec50d740c9ce6feed30d1bc67f03fc8d91af097e7e2940bae666c2150e5246ba",
+    "tdf-hq/src/TDF/Server/Directory.hs": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "752c46c93d45ae82b5fce380a9616764a5bb2d97858f0b56a09285ef19b8dfaf",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
@@ -13115,6 +13305,7 @@
     "tdf-hq/test/integration/directory_event_search_alias_sync.sql": "74345cd1a950aba9a454c1f089df7d8bd70bfa76ab8e20f292be9f69ab8b9cae",
     "tdf-hq/test/integration/directory_event_search_http_seed.sql": "b00c06818bcc42e8cee4ff9101f73a2a1311cf411edb68535257a01c038dce12",
     "tdf-hq/test/integration/directory_event_search_sync.sql": "5bb5a92c5403719e7398b2613a2c7956a152a69d0f88c7b0646e9b743206f8f6",
+    "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql": "98c52b8c11c22fdbb85ab5ed923a3185e54a2cf6438d0b485155e55640dda557",
     "tdf-hq/test/integration/interactions/notification-properties.sql": "65d0697ff1ba05a77d8d79d3120e24877c49c23c1b8a45de778096e39adb2d91",
     "tdf-hq/test/integration/ledger_posting_balance.sql": "bfca6e8574bf541195a3ea583eebe9b44205d7299ab96e71fd8276eb194d169e",
     "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
@@ -14141,6 +14332,10 @@
       {
         "requirement": "AUTH-ENTRY-002",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "implementation"
       }
     ],
     "e2e/web/persona-public.spec.mjs": [
@@ -14180,6 +14375,10 @@
       },
       {
         "requirement": "AUTH-ENTRY-002",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-LOGOUT-001",
         "relationship": "tests"
       }
     ],
@@ -14233,6 +14432,10 @@
       {
         "requirement": "DEPLOY-VERSION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
       },
       {
         "requirement": "MEDIA-MUSIC-DISCOVERY-001",
@@ -14470,6 +14673,10 @@
       },
       {
         "requirement": "DISCOVERY-NAV-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
         "relationship": "implementation"
       }
     ],
@@ -14753,6 +14960,10 @@
       {
         "requirement": "NAV-MENU-COVERAGE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": [
@@ -14774,6 +14985,10 @@
       },
       {
         "requirement": "NAV-MENU-COVERAGE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-LOGOUT-001",
         "relationship": "implementation"
       }
     ],
@@ -17031,6 +17246,10 @@
       {
         "requirement": "SYS-WEB-SHELL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/session/authEvents.ts": [
@@ -17046,6 +17265,10 @@
       },
       {
         "requirement": "SYS-WEB-REQUEST-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-LOGOUT-001",
         "relationship": "implementation"
       }
     ],
@@ -18916,6 +19139,10 @@
     "tdf-hq-ui/src/api/inventory.ts": [
       {
         "requirement": "MEDIA-INVENTORY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-LOGOUT-001",
         "relationship": "implementation"
       }
     ],
@@ -21379,6 +21606,10 @@
       {
         "requirement": "SYS-WEB-SHELL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/utils/loginRouting.ts": [
@@ -22787,6 +23018,10 @@
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx": [
@@ -23141,6 +23376,10 @@
       {
         "requirement": "SYS-WEB-REQUEST-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/api/auth.test.ts": [
@@ -23152,6 +23391,10 @@
     "tdf-hq-ui/src/api/drive.ts": [
       {
         "requirement": "MEDIA-DRIVE-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-LOGOUT-001",
         "relationship": "implementation"
       }
     ],
@@ -23263,6 +23506,90 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-directory-saved-search-parity.mjs": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/directory-saved-search-http.mjs": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/directory-search-plan-parity.mjs": [
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/session/logoutIntent.ts": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/session/logoutIntent.test.ts": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/logoutIntent.test.ts": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx": [
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "tests"
+      }
+    ],
     "scripts/test-music-catalog-search.mjs": [
       {
         "requirement": "MEDIA-MUSIC-DISCOVERY-001",
@@ -23354,7 +23681,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7dc896f92976373583e9bac97b0d9e1ca4f34a6b4f72c70b809b14fd9c4c4910",
+      "sha256": "aa9498a53191d37c81437847943c5241c9e00aa0c70143e36044561a46e843e9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23400,6 +23727,10 @@
         {
           "requirement": "DEPLOY-VERSION-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "tests"
         },
         {
           "requirement": "MEDIA-MUSIC-DISCOVERY-001",
@@ -24364,7 +24695,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "7d3fd93e543c62399aa573908553998cc70c6606edc39b31c2120bc24d2f196d",
+      "sha256": "eb30521a370a81c42fb49e9a106baf79fa7d4e8a52ce9a3bee2a5dcef4e7054a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24508,6 +24839,30 @@
       "requirements": [
         {
           "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-420f7b30c17196ae",
+      "path": "scripts/__tests__/directory-saved-search-http.mjs",
+      "sha256": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-38cae059ca169cb6",
+      "path": "scripts/__tests__/directory-search-plan-parity.mjs",
+      "sha256": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "tests"
         }
       ]
@@ -26768,7 +27123,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6b125a762a48305ccd0c948db1817e8dd0490092819e55254dcb78946c44d8be",
+      "sha256": "01dea8601b27c2b4ae58f321c5d997c209b3bfc438e542e33e63e0198f903bb7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27965,11 +28320,15 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "62fc49fb26bc0eb3e986d25e001c686eb196ab29a5d275221ce44203ae3b7cb7",
+      "sha256": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "tests"
         }
       ]
@@ -28036,6 +28395,18 @@
       "sha256": "f2b36be47672551b47c68cccad8959582239a0beeb80e3ed41f105b3c82022ce",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-66af35e30b926d7a",
+      "path": "scripts/test-directory-saved-search-parity.mjs",
+      "sha256": "f4d9e034b9c1c80ce8a526224897079a06158baf8856f92b1dbc199f1baa9365",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b574af41738316b9",
@@ -30394,11 +30765,15 @@
     {
       "id": "SURFACE-2a14b72d994c2399",
       "path": "tdf-hq-ui/src/api/auth.ts",
-      "sha256": "6ad0e27b011ff0d4293a1af6c7dfa6c038cd6829c947837d492a26e89734ca0f",
+      "sha256": "c2f502db09c6082917f0a796be6258b780a7086329565aea55c3d4661f7e15bb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEB-REQUEST-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-LOGOUT-001",
           "relationship": "implementation"
         }
       ]
@@ -30504,7 +30879,7 @@
     {
       "id": "SURFACE-2e3549439fba7b8e",
       "path": "tdf-hq-ui/src/api/client.ts",
-      "sha256": "6b0d3de4ec299b7f44e4c2ef295efe97b0977f81288379c9aa4af4c0fac5cd92",
+      "sha256": "c1a35d37d170cdf684226758a5fb024b1040545d8404c0f6d77e58e644e165fc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30513,6 +30888,10 @@
         },
         {
           "requirement": "SYS-WEB-REQUEST-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-LOGOUT-001",
           "relationship": "implementation"
         }
       ]
@@ -30612,11 +30991,15 @@
     {
       "id": "SURFACE-10856a58d8da5733",
       "path": "tdf-hq-ui/src/api/drive.ts",
-      "sha256": "27e9d44e0bfa36c763b79e57731b118168b77bf0ac051790903693208fe0d2a3",
+      "sha256": "58ddf0aba81ae1ca1cf67d400b6826cca57aab890a7120dd48efe28aa49c8e7c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-DRIVE-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-LOGOUT-001",
           "relationship": "implementation"
         }
       ]
@@ -30876,11 +31259,15 @@
     {
       "id": "SURFACE-4f584dc31d92ebd7",
       "path": "tdf-hq-ui/src/api/inventory.ts",
-      "sha256": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
+      "sha256": "23a9ee913fdd4a4602abd1185bde961b1e3593d95320146bad332059226dffdd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-INVENTORY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-LOGOUT-001",
           "relationship": "implementation"
         }
       ]
@@ -30929,6 +31316,18 @@
       "sha256": "5774b06d8592a7c392959bfb888cd359520cd5a7232f3ccde10de5e6c1f4be2f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-c7a9306039571e52",
+      "path": "tdf-hq-ui/src/api/logoutIntent.test.ts",
+      "sha256": "5366999e451b40e12be270e6db4ec4142761877b23aacf111733b5babbc5c66c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-LOGOUT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-3a646cbbad72eabf",
@@ -31299,7 +31698,7 @@
     {
       "id": "SURFACE-e999a12d43def7e6",
       "path": "tdf-hq-ui/src/api/session.ts",
-      "sha256": "f9c1e71ee476a7551fb6a5dd093c8c9776e525d113af0451bde93aebaf910e90",
+      "sha256": "4b3fccc0019fa402a84982b83b569fc47e4342f71dd70e2ddaaee7f327f3c372",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31308,6 +31707,10 @@
         },
         {
           "requirement": "SYS-WEB-SHELL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-LOGOUT-001",
           "relationship": "implementation"
         }
       ]
@@ -33410,7 +33813,7 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "10ee86e9b01c50a6222c2f24291d812964a7552ea778ebe53054b9012ea9b84e",
+      "sha256": "d886e1ac1352a582a8b44e658d47ee8681328c928379869a338d3144965cdb92",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33431,6 +33834,10 @@
         },
         {
           "requirement": "NAV-MENU-COVERAGE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-LOGOUT-001",
           "relationship": "implementation"
         }
       ]
@@ -33438,7 +33845,7 @@
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "915ced996ce7903c55e27831791a239ab07441784d70dd1975ce85daaad57e89",
+      "sha256": "a95c1358ae8817800742f6e9a7e0505e8d10efc6aa7ee0421cf9840436f2a3e7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33459,6 +33866,10 @@
         },
         {
           "requirement": "NAV-MENU-COVERAGE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-LOGOUT-001",
           "relationship": "implementation"
         }
       ]
@@ -33845,16 +34256,26 @@
     {
       "id": "SURFACE-211c2d4c89fbcb63",
       "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
-      "sha256": "ce9b473b5065b522e50d926baa63510290331badd7b668c4916191bfce5378f1",
+      "sha256": "70b99414c406650748af71ecad6998afe4821ef5beaab6f6f46e7f11c9d9f821",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-LOGOUT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-a22dcf6e94d1d682",
       "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
-      "sha256": "8f3da99899ffe2f026ffb82ccb08d3dc2ef3143dc9f51955e6f7877fc051ac7c",
+      "sha256": "041214548bf3ebf562aae5c17fa5d90008469e1c13dc8fd88c0e3d1ee609bfd5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-LOGOUT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-feace0cde60c7f70",
@@ -34779,7 +35200,7 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "c79edb524886802dfbedd61fbc97614a0fe4ba4414708c2482ffa1856d2bad0c",
+      "sha256": "29cbe90efd800dfa0b84334f8e40d1df1c3019d9230311eda67577db67bccaad",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34796,6 +35217,10 @@
         },
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-LOGOUT-001",
           "relationship": "tests"
         }
       ]
@@ -34803,7 +35228,7 @@
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "a4fa1f33977e120b61299d94f3b9853e220f25ddc0c854e9329fa288d120f443",
+      "sha256": "41bba4678c5386a6a1f0bc6104ab214ae4c4ac12d44d1b7eaa0130b8b1f13c6d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34820,6 +35245,10 @@
         },
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-LOGOUT-001",
           "relationship": "implementation"
         }
       ]
@@ -35454,9 +35883,14 @@
     {
       "id": "SURFACE-e9006bbb523fee68",
       "path": "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
-      "sha256": "9bec5512454b24b594edcc260416d843a4dec5ec36597c0628fc740a9aeed1c1",
+      "sha256": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-LOGOUT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-24d2133b7f15822c",
@@ -36216,7 +36650,7 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "8cb425bcd28933e0482bee404607a6ed275d75b3810a42b207e8edd930037037",
+      "sha256": "31ad1065781ceee0927d9809041e5fe374a54210feeacca396c5c22ad13d42ca",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36225,6 +36659,10 @@
         },
         {
           "requirement": "SYS-WEB-SHELL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-LOGOUT-001",
           "relationship": "implementation"
         }
       ]
@@ -36242,11 +36680,28 @@
       ]
     },
     {
+      "id": "SURFACE-6996ecfbe844e690",
+      "path": "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
+      "sha256": "6d28d26c28078996f37d16bb00ea2e12f9af21e2583ed52cd9f1c6f5c9368777",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-LOGOUT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d936df90f5c3e6d3",
       "path": "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
-      "sha256": "e65e006555671cc6a07a415a85226bbbb5ad4f3972934527498d52216848ecd0",
+      "sha256": "6fb0daa60ae3fbe7d6603fb252ee661d308ec2e38ff12a96d94adabaea22e7f7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-LOGOUT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-85c277bbf0d40f06",
@@ -36312,6 +36767,30 @@
       "requirements": [
         {
           "requirement": "PRIV-CACHE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-7f18c38ef360a0ae",
+      "path": "tdf-hq-ui/src/session/logoutIntent.test.ts",
+      "sha256": "e6d15a80229ee6728882d44e717d955160a597d1f9f3a3ca6ebb0fef2509f1e1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-LOGOUT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-319cda255d94c59c",
+      "path": "tdf-hq-ui/src/session/logoutIntent.ts",
+      "sha256": "abad265a1a074073f4785ddc134df91fe7e1ab5774c49d171690f2e60eeff733",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-LOGOUT-001",
           "relationship": "implementation"
         }
       ]
@@ -41072,6 +41551,30 @@
       ]
     },
     {
+      "id": "SURFACE-8b976b9e85e42f80",
+      "path": "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+      "sha256": "673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-3efaf5b7ed7854d4",
+      "path": "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql",
+      "sha256": "15c50b43f1f1b5591abdacb89cbca6b6db52fb792ca973f31c13c5a67f91e019",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -43054,7 +43557,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "ec50d740c9ce6feed30d1bc67f03fc8d91af097e7e2940bae666c2150e5246ba",
+      "sha256": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43079,6 +43582,10 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "implementation"
         }
       ]
@@ -45298,6 +45805,18 @@
       "requirements": [
         {
           "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ef8e94675f6de4cb",
+      "path": "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql",
+      "sha256": "98c52b8c11c22fdbb85ab5ed923a3185e54a2cf6438d0b485155e55640dda557",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "tests"
         }
       ]
@@ -49558,8 +50077,6 @@
     "SURFACE-34d2f5e2182b0188",
     "SURFACE-441e024eb370fe5d",
     "SURFACE-7d1cdc171a244d93",
-    "SURFACE-211c2d4c89fbcb63",
-    "SURFACE-a22dcf6e94d1d682",
     "SURFACE-67734f5e4107b4c6",
     "SURFACE-fffcbad1b08fd3bd",
     "SURFACE-e7e38d2c86b603f3",
@@ -49681,7 +50198,6 @@
     "SURFACE-fe10107a77c493a3",
     "SURFACE-233b71be3bc7c2c7",
     "SURFACE-0841fa11b4af7d60",
-    "SURFACE-e9006bbb523fee68",
     "SURFACE-24d2133b7f15822c",
     "SURFACE-6b44ad06b4487812",
     "SURFACE-54a41f2ada423353",
@@ -49739,7 +50255,6 @@
     "SURFACE-d27bbf0d78d3b017",
     "SURFACE-500218fd281ada1d",
     "SURFACE-176a7b6b111d489c",
-    "SURFACE-d936df90f5c3e6d3",
     "SURFACE-5a62836ec9be3e4a",
     "SURFACE-871a4dfd1fad6997",
     "SURFACE-62cd0df91e626da5",
@@ -50721,6 +51236,7 @@
     "DEPLOY-VERSION-001",
     "MEDIA-DRIVE-002",
     "COMMUNITY-PROFILE-001",
+    "AUTH-LOGOUT-001",
     "MEDIA-MUSIC-DISCOVERY-001"
   ],
   "stateMachines": [
@@ -51840,7 +52356,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5a217bea09995d995fc5f40a2e8eef471bad07d6787b34d308387c16ad4bf248",
+      "sourceSha256": "43b03fbc3a97b43fa7bfa08dd5bc7d1e8271529da475c33e548a165ca268a7b6",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -51868,7 +52384,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5a217bea09995d995fc5f40a2e8eef471bad07d6787b34d308387c16ad4bf248",
+      "sourceSha256": "43b03fbc3a97b43fa7bfa08dd5bc7d1e8271529da475c33e548a165ca268a7b6",
       "definition": {
         "states": [
           "absent",
@@ -51898,7 +52414,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5a217bea09995d995fc5f40a2e8eef471bad07d6787b34d308387c16ad4bf248",
+      "sourceSha256": "43b03fbc3a97b43fa7bfa08dd5bc7d1e8271529da475c33e548a165ca268a7b6",
       "definition": {
         "export": [
           "queued",
@@ -74174,7 +74690,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 141,
+    "PARTIAL": 143,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

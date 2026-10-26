@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "Focused P1 release catalog search/pagination; universal search mission incomplete",
-  "foundation": "464d49dcdf9b72c6670cb4bb6ea1716d6b7e3429",
+  "foundation": "70e4e2e2679ac607ee15af9967e56aac5a0f58f0",
   "baseline": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
   "combinedInitialCommit": "99ca66b07a7c9ef851d2dfb80199025b3307fc19",
   "sourceFingerprints": {
@@ -225,7 +225,15 @@
       "preloads": 5
     },
     "metadataRegressionTests": 25,
-    "formalStatus": "TESTED finite controls; no mathematical proof or model/refinement claim"
+    "formalStatus": "TESTED finite controls; no mathematical proof or model/refinement claim",
+    "localStackBuild": {
+      "outcome": "CANCELLED",
+      "exitCode": 130,
+      "log": "/private/tmp/tdf-audio-discovery-stack.log",
+      "reason": "Local build was cancelled after the exact preceding hosted candidate canonical backend build and tests passed.",
+      "countsAsPass": false,
+      "currentMergedCandidateQualification": false
+    }
   },
   "priorFailure": {
     "combinedFirstUnit": "65PASS/1FAIL because inherited library fixture clicked disabled button before query settled; now explicit enabled-state wait",
@@ -244,16 +252,83 @@
     "no p95,SLO,physical devices,fullWCAG,deployment or production acceptance"
   ],
   "integration": {
-    "pr": "pending",
-    "ci": "pending",
-    "merge": "not performed",
+    "pr": "https://github.com/diegueins680/tdf-app/pull/622",
+    "ci": "Preceding0a0dd9014candidate green; new integrated candidate CI pending",
+    "merge": "normal foundation reconciliation prepared; no protected-main merge performed by this refresh",
     "deployment": "not performed",
     "productionBusinessWrites": 0
   },
   "foundationRefresh": {
     "normalMerge": true,
-    "preservedRequirements": 140,
+    "state": "source reconciliation prepared; new merged-candidate qualification pending",
+    "previousHead": "0a0dd901471653fc874175ebb401d4580fb0419b",
+    "foundation": "70e4e2e2679ac607ee15af9967e56aac5a0f58f0",
+    "protectedMainIncluded": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+    "inheritedRequirements": 142,
+    "preservedRequirements": 142,
     "additionalRequirement": "MEDIA-MUSIC-DISCOVERY-001",
-    "sqlRunnerAndHandler": "unchanged from integrated four-group PostgreSQL execution"
+    "additionalRequirementSource": "0a0dd901471653fc874175ebb401d4580fb0419b",
+    "totalRequirements": 143,
+    "preservation": "All142 foundation requirement objects retained field-for-field; original discovery object unchanged",
+    "retainedRequirements": [
+      "AUTH-LOGOUT-001",
+      "DIR-SAVED-SEARCH-001",
+      "MEDIA-MUSIC-PLAYER-001"
+    ],
+    "retainedNativeTestWrapper": "scripts/run-native-audio-tests.sh",
+    "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "sqlRunnerAndHandler": "unchanged from integrated four-group PostgreSQL execution",
+    "priorHeadEvidenceDoesNotEstablishNewHeadPass": true,
+    "catalogDecisions": "Foundation preserves main1330 and9audio decisions; this P1refresh adds no catalog decision"
+  },
+  "integrationBaseline": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+  "previousHostedCandidate": {
+    "head": "0a0dd901471653fc874175ebb401d4580fb0419b",
+    "runId": 40266955707,
+    "runUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40266955707",
+    "status": "success for the recorded preceding candidate; not current merged head",
+    "ui": {
+      "passedTests": 3413,
+      "passedSuites": 303,
+      "jobId": 121391618149
+    },
+    "backend": {
+      "examples": 4039,
+      "failures": 0,
+      "pending": 21,
+      "canonicalBuild": "PASS",
+      "jobId": 121391618119
+    },
+    "sqlCatalogSearch": {
+      "passedGroups": 4,
+      "missingAuthorizationMutantDetected": true,
+      "jobId": 121391618119
+    },
+    "nativeAudio": {
+      "passed": 40,
+      "jobId": 121391618875
+    },
+    "personaWeb": {
+      "passed": 524,
+      "skipped": 22,
+      "jobId": 121391618134
+    },
+    "defaultOffRollout": {
+      "passed": 10,
+      "jobId": 121391618134
+    },
+    "communityDiscovery": {
+      "passed": 25,
+      "jobId": 121391618134
+    },
+    "qualityAggregator": {
+      "conclusion": "success",
+      "jobId": 121397158532
+    },
+    "limitations": [
+      "Results retain their original0a0dd9014source identity.",
+      "Pending Hspec examples and skipped browser tests are not counted as passes.",
+      "No production deployment or current merged-candidate CI pass is established."
+    ]
   }
 }
