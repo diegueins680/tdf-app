@@ -1,6 +1,6 @@
 # TDF Records — Informe ejecutivo de recuerdos de eventos
 
-Corte de esta continuación: 26 de octubre de 2026, 18:54 UTC. **Implementado y probado parcialmente, publicado para revisión; sin integración protegida, despliegue ni invitaciones reales de esta entrega. El objetivo integral continúa pendiente.**
+Corte de esta continuación: 26 de octubre de 2026, 22:28 UTC. **Implementado y probado parcialmente, publicado para revisión; sin integración protegida, despliegue productivo ni invitaciones reales de esta entrega. El objetivo integral continúa pendiente.**
 
 ## 1. Diagnóstico y capacidades reutilizadas
 
@@ -31,6 +31,8 @@ Los archivos de este flujo tienen enlaces públicos; no se ofrece almacenamiento
 
 ## 4. PRs, commits e integración
 
+El sucesor de validación usa la rama `test/event-memory-signup-publication-20261026`, primera fuente `f03478ba9` y adaptador CI `733288f96` sobre4d. Cambia únicamente el runner, helper de navegador, asociaciones formales y evidencia; preserva el head revisable de#632. No se incorpora ni se acredita un main posterior a la preparación069/78fa.
+
 | Entrega | Estado acreditado |
 | --- | --- |
 | [Raíz #608](https://github.com/diegueins680/tdf-app/pull/608) | `534c5631`, borrador; su aprobación histórica no aprueba una integración posterior |
@@ -45,6 +47,16 @@ Los archivos de este flujo tienen enlaces públicos; no se ofrece almacenamiento
 La nueva preparación incorpora las reparaciones protegidas del reproductor y las identidades/cabeceras contables. Conserva **los 145 requisitos de main exactos más cuatro propios: 149**, el prefijo protegido de 222 migraciones más las cuatro originales: **226**, y todos los bytes SQL/ancestros de introducción. El pin móvil de esta preparación sigue `7000df1d`; las calificaciones posteriores #172–#174 conservan sus identidades separadas y requieren integración nativa revisada. No se alteraron #608/#615 ni ramas ajenas para sustituir revisiones pendientes. El checkout original divergente se conserva.
 
 ## 5. Pruebas ejecutadas y resultados
+
+El [adaptador y prueba actuales733](event-memory-source-evidence-20261025/signup-ci-qualification.json) pasan localmente **las dos selecciones de navegador**: Chrome150 y Chromium147 incluido, cada una con **122 peticiones directas / 19 grupos / 269 hashes / 11 comprobaciones de navegador**. Los269 archivos coinciden con el commit durante ambas ejecuciones. La cuenta nueva no recibe roles del fixture, conserva el destino, publica una imagen decodificable, la recupera tras reinicio y mantiene invitacionesfalse; el servidor rechaza lectura privada y gestión de campaña. Pasan calidad completa del repositorio, JSON/CSV estrictos1347, siete controles del runner y ocho de historial. [Chrome](event-memory-source-evidence-20261025/signup-ci-local-http-results.json), [Chromium](event-memory-source-evidence-20261025/signup-ci-native-http-results.json). Son ejecuciones Darwin/PG16; activar localmente las ramas de selección de CI no equivale a ejecutar el adaptador Docker alojado.
+
+Se conecta el navegador al runner RACI existente con `--event-memories`, reutilizando compilación y contenedor desechable exacto, e imagenpgvector/PG17 ya usada por el backend para su esquema completo. Conserva las ocho pruebas RACI y las barreras de Docker local, permisos y cleanup; publica solo resultados/capturas sintéticas. **La ejecución alojada nueva está pendiente.** El código de la aplicación, backend, clientes y pin móvil sigue exacto4d; los cambios son automatización, pruebas, asociaciones y evidencia.
+
+
+El [CI final del padre#632](event-memory-source-evidence-20261025/public-entry-hosted-complete.json) terminó en **30 controles satisfactorios y siete omitidos**. Fuente4d, checkout real1e6 con árbol Git completo exacto: web3540/311, Node22.23.3, build336416 bytes gzip/cinco preloads; recorridos566 aprobados/22 omitidos, diez controles de rollout y25 de descubrimiento; ocho casos RACI reales tras el build canónico Stack/GHC9.10.3. Las omisiones no cuentan como pases. Sus revisiones independientes siguen pendientes; no se atribuye este CI al sucesor de pruebas de registro.
+
+La [nueva verificación de registro](event-memory-source-evidence-20261025/signup-first-publication-qualification.json), fuente `f03478ba9`, conserva todo el código web/backend/móvil de4d y añade pruebas. **122 peticiones directas / 19 grupos / 267 hashes / 11 comprobaciones de navegador** pasan con API/PostgreSQL reales y ledger226 exacto. Una cuenta inexistente se crea por la interfaz móvil con aviso visible de términos, vuelve al destino original, carga una fotografía y publica. Autor y otra cuenta la leen tras recargar; la cuenta, publicación y bytes sobreviven a un reinicio real de la API. **No recibe roles del fixture**, solicita marketingfalse, mantiene invitaciones internasfalse y recibe404 para contenido privado y gestión de campañas. [Resultados HTTP](event-memory-source-evidence-20261025/signup-first-publication-http-results.json), [navegador](event-memory-source-evidence-20261025/signup-first-publication-browser-results.json) y [captura sintética](event-memory-source-evidence-20261025/signup-first-memory-phone.png). No es un registro, conversión, permiso ni envío productivo.
+
 
 La [corrección de entrada pública](event-memory-source-evidence-20261025/public-entry-qualification.json), core `87c3ed194`, pasa **3540 pruebas / 311 suites**, lint, TypeScript, build (336422 bytes gzip, cinco preloads), `quality:repo`, catálogo estricto JSON/CSV de **1347** entradas y ocho controles de historial. La admisión mapea doce superficies modificadas; mantiene exactos los 145 requisitos protegidos, 149 totales, y el backend/esquema de 226 migraciones. Estos son controles ejecutados; la cobertura estructural no prueba toda la especificación. El [seguimiento de catálogo](event-memory-source-evidence-20261025/public-entry-catalog-followup.json) conserva el fallo CI inicial: el escaneo1346 anterior omitió el fixture de sesión del test nuevo, aún sin seguimiento en Git. Se revisaron explícitamente sus dos campos sintéticos y se repitieron JSON/CSV estrictos sobre los1347 candidatos versionados y los ocho controles, sin modificar el scanner ni las pruebas funcionales.
 
