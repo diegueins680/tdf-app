@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T17:05:21.899Z",
+  "generatedAt": "2026-10-26T17:19:44.945Z",
   "repositoryRoot": ".",
   "filesScanned": 2421,
   "candidateCount": 1345,
@@ -39155,7 +39155,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 371,
+      "consumerCount": 372,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -39438,7 +39438,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 377,
+      "consumerCount": 378,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -62518,7 +62518,7 @@
       "lines": [
         17
       ],
-      "consumerCount": 441,
+      "consumerCount": 442,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
