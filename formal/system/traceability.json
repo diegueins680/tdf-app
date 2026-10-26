@@ -11995,7 +11995,7 @@
         "formal/event-operations/LedgerHeaderMutable.cfg"
       ],
       "verification": "Full registered schema ordinary-role SQL updates, rollback-scoped guard/startup mutations, witnessed posting/header races under three isolations, a guard-removal RC counterexample and a finite two-writer TLC model with a named mutation control. Backend and formal CI lanes enforce execution.",
-      "evidence": "formal/system/evidence/2026-10-25-ledger-header/; replay commands and limits in formal/system/ledger-header.md. Evidence is valid only for its recorded source hashes.",
+      "evidence": "formal/system/evidence/2026-10-26-ledger-header-main/ records current-main composition; formal/system/evidence/2026-10-25-ledger-header/ retains earlier source identities. Replay commands and limits: formal/system/ledger-header.md. Admit evidence only for its recorded relevant source hashes.",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "TESTED named SQL boundary and BOUNDED_VERIFIED finite abstraction; complete implementation equivalence remains UNKNOWN.",
@@ -51958,7 +51958,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fb31e6740567534d33f352c06aa10e69b8290f79627581b9374d4326dfe5590c",
+      "sourceSha256": "8102ba73d9ea800046ce15d8601a46fbe221a592405f289d9a4d2f8d3edfe049",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -51986,7 +51986,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fb31e6740567534d33f352c06aa10e69b8290f79627581b9374d4326dfe5590c",
+      "sourceSha256": "8102ba73d9ea800046ce15d8601a46fbe221a592405f289d9a4d2f8d3edfe049",
       "definition": {
         "states": [
           "absent",
@@ -52016,7 +52016,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fb31e6740567534d33f352c06aa10e69b8290f79627581b9374d4326dfe5590c",
+      "sourceSha256": "8102ba73d9ea800046ce15d8601a46fbe221a592405f289d9a4d2f8d3edfe049",
       "definition": {
         "export": [
           "queued",
