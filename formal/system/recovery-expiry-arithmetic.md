@@ -189,3 +189,27 @@ byte-identical to protected main. The contract records both manifest hashes and
 this dependency review; its updated context pin still requires fresh solver,
 serialized replay, mutation and independent certificate checks. No predicate,
 assumption or full implementation/refinement status is strengthened by the pin.
+
+## Financial integration context review — 2026-10-23
+
+Relative to protected main `030365aabfb46c14e2962e054cf3b22192cda1a8`, Cabal
+adds only `TDF.LedgerPostingSpec` to the test-suite module list. Removing that
+one line reproduces protected main byte for byte. The test module exports only
+its Hspec specification and uses existing SQL/Persistent and disposable-database
+guards. Runtime module bindings, source paths, dependencies, compiler/CPP options,
+Stack/lock, authorization/RoleEnum/ingestion and recovery source/SQL are unchanged.
+The contract records both manifest hashes and this dependency review. Its new
+context pin requires fresh solver, replay, mutation and independent certificate
+checks; full implementation/refinement and financial release remain unproven.
+
+## Combined Ledger/Music manifest context review — 2026-10-23
+
+The current comparison uses protected main `4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`.
+The merged Cabal file retains its two MusicRelease.Money registrations and adds
+only TDF.LedgerPostingSpec to the test module list. Removing that single line
+reproduces the protected manifest byte for byte. Runtime bindings, dependencies,
+compiler/CPP options, Stack/lock, authorization/RoleEnum/ingestion, ServerAuth
+and recovery SQL are unchanged. Earlier context reviews above retain their
+original baselines; the JSON records the current manifest hashes and review.
+Fresh scoped solver/replay/mutation and independent certificate checks are
+required. This review does not promote full refinement or release readiness.

@@ -1,8 +1,9 @@
 -- SYS-MONEY-003 at the runtime authority: commerce_validate_ledger_posting on
 -- the production schema. Every case runs in a transaction that is rolled back.
--- Known gaps (not asserted here, see formal/system/payment-arithmetic.md): a
--- transaction inserted directly as 'posted' and an entry appended to a posted
--- transaction are not validated by the database.
+-- After the posting-integrity migration, rejected postings use SQLSTATE 23514.
+-- Require its exact ledger diagnostic, not an unrelated constraint failure.
+-- Draft-only creation and posted-entry immutability are additionally exercised
+-- by ledger-posting-postgresql; this fixture focuses on exact arithmetic.
 BEGIN;
 CREATE TEMP TABLE ledger_case(id UUID, label TEXT, entries TEXT[][], expect_ok BOOLEAN);
 INSERT INTO ledger_case VALUES
@@ -22,6 +23,7 @@ DECLARE
   c RECORD;
   i INT;
   posted BOOLEAN;
+  rejection TEXT;
 BEGIN
   FOR c IN SELECT * FROM ledger_case LOOP
     INSERT INTO commerce_ledger_transaction(id, transaction_type, source_type, source_id,
@@ -37,7 +39,14 @@ BEGIN
     BEGIN
       UPDATE commerce_ledger_transaction SET status = 'posted' WHERE id = c.id;
       posted := TRUE;
-    EXCEPTION WHEN raise_exception THEN
+    EXCEPTION WHEN check_violation THEN
+      GET STACKED DIAGNOSTICS rejection = MESSAGE_TEXT;
+      IF rejection NOT IN (
+        format('Ledger transaction %s is not balanced by currency', c.id),
+        format('Ledger transaction %s has no entries', c.id)
+      ) THEN
+        RAISE;
+      END IF;
       posted := FALSE;
     END;
     IF posted IS DISTINCT FROM c.expect_ok THEN

@@ -1,0 +1,37 @@
+{
+  "source": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+  "startedAt": "2026-10-25T18:57:41.285594+00:00",
+  "productionOperations": false,
+  "cases": [
+    {
+      "case": "ordinary-unbalanced-posting",
+      "rejected": true
+    },
+    {
+      "case": "ordinary-posted-entry-mutation",
+      "rejected": true
+    },
+    {
+      "case": "temp-entry-shadow-permits-unbalanced-posting",
+      "observed": "posted|1",
+      "counterexample": true
+    },
+    {
+      "case": "temp-parent-shadow-permits-posted-entry-mutation",
+      "observed": "posted|1",
+      "counterexample": true
+    }
+  ],
+  "cleanup": {
+    "ownedDatabaseRemoved": true,
+    "ownedClusterStopped": true
+  },
+  "rolePrivileges": {
+    "superuser": false,
+    "ownsTransaction": false,
+    "canCreatePublic": false,
+    "canTemp": true
+  },
+  "finding": "two non-owner TEMP shadowing integrity bypasses reproduced",
+  "finishedAt": "2026-10-25T18:58:00.237738+00:00"
+}
