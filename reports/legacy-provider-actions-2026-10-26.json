@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "kind": "focused-legacy-release-provider-action-delivery",
+  "scope": "Independent main-targeted legacy release source classification and provider navigation; universal audio mission incomplete",
+  "baseline": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+  "sourceCommit": "6f9b192cd6d0b4652b9e3342e4e7db392082fd64",
+  "branch": "fix/legacy-audio-links-20261026",
+  "targetBranch": "main",
+  "observedRemoteMain": "3af768dacd95c1223975c62da3ce8088bed89b47",
+  "implementationReceipt": {
+    "kind": "legacy-provider-source-selection-increment",
+    "base": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+    "branch": "fix/legacy-audio-links-20261026",
+    "baselineRegression": "9 expected failures,9 existing passes: provider/unsafe URLs dispatched as native,artist attribution lost",
+    "verification": {
+      "focusedRegressionFinal": "122 tests in7suites PASS",
+      "lint": "6 touched files PASS",
+      "build": "TypeScript,Vite,initial bundle gate PASS",
+      "browserNativeDecoder": "NOT_RUN; added actualFanHub+ReleaseFeed and actualPlayerProvider JSDOM command/state integration, declared media doubles",
+      "buildInitialGzipBytes": 335237,
+      "buildPreloads": 5
+    },
+    "sourceSha256": {
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "d1989028ff7d93c48c1a65bd048e36bb8344b11ebdb47f6a7d7c1f494426388c",
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": "734884c36cc8f8613efe55358998cdef4569bcdc408a7730b38cf3a79605200b",
+      "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx": "8efc3df3b7c1cb37c6a8c0c670b46f83099015634afa19d64a104d4beb11a1fa",
+      "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx": "5025c515898d64cf45433b275f81d8752d8f4b1c46ad3b7b82899ceccfa4ebb5",
+      "tdf-hq-ui/src/pages/FanHubPage.tsx": "e7bbd53c926c611a74a64883edc1a433faabd183234c2d0e90dfb564b62b848c",
+      "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d"
+    },
+    "evidenceSha256": {
+      "/private/tmp/tdf-legacy-audio-negative.log": "9e4b61dee128f65d05095146b3f2cda3ff420e74043783203c253c7972e6c51f",
+      "/private/tmp/tdf-legacy-audio-regressions-final.log": "11e3aaea205cfb69cf3208747e579018310dea606403b30fd8a8758771d21c13",
+      "/private/tmp/tdf-legacy-audio-build-final.log": "7c343bcfa61b4e6682212509b26270e16025661ed5cc8c0ff038415a0c3f89e3",
+      "/private/tmp/tdf-legacy-audio-lint-final.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "overlapAudit": {
+      "619": "d8191612b1d8e185e997a4ecf72c2d23ed83fba9 welcome/directory,noowned-sourceoverlap",
+      "621": "f3e3217ac12a04be2a221ee6ac8bea67875d46c5 ledgerheader,noowned-sourceoverlap"
+    },
+    "externalContextLimits": [
+      "Spotify/YouTube pages and Drive HTML views use explicit provider links; no extraction,SDK,or universal provider playback claim.",
+      "External link activation pauses existing TDF universal player using RADIO_TAKEOVER_EVENT,retaining track/position. Dialog opening/canceling leaves playback unchanged.",
+      "RadioWidget broadcasts/microphone tests and external tabs/players remain outside this ownership bridge.",
+      "Drive /uc?id delivery and signed no-extension media URLs remain native; private Drive content retains provider permissions.",
+      "Unknown HTTP(S) resources still require actual valid audio; source adapter cannot prove arbitrary URL content by extension."
+    ],
+    "productionWrites": 0,
+    "push": false,
+    "PR": null,
+    "deployment": null,
+    "commit": "6f9b192cd6d0b4652b9e3342e4e7db392082fd64",
+    "gitIndexSetupFailure": "Initial sandbox Git index write was blocked; normal staging and commit retried with explicit escalation, no source changes."
+  },
+  "implementationReceiptSha256": "1959088ab72d3b53609912de8c99b376d7df12e8909a33eefa1d1e16f1ae7352",
+  "formal": {
+    "requirement": "MEDIA-MUSIC-LEGACY-001",
+    "contract": "formal/system/legacy-release-playback.md",
+    "classification": "PARTIAL",
+    "mathematicalProof": false,
+    "modelChecking": false,
+    "preservedRequirements": 142,
+    "totalRequirements": 143,
+    "preservedBaseCatalogDecisions": 1330,
+    "nativeDecoderStatus": "NOT_RUN",
+    "externalProviderAcceptance": "UNVERIFIED",
+    "totalCatalogDecisions": 1332
+  },
+  "verificationBoundary": {
+    "localSourceHashesVerifiedAgainstReceipt": true,
+    "localEvidenceHashesVerifiedAgainstReceipt": true,
+    "unitIntegration": "JSDOM actual helper/FanHub/ReleaseFeed/PlayerProvider command-state with declared API/UI/media doubles",
+    "nativeRealMedia": "NOT_RUN",
+    "externalLinkNavigation": "Prevented in rendered tests; normal link attributes/event bridge checked",
+    "rightAvailabilityMime": "UNVERIFIED for arbitrary direct HTTP(S) resources",
+    "browserFixture": {
+      "path": "e2e/web/legacy-provider-playback.spec.mjs",
+      "status": "execution not yet source-bound in this report",
+      "scope": "Rendered browser/provider dialog and locally fulfilled popup navigation; no external provider network or native decoder claim"
+    },
+    "metadataRegressionTests": {
+      "passed": 25,
+      "groups": {
+        "requirementDeclarations": 9,
+        "specificationInventory": 6,
+        "specificationConformance": 10
+      }
+    }
+  },
+  "integration": {
+    "pr": null,
+    "ci": "not established for final candidate",
+    "review": "independent review pending",
+    "merge": "not performed",
+    "deployment": null,
+    "productionBusinessWrites": 0,
+    "migrations": 0,
+    "newInfrastructure": false
+  },
+  "remainingGaps": [
+    "Target-environment real media decoding and external-provider navigation/playback",
+    "All legacy audio ingestion/indexing and availability reconciliation",
+    "Direct reference expiry/refresh, permissions and MIME validation",
+    "Whole-platform duplicate audio ownership and external route continuity",
+    "Physical accessibility and fullWCAG2.2AA acceptance"
+  ],
+  "rollback": "Application code rollback; no migration or data reversal.",
+  "catalogReview": {
+    "baselineDecisionsPreserved": 1330,
+    "newDecisions": [
+      {
+        "id": "b79cd312b41d5645e457",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P2-compatibility",
+        "risk": "Changing exact host classification may send a provider HTML/share page to native audio or mislabel external navigation. This list confers no authorization or provider-payment authority.",
+        "justification": "Individually reviewed exact spotify.link and spoti.fi host literals used only by the legacy playback URL adapter. They are fixed parsing/routing compatibility cases, not selectable business providers, rights declarations, payment rails or an editable catalog. Original link targets remain unchanged and external playback is not claimed.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+          "line": 40
+        },
+        "reviewBatch": "legacy-provider-actions-2026-10-26"
+      },
+      {
+        "id": "a08e3450ef31db632d8d",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Fixture shape drift can invalidate command/state regressions; this synthetic session must not be treated as a production grant or a new role registry.",
+        "justification": "Individually reviewed username, partyId, roles and modules keys of the synthetic fan session in FanHubPage.playback.test.tsx. These mirror existing test/session DTO shape and are not user-selectable security policy, persisted roles or production business data. This decision applies only to this exact fixture fingerprint.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+          "line": 7
+        },
+        "reviewBatch": "legacy-provider-actions-2026-10-26"
+      }
+    ],
+    "strictAuditBefore": {
+      "outcome": "FAILED as expected before review",
+      "unreviewed": 2,
+      "stale": 0,
+      "report": "/private/tmp/tdf-legacy-audio-catalog-audit.json"
+    },
+    "strictAuditAfter": {
+      "exitCode": 0,
+      "candidateCount": 1332,
+      "unreviewed": 0,
+      "stale": 0,
+      "report": "docs/catalog-persistence/reports/static-list-inventory.json"
+    },
+    "noBlanketFixtureExemption": true,
+    "strictAuditCsv": {
+      "exitCode": 0,
+      "candidateRows": 1332,
+      "report": "docs/catalog-persistence/reports/list-consumer-matrix.csv"
+    }
+  }
+}
