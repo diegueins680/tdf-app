@@ -1,0 +1,3 @@
+{"case": "trusted-ledger-namespace", "result": "passed", "guardsRestoredExactly": true, "fixtureRolledBack": true}
+{"case": "commerce_validate_ledger_posting", "result": "expected-counterexample", "guardsRestoredExactly": true, "fixtureRolledBack": true}
+{"case": "commerce_protect_posted_ledger", "result": "expected-counterexample", "guardsRestoredExactly": true, "fixtureRolledBack": true}

@@ -49,11 +49,21 @@ test('music/main reconciliation retains both reviews and the protected migration
       // An intentionally extended registry retires its old fingerprint. Require
       // both the explicit current-source mapping and the complete prior review;
       // retaining a stale active approval would contradict the strict audit.
-      const successor = active.find(item => item.previousDecision?.id === entry.id);
+      const history = (value, parentKey) => {
+        const chain = []; const seen = new Set();
+        while (value) {
+          assert.ok(!seen.has(value), 'review lineage must be acyclic');
+          seen.add(value); chain.push(value); value = value[parentKey];
+        }
+        return chain;
+      };
+      const successor = active.find(item => history(item, 'previousDecision').some(prior => prior.id === entry.id));
       assert.equal(successor?.reviewed, true);
       const mapping = successors.find(item => item.currentId === successor.id);
-      assert.equal(mapping?.previousResolution?.currentId, entry.id);
-      decision = successor.previousDecision;
+      assert.ok(mapping, 'every historical approval needs an explicit current-source mapping');
+      assert.ok(history(mapping, 'previousResolution').some(prior => prior.currentId === entry.id),
+        'review lineage must match the source-resolution lineage');
+      decision = history(successor, 'previousDecision').find(prior => prior.id === entry.id);
     }
     assert.equal(decision?.reviewed, true);
     if (entry.preservedReviewCanonicalSha256) {
