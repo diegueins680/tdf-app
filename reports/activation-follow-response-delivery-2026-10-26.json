@@ -1,6 +1,6 @@
 {
   "status": "PARTIAL",
-  "updatedAt": "2026-10-26T15:26:28.783230+00:00",
+  "updatedAt": "2026-10-26T15:57:22.185119+00:00",
   "pr": "https://github.com/diegueins680/tdf-app/pull/627",
   "priority": "P1",
   "userImpact": "El servidor guarda la relación, pero una respuesta perdida dejaba el botón en Seguir y mostraba error. El usuario no podía confirmar su primer valor.",
@@ -93,7 +93,13 @@
       "checkout": "3cb465df2ffe8a8e879229225a97970980ce72e3",
       "tree": "bf34a73d6f99ea0482bee333fb30e50b5d1d77b4"
     },
-    "hostedPersonaRepair": "activation-follow-response-2026-10-26/ci-persona-repair.json"
+    "hostedPersonaRepair": "activation-follow-response-2026-10-26/ci-persona-repair.json",
+    "reviewNavigationRepair": "activation-follow-response-2026-10-26/review-navigation-repair.json",
+    "currentFocusedTests": {
+      "passed": 102,
+      "suites": 5,
+      "scope": "Four delayed navigation cases and all existing follow/profile/onboarding controls."
+    }
   },
   "measurement": {
     "firstValueAuthority": "Only the existing server-evidence completion endpoint; six newlyCompleted:true receipts for six fictional fans, later refollow receipts:false. No direct analytics from GET.",
@@ -106,7 +112,7 @@
   },
   "integration": {
     "status": "PARTIAL",
-    "state": "Prior d179 approved independently but quality failed on stale E2E error copy. Test-only correction and fresh final-head CI/review required; no merge or deployment627.",
+    "state": "743 has fresh approval and19/20requiredPASS but valid navigation review finding is being repaired. New code must obtain exact-headCI, fresh independent approval and protectedadmission; no merge/deploy627.",
     "rollback": "Revert web change through protected workflow; no migrations.",
     "base": "3c25a9de56345a8fccea4c1320b0548fed37a334",
     "qualifiedCombinedSource": "25e9943e1ac4cbfd0214267735c9d95f3d82c9d8",

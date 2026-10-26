@@ -14,7 +14,11 @@ QueryClient; a late response cannot populate or confirm another occurrence.
 The existing SessionProviders cache isolation and backend authorization remain
 authoritative. Pending writes and read recovery coalesce repeated clicks. A
 profile receipt can clear follow intent only in its owned profile lifetime,
-preserving unrelated search parameters and the hash.
+preserving unrelated search parameters and the hash. A delayed callback may
+rewrite the URL only while its captured navigation key remains current. If the
+reader navigates within the same artist page during recovery, retain that newer
+URL; the existing resume effect can clear only its current valid intent after
+membership is confirmed.
 
 A confirmed desired follow can invoke the existing onboarding completion
 handshake. That endpoint requires actual server event evidence; only its

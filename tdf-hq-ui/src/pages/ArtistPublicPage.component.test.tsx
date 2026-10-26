@@ -83,16 +83,17 @@ const artist: ArtistProfileDTO = {
   apHasUserAccount: true,
 };
 
-function LocationProbe() {
+function LocationProbe({ sameArtistDestination }: { sameArtistDestination: string }) {
   const location = useLocation();
   return <>
     <output aria-label="Ubicación actual">{`${location.pathname}${location.search}${location.hash}`}</output>
     <Link to="/a/otra-artista?resume=follow&artistId=99#bio">Otro perfil de prueba</Link>
     <Link to="/a/las-sinteticas?resume=follow&artistId=17">Volver al perfil de prueba</Link>
+    <Link to={sameArtistDestination}>Cambiar vista del mismo artista</Link>
   </>;
 }
 
-function renderPage(initialEntry: string) {
+function renderPage(initialEntry: string, sameArtistDestination = '/a/las-sinteticas?source=later#music') {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -105,7 +106,7 @@ function renderPage(initialEntry: string) {
         <Routes>
           <Route
             path="/a/:slugOrId"
-            element={<><LocationProbe /><ArtistPublicPage /></>}
+            element={<><LocationProbe sameArtistDestination={sameArtistDestination} /><ArtistPublicPage /></>}
           />
         </Routes>
       </MemoryRouter>
@@ -435,6 +436,41 @@ describe('ArtistPublicPage follow continuity', () => {
     expect(view.queryClient.getQueryData(['fan-follows', 99])).toEqual([]);
     expect(captureFirstValueMock).not.toHaveBeenCalled();expect(followMock).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe('/a/las-sinteticas?resume=follow&artistId=17');
+    view.unmount();view.queryClient.clear();
+  });
+
+  it.each([
+    ['recovery', '/a/las-sinteticas?source=later#music', '/a/las-sinteticas?source=later#music'],
+    ['recovery', '/a/las-sinteticas?source=later&resume=follow&artistId=17#music', '/a/las-sinteticas?source=later#music'],
+    ['recovery', '/a/las-sinteticas?source=later&resume=follow&artistId=99#music', '/a/las-sinteticas?source=later&resume=follow&artistId=99#music'],
+    ['success', '/a/las-sinteticas?source=later#music', '/a/las-sinteticas?source=later#music'],
+  ])('delayed %s preserves the latest same-artist navigation %s', async (phase, destination, expectedLocation) => {
+    sessionMock = { username: 'fan', displayName: 'Fan', roles: ['customer'], modules: [], partyId: 42 };
+    const follow = { ffArtistId: 17, ffArtistName: 'Las Sintéticas', ffStartedAt: '2026-10-26T15:00:00Z' };
+    let finishRead!: (rows: FanFollowDTO[]) => void;
+    let finishWrite!: (row: Awaited<ReturnType<typeof followMock>>) => void;
+    if (phase === 'recovery') {
+      listFollowsMock.mockResolvedValueOnce([])
+        .mockImplementationOnce(() => new Promise(resolve => { finishRead = resolve; }))
+        .mockResolvedValue([follow]);
+      followMock.mockRejectedValueOnce(new TypeError('Synthetic response lost after commit'));
+    } else {
+      listFollowsMock.mockResolvedValueOnce([]).mockResolvedValue([follow]);
+      followMock.mockImplementationOnce(() => new Promise(resolve => { finishWrite = resolve; }));
+    }
+    const view = renderPage('/a/las-sinteticas?source=initial&resume=follow&artistId=17#bio', destination);
+    const button = await screen.findByRole('button', { name: 'Seguir ahora' });
+    await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(button);
+    await waitFor(() => expect(phase === 'recovery' ? finishRead : finishWrite).toBeDefined());
+    fireEvent.click(screen.getByRole('link', { name: 'Cambiar vista del mismo artista' }));
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe(destination));
+    await act(async () => { if (phase === 'recovery') finishRead([follow]); else finishWrite(follow); });
+    const following = await screen.findByRole('button', { name: 'Dejar de seguir a Las Sintéticas' });
+    await waitFor(() => expect((following as HTMLButtonElement).disabled).toBe(false));
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Ubicación actual' }).textContent).toBe(expectedLocation));
+    expect(followMock).toHaveBeenCalledTimes(1);
+    expect(captureFirstValueMock).toHaveBeenCalledTimes(1);
     view.unmount();view.queryClient.clear();
   });
 

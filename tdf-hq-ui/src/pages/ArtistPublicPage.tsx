@@ -258,7 +258,8 @@ export default function ArtistPublicPage() {
       void captureFirstValueOnce(getAnalyticsClient(), command.viewerId, 'artist_followed', undefined, command.ownsProfile)
         .catch(() => undefined);
     }
-    if (command.resume && !command.wasFollowing) clearResume();
+    // A delayed receipt must not restore an earlier search or hash.
+    if (command.resume && !command.wasFollowing && command.isCurrent()) clearResume();
   };
 
   const recoverFollow = async (command: FollowCommand) => {

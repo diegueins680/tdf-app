@@ -12250,7 +12250,7 @@
       ],
       "authorization": "Capture the exact SessionUser occurrence; guard before and after the fresh read and before write/first-value handoff. Backend authorization remains authoritative.",
       "privacy": "No tokens or raw diagnostics in UI or receipts. Existing SessionProviders client isolation remains in force; this change adds no credentials or persisted personal data.",
-      "concurrency": "Coalesce repeated clicks while the write and confirmation read settle. Cancel superseded account-key queries, explicitly invalidate without a refetch, then fetch fresh once with no automatic retry. Guard queryFn before returning data so a retired occurrence cannot cache its response.",
+      "concurrency": "Coalesce repeated clicks while the write and confirmation read settle. Cancel superseded account-key queries, explicitly invalidate without a refetch, then fetch fresh once with no automatic retry. Guard queryFn before returning data so a retired occurrence cannot cache its response. Delayed URL cleanup requires the captured navigation lifetime to remain current; same-artist navigation preserves its latest search/hash and only the current valid resume intent may be consumed.",
       "idempotency": "Never replay POST/DELETE in response recovery. Existing server onboarding completion newlyCompleted receipt controls analytics emission.",
       "failure": "An unavailable read returns unknown, preserves the unconfirmed state and exposes a read retry; a fresh unchanged state never fabricates success.",
       "recovery": "Public profile and Comunidad reuse the same read helper. Explicit retry repeats the GET only; preserve unrelated URL search and hash.",
