@@ -1,0 +1,16 @@
+{
+  "startedAt": "2026-10-26T19:31:32.072625+00:00",
+  "finishedAt": "2026-10-26T19:31:35.614858+00:00",
+  "source": "43b1b4b00715c5564525d7bce1fa838bf6366122",
+  "testBinarySha256": "6e793621c7c9c6f2f37cb5ff5224f9437f2c3a7d1fe02418a2908d2d257f2f5a",
+  "argv": [
+    "/usr/bin/sandbox-exec",
+    "-p",
+    "(version 1)(allow default)(deny network-outbound)(allow network-outbound (remote ip \"localhost:*\"))(deny network-inbound)(allow network-inbound (local ip \"localhost:*\"))",
+    "/private/tmp/tdf-music-credential-cache-20261026/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test",
+    "--match=credential cache",
+    "--fail-on=empty"
+  ],
+  "exitCode": 0,
+  "scope": "Compiled affected Hspec subset; application executable build still running. Loopback-only network sandbox, inherited service credentials removed. No application build pass claimed here."
+}

@@ -1,0 +1,23 @@
+{
+  "preparedAt": "2026-10-26T19:17:57.807651+00:00",
+  "status": "PREPARED_NOT_EXECUTED",
+  "source": "43b1b4b00715c5564525d7bce1fa838bf6366122",
+  "baseQualifiedHarnessSha256": "c95aead66b93bb6366dc43d6890e06ac57f8bbfc200d82d19f8f095a56cc2601",
+  "changes": [
+    "Own43b checkout/output/database/port identities; original34 assertions retained.",
+    "Every original asset-access success/denial must have exactly one private,no-store header.",
+    "Actual GET trailing/encoded aliases and HEAD; seven additional malformed/unauthenticated credential route errors; unrelated catalog cache response unchanged.",
+    "Fixed additional methods/error paths only, no external object requests or production operations."
+  ],
+  "files": {
+    "fixture.mjs": "10bb84c6af325d2d4ff707280f4fe24c2f4a1ee3d8c4461a850ff9843774c3df",
+    "source-before.json": "a600257ca9d396667915b4891e88fca6d8dc1ee9f4fd28c18a2319d716c46378",
+    "run-v4.py": "0231299a3306f26f88145374275864fc5a2b8adffb221ade8c3cecea31e58959"
+  },
+  "buildPending": true,
+  "supersedesPreparedManifestSha256": "7c08dc9a673eb786bcf8848436a2963752e3d357de126e7953be6aad523fd7ca",
+  "preExecutionLabelCorrection": "Only replace historical exact5f assertion label with matches expected43b. Identity assertion itself unchanged; initial prepared file/manifest preserved, never executed.",
+  "reviewedAt": "2026-10-26T19:28:29.308299+00:00",
+  "preExecutionSafetyCorrection": "Disable redirect following for both client openers; enforce exact write method/path pairs and exact fixed error payloads. All prior application assertions/statuses/cleanup/source guards retained. Earlier prepared versions never executed.",
+  "cleanupReportingCorrection": "Only finalize PASS after all three required owned-resource cleanup flags are true. Functional checks temporarily record CLEANUP_PENDING. Outer acceptance still requires actual exit0 and all cleanup flags. Earlier prepared versions never executed."
+}

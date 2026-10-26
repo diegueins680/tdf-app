@@ -20857,7 +20857,7 @@
     },
     {
       "path": "docs/music-releases/credential-cache-control.md",
-      "sha256": "3ccb5daa3a26f44e798144899e51ba9b736a02094ef23deca1996f8fae823707",
+      "sha256": "3c39fa502b1d90208512c23c28e79156cd10f25e75fe6f625827b8cac40aad3d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26807,7 +26807,7 @@
     },
     {
       "path": "formal/system/auth-predicates.md",
-      "sha256": "378d0b82b31965b2299ad681fe115a58837f183ae233ba4968da2ee28f376b04",
+      "sha256": "724bcb77992e2abbb1bc150b98f42bc4f2e8c64defd512efb49f7eb577164cfa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27150,7 +27150,7 @@
     },
     {
       "path": "formal/system/music-credential-cache.md",
-      "sha256": "79175139fcea8d2b8c09b229d0baca5fdd1e0d0cd59918617f25dd4607d0f258",
+      "sha256": "09fa05398500cbc3406312104139a6252d66852a61c29573baf425872c290c0f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27353,7 +27353,7 @@
     },
     {
       "path": "formal/system/recovery-expiry-arithmetic.md",
-      "sha256": "2a772157e43a729e1469681f94ba94536dcd713ac1993b4ab8dd10331f6e6735",
+      "sha256": "363054f2a6d35fe774e0878b520f2c153ca048a90495ebc6d98b47e005443336",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

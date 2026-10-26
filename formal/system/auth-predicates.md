@@ -195,3 +195,37 @@ and recovery SQL are unchanged. Earlier context reviews above retain their
 original baselines; the JSON records the current manifest hashes and review.
 Fresh scoped solver/replay/mutation and independent certificate checks are
 required. This review does not promote full refinement or release readiness.
+
+
+## Credential-cache build-context review (2026-10-26)
+
+The proposed context review compares protected main
+`9b7aa4648d4158f6da84fbb5e794267cd4953177` with credential-cache candidate
+`43b1b4b00715c5564525d7bce1fa838bf6366122`. The Cabal digest changes from
+`1427f603a60bed8c4d0a9bd70d51e9e65bddb7785f50ba798e24d87bc012fafb` to
+`ffa96645979f3a6953a35088c3319c9c6ad2adbdd45bfef9a203836016d85869`.
+Removing exactly the three added `other-modules` registrations reconstructs
+protected main byte for byte. Dependencies, source paths, extensions, compiler
+options, CPP flags and Stack/lock are unchanged. All other pinned source files
+and both source translators retain their protected-main bytes. Prior review
+entries and every obligation, assumption and limitation are preserved.
+
+The new uniquely named middleware forwards the unchanged request and inner
+application; it maps response `Cache-Control` for eight fixed music credential
+operations. Its imports are existing `Data.List`, `Data.Text`,
+`Network.HTTP.Types` and `Network.Wai`. `Server.mkApp` and `App.Boot.wrapApp`
+add the wrapper without changing `authContext`, handler dispatch, the translated
+authorization definitions or recovery arithmetic. The registered Hspec module
+exports `spec`; neither added module introduces a binding override, Template
+Haskell, CPP, foreign import or `unsafePerformIO`. HTTP correctness, credentials,
+sessions and deployment remain outside these predicate/arithmetic contracts.
+
+Specification CI run `40389587503`, job `121806768054`, rejected the unreviewed
+Cabal digest before authorization/recovery translation. Its retained artifact
+`12681639748` (ZIP SHA-256
+`4aacba501323d6ab33ad727aeeb4fa6cc5f189e7fabc35e696a64e08d2137c2a`) is historical
+failure evidence, rather than a refutation of a translated obligation. A fresh
+isolated replay must qualify this review; no historical result is relabeled.
+Full implementation/refinement remains **UNPROVEN**, and the full release gate
+remains **BLOCKED**. Fresh independent CPC checking remains required in addition
+to the source-bound SMT, witnesses, mutations and same-solver serialized replay.

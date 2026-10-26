@@ -65,9 +65,7 @@ execution. Registration in Cabal alone is not execution evidence.
 The focused canonical Stack run passed **42 examples, zero failures** on the
 recorded source fingerprints. MCC-001 through MCC-004 are **TESTED** within
 those finite WAI and public-router cases. This is not mathematical proof,
-unbounded route coverage, or target-environment acceptance. The three direct
-`mkApp` cases, full aggregate execution, mutation controls and fresh candidate
-HTTP qualification remain separate until their own recorded execution. The
+unbounded route coverage, or target-environment acceptance. The three direct `mkApp` cases subsequently passed in the 45-case compiled subset on 43b, and fresh real HTTP qualification passed 54 assertions/65 steps with synthetic publication metadata. Full aggregate execution, mutation controls and target deployment remain separate obligations. The
 execution report records exact source hashes and later outcomes separately.
 
 ## Assumptions and limits
@@ -86,3 +84,7 @@ validate its S3 signature, prevent copying, or replace backend/media-delivery
 authorization. Catalog and private library caching remain separate obligations.
 A fresh candidate binary, actual HTTP success/denial checks, CI, independent
 review and production rollout remain release gates; no deployment is claimed.
+
+## Subsequent execution and context review
+
+See [the execution report](../../reports/music-credential-cache-2026-10-26.json) and [runtime evidence](../../reports/music-credential-cache-evidence-20261026/qualification-summary.json). The43b runtime build/version,45 selected compiled cases,54 HTTP assertions and complete owned-resource cleanup were observed. Signing, authorization and expiry controls use real handlers but unfetched synthetic object references. These tests extend TESTED coverage; they introduce no mathematical implementation/refinement proof. The Cabal-pin correction is separately reviewed and replayed conditional authorization/recovery evidence, not proof of the new cache boundary or authorization of a production release.
