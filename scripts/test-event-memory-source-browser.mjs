@@ -134,10 +134,12 @@ try {
     // it succeeded or count a transient feed refetch as confirmed hiding.
     await expect(owner.getByRole('dialog').getByRole('alert')).toContainText('El recuerdo cambió');
     // MUI correctly makes the background aria-hidden while the dialog is open.
-    // Check retained DOM and the real public API, rather than mistaking that
+    // Check retained DOM and the real authenticated API, rather than mistaking that
     // accessibility isolation for source deletion or a successful hide.
     await expect(owner.getByRole('region', { name: /^Publicación de /, includeHidden: true }).filter({ hasText: caption })).toHaveCount(1);
-    const unchanged = await owner.request.get(`${config.api}/social-events/events/${config.eventId}/moments?extended`);
+    const authorization = hidden.request().headers()['authorization'];
+    expect(Boolean(authorization?.startsWith('Bearer '))).toBe(true);
+    const unchanged = await owner.request.get(`${config.api}/social-events/events/${config.eventId}/moments?extended`, { headers: { Authorization: authorization } });
     expect(unchanged.status()).toBe(200);
     expect(await unchanged.json()).toEqual(expect.arrayContaining([expect.objectContaining({ emCaption: caption })]));
     await owner.getByRole('button', { name: 'Cancelar', exact: true }).click();
