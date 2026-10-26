@@ -117,7 +117,7 @@
   "integration": {
     "pr": null,
     "ci": "Pending exact current privacy candidate; prior P0 foundation merged and green according to root release evidence",
-    "merge": "Normal merge of78fa prepared with local metadata gates passed; commit and exact committed-descendant source admission pending",
+    "merge": "COMMITTED locally as bbbe56ca2cd96cdfdf0b7c539621d831982be322; current main is an actual parent",
     "deployment": null,
     "productionWrites": 0,
     "serverMigrations": 0,
@@ -125,7 +125,12 @@
     "normalMergeParent": "78fa351b469c1d2031df3232204dd722ac480e3b",
     "sourceQualificationBoundary": "The86-test/27-browser receipt predates this main merge but all six qualified b625 runtime/test source hashes remain exact. It does not qualify unrelated inherited main changes or replace exact-candidate hosted CI.",
     "p0MergedFoundation": "3c25a9de56345a8fccea4c1320b0548fed37a334",
-    "target": "New focused privacy PR targetingmain; P0 already merged"
+    "target": "New focused privacy PR targetingmain; P0 already merged",
+    "mergeCommit": "bbbe56ca2cd96cdfdf0b7c539621d831982be322",
+    "mergeParents": [
+      "56fac31aff0554d95684828e852a6063d2874941",
+      "78fa351b469c1d2031df3232204dd722ac480e3b"
+    ]
   },
   "requiredNativeIdentityCase": {
     "path": "e2e/web/music-player-native.spec.mjs",
@@ -1247,7 +1252,7 @@
     "scope": "Inherited migration manifest remains unchanged; no migration execution claimed."
   },
   "sourceAdmission": {
-    "status": "PASS prepared-tree six mappings/fingerprints; committed-descendant check pending",
+    "status": "PASS committed-descendant canonical source admission",
     "base": "78fa351b469c1d2031df3232204dd722ac480e3b",
     "preparedReceipt": "/private/tmp/tdf-player-privacy-main78-prepared-source-admission-20261026.json",
     "preparedReceiptSha256": "a6ddc275790cf7717a70b813b02daf4e935d48ff9e347097abd4009f072d3f0d",
@@ -1260,7 +1265,27 @@
       "tdf-hq-ui/src/session/SessionProviders.tsx"
     ],
     "exactPostCommitCommand": "python3 scripts/check-new-specification-surfaces.py --base 78fa351b469c1d2031df3232204dd722ac480e3b --head HEAD",
-    "scope": "Existing canonical checker validate_changed_paths applied to prepared working-tree bytes and mappings. No committed-descendant admission or semantic/refinement proof; normal committed checker remains required after merge commit."
+    "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations. This is structural source/fingerprint mapping admission,not semantic verification or production acceptance.",
+    "preparedStatus": "PASS prepared-tree six mappings/fingerprints; committed-descendant check pending",
+    "command": "python3 scripts/check-new-specification-surfaces.py --base 78fa351b469c1d2031df3232204dd722ac480e3b --head HEAD",
+    "validatedMergedCommit": "bbbe56ca2cd96cdfdf0b7c539621d831982be322",
+    "committedReceipt": {
+      "base": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "head": "bbbe56ca2cd96cdfdf0b7c539621d831982be322",
+      "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "mappedChangedSurfaces": [
+        "e2e/web/music-player-native.spec.mjs",
+        "tdf-hq-ui/src/App.tsx",
+        "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx",
+        "tdf-hq-ui/src/player/queue.ts",
+        "tdf-hq-ui/src/session/SessionProviders.tsx"
+      ],
+      "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+    },
+    "committedReceiptPath": "/private/tmp/tdf-player-privacy-main78-committed-source-admission-20261026.json",
+    "committedReceiptSha256": "a3b865a9bbc9301528f916b7d9ac0657a7ac5ffd78a25ca8f26609c76ef802e5"
   },
   "parentReleaseSnapshot": {
     "scope": "Historical parent P0 release snapshot supplied by root release engineer; NOT new privacy runtime qualification,backend activation or real production music acceptance. Local artifact hashes and named harness outcome fields independently checked while preparing privacy metadata.",
