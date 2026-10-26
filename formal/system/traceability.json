@@ -12115,6 +12115,92 @@
       "evidence": "Exact source qualification receipts; synthetic data excluded from VAR, conversion and retention."
     },
     {
+      "id": "UX-WELCOME-001",
+      "title": "Public discovery shows value before personal profiling",
+      "statement": "The public start page /inicio explains TDF and offers anonymous exploration before the existing directory form. /buscar keeps direct URL-backed search; search controls describe the requested result rather than visitor identity. /tdf exposes studio, services and published work before contextual signup. Exploration does not require registration, geolocation or role selection and remains usable when directory data fails.",
+      "authority": "Explicit product owner execution request 2026-10-25 incorporating eight supplied visitor voice comments.",
+      "domain": "UX",
+      "source": "docs/engineering/welcome-first-discovery-2026-10-25.md",
+      "contract": "docs/engineering/welcome-first-discovery-2026-10-25.md",
+      "actors": [
+        "Anonymous visitor",
+        "Returning visitor",
+        "Authenticated user"
+      ],
+      "preconditions": [
+        "Existing public route and session bootstrap contracts"
+      ],
+      "inputs": [
+        "Current pathname",
+        "Existing URL search parameters",
+        "Public directory and editorial reads"
+      ],
+      "state": {
+        "arrival": [
+          "anonymous welcome",
+          "direct search",
+          "public platform exploration",
+          "directory unavailable"
+        ]
+      },
+      "allowedTransitions": [
+        "Anonymous root after bootstrap -> /inicio welcome and existing search",
+        "/inicio -> /tdf, /records or /buscar without registration",
+        "/tdf -> studio and service anchors, public work or contextual signup",
+        "Directory unavailable -> retry or independent public exploration"
+      ],
+      "forbiddenTransitions": [
+        "Public exploration requires personal profiling",
+        "Search profession is presented as visitor identity",
+        "Arbitrary editorial cover is represented as a studio photograph",
+        "Exploration CTA writes business data or grants access"
+      ],
+      "effects": [
+        "Render welcoming public content and labeled search",
+        "Navigate to existing public destinations",
+        "Emit optional fixed-destination exploration click events"
+      ],
+      "authorization": "Existing backend and session authorization unchanged. Signed-in root destination remains Comunidad.",
+      "privacy": "New welcome CTA events contain only fixed route and destination labels; no search query, identity, coordinates or user-entered data. Existing consent controls remain authoritative.",
+      "concurrency": "Welcome is independent of asynchronous directory data; existing account-scoped search cache and mutation guards are unchanged.",
+      "idempotency": "Exploration is read-only navigation; existing directory write contracts unchanged.",
+      "failure": "Directory failures preserve the welcome and independent exploration links. Analytics failure must not interrupt welcome navigation.",
+      "recovery": "Existing directory retry and URL-backed search remain available.",
+      "observability": "public_discovery_cta_clicked is exploratory intent, never successful activation. No measured conversion uplift is claimed.",
+      "property": "WelcomeBeforeProfiling; DirectSearchPreserved; PublicExplorationWithoutSignup",
+      "implementation": [
+        "tdf-hq-ui/src/components/PublicWelcome.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx",
+        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
+        "e2e/web/persona-public.spec.mjs",
+        "e2e/web/directory-entry.spec.mjs",
+        "e2e/web/directory-favorite-recovery.spec.mjs",
+        "e2e/web/directory-language.spec.mjs",
+        "e2e/web/public-welcome.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
+      "evidence": "reports/welcome-first-discovery-2026-10-25.json",
+      "status": "specified and implemented",
+      "critical": false,
+      "openQuestions": [
+        "Unidentified host portrait from voice feedback; authoritative studio gallery and teaching clips; interior plan/VR; human comprehension and production outcomes."
+      ],
+      "confidence": "Qualitative visitor feedback and scoped source/browser evidence; frequency and causal activation impact unknown.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused implementation; production release, human comprehension, complete media assets and measured user outcomes remain separate obligations."
+      }
+    },
+    {
       "domain": "SOCIAL",
       "authority": "Explicit product owner request 2026-10-25: Event Memories, Community Engagement & Post-Event Activation",
       "source": "formal/system/event-memories.md",
@@ -12521,7 +12607,9 @@
     "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
     "e2e/web/community-discovery.spec.mjs": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
     "e2e/web/course-enrollment.spec.mjs": "f64fed981fa69b332499556853637fca938c9b026b90c4aaf1b4f5bb97633311",
-    "e2e/web/directory-entry.spec.mjs": "17d56aaa082a13e71c2442b6f09ee29b158413e9a41eb7b07969e3bee61c8c97",
+    "e2e/web/directory-entry.spec.mjs": "08cbc831a6260271171aa65121ec655f0b3f916d0c468e670278157032d387a3",
+    "e2e/web/directory-favorite-recovery.spec.mjs": "08dd8f020ec9c1f0ab75f00a2af230764e57acf65a224826c54b2201b5670fe3",
+    "e2e/web/directory-language.spec.mjs": "bd2ea2a63805ab1b466e7056eeefdaed3fab6d430efa67e6c46f161904717800",
     "e2e/web/event-memories.spec.mjs": "197d325765bbd6268167b65c1da217c9b960568b39d99bc92fd356871812e9d0",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
@@ -12532,7 +12620,8 @@
     "e2e/web/music-player-native.spec.mjs": "8a1ef90f2a060ff4ae4e16add3001c09280e8224e06a8d28b49c9793eefb5112",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
-    "e2e/web/persona-public.spec.mjs": "afaaabc5ab1c3a0fd039e08d715a5ea3a4505c6e7c9931b80269e68e7de490a9",
+    "e2e/web/persona-public.spec.mjs": "52621b77b14d7d15e4081493a4b92e39aaa3996f9247cc5f2ab2f1285108236c",
+    "e2e/web/public-welcome.spec.mjs": "b26513be86bde272bec3711ef408aac4d742a9fc13ddff8bf7a4f872fb528044",
     "e2e/web/records-thumbnails.spec.mjs": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
@@ -13206,6 +13295,7 @@
     "tdf-hq-ui/src/components/NotificationNavigation.test.tsx": "9596ad73723f9a44acbed461617a5f03f5e0f40f968cc71b36b2534980d294d1",
     "tdf-hq-ui/src/components/PublicBranding.test.tsx": "9f3a3c426d5ac0549f8e73b02aec0826f510d96f6f7e214e032971f785ebb119",
     "tdf-hq-ui/src/components/PublicBranding.tsx": "564d20da56e36a873b02eeb8c9f9d246aca6d509c44d77777c15968df59c6a66",
+    "tdf-hq-ui/src/components/PublicWelcome.tsx": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
     "tdf-hq-ui/src/components/RadioWidget.tsx": "8ca26bdf9324376d67357d0bf94a32411d6099d02ec12a3c0d215b4067ddfd98",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
@@ -13275,8 +13365,8 @@
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "d886e1ac1352a582a8b44e658d47ee8681328c928379869a338d3144965cdb92",
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "a95c1358ae8817800742f6e9a7e0505e8d10efc6aa7ee0421cf9840436f2a3e7",
     "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
-    "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "1b14577b1d260ec8c9b65ca2c6939c3db85e20e043d835e5efc1c0183cbc059f",
-    "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "dd0ccec28420756aad3a3f52fe1e6e749f6d79caba0974977d96f3e69fd5e58d",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "62b867e770f329763c7d0f6b81fa7998a9b7b48737351010f67cb673ab418628",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "98a49a2cf613aa9aa44b99253f39e81f1a9c54298b932fb21982cfda67a6b962",
     "tdf-hq-ui/src/i18n/locales/en.ts": "498365b7aa8b9990059bbb5fc14ea259b3754df38a8df187f33e8cc99b2850bb",
     "tdf-hq-ui/src/i18n/locales/es.ts": "39fa2c7f117979998b30743472893389b28ee84132ef32d9af981cecba034194",
     "tdf-hq-ui/src/i18n/locales/fr.ts": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
@@ -13308,8 +13398,8 @@
     "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "4faca98825a44ea0db53f41d5cbe0ade76d8762b78b217d72343dc4481f9fa90",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "1ef3395beeb19393557b6de5755e49947c814e8d8c4c6797bff0c6bdcacee3a5",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "0a293b7ed7b63a5ef94a16cbff452fcb29d05c231ccc2e80382973623b18a04d",
-    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "0d88f1cb2a534ca742147e821578b297c0c12f37ad66569cc5cad9da6f26408f",
-    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "01b3b5cf78791e627b85188e4bd211b37b7f1f88389d6b81bc5526110cd65ebd",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "c3dc63053f7a1e5d75781797b96bb414c63b20755f368ed2e11ab0819b47d743",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "7d4854a1f390af0e9c03356297c2340e174992fe7435040cf8d169d83dd7381f",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
     "tdf-hq-ui/src/pages/FanClubPage.tsx": "12eab619ce83baadb79404750556e08cf68e8833e66433135441e0c1b4107af2",
@@ -13351,7 +13441,8 @@
     "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "0901b25a70b3300639a65942ba1fafb22d543b08632e442fbbd583e47ae5210b",
     "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "89031662f7657f36b5379a462172f1c3b1018865325baf3ed8cee37c813ccba7",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "839aadb02473f36fa6650e13c588852d5bf41fae3524f6675b8a3fe509e39cb5",
-    "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": "f65878e0267a1d4a781b5b93e44f47ba4d99f2bd911c633e92e49ae3b57fceb4",
+    "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx": "a497fb3d7e11289a6be96cb284c6ceee1dd4a2f0435a3b05ecf51030a8e5bbcc",
+    "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": "70a1c437a900dd9fa270980102e8a10e0daf58abd09a5be85d36d8ee5044cc4e",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "92717c83b108441fcb17e04eb052b21d19a98ee85ce3cb2a1bd8794f8a8e97c1",
@@ -14781,6 +14872,10 @@
       },
       {
         "requirement": "DISCOVERY-NAV-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
         "relationship": "tests"
       }
     ],
@@ -19666,6 +19761,10 @@
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/api/inventory.ts": [
@@ -22372,6 +22471,10 @@
       {
         "requirement": "AUTH-ENTRY-002",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": [
@@ -22998,6 +23101,10 @@
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
       }
     ],
     "docs/directory/event-search-sync.md": [
@@ -23100,6 +23207,10 @@
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": [
@@ -23109,6 +23220,10 @@
       },
       {
         "requirement": "DISCOVERY-NAV-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
         "relationship": "implementation"
       }
     ],
@@ -23458,6 +23573,10 @@
       {
         "requirement": "BOOK-SERVICE-PICKER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": [
@@ -23579,6 +23698,10 @@
     "e2e/web/directory-entry.spec.mjs": [
       {
         "requirement": "DISCOVERY-NAV-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
         "relationship": "tests"
       }
     ],
@@ -24147,6 +24270,36 @@
     "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": [
       {
         "requirement": "COMM-CLUB-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/PublicWelcome.tsx": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/directory-favorite-recovery.spec.mjs": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/directory-language.spec.mjs": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/public-welcome.spec.mjs": [
+      {
+        "requirement": "UX-WELCOME-001",
         "relationship": "tests"
       }
     ],
@@ -24795,11 +24948,15 @@
     {
       "id": "SURFACE-6826ca2044602fd9",
       "path": "e2e/web/directory-entry.spec.mjs",
-      "sha256": "17d56aaa082a13e71c2442b6f09ee29b158413e9a41eb7b07969e3bee61c8c97",
+      "sha256": "08cbc831a6260271171aa65121ec655f0b3f916d0c468e670278157032d387a3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "tests"
         }
       ]
@@ -24807,16 +24964,26 @@
     {
       "id": "SURFACE-a4b7714e233a9cb9",
       "path": "e2e/web/directory-favorite-recovery.spec.mjs",
-      "sha256": "00c51c0a3d345432471139f4b38c1e534d5d3b5b498269b8c67c4297335c60bb",
+      "sha256": "08dd8f020ec9c1f0ab75f00a2af230764e57acf65a224826c54b2201b5670fe3",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-2d19f45e5f75f841",
       "path": "e2e/web/directory-language.spec.mjs",
-      "sha256": "d39127857b4d62e5edee6fcc51726c7657cc7cf9f6621003a53c5c249f53c587",
+      "sha256": "bd2ea2a63805ab1b466e7056eeefdaed3fab6d430efa67e6c46f161904717800",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b64dd532c8bafb41",
@@ -24976,7 +25143,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "afaaabc5ab1c3a0fd039e08d715a5ea3a4505c6e7c9931b80269e68e7de490a9",
+      "sha256": "52621b77b14d7d15e4081493a4b92e39aaa3996f9247cc5f2ab2f1285108236c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24998,6 +25165,10 @@
         {
           "requirement": "DISCOVERY-NAV-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -25007,6 +25178,18 @@
       "sha256": "16fd028ff663f392c6145e65866eb7ba1aeb1c82835307e3518c4a55578fd31d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-a2826b2994431e77",
+      "path": "e2e/web/public-welcome.spec.mjs",
+      "sha256": "b26513be86bde272bec3711ef408aac4d742a9fc13ddff8bf7a4f872fb528044",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-bb80adee648c0293",
@@ -33168,6 +33351,18 @@
       ]
     },
     {
+      "id": "SURFACE-100603869e0d8848",
+      "path": "tdf-hq-ui/src/components/PublicWelcome.tsx",
+      "sha256": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d385ed9b2a05df5c",
       "path": "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
       "sha256": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
@@ -34865,7 +35060,7 @@
     {
       "id": "SURFACE-7e096967d3a00d3b",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-      "sha256": "1b14577b1d260ec8c9b65ca2c6939c3db85e20e043d835e5efc1c0183cbc059f",
+      "sha256": "62b867e770f329763c7d0f6b81fa7998a9b7b48737351010f67cb673ab418628",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34874,6 +35069,10 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         }
       ]
@@ -34881,7 +35080,7 @@
     {
       "id": "SURFACE-31dfb712c6445325",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-      "sha256": "dd0ccec28420756aad3a3f52fe1e6e749f6d79caba0974977d96f3e69fd5e58d",
+      "sha256": "98a49a2cf613aa9aa44b99253f39e81f1a9c54298b932fb21982cfda67a6b962",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34890,6 +35089,10 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         }
       ]
@@ -35648,7 +35851,7 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "0d88f1cb2a534ca742147e821578b297c0c12f37ad66569cc5cad9da6f26408f",
+      "sha256": "c3dc63053f7a1e5d75781797b96bb414c63b20755f368ed2e11ab0819b47d743",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35666,13 +35869,17 @@
         {
           "requirement": "DISCOVERY-NAV-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "01b3b5cf78791e627b85188e4bd211b37b7f1f88389d6b81bc5526110cd65ebd",
+      "sha256": "7d4854a1f390af0e9c03356297c2340e174992fe7435040cf8d169d83dd7381f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35685,6 +35892,10 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         }
       ]
@@ -37065,18 +37276,27 @@
     {
       "id": "SURFACE-94ed138833ff9be9",
       "path": "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx",
-      "sha256": "e01816a2781b40fbedaee0d0de8d885354850a52c84c875a19178f1d0ab63073",
+      "sha256": "a497fb3d7e11289a6be96cb284c6ceee1dd4a2f0435a3b05ecf51030a8e5bbcc",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-a8a994f85758ab3a",
       "path": "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-      "sha256": "f65878e0267a1d4a781b5b93e44f47ba4d99f2bd911c633e92e49ae3b57fceb4",
+      "sha256": "70a1c437a900dd9fa270980102e8a10e0daf58abd09a5be85d36d8ee5044cc4e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "BOOK-SERVICE-PICKER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         }
       ]
@@ -37544,6 +37764,10 @@
       "requirements": [
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "tests"
         }
       ]
@@ -50783,8 +51007,6 @@
     "SURFACE-21d4d7e18c516e29",
     "SURFACE-99efca801c54dd18",
     "SURFACE-e442d994f4a6caf5",
-    "SURFACE-a4b7714e233a9cb9",
-    "SURFACE-2d19f45e5f75f841",
     "SURFACE-84f7b910bd4577fb",
     "SURFACE-5eb821e0243ca097",
     "SURFACE-f40804c1455f8bad",
@@ -51449,7 +51671,6 @@
     "SURFACE-0b8cce65eccd05df",
     "SURFACE-294273454f1df4be",
     "SURFACE-791bf979002005a3",
-    "SURFACE-94ed138833ff9be9",
     "SURFACE-42ebeaafc13e0e5c",
     "SURFACE-eb3a22474b1541ad",
     "SURFACE-b3708173ec172c34",
@@ -53589,7 +53810,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e2ada42d39784452f5a08be90f8117bb7dcde8539896d4db697cfce673afafb8",
+      "sourceSha256": "338caa70cbcba2f0e500b1009dae78c832f8e323c44224ffa30877b040e76173",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -53617,7 +53838,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e2ada42d39784452f5a08be90f8117bb7dcde8539896d4db697cfce673afafb8",
+      "sourceSha256": "338caa70cbcba2f0e500b1009dae78c832f8e323c44224ffa30877b040e76173",
       "definition": {
         "states": [
           "absent",
@@ -53647,7 +53868,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e2ada42d39784452f5a08be90f8117bb7dcde8539896d4db697cfce673afafb8",
+      "sourceSha256": "338caa70cbcba2f0e500b1009dae78c832f8e323c44224ffa30877b040e76173",
       "definition": {
         "export": [
           "queued",
@@ -76121,7 +76342,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 147,
+    "PARTIAL": 148,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

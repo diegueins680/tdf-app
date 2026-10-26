@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-10-26T03:59:20.383727+00:00",
+  "source": "7cf6c8000f7f42f3c8ea0a44daf213ff5b7b7dc3",
+  "main": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+  "parents": [
+    "bc8befad580d1484df81352234af1d1d487aae14",
+    "e938c72ba4b87010214f6838f06bfac45a0f45c0"
+  ],
+  "protectedRequirementsPreservedExactly": 141,
+  "combinedRequirements": 142,
+  "onlyAdditionalRequirement": "UX-WELCOME-001",
+  "sharedSqlFilesExact": 405,
+  "protectedMigrationManifestExact": true,
+  "protectedCatalogDecisionGraphsExact": true,
+  "frontendEqualReviewedD819": true,
+  "backendEquivalentNativeSource": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+  "executionScope": "Static source composition; runtime receipt is separate."
+}

@@ -36,7 +36,7 @@ for (const denial of ['getter', 'getItem', 'setItem']) {
     await page.goto('/buscar?q=music&cityId=cuenca-fixture');
     await expect(page.getByRole('heading', { name: 'Encuentra a la gente y las oportunidades que hacen música' })).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Ciudad', exact: true })).toHaveText('Cuenca');
-    const search = page.getByRole('combobox', { name: '¿Qué necesitas?' });
+    const search = page.getByRole('combobox', { name: 'Buscar artistas, profesionales o eventos' });
     await expect(search).toHaveValue('music');
     const suggestionsSettled = page.waitForResponse(response => {
       const url = new URL(response.url());
