@@ -74,3 +74,27 @@ The actual-schema regression first observes an unauthorized synthetic hide on
 the predecessor, then verifies denial without effects, false capability flags,
 private review rows, legitimate scoped moderation and former-organizer replay
 revocation. Its fixtures roll back; HTTP, CI and production are separate scopes.
+
+
+## Concurrent assignment revocation
+
+Source decisions reuse interaction_lock_permissions after parent/source locking
+and before actor/target serialization and source capability checks. Its ordered
+FOR SHARE locks on the actor's party_security_role assignments remain held until
+the action transaction finishes. A concurrent assignment revocation waits if the
+action owns the permission lock first; when revocation owns the row first, the
+action waits and rechecks current authority after revocation commits. A revoked
+actor cannot replay a previously authorized source decision.
+
+Migration 217 replaces the same guarded source-command function after 216. The
+216 authorization predicates and all prior SQL stay unchanged. Reapply accepts
+only the exact approved predecessor or repaired bodies/attributes, preserves the
+function OID and rejects unknown successors or a downgrade through 216.
+
+The real PostgreSQL concurrency runner executes remove, restore, hide and report
+resolution in both lock orders, observes pg_blocking_pids, and checks source,
+version, ledger and audit. The predecessor control commits a role revocation
+while a source action is held, then observes the unauthorized source commit.
+Fixtures use only the runner's owned database; no production grant is changed.
+This scope does not prove universal linearizability of every security-catalog
+operation or the complete administrative grant-approval workflow.

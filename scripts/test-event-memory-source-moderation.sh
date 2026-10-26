@@ -64,4 +64,28 @@ node "$repo_root/scripts/render-production-migration-batch.mjs" > "$batch"
 tdf_test_psql -f "$batch" >/dev/null
 tdf_test_psql -f "$batch" >/dev/null
 tdf_test_psql -f "$repo_root/tdf-hq/test/integration/event_memory_source_null_organizer.sql" >/dev/null
-printf '%s\n' 'Source moderation: full-schema, replay, historical rollback, NULL-organizer denial and guarded successor reapply passed'
+source_oid=$(tdf_test_psql -qAtc "SELECT 'public.event_memory_source_command(bigint,uuid,uuid,jsonb)'::regprocedure::oid")
+tdf_test_psql -f "$repo_root/tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql" >/dev/null
+tdf_test_psql -f "$repo_root/tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql" >/dev/null
+test "$source_oid" = "$(tdf_test_psql -qAtc "SELECT 'public.event_memory_source_command(bigint,uuid,uuid,jsonb)'::regprocedure::oid")"
+if tdf_test_psql -f "$repo_root/tdf-hq/sql/2026-10-25_event_memory_source_authorization.sql" >/dev/null 2>&1; then
+ echo 'Nullable-authority repair unexpectedly removed its permission-lock successor' >&2; exit 1
+fi
+tdf_test_psql -qAtc "SELECT pg_get_functiondef('public.event_memory_source_command(bigint,uuid,uuid,jsonb)'::regprocedure)" > "$definition"
+tdf_test_psql >/dev/null <<'SQL'
+DO $$ DECLARE original text; changed text; BEGIN
+ original:=pg_get_functiondef('public.event_memory_source_command(bigint,uuid,uuid,jsonb)'::regprocedure);
+ changed:=replace(original,E'\nDECLARE t interaction_target',E'\n-- Synthetic unreviewed successor\nDECLARE t interaction_target');
+ ASSERT changed<>original;
+ EXECUTE changed;
+END $$;
+SQL
+if tdf_test_psql -f "$repo_root/tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql" >/dev/null 2>&1; then
+ echo 'Permission-lock repair unexpectedly overwrote an unknown successor' >&2; exit 1
+fi
+tdf_test_psql -f "$definition" >/dev/null
+tdf_test_psql -f "$repo_root/tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql" >/dev/null
+tdf_test_psql -f "$repo_root/tdf-hq/test/integration/event_memory_source_moderation.sql" >/dev/null
+tdf_test_psql -f "$repo_root/tdf-hq/test/integration/event_memory_source_null_organizer.sql" >/dev/null
+python3 "$repo_root/scripts/test-event-memory-source-permissions.py" --database-url "$TDF_TEST_DATABASE_URL"
+printf '%s\n' 'Source moderation: historical rollback, NULL authorization, permission-revocation interleavings and guarded successors passed'

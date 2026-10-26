@@ -20,7 +20,7 @@ opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
 runtime_paths=['tdf-hq/src/TDF/API/SocialEventsAPI.hs','tdf-hq/src/TDF/DTO/SocialEventsDTO.hs',
  'tdf-hq/src/TDF/Server/SocialEventsHandlers.hs','tdf-hq/src/TDF/Interactions/Notifications.hs',
  'tdf-hq/sql/2026-10-25_event_memory_invitations.sql','scripts/test-event-memories-http.py']
-if a.source_moderation:runtime_paths+=['tdf-hq/src/TDF/Interactions/API.hs','tdf-hq/src/TDF/Interactions/Server.hs','tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql','tdf-hq/sql/2026-10-25_event_memory_source_authorization.sql']
+if a.source_moderation:runtime_paths+=['tdf-hq/src/TDF/Interactions/API.hs','tdf-hq/src/TDF/Interactions/Server.hs','tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql','tdf-hq/sql/2026-10-25_event_memory_source_authorization.sql','tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql']
 if a.browser:runtime_paths+=['scripts/test-event-memory-source-browser.mjs','tdf-hq-ui/src/components/events/EventMemoryModeration.tsx','tdf-hq-ui/src/api/eventMemoryModeration.ts','tdf-hq-ui/src/pages/SocialEventDetailPage.tsx']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/api/socialEvents.ts','tdf-hq-ui/src/api/client.ts','tdf-hq-ui/src/api/eventMemoryInvitations.ts']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/session/useSessionOwner.ts','tdf-hq-ui/src/session/useOwnedSessionDraft.ts','tdf-hq-ui/src/session/authEvents.ts','tdf-hq-ui/src/session/SessionContext.tsx','tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx','tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts']
@@ -216,8 +216,8 @@ try:
  batch=run(['node','scripts/render-production-migration-batch.mjs']);(out/'migrations.sql').write_bytes(batch);apply(out/'migrations.sql')
  if sql("SELECT to_regprocedure('event_memory_dispatch_batch(integer)') IS NULL")=='t':apply(root/'tdf-hq/sql/2026-10-25_event_memory_invitations.sql')
  if a.source_moderation:
-  if sql("SELECT to_regprocedure('event_memory_source_command(bigint,uuid,uuid,jsonb)') IS NULL")=='t':apply(root/'tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql')
-  apply(root/'tdf-hq/sql/2026-10-25_event_memory_source_authorization.sql')
+  assert sql("SELECT to_regprocedure('event_memory_source_command(bigint,uuid,uuid,jsonb)') IS NOT NULL")=='t','Canonical manifest must install source moderation'
+  apply(root/'tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql')
  authority_after_install=sql("SELECT jsonb_object_agg(signature,md5(pg_get_functiondef(signature::regprocedure))) FROM (SELECT signature FROM event_memory_moderation_authority UNION SELECT unnest(ARRAY['event_memory_source_context(uuid,bigint)','event_memory_source_reports(bigint,bigint,uuid,integer)','event_memory_source_command(bigint,uuid,uuid,jsonb)'])) definitions") if a.source_moderation else None
  start();report['actualVersion']=request('/version')[0]
  assert request('/session')[0] is None
