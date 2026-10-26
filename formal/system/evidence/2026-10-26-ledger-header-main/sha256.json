@@ -1,5 +1,5 @@
 {
-  "README.md": "56ff9cf8276d8d20611d1caa8ee3a59ae8ed95d404c632df1fd4134d8df907c3",
+  "README.md": "0fe8657bd14bb13c4b9f42f3ada806f50c4b4007919df39d2a206bf372f4e500",
   "aggregate-receipt.json": "6880a6594031a6b3d86ab7703fdd6d11af618f864a4fa8314358dcfaa6a5760c",
   "baseline-receipt.json": "f6f7f54c679224f012b262008760f572411f70a641678a60c69ea055bd365fbf",
   "build-receipt.json": "010205e506ecf987a62d84171ecf971a827c8e15873d224d4ad7021de5c80a01",
@@ -7,6 +7,7 @@
   "logout-main-integration.json": "8cce3da7f3d4e2336580a38c7c6f9f4cecdc67e09baf7b1dd448b3bf283c6f2e",
   "orchestrator-controls.json": "e8e01c6719dd3827b9b5e9c2a0a8b1e5f752ad4d69742825361bae6b5cf3330e",
   "receipt.json": "c62ba181a75316412d8adc9646ccf1dd86f0e1319f70888f0e77adaead7394d8",
+  "release-journal-main-integration.json": "65e318b1228088addd7353c7000219a0e9749367cc61372b48ca8023f7201915",
   "scorecard.json": "9e773351f2e9f49ebc54e973f817b703c0a442c281a3786f6bad09ea351c1077",
   "snapshot-receipt.json": "2533d7069499d0e2cd6cac053ec1c84b60af5003c93ab6cf946f438307590297",
   "tlc-receipt.json": "24f8c6ace73fea3ed5acd0583c9e8fc95552028d1a19cfb3544d604196495b4d",
