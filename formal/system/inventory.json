@@ -1266,6 +1266,7 @@
       "tdf-hq-ui/src/pages/teachersPageLogic.test.ts",
       "tdf-hq-ui/src/pages/teachersPageLogic.ts",
       "tdf-hq-ui/src/player/GlobalPlayer.tsx",
+      "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
       "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
       "tdf-hq-ui/src/player/PlayerProvider.tsx",
       "tdf-hq-ui/src/player/PlayerShell.tsx",
@@ -2943,7 +2944,7 @@
     {
       "id": "SURFACE-056631e61150574f",
       "path": "e2e/web/music-player-native.spec.mjs",
-      "sha256": "c30ef37d2013401f3baffede88298930fa0795fb277d06c9167d3c9747fb55a0",
+      "sha256": "622572b204235ac202fa0ffa550a3d7820b86ab15b2f943e23726552e299966e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6315,7 +6316,7 @@
     {
       "id": "SURFACE-02bd88f022e926a3",
       "path": "tdf-hq-ui/src/App.tsx",
-      "sha256": "a43e646790f5293655dc06d92c1f8ce242e18932ec3241bf302e9a866b1237b9",
+      "sha256": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10141,6 +10142,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4fcbb0b9c41b6de4",
+      "path": "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+      "sha256": "6c9d95071825657a5b6b70bda2765be0c939000084618ea315a54ad2ae2b8046",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
       "sha256": "0933e9cc20b04130bc4a86065556a55525028f8e3f3b02624674c04c695e4d50",
@@ -10149,7 +10156,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "e6ea941fbe1463ca01d11c07044e6ff518b5572a1be7be9a038b50cef1903a9a",
+      "sha256": "f79611dd4a798f8490dfae7acdb5cc23687cd051f4c242c304af17039dd97aa3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10185,7 +10192,7 @@
     {
       "id": "SURFACE-6f181a8eb8c4a407",
       "path": "tdf-hq-ui/src/player/queue.ts",
-      "sha256": "f7156de7da66f35bd26390af0ef14a3968b23a7bd6ddf1b41966e482c16a7ddb",
+      "sha256": "5c55aa09fdd0dbf24c32aea638fb1bcf38b620d761d6ca98c3b12c44c6ef375f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10341,7 +10348,7 @@
     {
       "id": "SURFACE-10caedec4015767f",
       "path": "tdf-hq-ui/src/session/SessionProviders.tsx",
-      "sha256": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
+      "sha256": "993723d58cfd86b5604c9a0faae84c0c21db167a50b8459f0b0439e7381617c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20835,6 +20842,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/music-releases/listener-scoped-player-state.md",
+      "sha256": "12ab105112dbff5bd9fecd549c6d3d46f102d1763610b45a938bffd6b8329c30",
+      "authority": "inferred",
+      "authorityBasis": "Status: implemented at `a0120daa3493c04e358b50c6d60af1cacfc60a31`, locally tested;",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/music-releases/local-s3-integration.md",
       "sha256": "32736afb17cb3ad73d79d6abdaa1996c381c6487c226560f0e96a8d66b08157a",
       "authority": "inferred",
@@ -27128,8 +27142,15 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/player-listening-privacy.md",
+      "sha256": "0d12466143c5a784a83944fd8e8eb664f22fbc2a3c6a2b97a0d9fdfe89e87429",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/player-session.md",
-      "sha256": "81cef40eb0c0ff1135257fd630136f365a02a6bf97d4f3ca2514e476a02906ce",
+      "sha256": "1b42df5d646e6c417de273e4b3e3ddd38017a5142becda4fe40dd772e267b2a0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27220,7 +27241,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e7bf31a066c32a683d48adf18bed614c6271d6ae11c0fbf81a174638a944d67c",
+      "sha256": "694db8227b0ebb63ead3931cdee129bc5a75327392707cc688fa1693d39c17fb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -8651,7 +8651,8 @@
         "tdf-mobile/src/navigation/notificationTarget.ts",
         "playwright.music-native.config.mjs",
         ".github/workflows/ci.yml",
-        "scripts/run-native-audio-tests.sh"
+        "scripts/run-native-audio-tests.sh",
+        "tdf-hq-ui/src/session/SessionProviders.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -12044,6 +12045,107 @@
       "failure": "Server revocation remains unconfirmed on network, deadline or non-success response.",
       "recovery": "Explicit bounded retry or fresh interactive login; retain unsigned public reads.",
       "observability": "Record outcome booleans only; no cookie, token or personal-data diagnostics."
+    },
+    {
+      "id": "MEDIA-MUSIC-PRIVACY-001",
+      "domain": "MEDIA",
+      "title": "Client listener ownership and latest-intent precedence for local playback state",
+      "critical": true,
+      "authority": "User universal audio privacy/selection/continuity directive2026-10-25; root-selected client ownership policy and hydration-precedence correction2026-10-26. Independent release review remains required.",
+      "source": "docs/music-releases/listener-scoped-player-state.md",
+      "contract": "formal/system/player-listening-privacy.md",
+      "statement": "Listening queue,selected track metadata,positions,shuffle and repeat belong to an explicit current client owner; device volume,mute and quality remain separate. Restore only a resolved valid matching own-property owner tag; legacy/mismatched/invalid owners restore no listening state. Same-owner readiness must not overwrite newer user queue edits,including an intentionally empty queue,or replace its decoder. Actual owner changes clear listening state and stop obsolete work.",
+      "property": "RestoreListening implies identityReady and valid explicit owner and own-property tag strictly equal to that owner and no intervening user queue edit. Persistence requires resolved valid owner. A same-owner readiness/query-scope change preserves current user intent and engine; an actual owner change resets listening state while retaining device preferences. Owner tags grant no server authorization.",
+      "actors": [
+        "Current client listener",
+        "Explicit anonymous device listener",
+        "Session/player composition and local storage"
+      ],
+      "preconditions": [
+        "Existing SessionProvider supplies current client descriptor and readiness; that readiness is not server authentication proof.",
+        "Runtime owner composition keeps one identity-aware player inside SessionProvider and above keyed query scopes.",
+        "Backend media permissions and browser storage integrity remain independent boundaries.",
+        "Initial matching-owner reload/first-ready hydration is distinct from an in-app actual owner transition; the latter starts empty even when its tag matches stale storage."
+      ],
+      "inputs": [
+        "Client identity readiness and partyId or explicit anonymous null",
+        "Saved owner-tagged or legacy local player envelope",
+        "User selection,queue changes,seek/play/pause and device preference changes",
+        "Initial bootstrap success/failure,account transitions,query-scope changes and supported route navigation"
+      ],
+      "state": {
+        "owner": "Positive safe-integer partyId,explicit anonymous null,or invalid/unresolved undefined",
+        "devicePreferences": [
+          "volume",
+          "muted",
+          "quality"
+        ],
+        "listening": [
+          "queue",
+          "selected title/identity",
+          "positions",
+          "shuffle",
+          "repeat"
+        ],
+        "hydration": "Initial readiness plus user queue-edit precedence; no retained per-historical-account envelope"
+      },
+      "allowedTransitions": [
+        "Initial pending identity -> suppress listening restore/write while retaining current permitted user gestures",
+        "First ready,same owner,no queue edit -> restore valid matching queue paused",
+        "First ready,same owner,user queue edit -> preserve current selection/decoder or intentional empty queue; do not revive old saved listening state",
+        "A/B/anonymous owner change -> invalidate old session work and clear listening state,retain device preferences",
+        "Same-owner loading/query-scope/navigation -> retain engine and listening intent",
+        "Legacy or mismatched owner envelope -> preserve only safe device preferences; do not restore prior listening state"
+      ],
+      "forbiddenTransitions": [
+        "Prior owner title,queue or positions commit under a new explicit client owner.",
+        "Invalid authenticated identity is treated as anonymous ownership.",
+        "Unresolved bootstrap overwrites saved listening state with an unowned empty envelope.",
+        "Readiness restores oldA after the same owner selectedB,cleared or reordered the queue.",
+        "A delayed prior-owner save repopulates or relabels another listener state.",
+        "A supported same-owner route/query-scope transition unnecessarily replaces the playback engine.",
+        "Rapid A/B/A or anonymous/account/anonymous owner transitions revive an old matching envelope before an intermediate debounced save."
+      ],
+      "effects": [
+        "Guarded owner-tagged local restoration and persistence",
+        "Intentional listening-state reset on actual owner changes",
+        "Device preference retention and no implicit autoplay from hydration"
+      ],
+      "authorization": "Client owner equality is a local restoration boundary only. Existing session,server media access,credential expiry and browser policies remain authoritative; cached client identity after bootstrap failure is not successful server verification.",
+      "privacy": "Keep only one owned listening envelope; no owner credentials/display names are added. Untagged/mismatched listening state is discarded,not securely erased. Anonymous context cannot distinguish anonymous humans; other tabs,older clients,storage tampering and disk/history backups are outside this guarantee.",
+      "concurrency": "Actual owner changes invalidate old session effects/timers. Same-owner readiness/query-scope changes must preserve latest queue edits and decoder; empty-after-edit is intentional. No cross-tab linearizability or distributed session claim.",
+      "idempotency": "Repeated same-owner ready notifications must not repeat hydration over user edits. Existing bounded save timer cleanup remains; no per-historical-account state accumulation is introduced.",
+      "failure": "Invalid JSON or unavailable storage uses the exercised empty/default path; arbitrary malformed nested sources remain an existing separate robustness obligation. Invalid owner suppresses listening restore/write. Bootstrap failure follows existing cached client descriptor policy,not server verification.",
+      "recovery": "A resolved matching client owner may restore paused state if no newer queue intent exists; otherwise keep the current state or start empty. Existing audio authorization/recovery stays separately required.",
+      "observability": "Source-bound actual App/session/player regressions and local native browser observations; no production identity/listening payload logging introduced.",
+      "implementation": [
+        "tdf-hq-ui/src/App.tsx",
+        "tdf-hq-ui/src/session/SessionProviders.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx",
+        "tdf-hq-ui/src/player/queue.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "tdf-hq-ui/src/player/queue.test.ts",
+        "e2e/web/music-player-native.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "TESTED locally at a0120daa3493c04e358b50c6d60af1cacfc60a31:85/85 tests in8suites (22identity,39engine,3queue,21session),scoped lint,Node22 build;27/27 installed browser cases (24real native+3declared mocked) across Chromium desktop/phone emulation and Firefox. New held-session same-owner/freshB case preserves SAMEdecoder in all3. APIs/session/authorization remain synthetic; no theorem,server/private-byte proof or whole-system verification. Existing bounded player model excludes identity/preferences.",
+      "evidence": "reports/player-listening-privacy-2026-10-26.json retains baseline3af audit,7de expected failure,final six-source hashes and qualification/commit/log/bundle hashes; exact integrated-candidate CI,review and release remain pending.",
+      "status": "specified and implemented",
+      "confidence": "Medium: actual App/identity regressions and local real-native decoder continuity pass; client-owned state only,not independently released or production verified.",
+      "ambiguity": [
+        "Current client readiness/owner label may rely on cached identity after bootstrap failure; no server authentication or private-byte access proof.",
+        "Anonymous null is a device-anonymous identity,not isolation between different anonymous humans.",
+        "Older clients,concurrent tabs,storage tampering and secure erasure remain outside the boundary.",
+        "WebKit,physical-device,fullWCAG,target rollback and production acceptance remain unverified.",
+        "Invalid JSON/storage failures are exercised; arbitrary malformed nested source records are not comprehensively validated."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Named client ownership/latest-intent behaviors TESTED locally with source-bound App regressions and real decoder continuity; no extracted identity model or mathematical proof. Exact integrated-candidate hosted checks,independent review and deployed acceptance remain pending."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -12059,7 +12161,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "c3961a5f03e3252d529ab17649083deacc18dbdbf8c701f981e55fecadd58803",
+    "docs/catalog-persistence/catalog-list-decisions.json": "b182a0d413a70cb05bbe869a35c010ccf30201ad794b66b225733b5ef8261c1c",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -12076,7 +12178,7 @@
     "e2e/web/mobile-layout-regressions.spec.mjs": "db3505fa7e16300fac202d80cca9957d8208eb067b8f2c6c53f0e08f547411fc",
     "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
-    "e2e/web/music-player-native.spec.mjs": "c30ef37d2013401f3baffede88298930fa0795fb277d06c9167d3c9747fb55a0",
+    "e2e/web/music-player-native.spec.mjs": "622572b204235ac202fa0ffa550a3d7820b86ab15b2f943e23726552e299966e",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
     "e2e/web/persona-public.spec.mjs": "afaaabc5ab1c3a0fd039e08d715a5ea3a4505c6e7c9931b80269e68e7de490a9",
@@ -12680,7 +12782,7 @@
     "tdf-hq-ui/public/mobile-distribution.json": "502e4dda174a92d73630a760132a485cebaa58bfca7fcf2345f9283e98430aff",
     "tdf-hq-ui/public/robots.txt": "082606e607e29733ad0e44ad1efd702079008d9bf867b97638b289d9a18cfb76",
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
-    "tdf-hq-ui/src/App.tsx": "a43e646790f5293655dc06d92c1f8ce242e18932ec3241bf302e9a866b1237b9",
+    "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "e9b604b8d0c83c918608e020e2c4e8e1ba38658387c3d81fa8fa39650ccbbdb5",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
@@ -12886,14 +12988,15 @@
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
+    "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "6c9d95071825657a5b6b70bda2765be0c939000084618ea315a54ad2ae2b8046",
     "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "0933e9cc20b04130bc4a86065556a55525028f8e3f3b02624674c04c695e4d50",
-    "tdf-hq-ui/src/player/PlayerProvider.tsx": "e6ea941fbe1463ca01d11c07044e6ff518b5572a1be7be9a038b50cef1903a9a",
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "f79611dd4a798f8490dfae7acdb5cc23687cd051f4c242c304af17039dd97aa3",
     "tdf-hq-ui/src/player/PlayerShell.tsx": "bce3f4680f8f764eed1302b5ad71ef9a801686cafb2f74e3377ce4d7ed5650a3",
     "tdf-hq-ui/src/player/analytics.test.ts": "ea44642f88074faa812887cdbd611d6720eb77fbb8985c6ec681726673c65420",
     "tdf-hq-ui/src/player/analytics.ts": "004329c88a0e171892b21295bf6464d3922bb379ab9c09239f1566ce6356b169",
     "tdf-hq-ui/src/player/assetAccess.ts": "a0da01ca4f664e57db6f1efcbcf5f6cb601c181679bd7d4c4d92b7c5c07c74d1",
     "tdf-hq-ui/src/player/queue.test.ts": "736c8b5550f3e3a8d7ad51e548e1fda55d6a899ee19058bf1d6f5fe4b6d9493e",
-    "tdf-hq-ui/src/player/queue.ts": "f7156de7da66f35bd26390af0ef14a3968b23a7bd6ddf1b41966e482c16a7ddb",
+    "tdf-hq-ui/src/player/queue.ts": "5c55aa09fdd0dbf24c32aea638fb1bcf38b620d761d6ca98c3b12c44c6ef375f",
     "tdf-hq-ui/src/player/sourceMetadata.test.ts": "9f9e0396d6b5aca8ea3ec585c0c9babaf607e1066c9fa6033f45f951f74f33de",
     "tdf-hq-ui/src/player/sourceMetadata.ts": "2d2f6271f7718eb899b75b8afd5c1e1b73d77bf5db665438e42c5d3eea3dd55a",
     "tdf-hq-ui/src/player/types.ts": "469cc2cbcd256ea4f59b510e82e8d54927ca4081f372575822e0f2c375fd558f",
@@ -12911,7 +13014,7 @@
     "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx": "6d28d26c28078996f37d16bb00ea2e12f9af21e2583ed52cd9f1c6f5c9368777",
     "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx": "6fb0daa60ae3fbe7d6603fb252ee661d308ec2e38ff12a96d94adabaea22e7f7",
     "tdf-hq-ui/src/session/SessionProviders.test.tsx": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
-    "tdf-hq-ui/src/session/SessionProviders.tsx": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
+    "tdf-hq-ui/src/session/SessionProviders.tsx": "993723d58cfd86b5604c9a0faae84c0c21db167a50b8459f0b0439e7381617c4",
     "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx": "5109459ac552aec840246f08366bf65ec95a0fe26579b7664cee39dcfdae6250",
     "tdf-hq-ui/src/session/SessionQueryProvider.tsx": "a210c0bdf2b574603474abe4c839e7a6bed0d3b3c4eff9fc679495ad41a0e74b",
     "tdf-hq-ui/src/session/authEvents.ts": "7eb5599167ba8a097912f600c0b88a472c9d56e98b0115bba05aa3734249e977",
@@ -17163,6 +17266,14 @@
       {
         "requirement": "PRIV-CACHE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-PRIVACY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/session/SessionQueryProvider.tsx": [
@@ -21181,6 +21292,10 @@
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-PRIVACY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/player/PlayerShell.tsx": [
@@ -21204,6 +21319,10 @@
     "tdf-hq-ui/src/player/queue.ts": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-PRIVACY-001",
         "relationship": "implementation"
       }
     ],
@@ -21262,6 +21381,10 @@
       },
       {
         "requirement": "DISCOVERY-NAV-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-PRIVACY-001",
         "relationship": "implementation"
       }
     ],
@@ -21395,6 +21518,10 @@
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-PRIVACY-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/player/analytics.test.ts": [
@@ -21406,6 +21533,10 @@
     "tdf-hq-ui/src/player/queue.test.ts": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-PRIVACY-001",
         "relationship": "tests"
       }
     ],
@@ -21520,6 +21651,10 @@
     "e2e/web/music-player-native.spec.mjs": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-PRIVACY-001",
         "relationship": "tests"
       }
     ],
@@ -23582,6 +23717,12 @@
         "requirement": "AUTH-LOGOUT-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-PRIVACY-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -24087,11 +24228,15 @@
     {
       "id": "SURFACE-056631e61150574f",
       "path": "e2e/web/music-player-native.spec.mjs",
-      "sha256": "c30ef37d2013401f3baffede88298930fa0795fb277d06c9167d3c9747fb55a0",
+      "sha256": "622572b204235ac202fa0ffa550a3d7820b86ab15b2f943e23726552e299966e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-PRIVACY-001",
           "relationship": "tests"
         }
       ]
@@ -30299,7 +30444,7 @@
     {
       "id": "SURFACE-02bd88f022e926a3",
       "path": "tdf-hq-ui/src/App.tsx",
-      "sha256": "a43e646790f5293655dc06d92c1f8ce242e18932ec3241bf302e9a866b1237b9",
+      "sha256": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30312,6 +30457,10 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-PRIVACY-001",
           "relationship": "implementation"
         }
       ]
@@ -36249,6 +36398,18 @@
       ]
     },
     {
+      "id": "SURFACE-4fcbb0b9c41b6de4",
+      "path": "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+      "sha256": "6c9d95071825657a5b6b70bda2765be0c939000084618ea315a54ad2ae2b8046",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PRIVACY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
       "sha256": "0933e9cc20b04130bc4a86065556a55525028f8e3f3b02624674c04c695e4d50",
@@ -36257,17 +36418,25 @@
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-PRIVACY-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "e6ea941fbe1463ca01d11c07044e6ff518b5572a1be7be9a038b50cef1903a9a",
+      "sha256": "f79611dd4a798f8490dfae7acdb5cc23687cd051f4c242c304af17039dd97aa3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-PRIVACY-001",
           "relationship": "implementation"
         }
       ]
@@ -36329,17 +36498,25 @@
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-PRIVACY-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-6f181a8eb8c4a407",
       "path": "tdf-hq-ui/src/player/queue.ts",
-      "sha256": "f7156de7da66f35bd26390af0ef14a3968b23a7bd6ddf1b41966e482c16a7ddb",
+      "sha256": "5c55aa09fdd0dbf24c32aea638fb1bcf38b620d761d6ca98c3b12c44c6ef375f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-PRIVACY-001",
           "relationship": "implementation"
         }
       ]
@@ -36631,11 +36808,19 @@
     {
       "id": "SURFACE-10caedec4015767f",
       "path": "tdf-hq-ui/src/session/SessionProviders.tsx",
-      "sha256": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
+      "sha256": "993723d58cfd86b5604c9a0faae84c0c21db167a50b8459f0b0439e7381617c4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PRIV-CACHE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-PRIVACY-001",
           "relationship": "implementation"
         }
       ]
@@ -51141,7 +51326,8 @@
     "DEPLOY-VERSION-001",
     "MEDIA-DRIVE-002",
     "COMMUNITY-PROFILE-001",
-    "AUTH-LOGOUT-001"
+    "AUTH-LOGOUT-001",
+    "MEDIA-MUSIC-PRIVACY-001"
   ],
   "stateMachines": [
     {
@@ -52260,7 +52446,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e7bf31a066c32a683d48adf18bed614c6271d6ae11c0fbf81a174638a944d67c",
+      "sourceSha256": "694db8227b0ebb63ead3931cdee129bc5a75327392707cc688fa1693d39c17fb",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -52288,7 +52474,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e7bf31a066c32a683d48adf18bed614c6271d6ae11c0fbf81a174638a944d67c",
+      "sourceSha256": "694db8227b0ebb63ead3931cdee129bc5a75327392707cc688fa1693d39c17fb",
       "definition": {
         "states": [
           "absent",
@@ -52318,7 +52504,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e7bf31a066c32a683d48adf18bed614c6271d6ae11c0fbf81a174638a944d67c",
+      "sourceSha256": "694db8227b0ebb63ead3931cdee129bc5a75327392707cc688fa1693d39c17fb",
       "definition": {
         "export": [
           "queued",
@@ -74594,7 +74780,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 142,
+    "PARTIAL": 143,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -1,0 +1,74 @@
+# Listener-scoped local playback state
+
+Status: implemented at `a0120daa3493c04e358b50c6d60af1cacfc60a31`, locally tested;
+not yet merged into the final playback foundation or deployed.
+
+A local audit reproduced a privacy/UX defect: after logout or account changes,
+the next client principal could see the preceding listener's public track title,
+queue and resume position. The audit used actual App/session/player composition
+with synthetic public tracks and declared media/API doubles. It did not establish
+server-private media access or continued sound across accounts.
+
+The selected policy keeps volume, mute and quality as device preferences while
+scoping queue, selection, positions, shuffle and repeat to an explicit client
+owner. Legacy untagged listening state is discarded; a saved record restores only
+for the same resolved valid owner. Anonymous ownership is explicit `null`, not a
+fallback for an invalid authenticated descriptor. One device-anonymous context
+cannot distinguish separate anonymous people.
+
+Initial pending identity neither exposes saved titles nor overwrites saved state.
+When the same owner becomes ready, a matching queue may restore paused only if
+the user has made no queue edits. A fresh selection, clear, reorder or other edit
+must win even when the current queue is empty. Readiness must not revive old A
+after the listener chose B or replace B's decoder. Actual owner changes clear
+listening state and stop old work, while current device preferences remain.
+Rapid A/B/A or anonymous/account/anonymous transitions must not revive an old
+matching envelope before the intermediate owner's delayed save has run.
+
+The engine belongs inside `SessionProvider` and above the keyed
+`SessionQueryProvider`. `App` consumes it rather than owning another provider.
+This preserves same-owner playback through bootstrap/query scope changes and
+supported navigation while allowing actual owner changes to reset it. The
+committed composition and guarded hydration replace the initial prototype's
+rejected readiness remount.
+
+The implementation branch is `fix/player-listening-identity-20261026`, initially
+based on playback head `7de7c292753565ae6ea64c57dd9aa4b97e330b6d`.
+The older diagnostic/design assessment binds main `3af768d`; a desired logout
+regression also fails on `7de7c2927`. Final qualification records 85/85 tests in
+eight suites (22 identity, 39 engine, three queue, 21 session), scoped lint and a
+Node 22.14.0 TypeScript/Vite/budget build passing at 336,894 initial gzip bytes.
+The installed three-project matrix passes 27/27: 24 native real-media cases plus
+three declared mocked smoke cases, zero skips/retries/flaky cases. Chromium
+desktop/phone emulation and Firefox each pass the new held-session case: fresh B
+keeps the same actual decoder/source when same-owner bootstrap resolves. Session,
+catalog and authorization replies are synthetic, media are generated AAC/FLAC
+served over loopback; no backend identity/rights or physical-device result is
+inferred. WebKit and hosted current-candidate checks remain pending. Source,
+receipt, logs and bundle hashes are retained in
+[the delivery report](../../reports/player-listening-privacy-2026-10-26.json).
+
+The scoped contract is
+[player-listening-privacy.md](../../formal/system/player-listening-privacy.md),
+owned by `MEDIA-MUSIC-PRIVACY-001`. This increment appends the requirement to
+142 inherited playback requirements, deliberately adding only
+`SessionProviders.tsx` to the existing `MEDIA-MUSIC-PLAYER-001` implementation
+mapping and correcting that contract's ownership/navigation correspondence. All
+other fields of that inherited row and all other inherited requirement objects
+remain exact against `7de7c2927`. The bounded player model does not
+model identity/preferences, and its verification status will not be upgraded.
+
+The final branch must normally merge the latest root playback foundation with
+current main before publication. Queue-owner labels are client isolation aids,
+not server authorization, byte revocation, secure erasure or a cross-tab protocol.
+Existing server libraries/history, original masters, delivery checks, payments and
+media dependencies remain unchanged. Rollback to the older unscoped loader can
+restore the known privacy gap; target rollback, physical-device acceptance,
+hosted checks, independent review and production deployment remain unverified.
+
+Catalog lineage retains 1,338 unchanged active parent decisions and the exact
+superseded eight-action queue review in append-only history. One individually
+reviewed nine-action successor adds internal guarded `restore`, leaving 1,339
+active decisions. These are reducer dispatch mechanics; no domain catalog or
+permissions become client-controlled. Other decisions/reconciliation history
+remain unchanged.

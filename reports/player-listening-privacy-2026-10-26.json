@@ -1,0 +1,712 @@
+{
+  "schemaVersion": 1,
+  "status": "IMPLEMENTED_COMMITTED_LOCALLY_TESTED_NOT_RELEASED",
+  "branch": "fix/player-listening-identity-20261026",
+  "initialPlaybackBaseline": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+  "integrationBaseline": "pending latest root playback foundation with current main after root qualification",
+  "scope": "Client-owned local listening state and latest user-intent precedence; no server/private-byte/secureerase/cross-tab proof",
+  "audit": {
+    "sourceBaseline": "3af768dacd95c1223975c62da3ce8088bed89b47",
+    "receipt": "/private/tmp/tdf-player-account-audit-20261026/receipt.json",
+    "receiptSha256": "d07311da523daad8996b8719654994b37ebf3c115fb3410e75c71ae05c0dd61b",
+    "designAssessment": "/private/tmp/tdf-player-account-audit-20261026/design-assessment.json",
+    "designAssessmentSha256": "9aca38c0a97e4dd1e6d48e543eb8b83c04039196a26437e0510a99de2fc582fb",
+    "reproduction": {
+      "scratch": "/private/tmp/tdf-player-account-audit-20261026",
+      "command": "cd /private/tmp/tdf-player-account-audit-20261026/tdf-hq-ui && NODE_OPTIONS=--experimental-vm-modules node ../node_modules/jest/bin/jest.js --runInBand --runTestsByPath src/player/PlayerAccountBoundary.audit.test.tsx",
+      "result": "PASS 1 deterministic diagnostic scenario,4 observed identity transitions",
+      "sha256": {
+        "tdf-hq-ui/src/player/PlayerAccountBoundary.audit.test.tsx": "a5c80c7f814bc1604007dc932b8003d8fa0f769ca39829013c5a6a81a7ca6729",
+        "run.log": "901dc28040b31a365c9838f233ece804f3a4074db1efb46adc663530ceb60aae",
+        "observations.json": "1f2332291fc4bbef394d2b91a0623f203b0b799af75b55c45fdc2e9c45e84de5"
+      },
+      "doubles": [
+        "session API snapshot/logout/reconcile mocked",
+        "catalog appearance metadata mocked",
+        "analytics disabled through existing bridge mock",
+        "routed AppRoutes replaced by synthetic identity/player controls",
+        "JSDOM media play/pause/load/currentSrc/paused doubles, synthetic public URLs",
+        "matchMedia/ResizeObserver layout adapters"
+      ],
+      "realNetworkCalls": 0
+    },
+    "findings": {
+      "retainedState": "A prior listener's selected public track title,queue IDs and resume position remain visible/restored after logout to anonymous,login as another principal,reload,and direct account switch.",
+      "rootCause": "SessionQueryProvider correctly remounts all child component state on auth-scope occurrence; replacement PlayerProvider unconditionally loads unscoped persistent localStorage key tdf-global-player/v1. Session personal-data cleanup does not register or clear this key.",
+      "playbackContinuity": "Old native element is replaced and paused on logout; no automatic play restart observed. This is state carryover, not proved cross-account continuous audio.",
+      "retention": "Positions from both synthetic principals coexist in the same persistent positions map after queue replacement; no owner/expiry field in observed saved object.",
+      "serverPrivateBytes": "NOT_TESTED_OR_CLAIMED. Fixture tracks are explicitly synthetic public content; no actual delivery or backend authorization was exercised."
+    },
+    "policyAssessment": {
+      "explicit": "ADR004 says queue,position and preferences persist; existing library docs isolate favorites,playlists,history by listener and analytics sessions rotate with identity.",
+      "unresolved": "No located explicit local queue persistence policy chooses device-wide shared public queue versus account-private listening state at logout/account switch.",
+      "classification": "Confirmed cross-principal client listening-state carryover; user-visible privacy/UX concern on shared browsers, not evidence of a server authorization bypass.",
+      "possibleNextDecision": "Separate harmless device preferences from listening state; root must choose desired anonymous-to-account and account-change retention policy before implementation."
+    }
+  },
+  "newerBaselineDesiredFailure": {
+    "sourceBaseline": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+    "log": "/private/tmp/tdf-player-identity-baseline-failure-20261026.log",
+    "sha256": "1c97e19d4da8fcb1ed9443b2133895448b59fc9d276f7d115e9a9a7567f3fe24",
+    "outcome": "Expected failure: old selected public track remains after logout; not corrected-source pass"
+  },
+  "preliminaryRuntimeObservations": {
+    "reportedBy": "root/source owner before requested composition/latest-intent correction",
+    "totalTests": 74,
+    "identityCases": 14,
+    "engineCases": 39,
+    "sessionCases": 21,
+    "lint": "reported PASS",
+    "admittedAsFinalContractQualification": false,
+    "build": "pending",
+    "nativeInstalledMatrix": "pending"
+  },
+  "desiredPolicy": {
+    "devicePreferences": [
+      "volume",
+      "muted",
+      "quality"
+    ],
+    "listeningScope": [
+      "queue",
+      "selection/title",
+      "positions",
+      "shuffle",
+      "repeat"
+    ],
+    "owner": "Valid positive safe integer,explicit anonymous null,or unknown undefined; strict own-property equality",
+    "sameOwnerReadiness": "Hydrate matching paused snapshot only if no user queue edit; fresh selection,clear,reorder and intentional empty queue win",
+    "composition": "SessionProvider -> identity-aware PlayerProvider -> keyed SessionQueryProvider -> App",
+    "preferences": "Current device preferences retained through actual owner changes; fast pre-save switch regression required",
+    "rapidOwnerReturn": "Actual A/B/A or anonymous/account/anonymous transitions clear listening state even before intermediate250ms persistence; a stale matching disk tag must not revive it."
+  },
+  "formal": {
+    "requirement": "MEDIA-MUSIC-PRIVACY-001",
+    "contract": "formal/system/player-listening-privacy.md",
+    "classification": "PARTIAL release acceptance; named local behaviors TESTED",
+    "mathematicalProof": false,
+    "existingPlayerModelCoversIdentity": false,
+    "initialInheritedRequirements": 142,
+    "initialTotalRequirements": 143,
+    "initialInheritedPlayerRowSha256": "7adda48f90f0ace1be14a05e8b2d74571291f651feeb5acd9799ecdb749259da",
+    "intentionalInheritedDelta": {
+      "requirement": "MEDIA-MUSIC-PLAYER-001",
+      "field": "implementation",
+      "appendOnlyPath": "tdf-hq-ui/src/session/SessionProviders.tsx",
+      "contractMapping": "formal/system/player-session.md ownership/navigation correspondence only",
+      "otherFieldsMustRemainExact": true
+    },
+    "other141InheritedRequirementObjectsExact": true,
+    "ownedPlayerOtherFieldsExact": true,
+    "proofStatus": "TESTED; no mathematical or model-checked identity claim"
+  },
+  "sourceQualification": {
+    "receipt": "/private/tmp/tdf-player-listening-identity-qualified-20261026.json",
+    "receiptSha256": "74b26219b5c0c148cf0f915848b8d2c6446e722dd5d79ed4746f4e362084ac40",
+    "commitReceipt": "/private/tmp/tdf-player-listening-identity-committed-20261026.json",
+    "commitReceiptSha256": "a0f4a38f07f5a9fa7588c37076d257387cb03ce0edf96eaeb1651d97894b28c5",
+    "committedSixSourceHashesMatch": true,
+    "sourceSha256": {
+      "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
+      "tdf-hq-ui/src/session/SessionProviders.tsx": "993723d58cfd86b5604c9a0faae84c0c21db167a50b8459f0b0439e7381617c4",
+      "tdf-hq-ui/src/player/PlayerProvider.tsx": "f79611dd4a798f8490dfae7acdb5cc23687cd051f4c242c304af17039dd97aa3",
+      "tdf-hq-ui/src/player/queue.ts": "5c55aa09fdd0dbf24c32aea638fb1bcf38b620d761d6ca98c3b12c44c6ef375f",
+      "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "6c9d95071825657a5b6b70bda2765be0c939000084618ea315a54ad2ae2b8046",
+      "e2e/web/music-player-native.spec.mjs": "622572b204235ac202fa0ffa550a3d7820b86ab15b2f943e23726552e299966e"
+    },
+    "actualComposition": "SessionProvider -> PlayerProvider -> keyed SessionQueryProvider -> App; the authoritative audio element remains outside the query occurrence subtree.",
+    "unitSessionTests": {
+      "result": "PASS85/85 in8suites",
+      "newIdentityCases": 22,
+      "media": "Declared JSDOM media doubles",
+      "log": "/private/tmp/tdf-player-identity-corrected-tests-final-20261026.log"
+    },
+    "lint": "PASS scoped source+identity test",
+    "build": {
+      "result": "PASS tsc plus Vite plus budget",
+      "node": "22.14.0",
+      "initialGzipBytes": 336894,
+      "log": "/private/tmp/tdf-player-identity-corrected-build-20261026.log"
+    },
+    "native": {
+      "status": "PASS27/27",
+      "realNativeCases": 24,
+      "explicitMockedCases": 3,
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone",
+        "firefox-critical"
+      ],
+      "webKit": "NOT_RUN_LOCAL",
+      "port": 4224,
+      "log": "/private/tmp/tdf-player-identity-native-qualified-20261026.log",
+      "artifacts": "/private/tmp/tdf-player-identity-native-qualified-20261026",
+      "stats": {
+        "startTime": "2026-10-26T06:38:31.708Z",
+        "duration": 244862.12800000003,
+        "expected": 27,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": [
+        {
+          "case": "@critical PW-MUSIC-NATIVE-01 decodes real derivatives and keeps playback across navigation, seeking and quality",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 7805,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer selection and its real decoder",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 3143,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-02 native ended advances the queue and repetition actually restarts audio",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 8275,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-03 rapid switching during a pending native play keeps the latest source",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 2842,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-04 compact options are keyboard accessible and control the same native engine",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 8455,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "music-options-axe.json",
+              "path": null
+            },
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-05 denied full access falls back to real preview of the selected recording and enforces its cap",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 4572,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-06 an expired delivery URL reauthorizes real media without replacing the selection or its position",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 5990,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "expired-delivery-recovery.json",
+              "path": null
+            },
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two automatic retries",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 12274,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-01 decodes real derivatives and keeps playback across navigation, seeking and quality",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 6847,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer selection and its real decoder",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 3327,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-02 native ended advances the queue and repetition actually restarts audio",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 8587,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-03 rapid switching during a pending native play keeps the latest source",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 2945,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-04 compact options are keyboard accessible and control the same native engine",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 8645,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "music-options-axe.json",
+              "path": null
+            },
+            {
+              "name": "compact-options.png",
+              "path": null
+            },
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-05 denied full access falls back to real preview of the selected recording and enforces its cap",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 4659,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-06 an expired delivery URL reauthorizes real media without replacing the selection or its position",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 6021,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "expired-delivery-recovery.json",
+              "path": null
+            },
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two automatic retries",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 12445,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-01 decodes real derivatives and keeps playback across navigation, seeking and quality",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 11582,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer selection and its real decoder",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 4380,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-02 native ended advances the queue and repetition actually restarts audio",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 10739,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-03 rapid switching during a pending native play keeps the latest source",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 4472,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-04 compact options are keyboard accessible and control the same native engine",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 11604,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "music-options-axe.json",
+              "path": null
+            },
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-05 denied full access falls back to real preview of the selected recording and enforces its cap",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 7003,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-06 an expired delivery URL reauthorizes real media without replacing the selection or its position",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 7920,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "expired-delivery-recovery.json",
+              "path": null
+            },
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two automatic retries",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 13530,
+          "realNative": true,
+          "attachments": [
+            {
+              "name": "native-audio-observations.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 3888,
+          "realNative": false,
+          "attachments": [
+            {
+              "name": "music-player-axe.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 3560,
+          "realNative": false,
+          "attachments": [
+            {
+              "name": "music-player-axe.json",
+              "path": null
+            }
+          ]
+        },
+        {
+          "case": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+          "project": "firefox-critical",
+          "status": "passed",
+          "durationMs": 5552,
+          "realNative": false,
+          "attachments": [
+            {
+              "name": "music-player-axe.json",
+              "path": null
+            }
+          ]
+        }
+      ],
+      "newCriticalCase": "PW-MUSIC-NATIVE-08 validates cached same-owner bootstrap preserves a newer explicit track and the same real native decoder across query/App remount.",
+      "scope": "Real generated AAC/FLAC pipeline and loopback byte delivery; synthetic catalogue/session/authorization metadata. Existing PW-MUSIC-01 is explicitly mocked. Desktop browsers and phone emulation on macOS; no physical device or OS lockscreen guarantee."
+    },
+    "logSha256": {
+      "/private/tmp/tdf-player-identity-corrected-tests-final-20261026.log": "95eef94316bbe2e35023d20254da2c50b63841cbe5bb24cec426327e4aa00ff9",
+      "/private/tmp/tdf-player-identity-corrected-lint-final-20261026.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "/private/tmp/tdf-player-identity-corrected-build-20261026.log": "6b65f0db2acb0716277f44f5f022cbbbeb9e472c2f57f7f6b1381707c86e29c4",
+      "/private/tmp/tdf-player-identity-baseline-failure-20261026.log": "1c97e19d4da8fcb1ed9443b2133895448b59fc9d276f7d115e9a9a7567f3fe24",
+      "/private/tmp/tdf-player-identity-native-qualified-20261026.log": "eec361c2ababba5be62993c1db0315168d20d5c7434ba7cbe2ceab10906a8c6a",
+      "/private/tmp/tdf-player-identity-native-qualified-20261026/results.json": "d717f7324981e5527c0305ccb94ffdb6b89db5d5aa97067a6dbee4b809882f30"
+    },
+    "bundleSha256": {
+      "tdf-hq-ui/dist/index.html": "d7c539b458e4846a36f15df95baf9d5095d6ca595a63e898ad53016fb0055ed7",
+      "tdf-hq-ui/dist/assets/index-Bv3cxIHr.js": "adf3821b7a7c11c84de9508ccdec3885205c7c5dd723bafdacf3bdc0e68081b0"
+    },
+    "testBuildEnvironment": "Full build Node22.14.0; native fixture VITE_API_BASE=http://127.0.0.1:19099, preview4224; no production network/data.",
+    "priorAttempts": {
+      "initialObjectHasOwnCompile": "FAILED_TS2550 and corrected with hasOwnProperty.call before final qualification",
+      "initialLintLauncher": "Missing hoisted eslint path, corrected without source workaround",
+      "initialNativeSandbox": "EPERM loopback bind, escalated approved command",
+      "oldNative": "Rejected architecture variant interrupted during setup; explicitly historical only",
+      "doctor": "Direct Node ai doctor13OK5WARN0ERROR; GH auth warn and isolated untracked memory/Mobile warnings, no credentials changed."
+    }
+  },
+  "metadataValidation": {
+    "status": "PASS",
+    "totalTests": 25,
+    "commands": [
+      {
+        "command": "python3 scripts/test-requirement-declarations.py",
+        "tests": 9,
+        "result": "PASS",
+        "log": "/private/tmp/tdf-player-privacy-metadata-declarations-20261026.log",
+        "sha256": "7c758af7411e05fc2e6c4fb89045f7a03d9a5957d5305092903a23a66373d034"
+      },
+      {
+        "command": "python3 scripts/test-specification-inventory.py",
+        "tests": 6,
+        "result": "PASS",
+        "log": "/private/tmp/tdf-player-privacy-metadata-inventory-20261026.log",
+        "sha256": "6c9a48165a96fdc7f8e9bed311cd1efc5904c9c24b76ada7159779c5d3781b9e"
+      },
+      {
+        "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+        "tests": 10,
+        "result": "PASS",
+        "log": "/private/tmp/tdf-player-privacy-metadata-conformance-20261026.log",
+        "sha256": "bdacbe10aa610229a505131dc411f511e90f4f3144bb5c934f5562cb9dfe040e"
+      }
+    ],
+    "additionalSurfaceGuard": {
+      "command": "python3 scripts/test-new-specification-surfaces.py",
+      "tests": 11,
+      "result": "PASS",
+      "log": "/private/tmp/tdf-player-privacy-metadata-surfaces-20261026.log",
+      "sha256": "6b029fe54b914f95e7290338ecbd637637b0bba4ae88d729a7cf0c40449eeed9"
+    },
+    "totalIncludingAdditionalSurfaceGuard": 36
+  },
+  "catalogValidation": {
+    "status": "PASS strictJSON andCSV,zero unreviewed/stale",
+    "initialParentActiveDecisions": 1339,
+    "unchangedActiveParentObjects": 1338,
+    "supersededParentObjectsPreservedExactInHistory": 1,
+    "activeSuccessorsIndividuallyReviewed": 1,
+    "finalActiveDecisions": 1339,
+    "supersededDecisionId": "dfec3f046ad1157e0f0c",
+    "successorDecisionId": "5ed33d9cd50e8f195d05",
+    "history": "docs/catalog-persistence/catalog-list-decisions.json reconciliation.privacyQueueRestoreSuccessor",
+    "reason": "Internal queue reducer adds guarded restore dispatch; all9 tags individually reviewed as implementation mechanics,not a business or authorization catalog.",
+    "initialInvocationError": "First diagnostic omitted --decisions,so1339 unreviewed result is not an admitted strict pass. Subsequent explicit decision-file pre-successor scans are diagnostic only; final post-review JSON/CSV must pass.",
+    "mobilePin": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "newFixtureCandidates": 0,
+    "catalogUnitTests": {
+      "command": "node --test scripts/__tests__/catalog-list-audit.test.mjs",
+      "result": "PASS",
+      "log": "/private/tmp/tdf-player-privacy-catalog-tests-20261026.log",
+      "sha256": "0b4d8bb3b788dc6114423c92fff7da5466e98ae85d527616ea0828b8642d2653",
+      "scope": "Auditor/regression mechanics,not proof of media authorization",
+      "tests": 8
+    },
+    "filesScanned": 2392,
+    "strictCommands": [
+      {
+        "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format json --output docs/catalog-persistence/reports/static-list-inventory.json --fail-on-unreviewed",
+        "result": "PASS exit0",
+        "log": "/private/tmp/tdf-player-identity-catalog-final-json-20261026.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "artifact": "docs/catalog-persistence/reports/static-list-inventory.json",
+        "artifactSha256": "2e7096b210439c1851307475ccf8322e09648def80b4410bb7d749da0d23a317"
+      },
+      {
+        "command": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv --fail-on-unreviewed",
+        "result": "PASS exit0",
+        "log": "/private/tmp/tdf-player-identity-catalog-final-csv-20261026.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "artifact": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+        "artifactSha256": "b87e51983e4e5df141ffb796da35a31f199486a256f58d6cfc674e60d55a557f"
+      }
+    ],
+    "activeCandidateIdsExactlyMatchDecisions": true,
+    "all1339OriginalDecisionObjectsPreservedActiveOrHistory": true,
+    "allOtherReconciliationFieldsExact": true
+  },
+  "limits": [
+    "Client identity readiness is not server authentication",
+    "No private media byte access or immediate revocation proof",
+    "No cross-tab coordination,secure erasure or storage-tamper defense",
+    "Null ownership cannot isolate anonymous humans",
+    "Rollback to older unscoped loader can restore the privacy gap",
+    "WebKit,physical-device,fullWCAG,target rollback and deployed acceptance not established",
+    "Existing arbitrary malformed nested-source validation is not comprehensively verified",
+    "Analytics principal isolation is not changed or established by this local persistence increment"
+  ],
+  "integration": {
+    "pr": null,
+    "ci": "pending exact integrated candidate",
+    "merge": "source and metadata foundation merge pending",
+    "deployment": null,
+    "productionWrites": 0,
+    "serverMigrations": 0,
+    "newMediaDependencies": false
+  },
+  "requiredNativeIdentityCase": {
+    "path": "e2e/web/music-player-native.spec.mjs",
+    "scope": "Actual generated-media decode of freshB during held same-owner session response,then query-scope resolution preserves SAMEelement/source/selection; session and metadata remain synthetic",
+    "execution": "PASS in all3installed projects",
+    "installedMatrixCounts": {
+      "total": 27,
+      "realNative": 24,
+      "explicitlyMocked": 3,
+      "newIdentityRealCases": 3,
+      "skipped": 0,
+      "flaky": 0,
+      "retries": 0
+    },
+    "hostedMatrixCounts": null,
+    "serverAuthProof": false
+  },
+  "sourceCommit": "a0120daa3493c04e358b50c6d60af1cacfc60a31",
+  "traceability": [
+    {
+      "requirement": "MEDIA-MUSIC-PRIVACY-001",
+      "property": "strict current-owner restoration and owner-change reset",
+      "implementation": [
+        "SessionProviders identity",
+        "PlayerProvider owner epoch/storage guard"
+      ],
+      "test": "PlayerIdentity.test.tsx 22cases with declared media/API doubles",
+      "status": "TESTED locally; release PARTIAL"
+    },
+    {
+      "requirement": "PLAYER-002/005/006 with identity hydration",
+      "property": "fresh same-owner B survives readiness/query scope with same decoder",
+      "implementation": [
+        "SessionProviders player above query scope",
+        "PlayerProvider queueIntentRef and guarded hydration"
+      ],
+      "test": "PW-MUSIC-NATIVE-08 across3 installed projects,real generated AAC/FLAC; synthetic API",
+      "status": "TESTED locally; no identity model/refinement proof"
+    }
+  ],
+  "performance": {
+    "startupSLO": "UNMEASURED for this privacy increment",
+    "beforeAfterP95": null,
+    "buildInitialGzipBytes": 336894,
+    "measurementBoundary": "Build size only; browser case durations are functional regression observations,not p95 playback initiation or production reliability."
+  },
+  "acceptance": {
+    "AC-006": "TESTED conditional stable client owner; actual owner changes intentionally end listening session. Local real decoder navigation/bootstrap cases; hosted and production pending.",
+    "AC-007": "TESTED for one canonical engine in named App/browser journeys; no whole-platform or cross-tab exclusion claim.",
+    "AC-010/011": "UNVERIFIED by this increment: backend/private byte authorization and revocation unchanged.",
+    "AC-013": "PARTIAL: Chromium desktop/phone emulation and Firefox; WebKit,physical device and target production pending.",
+    "AC-017": "PARTIAL: new identity behavior TESTED only; existing bounded design model excludes it.",
+    "AC-018": "PARTIAL: local scoped checks pass at six-source commit; hosted exact integration candidate pending.",
+    "AC-022": "PARTIAL: known old-loader rollback privacy gap documented; target rollback drill not executed.",
+    "AC-023": "TESTED actual App composition and existing UI real decoder journey locally; production pending.",
+    "remainingUniversalAcceptance": "Not established by this scoped local persistence increment; no upload/catalog/search/processing/fullWCAG/production completeness claim."
+  }
+}
