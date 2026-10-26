@@ -12094,7 +12094,8 @@
         "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/test-ledger-posting.sh",
-        "scripts/test-provider-retry-runtime.sh"
+        "scripts/test-provider-retry-runtime.sh",
+        "scripts/test-directory-saved-search-parity.mjs"
       ],
       "formalModels": [
         "formal/event-operations/LedgerHeader.tla",
@@ -12102,7 +12103,7 @@
         "formal/event-operations/LedgerHeaderMutable.cfg"
       ],
       "verification": "Full registered schema ordinary-role SQL updates, rollback-scoped guard/startup mutations, witnessed posting/header races under three isolations, a guard-removal RC counterexample and a finite two-writer TLC model with a named mutation control. Backend and formal CI lanes enforce execution.",
-      "evidence": "formal/system/evidence/2026-10-26-ledger-header-main/ records current-main composition; formal/system/evidence/2026-10-25-ledger-header/ retains earlier source identities. Replay commands and limits: formal/system/ledger-header.md. Admit evidence only for its recorded relevant source hashes.",
+      "evidence": "formal/system/evidence/2026-10-26-ledger-header-main/ records current-main composition; formal/system/evidence/2026-10-25-ledger-header/ retains earlier source identities. Replay commands and limits: formal/system/ledger-header.md. Admit evidence only for its recorded relevant source hashes. Saved-search historical-prefix compatibility is tracked separately in formal/system/evidence/2026-10-26-saved-search-checkpoint/; original financial/model receipts retain their source identities.",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "TESTED named SQL boundary and BOUNDED_VERIFIED finite abstraction; complete implementation equivalence remains UNKNOWN.",
@@ -12644,7 +12645,7 @@
     "scripts/test-community-search.py": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
-    "scripts/test-directory-saved-search-parity.mjs": "f4d9e034b9c1c80ce8a526224897079a06158baf8856f92b1dbc199f1baa9365",
+    "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -23580,6 +23581,10 @@
       {
         "requirement": "DIR-SAVED-SEARCH-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-LEDGER-HEADER-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/directory-saved-search-http.mjs": [
@@ -28445,11 +28450,15 @@
     {
       "id": "SURFACE-66af35e30b926d7a",
       "path": "scripts/test-directory-saved-search-parity.mjs",
-      "sha256": "f4d9e034b9c1c80ce8a526224897079a06158baf8856f92b1dbc199f1baa9365",
+      "sha256": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-LEDGER-HEADER-001",
           "relationship": "tests"
         }
       ]
@@ -52350,7 +52359,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1d474a03ce75d5ebfe4664869809787b828b0dbdc5cdf0d9b44a5ccd249103d1",
+      "sourceSha256": "179679a011a68cbacc205a4f683679af3e76002fcffdee6de26796f9c0bb2d2e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -52378,7 +52387,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1d474a03ce75d5ebfe4664869809787b828b0dbdc5cdf0d9b44a5ccd249103d1",
+      "sourceSha256": "179679a011a68cbacc205a4f683679af3e76002fcffdee6de26796f9c0bb2d2e",
       "definition": {
         "states": [
           "absent",
@@ -52408,7 +52417,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1d474a03ce75d5ebfe4664869809787b828b0dbdc5cdf0d9b44a5ccd249103d1",
+      "sourceSha256": "179679a011a68cbacc205a4f683679af3e76002fcffdee6de26796f9c0bb2d2e",
       "definition": {
         "export": [
           "queued",

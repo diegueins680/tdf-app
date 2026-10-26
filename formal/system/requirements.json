@@ -12093,7 +12093,8 @@
         "scripts/__tests__/ledger-event-identity.mjs",
         "scripts/__tests__/ledger-posting-snapshot.py",
         "scripts/test-ledger-posting.sh",
-        "scripts/test-provider-retry-runtime.sh"
+        "scripts/test-provider-retry-runtime.sh",
+        "scripts/test-directory-saved-search-parity.mjs"
       ],
       "formalModels": [
         "formal/event-operations/LedgerHeader.tla",
@@ -12101,7 +12102,7 @@
         "formal/event-operations/LedgerHeaderMutable.cfg"
       ],
       "verification": "Full registered schema ordinary-role SQL updates, rollback-scoped guard/startup mutations, witnessed posting/header races under three isolations, a guard-removal RC counterexample and a finite two-writer TLC model with a named mutation control. Backend and formal CI lanes enforce execution.",
-      "evidence": "formal/system/evidence/2026-10-26-ledger-header-main/ records current-main composition; formal/system/evidence/2026-10-25-ledger-header/ retains earlier source identities. Replay commands and limits: formal/system/ledger-header.md. Admit evidence only for its recorded relevant source hashes.",
+      "evidence": "formal/system/evidence/2026-10-26-ledger-header-main/ records current-main composition; formal/system/evidence/2026-10-25-ledger-header/ retains earlier source identities. Replay commands and limits: formal/system/ledger-header.md. Admit evidence only for its recorded relevant source hashes. Saved-search historical-prefix compatibility is tracked separately in formal/system/evidence/2026-10-26-saved-search-checkpoint/; original financial/model receipts retain their source identities.",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "TESTED named SQL boundary and BOUNDED_VERIFIED finite abstraction; complete implementation equivalence remains UNKNOWN.",

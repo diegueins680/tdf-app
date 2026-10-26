@@ -81,3 +81,11 @@ Complete implementation/refinement obligations remain UNPROVEN.
 Source-bound commands, tool versions, counterexamples and qualification receipts
 are retained in `formal/system/evidence/2026-10-25-ledger-header/`. Evidence is
 valid only for its recorded source identities and hashes.
+
+Historical migration rehearsals capture their old-state checkpoint inside a
+complete current production batch. A partial historical prefix is not a ready
+current deployment and cannot satisfy a mandatory guard introduced later. The
+saved-search rehearsal records exact pre-target migration IDs, the old trigger
+and historical saved rows before its target checksum block, then retains every
+migration body/checksum and the complete current startup verification. Its full
+replay, rollback/reapply and HTTP/plan controls remain required.
