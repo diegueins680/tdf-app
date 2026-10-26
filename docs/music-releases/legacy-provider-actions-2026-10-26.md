@@ -191,3 +191,38 @@ three legacy focused suites and `PlayerProvider.test.tsx`: 88 tests passed acros
 four suites using declared JSDOM/media doubles. The old four-browser qualification
 remains historical; no fresh browser, build, decoder or provider acceptance is
 inferred from this current component/provider regression run.
+
+
+## Current protected-main integration after discovery and Stripe checkout
+
+The remote PR624 head was verified as
+`d10ff380d2a7ad8d9d786c43ee769350a816d981` before the normal merge of
+protected main `9b7aa4648d4158f6da84fbb5e794267cd4953177` (after PR623).
+All 146 main requirement objects remain exact, with the unchanged legacy
+requirement appended for 147 total. All 1,339 main catalog decisions and their
+reconciliation history remain exact; the two unchanged legacy technical reviews
+make 1,341 decisions. The inherited 222-entry migration manifest is byte-identical
+to main. No migration or production change is performed.
+
+The seven legacy runtime/test/browser inputs retain their exact qualified d10
+bytes. Earlier 49-unit/four-browser results and previous 88-unit compatibility
+results remain historical, with their original source/dependency/bundle identity.
+The current refresh separately qualifies its focused legacy/player regressions
+and metadata. It does not relabel the old browser or build results as new rendered
+acceptance, native decoding, provider playback, rights or production availability.
+Only activation of an explicit provider link pauses the TDF player; opening or
+canceling the dialog preserves its existing session. External navigation still
+has no TDF continuity guarantee.
+
+Protected publication requires exact new-head CI and one fresh independent review
+after root publishes the concrete candidate. This task performs no force push,
+review request, protected-main write or production operation.
+
+The fresh Node 22.14.0 compatibility run passed 88/88 tests in four suites using
+declared JSDOM/media doubles. Installed lock metadata matched all 1,472 checked
+entries, and no dependency was installed or changed. Metadata regressions passed
+36/36; strict catalog JSON/CSV cover 1,341 reviewed candidates with no stale or
+unreviewed entry. Prepared-tree source admission maps exactly the seven unchanged
+qualified paths. Immutable committed-tree admission and fresh hosted checks remain
+required after the normal merge is committed/published. No broader rendered or
+production result is inferred from these local compatibility checks.

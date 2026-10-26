@@ -6,7 +6,7 @@
   "sourceCommit": "6f9b192cd6d0b4652b9e3342e4e7db392082fd64",
   "branch": "fix/legacy-audio-links-20261026",
   "targetBranch": "main",
-  "observedRemoteMain": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "observedRemoteMain": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
   "implementationReceipt": {
     "kind": "legacy-provider-source-selection-increment",
     "base": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
@@ -761,5 +761,158 @@
       "currentPlayerCompatibility": "d3ea849794c5b95fbcdaad7bcc833d2faa7610bf43cde2b44a1f056b9c627fed"
     },
     "initialConformanceAttempt": "Read unresolved generated inventory JSON during merge and failed before tests; retained initial failure, regenerated inventory/traceability in dependency order, then10/10 passed without changing guards."
+  },
+  "latestIntegrationEvidence": "protectedMainAfterDiscoveryAndStripe20261026",
+  "protectedMainAfterDiscoveryAndStripe20261026": {
+    "main": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+    "fromCandidate": "d10ff380d2a7ad8d9d786c43ee769350a816d981",
+    "method": "normal merge",
+    "remoteHeadBeforeMutationVerifiedViaGh": "d10ff380d2a7ad8d9d786c43ee769350a816d981",
+    "preservedMainRequirementsExactly": 146,
+    "ownRequirementPreservedExactly": "MEDIA-MUSIC-LEGACY-001",
+    "requirementsTotal": 147,
+    "mainCatalogDecisionsExactly": 1339,
+    "additionalTechnicalDecisionsExactly": [
+      {
+        "id": "b79cd312b41d5645e457",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P2-compatibility",
+        "risk": "Changing exact host classification may send a provider HTML/share page to native audio or mislabel external navigation. This list confers no authorization or provider-payment authority.",
+        "justification": "Individually reviewed exact spotify.link and spoti.fi host literals used only by the legacy playback URL adapter. They are fixed parsing/routing compatibility cases, not selectable business providers, rights declarations, payment rails or an editable catalog. Original link targets remain unchanged and external playback is not claimed.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+          "line": 46
+        },
+        "reviewBatch": "legacy-provider-actions-2026-10-26"
+      },
+      {
+        "id": "a08e3450ef31db632d8d",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Fixture shape drift can invalidate command/state regressions; this synthetic session must not be treated as a production grant or a new role registry.",
+        "justification": "Individually reviewed username, partyId, roles and modules keys of the synthetic fan session in FanHubPage.playback.test.tsx. These mirror existing test/session DTO shape and are not user-selectable security policy, persisted roles or production business data. This decision applies only to this exact fixture fingerprint.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+          "line": 7
+        },
+        "reviewBatch": "legacy-provider-actions-2026-10-26"
+      }
+    ],
+    "candidateCatalogDecisions": 1341,
+    "mainReconciliationFieldsExact": true,
+    "mainMigrationManifestEntries": 222,
+    "mainMigrationManifestBytesExact": true,
+    "currentSourceHashes": {
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "67c0980c3268cc54bda54b7ee871d8345a79d754b1e100e6c98f18340b1f1b68",
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": "c5ad21fcffed6f6d4096788ddfafef44cbdcf3b693dc6c9c37b1012e871c0faf",
+      "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx": "8efc3df3b7c1cb37c6a8c0c670b46f83099015634afa19d64a104d4beb11a1fa",
+      "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx": "5025c515898d64cf45433b275f81d8752d8f4b1c46ad3b7b82899ceccfa4ebb5",
+      "tdf-hq-ui/src/pages/FanHubPage.tsx": "e7bbd53c926c611a74a64883edc1a433faabd183234c2d0e90dfb564b62b848c",
+      "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d",
+      "e2e/web/legacy-provider-playback.spec.mjs": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413"
+    },
+    "sourceHashChangesFromD10": [],
+    "historicalRuntimeEvidence": "Original49-unit/four-browser correction receipt and old88-unit compatibility run retain their own source/dependency/bundle identities; no fresh rendered/browser/provider/production claim.",
+    "dependencyProof": "Workspace package-lock and root/UI package metadata byte-match the existing dependency-owner checkout; no dependency installation or lock change.",
+    "verification": {
+      "currentPlayerCompatibility": {
+        "status": "PASS",
+        "passed": 88,
+        "failed": 0,
+        "suites": 4,
+        "node": "22.14.0",
+        "command": "NODE_OPTIONS=--experimental-vm-modules /private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/bin/node ../node_modules/jest/bin/jest.js --runInBand --runTestsByPath src/features/releases/ReleasePlayerActions.test.ts src/features/releases/ReleaseFeed.test.tsx src/pages/FanHubPage.playback.test.tsx src/player/PlayerProvider.test.tsx",
+        "cwd": "tdf-hq-ui",
+        "log": "/private/tmp/tdf-legacy-main9b-focused-20261026.log",
+        "logSha256": "c9cf61758dbf7021042f6d73fcba67c5c77bbf1064d5344673d5503b9e7efe0b",
+        "scope": "Fresh protected-main composition regression with declared JSDOM/media doubles; no browser,decoder,provider network or production acceptance."
+      },
+      "metadataRegressions": {
+        "status": "PASS",
+        "passed": 36,
+        "failed": 0,
+        "groups": [
+          {
+            "name": "declarations",
+            "tests": 9,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-legacy-main9b-metadata-declarations-20261026.log",
+            "logSha256": "44da5ff3d8732677572559b618a09686fa21efd87af4d2b415dc65f98118d47f"
+          },
+          {
+            "name": "inventory",
+            "tests": 6,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-legacy-main9b-metadata-inventory-20261026.log",
+            "logSha256": "e5435a3dbc77aed57fbd99659faf05a361cae368b308ac2a73107d8bcebd2ba1"
+          },
+          {
+            "name": "conformance",
+            "tests": 10,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-legacy-main9b-metadata-conformance-20261026.log",
+            "logSha256": "43f0c3cc06b0ac1235aec593b5b3e8d5886bed206a8c2c640ce8ce6a16c5acf4"
+          },
+          {
+            "name": "surfaces",
+            "tests": 11,
+            "result": "PASS",
+            "log": "/private/tmp/tdf-legacy-main9b-metadata-surfaces-20261026.log",
+            "logSha256": "592847e7f9baa5a171b10d49e4a505420c9cbea19660e1b26d930432680020aa"
+          }
+        ]
+      },
+      "strictCatalogJson": {
+        "status": "PASS",
+        "count": 1341,
+        "unreviewed": 0,
+        "stale": 0,
+        "log": "/private/tmp/tdf-legacy-main9b-catalog-json-20261026.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "artifactSha256": "f68162d005c793378591b6f4a9ae63b92073e497591959144df939f936b9f09d"
+      },
+      "strictCatalogCsv": {
+        "status": "PASS",
+        "count": 1341,
+        "unreviewed": 0,
+        "stale": 0,
+        "log": "/private/tmp/tdf-legacy-main9b-catalog-csv-20261026.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "artifactSha256": "4a0ee76d4b671705f3f340a7fc087b7ad7f7cad9ef842c6a34269ad32465237e"
+      },
+      "sourceAdmission": {
+        "status": "PASS_PREPARED_TREE_ONLY",
+        "receipt": "/private/tmp/tdf-legacy-main9b-prepared-source-admission-20261026.json",
+        "sha256": "244bd8529246372bdc3eb6045fe40e1d57e206de55fbf34fbca3dccd1f554817",
+        "mappedMaterialPaths": [
+          "e2e/web/legacy-provider-playback.spec.mjs",
+          "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
+          "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
+          "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+          "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+          "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+          "tdf-hq-ui/src/pages/FanHubPage.tsx"
+        ],
+        "immutableCommittedDescendantCheck": "Pending merge commit; python3 scripts/check-new-specification-surfaces.py --base 9b7aa4648d4158f6da84fbb5e794267cd4953177 --head HEAD"
+      },
+      "freshness": "PASS final sequential inventory/traceability generation and both --check commands;git diff --check PASS"
+    },
+    "release": "Root publication,exact-head hosted checks and fresh independent review remain required. No push,review request,main merge or deployment by this refresh.",
+    "installedLockConsistency": {
+      "installedEntriesChecked": 1472,
+      "workspaceLockEntries": 1522,
+      "versionResolvedIntegrityLinkMismatches": 0,
+      "scope": "Every installed package-lock entry matched workspace lock metadata; missing platform/optional entries not inferred from this subset comparison. Root/UI package metadata also byte-match the shared dependency owner."
+    },
+    "broaderRuntimeReruns": {
+      "performed": false,
+      "reason": "Seven owned inputs,protected PlayerProvider,package metadata and lock unchanged; focused composition tests pass. Historical lint/types/build/browser receipt retained without new qualification. Hosted exact-head checks remain a publication/merge gate."
+    }
   }
 }
