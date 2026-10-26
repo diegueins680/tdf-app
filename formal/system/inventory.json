@@ -20752,7 +20752,7 @@
     },
     {
       "path": "docs/music-releases/README.md",
-      "sha256": "a065c8889c524bfe4ad5d78683169de8738473cd2fbdbde8bdbc570b9451c19a",
+      "sha256": "5298efc9d2ba425606b5dbe99aabd64adc6d08fee1dd70e82f7e428c3e929778",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20877,6 +20877,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/music-releases/live-catalog-inventory-2026-10-26.md",
+      "sha256": "7ad9c2c598820bbcd28f6142b26fa90bd604d839c266007e31d0ef2a707cf0ad",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/music-releases/local-s3-integration.md",
       "sha256": "32736afb17cb3ad73d79d6abdaa1996c381c6487c226560f0e96a8d66b08157a",
       "authority": "inferred",
@@ -20892,7 +20899,7 @@
     },
     {
       "path": "docs/music-releases/operations-runbook.md",
-      "sha256": "68ba6d089aad86ab99306287068c441abe02916eb70d629d33c486f4ee37d29d",
+      "sha256": "51a6baac5db45e226b70b4dd1967214796a74635a3f43aeb71d0fc41f1ef0e0d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

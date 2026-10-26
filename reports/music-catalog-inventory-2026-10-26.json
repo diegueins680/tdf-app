@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "status": "OBSERVED_AGGREGATE_INVENTORY_NOT_ACTIVATION",
+  "repositoryBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "branch": "docs/music-catalog-inventory-20261026",
+  "execution": {
+    "performedBy": "Root engineering session after explicit review",
+    "runs": 1,
+    "observedAt": "2026-10-26T17:47:23.742Z",
+    "startedAt": "2026-10-26T17:47:19.310Z",
+    "collectorStartedAt": "2026-10-26T17:47:22.382109+00:00",
+    "collectorFinishedAt": "2026-10-26T17:47:23.697549+00:00",
+    "receipt": "reports/music-catalog-inventory-evidence-20261026/observation.json",
+    "receiptSha256": "57164d673611d3af3eaadda84384b93319bb953e386c167d0ab6064172e59295",
+    "reviewedManifest": "reports/music-catalog-inventory-evidence-20261026/collector/review-manifest.json",
+    "reviewedManifestSha256": "cf359cf1f9a704b052e17cf5c2e423e66aa346a440a6de094dff751bd38fb046",
+    "remotePayloadSha256": "24d235a1487f50f333a4ceb49ec200ede3d4d4aa77c3434ac3df00129858cbc8",
+    "observedAggregateFamilies": 9,
+    "unobservedAggregateFamilies": 0,
+    "inventoryRole": "tdf_catalog_inventory",
+    "allInventoryIdentityChecksTrue": true,
+    "allEightRelationCapabilitiesSelectAvailable": true,
+    "statementTimeoutMs": 2000,
+    "newQueriesReadOnly": true,
+    "productionWrites": 0,
+    "sshRerunsByArchiveTask": 0
+  },
+  "summary": {
+    "canonicalAssetRows": 0,
+    "canonicalReleaseRows": 0,
+    "canonicalReleaseVersionRows": 0,
+    "canonicalProcessingJobRows": 0,
+    "canonicalUploadSessionRows": 0,
+    "legacyArtistReleaseRows": 65,
+    "legacyPrimaryReferencePresent": 8,
+    "legacyYoutubeReferencePresent": 0,
+    "referenceInterpretation": "spotify_url is historically overloaded: presence is not classification as Spotify,native audio,available media or authorized ownership. Counts are rows/reference presence,not unique recordings or playable files.",
+    "structuralReadyPublishedGaps": "All named counters are zero in an empty canonical catalog. These are vacuous checks,not successful nonempty integrity/upload/playback acceptance."
+  },
+  "permissionsConclusion": "No SELECT/schema/RLS coverage blocker was observed for the eight fixed relations in this execution. Other relations and storage remain unobserved. No role or grant was changed.",
+  "privilegedIdentityException": {
+    "exception": "unchanged canonical.verify_storage only",
+    "fixedSqlSha256": "0289213686e8bfc6f04d88009c94355bfde458656df14e4f30d1b0672d1f4793",
+    "role": "postgres",
+    "scope": "Fixed canonical database/user/local socket/port/read-only/data_directory boolean; no business SELECT,permission fallback,grants or DDL.",
+    "validated": true
+  },
+  "canonicalInspectorSourceSha256": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
+  "productionBaselineExcerpt": "reports/music-catalog-inventory-evidence-20261026/production-baseline-snapshot.json",
+  "mainMigrationCount": 222,
+  "mainMigrationsDeployedByThisIncrement": false,
+  "migrationOrImportActions": 0,
+  "scopeRemainingUnobserved": [
+    "Storage object listings/HEADs,orphaned bytes and original masters",
+    "Individual legacy references,actual formats/availability,owner attribution and rights",
+    "Directory audio portfolios,fan-club posts/memories,events,Drive uploads,radio,live sessions,podcasts and other upload sources",
+    "Authorized production upload-processing-publication-search-delivery-playback journey",
+    "Playback latency/rebuffer/start-success SLOs and physical-device/background-media acceptance"
+  ],
+  "migrationPolicy": "Private/manual owner and rights review; stable legacy links retained. No download/copy of originals,automatic ingestion,publication,job creation or flag activation. Future ingestion must use existing canonical lifecycle and reviewed idempotent provenance.",
+  "validation": {
+    "localCollectorTests": "13 fake/pure tests only; historical log archived unchanged",
+    "liveSql": "9 aggregate families plus2 inventory preflights observed; canonical fixed identity boolean exception separate",
+    "archiveReplay": {
+      "status": "PASS_OFFLINE_ONLY",
+      "command": "python3 -B reports/music-catalog-inventory-evidence-20261026/verify-archive.py",
+      "log": "reports/music-catalog-inventory-evidence-20261026/offline-replay.log",
+      "sha256": "e0e145c7a2d34fd0667b745c846f775fd6772a805c1f683ddba6506b130031ee",
+      "sshDockerSqlStorageExecuted": false
+    },
+    "postgresWritesForTesting": 0,
+    "documentationMetadata": {
+      "baseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "status": "PASS",
+      "tests": 36,
+      "groups": [
+        {
+          "name": "declarations",
+          "tests": 9,
+          "result": "PASS",
+          "logSha256": "ca18ffc8e8fdc6b71e49e9b4fd64e04661daa3243fb767d57a64ce80ea2d7b63"
+        },
+        {
+          "name": "inventory",
+          "tests": 6,
+          "result": "PASS",
+          "logSha256": "72acdd2f0f898c1664938999ab6ad29e12fab31be3d8c296d82132cc7c4c754b"
+        },
+        {
+          "name": "conformance",
+          "tests": 10,
+          "result": "PASS",
+          "logSha256": "a4d000197b4688a82e5bf1175cd0e798196b3cc97f4edf3ac927df448b261552"
+        },
+        {
+          "name": "surfaces",
+          "tests": 11,
+          "result": "PASS",
+          "logSha256": "32abcceef40a814fe85929291988a88d800e7ca0c1a801043e60793eb7ad4241"
+        }
+      ]
+    }
+  },
+  "canonicalPreservation": {
+    "requirements": 145,
+    "allRequirementObjectsExact": true,
+    "catalogDecisions": 1339,
+    "allCatalogDecisionObjectsExact": true,
+    "newProductionLogicRequirement": false,
+    "migrationManifestCount": 222,
+    "migrationManifestBytesExact": true,
+    "wholeFileByteEquality": true
+  },
+  "acceptance": {
+    "historicalCoverage": "PARTIAL: canonical tables observed empty; legacy/context inventory and rights review remain incomplete.",
+    "productionUploadToPlayback": "UNVERIFIED",
+    "audioStorageQualityRights": "UNVERIFIED",
+    "sloAndPhysicalDevices": "UNVERIFIED",
+    "activationAndDeployment": "NOT_PERFORMED",
+    "formalProof": "NONE; this is a bounded point-in-time SQL observation."
+  },
+  "phaseImpact": {
+    "productionUniversalPlayback": "NOT_DELIVERED",
+    "reason": "Canonical catalog empty;65legacy rows and8primary references not reconciled;recorded music flags intentionally OFF.",
+    "p0WebClient": "Separate implementation/release evidence,not production upload-to-playback acceptance.",
+    "p1HistoricalCoverage": "INCOMPLETE",
+    "p2SloAndPhysicalDevices": "UNMEASURED by this inventory",
+    "zeroCountsDoNotEstablish": "Storage-object health,rights or successful nonempty media lifecycle."
+  }
+}
