@@ -19,6 +19,26 @@ reparación y rechaza sucesores desconocidos. Reaplicar o revertir 215 se niega
 después de la reparación; la recuperación debe conservarla o usar otro arreglo
 revisado hacia adelante. No se elimina información para facilitar una reversión.
 
+Una segunda revisión detectó que la decisión no retenía el bloqueo de la
+asignación del moderador. La nueva migración **217**, introducida por
+`baab857f085b74f333c9f5d29e31306072fbc496`, reutiliza
+`interaction_lock_permissions` antes de calcular capacidades. Sus locks FOR SHARE
+se mantienen hasta el commit; no crea otro sistema de permisos. Conserva el OID,
+los 216 registros y todos los bytes SQL anteriores. La reaplicación admite solo
+las definiciones exactas aprobadas y rechaza el sucesor desconocido o el downgrade
+a través de 216. No hay borrados ni transferencia de consentimiento.
+
+El [control negativo y los ocho casos](event-memory-source-evidence-20261025/permission-lock-verification.json)
+reproducen dos transacciones confirmadas con la asignación ya revocada y el
+recuerdo retirado. La reparación observa pg_blocking_pids en ambos órdenes para
+retirar, restaurar, ocultar y resolver reportes. La revocación primera deniega
+sin cambiar fuente, versión, ledger ni auditoría; una decisión primera mantiene
+la revocación esperando y un replay posterior queda denegado. La protección del
+último rol administrador de emergencia rechazó un fixture adicional de
+desactivación global y se mantuvo intacta; ese intento no cuenta como caso
+positivo ni como vulnerabilidad. No se afirma linealizabilidad de todo el
+catálogo de seguridad ni E2E del proceso administrativo de aprobación de roles.
+
 Las pruebas verifican rechazo sin efectos para ocultar, restaurar, retirar y
 resolver reportes, capacidades falsas, ausencia de filas/motivos de revisión,
 reportes permitidos al lector, moderación legítima y revocación del replay de un
@@ -44,12 +64,13 @@ Resultados independientes, sin sumar ejecuciones que se solapan:
 
 - PostgreSQL: esquema completo, permisos, NULL, replay, controles de sucesión,
   reversión histórica y reaplicación de la reparación pasan.
-- [API/DB](event-memory-source-evidence-20261025/http-authorization-repair-results.json):
+- [API/DB con 217](event-memory-source-evidence-20261025/http-permission-lock-results.json):
   **120 solicitudes, 17 grupos**, cero llamadas a proveedores. Publicación y
   recuperación de texto/PNG/WAV/MP4/MOV, permisos, concurrencia, reinicio y rechazo
   de reversión con evidencia. La reparación conserva exactamente las seis
-  autoridades registradas antes del intento de reversión.
-- [Navegador](event-memory-source-evidence-20261025/browser-authorization-repair-results.json):
+  autoridades registradas antes del intento de reversión. Los ocho casos reales
+  de revocación y las regresiones de invitaciones también pasan por separado.
+- [Navegador con 217](event-memory-source-evidence-20261025/browser-permission-lock-results.json):
   escritorio y Pixel 7 sobre API y DB sintéticas; publicación, denuncia, cierre,
   ocultación, recarga y restauración. No es un teléfono físico ni producción.
 - Móvil: **653 pruebas/98 suites**, release:check, tipos y lint pasan en Node
@@ -63,10 +84,12 @@ Resultados independientes, sin sumar ejecuciones que se solapan:
 - CI histórico de #615 `e9db49c342` pasó: 3.440 pruebas web/305 suites y 524
   recorridos, 22 skips existentes; backend, contratos y migraciones pasaron.
   No autoriza este sucesor: la revisión encontró después el defecto de NULL.
+  El CI completo de `6c5f6ebe4` también pasó, pero su revisión encontró la carrera
+  de revocación; tampoco sustituye el CI ni la aprobación del sucesor con 217.
 
 Los [recibos y hashes](event-memory-source-evidence-20261025/authorization-repair-verification.json)
-conservan revisiones y árboles modificados reales. Los 23 hashes de ejecución de
-API/navegador coinciden con la fuente actual; el ejecutable conserva su identidad
+conservan revisiones y árboles modificados reales. Los 24 hashes de ejecución de
+API/navegador de 217 coinciden con la fuente actual; el ejecutable conserva su identidad
 anterior, sin fingir una compilación limpia del nuevo commit. El primer recorrido
 HTTP de esta reparación falló en una aserción antigua que esperaba el digest de
 215: se sustituyó por igualdad exacta de las seis autoridades instaladas antes y
