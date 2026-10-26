@@ -55,10 +55,22 @@
     "reason": "PR596 merged at23:10:30UTC; the tested636candidate remains based on2e. Its CI/preview is not relabeled as a test on this newer main. Gallery628still waits625 and has not changed source."
   },
   "evidenceSha256": {
+    "reports/booking-catalog-preview-evidence-20261026/verify-warning-320.mjs": "02262a84bae5a77b29165a524ede94fd4e99e25406f01609763d36ede29f804f",
+    "reports/booking-catalog-preview-evidence-20261026/warning-320-results.json": "9589783bb543f5d0eb9751e81ec1e8a694ce44bf6a293436f9d57c92eac43ad4",
     "reports/booking-catalog-preview-evidence-20261026/recovered-phone.png": "3f6cca578b7f580a10e55e861ebed84fb35fa2ccdf52536b75234c0e3b2938c3",
     "reports/booking-catalog-preview-evidence-20261026/recovered-desktop.png": "2df7e023915b59bea72387ec65aa33376a4b715c6b943bedf0ac5e6a3384f63b",
     "reports/booking-catalog-preview-evidence-20261026/browser-results.json": "85622275fa98932f1a55e309f3aaed2fb1fe7a875b6f9f0d9cd6334fd6a20556",
     "reports/booking-catalog-preview-evidence-20261026/verify-hosted.mjs": "17505bea856be80ae1573b21029da992902a3d6f3685d0ac0cf996a765972ded",
-    "reports/booking-catalog-preview-evidence-20261026/playwright.config.mjs": "26282479c4590096feeb6b08f41a3d7136b1ec3d68fcce4fb8130f397acca961"
+    "reports/booking-catalog-preview-evidence-20261026/playwright.config.mjs": "26282479c4590096feeb6b08f41a3d7136b1ec3d68fcce4fb8130f397acca961",
+    "reports/booking-catalog-preview-evidence-20261026/warning-320.png": "d926e468efaac25e68b33cc5475a057ee6b78f078ef06a0bcb2d670c427058cf"
+  },
+  "warningAt320": {
+    "observations": 2,
+    "overflow": false,
+    "buttonEnabled": true,
+    "pageErrors": 0,
+    "businessWrites": 0,
+    "scope": "Actual preview static artifact, simulated API503 only. No real reservation or provider calls.",
+    "observerSetupFailureRetained": "The first observer incorrectly expected unmerged gallery photos on independent PR636; it refused before observations. Replaced that prerequisite with the existing studio heading, without app changes or weakening the catalog/button/overflow/write assertions."
   }
 }
