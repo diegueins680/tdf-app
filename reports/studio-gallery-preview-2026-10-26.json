@@ -1,0 +1,100 @@
+{
+  "pr": 628,
+  "sourceHead": "c219279b33ce13337f71ddee8d14171f5adfc069",
+  "preview": {
+    "observedAt": "2026-10-26T17:13:31.079Z",
+    "base": "https://fc0026d2.tdf-app.pages.dev",
+    "scope": "Actual Cloudflare preview static artifact; all business/session APIs synthetic, external requests blocked. Not production, human usability or provider verification.",
+    "cases": [
+      {
+        "mode": "desktop",
+        "source": "c219279b33ce13337f71ddee8d14171f5adfc069",
+        "entry": "/assets/index-bIvwe3Ae.js",
+        "entrySha256": "cba14f8d8aff80d9fff3b004e4aeec383d553c455e04255f04851aef1f4e6c46",
+        "thumbnailHashesVerified": [
+          "control-room",
+          "recording-room",
+          "instruments",
+          "mixing-detail",
+          "drum-session",
+          "studio-community"
+        ],
+        "initialEnlargedRequests": 0,
+        "syntheticImageFailures": 1,
+        "retryPassed": true,
+        "keyboardFocusPassed": true,
+        "overflow320": false,
+        "seriousCriticalAxeViolations": [],
+        "businessWrites": 0,
+        "pageErrors": [],
+        "blockedExternal": [
+          {
+            "host": "api.frankfurter.dev",
+            "type": "fetch"
+          },
+          {
+            "host": "api.frankfurter.dev",
+            "type": "fetch"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "mode": "Pixel7",
+        "source": "c219279b33ce13337f71ddee8d14171f5adfc069",
+        "entry": "/assets/index-bIvwe3Ae.js",
+        "entrySha256": "cba14f8d8aff80d9fff3b004e4aeec383d553c455e04255f04851aef1f4e6c46",
+        "thumbnailHashesVerified": [
+          "control-room",
+          "recording-room",
+          "instruments",
+          "mixing-detail",
+          "drum-session",
+          "studio-community"
+        ],
+        "initialEnlargedRequests": 0,
+        "syntheticImageFailures": 1,
+        "retryPassed": true,
+        "keyboardFocusPassed": true,
+        "overflow320": false,
+        "seriousCriticalAxeViolations": [],
+        "businessWrites": 0,
+        "pageErrors": [],
+        "blockedExternal": [
+          {
+            "host": "api.frankfurter.dev",
+            "type": "fetch"
+          },
+          {
+            "host": "api.frankfurter.dev",
+            "type": "fetch"
+          }
+        ],
+        "passed": true
+      }
+    ]
+  },
+  "evidence": "reports/studio-gallery-preview-evidence-20261026",
+  "githubReview": {
+    "id": 5656062817,
+    "reviewer": "tdfrecords",
+    "commit": "c219279b33ce13337f71ddee8d14171f5adfc069",
+    "state": "APPROVED",
+    "submittedAt": "2026-10-26T17:11:29Z",
+    "verification": "Actual review record read from GitHub, not inferred from the chat reply."
+  },
+  "delivery": {
+    "implemented": true,
+    "testedLocally": true,
+    "previewPublished": true,
+    "previewBrowserVerified": true,
+    "merged": false,
+    "productionDeployed": false,
+    "productionVerified": false
+  },
+  "remainingGates": [
+    "Complete current-head CI",
+    "Current protected main integration slot/base and fresh approval must all remain valid before merge"
+  ],
+  "scope": "This branch adds evidence only; PR628head stays c219279. No production mutation or deployment performed."
+}
