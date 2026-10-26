@@ -382,6 +382,140 @@
         ]
       ],
       "reason": "Only five reviewed source fingerprints changed: four additive navigation groups and a session featureFlags fixture. All classifications, persistence obligations and audit policies are preserved."
+    },
+    "directorySavedSearchParity": {
+      "sourceMain": "9a927fa390066f43cc27c872800bf1b0412e166e",
+      "reason": "The active migration registry fingerprint gains one additive entry. Preserve the prior reviewed213-entry decision as history and classify its214-entry successor without changing existing migration authority.",
+      "decisions": [
+        {
+          "id": "3f336173e03f10fc023c",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P0-cutover",
+          "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+          "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decisions",
+          "reviewBatch": "music-current-main-integration-20261023",
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3,
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 213
+          }
+        }
+      ],
+      "previousDecisionCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+      "protectedMainManifestCanonicalSha256": "7b3616b6095436eb7eb46038d6ccaa289ff4cb22e602960c06d971bf915add86",
+      "successorDecisionId": "c94cd70c1272ec9ede1b"
+    },
+    "directoryFinancialMainIntegration": {
+      "sourceMain": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+      "sourceAlertBranch": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+      "protectedMainMigrationCount": 220,
+      "protectedMainManifestCanonicalSha256": "c025cf3d2ab92f64bfb92d3656384d7fe0da6919457440d3c24301d7f6b8f232",
+      "currentDecisionId": "8229b8202552298c955e",
+      "reason": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
+      "decisions": [
+        {
+          "id": "c94cd70c1272ec9ede1b",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P0-cutover",
+          "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+          "justification": "The 214-entry deployment execution registry preserves protected main 9a927fa390066f43cc27c872800bf1b0412e166e as its exact 213-entry prefix and appends one non-geographic directory saved-search parity migration. All213 shared entry objects, introduction anchors and historical SQL bytes remain unchanged. The new introduction anchor is eb2f71d62740783369a6eb2a6d35fc024484cb71; subsequent unpublished candidate corrections are reviewed separately. Disposable full-prefix/replay, exact rollback/reapply and authenticated application qualification are separate evidence; this classification authorizes no production application or activation.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decisions",
+          "reviewBatch": "directory-saved-search-parity-20261025",
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3,
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 214
+          }
+        },
+        {
+          "id": "b7cc47848f3f9882770f",
+          "classification": "security-system-registry",
+          "disposition": "retain-reviewed-deployment-manifest",
+          "specializedModel": "production migration manifest and applied migration ledger",
+          "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+          "justification": "The 220-entry deployment execution registry preserves all 219 migration objects and historical SQL bytes from financial parent 59df1dd2a17952b906cf89d1c5502725d51239e1 as its exact ordered prefix, then adds only the ledger relation-lookup guard introduced by ancestor 9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391. This technical review preserves earlier immutable catalog provenance and authorizes no production execution, provider activation or runtime privilege change. Full-schema controls and independent PR review remain separate obligations.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decisions",
+          "reviewBatch": "ledger-namespace-technical-review-20261025",
+          "sourceReviewReferences": [
+            {
+              "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+              "sourceEntry": {
+                "id": "3f336173e03f10fc023c"
+              },
+              "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+              "sourceEntry": {
+                "id": "2b073f20afd2f3798b1e"
+              },
+              "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+              "sourceEntry": {
+                "id": "a1eb1e750e7543b88fe1"
+              },
+              "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            }
+          ],
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3,
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 220
+          }
+        }
+      ],
+      "preservedDecisionCanonicalSha256": {
+        "3f336173e03f10fc023c": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+        "c94cd70c1272ec9ede1b": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+        "b7cc47848f3f9882770f": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28"
+      },
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+          "sourceEntry": {
+            "id": "b7cc47848f3f9882770f"
+          },
+          "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+          "sourceEntry": {
+            "id": "c94cd70c1272ec9ede1b"
+          },
+          "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ]
     }
   },
   "decisions": [
@@ -17922,15 +18056,15 @@
       "reviewBatch": "checkout-session-readiness-2026-10-14"
     },
     {
-      "id": "b7cc47848f3f9882770f",
+      "id": "8229b8202552298c955e",
       "classification": "security-system-registry",
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "The 220-entry deployment execution registry preserves all 219 migration objects and historical SQL bytes from financial parent 59df1dd2a17952b906cf89d1c5502725d51239e1 as its exact ordered prefix, then adds only the ledger relation-lookup guard introduced by ancestor 9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391. This technical review preserves earlier immutable catalog provenance and authorizes no production execution, provider activation or runtime privilege change. Full-schema controls and independent PR review remain separate obligations.",
+      "justification": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "ledger-namespace-technical-review-20261025",
+      "reviewBatch": "directory-financial-main-integration-20261026",
       "sourceReviewReferences": [
         {
           "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
@@ -17961,6 +18095,26 @@
           },
           "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+          "sourceEntry": {
+            "id": "b7cc47848f3f9882770f"
+          },
+          "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+          "sourceEntry": {
+            "id": "c94cd70c1272ec9ede1b"
+          },
+          "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "evidence": {
@@ -17968,7 +18122,7 @@
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 220
+        "valueCount": 221
       }
     },
     {
