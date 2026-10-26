@@ -378,7 +378,10 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
       }
       dispatch({
         type: 'buyerSubmitFailed',
-        error: err instanceof Error ? err.message : t('checkout.errors.paymentIntent'),
+        error: (err instanceof Error && 'status' in err && typeof err.status === 'number' && err.status >= 500)
+          || (err instanceof Error && /stripe (?:api )?error:/i.test(err.message))
+          ? t('checkout.errors.cardUnavailable')
+          : err instanceof Error ? err.message : t('checkout.errors.paymentIntent'),
       });
     } finally {
       if (attempt === buyerAttempt.current) {
