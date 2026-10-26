@@ -108,3 +108,7 @@ The following normal refresh retains playback `7de7c292753565ae6ea64c57dd9aa4b97
 ## Runner-only CI selection
 
 Review of candidate `cd1c3a7e16d95954d255aaf2d090387998d67819` found that editing only the new catalog SQL runner did not select backend verification. The scope classifier now explicitly includes that runner; all 17 scope tests pass. Its regression is mapped to the existing discovery requirement. Runtime query, page, API and SQL-runner bytes remain unchanged; fresh hosted checks and review apply to the final candidate.
+
+## Fan-club baseline preservation
+
+The normal refresh includes foundation `ee688d321fa0ddb09a0f30e981754f69f621c534` and main `ed9eb9a1600f0a827e002bb2ab64a608f8352b2c` (#613). All 143 foundation requirement objects remain exact, plus the discovery requirement with its new runner-only CI mapping, for 144 total. Recording-query, page, API and SQL-runner bytes remain qualified by their original receipts; the scope correction has 17 passing controls. Exact new-head hosted checks and review remain required; no deployment or production write is claimed.

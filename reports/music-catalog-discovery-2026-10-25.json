@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "Focused P1 release catalog search/pagination; universal search mission incomplete",
-  "foundation": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+  "foundation": "ee688d321fa0ddb09a0f30e981754f69f621c534",
   "baseline": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
   "combinedInitialCommit": "99ca66b07a7c9ef851d2dfb80199025b3307fc19",
   "sourceFingerprints": {
@@ -11,7 +11,9 @@
     "tdf-hq-ui/src/api/musicReleases.ts": "6c1ae9c62c2c4cdb51ba8e94bc5086d3c54e6a2cfd323c14da1d7d74f3c6ca6e",
     "tdf-hq-ui/src/api/musicReleases.pagination.test.ts": "e1b83d693a268efebd2121a899cf6fa422d39994895425abddb68054056b652e",
     "scripts/test-music-catalog-search.mjs": "070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2",
-    "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84"
+    "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
+    "scripts/ci-change-scope.mjs": "56dd35bfe3648d8732b28ed6066e118cf743e58093fef5657b031dada0a1112e",
+    "scripts/__tests__/ci-change-scope.test.mjs": "51dfd59c5f1a2c70a16e7acb552711a7806e90f39af21a6c0ace4e3c4f1da8c7"
   },
   "tests": {
     "uiApiPlayer": {
@@ -281,7 +283,7 @@
     "priorHeadEvidenceDoesNotEstablishNewHeadPass": true,
     "catalogDecisions": "Foundation preserves main1330 and9audio decisions; this P1refresh adds no catalog decision"
   },
-  "integrationBaseline": "3af768dacd95c1223975c62da3ce8088bed89b47",
+  "integrationBaseline": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
   "previousHostedCandidate": {
     "head": "0a0dd901471653fc874175ebb401d4580fb0419b",
     "runId": 40266955707,
@@ -353,5 +355,14 @@
     "log": "/private/tmp/tdf-audio-discovery-ci-scope-20261026.log",
     "sourceRuntimeChanged": false,
     "currentCandidateHostedCI": "pending"
+  },
+  "fanClubMainRefresh": {
+    "foundation": "ee688d321fa0ddb09a0f30e981754f69f621c534",
+    "main": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+    "preservedFoundationRequirements": 143,
+    "totalRequirements": 144,
+    "runtimeQueryPageChanged": false,
+    "currentHeadCI": "pending",
+    "sharedBrowserPrivacyRisk": "P0reportdocumentsconfirmedbaselinegap; separatelisteningidentityfixinprogress"
   }
 }

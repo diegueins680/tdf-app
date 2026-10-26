@@ -1099,6 +1099,7 @@
       "tdf-hq-ui/src/pages/EventTaskPage.tsx",
       "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx",
       "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
+      "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
       "tdf-hq-ui/src/pages/FanClubPage.tsx",
       "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
       "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
@@ -9143,9 +9144,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-adbe6d097447b912",
+      "path": "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
+      "sha256": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-60cd6659a77e2df2",
       "path": "tdf-hq-ui/src/pages/FanClubPage.tsx",
-      "sha256": "2bb3c0031e6829521db3a8fcb41903243acf2165365d12c348266c032e130b90",
+      "sha256": "12eab619ce83baadb79404750556e08cf68e8833e66433135441e0c1b4107af2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20759,7 +20766,7 @@
     },
     {
       "path": "docs/music-releases/catalog-discovery-delivery-2026-10-25.md",
-      "sha256": "790896cb8053b993712c5cb8f80af39f98a9b5b5b71d04bbee22d28d302695bd",
+      "sha256": "42221f84328b06afc518e4217000ec597d9bb6287606d753ac58f1213b2b634a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20948,7 +20955,7 @@
     },
     {
       "path": "docs/music-releases/universal-audio-delivery-2026-10-25.md",
-      "sha256": "c2f37fe29af4c34f545ed1a0d52aa52d00063e28301a42e4ad8c8438998b07c5",
+      "sha256": "f5581b5709b974e5080aaa83acd0460f6c0f0b6b7c5bef09bd224b4e1d22148f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26688,7 +26695,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "ca2e0c7f919c1a69848f6ed78f7ae6c6f959b83533cedf4f4ed4b358ef0b24ec",
+      "sha256": "d6a69e6ead4e12ce86b7754232faf2f9b845b48e54545a52e1e44c0f48abbfa2",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -26850,6 +26857,13 @@
     {
       "path": "formal/system/event-organizer-assignment.md",
       "sha256": "71f6f3da069ad720ab63d42217a987e35857a90e294aeb107c4030e926d01fcd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/fan-club-read-recovery.md",
+      "sha256": "c986b59782301949720e1594cae1e435fc93122eb63a48e4d2d643248fae9f0c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27269,7 +27283,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "65c38c69f9e0211c379c8cd4570c91f5385533a49516eefc9e926e5ea670c0d8",
+      "sha256": "083f1d662a786efa0dd19b9bb42d54982308f85d97087dadef39b85f9f965c85",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
