@@ -12373,6 +12373,93 @@
         "classification": "PARTIAL",
         "reason": "Focused authorized recording search and release pagination are implemented with finite SQL/security/client regression coverage. Full HTTP binding, current candidate hosted checks, independent review and deployed acceptance remain separate obligations; no mathematical proof or universal catalog completion is established."
       }
+    },
+    {
+      "id": "MEDIA-MUSIC-LEGACY-001",
+      "title": "Legacy release native media and contextual external-provider actions",
+      "domain": "MEDIA",
+      "critical": true,
+      "authority": "User universal audio implementation directive2026-10-25, selection/state integrity and targeted legacy-source continuation2026-10-26; independent release review remains required.",
+      "source": "docs/music-releases/legacy-provider-actions-2026-10-26.md",
+      "contract": "formal/system/legacy-release-playback.md",
+      "statement": "The existing legacy release feed distinguishes candidate direct media from known Spotify/YouTube provider pages and Google Drive HTML/share views before issuing native playback commands. Known provider actions use explicit contextual links; artist profiles never masquerade as a selected release recording. Dialog opening/canceling preserves the current TDF session; actual provider-link activation pauses its global player through the existing takeover event while retaining selection and position.",
+      "property": "Native dispatch rejects known provider pages, non-HTTP schemes and URL userinfo before emitting a stable legacy release command with artist attribution. Provider navigation emits no native selection, labels artist context, and pauses only on link activation. Classification does not prove audio MIME, availability, rights or successful playback.",
+      "actors": [
+        "Listener using the legacy release feed",
+        "Artist supplying an existing release link",
+        "Existing global player and external platform"
+      ],
+      "preconditions": [
+        "Legacy release and artist IDs refer to persisted entities; source metadata is supplied through existing authorized reads.",
+        "The existing global player is mounted for native commands and the external-link takeover listener.",
+        "Provider permissions, browser policies and actual media availability remain independently authoritative."
+      ],
+      "inputs": [
+        "Legacy release metadata and uploaded/direct URL map",
+        "Release streaming fields and optional artist-level provider fallback",
+        "Listen action, provider-dialog dismissal and actual link activation"
+      ],
+      "state": {
+        "boundary": "ReleasePlaybackAction classifier and FanHub provider dialog",
+        "outcomes": [
+          "native candidate",
+          "contextual provider navigation",
+          "no action"
+        ],
+        "globalPlayer": "Existing selected track and playback position; no new engine is created"
+      },
+      "allowedTransitions": [
+        "Listen direct release resource -> one global PLAYER_LOAD_TRACK_EVENT with stable release identity",
+        "Listen known provider page -> labeled provider dialog without native selection",
+        "Open/cancel provider dialog -> preserve global playback intent, selection and position",
+        "Activate primary/middle provider link -> existing RADIO_TAKEOVER_EVENT pauses global player, then normal external navigation",
+        "Only artist profile fallback available -> explicitly contextual artist navigation"
+      ],
+      "forbiddenTransitions": [
+        "Known provider HTML page is dispatched as native audio.",
+        "An arbitrary artist-level direct resource is presented as the chosen release recording.",
+        "Non-HTTP scheme or URL username/password reaches native selection or provider action.",
+        "Opening/canceling the provider dialog pauses the current global session.",
+        "Feed announces successful playback before the engine confirms playback."
+      ],
+      "effects": [
+        "Native command or contextual provider dialog/link",
+        "Accurate listener-facing action feedback and retained artist attribution",
+        "Existing global-player pause bridge on actual external link activation"
+      ],
+      "authorization": "The frontend source adapter grants no rights, ownership or backend permission. Existing release publication, delivery/provider permissions and user authorization retain authority. A candidate HTTP(S) reference can still be unavailable or unauthorized.",
+      "privacy": "Reject URL userinfo; preserve direct signed-reference bytes without logging them. No provider fetch/extraction proxy, credential collection or new analytics is added. Existing direct-URL persistence/expiry and provider permissions remain separate obligations.",
+      "concurrency": "Classification and action selection are synchronous. Provider dialog is dismissed on viewer change; takeover pauses only the current mounted global session. No global exclusion across embedded players, radio/broadcast tests, external tabs or operating-system audio is established.",
+      "idempotency": "Each native helper invocation emits one command; classification and dialog operations do not mutate stored assets. Repeated provider-link activation may repeat an existing pause signal, not a provider playback command.",
+      "failure": "Invalid candidates are rejected or skipped within existing precedence; no supported action exposes the existing unavailable-link feedback. Native decode/network failures and external-provider failures remain controlled by their existing engines/platforms.",
+      "recovery": "Listener may close the dialog, resume the retained TDF selection, or supply a valid release reference through the existing authorized save flow. Application-source rollback needs no schema or data reversal.",
+      "observability": "Source-bound helper/rendered/PlayerProvider command-state tests and declared artifact hashes. No provider playback, native decoder or production-observability result is inferred from command tests.",
+      "implementation": [
+        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+        "e2e/web/legacy-provider-playback.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Finite tests execute actual source helpers, FanHub/ReleaseFeed actions and PlayerProvider state with explicit API/UI/media doubles. URL and event-payload controls are not a MIME/rights oracle, real browser decoding, external service acceptance or mathematical proof.",
+      "evidence": "reports/legacy-provider-actions-2026-10-26.json binds source6f9b192cd6d0b4652b9e3342e4e7db392082fd64 and local receipt/log hashes; exact current candidate CI, review and release acceptance are separate.",
+      "status": "specified and implemented",
+      "confidence": "Local finite command/state evidence; real-media/provider behavior remains unverified.",
+      "ambiguity": [
+        "Unknown HTTP(S) resources and redirects may be HTML, missing, unsupported or unauthorized; source classification cannot establish media MIME/rights.",
+        "Provider click pause does not prove a new tab opened or provider playback began; external continuity and cross-tab audio exclusion are not claimed.",
+        "Embedded streaming components, radio/broadcast/microphone tests and other audio owners remain outside this bridge.",
+        "Real native browser/media and target-environment acceptance, physical accessibility and deployed behavior remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Targeted source classification and contextual action behavior are implemented and covered by local helper/rendered command-state regressions. No theorem, native decoder or external-provider acceptance is established; current-head CI, independent review and target release evidence remain required."
+      }
     }
   ]
 }
