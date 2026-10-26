@@ -92,6 +92,52 @@ describe('DirectorySearchPage', () => {
     favoritesMock.mockResolvedValue([]);
   });
 
+  it.each(['/inicio?q=bass', '/inicio/?q=bass', '/Inicio?q=bass', '/buscar?q=bass'])('welcomes visitors on the start page while preserving direct search at %s', async (entry) => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => {
+        root.render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={[entry]}><DirectorySearchPage /></MemoryRouter></QueryClientProvider>);
+      });
+      await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
+      const welcome = container.querySelector('#public-welcome-title');
+      expect(Boolean(welcome)).toBe(entry.toLowerCase().startsWith('/inicio'));
+      expect(container.querySelector('input')?.value).toBe('bass');
+      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ q: 'bass' }), expect.any(AbortSignal));
+      expect(container.textContent).toContain('Estos filtros describen lo que buscas, no quién eres.');
+      expect(container.querySelector('h1')?.textContent).toBe(entry.toLowerCase().startsWith('/inicio') ? 'Bienvenido a TDF Records' : esDirectory.heading);
+      expect(addFavoriteMock).not.toHaveBeenCalled();
+      if (welcome) {
+        const link = container.querySelector<HTMLAnchorElement>('a[href="/records"]')!;
+        expect(link).not.toBeNull();
+        await act(async () => { fireEvent.click(link); });
+        expect(analyticsCaptureMock).toHaveBeenCalledWith('public_discovery_cta_clicked', { route: '/inicio', destination: '/records' });
+      }
+    } finally {
+      await act(async () => root.unmount()); container.remove(); queryClient.clear();
+    }
+  });
+
+  it('keeps public exploration available when the directory fails', async () => {
+    searchMock.mockRejectedValue(new Error('Synthetic directory outage'));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => { root.render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/inicio']}><DirectorySearchPage /></MemoryRouter></QueryClientProvider>); });
+      await waitFor(() => expect(container.textContent).toContain(esDirectory.searchError));
+      expect(container.querySelector('a[href="/tdf"]')).not.toBeNull();
+      expect(container.querySelector('a[href="/records"]')).not.toBeNull();
+      expect(container.querySelector('#public-welcome-title')?.textContent).toBe('Bienvenido a TDF Records');
+      expect(container.querySelector('form[role="search"]')?.getAttribute('aria-label')).toBe('Buscar artistas y profesionales');
+      expect(addFavoriteMock).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root.unmount()); container.remove(); queryClient.clear();
+    }
+  });
+
   it.each(['getter', 'getItem', 'setItem'] as const)('keeps public search usable when optional city storage denies %s', async (operation) => {
     const storageDescriptor = Object.getOwnPropertyDescriptor(window, 'localStorage')!;
     const denial = () => { throw new DOMException('Storage denied', 'SecurityError'); };

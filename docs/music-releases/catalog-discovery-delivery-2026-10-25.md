@@ -22,9 +22,10 @@ test boundaries are in
 
 The focused requirement `MEDIA-MUSIC-DISCOVERY-001` owns the query, client/page,
 their tests and the dedicated CI invocation. The initial integration retained
-140 foundation requirement objects plus the discovery requirement; the latest
-foundation refresh below retains 142 objects plus that unchanged discovery
-requirement, for 143 total. Inventory and traceability are regenerated from
+140 foundation requirement objects plus the discovery requirement; an earlier
+foundation refresh below retains 142 objects plus the discovery requirement.
+The final P0 parent reconciliation retains 144 parent objects plus the unchanged
+discovery requirement, for 145 total. Inventory and traceability are regenerated from
 actual sources and the unchanged pinned Mobile checkout; these generated
 mappings establish freshness and coverage, not test success.
 
@@ -112,3 +113,29 @@ Review of candidate `cd1c3a7e16d95954d255aaf2d090387998d67819` found that editin
 ## Fan-club baseline preservation
 
 The normal refresh includes foundation `ee688d321fa0ddb09a0f30e981754f69f621c534` and main `ed9eb9a1600f0a827e002bb2ab64a608f8352b2c` (#613). All 143 foundation requirement objects remain exact, plus the discovery requirement with its new runner-only CI mapping, for 144 total. Recording-query, page, API and SQL-runner bytes remain qualified by their original receipts; the scope correction has 17 passing controls. Exact new-head hosted checks and review remain required; no deployment or production write is claimed.
+
+## Final P0 parent reconciliation
+
+The candidate normally merges final playback parent
+`2a7f1b67745e93bb4f0da7958200ca7b54dd5b40` into
+`3749ca68ce02ce01fd0c9794693941ba9e57d84f`. That parent includes protected
+main `a1238fbf6d98062904a4bd80d2f9df35ebc40706` and the welcome integration.
+All 144 parent requirement objects are retained exactly, followed by the
+unchanged `MEDIA-MUSIC-DISCOVERY-001` object from `3749ca68`, including its
+runner-only CI recognition mapping, for 145 total. The whole 1,339-decision
+parent catalog file remains unchanged.
+
+Recording-query, catalog page/API, SQL-runner, browser test and scoped CI
+fingerprints remain exact. The handler is still `fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc`
+and the runner is still `070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2`.
+The prior 106 focused tests and earlier `0a0dd9014` hosted 3,413 UI tests,
+canonical backend and browser results remain historical qualifications of their
+actual inputs. This merge does not relabel them as execution of the final head.
+The existing runner-only classifier correction retains its 17 passing controls.
+
+Only canonical/generated metadata conflicts are resolved. Fresh metadata,
+source-admission, inventory/traceability and strict catalog JSON/CSV checks apply
+to this reconciliation; no new SQL, UI, compiled build, browser or production
+execution is claimed. PR622 remains stacked on PR620 and must target main only
+after PR620 is actually merged. Exact-head CI, review and protected integration
+remain required. No deployment or production write is performed.
