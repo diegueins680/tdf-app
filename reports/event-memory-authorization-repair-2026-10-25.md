@@ -424,3 +424,35 @@ formal, lint/tipos web, **3496 pruebas / 309 suites** y build web
 runtime 262 conservan su identidad; no se presenta una compilación nueva.
 El cambio móvil de texto/lectura de audio tiene validación independiente en su
 rama, apilada sobre #170; esta preparación todavía conserva el pin móvil anterior.
+
+
+El [recibo de esta preparación](event-memory-source-evidence-20261025/ed9-main-preparation.json)
+y los [resultados API/browser](event-memory-source-evidence-20261025/ed9-http-browser-results.json)
+registran **120 peticiones reales / 17 grupos / 24 hashes**, sin proveedores
+externos. Dos sesiones sintéticas verifican texto persistido, denuncia sin
+ocultamiento automático, revisión, ocultamiento por teclado y restauración con
+recarga. Hay capturas de [escritorio](event-memory-source-evidence-20261025/ed9-source-desktop.png)
+y [vista móvil](event-memory-source-evidence-20261025/ed9-source-phone.png).
+El binario conserva su versión real **262295679 / 05:36:20Z** y hash f01ef34b;
+el frontend probado corresponde a **eb619822a**. El indicador dirty se debe
+únicamente a dos enlaces temporales de dependencias. No es un build Linux ni
+una comprobación funcional productiva.
+
+Durante la validación, main avanzó otra vez: **a1238fbf6**, fusión protegida de
+**#619**. Esa bienvenida ya está integrada; no está incluida en esta preparación
+ed9 y deberá reconciliarse antes de la entrega raíz. No se atribuyen sus pruebas
+a esta preparación ni se modificó la rama de su autor.
+
+El cliente móvil de texto y lectura de audio está implementado y publicado en
+[PR #172](https://github.com/diegueins680/TDF-mobile/pull/172), head **f5197c6**,
+apilado sobre #170. Pasan **684 pruebas / 98 suites**, controles de release y
+bundle Android offline con cinco fuentes verificadas byte por byte en su mapa.
+El workflow **40282201755** se inició explícitamente porque la base apilada no
+dispara Mobile Validate; su estado aún estaba en curso al redactar este recibo.
+No acredita dispositivo físico, iOS, tienda ni selector de audio nativo.
+
+Siguen pendientes la revisión independiente de #615, la cadena móvil y la
+revisión/CI del root final. #608 continúa en borrador, sin auto-merge. No hay
+escritura ni despliegue productivo, corrección de estado del evento ni invitaciones
+reales de esta entrega. Los elegibles con consentimiento y las exclusiones no
+están acreditados; intentadas/enviadas/entregadas/fallidas siguen **0/0/0/0**.
