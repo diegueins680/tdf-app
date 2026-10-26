@@ -364,8 +364,8 @@ la identidad de su ejecutable ni se atribuye una compilación de otro commit.
 El [recibo de sucesión](event-memory-source-evidence-20261025/release-journal-main-preparation.json)
 registra ese límite y el hash del log completo.
 
-El main observado después avanzó a otra revisión que incluye la bienvenida
-#619. Esta preparación conserva su base congelada 3af768d; antes de promover
+El main observado después avanzó a ed9eb9a16 mediante la recuperación del
+club de fans #613. La propuesta de bienvenida #619 seguía abierta. Esta preparación conserva su base congelada 3af768d; antes de promover
 #608 deben reconciliarse el main entonces vigente y sus controles, ejecutar los
 checks afectados, cumplir FIFO y obtener revisión/CI protegidos del root exacto.
 No se actualizó el head publicado de #615 ni el de #608 para forzar una fusión.
@@ -393,7 +393,7 @@ operadores se conservaron.
 El bloqueo inmediato es revisión independiente de #615 (31c16bffe, CI verde)
 y de la cadena móvil #168/#169/#170. La entrega raíz #608 sigue en borrador:
 debe incorporar el sucesor revisado, el main entonces vigente (incluida la
-bienvenida posterior a esta preparación), CI y aprobación nuevos del root,
+recuperación del club de fans posterior a esta preparación), CI y aprobación nuevos del root,
 imagen/recuperación/canary autorizados y comprobación productiva. Después puede
 corregirse el estado del evento confirmado y comprobar preferencias/eligibilidad
 reales antes de cualquier invitación. Consentidos elegibles y exclusiones siguen
@@ -403,3 +403,24 @@ revocables, galerías mixtas, audio/texto nativo, etiquetado estructurado de la
 publicación, idempotencia general, previews específicos y medición D7/D30.
 Esto es avance implementado y probado, con preparación publicada; no una entrega
 integrada, desplegada o verificada funcionalmente en producción.
+
+
+## Actualización de integración — 26/oct
+
+Se corrige la atribución anterior de ed9eb9a16: el registro de GitHub confirma
+que corresponde a #613, recuperación del club de fans. #619 sigue abierta;
+no se cuenta como entregada. La preparación incorpora ahora ese main mediante
+merge normal, preservando todos sus requisitos y añadiendo los cuatro originales
+de recuerdos. El backend, SQL y contratos conservan sus bytes; se comprueba de
+nuevo la composición web y la recuperación del contexto del artista.
+
+
+La reconciliación ed9 preserva exactamente los **143 requisitos** protegidos y
+los cuatro requisitos originales de recuerdos (**147** combinados). Backend,
+SQL, contratos, pin móvil y dependencias siguen byte-idénticos al runtime 262.
+Pasan `quality:repo`, catálogo estricto JSON/CSV (**1336** entradas), regeneración
+formal, lint/tipos web, **3496 pruebas / 309 suites** y build web
+(**335236 bytes gzip**, cinco preloads) con Node **22.14.0**. Las pruebas del
+runtime 262 conservan su identidad; no se presenta una compilación nueva.
+El cambio móvil de texto/lectura de audio tiene validación independiente en su
+rama, apilada sobre #170; esta preparación todavía conserva el pin móvil anterior.
