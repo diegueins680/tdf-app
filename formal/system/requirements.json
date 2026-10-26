@@ -12463,6 +12463,78 @@
       }
     },
     {
+      "id": "PAY-DOMAIN-BINDING-001",
+      "title": "Domain checkout admits exact durable provider payment evidence",
+      "statement": "Service, event, course and Domo checkouts accept PlaceToPay session and PayPhone sale evidence only when the succeeded attempt, immutable binding, durable create operation and canonical intent agree on checkout, provider, account, environment, reference, resource, currency and amount; legacy payment and accepted-hold guards remain enforced.",
+      "domain": "PAY",
+      "authority": "Explicit user instruction 2026-10-16; docs/adr/0101-verified-payment-events.md",
+      "source": "Explicit user instruction 2026-10-16; docs/payments/consolidation-2026-10-15.md",
+      "property": "Paid transition implies exact bound evidence; internal order identity is distinct from immutable provider reference.",
+      "contract": "formal/system/provider-domain-binding.md",
+      "actors": [
+        "Provider callback/query worker",
+        "Authorized fulfillment operator"
+      ],
+      "preconditions": [
+        "Applicable provider, feature and environment gates remain independently enforced; this requirement does not authorize activation."
+      ],
+      "inputs": [
+        "Checkout and payment attempt",
+        "Immutable provider binding, create operation and canonical intent"
+      ],
+      "state": {
+        "boundary": "commerce_checkout_session.status",
+        "initial": "awaiting_payment",
+        "intermediate": [
+          "processing"
+        ],
+        "terminal": [
+          "paid"
+        ]
+      },
+      "allowedTransitions": [
+        "Exact verified bound payment admits paid state once."
+      ],
+      "forbiddenTransitions": [
+        "Wrong or missing provider identity, resource, reference, intent, amount or currency cannot admit paid state."
+      ],
+      "effects": [
+        "Existing domain synchronization executes in the same transaction after admission."
+      ],
+      "authorization": "Valid provider binding is necessary; callback verification and operator authorization remain additional backend requirements.",
+      "privacy": "The correspondence does not authorize public order lookup or place lookup capabilities in URLs.",
+      "concurrency": "Checkout row updates serialize; repeatable-read serialization failures retry in a fresh transaction. PostgreSQL blocking must be witnessed.",
+      "idempotency": "A repeated verified result preserves completed accounting and later fulfillment progress.",
+      "failure": "Binding mismatch rejects synchronization; outer transaction rollback also removes payment/order effects.",
+      "recovery": "Retry through durable query/reconciliation without inventing new payment evidence.",
+      "observability": "Retain exact candidate SHA, database/model bounds, command, result and named negative-control evidence; never log credentials or raw payment payloads.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql"
+      ],
+      "tests": [
+        "scripts/test-provider-domain-binding.py",
+        "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
+        "scripts/load-payment-test-schema.sh",
+        "scripts/test-provider-retry-runtime.sh",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        ".github/workflows/ci.yml",
+        "scripts/test-provider-domain-harness.py"
+      ],
+      "formalModels": [],
+      "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required.",
+      "evidence": "formal/system/evidence/2026-10-26-provider-domain-main/ records clean223-schema qualification atcb777,317 compiled cases, independent optimized-harness counterexamples, failed earlier attempts and exact scoped integration hashes. Fresh final-head CI/review remain separate.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped source correspondence; combined-candidate execution and deployment pending",
+      "ambiguity": [
+        "Finite tests do not prove provider authenticity or full implementation refinement. Production activation remains unapproved."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped implementation and full-schema tests exist; current-head hosted evidence, independent review and production correspondence remain separate."
+      }
+    },
+    {
       "id": "MEDIA-MUSIC-PRIVACY-001",
       "domain": "MEDIA",
       "title": "Client listener ownership and latest-intent precedence for local playback state",

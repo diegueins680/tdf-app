@@ -174,3 +174,17 @@ correction only; all other inherited requirement fields remain exact.
 `PLAYER-002/003/005/006 privacy boundary -> MEDIA-MUSIC-PRIVACY-001 -> session/player
 composition + guarded local hydration -> actual App/identity tests + engine/session
 regressions -> exact-candidate CI -> independent review -> target acceptance`.
+
+## Current-main metadata reconciliation
+
+The prepared normal merge from `c66a65a10a8e5e48f89172d61f6f57fb81697896` retains all six qualified
+privacy runtime/test source files byte-for-byte from `fc5cedb5ff7abb28c10c89d543656b5da3e38559`.
+The canonical set contains 149 requirements: 147 exact inherited objects, the
+disclosed player implementation-path append, and the unchanged privacy requirement.
+All 1,341 current-main catalog decisions remain active or preserved exactly in
+retirement history; the privacy queue successor remains individually reviewed.
+The inherited 223-entry migration manifest is unchanged. Metadata checks qualify
+structural consistency only. Historical unit/native receipts retain their original
+source identities; they are not a new whole-backend, hosted-candidate or production
+qualification. Inherited SQL/test changes make whole-backend qualification false
+for this metadata-only refresh. Exact-candidate CI, review and release remain pending.

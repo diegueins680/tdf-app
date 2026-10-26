@@ -12464,6 +12464,78 @@
       }
     },
     {
+      "id": "PAY-DOMAIN-BINDING-001",
+      "title": "Domain checkout admits exact durable provider payment evidence",
+      "statement": "Service, event, course and Domo checkouts accept PlaceToPay session and PayPhone sale evidence only when the succeeded attempt, immutable binding, durable create operation and canonical intent agree on checkout, provider, account, environment, reference, resource, currency and amount; legacy payment and accepted-hold guards remain enforced.",
+      "domain": "PAY",
+      "authority": "Explicit user instruction 2026-10-16; docs/adr/0101-verified-payment-events.md",
+      "source": "Explicit user instruction 2026-10-16; docs/payments/consolidation-2026-10-15.md",
+      "property": "Paid transition implies exact bound evidence; internal order identity is distinct from immutable provider reference.",
+      "contract": "formal/system/provider-domain-binding.md",
+      "actors": [
+        "Provider callback/query worker",
+        "Authorized fulfillment operator"
+      ],
+      "preconditions": [
+        "Applicable provider, feature and environment gates remain independently enforced; this requirement does not authorize activation."
+      ],
+      "inputs": [
+        "Checkout and payment attempt",
+        "Immutable provider binding, create operation and canonical intent"
+      ],
+      "state": {
+        "boundary": "commerce_checkout_session.status",
+        "initial": "awaiting_payment",
+        "intermediate": [
+          "processing"
+        ],
+        "terminal": [
+          "paid"
+        ]
+      },
+      "allowedTransitions": [
+        "Exact verified bound payment admits paid state once."
+      ],
+      "forbiddenTransitions": [
+        "Wrong or missing provider identity, resource, reference, intent, amount or currency cannot admit paid state."
+      ],
+      "effects": [
+        "Existing domain synchronization executes in the same transaction after admission."
+      ],
+      "authorization": "Valid provider binding is necessary; callback verification and operator authorization remain additional backend requirements.",
+      "privacy": "The correspondence does not authorize public order lookup or place lookup capabilities in URLs.",
+      "concurrency": "Checkout row updates serialize; repeatable-read serialization failures retry in a fresh transaction. PostgreSQL blocking must be witnessed.",
+      "idempotency": "A repeated verified result preserves completed accounting and later fulfillment progress.",
+      "failure": "Binding mismatch rejects synchronization; outer transaction rollback also removes payment/order effects.",
+      "recovery": "Retry through durable query/reconciliation without inventing new payment evidence.",
+      "observability": "Retain exact candidate SHA, database/model bounds, command, result and named negative-control evidence; never log credentials or raw payment payloads.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql"
+      ],
+      "tests": [
+        "scripts/test-provider-domain-binding.py",
+        "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
+        "scripts/load-payment-test-schema.sh",
+        "scripts/test-provider-retry-runtime.sh",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        ".github/workflows/ci.yml",
+        "scripts/test-provider-domain-harness.py"
+      ],
+      "formalModels": [],
+      "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required.",
+      "evidence": "formal/system/evidence/2026-10-26-provider-domain-main/ records clean223-schema qualification atcb777,317 compiled cases, independent optimized-harness counterexamples, failed earlier attempts and exact scoped integration hashes. Fresh final-head CI/review remain separate.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped source correspondence; combined-candidate execution and deployment pending",
+      "ambiguity": [
+        "Finite tests do not prove provider authenticity or full implementation refinement. Production activation remains unapproved."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped implementation and full-schema tests exist; current-head hosted evidence, independent review and production correspondence remain separate."
+      }
+    },
+    {
       "id": "MEDIA-MUSIC-PRIVACY-001",
       "domain": "MEDIA",
       "title": "Client listener ownership and latest-intent precedence for local playback state",
@@ -12570,7 +12642,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "aa9498a53191d37c81437847943c5241c9e00aa0c70143e36044561a46e843e9",
+    ".github/workflows/ci.yml": "0ae74b6e12c2e2eb03ad899af76bb8b67b6d48c317fc298ee2f131dbcffff26b",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -12578,7 +12650,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "8d6bccb65e4d68fd30d37f4cc1a09f69ee4a81505e67f2574d0a577b68f6d10d",
+    "docs/catalog-persistence/catalog-list-decisions.json": "5283c42ff132038c92b6fa9a923dbb6e83a834fbec41386972dafc5ef02457fe",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -12942,7 +13014,7 @@
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "e16e672607635ad011a51c7e5cad2281e8f5be88d27e7d48b7fa794b00e14a0d",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "975060fbc49a4c767e15e7ade1a4cbcf189e36155f8c6e44963ce6d648c42811",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "51dfd59c5f1a2c70a16e7acb552711a7806e90f39af21a6c0ace4e3c4f1da8c7",
@@ -12957,6 +13029,7 @@
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
     "scripts/__tests__/event-raci-editor-context-runner.test.mjs": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
+    "scripts/__tests__/fixtures/provider-domain-fixtures.sql": "17d645e924bd5d6533523dcfb1e3a4522a403ac420de7dde45f94a44eca9e14d",
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": "186495b321cdc2ac067af786a72dffa740b289eb1ac22429c1d6e5c14ce85a9c",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
@@ -13053,6 +13126,7 @@
     "scripts/lib/test-process-session.mjs": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/lib/whatsapp_consent_conformance.py": "e7e6f0221bb7bcf5ef631827e2dfa6c329d5b4c16733fa5bca6e61bdb748c4a8",
+    "scripts/load-payment-test-schema.sh": "8f8e8385a59b6b118c049ab7ac5f48e5525152c45fc8a15d882c37f78b0330d7",
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
     "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
     "scripts/mobile-publishing-admin-audit.sh": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
@@ -13062,7 +13136,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+    "scripts/production-migrations.json": "2ef157906e6bc8f922fd5f3f838b5daca8b1ef60f5943f5f7b136ec3f9225699",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
@@ -13143,7 +13217,9 @@
     "scripts/test-player-session-model.mjs": "cc1ae78132c81735e2c5562829b3b5a4a5660175dbcea9ae831f3a450eceed2d",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-proof-certificates.py": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
-    "scripts/test-provider-retry-runtime.sh": "358b2213ed089a649b9dfb5c1209204fd6104c8ebf0d829d4bf2fec5c1d4da89",
+    "scripts/test-provider-domain-binding.py": "dde27908fb2bebe25c14c022cc2bf7cc123e03b4236d94e43971699272c9ba77",
+    "scripts/test-provider-domain-harness.py": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
+    "scripts/test-provider-retry-runtime.sh": "6e9f3db759644af6ba162685d6a48aac8a0b8a1b7a25b123e88cfc2f345eabbc",
     "scripts/test-public-route-denial.py": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
@@ -13595,6 +13671,7 @@
     "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql": "d80703d04d4508c3a3e0b47ffe6eb2583bc1a29e84a6b05f3f09f1afe17e2782",
     "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql": "0eaf8fd7a04836f35eae5693a709933109c4aa91b63d0eb2b5a148c2c257db94",
     "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql": "af468bf34bbfe36bfc6e3321a02ff71875d1ac49d7351a23fb607568de1d643f",
+    "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql": "b6e7cb3bfdb7228af49ef7b6ec5a124c1eae0810ea11cf3ccb9fec24f8b4b764",
     "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql": "27c2a344d5b0f88fd9757dff720c692e55564d9fb3df5531ed22f38aaafb2694",
     "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql": "3f0cf2121f5de8bc3074c0d7d1eddaf1fb8217d3d46895ae5b0e92070da9ec05",
     "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql": "673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4",
@@ -13726,7 +13803,7 @@
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "3724057900552d950d478b41348a1c1a0415c5e49edd68af1f62b5c49c139e0d",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "ce2f07abb1c9d812c354810a994ff8276b2fdfe00da7ba7d80541de697fa8feb",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -14941,6 +15018,10 @@
       {
         "requirement": "MEDIA-MUSIC-DISCOVERY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/api/generated/types.ts": [
@@ -15999,6 +16080,10 @@
       {
         "requirement": "AUTH-PUBLIC-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-provider-retry-runtime.sh": [
@@ -16028,6 +16113,10 @@
       },
       {
         "requirement": "PAY-LEDGER-HEADER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
         "relationship": "tests"
       }
     ],
@@ -24367,6 +24456,36 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql": [
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-provider-domain-binding.py": [
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/fixtures/provider-domain-fixtures.sql": [
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/load-payment-test-schema.sh": [
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-provider-domain-harness.py": [
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": [
       {
         "requirement": "MEDIA-MUSIC-PRIVACY-001",
@@ -24440,7 +24559,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "aa9498a53191d37c81437847943c5241c9e00aa0c70143e36044561a46e843e9",
+      "sha256": "0ae74b6e12c2e2eb03ad899af76bb8b67b6d48c317fc298ee2f131dbcffff26b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24494,6 +24613,10 @@
         {
           "requirement": "MEDIA-MUSIC-DISCOVERY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -25500,7 +25623,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "e16e672607635ad011a51c7e5cad2281e8f5be88d27e7d48b7fa794b00e14a0d",
+      "sha256": "975060fbc49a4c767e15e7ade1a4cbcf189e36155f8c6e44963ce6d648c42811",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25836,6 +25959,18 @@
       "sha256": "1730a172439c1ccfb2fb8561d9ced27e57fe4caf136fcb83d9850770bbbf095e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-c4bc5dde97871a0c",
+      "path": "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
+      "sha256": "17d645e924bd5d6533523dcfb1e3a4522a403ac420de7dde45f94a44eca9e14d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-e4c6bf3c31cac943",
@@ -27776,6 +27911,18 @@
       ]
     },
     {
+      "id": "SURFACE-025be65dc2f000fe",
+      "path": "scripts/load-payment-test-schema.sh",
+      "sha256": "8f8e8385a59b6b118c049ab7ac5f48e5525152c45fc8a15d882c37f78b0330d7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-a0fd8416fa83358e",
       "path": "scripts/mail-deliverability-monitor.py",
       "sha256": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
@@ -27956,7 +28103,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+      "sha256": "2ef157906e6bc8f922fd5f3f838b5daca8b1ef60f5943f5f7b136ec3f9225699",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30034,6 +30181,30 @@
       ]
     },
     {
+      "id": "SURFACE-a519de3cb1b5ff7f",
+      "path": "scripts/test-provider-domain-binding.py",
+      "sha256": "dde27908fb2bebe25c14c022cc2bf7cc123e03b4236d94e43971699272c9ba77",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-7d9c91182787e22c",
+      "path": "scripts/test-provider-domain-harness.py",
+      "sha256": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-3c9e2b2fae1ee373",
       "path": "scripts/test-provider-event-operations-migration.sh",
       "sha256": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
@@ -30057,7 +30228,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "358b2213ed089a649b9dfb5c1209204fd6104c8ebf0d829d4bf2fec5c1d4da89",
+      "sha256": "6e9f3db759644af6ba162685d6a48aac8a0b8a1b7a25b123e88cfc2f345eabbc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30086,6 +30257,10 @@
         },
         {
           "requirement": "PAY-LEDGER-HEADER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
           "relationship": "tests"
         }
       ]
@@ -42508,6 +42683,18 @@
       ]
     },
     {
+      "id": "SURFACE-b0d798f9db374724",
+      "path": "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql",
+      "sha256": "b6e7cb3bfdb7228af49ef7b6ec5a124c1eae0810ea11cf3ccb9fec24f8b4b764",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-485e38bfb3a8d257",
       "path": "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql",
       "sha256": "27c2a344d5b0f88fd9757dff720c692e55564d9fb3df5531ed22f38aaafb2694",
@@ -45748,7 +45935,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "3724057900552d950d478b41348a1c1a0415c5e49edd68af1f62b5c49c139e0d",
+      "sha256": "ce2f07abb1c9d812c354810a994ff8276b2fdfe00da7ba7d80541de697fa8feb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45769,6 +45956,10 @@
         },
         {
           "requirement": "AUTH-PUBLIC-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-DOMAIN-BINDING-001",
           "relationship": "tests"
         }
       ]
@@ -52226,6 +52417,7 @@
     "AUTH-LOGOUT-001",
     "MEDIA-MUSIC-DISCOVERY-001",
     "MEDIA-MUSIC-LEGACY-001",
+    "PAY-DOMAIN-BINDING-001",
     "MEDIA-MUSIC-PRIVACY-001"
   ],
   "stateMachines": [
@@ -53345,7 +53537,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ac1590d02b48ceb79844cf2449da26e9457cf5cc5d67e91f100e941df311a41e",
+      "sourceSha256": "dd02c87494701578d643f61e0fe13ab8e1f59826ef4a0c96a1fac20246a5f4d2",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -53373,7 +53565,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ac1590d02b48ceb79844cf2449da26e9457cf5cc5d67e91f100e941df311a41e",
+      "sourceSha256": "dd02c87494701578d643f61e0fe13ab8e1f59826ef4a0c96a1fac20246a5f4d2",
       "definition": {
         "states": [
           "absent",
@@ -53403,7 +53595,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ac1590d02b48ceb79844cf2449da26e9457cf5cc5d67e91f100e941df311a41e",
+      "sourceSha256": "dd02c87494701578d643f61e0fe13ab8e1f59826ef4a0c96a1fac20246a5f4d2",
       "definition": {
         "export": [
           "queued",
@@ -75679,7 +75871,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 148,
+    "PARTIAL": 149,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

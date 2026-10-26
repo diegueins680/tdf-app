@@ -524,6 +524,12 @@
       "headerParent": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
       "currentDecisionId": "6ff395b6131079017c9d"
     },
+    "providerDomainMainIntegration": {
+      "document": "docs/catalog-persistence/provider-domain-main-reconciliation-20261026.json",
+      "ledgerParent": "f3e3217ac12a04be2a221ee6ac8bea67875d46c5",
+      "providerParent": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
+      "currentDecisionId": "2634b239375f2ad309ba"
+    },
     "privacyQueueRestoreSuccessor": {
       "sourceRevision": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
       "sourceImplementationCommit": "a0120daa3493c04e358b50c6d60af1cacfc60a31",
@@ -6822,36 +6828,6 @@
       },
       "reviewBatch": "music-release-platform-sync-2026-10-07",
       "reviewMethod": "manual-source-review"
-    },
-    {
-      "id": "5ed33d9cd50e8f195d05",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing or externally governing reducer dispatch tags could break guarded local queue hydration or transport controls. These tags do not authorize media access.",
-      "justification": "Individually reviewed all nine queue reducer tags: restore,replace,enqueue,select,remove,move,clear,shuffle,repeat. The added restore action installs a previously validated matching-owner snapshot through internal guarded hydration; the remaining eight are unchanged client queue operations. These implementation dispatch discriminants are not selectable business catalog values or a privilege registry.",
-      "reviewed": true,
-      "reviewMethod": "individual-source-review",
-      "reviewBatch": "player-listening-identity-20261026",
-      "evidence": {
-        "file": "tdf-hq-ui/src/player/queue.ts",
-        "line": 34,
-        "kind": "switch-cases",
-        "name": "action.type",
-        "valueCount": 9
-      },
-      "sourceReviewReferences": [
-        {
-          "sourceRevision": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceEntry": {
-            "id": "dfec3f046ad1157e0f0c"
-          },
-          "sourceEntryCanonicalSha256": "1fd0dae5a96294d8649e2d2c0167cd15b993dd168f587e5445b011ec5e0544fc",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        }
-      ]
     },
     {
       "id": "d94623ae7e8da8f014f5",
@@ -18138,15 +18114,15 @@
       "reviewBatch": "checkout-session-readiness-2026-10-14"
     },
     {
-      "id": "6ff395b6131079017c9d",
+      "id": "2634b239375f2ad309ba",
       "classification": "security-system-registry",
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "The 222-entry deployment registry preserves the complete 221-entry protected main e938c72ba4b87010214f6838f06bfac45a0f45c0 prefix, including saved-alert migration eb2f71d62740783369a6eb2a6d35fc024484cb71, and appends only the posted-header guard introduced by 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Both independently developed 221-entry predecessor reviews are retained with exact canonical hashes and source references. Historical SQL and introduction SHAs are unchanged. This is a technical source review; current-head CI, independent PR approval and production authorization remain separate requirements.",
+      "justification": "The 223-entry deployment registry preserves the complete 222-entry ledger candidate f3e3217ac12a04be2a221ee6ac8bea67875d46c5 prefix, including all221 protected-main migrations and the original posted-header migration, and appends only the provider/domain admission migration introduced by456be073c944dd3d76eb9e3c2169fe7fbb4041ef. Historical SQL bodies and introduction ancestors are unchanged. Both222-entry and209-entry source reviews are retained by canonical hashes. This technical review grants no provider activation, production execution or waiver of current-head CI, independent review and protected merge admission.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "ledger-header-main-technical-review-20261025",
+      "reviewBatch": "provider-domain-main-technical-review-20261026",
       "sourceReviewReferences": [
         {
           "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
@@ -18217,6 +18193,26 @@
           },
           "sourceEntryCanonicalSha256": "6528ab5a8a23254d2e4ad4222e392f7f8f052b9f2818ef6e9eb8fc3a461a7003",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "f3e3217ac12a04be2a221ee6ac8bea67875d46c5",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "529f4972e422295562c0a67e1101346a97b2549ee0544072b69476c80edd0503",
+          "sourceEntry": {
+            "id": "6ff395b6131079017c9d"
+          },
+          "sourceEntryCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "be3b04226bda54e2dd6abdaddd434039ef7b457defe59942ec49dbed98013a73",
+          "sourceEntry": {
+            "id": "a70a9a4dd05ce44e950b"
+          },
+          "sourceEntryCanonicalSha256": "018a1dc08aafe97b3af2257fe2ad24bac9a8f47f724975df0eec07e729ba8058",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "evidence": {
@@ -18224,12 +18220,12 @@
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 222
+        "valueCount": 223
       },
       "previousDecisionReferences": {
-        "document": "docs/catalog-persistence/ledger-header-main-reconciliation-20261025.json",
-        "mainId": "8229b8202552298c955e",
-        "headerId": "9ada14767bee1662f97d"
+        "document": "docs/catalog-persistence/provider-domain-main-reconciliation-20261026.json",
+        "ledgerId": "6ff395b6131079017c9d",
+        "providerId": "a70a9a4dd05ce44e950b"
       }
     },
     {
@@ -18622,6 +18618,36 @@
         "line": 7
       },
       "reviewBatch": "legacy-provider-actions-2026-10-26"
+    },
+    {
+      "id": "5ed33d9cd50e8f195d05",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing or externally governing reducer dispatch tags could break guarded local queue hydration or transport controls. These tags do not authorize media access.",
+      "justification": "Individually reviewed all nine queue reducer tags: restore,replace,enqueue,select,remove,move,clear,shuffle,repeat. The added restore action installs a previously validated matching-owner snapshot through internal guarded hydration; the remaining eight are unchanged client queue operations. These implementation dispatch discriminants are not selectable business catalog values or a privilege registry.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "player-listening-identity-20261026",
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/queue.ts",
+        "line": 34,
+        "kind": "switch-cases",
+        "name": "action.type",
+        "valueCount": 9
+      },
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceEntry": {
+            "id": "dfec3f046ad1157e0f0c"
+          },
+          "sourceEntryCanonicalSha256": "1fd0dae5a96294d8649e2d2c0167cd15b993dd168f587e5445b011ec5e0544fc",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ]
     }
   ]
 }
