@@ -15451,7 +15451,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "9e654adeb10335ccbd8c4450c406e57a3cb58eef8d3a4757f814faa019b8527b",
+      "sha256": "ce2f07abb1c9d812c354810a994ff8276b2fdfe00da7ba7d80541de697fa8feb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21179,7 +21179,7 @@
     },
     {
       "path": "docs/payments/provider-domain-validation-2026-10-16.md",
-      "sha256": "69de8cc0bfa8e33ba37a03d7eb1337bbfe375e1bd5dd27cb83d4db8116501068",
+      "sha256": "1a8606fcb05199bf89ddf4926d4b2836ca6b0d1789c8a9038ed363aea3f2c363",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -67,3 +67,14 @@ rollback snapshot. Explicit failure branches preserve every check and operation
 under optimization. The canonical runner executes four harness controls normally
 and with -O, then the actual PostgreSQL matrix with -O. These synthetic helper
 controls establish harness detection, separately from database behavior.
+
+The first223-schema compiled run at6566630f156fa35b9bea683d393162c24a34ab6a
+executed316 cases with three fixture-precondition failures. The paid-but-unverified
+refund test must construct historical legacy paid state before attaching its
+canonical runtime; otherwise the unpaid-order400 branch fires before provider
+selection. Its409 expectation is retained and the exact rejection body is checked;
+an additional case verifies the unpaid400 branch without creating refund rows.
+Late-capture review admission must complete actual ticket fulfillment after
+recordVerifiedPayment; that store only synchronizes canonical payment status.
+Fixtures now call the existing finalizePaidTicketOrder operation, retaining all
+payment/admission guards. The failed receipt and logs remain distinct evidence.

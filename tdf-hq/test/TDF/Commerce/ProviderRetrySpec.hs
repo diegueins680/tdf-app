@@ -3489,11 +3489,24 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
         `shouldReturn` [Single (if provider == Checkout.ProviderPayPal then 1 else 0 :: Int64)]
 
   it "rejects a runtime order with no succeeded payment instead of guessing its refund provider" $ \pool -> do
-    (_,eventKey,orderKey,_) <- ticketAllocationFixtureWithPayment Checkout.ProviderPayPal False pool
+    -- Model a paid legacy order before a canonical runtime is attached. An
+    -- unpaid fixture stops at the earlier400 check and never tests this fence.
+    (_,eventKey,orderKey,_) <- ticketAllocationFixtureWithLegacyPaid True Checkout.ProviderPayPal "capture" False pool
     let (_,request) = socialRefundHandlers (AuthedUser (toSqlKey 1) [Admin] mempty Nothing Nothing)
     result <- runHandler (runReaderT (request (T.pack (show (fromSqlKey eventKey))) (T.pack (show (fromSqlKey orderKey)))
       (TD.RefundRequestDTO Nothing (Just 4172))) (Env pool (error "Unverified refund must stop locally")))
     either errHTTPCode (const 200) result `shouldBe` 409
+    either errBody (const "") result `shouldBe` "Refund requires one unambiguous verified payment provider"
+    runSqlPool (rawSql "SELECT count(*) FROM ticket_refund_request WHERE order_id=?"
+      [PersistInt64 (fromSqlKey orderKey)]) pool `shouldReturn` [Single (0 :: Int64)]
+
+  it "rejects an unpaid runtime order before attempting provider selection" $ \pool -> do
+    (_,eventKey,orderKey,_) <- ticketAllocationFixtureWithPayment Checkout.ProviderPayPal False pool
+    let (_,request) = socialRefundHandlers (AuthedUser (toSqlKey 1) [Admin] mempty Nothing Nothing)
+    result <- runHandler (runReaderT (request (T.pack (show (fromSqlKey eventKey))) (T.pack (show (fromSqlKey orderKey)))
+      (TD.RefundRequestDTO Nothing (Just 4172))) (Env pool (error "Unpaid refund must stop locally")))
+    either errHTTPCode (const 200) result `shouldBe` 400
+    either errBody (const "") result `shouldBe` "Only paid orders can be refunded"
     runSqlPool (rawSql "SELECT count(*) FROM ticket_refund_request WHERE order_id=?"
       [PersistInt64 (fromSqlKey orderKey)]) pool `shouldReturn` [Single (0 :: Int64)]
 
@@ -3953,9 +3966,18 @@ ticketAllocationFixtureWithPayment provider = ticketAllocationFixtureWithResourc
 
 ticketAllocationFixtureWithResource :: Checkout.PaymentProvider -> Text -> Bool -> ConnectionPool
   -> IO (Checkout.VerifiedPayment,TM.SocialEventId,TM.EventTicketOrderId,[TM.EventTicketId])
-ticketAllocationFixtureWithResource provider resourceType verified pool = do
+ticketAllocationFixtureWithResource = ticketAllocationFixtureWithLegacyPaid False
+
+ticketAllocationFixtureWithLegacyPaid :: Bool -> Checkout.PaymentProvider -> Text -> Bool -> ConnectionPool
+  -> IO (Checkout.VerifiedPayment,TM.SocialEventId,TM.EventTicketOrderId,[TM.EventTicketId])
+ticketAllocationFixtureWithLegacyPaid legacyPaid provider resourceType verified pool = do
   (eventKey,tierKey,orderKey) <- runSqlPool (do
     [Single orderKey] <- rawSql "SELECT payment_test.ticket_order(3)" []
+    -- Historical legacy paid state is permitted only before runtime creation;
+    -- retain the canonical paid-transition guard throughout this setup.
+    when legacyPaid $ rawExecute
+      "UPDATE event_ticket_order SET status='paid',purchased_at=NOW() WHERE id=?"
+      [PersistInt64 (fromSqlKey orderKey)]
     [(Single eventKey,Single tierKey)] <- rawSql
       "SELECT event_id,tier_id FROM event_ticket_order WHERE id=?"
       [PersistInt64 (fromSqlKey orderKey)]
@@ -3978,11 +4000,8 @@ ticketAllocationFixtureWithResource provider resourceType verified pool = do
     pure tickets) pool
   when verified $ do
     runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
-    runSqlPool (do
-      rawExecute "UPDATE event_ticket_order SET status='paid',purchased_at=NOW() WHERE id=?"
-        [PersistInt64 (fromSqlKey orderKey)]
-      rawExecute "UPDATE event_ticket_checkout_runtime SET fulfillment_status='issued' WHERE order_id=?"
-        [PersistInt64 (fromSqlKey orderKey)]) pool
+    _ <- runSqlPool (Social.finalizePaidTicketOrder (Checkout.vpOccurredAt payment) orderKey) pool
+    pure ()
   pure (payment,eventKey,orderKey,tickets)
 
 -- A signed refund/reversal is not terminally ignored merely because its
@@ -4042,6 +4061,9 @@ latePaypalRefundSpec = describe "out-of-order PayPal refunds" $
       -- helper without replaying the dead-letter webhook or duplicating its SQL.
       let payment = unbound { Checkout.vpResourceType="capture", Checkout.vpProviderResource=capture }
       runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+      -- The payment store synchronizes canonical payment state; the real
+      -- fulfillment operation completes the paid/issued admission precondition.
+      _ <- runSqlPool (Social.finalizePaidTicketOrder notificationTime orderKey) pool
       admitted <- runSqlPool (Admission.admitTicket "1" eventKey
         (Admission.AdmissionById ticket) notificationTime) pool
       fmap (TM.eventTicketStatus . entityVal) admitted `shouldBe` Left Admission.AdmissionPaymentReview
