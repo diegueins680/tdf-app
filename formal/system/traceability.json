@@ -12387,7 +12387,8 @@
         "scripts/test-event-raci-browser.sh",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         ".github/workflows/event-raci-browser.yml",
-        "scripts/__tests__/event-memory-http-password.test.mjs"
+        "scripts/__tests__/event-memory-http-password.test.mjs",
+        "scripts/test-event-memory-recovery-browser.mjs"
       ],
       "formalModels": [],
       "verification": "Parser/signature/author-boundary tests, HTTP and browser journeys must be independently executed; no blanket completion claim."
@@ -12678,7 +12679,9 @@
         "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
         "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx",
         "tdf-hq-ui/src/api/socialEvents.test.ts",
-        "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts"
+        "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts",
+        "scripts/test-event-memory-recovery-browser.mjs",
+        "scripts/test-event-memories-http.py"
       ],
       "formalModels": [],
       "verification": "Three observed pre-render counterexamples followed by corrected zero-dispatch regressions, late response and existing real session-provider/profile tests. Browser/API integration is qualified separately."
@@ -12692,7 +12695,7 @@
     ".github/workflows/ci.yml": "883a9ffc619978fd2f08607f6d2fb558e354b2b83c8ad0c1c1a7901c242b37e5",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
-    ".github/workflows/event-raci-browser.yml": "eedb2562c8c44b72d2651ce4bd63d3249422bf4b3160d2388546bf144b978ac6",
+    ".github/workflows/event-raci-browser.yml": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
@@ -13222,10 +13225,11 @@
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
-    "scripts/test-event-memories-http.py": "e55095bbc7da498dccb0479186e980c988bc227cb8effaa576fb1babb05e0d5c",
+    "scripts/test-event-memories-http.py": "973e07dca96f6a725ee44ffb4a21181da8e6ae0c2dff6ecdb2bcad75c9e7f7a4",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
+    "scripts/test-event-memory-recovery-browser.mjs": "cc43d986c80dc420cfb2e6fe19dec8316759e3a5193c4f533760798b92a2cd1b",
     "scripts/test-event-memory-signup-browser.mjs": "53325a4eec001efb223ce5a3913518b7a8dd658dea6ea8f2d19f46df0fca2a86",
-    "scripts/test-event-memory-source-browser.mjs": "83f22ccfa3a209280c6752cda13c6932635362b9681147cab6476813f77eaa7a",
+    "scripts/test-event-memory-source-browser.mjs": "99584c7466da353a297908f8b1fb856d60850f18dba24afd219d60be22a1ca6e",
     "scripts/test-event-memory-source-moderation.sh": "3d25115a7c4767df9537e4c4112ccad2ab88eada159a577925c8665206f0be29",
     "scripts/test-event-memory-source-permissions.py": "97d8944b7f043879ca56fa4503027195ed99fbf2482ea874634bbbdcdb67d30c",
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
@@ -24605,6 +24609,10 @@
       {
         "requirement": "SOCIAL-EVENT-MODERATION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SOCIAL-EVENT-SESSION-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/routes/EventCommunityEntry.test.tsx": [
@@ -24650,6 +24658,16 @@
     "scripts/__tests__/event-memory-http-password.test.mjs": [
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-event-memory-recovery-browser.mjs": [
+      {
+        "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SOCIAL-EVENT-SESSION-001",
         "relationship": "tests"
       }
     ],
@@ -29758,6 +29776,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-MODERATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SOCIAL-EVENT-SESSION-001",
           "relationship": "tests"
         }
       ]
@@ -54253,7 +54275,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9fbe3924a92bc6735bbaa569dafd5e3434bb9a69c54623521c1d55a2fc7bf27e",
+      "sourceSha256": "8151486f6a3bc17ccf7fd91e301291d7cd9267c50d924edf37d65054a8364b41",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -54281,7 +54303,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9fbe3924a92bc6735bbaa569dafd5e3434bb9a69c54623521c1d55a2fc7bf27e",
+      "sourceSha256": "8151486f6a3bc17ccf7fd91e301291d7cd9267c50d924edf37d65054a8364b41",
       "definition": {
         "states": [
           "absent",
@@ -54311,7 +54333,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9fbe3924a92bc6735bbaa569dafd5e3434bb9a69c54623521c1d55a2fc7bf27e",
+      "sourceSha256": "8151486f6a3bc17ccf7fd91e301291d7cd9267c50d924edf37d65054a8364b41",
       "definition": {
         "export": [
           "queued",

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T23:02:41.087Z",
+  "generatedAt": "2026-10-26T23:58:50.183Z",
   "repositoryRoot": ".",
-  "filesScanned": 2425,
+  "filesScanned": 2426,
   "candidateCount": 1347,
   "byClassification": {
     "dynamic-business-catalog": 870,
@@ -4410,7 +4410,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 1088,
+      "consumerCount": 1089,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -4698,7 +4698,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 1088,
+      "consumerCount": 1089,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -5365,7 +5365,7 @@
       "lines": [
         193
       ],
-      "consumerCount": 119,
+      "consumerCount": 121,
       "backendConsumers": [
         "tdf-hq/.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -5481,6 +5481,8 @@
         "scripts/production_access.py",
         "scripts/specification-conformance.py",
         "scripts/sync-artist-drive.js",
+        "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-source-moderation.sh",
         "scripts/test-event-task-read-migration.sh",
         "scripts/test-hetzner-backup.py",
@@ -6829,7 +6831,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1088,
+      "consumerCount": 1089,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -8780,7 +8782,7 @@
       "lines": [
         101
       ],
-      "consumerCount": 90,
+      "consumerCount": 91,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -8876,6 +8878,7 @@
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-directory-artist-listings.sh",
         "scripts/test-directory-event-visibility-migration.sh",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh"
       ],
@@ -8933,7 +8936,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 130,
+      "consumerCount": 131,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_music_directory_backfill_dry_run.sql",
@@ -9036,6 +9039,7 @@
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-booking-conformance.py",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-event-memory-source-browser.mjs",
         "scripts/test-hetzner-restore.py",
@@ -16377,7 +16381,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 41,
+      "consumerCount": 42,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -16423,6 +16427,7 @@
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/check-dependency-security.mjs",
         "scripts/social/verify-preview.mjs",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-event-memory-source-browser.mjs",
         "scripts/test-music-release-api-e2e.mjs"
@@ -22020,7 +22025,7 @@
       "lines": [
         177
       ],
-      "consumerCount": 130,
+      "consumerCount": 131,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_music_directory_backfill_dry_run.sql",
@@ -22123,6 +22128,7 @@
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-booking-conformance.py",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-event-memory-source-browser.mjs",
         "scripts/test-hetzner-restore.py",
@@ -29117,7 +29123,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 671,
+      "consumerCount": 672,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -31917,7 +31923,7 @@
       "lines": [
         25
       ],
-      "consumerCount": 90,
+      "consumerCount": 91,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -32013,6 +32019,7 @@
         "scripts/persona-test-program.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-music-directory-migration.sh"
       ],
@@ -32383,7 +32390,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 671,
+      "consumerCount": 672,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -40895,7 +40902,7 @@
       "lines": [
         32
       ],
-      "consumerCount": 130,
+      "consumerCount": 131,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_music_directory_backfill_dry_run.sql",
@@ -40998,6 +41005,7 @@
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-booking-conformance.py",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-event-memory-source-browser.mjs",
         "scripts/test-hetzner-restore.py",
@@ -49011,7 +49019,7 @@
       "lines": [
         215
       ],
-      "consumerCount": 91,
+      "consumerCount": 92,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -49108,6 +49116,7 @@
         "scripts/mail-deliverability-monitor.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-music-directory-migration.sh"
       ],
@@ -49293,7 +49302,7 @@
       "lines": [
         505
       ],
-      "consumerCount": 111,
+      "consumerCount": 112,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -49404,6 +49413,7 @@
         "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh"
@@ -49898,7 +49908,7 @@
       "lines": [
         1111
       ],
-      "consumerCount": 116,
+      "consumerCount": 117,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -50013,6 +50023,7 @@
         "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh",
@@ -52513,7 +52524,7 @@
       "lines": [
         147
       ],
-      "consumerCount": 1111,
+      "consumerCount": 1112,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -52873,7 +52884,7 @@
       "lines": [
         311
       ],
-      "consumerCount": 1021,
+      "consumerCount": 1022,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -54341,7 +54352,7 @@
       "lines": [
         402
       ],
-      "consumerCount": 1091,
+      "consumerCount": 1092,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -54636,7 +54647,7 @@
       "lines": [
         20
       ],
-      "consumerCount": 133,
+      "consumerCount": 134,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_music_directory_backfill_dry_run.sql",
@@ -54742,6 +54753,7 @@
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-booking-conformance.py",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-event-memory-source-browser.mjs",
         "scripts/test-hetzner-restore.py",
@@ -54818,7 +54830,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 133,
+      "consumerCount": 134,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_music_directory_backfill_dry_run.sql",
@@ -54924,6 +54936,7 @@
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-booking-conformance.py",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-event-memory-source-browser.mjs",
         "scripts/test-hetzner-restore.py",
@@ -60370,7 +60383,7 @@
         198,
         213
       ],
-      "consumerCount": 300,
+      "consumerCount": 301,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -65840,7 +65853,7 @@
       "lines": [
         88
       ],
-      "consumerCount": 58,
+      "consumerCount": 60,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-14_social_v2_read_models.sql",
         "tdf-hq/sql/2026-09-15_music_party_details.sql",
@@ -65901,6 +65914,8 @@
         "scripts/persona-test-program.mjs",
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
+        "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-event-memory-source-browser.mjs",
         "scripts/test-hetzner-restore.py",
@@ -65952,7 +65967,7 @@
       "lines": [
         108
       ],
-      "consumerCount": 130,
+      "consumerCount": 131,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_music_directory_backfill_dry_run.sql",
@@ -66055,6 +66070,7 @@
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-booking-conformance.py",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-event-memory-source-browser.mjs",
         "scripts/test-hetzner-restore.py",
@@ -66132,7 +66148,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1096,
+      "consumerCount": 1097,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -67931,7 +67947,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 497,
+      "consumerCount": 498,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -71044,7 +71060,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 671,
+      "consumerCount": 672,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -76266,7 +76282,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 90,
+      "consumerCount": 91,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -76362,6 +76378,7 @@
         "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-music-directory-migration.sh"
       ],
@@ -83211,7 +83228,7 @@
       "lines": [
         14158
       ],
-      "consumerCount": 1089,
+      "consumerCount": 1090,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -83948,7 +83965,7 @@
       "lines": [
         14503
       ],
-      "consumerCount": 353,
+      "consumerCount": 354,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/docs/openapi/user-roles.yaml",
@@ -84136,6 +84153,7 @@
         "scripts/test-booking-conformance.py",
         "scripts/test-contextual-reputation-worker-migration.sh",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-event-memory-source-browser.mjs",
         "scripts/test-music-ddex-credits.sh",
@@ -84221,7 +84239,7 @@
       "lines": [
         14560
       ],
-      "consumerCount": 1089,
+      "consumerCount": 1090,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -86276,7 +86294,7 @@
         17021,
         17073
       ],
-      "consumerCount": 1088,
+      "consumerCount": 1089,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -88414,7 +88432,7 @@
       "lines": [
         18610
       ],
-      "consumerCount": 1095,
+      "consumerCount": 1096,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -95174,7 +95192,7 @@
       "lines": [
         300
       ],
-      "consumerCount": 112,
+      "consumerCount": 113,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -95285,6 +95303,7 @@
         "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh"
@@ -105418,7 +105437,7 @@
       "lines": [
         507
       ],
-      "consumerCount": 42,
+      "consumerCount": 43,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -105466,6 +105485,7 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-event-memory-source-browser.mjs"
       ],
@@ -145790,7 +145810,7 @@
       "lines": [
         68
       ],
-      "consumerCount": 15,
+      "consumerCount": 16,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/init_schema.sql",
@@ -145812,7 +145832,8 @@
         "tdf-mobile/app/catalogEditor.tsx"
       ],
       "automationConsumers": [
-        "scripts/__tests__/fixtures/production-schema-20260814.sql"
+        "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/test-event-memories-http.py"
       ],
       "apiAndIntegrationConsumers": [],
       "decision": "dynamic-business-catalog",
@@ -147030,7 +147051,7 @@
       "lines": [
         6110
       ],
-      "consumerCount": 116,
+      "consumerCount": 117,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -147144,6 +147165,7 @@
         "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-event-memory-signup-browser.mjs",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh",
@@ -154047,7 +154069,7 @@
       "lines": [
         1211
       ],
-      "consumerCount": 1088,
+      "consumerCount": 1089,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",

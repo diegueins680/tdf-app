@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Actual API and durable media checks; only an owned disposable PostgreSQL DB."""
-import argparse, base64, concurrent.futures, hashlib, io, json, os, pathlib, signal, subprocess, time, urllib.error, urllib.request, uuid, wave
+import argparse, base64, concurrent.futures, hashlib, io, json, os, pathlib, signal, subprocess, threading, time, urllib.error, urllib.request, uuid, wave
 p=argparse.ArgumentParser();p.add_argument('--binary',required=True);p.add_argument('--output',required=True);p.add_argument('--source-moderation',action='store_true');p.add_argument('--browser',action='store_true');a=p.parse_args()
 assert not a.browser or a.source_moderation,'The integrated browser lane requires source moderation'
 root=pathlib.Path(__file__).resolve().parent.parent
@@ -30,6 +30,7 @@ if a.browser:runtime_paths+=['scripts/test-event-memory-source-browser.mjs','tdf
 if a.browser:runtime_paths+=['tdf-hq-ui/src/api/socialEvents.ts','tdf-hq-ui/src/api/client.ts','tdf-hq-ui/src/api/eventMemoryInvitations.ts']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/components/PublicBranding.tsx','tdf-hq-ui/src/features/interactions/InteractionPanel.tsx']
 if a.browser:runtime_paths+=['scripts/test-event-memory-signup-browser.mjs','tdf-hq-ui/src/pages/LoginPage.tsx','tdf-hq-ui/src/api/auth.ts','tdf-hq-ui/src/api/session.ts','tdf-hq-ui/src/utils/loginRouting.ts','tdf-hq-ui/src/utils/roles.ts','tdf-hq-ui/src/utils/signupFields.ts','tdf-hq/src/TDF/ServerAuth.hs','tdf-hq/src/TDF/DTO.hs']
+if a.browser:runtime_paths+=['scripts/test-event-memory-recovery-browser.mjs','tdf-hq-ui/src/pages/ResetPasswordPage.tsx','tdf-hq-ui/src/i18n/locales/authEntry.es.ts','tdf-hq/src/TDF/Email.hs','tdf-hq/src/TDF/Email/Service.hs','tdf-hq/src/TDF/Config.hs']
 if a.browser:runtime_paths+=['scripts/test-event-raci-browser.sh','.github/workflows/event-raci-browser.yml']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/routes/EventCommunityEntry.tsx','tdf-hq-ui/src/routes/publicRoutes.tsx','tdf-hq-ui/src/routes/protectedRoutes.tsx','tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx','tdf-hq-ui/src/routes/AppRoutes.tsx','tdf-hq-ui/src/routes/AppShell.tsx']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/session/useSessionOwner.ts','tdf-hq-ui/src/session/useOwnedSessionDraft.ts','tdf-hq-ui/src/session/authEvents.ts','tdf-hq-ui/src/session/SessionContext.tsx','tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx','tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts']
@@ -339,13 +340,36 @@ try:
   # Explicit synthetic fan grants for the actual product UI, never production.
   sql(f"INSERT INTO party_security_role(party_id,role_id,approval_mode,active,created_at,version) SELECT actor,id,'bootstrap',true,now(),1 FROM security_role CROSS JOIN (VALUES({owner}::bigint),({participant}::bigint)) a(actor) WHERE code='fan' ON CONFLICT DO NOTHING")
   browser_config=out/'browser-input.json';browser_config.write_text(json.dumps({'api':origin,'eventId':'919143001','output':str(out),'accounts':[{'email':'memory.owner@persona.test','password':'synthetic-memory-password-141'},{'email':'memory.participant@persona.test','password':'synthetic-memory-password-141'}]}));browser_config.chmod(0o600)
-  driver=subprocess.Popen(['node','scripts/test-event-memory-source-browser.mjs',str(browser_config)],cwd=root,env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True)
-  try:stdout,stderr=driver.communicate(timeout=240)
+  assert not any(key.startswith('SMTP_') for key in env) and not (root/'.env').exists(),'Recovery fixture must not configure outbound email'
+  assert sql(f"SELECT count(*) FROM api_token WHERE party_id={participant} AND label LIKE 'password-reset:%'")=='0'
+  relay_stop=threading.Event();relay_errors=[]
+  def relay_owned_recovery():
+   try:
+    requested=out/'recovery-requested'
+    while not relay_stop.wait(.25):
+     if not requested.exists():continue
+     assert requested.read_text()=='owned-memory-recovery-fixture-v1'
+     query=f"SELECT jsonb_build_object('source','actual-owned-reset-issuance','partyId',a.party_id,'token',a.token) FROM api_token a JOIN auth_recovery_challenge c ON c.api_token_id=a.id JOIN user_credential u ON u.id=c.credential_id WHERE a.party_id={participant} AND u.party_id=a.party_id AND u.active AND a.active AND a.label='password-reset:memory.participant@persona.test' AND c.expires_at_epoch>extract(epoch FROM clock_timestamp())"
+     fetched=subprocess.run(['psql',*routing,'-d',db,'-XqAt','-v','ON_ERROR_STOP=1','-c',query],cwd=root,env=env,capture_output=True,timeout=10)
+     assert fetched.returncode==0,'Owned recovery relay query failed'
+     challenge=json.loads(fetched.stdout);assert challenge['partyId']==participant and uuid.UUID(challenge['token']).int!=0
+     private=out/'recovery-link-private.tmp'
+     with os.fdopen(os.open(private,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600),'w') as handle:json.dump(challenge,handle)
+     private.replace(out/'recovery-link-private.json')
+     return
+   except Exception as error:relay_errors.append(type(error).__name__)
+  relay=threading.Thread(target=relay_owned_recovery,daemon=True);relay.start()
+  try:
+   driver=subprocess.Popen(['node','scripts/test-event-memory-source-browser.mjs',str(browser_config)],cwd=root,env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True)
+   stdout,stderr=driver.communicate(timeout=240)
   except subprocess.TimeoutExpired:
    os.killpg(driver.pid,signal.SIGTERM)
    try:stdout,stderr=driver.communicate(timeout=10)
    except subprocess.TimeoutExpired:os.killpg(driver.pid,signal.SIGKILL);stdout,stderr=driver.communicate(timeout=10)
    raise AssertionError('Owned integrated browser deadline')
+  finally:
+   relay_stop.set();relay.join(timeout=15)
+  assert not relay.is_alive() and not relay_errors,'Owned recovery relay did not complete cleanly'
   (out/'browser-driver.log').write_bytes(stdout+stderr)
   assert driver.returncode==0,'Integrated browser failed; see its private evidence/log'
   report['browser']=json.loads((out/'browser-results.json').read_text());assert report['browser']['status']=='PASS'
@@ -361,6 +385,22 @@ try:
   data=request(asset_path)[0];assert data==png and hashlib.sha256(data).hexdigest()==newcomer['assetSha256']
   report['newAccountPersistence']={'partyId':actor,'momentId':str(ident),'assetSha256':hashlib.sha256(data).hexdigest(),'survivesRealApiRestart':True,'fixtureRoleGrants':0}
   record('Browser-created account and its first photograph persist in PostgreSQL and durable storage across a real API restart without fixture role grants')
+  recovered=report['browser']['recoveredAccount'];assert recovered['partyId']==participant
+  recovered_id=int(recovered['momentId']);assert recovered_id>0
+  assert any(str(m['emId'])==str(recovered_id) and str(m['emAuthorPartyId'])==str(participant) for m in persisted)
+  assert sql(f"SELECT count(*) FROM api_token a JOIN auth_recovery_challenge c ON c.api_token_id=a.id WHERE a.party_id={participant} AND a.label='password-reset:memory.participant@persona.test' AND NOT a.active")=='1'
+  assert sql(f"SELECT count(*) FROM event_memory_delivery WHERE event_id=919143001 AND party_id={participant}")=='1'
+  request('/social-events/events/919143001/moments?extended',participant_token,expected=401)
+  request('/login',body={'username':'memory.participant@persona.test','password':'synthetic-memory-password-141'},method='POST',expected=401)
+  recovered_login=request('/login',body={'username':'memory.participant@persona.test','password':'synthetic-recovered-password-141'},method='POST')[0]
+  assert recovered_login['partyId']==participant
+  request('/social-events/events/919143002/moments?extended',recovered_login['token'],expected=404)
+  private_challenge=json.loads((out/'recovery-link-private.json').read_text())
+  request('/v1/password-reset/confirm',body={'token':private_challenge['token'],'newPassword':'synthetic-unused-replay-password-141'},method='POST',expected=400)
+  assert any('SMTP not configured; skipped password-reset email.' in file.read_text() for file in out.glob('backend-*.log'))
+  assert not any('smtp_attempt' in file.read_text() for file in out.glob('backend-*.log'))
+  report['recoveryPersistence']={'partyId':participant,'momentId':str(recovered_id),'survivesRealApiRestart':True,'challengeConsumed':True,'challengeReplayStatus':400,'oldSessionStatus':401,'oldPasswordStatus':401,'newPasswordStatus':200,'privateEventStatus':404,'outboundEmail':'disabled; explicit private relay only','fixtureRoleGrantsDuringRecovery':0}
+  record('Actual recovery consumes its issued challenge once, revokes old credentials, preserves scoped permissions and persists the recovered publication across API restart without sending email')
  assert json.loads(sql("SELECT coalesce(jsonb_agg(migration_id ORDER BY migration_id),'[]'::jsonb) FROM tdf_schema_migration"))==expected_migration_ids,'The migration ledger changed during the actual HTTP/browser execution'
  assert report['runtimeSources']==runtime_sources(),'Runtime sources changed during the HTTP execution'
  assert report['binarySha256']==hashlib.sha256(binary.read_bytes()).hexdigest(),'Candidate binary changed during the HTTP execution'

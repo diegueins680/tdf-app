@@ -56,6 +56,17 @@ Historical public URLs cannot be made private by changing a UI label.
 
 ## Verification limits
 
+The recovery browser fixture exercises an actual password-reset request and
+confirmation before returning to the exact attributed event composer. SMTP is
+unconfigured. A private relay reads only the freshly issued challenge for the
+synthetic participant from the owned disposable database; it does not insert a
+challenge, manufacture an API acknowledgement or prove email delivery. The
+fixture checks single-use consumption, old-session/old-password rejection,
+unchanged invitation preference and private-event/organizer permissions, and
+publication persistence across a real API restart. Its private token relay is
+excluded from CI artifacts; only result metadata and a post-publication image
+are retained. The original source review and signup assertions remain required.
+
 `formal/event-memories/check.py` explores a bounded abstract policy and detects
 three deliberately broken controls. It is not SQL refinement or a distributed
 systems proof. PostgreSQL fixtures exercise the real migrated functions, source

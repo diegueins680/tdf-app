@@ -12386,7 +12386,8 @@
         "scripts/test-event-raci-browser.sh",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         ".github/workflows/event-raci-browser.yml",
-        "scripts/__tests__/event-memory-http-password.test.mjs"
+        "scripts/__tests__/event-memory-http-password.test.mjs",
+        "scripts/test-event-memory-recovery-browser.mjs"
       ],
       "formalModels": [],
       "verification": "Parser/signature/author-boundary tests, HTTP and browser journeys must be independently executed; no blanket completion claim."
@@ -12677,7 +12678,9 @@
         "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
         "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx",
         "tdf-hq-ui/src/api/socialEvents.test.ts",
-        "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts"
+        "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts",
+        "scripts/test-event-memory-recovery-browser.mjs",
+        "scripts/test-event-memories-http.py"
       ],
       "formalModels": [],
       "verification": "Three observed pre-render counterexamples followed by corrected zero-dispatch regressions, late response and existing real session-provider/profile tests. Browser/API integration is qualified separately."

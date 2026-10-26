@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync, openSync, closeSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { verifyNewAccountPublication } from './test-event-memory-signup-browser.mjs';
+import { verifyRecoveredPublication } from './test-event-memory-recovery-browser.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const config = JSON.parse(readFileSync(process.argv[2], 'utf8'));
@@ -42,6 +43,7 @@ try {
   browser = await chromium.launch({ ...(bundledBrowser ? {} : { channel: 'chrome' }), headless: true });
   result.browserRuntime = { channel: bundledBrowser ? 'playwright-chromium' : 'chrome', version: browser.version() };
   const contexts = [await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'es-EC', timezoneId: 'America/Guayaquil', reducedMotion: 'reduce' }),
+    await browser.newContext({ ...devices['Pixel 7'], locale: 'es-EC', timezoneId: 'America/Guayaquil', reducedMotion: 'reduce' }),
     await browser.newContext({ ...devices['Pixel 7'], locale: 'es-EC', timezoneId: 'America/Guayaquil', reducedMotion: 'reduce' }),
     await browser.newContext({ ...devices['Pixel 7'], locale: 'es-EC', timezoneId: 'America/Guayaquil', reducedMotion: 'reduce' })];
   for (const context of contexts) await context.route('**/*', async (route) => {
@@ -223,6 +225,10 @@ try {
     await card(page).screenshot({ path: path.join(output, index === 0 ? 'source-desktop.png' : 'source-phone.png') });
   }
   await verifyNewAccountPublication({ context: contexts[2], owner, config, origin, output, result });
+  // Recovery revokes this participant's old interactive credentials. Its earlier
+  // context has completed its assertions; keep the new recovery session isolated.
+  await contexts[1].close();
+  await verifyRecoveredPublication({ context: contexts[3], owner, config, origin, output, result });
   result.status = 'PASS';
 } catch (error) {
   result.status = 'FAIL'; result.error = String(error);

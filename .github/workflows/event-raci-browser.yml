@@ -87,6 +87,7 @@ jobs:
             artifacts/event-memory-browser/results.json
             artifacts/event-memory-browser/browser-results.json
             artifacts/event-memory-browser/signup-first-memory-phone.png
+            artifacts/event-memory-browser/recovery-memory-phone.png
             artifacts/event-memory-browser/source-desktop.png
             artifacts/event-memory-browser/source-phone.png
             artifacts/event-memory-browser/source-public-entry-phone.png
