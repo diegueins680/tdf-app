@@ -46,6 +46,7 @@
       "e2e/web/fixtures/native-music-setup.mjs",
       "e2e/web/helpers/local-api-fixture.mjs",
       "e2e/web/helpers/review-paint.mjs",
+      "e2e/web/legacy-provider-playback.spec.mjs",
       "e2e/web/marketplace-cart.spec.mjs",
       "e2e/web/mobile-layout-regressions.spec.mjs",
       "e2e/web/mobile-program.spec.mjs",
@@ -1106,6 +1107,7 @@
       "tdf-hq-ui/src/pages/FanClubPage.tsx",
       "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
       "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+      "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
       "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
       "tdf-hq-ui/src/pages/FanHubPage.tsx",
       "tdf-hq-ui/src/pages/FeedbackCatalogPage.test.ts",
@@ -2926,6 +2928,12 @@
       "id": "SURFACE-d8799e5a0806f908",
       "path": "e2e/web/helpers/review-paint.mjs",
       "sha256": "f8f6d9d3164a0017dcc6a83f79d7e4a989d01fc94d0817f5fd08d55aa5a8e022",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-829d3149f60357d4",
+      "path": "e2e/web/legacy-provider-playback.spec.mjs",
+      "sha256": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8409,25 +8417,25 @@
     {
       "id": "SURFACE-eb1397b7b6666a31",
       "path": "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
-      "sha256": "d41c283e52f6cf6726bb8bd44c25db295a35213f2ea4e6613135f9a9b1cb2188",
+      "sha256": "5025c515898d64cf45433b275f81d8752d8f4b1c46ad3b7b82899ceccfa4ebb5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bed1b6650305b76c",
       "path": "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
-      "sha256": "9d2f379e92e960f7033fc6ca488d163bbda3cbad2187cba46059030f807b0a11",
+      "sha256": "8efc3df3b7c1cb37c6a8c0c670b46f83099015634afa19d64a104d4beb11a1fa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-be5a695450cd340a",
       "path": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
-      "sha256": "c8b657565b9202a541c334401dccee0fd2c0a3799b2033ca6ed57234d9c4c16f",
+      "sha256": "c5ad21fcffed6f6d4096788ddfafef44cbdcf3b693dc6c9c37b1012e871c0faf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-cfa376560285627f",
       "path": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
-      "sha256": "889ba68fa797185116dc3ebd3ed98b2e71d4bc2308e554c1e24ab3959d510b40",
+      "sha256": "67c0980c3268cc54bda54b7ee871d8345a79d754b1e100e6c98f18340b1f1b68",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9193,6 +9201,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-3d536aa30411edce",
+      "path": "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+      "sha256": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2bbd93102a783ed1",
       "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
       "sha256": "62e418948e9c10013e0a147810cfabc2055a67e3658ee414a4cb2c92c38f3a0c",
@@ -9201,7 +9215,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "cb9e20aee2a63bc385ae3339045a0409133cd86c16f5e82313ebc4eb47d5ae19",
+      "sha256": "e7bbd53c926c611a74a64883edc1a433faabd183234c2d0e90dfb564b62b848c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20857,7 +20871,7 @@
     },
     {
       "path": "docs/music-releases/credential-cache-control.md",
-      "sha256": "3c39fa502b1d90208512c23c28e79156cd10f25e75fe6f625827b8cac40aad3d",
+      "sha256": "61080cefe9bf2ba557d779c665bfc16ee892162b7186d467b775c8af67e70dd8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20928,6 +20942,13 @@
     {
       "path": "docs/music-releases/initial-audit-2026-09-12.md",
       "sha256": "868d4c56097f0b8bbe592e41ea0ff25741bfc42c2f8dea5f611760a49e5c2018",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/music-releases/legacy-provider-actions-2026-10-26.md",
+      "sha256": "85f5a58ff09fcd960852da5a165a4dfb0084169c680a2026c215f507ae3db15e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27051,6 +27072,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-release-playback.md",
+      "sha256": "3a98924b03c94913d8aa90f67a4bace35034dff00230924a87ad14cbf416f792",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/logical-backup.md",
       "sha256": "6e9a051e06010386e846bfbce451fa3f229c273cb10f7f9953423c0be77779ac",
       "authority": "inferred",
@@ -27381,7 +27409,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "72dea05b8fe1d21e46faffe9a50d84a445a519775f03f8b81e6f0e83de43d09a",
+      "sha256": "2ee1d9e35259918183bf51fdcd601731dd6acdc2819c712520e7e07c715991d3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

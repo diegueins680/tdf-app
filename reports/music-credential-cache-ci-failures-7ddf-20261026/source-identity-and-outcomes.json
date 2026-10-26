@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "sourceHead": "7ddfbd73bf08d007b4658b700bb9cbe289a6b480",
+  "sourceBase": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+  "testedMerge": {
+    "commit": "9edec4ee222e083bdfd8ebaed2860eb8c80f6542",
+    "tree": "886a25f538aef08fe5fc0c91bf7e99c0a9dc4805",
+    "parents": [
+      "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+      "7ddfbd73bf08d007b4658b700bb9cbe289a6b480"
+    ]
+  },
+  "laterRequiredIntegrationBaseline": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "qaReceiptSha256": "866468aeb733fbf3ce841c0a3e5c061439762657b66592ee5cdd0b7d0be1c4c8",
+  "persona": {
+    "run": 40395683983,
+    "job": 121828274802,
+    "attempt": 1,
+    "outcome": "FAILED",
+    "passed": 565,
+    "skipped": 22,
+    "failed": 1,
+    "project": "webkit-iphone",
+    "case": "Marketplace cart stays reachable after adding on a small phone @mobile-flow",
+    "sourceFile": "e2e/web/marketplace-cart.spec.mjs",
+    "failureLine": 172,
+    "failure": "Final Cerrar carrito click exceeded the whole-test 30000 ms budget",
+    "rootCause": "UNVERIFIED; no cart fix, assertion/timeout change or rerun is claimed"
+  },
+  "social": {
+    "run": 40395684105,
+    "job": 121827958993,
+    "attempt": 1,
+    "outcome": "CANCELLED_JOB_TIMEOUT",
+    "focusedTestsPassed": 63,
+    "focusedSuitesPassed": 6,
+    "browserJourney": "SKIPPED",
+    "annotationConfirms": "The job has exceeded the maximum execution time of 15m0s",
+    "phase": "playwright install --with-deps chromium; font-mirror delays/retries consumed dependency-setup budget",
+    "browserResultClaimed": false
+  },
+  "releaseDisposition": "Required main composition must be followed by fresh exact-head CI; this composition does not fix the cart failure. No old-head rerun or bypass is authorized by this archive.",
+  "preservation": "Every archive member is byte-identical to the original source packet/log/annotation/workflow. All pre-existing evidence packets remain unchanged.",
+  "newExecutions": {
+    "oldHeadRerun": false,
+    "browser": false,
+    "stack": false,
+    "smt": false,
+    "production": false
+  },
+  "globalAssurance": "Existing reviewed conditional source checks and original proof context retained; implementation/refinement UNPROVEN and release BLOCKED, no new proof claim."
+}

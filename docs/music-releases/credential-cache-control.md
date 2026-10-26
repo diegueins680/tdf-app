@@ -62,3 +62,38 @@ Frozen source `43b1b4b00715c5564525d7bce1fa838bf6366122` passed the canonical ap
 [Versioned evidence](../../reports/music-credential-cache-evidence-20261026/qualification-summary.json) retains source/binary identities, raw-log hashes and explicit limits. No object was fetched or browser/production journey tested. Review hardened the test client before execution: reject redirects, enforce exact write method/path/payload combinations and finalize PASS only after cleanup. Preparation revisions and safety controls remain archived.
 
 The first hosted specification job correctly refused the changed Cabal manifest. An [independent context review](../../reports/music-credential-cache-formal-context-review-20261026.json) justified two source pins after checking the three module registrations and unchanged semantic dependencies; fresh SMT, regression and independent certificate checks passed. No proof gate or obligation was relaxed. All 147 full implementation/refinement requirements remain UNPROVEN and the formal release decision remains BLOCKED. Later formal/evidence-only edits retain the qualified eight runtime/test source hashes; the 43b execution is not relabeled as a build of a later commit.
+
+## Protected post-legacy main composition and original CI failures
+
+This local preparation normally merges the published evidence successor
+`7ddfbd73bf08d007b4658b700bb9cbe289a6b480` with actual protected main
+`2e01bbe1263e8761fa2692bd951f828c01142449`. All 147 main requirement objects
+and the unchanged credential-cache requirement are retained (148 total), along
+with the complete 1,341-decision file and 222-entry migration manifest. All eight
+qualified runtime/test source files remain byte-identical to `43b1b4b`; its
+45 compiled cases and 54 HTTP assertions retain that execution identity. No
+Stack, PostgreSQL, SMT or browser run is repeated or relabeled for this refresh.
+
+The [separate original-CI archive](../../reports/music-credential-cache-ci-failures-7ddf-20261026/README.md)
+preserves full attempt-1 logs and the original QA receipt for source `7ddfbd73`,
+base `9b7aa464`, tested merge `9edec4ee`. Persona testing recorded 565 passes,
+22 skips and one failure: WebKit's phone cart test exhausted its whole-test
+30-second budget at the final `Cerrar carrito` click. The cause remains
+UNVERIFIED. Social's 63 focused tests passed; browser journeys were SKIPPED
+after the dependency-install step exhausted the 15-minute job budget following
+font-mirror delays. The separately archived root-fetched annotation confirms
+15m0s. Original logs, packets and their earlier observations are not rewritten.
+
+Required main composition followed by fresh exact-head CI is not a cart fix.
+There is no rerun of `7ddf`, timeout/skip/assertion/workflow modification or new
+production action. The reviewed Cabal source pins, append-only proof history
+and original assurance evidence remain byte-identical. Their conditional
+source-check results keep their original context; global implementation and
+refinement remain UNPROVEN and the assurance release decision remains BLOCKED.
+Adding the protected-main requirement does not create a new proof.
+
+The integration baseline is explicitly pinned to post-#624 main above; later
+main advances need their own reconciliation. Current-head CI, independent review,
+protected merge and deployment acceptance remain separate release gates.
+
+The [independent source-preservation review](../../reports/music-credential-cache-source-review-post624-20261026.json) checks all 976 backend blobs and Git modes against the qualified source, alongside the original HTTP inputs, native paths, proof-context files and old evidence packet. This is a read-only source comparison, not a new build or execution.

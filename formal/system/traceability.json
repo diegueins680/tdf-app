@@ -12376,6 +12376,93 @@
       }
     },
     {
+      "id": "MEDIA-MUSIC-LEGACY-001",
+      "title": "Legacy release native media and contextual external-provider actions",
+      "domain": "MEDIA",
+      "critical": true,
+      "authority": "User universal audio implementation directive2026-10-25, selection/state integrity and targeted legacy-source continuation2026-10-26; independent release review remains required.",
+      "source": "docs/music-releases/legacy-provider-actions-2026-10-26.md",
+      "contract": "formal/system/legacy-release-playback.md",
+      "statement": "The existing legacy release feed distinguishes candidate direct media from known Spotify/YouTube provider pages and Google Drive HTML/share views before issuing native playback commands. Known provider actions use explicit contextual links; artist profiles never masquerade as a selected release recording. Dialog opening/canceling preserves the current TDF session; actual provider-link activation pauses its global player through the existing takeover event while retaining selection and position.",
+      "property": "Native dispatch rejects known provider pages, non-HTTP schemes and URL userinfo before emitting a stable legacy release command with artist attribution. Provider navigation emits no native selection, labels artist context, and pauses only on link activation. Classification does not prove audio MIME, availability, rights or successful playback.",
+      "actors": [
+        "Listener using the legacy release feed",
+        "Artist supplying an existing release link",
+        "Existing global player and external platform"
+      ],
+      "preconditions": [
+        "Legacy release and artist IDs refer to persisted entities; source metadata is supplied through existing authorized reads.",
+        "The existing global player is mounted for native commands and the external-link takeover listener.",
+        "Provider permissions, browser policies and actual media availability remain independently authoritative."
+      ],
+      "inputs": [
+        "Legacy release metadata and uploaded/direct URL map",
+        "Release streaming fields and optional artist-level provider fallback",
+        "Listen action, provider-dialog dismissal and actual link activation"
+      ],
+      "state": {
+        "boundary": "ReleasePlaybackAction classifier and FanHub provider dialog",
+        "outcomes": [
+          "native candidate",
+          "contextual provider navigation",
+          "no action"
+        ],
+        "globalPlayer": "Existing selected track and playback position; no new engine is created"
+      },
+      "allowedTransitions": [
+        "Listen direct release resource -> one global PLAYER_LOAD_TRACK_EVENT with stable release identity",
+        "Listen known provider page -> labeled provider dialog without native selection",
+        "Open/cancel provider dialog -> preserve global playback intent, selection and position",
+        "Activate primary/middle provider link -> existing RADIO_TAKEOVER_EVENT pauses global player, then normal external navigation",
+        "Only artist profile fallback available -> explicitly contextual artist navigation"
+      ],
+      "forbiddenTransitions": [
+        "Known provider HTML page is dispatched as native audio.",
+        "An arbitrary artist-level direct resource is presented as the chosen release recording.",
+        "Non-HTTP scheme or URL username/password reaches native selection or provider action.",
+        "Opening/canceling the provider dialog pauses the current global session.",
+        "Feed announces successful playback before the engine confirms playback."
+      ],
+      "effects": [
+        "Native command or contextual provider dialog/link",
+        "Accurate listener-facing action feedback and retained artist attribution",
+        "Existing global-player pause bridge on actual external link activation"
+      ],
+      "authorization": "The frontend source adapter grants no rights, ownership or backend permission. Existing release publication, delivery/provider permissions and user authorization retain authority. A candidate HTTP(S) reference can still be unavailable or unauthorized.",
+      "privacy": "Reject URL userinfo; preserve direct signed-reference bytes without logging them. No provider fetch/extraction proxy, credential collection or new analytics is added. Existing direct-URL persistence/expiry and provider permissions remain separate obligations.",
+      "concurrency": "Classification and action selection are synchronous. Provider dialog is dismissed on viewer change; takeover pauses only the current mounted global session. No global exclusion across embedded players, radio/broadcast tests, external tabs or operating-system audio is established.",
+      "idempotency": "Each native helper invocation emits one command; classification and dialog operations do not mutate stored assets. Repeated provider-link activation may repeat an existing pause signal, not a provider playback command.",
+      "failure": "Invalid candidates are rejected or skipped within existing precedence; no supported action exposes the existing unavailable-link feedback. Native decode/network failures and external-provider failures remain controlled by their existing engines/platforms.",
+      "recovery": "Listener may close the dialog, resume the retained TDF selection, or supply a valid release reference through the existing authorized save flow. Application-source rollback needs no schema or data reversal.",
+      "observability": "Source-bound helper/rendered/PlayerProvider command-state tests and declared artifact hashes. No provider playback, native decoder or production-observability result is inferred from command tests.",
+      "implementation": [
+        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+        "e2e/web/legacy-provider-playback.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Finite tests execute actual source helpers, FanHub/ReleaseFeed actions and PlayerProvider state with explicit API/UI/media doubles. URL and event-payload controls are not a MIME/rights oracle, real browser decoding, external service acceptance or mathematical proof.",
+      "evidence": "reports/legacy-provider-actions-2026-10-26.json binds source6f9b192cd6d0b4652b9e3342e4e7db392082fd64 and local receipt/log hashes; exact current candidate CI, review and release acceptance are separate.",
+      "status": "specified and implemented",
+      "confidence": "Local finite command/state evidence; real-media/provider behavior remains unverified.",
+      "ambiguity": [
+        "Unknown HTTP(S) resources and redirects may be HTML, missing, unsupported or unauthorized; source classification cannot establish media MIME/rights.",
+        "Provider click pause does not prove a new tab opened or provider playback began; external continuity and cross-tab audio exclusion are not claimed.",
+        "Embedded streaming components, radio/broadcast/microphone tests and other audio owners remain outside this bridge.",
+        "Real native browser/media and target-environment acceptance, physical accessibility and deployed behavior remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Targeted source classification and contextual action behavior are implemented and covered by local helper/rendered command-state regressions. No theorem, native decoder or external-provider acceptance is established; current-head CI, independent review and target release evidence remain required."
+      }
+    },
+    {
       "id": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
       "title": "Private non-storable responses for music bearer credentials",
       "domain": "MEDIA",
@@ -12470,7 +12557,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+    "docs/catalog-persistence/catalog-list-decisions.json": "fc28d03ed980644c63767c8bd82b9ef3e947673ddadefd6399f1018b6650a54e",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -12485,6 +12572,7 @@
     "e2e/web/directory-language.spec.mjs": "bd2ea2a63805ab1b466e7056eeefdaed3fab6d430efa67e6c46f161904717800",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
+    "e2e/web/legacy-provider-playback.spec.mjs": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
     "e2e/web/marketplace-cart.spec.mjs": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385",
     "e2e/web/mobile-layout-regressions.spec.mjs": "db3505fa7e16300fac202d80cca9957d8208eb067b8f2c6c53f0e08f547411fc",
     "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
@@ -13222,8 +13310,10 @@
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": "fc714335e3d96208fc3ac9f7ec246f94066c4fb744013df330223b515f020ee9",
-    "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": "c8b657565b9202a541c334401dccee0fd2c0a3799b2033ca6ed57234d9c4c16f",
-    "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "889ba68fa797185116dc3ebd3ed98b2e71d4bc2308e554c1e24ab3959d510b40",
+    "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx": "5025c515898d64cf45433b275f81d8752d8f4b1c46ad3b7b82899ceccfa4ebb5",
+    "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx": "8efc3df3b7c1cb37c6a8c0c670b46f83099015634afa19d64a104d4beb11a1fa",
+    "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": "c5ad21fcffed6f6d4096788ddfafef44cbdcf3b693dc6c9c37b1012e871c0faf",
+    "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "67c0980c3268cc54bda54b7ee871d8345a79d754b1e100e6c98f18340b1f1b68",
     "tdf-hq-ui/src/hooks/useMetaTags.test.tsx": "8cce0eb1170e36a446f878f719010bf45c8b53625b9bc9785ec00bcaccb43b02",
     "tdf-hq-ui/src/i18n/index.ts": "53c26394ae54a6dd8fbfd91429e0300bf5b2d324d7e66f48179e283f7fc832e5",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
@@ -13271,8 +13361,9 @@
     "tdf-hq-ui/src/pages/FanClubPage.tsx": "12eab619ce83baadb79404750556e08cf68e8833e66433135441e0c1b4107af2",
     "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "d2554fe091549fbb6f64a905279e676cec7d67949f20116c11b95fa726945c35",
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "8cdf4c124dc5e37d6234c602bbc323db537d87b6248c470ceaa1a442dae4c1c9",
+    "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d",
     "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "62e418948e9c10013e0a147810cfabc2055a67e3658ee414a4cb2c92c38f3a0c",
-    "tdf-hq-ui/src/pages/FanHubPage.tsx": "cb9e20aee2a63bc385ae3339045a0409133cd86c16f5e82313ebc4eb47d5ae19",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "e7bbd53c926c611a74a64883edc1a433faabd183234c2d0e90dfb564b62b848c",
     "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
     "tdf-hq-ui/src/pages/InventoryPage.tsx": "524cdce972c0eeaa93a803ed7b2d2fc38e2c1d9128a170a08fa0705acc2e6d1b",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
@@ -21851,11 +21942,19 @@
       {
         "requirement": "COMMUNITY-PROFILE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-LEGACY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-LEGACY-001",
         "relationship": "implementation"
       }
     ],
@@ -21974,6 +22073,10 @@
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-LEGACY-001",
         "relationship": "tests"
       }
     ],
@@ -24209,6 +24312,30 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-LEGACY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-LEGACY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-LEGACY-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/legacy-provider-playback.spec.mjs": [
+      {
+        "requirement": "MEDIA-MUSIC-LEGACY-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs": [
       {
         "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
@@ -24697,6 +24824,18 @@
       "sha256": "f8f6d9d3164a0017dcc6a83f79d7e4a989d01fc94d0817f5fd08d55aa5a8e022",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-829d3149f60357d4",
+      "path": "e2e/web/legacy-provider-playback.spec.mjs",
+      "sha256": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-LEGACY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c5e7e7710b072a8d",
@@ -34264,25 +34403,39 @@
     {
       "id": "SURFACE-eb1397b7b6666a31",
       "path": "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
-      "sha256": "d41c283e52f6cf6726bb8bd44c25db295a35213f2ea4e6613135f9a9b1cb2188",
+      "sha256": "5025c515898d64cf45433b275f81d8752d8f4b1c46ad3b7b82899ceccfa4ebb5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-LEGACY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-bed1b6650305b76c",
       "path": "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
-      "sha256": "9d2f379e92e960f7033fc6ca488d163bbda3cbad2187cba46059030f807b0a11",
+      "sha256": "8efc3df3b7c1cb37c6a8c0c670b46f83099015634afa19d64a104d4beb11a1fa",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-LEGACY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-be5a695450cd340a",
       "path": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
-      "sha256": "c8b657565b9202a541c334401dccee0fd2c0a3799b2033ca6ed57234d9c4c16f",
+      "sha256": "c5ad21fcffed6f6d4096788ddfafef44cbdcf3b693dc6c9c37b1012e871c0faf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-LEGACY-001",
           "relationship": "tests"
         }
       ]
@@ -34290,11 +34443,15 @@
     {
       "id": "SURFACE-cfa376560285627f",
       "path": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
-      "sha256": "889ba68fa797185116dc3ebd3ed98b2e71d4bc2308e554c1e24ab3959d510b40",
+      "sha256": "67c0980c3268cc54bda54b7ee871d8345a79d754b1e100e6c98f18340b1f1b68",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-LEGACY-001",
           "relationship": "implementation"
         }
       ]
@@ -35580,6 +35737,18 @@
       ]
     },
     {
+      "id": "SURFACE-3d536aa30411edce",
+      "path": "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+      "sha256": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-LEGACY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-2bbd93102a783ed1",
       "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
       "sha256": "62e418948e9c10013e0a147810cfabc2055a67e3658ee414a4cb2c92c38f3a0c",
@@ -35594,7 +35763,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "cb9e20aee2a63bc385ae3339045a0409133cd86c16f5e82313ebc4eb47d5ae19",
+      "sha256": "e7bbd53c926c611a74a64883edc1a433faabd183234c2d0e90dfb564b62b848c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35615,6 +35784,10 @@
         },
         {
           "requirement": "COMMUNITY-PROFILE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-LEGACY-001",
           "relationship": "implementation"
         }
       ]
@@ -50847,8 +51020,6 @@
     "SURFACE-e28aa4c9f9e05abc",
     "SURFACE-d9cb6af6aac70dd6",
     "SURFACE-e04a90610f08f69f",
-    "SURFACE-eb1397b7b6666a31",
-    "SURFACE-bed1b6650305b76c",
     "SURFACE-27125889be0aa628",
     "SURFACE-28dd6664422e6d42",
     "SURFACE-0f0cf60d35e6f5c1",
@@ -52047,6 +52218,7 @@
     "COMMUNITY-PROFILE-001",
     "AUTH-LOGOUT-001",
     "MEDIA-MUSIC-DISCOVERY-001",
+    "MEDIA-MUSIC-LEGACY-001",
     "MEDIA-MUSIC-CREDENTIAL-CACHE-001"
   ],
   "stateMachines": [
@@ -53166,7 +53338,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "72dea05b8fe1d21e46faffe9a50d84a445a519775f03f8b81e6f0e83de43d09a",
+      "sourceSha256": "2ee1d9e35259918183bf51fdcd601731dd6acdc2819c712520e7e07c715991d3",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -53194,7 +53366,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "72dea05b8fe1d21e46faffe9a50d84a445a519775f03f8b81e6f0e83de43d09a",
+      "sourceSha256": "2ee1d9e35259918183bf51fdcd601731dd6acdc2819c712520e7e07c715991d3",
       "definition": {
         "states": [
           "absent",
@@ -53224,7 +53396,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "72dea05b8fe1d21e46faffe9a50d84a445a519775f03f8b81e6f0e83de43d09a",
+      "sourceSha256": "2ee1d9e35259918183bf51fdcd601731dd6acdc2819c712520e7e07c715991d3",
       "definition": {
         "export": [
           "queued",
@@ -75500,7 +75672,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 147,
+    "PARTIAL": 148,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
