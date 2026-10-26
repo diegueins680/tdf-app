@@ -1,0 +1,49 @@
+{
+  "before": {
+    "observedAt": "2026-10-26T23:44:05.520Z",
+    "base": "https://33edf6b7.tdf-app.pages.dev",
+    "source": "9b6c1eb940b00b4edb476ad05d940f2739467731",
+    "entry": "/assets/index-BLdRondB.js",
+    "sha256": "65932d8475389ff8e589fa3e6e7b053f2f331e5bb7219a89f95c2fdb85a0a74b"
+  },
+  "after": {
+    "observedAt": "2026-10-26T23:44:40.416Z",
+    "base": "https://33edf6b7.tdf-app.pages.dev",
+    "source": "9b6c1eb940b00b4edb476ad05d940f2739467731",
+    "entry": "/assets/index-BLdRondB.js",
+    "sha256": "65932d8475389ff8e589fa3e6e7b053f2f331e5bb7219a89f95c2fdb85a0a74b"
+  },
+  "exitCode": 0,
+  "scope": "Actual immutable Cloudflare preview artifact; all business/session APIs synthetic, all external traffic and business writes blocked. No production or persistence claim.",
+  "stats": {
+    "startTime": "2026-10-26T23:44:07.277Z",
+    "duration": 33046.011000000006,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "pr": 636,
+  "protectedBase": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "ci": {
+    "run": 40421134285,
+    "source": "9b6c1eb940b00b4edb476ad05d940f2739467731",
+    "statusAtObservation": "queued",
+    "newWebKitResult": null,
+    "previousFailureRetained": "8bdafbe:593passed22skipped1WebKitdesktop overflow failure; original trace retained in the feature branch."
+  },
+  "delivery": {
+    "currentPreviewVerified": true,
+    "draft": true,
+    "merged": false,
+    "productionDeployed": false,
+    "productionVerified": false
+  },
+  "evidenceSha256": {
+    "reports/booking-catalog-safari-preview-evidence-20261026/recovered-phone.png": "8eca8b24cc6a015da27c7597ea9cdbd4a3263dbc3cb9f5b3b138e7ff6f810c95",
+    "reports/booking-catalog-safari-preview-evidence-20261026/recovered-desktop.png": "cf706f12b7196234f2006163458ef5a504317b97b945287fdd751bdb636299c9",
+    "reports/booking-catalog-safari-preview-evidence-20261026/browser-results.json": "98abafcea27c38488eea4a647cca090ec2a974a126747cb8f50b6ec87a848e06",
+    "reports/booking-catalog-safari-preview-evidence-20261026/verify-hosted.mjs": "f60eaa4156d5a7c6682917e54d183c36d46752efd7dddc429c9de18fc6518bd7",
+    "reports/booking-catalog-safari-preview-evidence-20261026/playwright.config.mjs": "d59866bfd4cd0ed40e152f1282fb5decbaa43cb659046f393c65155eb8120da2"
+  }
+}
