@@ -225,3 +225,15 @@ it.each(['broken-json', 'unavailable'] as const)('uses empty state with usable p
   render(<PlayerProvider identity={{ ready: true, partyId: 101 }}><Probe /></PlayerProvider>);
   expect(player.currentTrack).toBeNull(); await act(async () => { player.playTrack(track()); }); expect(player.status).toBe('playing');
 });
+
+it('actual App rejects a corrupt matching-owner track with a null source while keeping playback usable', async () => {
+  seed(101); localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userA));
+  const saved = JSON.parse(localStorage.getItem(KEY)!);
+  saved.queue.tracks[0].sources.push(null);
+  localStorage.setItem(KEY, JSON.stringify(saved)); snapshot = async () => userA;
+  mountApp(); await actor(101);
+  expect(player.currentTrack).toBeNull(); expect(player.queue.tracks).toEqual([]);
+  expect(screen.queryByText('SYNTHETIC_LISTENER_A')).toBeNull();
+  await choose('B', 4); expect(player.currentTrack?.id).toBe('public-B');
+  expect(player.status).toBe('playing');
+});

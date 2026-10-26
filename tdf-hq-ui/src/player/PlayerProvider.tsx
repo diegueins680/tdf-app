@@ -85,7 +85,8 @@ const isTrack = (value: unknown): value is PlayerTrack => {
     && typeof track.title === 'string'
     && typeof track.artist === 'string'
     && Array.isArray(track.sources)
-    && track.sources.some((source) => source
+    && track.sources.length > 0
+    && track.sources.every((source) => source
       && isPlayerQuality(source.quality)
       && ((typeof source.url === 'string' && source.url.length > 0)
         || (typeof source.assetId === 'string' && source.assetId.length > 0)));
