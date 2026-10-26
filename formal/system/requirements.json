@@ -9034,7 +9034,10 @@
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/utils/authErrorMessage.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
@@ -9043,7 +9046,10 @@
         "e2e/web/auth-landing.spec.mjs",
         "e2e/web/persona-public.spec.mjs",
         "e2e/web/event-rsvp-sharing.spec.mjs",
-        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx"
+        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
+        "tdf-hq-ui/src/api/auth.test.ts",
+        "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",

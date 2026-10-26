@@ -9035,7 +9035,10 @@
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/utils/authErrorMessage.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
@@ -9044,7 +9047,10 @@
         "e2e/web/auth-landing.spec.mjs",
         "e2e/web/persona-public.spec.mjs",
         "e2e/web/event-rsvp-sharing.spec.mjs",
-        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx"
+        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
+        "tdf-hq-ui/src/api/auth.test.ts",
+        "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -12763,8 +12769,8 @@
     "tdf-hq-ui/src/api/accountDeletion.test.ts": "5a039f2ef3658b1aabee56a51f1f1e4a23c2e895ed22d863879fd245e95a4785",
     "tdf-hq-ui/src/api/accountDeletion.ts": "7d9983a96e95229e1ecf8a2470712214ad62ce525a206a0cb0a8c5ff3a3805ff",
     "tdf-hq-ui/src/api/artistInvitations.ts": "22b382c361b9ee99744c24a7ebb2888ac7037482cc607460a84a353614937a17",
-    "tdf-hq-ui/src/api/auth.test.ts": "ae5de69adf0ca516180ce0078770eb6654bfa2ca617b1c8c2a9762108f7b8bf7",
-    "tdf-hq-ui/src/api/auth.ts": "c2f502db09c6082917f0a796be6258b780a7086329565aea55c3d4661f7e15bb",
+    "tdf-hq-ui/src/api/auth.test.ts": "e49f4b09c0738d72071bf395f2d1c8a43975a2b0e818b4983c58c63e4879db72",
+    "tdf-hq-ui/src/api/auth.ts": "9fc3a39e212fc453ba5c38b701a69dce8c4129addba3aba4ae823cd1d0db57fa",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "e926290d808f7fed23fe6c52cf24ced83ebdfb77212787ce44b3a85860558d84",
     "tdf-hq-ui/src/api/client.ts": "c1a35d37d170cdf684226758a5fb024b1040545d8404c0f6d77e58e644e165fc",
@@ -12872,8 +12878,8 @@
     "tdf-hq-ui/src/i18n/index.ts": "53c26394ae54a6dd8fbfd91429e0300bf5b2d324d7e66f48179e283f7fc832e5",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
-    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "d886e1ac1352a582a8b44e658d47ee8681328c928379869a338d3144965cdb92",
-    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "a95c1358ae8817800742f6e9a7e0505e8d10efc6aa7ee0421cf9840436f2a3e7",
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "31583e47dca59d77c2e7e74b50ff4672ac2ebbdaae21240669a8a46408b78868",
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "78299818099457a78e8e76f5aa63d06e416aa16a59bf470c88d3390296bff21a",
     "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
     "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "1b14577b1d260ec8c9b65ca2c6939c3db85e20e043d835e5efc1c0183cbc059f",
     "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "dd0ccec28420756aad3a3f52fe1e6e749f6d79caba0974977d96f3e69fd5e58d",
@@ -12945,6 +12951,7 @@
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "2aa258dc66bffa06a09bc3581cc0d1c1342b512504cbd6f897854c79c0caeece",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
+    "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx": "23fac48ff6208ec8ca79f31118dfc63eb54d8184aedb0f8ad7f8fbe98a4b663a",
     "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "6d8f0f2af34f9312217af92971c67e977ec63403ffdef45ed9c908fcf1720c49",
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
@@ -12990,6 +12997,8 @@
     "tdf-hq-ui/src/utils/__tests__/roles.test.ts": "f5aa3c92f8f8f71fc7690ef46a1be60b768c4d0ea40a714da39b04c817d272fd",
     "tdf-hq-ui/src/utils/accessControl.test.ts": "633c8a7d0f6e20eb90fdd06a18eb198731096e5b2bcbc040d78bb452311e463c",
     "tdf-hq-ui/src/utils/accessControl.ts": "4550fd019b3553b00074186bf7e1614e9209c97cb4c94c5a485cb1ea102536c2",
+    "tdf-hq-ui/src/utils/authErrorMessage.test.ts": "9c5762f7ecc5a28095746ce56460955fc98de234efbf7fa185eb9d4ec6c6eb6e",
+    "tdf-hq-ui/src/utils/authErrorMessage.ts": "1983475914b88d680127ff4e2beb785d5e550d84821895b912e97496739890f8",
     "tdf-hq-ui/src/utils/bottomDock.test.tsx": "cd6a5f4017090e3d6073f7cb0b097a7d0ee8c03c393446eb3b50d973076b1a44",
     "tdf-hq-ui/src/utils/bottomDock.ts": "9191d50ba61638b5025ee27bdff3bed3b02a049cd348a0535a401cf691102f0c",
     "tdf-hq-ui/src/utils/checkoutStripe.ts": "1c074e0363401634344800112291a32552aba9a1244dd7986c54257f05af24b2",
@@ -21852,6 +21861,36 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": [
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/auth.ts": [
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-WEB-REQUEST-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-LOGOUT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/authErrorMessage.ts": [
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/utils/signupFields.test.ts": [
       {
         "requirement": "AUTH-ENTRY-002",
@@ -21865,6 +21904,28 @@
       }
     ],
     "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx": [
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/auth.test.ts": [
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-WEB-REQUEST-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/authErrorMessage.test.ts": [
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx": [
       {
         "requirement": "AUTH-ENTRY-002",
         "relationship": "tests"
@@ -23404,22 +23465,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq-ui/src/api/auth.ts": [
-      {
-        "requirement": "SYS-WEB-REQUEST-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-LOGOUT-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/api/auth.test.ts": [
-      {
-        "requirement": "SYS-WEB-REQUEST-001",
-        "relationship": "tests"
-      }
-    ],
     "tdf-hq-ui/src/api/drive.ts": [
       {
         "requirement": "MEDIA-DRIVE-002",
@@ -23575,12 +23620,6 @@
       }
     ],
     "tdf-hq-ui/src/session/logoutIntent.ts": [
-      {
-        "requirement": "AUTH-LOGOUT-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": [
       {
         "requirement": "AUTH-LOGOUT-001",
         "relationship": "implementation"
@@ -30717,9 +30756,13 @@
     {
       "id": "SURFACE-aecace78aa4aecae",
       "path": "tdf-hq-ui/src/api/auth.test.ts",
-      "sha256": "ae5de69adf0ca516180ce0078770eb6654bfa2ca617b1c8c2a9762108f7b8bf7",
+      "sha256": "e49f4b09c0738d72071bf395f2d1c8a43975a2b0e818b4983c58c63e4879db72",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
+        },
         {
           "requirement": "SYS-WEB-REQUEST-001",
           "relationship": "tests"
@@ -30729,9 +30772,13 @@
     {
       "id": "SURFACE-2a14b72d994c2399",
       "path": "tdf-hq-ui/src/api/auth.ts",
-      "sha256": "c2f502db09c6082917f0a796be6258b780a7086329565aea55c3d4661f7e15bb",
+      "sha256": "9fc3a39e212fc453ba5c38b701a69dce8c4129addba3aba4ae823cd1d0db57fa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        },
         {
           "requirement": "SYS-WEB-REQUEST-001",
           "relationship": "implementation"
@@ -33761,7 +33808,7 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "d886e1ac1352a582a8b44e658d47ee8681328c928379869a338d3144965cdb92",
+      "sha256": "31583e47dca59d77c2e7e74b50ff4672ac2ebbdaae21240669a8a46408b78868",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33793,7 +33840,7 @@
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "a95c1358ae8817800742f6e9a7e0505e8d10efc6aa7ee0421cf9840436f2a3e7",
+      "sha256": "78299818099457a78e8e76f5aa63d06e416aa16a59bf470c88d3390296bff21a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35818,11 +35865,27 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-9238e8af58167428",
+      "path": "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+      "sha256": "23fac48ff6208ec8ca79f31118dfc63eb54d8184aedb0f8ad7f8fbe98a4b663a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-e9006bbb523fee68",
       "path": "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
       "sha256": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        },
         {
           "requirement": "AUTH-LOGOUT-001",
           "relationship": "implementation"
@@ -36876,16 +36939,26 @@
     {
       "id": "SURFACE-5b07999bb7f69286",
       "path": "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
-      "sha256": "9b61797cb55489b188d11fab7b357401194e8a9d62fa2b003c09c4707e899309",
+      "sha256": "9c5762f7ecc5a28095746ce56460955fc98de234efbf7fa185eb9d4ec6c6eb6e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-3b725d897439a2a6",
       "path": "tdf-hq-ui/src/utils/authErrorMessage.ts",
-      "sha256": "b4e5b9000a68c8ec9169d299246f947c44e160330dc460a20fac799bdbcc7c38",
+      "sha256": "1983475914b88d680127ff4e2beb785d5e550d84821895b912e97496739890f8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-bd0954e273c5ef94",
@@ -50198,8 +50271,6 @@
     "SURFACE-9df8be78b3bfc57b",
     "SURFACE-2eb9f4f361f30887",
     "SURFACE-4f9e14e98fa44f31",
-    "SURFACE-5b07999bb7f69286",
-    "SURFACE-3b725d897439a2a6",
     "SURFACE-0aecc9cc1ba8692b",
     "SURFACE-0b5c3252718835e5",
     "SURFACE-e7bd26890a222487",
@@ -52288,7 +52359,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0d25ec40390e6c0f9720a9105057c6a4decfbb41fe87fdc3cebfb7bf63a1cb1e",
+      "sourceSha256": "865f06682eed7fa3aff96764ab9a8ce69f75d5076f28e4bd1c633462e8c418bc",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -52316,7 +52387,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0d25ec40390e6c0f9720a9105057c6a4decfbb41fe87fdc3cebfb7bf63a1cb1e",
+      "sourceSha256": "865f06682eed7fa3aff96764ab9a8ce69f75d5076f28e4bd1c633462e8c418bc",
       "definition": {
         "states": [
           "absent",
@@ -52346,7 +52417,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0d25ec40390e6c0f9720a9105057c6a4decfbb41fe87fdc3cebfb7bf63a1cb1e",
+      "sourceSha256": "865f06682eed7fa3aff96764ab9a8ce69f75d5076f28e4bd1c633462e8c418bc",
       "definition": {
         "export": [
           "queued",
