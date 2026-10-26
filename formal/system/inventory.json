@@ -49,6 +49,7 @@
       "e2e/web/marketplace-cart.spec.mjs",
       "e2e/web/mobile-layout-regressions.spec.mjs",
       "e2e/web/mobile-program.spec.mjs",
+      "e2e/web/music-catalog-discovery.spec.mjs",
       "e2e/web/music-player-integration.spec.mjs",
       "e2e/web/music-player-native.spec.mjs",
       "e2e/web/music-player.spec.mjs",
@@ -497,6 +498,7 @@
       "scripts/test-merch-reputation-migration.sh",
       "scripts/test-merge-admission.py",
       "scripts/test-meta-redelivery.sh",
+      "scripts/test-music-catalog-search.mjs",
       "scripts/test-music-correction-concurrency.mjs",
       "scripts/test-music-ddex-credits.sh",
       "scripts/test-music-ddex-package.mjs",
@@ -736,6 +738,7 @@
       "tdf-hq-ui/src/api/merchReputation.ts",
       "tdf-hq-ui/src/api/meta.ts",
       "tdf-hq-ui/src/api/musicReleases.money.test.ts",
+      "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
       "tdf-hq-ui/src/api/musicReleases.ts",
       "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
       "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
@@ -1168,6 +1171,7 @@
       "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
       "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
       "tdf-hq-ui/src/pages/MobileAppPage.tsx",
+      "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
       "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
       "tdf-hq-ui/src/pages/MusicLibraryPage.tsx",
       "tdf-hq-ui/src/pages/MusicMakerPage.tsx",
@@ -2732,7 +2736,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4f42f73a21b278482e2f6450490df1106cc3a0e75c929e63fdc4605427f97d0f",
+      "sha256": "aa9498a53191d37c81437847943c5241c9e00aa0c70143e36044561a46e843e9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2937,6 +2941,12 @@
       "id": "SURFACE-8b406122e72d741c",
       "path": "e2e/web/mobile-program.spec.mjs",
       "sha256": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6910fe6162437c91",
+      "path": "e2e/web/music-catalog-discovery.spec.mjs",
+      "sha256": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3254,7 +3264,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "c95c36e8dd5bd2e15c38999f86f05e33c2a5cee096141db132b855be6a713ae7",
+      "sha256": "51dfd59c5f1a2c70a16e7acb552711a7806e90f39af21a6c0ace4e3c4f1da8c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3962,7 +3972,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "84da33d7f0b87eba2a126db681bb0127abe666871de48f05a0b14746f1d967ae",
+      "sha256": "56dd35bfe3648d8732b28ed6066e118cf743e58093fef5657b031dada0a1112e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5556,6 +5566,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-cb78d4325e1fc93d",
+      "path": "scripts/test-music-catalog-search.mjs",
+      "sha256": "070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d8aeda8890026d82",
       "path": "scripts/test-music-correction-concurrency.mjs",
       "sha256": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
@@ -6966,9 +6982,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-48d8b51a42b47771",
+      "path": "tdf-hq-ui/src/api/musicReleases.pagination.test.ts",
+      "sha256": "e1b83d693a268efebd2121a899cf6fa422d39994895425abddb68054056b652e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-111a69931c7b0da3",
       "path": "tdf-hq-ui/src/api/musicReleases.ts",
-      "sha256": "150f499252556c86539bbbd5ec5aed68ff2c7031e5e2a6540d59fc87ecb9b917",
+      "sha256": "6c1ae9c62c2c4cdb51ba8e94bc5086d3c54e6a2cfd323c14da1d7d74f3c6ca6e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9558,9 +9580,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-eb82e4705c1d2848",
+      "path": "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
+      "sha256": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5f2964f5ab118818",
       "path": "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
-      "sha256": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
+      "sha256": "7b4d424b566195ca074af95148cf3fd63a194bbb5ceaba0798d12deccedf4784",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14918,7 +14946,7 @@
     {
       "id": "SURFACE-83d8f1c82facfb02",
       "path": "tdf-hq/src/TDF/Server/MusicRelease.hs",
-      "sha256": "5570d29e8f02f39e838b7e94a650551f177add4f6e67389c92defdf35b067f35",
+      "sha256": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20772,6 +20800,20 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/music-releases/catalog-discovery-delivery-2026-10-25.md",
+      "sha256": "35078b21a7128b35ec26fffbdfc0e12d9bbfae760e4a958ea980608960681781",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/music-releases/catalog-track-search.md",
+      "sha256": "b6f9cff40c5dba7cb55a604ed65231b4ce5f545a3e42e8941cb9ff0b5b7fa0a1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/music-releases/chained-corrections.md",
       "sha256": "7f5920254a567c9090650da14c331f17c48e51b7be8242ee7fb98e72f43a8576",
       "authority": "inferred",
@@ -20878,7 +20920,7 @@
     },
     {
       "path": "docs/music-releases/live-catalog-inventory-2026-10-26.md",
-      "sha256": "7ad9c2c598820bbcd28f6142b26fa90bd604d839c266007e31d0ef2a707cf0ad",
+      "sha256": "26cb6ae6bcbc241b2c4a32808ca5759c58a14458e01845498a25ea7dadd63d24",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27079,6 +27121,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-catalog-discovery.md",
+      "sha256": "89b69792aecab79c7d376b5b1e26deac0d64388543c724369096f7cc87970d0f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/music-ddex-export.md",
       "sha256": "b7e3d655ba9b4490fe516617a3f550e9a620dac2e6650e4ed5866fa9ee24fc1f",
       "authority": "inferred",
@@ -27304,7 +27353,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f27864fbe2dc25c51b045b14f51f05a33b9696c1202f7de86abfe1da1535cc8b",
+      "sha256": "229b8ef5dfe2506d09d4ba5f3d8932fd0cebca44807891b7baba66efd26db304",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

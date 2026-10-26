@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "OBSERVED_AGGREGATE_INVENTORY_NOT_ACTIVATION",
-  "repositoryBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "repositoryBaseline": "e05d003669a930d54b4fe7dd71d72d09335c11ae",
   "branch": "docs/music-catalog-inventory-20261026",
   "execution": {
     "performedBy": "Root engineering session after explicit review",
@@ -69,7 +69,7 @@
       "sshDockerSqlStorageExecuted": false
     },
     "postgresWritesForTesting": 0,
-    "documentationMetadata": {
+    "historicalDocumentationMetadata": {
       "baseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
       "status": "PASS",
       "tests": 36,
@@ -99,10 +99,45 @@
           "logSha256": "32abcceef40a814fe85929291988a88d800e7ca0c1a801043e60793eb7ad4241"
         }
       ]
+    },
+    "documentationMetadata": {
+      "baseline": "e05d003669a930d54b4fe7dd71d72d09335c11ae",
+      "status": "PASS",
+      "tests": 36,
+      "groups": [
+        {
+          "name": "declarations",
+          "tests": 9,
+          "result": "PASS",
+          "log": "reports/music-catalog-inventory-evidence-20261026/metadata-declarations.log",
+          "sha256": "5684d13977a1f6829bcd5f644c72b35ab6f8d42951d571a5f230c4cc35a359f3"
+        },
+        {
+          "name": "inventory",
+          "tests": 6,
+          "result": "PASS",
+          "log": "reports/music-catalog-inventory-evidence-20261026/metadata-inventory.log",
+          "sha256": "8a1e0fb4496e78a3ced9ae64fcb21728ab79bd1a35de5212d86e153a5f8efe00"
+        },
+        {
+          "name": "conformance",
+          "tests": 10,
+          "result": "PASS",
+          "log": "reports/music-catalog-inventory-evidence-20261026/metadata-conformance.log",
+          "sha256": "dbac6ab81dd872193a4f1e9191a519fae042397665345437bda0c4df62109faf"
+        },
+        {
+          "name": "surfaces",
+          "tests": 11,
+          "result": "PASS",
+          "log": "reports/music-catalog-inventory-evidence-20261026/metadata-surfaces.log",
+          "sha256": "04d3ba75bc8767be52975637e6fcd4320e4d803a5a0880d87a69a1741f14b6a8"
+        }
+      ]
     }
   },
   "canonicalPreservation": {
-    "requirements": 145,
+    "requirements": 146,
     "allRequirementObjectsExact": true,
     "catalogDecisions": 1339,
     "allCatalogDecisionObjectsExact": true,
@@ -126,5 +161,14 @@
     "p1HistoricalCoverage": "INCOMPLETE",
     "p2SloAndPhysicalDevices": "UNMEASURED by this inventory",
     "zeroCountsDoNotEstablish": "Storage-object health,rights or successful nonempty media lifecycle."
+  },
+  "initialRepositoryBaseline": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "integration": {
+    "normalMergeParent": "e05d003669a930d54b4fe7dd71d72d09335c11ae",
+    "checkpoint": "f59dfdea5c68572c2cc25594935a04337e2edf26",
+    "scope": "Docs/evidence only with a protected-main ancestry refresh;no unmerged feature candidate branch is merged or modified. Original live receipt/collector identities retained.",
+    "pr": null,
+    "push": false,
+    "productionWrites": 0
   }
 }

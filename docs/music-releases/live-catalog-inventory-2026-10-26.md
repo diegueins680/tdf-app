@@ -7,7 +7,8 @@ reference. The canonical catalog is not populated merely because legacy release
 cards exist. This snapshot does not complete the upload-to-playback mission.
 
 Documentation baseline: protected main
-`78fa351b469c1d2031df3232204dd722ac480e3b`. This increment archives evidence and
+`e05d003669a930d54b4fe7dd71d72d09335c11ae` (including music discovery
+PR #622). This increment archives evidence and
 an import/activation plan. It changes no application, database, role, flag,
 processing job, original file, legacy link or publication state.
 
@@ -155,6 +156,11 @@ increments retain their original scope and do not establish these outcomes.
 The user inventory/migration/privacy requirements lead to the fixed aggregate
 queries, reviewed manifest, original execution receipt, archived self-tests and
 the migration/activation gaps above. This is operational evidence, not a new
-production-logic contract or a theorem. All 145 canonical requirement objects,
+production-logic contract or a theorem. All 146 canonical requirement objects,
 1,339 catalog decisions and the 222-entry migration manifest remain exact against
 main. The docs-only PR can be reverted without changing production behavior.
+
+The documentation branch began at `78fa351b` and normally merged current main
+`e05d0036` before final metadata checks. This ancestry refresh does not rerun or
+relabel the earlier production observation, its collector source revision or
+any feature candidate's runtime evidence.
