@@ -34,7 +34,8 @@ not a production-user count or a measured activation/retention uplift.
   noncanonical UUIDs, unknown filters or unsupported geography yield no-match and do not abort
   another document's index update. Do not silently broaden malformed queries.
 - Validate new saved queries before reserving/writing them. Reject unknown or
-  nested fields, malformed typed values and control characters. Match date
+  nested fields, malformed typed values and unsafe control characters after
+  applying the same public text normalization. Match date
   acceptance to public UTCTime, not PostgreSQL's relative/ambiguous time grammar.
   Validate control characters and unrepresentable numeric scales before casting
   raw JSON: PostgreSQL jsonb rejects U+0000 and out-of-range numerics before a

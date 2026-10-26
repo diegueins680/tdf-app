@@ -7,7 +7,7 @@ disponible para usuarios son hitos separados.
 
 ## Base y alcance de la observación
 
-- `main` protegido actual: `cfe75b18786c18d18fb2fc806f843a95e029aeb0` (#607, merge normal del25/oct19:40:53UTC). La observación inicial partió de `a1dcb77fafbc66cd786b7f4249a3c8027bb64990`.
+- `main` protegido actual: `917806ff9c8d455a01bfb8a29c80d6ff353e0e0b` (#611, después de #551 financiero `5114fe95`). La observación inicial partió de `a1dcb77fafbc66cd786b7f4249a3c8027bb64990`.
 - Inspección productiva de solo lectura del 25/oct, 08:13:07 UTC:
   `/private/tmp/tdf-user-value-runtime-20261025.json`. Versión pública del backend:
   `4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`; 213 migraciones registradas.
@@ -56,16 +56,18 @@ tras controles negativos y ejecución descartable (85→91).
 | Orden | Trabajo existente o nuevo | Categoría | A/G/V/J/E/C/R/T | P | Estado y acción |
 | --- | --- | --- | --- | --- | --- |
 | 1, integrado | Evitar guardar borradores ajenos/sin lectura propia y revocar callbacks al cambiar credenciales | S0 | 4/5/4/5/5/4/4/4 | 91 | COMPLETE en alcance web acotado: #607 integrado como `cfe75b18`,20checks y revisión vigente verificados. Assets públicos y fixtures Chromium escritorio/Pixel7 pasan conservación/recuperación y callback antiguo revocado, sin reenviar API productiva. No certifica cuentas reales ni todo el recorrido de perfiles. |
-| 2 | Preservar términos aceptados, ledger y capturas inciertas | S0 | 3/5/5/5/5/3/2/2 | 86 | BLOCKED. Reutilizar #551, sin promover #555/#569 por separado ni activar proveedores. |
-| 3 | Subir portada con sesión HttpOnly válida | S1 | 3/4/4/5/5/5/4/3 | 83 | COMPLETE para el transporte web cookie-only: #605 integrado como `9a927fa3` y publicado, con fixture de navegador verificado. Google real no certificado por esta prueba. |
+| 1 | Evitar restaurar identidad A tras logout fallido | S0 | 4/5/4/5/5/3/3/2 | 87 | #616 READY `9e96e07`, revisión independiente vigente y propietario activo; composición final aún pendiente. Intención persistida, scope/caché revocados y reintento sin falsa confirmación anónima. No duplicar ni confundir READY con entrega. |
+| 2 | Entregar términos aceptados, ledger y capturas inciertas | S0 | 3/5/5/5/5/3/2/2 | 86 | SOURCE MERGED: #551 `5114fe95` y #609 `000cf8ad`; backend/release BLOCKED. Conservar sus modelos, siete migraciones y restricciones. No duplicar #555/#569 ni activar proveedores. |
+| 3, dependencia | Admitir el siguiente release mediante control explícito | S0 | 2/5/4/4/5/4/3/2 | 79 | #618 fuente remota `d682` aprobada; composición local del propietario `589` en espera. Gate dependiente, sin permiso de despliegue ni reinicio del diario. |
+| Entregado | Subir portada con sesión HttpOnly válida | S1 | 3/4/4/5/5/5/4/3 | 83 | COMPLETE para el transporte web cookie-only: #605 integrado como `9a927fa3` y publicado, con fixture de navegador verificado. Google real no certificado por esta prueba. |
 | Entregado | Reflejar foto guardada en Comunidad | S1 | 4/3/4/5/5/5/4/3 | 81 | COMPLETE en el alcance de invalidación web: #604 integrado como `512d590e` y assets publicados verificados. Browser real con API sintética; no afirma upload ni escritura productiva real. |
 | 4 | Abrir comprobantes privados desde gestión de entradas | S1 | 3/4/4/5/5/3/2/3 | 79 | BLOCKED para release. #603 integrado como `089dce6b`, backend productivo4dac; falta configuración privada durable y admisión de nuevo diario, y el assurance exacto sigue BLOCKED. |
-| 5, seleccionado | Alertas guardadas respetan filtros no geográficos | S1 | 2/3/3/4/5/2/3/2 | 64 | PARTIAL:10 discrepancias reproducidas sobre27 casos iniciales; reparación no geográfica compartida pasa68SQL,16UTC,7planes y107HTTP con fuente congelada; falta revisión/CI/merge/release. Radio sigue BLOCKED por centro/privacidad y fallback legacy fuera del índice no cubierto. |
+| 5, seleccionado | Alertas guardadas respetan filtros no geográficos | S1 | 2/3/3/4/5/2/3/2 | 64 | PARTIAL:10 discrepancias reproducidas sobre27 casos iniciales; composición con221 migraciones pasa68SQL,16UTC,7planes y107HTTP reales sobre binario exacto `fe179`. Stack4039/0/21pendientes. PR #614 publicado; nuevo head requiere revisión/CI antes de merge y release. Radio sigue BLOCKED por centro/privacidad y fallback legacy fuera del índice no cubierto. |
 | 6 | Correo/push de chat controlado por destinatario | S1 | 3/3/4/4/3/1/1/1 | 60 | BLOCKED para entrega; UNIMPLEMENTED el alcance externo #577, pendiente consentimiento, adaptadores y dispositivos. |
 | 7 | Habilitación explícita del club de un artista nuevo | S1 | 2/2/4/4/5/1/2/1 | 59 | UNIMPLEMENTED en #606; falta ese camino de contenido. El follow funciona y existen enlaces públicos alternativos. Nunca provisionar por GET ni crear miembros/contactos sin consentimiento. |
 | 8 | Ciclo completo de recuperación, expiración y vuelta al intento | S1 | 4/4/3/3/2/1/1/0 | 58 | PARTIAL, sin defecto adicional reproducido. Conservar ST-001 y el transporte existente. |
 
-La selección conserva la cola FIFO de integración: #604/#605/#607 ya están integrados; la reparación #534 aún no se publica. No tocar drafts financieros ni #608 para alterar la admisión. El controlador `scripts/merge-admission.py` admite un único PR no
+La selección conserva la cola FIFO: #604/#605/#607/#609/#610/#551/#611 ya están integrados. #614 es el primer READY de main según la última inspección; su head remoto77c conserva revisión/CI anteriores, que no se atribuyen a la composición nueva sin publicar. #616 espera su composición; no alterar otros PR ni drafts. No tocar drafts financieros ni #608 para alterar la admisión. El controlador `scripts/merge-admission.py` admite un único PR no
 draft de menor número. Protección observada: 20 contextos, checks estrictos,
 aprobación independiente, descarte de revisiones obsoletas, administradores
 sujetos a protección y resolución de conversaciones. Nunca convertir esta
@@ -183,15 +185,13 @@ actualice `main`, repetir la comparación de contenido antes de reabrir trabajo.
 
 ## Cinco acciones siguientes por prioridad actual
 
-1. Resolver los bloqueos de la consolidación financiera #551, conservando sus revisiones, modelos y límites de release.
-2. Preparar la entrega segura del backend #603: almacenamiento privado durable, admisión revisada del siguiente release y disposición de assurance exacta. Reutilizar los drafts #495/#600 donde corresponda; nunca reiniciar el diario completado.
-3. Integrar y entregar la reparación no geográfica #534 mediante revisión, CI y release autorizado; conservar privacidad, dedup y cero canales externos. La implementación local todavía no entrega el beneficio a usuarios; radio y fallback permanecen PARTIAL.
-4. Resolver los prerrequisitos de entrega de chat #577; no prometer email/push antes de evidencia real.
-5. Habilitación explícita e idempotente del club #606, con permisos probados y sin crear miembros o notificaciones implícitos.
+1. Privacidad de logout #616, S0, hipótesis87: preservar intención de salida después de POST fallido y evitar restauración de A. El propietario mantiene su READY9e96 y composición; reutilizar su trabajo y esperar gates vigentes.
+2. Entrega financiera #551/#609, S0, hipótesis86: código ya integrado; resolver los bloqueos de backend y assurance antes de liberar. No rehacer la consolidación ni activar proveedores.
+3. Control de release #618, dependencia S0, hipótesis79: admisión explícita del nuevo diario y condiciones de release; respetar propietario, revisión y fuente efectivamente publicada. No equivale a permiso de ejecución.
+4. Alertas no geográficas #614/#534, S1, hipótesis64: publicar la composición final revisada, completar CI exacta y merge protegido; desplegar solo con los gates de backend. Radio y fallback siguen PARTIAL. Es primero en FIFO, aunque la prioridad S0 de otros trabajos sea mayor.
+5. Chat externo consentido #577, S1, hipótesis60: consentimiento, adaptadores y dispositivos antes de prometer correo/push.
 
-ST-001 queda sexto: reproducir y calificar recuperación, expiración y retorno al intento, conservando el login/deadline existente sin reabrirlo sin evidencia.
-
-Las correcciones web #604/#605 ya están integradas y publicadas. Las puntuaciones siguen siendo hipótesis ordinales; no hay uplift observado ni un conteo validado de usuarios afectados.
+La activación explícita del club #606 y la recuperación ST-001 quedan después de estas cinco acciones. Los vectores de planificación de616/618 y todos los scores son hipótesis ordinales del modelo, no conteos de usuarios, ROI ni uplift. Las correcciones web604/605/607 tienen evidencia publicada acotada; Completar un subrecorrido no certifica el recorrido entero.
 
 ## Evidencia histórica inicial del arreglo #607 (antes de composición final)
 
@@ -329,7 +329,7 @@ migraciones pendientes, pero no equivalen a permiso ni preparación de release.
 No se cambió configuración, storage, contenedores, flags ni diario productivo.
 
 
-## Estado vigente después de integrar #607
+## Estado histórico después de integrar #607 (basecfe, anterior a551/611)
 
 #607 está **MERGED** como `cfe75b18786c18d18fb2fc806f843a95e029aeb0`,
 a las19:40:53UTC:20checks obligatorios, revisión independiente vigente del head
@@ -356,7 +356,7 @@ merge y despliegue todavía pendientes. No hay proveedor, cobro ni escritura rea
 productiva en esta reparación. Contrato: `docs/directory/saved-search-parity.md`.
 
 
-Recibo final no geográfico: `/private/tmp/tdf-alert-parity-repro-20261025/v12-frozen-full214/results.json`
+Recibo histórico no geográfico sobre full214: `/private/tmp/tdf-alert-parity-repro-20261025/v12-frozen-full214/results.json`
 (PASS sobre `8b2f981fa952b6d281a22b4c3eb187f3828df870`). SQL SHA256
 `673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4`;
 Directory SHA256 `d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494`.
@@ -382,3 +382,47 @@ ninguna API/escritura productiva y hubo0errores de página. El backend público
 sigue `4dac175d`, health/DB ok. Este resultado completa el alcance web acotado607;
 no certifica credenciales/cuentas reales, persistencia productiva ni dispositivo
 físico. La reparación backend #534 continúa sin publicar/desplegar.
+
+
+## Composición actual después de #551 y #611
+
+#551 se integró como `5114fe95ac8e328b58162a8dcae5c9015a47ce09` y #611 como
+`917806ff9c8d455a01bfb8a29c80d6ff353e0e0b`. La composición conserva exactamente
+los220 objetos/SQL de main, sus siete introducciones financieras y los140 requisitos
+protegidos completos; agrega alerta221 con el ancestro original `eb2f71d6` y DIR
+(141 requisitos). Los snapshots revisados213/214/220 siguen inmutables; el sucesor221
+`8229b8202552298c955e` no autoriza ejecutar ni liberar nada. Los tres fingerprints
+retirados siguen rechazados por el gate real. No cambia código financiero aprobado.
+
+La nueva compilación Stack/GHC9.10.3 terminó con salida0 en una única invocación
+`stack --no-terminal test --force-dirty tdf-hq --copy-bins`:4039 ejemplos,0 fallos,
+21 pendientes. El binario identifica exactamente `fe179de45d9b0e085bb7cd2f00a9704991fa1652`,
+SHA256 `cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a`. Sobre ese mismo código pasan full221/replay,
+rollback exacto/reapply,68 casos SQL,16 UTC,7 planes y107 HTTP reales. Se verifican
+JSON/hash/ledger preservados, privacidad/aislamiento y cero proveedores externos.
+Base eliminada, clúster detenido y puerto55512 cerrado. Recibo:
+`/private/tmp/tdf-alert-parity-post551-20261026/results.json`.
+
+Después se incorporó611 por merge normal. Sus cambios son dos helpers Python e
+índices generados: se contrastaron los263 inputs backend, el árbol SQL completo,
+manifiesto, renderer y fixtures/runners; permanecen byte a byte iguales a la
+calificaciónfe179. Esa equivalencia no relabela el resultado como ejecución del
+nuevo commit de documentos/ops. CI hospedada compilará y probará el head exacto
+que finalmente se publique. Recibo de equivalencia:
+`/private/tmp/tdf-alert-parity-post551-20261026/post611-equivalence.json`.
+
+#614 sigue sin merge/despliegue y #534 sigue PARTIAL para geografía sin centro y
+cambios exclusivos del fallback legacy. El beneficio observado es sintético:
+las10 discrepancias iniciales desaparecen y el guardado recuperable llega a una
+alerta interna persistida; no hay uplift ni beneficio productivo atribuible todavía.
+La imagen5114 tiene identidad estática verificada; no prueba startup, recuperación
+ni despliegue. Las observaciones anteriores de storage/diario requieren reinspección
+y el assurance exacto conserva280 obligaciones UNPROVEN. No se modificaron storage,
+diario, contenedores, flags, proveedores ni datos productivos.
+
+#616 tiene evidencia local separada64/9,178 casos nativos y3411 pruebas UI/303 suites
+sobre las identidades indicadas por su propietario. Sus pruebas reales API/PG se
+ligan a f9, con adapters/auth byte equivalentes a9e; no se relabelan como ejecución
+exacta de otra composición. Recibos:
+`/private/tmp/tdf-616-p3-joint-review-20261025-evidence/receipt.json` y
+`/private/tmp/tdf-616-f9-independent-20261025-evidence/receipt.json`.

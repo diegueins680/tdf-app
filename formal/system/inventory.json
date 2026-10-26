@@ -19429,7 +19429,7 @@
     },
     {
       "path": "docs/directory/saved-search-parity.md",
-      "sha256": "686372ef5cac5899db66170aa161d789a64e8cf92f478616b0ed23859f1c4f07",
+      "sha256": "ae37a8eb36ec4b832b6bdf1a9450e298f559607546de7988514463d99db768e3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19457,7 +19457,7 @@
     },
     {
       "path": "docs/engineering/user-value-backlog-2026-10-25.md",
-      "sha256": "171ab1860218badcf90bc531672079a3bd426d4378b302435099e8b0b27746f3",
+      "sha256": "4d39b1aaddd3035a6aed83b89aa8279aafcc85cf1d7154bcb5d52d0fe953ca87",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
