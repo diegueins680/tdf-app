@@ -1,6 +1,6 @@
 # TDF Records — Informe ejecutivo de recuerdos de eventos
 
-Corte de esta continuación: 26 de octubre de 2026, 17:25 UTC. **Implementado y probado parcialmente, publicado para revisión; sin integración protegida, despliegue ni invitaciones reales de esta entrega. El objetivo integral continúa pendiente.**
+Corte de esta continuación: 26 de octubre de 2026, 18:42 UTC. **Implementado y probado parcialmente, publicado para revisión; sin integración protegida, despliegue ni invitaciones reales de esta entrega. El objetivo integral continúa pendiente.**
 
 ## 1. Diagnóstico y capacidades reutilizadas
 
@@ -18,6 +18,8 @@ El último inventario privado acreditado, 03:22 UTC, observó siete cuentas rela
 - #172: texto sin archivo y lectura de texto/audio, con capacidad extendida explícita del servidor. Consultar capacidad no cambia preferencias.
 - #173: selección y publicación pública de archivos de audio hasta 25 MB; DocumentPicker compatible con SDK54, caché para lectura, validación y recuperación de errores. Runtime aislado; sin grabación ni permiso de micrófono.
 - #174: editar descripciones y eliminar publicaciones propias mediante PUT/DELETE existentes. Conserva microsegundos para concurrencia, exige confirmación de borrado y respuesta válida antes de actualizar el feed; descarta callbacks/respuestas retirados. Diálogos ES/EN con Cancelar de 60 × 44 píxeles CSS en la previsualización.
+
+- Corrección de entrada pública: el enlace canónico muestra primero la proyección pública existente; al publicar, comentar o crear una cuenta conserva el destino canónico completo. Eventos privados/no disponibles mantienen el acceso mediante autenticación; un fallo de red ofrece reintento explícito. La ruta pública antigua conserva su sanitizador de parámetros.
 
 ## 3. Arquitectura y decisiones
 
@@ -37,11 +39,18 @@ Los archivos de este flujo tienen enlaces públicos; no se ofrece almacenamiento
 | [Texto móvil #172](https://github.com/diegueins680/TDF-mobile/pull/172) | `f5197c69`, CI satisfactorio; revisión solicitada, auto-merge desactivado |
 | [Audio móvil #173](https://github.com/diegueins680/TDF-mobile/pull/173) | `6d0b109`, validación y ambos builds satisfactorios; revisión independiente pendiente |
 | [Autoría móvil #174](https://github.com/diegueins680/TDF-mobile/pull/174) | `41a68b7`, 759 pruebas/101 suites y ambos builds satisfactorios; listo para revisión, sin aprobación ni auto-merge |
+| [Entrada pública](https://github.com/diegueins680/tdf-app/tree/fix/event-memory-public-entry-20261026) | Core `87c3ed194`, base `069fac6`; calificado localmente, pendiente de revisión independiente e integración |
 | Preparación monorepo | Rama `integrate/event-memories-main-78fa-20261026`: merge normal `a95bc6745` con main `78fa351b` (#621 sobre #620); runner calificado `3a17a9f86` |
 
 La nueva preparación incorpora las reparaciones protegidas del reproductor y las identidades/cabeceras contables. Conserva **los 145 requisitos de main exactos más cuatro propios: 149**, el prefijo protegido de 222 migraciones más las cuatro originales: **226**, y todos los bytes SQL/ancestros de introducción. El pin móvil de esta preparación sigue `7000df1d`; las calificaciones posteriores #172–#174 conservan sus identidades separadas y requieren integración nativa revisada. No se alteraron #608/#615 ni ramas ajenas para sustituir revisiones pendientes. El checkout original divergente se conserva.
 
 ## 5. Pruebas ejecutadas y resultados
+
+La [corrección de entrada pública](event-memory-source-evidence-20261025/public-entry-qualification.json), core `87c3ed194`, pasa **3540 pruebas / 311 suites**, lint, TypeScript, build (336422 bytes gzip, cinco preloads), `quality:repo`, catálogo estricto JSON/CSV de **1346** entradas y ocho controles de historial. La admisión mapea doce superficies modificadas; mantiene exactos los 145 requisitos protegidos, 149 totales, y el backend/esquema de 226 migraciones. Estos son controles ejecutados; la cobertura estructural no prueba toda la especificación.
+
+La [API/PostgreSQL reales de esta corrección](event-memory-source-evidence-20261025/public-entry-http-browser-results.json) pasan **120 peticiones / 18 grupos / 258 hashes**, con ledger226 exacto. Se conserva la identidad real del mismo binario Darwin `262295679`/SHA f01ef34b: sus inputs siguen iguales y no se atribuye una recompilación al nuevo commit. Los únicos archivos sin seguimiento durante el recorrido eran dos enlaces propios de dependencias; no es una atestación de release limpio.
+
+La siguiente evidencia sobre78fa conserva su ejecución e identidad anteriores; no se presenta como una repetición en87c3ed:
 
 [Recibo de la preparación sobre 78fa](event-memory-source-evidence-20261025/78fa-main-preparation.json):
 
@@ -55,6 +64,8 @@ La nueva preparación incorpora las reparaciones protegidas del reproductor y la
 Los intentos iniciales fallidos de preparación/harness están registrados; no se cuentan como éxitos ni se debilitaron las comprobaciones para aprobarlos.
 
 ## 6. Evidencia web y móvil
+
+El [nuevo recorrido integrado](event-memory-source-evidence-20261025/public-entry-browser-results.json) pasa **ocho comprobaciones**: evento finalizado público en escritorio/Pixel7 sin leer momentos protegidos; fallback privado con destino conservado; fallo de red inyectado/reintento real; enlaces de registro con contexto; dos sesiones reales, publicación, denuncia, cierre, **409 real obligatorio**, ocultamiento/restauración y recarga. [Entrada anónima Pixel7](event-memory-source-evidence-20261025/public-entry-anonymous-phone.png), [autor](event-memory-source-evidence-20261025/public-entry-source-desktop.png) y [lector](event-memory-source-evidence-20261025/public-entry-source-phone.png). Son fixtures sintéticos con API/almacenamiento reales en aislamiento; no es producción, registro por interfaz con una persona ni ejecución nativa.
 
 Dos sesiones sintéticas reales en [escritorio](event-memory-source-evidence-20261025/78fa-source-desktop.png) y [Pixel 7 web](event-memory-source-evidence-20261025/78fa-source-phone.png) verifican autenticación conservando contexto, publicación persistida, denuncia, cierre, ocultamiento por teclado y restauración tras recargar ambas sesiones. La prueba exige **un 409 real** por versión deliberadamente incompatible, conservación del contenido y recuperación mediante cancelar/recargar/revisar. [Cinco comprobaciones del navegador](event-memory-source-evidence-20261025/78fa-browser-results.json). No son teléfonos físicos.
 
@@ -85,7 +96,7 @@ Están implementados recibos internos, aperturas atribuidas, publicación poster
 
 ## 10. Riesgos, bloqueos y prioridades siguientes
 
-1. Obtener la revisión independiente de #615 y de la cadena móvil; las solicitudes existentes siguen pendientes. No inferir aprobación a partir de CI o de “Continue”.
+1. Obtener la revisión independiente de #615, de la corrección de entrada pública y de la cadena móvil; las solicitudes existentes siguen pendientes. No inferir aprobación a partir de CI o de “Continue”.
 2. Integrar la fuente revisada en #608, mantener la base protegida vigente y obtener CI/revisión nuevos del head final, resolviendo las conversaciones y respetando FIFO. Las aprobaciones antiguas no cubren cambios posteriores.
 3. Completar imagen/recovery/canary/despliegue y aceptación productiva. Solo entonces verificar elegibilidad y preferencias reales y ejecutar invitaciones trazables/idempotentes del evento141.
 4. Resolver brechas explícitas: medios privados/revocables y borrado físico, galerías mixtas por publicación, etiquetado estructurado, idempotencia general de creación, previews específicos de publicaciones, pruebas nativas en dispositivos y mediciónD7/D30. Los archivos públicos nunca se presentan como restringidos.
@@ -93,6 +104,6 @@ Están implementados recibos internos, aperturas atribuidas, publicación poster
 La API, Vite y las bases de pruebas propias se retiraron; el cluster propio se detuvo tras verificar que solo quedaba `postgres`. Se conservan logs y caches de dependencias; no se detuvieron servicios compartidos. La preparación y su evidencia no constituyen autorización de producción ni finalización de los criterios pendientes.
 
 
-### Hallazgo de entrada pública pendiente de reparación
+### Entrada pública reparada y probada; despliegue pendiente
 
-La [observación anónima real de 17:42 UTC](event-memory-source-evidence-20261025/public-event141-browser-before-entry-repair.json) termina en `/login?redirect=%2Fsocial%2Feventos%2F141`: la página y API están disponibles, pero el enlace canónico exige autenticación antes de mostrar el evento. No hubo escrituras, errores de página ni salida externa permitida. La preparación calificada también conserva esa ruta autenticada. Se inicia una reparación separada que reutiliza `/eventos/:eventId` y el layout autenticado, con acceso exclusivamente a metadatos públicos, continuidad al publicar y fallback de autenticación para eventos privados. Esta observación no acredita la funcionalidad nueva en producción.
+La [observación anónima productiva de17:42 UTC](event-memory-source-evidence-20261025/public-event141-browser-before-entry-repair.json) termina en `/login?redirect=%2Fsocial%2Feventos%2F141`, sin escrituras. La nueva corrección permite explorar la proyección pública existente desde esa ruta y conserva Shell/permisos para usuarios autenticados, con comprobación integrada local satisfactoria. Esta corrección todavía no está verificada en producción. La observación previa no se cambia ni se usa como evidencia de que ya se desplegó.
