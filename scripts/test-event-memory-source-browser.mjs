@@ -93,6 +93,20 @@ try {
   await expect(review.getByText(caption, { exact: true })).toHaveCount(0);
   await expect(card(owner)).toBeVisible();
   result.assertions.push('Organizer closes the actual source report without removing the publication');
+  let injectedStaleVersion = 0;
+  await owner.route(`${config.api}/interactions/targets/*/commands`, async (route) => {
+    const payload = route.request().postDataJSON();
+    if (payload?.command?.operation === 'source.hide' && injectedStaleVersion === 0) {
+      if (!Number.isSafeInteger(payload.command.expectedVersion) || payload.command.expectedVersion <= 1)
+        throw new Error('The real fixture must have a prior committed report version');
+      injectedStaleVersion += 1;
+      payload.command.expectedVersion -= 1;
+      // Fault injection changes one outgoing version. The real API/DB decides
+      // the conflict; no response, entitlement or moderation result is mocked.
+      return route.continue({ postData: JSON.stringify(payload) });
+    }
+    return route.continue();
+  });
   const commandResponse = (page, operation) => page.waitForResponse((response) => {
     const request = response.request();
     if (request.method() !== 'POST' || !new URL(response.url()).pathname.endsWith('/commands')) return false;
@@ -107,6 +121,8 @@ try {
     return response;
   };
   let hidden = await hideWithKeyboard();
+  expect(injectedStaleVersion).toBe(1);
+  expect(hidden.status()).toBe(409);
   if (hidden.status() === 409) {
     // An offscreen cached summary may still carry the previous report version.
     // Exercise the explicit recovery path; never replay a stale decision as if
@@ -116,7 +132,7 @@ try {
     await owner.getByRole('button', { name: 'Cancelar', exact: true }).click();
     await owner.reload(); await expect(card(owner)).toBeVisible();
     hidden = await hideWithKeyboard();
-    result.assertions.push('A stale source decision is refused; explicit cancel/reload/review creates a fresh decision');
+    result.assertions.push('One injected stale version receives a real 409; explicit cancel/reload/review creates a fresh decision');
   }
   expect(hidden.status()).toBe(200);
   await expect(owner.getByRole('dialog')).toHaveCount(0);
