@@ -133,17 +133,25 @@ const automaticQuality = (): PlayerQuality => {
   return 'high';
 };
 
-const selectSource = (track: PlayerTrack | null, selectedQuality: PlayerQuality | 'auto'): PlayerSource | null => {
-  if (!track || track.sources.length === 0) return null;
+const orderedSources = (track: PlayerTrack | null, selectedQuality: PlayerQuality | 'auto'): PlayerSource[] => {
+  if (!track) return [];
   const requested = selectedQuality === 'auto' ? automaticQuality() : selectedQuality;
-  // A preview is an access fallback, not another bitrate of the full track.
-  // Restrict selection to full sources when any were authorized; otherwise
-  // retain the visitor's preview-only sources and their existing duration cap.
-  const fullSources = track.sources.filter((candidate) => !candidate.preview);
-  const ordered = [...(fullSources.length ? fullSources : track.sources)]
-    .sort((a, b) => qualityRank[a.quality] - qualityRank[b.quality]);
-  const notAboveRequested = ordered.filter((source) => qualityRank[source.quality] <= qualityRank[requested]);
-  return notAboveRequested.at(-1) ?? ordered[0] ?? null;
+  // Asset-bound tracks may only fall back to another freshly authorized asset.
+  // A stale direct URL must not downgrade a protected recording after denial.
+  const sources = track.sources.some((item) => item.assetId)
+    ? track.sources.filter((item) => item.assetId) : track.sources;
+  const order = (sources: PlayerSource[]) => [...sources].sort((a, b) => {
+    // Prefer the best quality within the requested ceiling, then lower-cost
+    // fallbacks above it. Preview access is always attempted after full audio.
+    const aRank = qualityRank[a.quality], bRank = qualityRank[b.quality];
+    const ceiling = qualityRank[requested];
+    if (aRank <= ceiling && bRank <= ceiling) return bRank - aRank;
+    if (aRank <= ceiling) return -1;
+    if (bRank <= ceiling) return 1;
+    return aRank - bRank;
+  });
+  return [...order(sources.filter((item) => !item.preview)),
+    ...order(sources.filter((item) => item.preview))];
 };
 
 const normalizedVolume = (volume: number, loudnessLufs: number | null | undefined): number => {
@@ -184,13 +192,37 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const positionsRef = useRef<Record<string, number>>(persisted.positions);
   const autoplayRef = useRef(false);
   const retryRef = useRef(0);
+  const retryTimerRef = useRef<number | null>(null);
+  const [resolvedQuality, setResolvedQuality] = useState<PlayerQuality | null>(null);
   const sourceGenerationRef = useRef(0);
   const playAttemptRef = useRef(0);
-  const loadedSourceRef = useRef<{ trackId: string; url: string } | null>(null);
+  const loadedSourceRef = useRef<{ trackId: string; url: string; preview?: boolean; quality: PlayerQuality } | null>(null);
   const lastContinuousPositionRef = useRef(0);
   const listenedSinceProgressRef = useRef(0);
   const currentTrack = queue.currentIndex >= 0 ? queue.tracks[queue.currentIndex] ?? null : null;
-  const source = useMemo(() => selectSource(currentTrack, quality), [currentTrack, quality]);
+  const candidates = useMemo(() => orderedSources(currentTrack, quality), [currentTrack, quality]);
+  const source = candidates[0] ?? null;
+
+  const cancelRetry = useCallback(() => {
+    if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
+    retryTimerRef.current = null;
+  }, []);
+
+  const scheduleRecovery = useCallback((track: PlayerTrack, position: number, generation: number): boolean => {
+    if (!autoplayRef.current) return false;
+    if (retryTimerRef.current !== null) return true;
+    if (retryRef.current >= MAX_NETWORK_RETRIES) return false;
+    retryRef.current += 1;
+    playAttemptRef.current += 1; // a failed native play promise no longer owns recovery
+    positionsRef.current[track.id] = position;
+    setStatus('loading');
+    emitPlayerEvent('buffering', track, position, { recoveryPhase: 'attempt', attempt: retryRef.current });
+    retryTimerRef.current = window.setTimeout(() => {
+      retryTimerRef.current = null;
+      if (generation === sourceGenerationRef.current) setSourceRefresh((value) => value + 1);
+    }, 500 * 2 ** retryRef.current);
+    return true;
+  }, []);
 
   const flushProgress = useCallback((track: PlayerTrack, audio: HTMLAudioElement) => {
     const listenedDeltaMs = Math.round(listenedSinceProgressRef.current);
@@ -204,13 +236,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (!audio) return;
     playAttemptRef.current += 1;
     autoplayRef.current = false;
+    cancelRetry();
     audio.pause();
     setStatus(currentTrack ? 'paused' : 'idle');
     if (currentTrack) {
       flushProgress(currentTrack, audio);
       emitPlayerEvent('pause', currentTrack, audio.currentTime);
     }
-  }, [currentTrack, flushProgress]);
+  }, [cancelRetry, currentTrack, flushProgress]);
 
   const play = useCallback(async () => {
     const audio = audioRef.current;
@@ -220,7 +253,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       return;
     }
     autoplayRef.current = true;
-    if (source.assetId && !audio.getAttribute('src')) {
+    if (!audio.getAttribute('src') || audio.error) {
+      retryRef.current = 0; // explicit retry starts a new bounded attempt
       setStatus('loading');
       setSourceRefresh((value) => value + 1);
       return;
@@ -234,21 +268,34 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       if (generation !== sourceGenerationRef.current || attempt !== playAttemptRef.current) return;
       setStatus('playing');
       setError(null);
-      emitPlayerEvent('play_start', currentTrack, audio.currentTime, { quality: source.quality });
+      emitPlayerEvent('play_start', currentTrack, audio.currentTime, { quality: loadedSourceRef.current?.quality ?? source.quality });
     } catch (caught) {
       if (generation !== sourceGenerationRef.current || attempt !== playAttemptRef.current) return;
+      // Browsers may reject play() before dispatching their native error
+      // event. Preserve recovery intent in either event order.
+      // The native engine can set error while play() is pending; TypeScript's
+      // pre-await narrowing does not describe that external mutation.
+      const mediaError = audio.error as MediaError | null;
+      const recoverable = mediaError?.code === 2 || (Boolean(source.assetId) && mediaError?.code === 4);
+      const blocked = caught instanceof DOMException && caught.name === 'NotAllowedError';
+      if (!blocked && recoverable && scheduleRecovery(currentTrack, audio.currentTime, generation)) return;
       autoplayRef.current = false;
-      audio.removeAttribute('src');
-      setStatus('error');
-      setError('No se pudo iniciar la reproducción. Revisa la conexión o vuelve a intentarlo.');
+      audio.pause();
+      // Browser policy rejection is recoverable by a fresh user gesture. Keep
+      // the selected source so that retrying direct/legacy audio also works.
+      setStatus(blocked ? 'paused' : 'error');
+      setError(blocked ? 'Pulsa Reproducir para permitir el audio en este navegador.'
+        : recoverable ? 'La fuente dejó de estar disponible. Puedes reintentar o pasar a la siguiente pista.'
+          : 'No se pudo iniciar la reproducción. Revisa la conexión o vuelve a intentarlo.');
       logger.warn('Global player could not start playback', caught);
     }
-  }, [currentTrack, source]);
+  }, [currentTrack, scheduleRecovery, source]);
 
   const selectTrack = useCallback((index: number) => {
+    if (index === queue.currentIndex) { void play(); return; }
     autoplayRef.current = true;
     dispatchQueue({ type: 'select', index });
-  }, []);
+  }, [play, queue.currentIndex]);
 
   const next = useCallback(() => {
     const nextIndex = nextQueueIndex(queue);
@@ -256,9 +303,15 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       pause();
       return;
     }
+    if (nextIndex === queue.currentIndex) {
+      if (audioRef.current) audioRef.current.currentTime = 0;
+      setCurrentTime(0);
+      void play();
+      return;
+    }
     autoplayRef.current = true;
     dispatchQueue({ type: 'select', index: nextIndex });
-  }, [pause, queue]);
+  }, [pause, play, queue]);
 
   const previous = useCallback(() => {
     const audio = audioRef.current;
@@ -291,7 +344,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         listenedSinceProgressRef.current += delta * 1000;
         if (track && listenedSinceProgressRef.current >= 5000) flushProgress(track, audio);
       }
-      if (track?.previewEndMs && audio.currentTime * 1000 >= track.previewEndMs) {
+      if (loadedSource.preview && track?.previewEndMs && audio.currentTime * 1000 >= track.previewEndMs) {
+        autoplayRef.current = false;
+        playAttemptRef.current += 1;
         audio.pause();
         setStatus('paused');
         emitPlayerEvent('complete', track, audio.currentTime, {
@@ -313,17 +368,25 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       // the user's play gesture is paused, not indefinitely loading.
       setStatus((current) => current === 'loading' || current === 'buffering' ? 'paused' : current);
     };
+    const ownsNativeSource = () => loadedSourceRef.current?.trackId === currentTrack?.id
+      && loadedSourceRef.current?.url === audio.currentSrc;
     const handlePlaying = () => {
+      if (!ownsNativeSource() || !autoplayRef.current || audio.paused) return;
       lastContinuousPositionRef.current = audio.currentTime;
       setStatus('playing');
     };
     const handleWaiting = () => {
+      if (!ownsNativeSource() || !autoplayRef.current || audio.paused) return;
       setStatus('buffering');
       const track = queue.tracks[queue.currentIndex];
       if (track) emitPlayerEvent('buffering', track, audio.currentTime);
     };
-    const handlePause = () => setStatus((current) => current === 'error' || current === 'unavailable' ? current : 'paused');
+    const handlePause = () => {
+      if (!ownsNativeSource() || !audio.paused) return;
+      setStatus((current) => current === 'error' || current === 'unavailable' || current === 'loading' ? current : 'paused');
+    };
     const handleEnded = () => {
+      if (!ownsNativeSource()) return;
       const track = queue.tracks[queue.currentIndex];
       if (track) emitPlayerEvent('complete', track, audio.currentTime, {
         listenedDeltaMs: Math.round(listenedSinceProgressRef.current),
@@ -343,21 +406,17 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       next();
     };
     const handleError = () => {
+      if (!ownsNativeSource() || retryTimerRef.current !== null) return;
+      playAttemptRef.current += 1; // native error owns the terminal/recovery outcome
       const generation = sourceGenerationRef.current;
-      if (retryRef.current < MAX_NETWORK_RETRIES) {
-        retryRef.current += 1;
-        setStatus('loading');
-        window.setTimeout(() => {
-          if (generation !== sourceGenerationRef.current) return;
-          if (source?.assetId) setSourceRefresh((value) => value + 1);
-          else {
-            audio.load();
-            if (autoplayRef.current) void play();
-          }
-        }, 500 * 2 ** retryRef.current);
-        return;
-      }
+      // Decode/unsupported failures will not improve by downloading again.
+      // A protected URL can also surface an expired HTTP grant as unsupported
+      // media. Reauthorization remains bounded and may deny access outright.
+      const retryable = !audio.error || audio.error.code === 2
+        || (Boolean(source?.assetId) && audio.error.code === 4);
+      if (retryable && currentTrack && scheduleRecovery(currentTrack, audio.currentTime, generation)) return;
       autoplayRef.current = false;
+      audio.pause();
       setStatus('error');
       setError('La fuente dejó de estar disponible. Puedes reintentar o pasar a la siguiente pista.');
       const track = queue.tracks[queue.currentIndex];
@@ -384,23 +443,26 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, [flushProgress, next, play, queue, source?.assetId]);
+  }, [currentTrack, flushProgress, next, play, queue, scheduleRecovery, source?.assetId]);
 
   useEffect(() => {
     const audio = audioRef.current;
     return () => {
+      cancelRetry();
       sourceGenerationRef.current += 1;
       playAttemptRef.current += 1;
       loadedSourceRef.current = null;
       autoplayRef.current = false;
       audio?.pause();
     };
-  }, []);
+  }, [cancelRetry]);
 
   useEffect(() => { retryRef.current = 0; }, [currentTrack?.id, quality]);
 
   useEffect(() => {
     const audio = audioRef.current;
+    cancelRetry();
+    const controller = new AbortController();
     const generation = sourceGenerationRef.current + 1;
     sourceGenerationRef.current = generation;
     loadedSourceRef.current = null;
@@ -408,6 +470,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     listenedSinceProgressRef.current = 0;
     setCurrentTime(0);
     setDuration(0);
+    setResolvedQuality(null);
     setError(null);
     if (!audio) return;
     audio.pause();
@@ -420,24 +483,48 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setStatus('loading');
     void (async () => {
       try {
-        const authorized = source.assetId ? await authorizePlayerAsset(source.assetId) : null;
-        if (generation !== sourceGenerationRef.current) return;
-        audio.src = authorized?.url ?? source.url;
-        loadedSourceRef.current = { trackId: currentTrack.id, url: audio.src };
+        let resolved: { source: PlayerSource; url: string } | null = null;
+        for (const candidate of candidates) {
+          if (generation !== sourceGenerationRef.current || controller.signal.aborted) return;
+          try {
+            const access = candidate.assetId ? await authorizePlayerAsset(candidate.assetId, controller.signal) : null;
+            if (generation !== sourceGenerationRef.current || controller.signal.aborted) return;
+            resolved = { source: candidate, url: access?.url ?? candidate.url };
+            break;
+          } catch (reason) {
+            if (generation !== sourceGenerationRef.current || controller.signal.aborted) return;
+            const status = reason && typeof reason === 'object' && 'status' in reason ? reason.status : null;
+            // A full rendition can be denied while a preview of this same
+            // recording is allowed. Never fall back to a different track.
+            if (status !== 401 && status !== 403 && status !== 404) throw reason;
+          }
+        }
+        if (!resolved?.url) throw Object.assign(new Error('No authorized source'), { status: 403 });
+        audio.src = resolved.url;
+        loadedSourceRef.current = { trackId: currentTrack.id, url: audio.src,
+          preview: resolved.source.preview, quality: resolved.source.quality };
+        setResolvedQuality(resolved.source.quality);
         audio.load();
-        const savedPosition = positionsRef.current[currentTrack.id] ?? 0;
+        const storedPosition = positionsRef.current[currentTrack.id] ?? 0;
+        const savedPosition = resolved.source.preview && currentTrack.previewEndMs
+          && storedPosition * 1000 >= currentTrack.previewEndMs ? 0 : storedPosition;
         if (savedPosition > 0) audio.currentTime = savedPosition;
-        emitPlayerEvent('quality_selected', currentTrack, savedPosition, { quality: source.quality, automatic: quality === 'auto' });
+        emitPlayerEvent('quality_selected', currentTrack, savedPosition, { quality: resolved.source.quality, automatic: quality === 'auto' });
         if (autoplayRef.current) void play();
       } catch (caught) {
         if (generation !== sourceGenerationRef.current) return;
+        const httpStatus = caught && typeof caught === 'object' && 'status' in caught ? caught.status : null;
+        const transient = httpStatus === null || httpStatus === 408 || httpStatus === 429
+          || (typeof httpStatus === 'number' && httpStatus >= 500);
+        if (transient && scheduleRecovery(currentTrack, positionsRef.current[currentTrack.id] ?? 0, generation)) return;
         autoplayRef.current = false;
         setStatus('unavailable');
         setError('El servidor no autorizó una fuente vigente para esta pista.');
         logger.warn('Global player could not refresh asset authorization', caught);
       }
     })();
-  }, [currentTrack, play, quality, source, sourceRefresh]);
+    return () => controller.abort();
+  }, [cancelRetry, candidates, currentTrack, play, quality, scheduleRecovery, source, sourceRefresh]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -471,7 +558,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
     const mediaSession = navigator.mediaSession;
-    if (currentTrack) {
+    if (currentTrack && typeof MediaMetadata !== 'undefined') {
       mediaSession.metadata = new MediaMetadata({
         title: currentTrack.title,
         artist: currentTrack.artist,
@@ -481,13 +568,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     } else {
       mediaSession.metadata = null;
     }
-    mediaSession.setActionHandler('play', () => { void play(); });
-    mediaSession.setActionHandler('pause', pause);
-    mediaSession.setActionHandler('previoustrack', previous);
-    mediaSession.setActionHandler('nexttrack', next);
-    mediaSession.setActionHandler('seekto', (details) => {
-      if (audioRef.current && details.seekTime !== undefined) audioRef.current.currentTime = details.seekTime;
-    });
+    const handlers: Partial<Record<MediaSessionAction, MediaSessionActionHandler>> = {
+      play: () => { void play(); }, pause, previoustrack: previous, nexttrack: next,
+      seekto: (details) => {
+        if (audioRef.current && details.seekTime !== undefined) audioRef.current.currentTime = details.seekTime;
+      },
+    };
+    for (const [action, handler] of Object.entries(handlers)) {
+      try { mediaSession.setActionHandler(action as MediaSessionAction, handler); }
+      catch { /* Some browsers expose only a subset of Media Session actions. */ }
+    }
     return () => {
       ['play', 'pause', 'previoustrack', 'nexttrack', 'seekto'].forEach((action) => {
         try {
@@ -509,7 +599,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       if (!currentTrack) return;
       if (event.code === 'Space' && !event.altKey) {
         event.preventDefault();
-        if (status === 'playing') pause(); else void play();
+        if (status === 'playing' || status === 'buffering') pause(); else void play();
       } else if (event.altKey && event.key === 'ArrowRight') {
         event.preventDefault();
         next();
@@ -552,10 +642,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, [currentTime, muted, quality, queue, volume]);
 
   const playTrack = useCallback((track: PlayerTrack, replacementQueue?: PlayerTrack[], autoplay = true) => {
+    if (track === currentTrack && !replacementQueue) {
+      if (autoplay) void play(); else pause();
+      return;
+    }
     const tracks = replacementQueue?.filter(isTrack) ?? [track];
     autoplayRef.current = autoplay;
     dispatchQueue({ type: 'replace', tracks, currentTrackId: track.id });
-  }, []);
+  }, [currentTrack, pause, play]);
 
   const contextValue = useMemo<PlayerContextValue>(() => ({
     queue,
@@ -567,7 +661,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     volume,
     muted,
     quality,
-    resolvedQuality: source?.quality ?? null,
+    resolvedQuality,
     playTrack,
     enqueue: (tracks) => dispatchQueue({ type: 'enqueue', tracks: tracks.filter(isTrack) }),
     selectTrack,
@@ -577,7 +671,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       pause();
       dispatchQueue({ type: 'clear' });
     },
-    togglePlayback: () => { if (status === 'playing') pause(); else void play(); },
+    togglePlayback: () => { if (status === 'playing' || status === 'buffering') pause(); else void play(); },
     play,
     pause,
     next,
@@ -598,7 +692,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setRepeat: (mode) => dispatchQueue({ type: 'repeat', mode }),
   }), [
     currentTime, currentTrack, duration, error, muted, next, pause, play, playTrack, previous,
-    quality, queue, selectTrack, source?.quality, status, volume,
+    quality, queue, resolvedQuality, selectTrack, status, volume,
   ]);
 
   return (
