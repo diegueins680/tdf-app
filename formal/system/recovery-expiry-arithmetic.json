@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "1427f603a60bed8c4d0a9bd70d51e9e65bddb7785f50ba798e24d87bc012fafb",
+    "tdf-hq/tdf-hq.cabal": "ffa96645979f3a6953a35088c3319c9c6ad2adbdd45bfef9a203836016d85869",
     "formal/system/identity-lifecycle.md": "59dbd5b2c455d62cee46ddf2a6e0d7f60b1fe6ce6b8bfabcad83ca6cc5ef1a31"
   },
   "obligations": [
@@ -125,6 +125,16 @@
       "change": "Add only the existing TDF.LedgerPostingSpec test registration to protected main. Removing that one exact line reproduces the main manifest byte for byte; all three protected TicketPaymentReceipt registrations remain intact.",
       "semanticReview": "Source search paths, runtime module bindings, dependencies, compiler/CPP options and Stack/lock match protected main. The existing ledger test defines no authorization/recovery module or import override. Auth, Models, RecordsIngestion, ServerAuth and recovery SQL match both parents exactly. Both parent context-review histories and unchanged obligation claims/assumptions are preserved.",
       "qualification": "Fresh source-bound solver/replay, mutation and independent certificate checks remain required. Full implementation/refinement and release obligations remain UNPROVEN."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+      "reviewedTarget": "43b1b4b00715c5564525d7bce1fa838bf6366122",
+      "previousSha256": "1427f603a60bed8c4d0a9bd70d51e9e65bddb7785f50ba798e24d87bc012fafb",
+      "currentSha256": "ffa96645979f3a6953a35088c3319c9c6ad2adbdd45bfef9a203836016d85869",
+      "change": "Register TDF.MusicRelease.CredentialCache in executable/test other-modules and TDF.MusicCredentialCacheSpec in test other-modules only. Removing exactly these three lines reproduces protected main Cabal bytes.",
+      "semanticReview": "No source paths, module aliases, dependencies, extensions, compiler options, CPP flags or Stack/lock changes. The uniquely named middleware imports existing Data.List, Data.Text, Network.HTTP.Types and Network.Wai bindings; it forwards the unchanged request to the unchanged inner application, mapping only response Cache-Control for eight fixed music credential operations. Server.mkApp and App.Boot.wrapApp add this wrapper without changing authContext, handler dispatch, authorization predicates or recovery arithmetic. The new Hspec module exports only spec, has no import override, Template Haskell, CPP, foreign import or unsafePerformIO. Auth, Models, RecordsIngestion, ServerAuth, expiry SQL, identity-lifecycle contract and both translators remain byte-identical to protected main. Conditional claims, domains, assumptions and limitations are unchanged; this is not an HTTP, session, middleware correctness or whole-program refinement proof.",
+      "qualification": "Fresh source-bound solver/replay, mutation and independent certificate checks remain required. Full implementation/refinement and release obligations remain UNPROVEN. Original CI fingerprint rejection is retained; this context review grants no merge, deployment or production authority."
     }
   ]
 }

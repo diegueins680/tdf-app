@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-26T23:10:45.430908+00:00",
+  "base": "d7657f3daf7ee037703a327d840a67e29ac61099",
+  "originalCartGitBlob": "440f1f3255fb013e4e1b21385862aaf6f667a15a",
+  "originalFailure": {
+    "run": 40404888561,
+    "attempt": 1,
+    "testedMerge": "7b33eee0e3f2b95a8f6bb87227dc2aeb865e03b6",
+    "total": 602,
+    "passed": 579,
+    "skipped": 22,
+    "failed": 1,
+    "project": "webkit-iphone",
+    "actionConfirmedByDownloadedTrace": "Final Cerrar carrito click at original line 172:64 remained pending when whole 30s budget expired",
+    "rendererRootCause": "UNVERIFIED",
+    "cartApiCalls": 4,
+    "allCartStatuses": 200,
+    "qualityFailure": "Propagated selected persona failure; not independent cache-runtime failure",
+    "parentArtifactId": 12691896566,
+    "actualParentZipSha256": "75d6a47be209899ba10ce34b28cce4f25d8b2edc2944c8be46458b2bc34e70b9",
+    "traceZipSha256": "d8649d59363d1498059067e2365c76ead7b5a6f59c25ce6562194ce58485f397",
+    "originalQaReceiptSha256": "466a754c340b93a8b0741c92e33436a8d7fd5184cd1a69565eca94f06ce00dbc"
+  },
+  "testCorrection": {
+    "sourceSha256": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
+    "originalAssertionOrLayoutCallsRetained": 44,
+    "insertedLines": 29,
+    "originalLinesDeleted": 0,
+    "caseA": "Genuine UI add, open/close drawer, then actual reload and count/badge/layout checks in that same session",
+    "caseB": "Independent fresh fixture and genuine UI add with successful POST200/cart ID/quantity validation, then reload/removal/empty state",
+    "savedCartFailureCase": "Original outage/recovery unchanged",
+    "scopeChange": "Original full eight-step drawer-cycle/reload/removal composition is now checked through two independent fresh scenarios, not a single same-session chain",
+    "perCaseTimeoutMs": 30000,
+    "retries": 0,
+    "forceClicks": false,
+    "skipsAdded": false,
+    "runtimeProductChanges": false,
+    "renderingFixClaim": false
+  },
+  "localV3": {
+    "actualRootExit": 0,
+    "rootSession": 59763,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "projects": [
+      "chromium-desktop",
+      "chromium-phone",
+      "firefox-critical"
+    ],
+    "durationRangeMs": [
+      3540,
+      12043
+    ],
+    "boundaries": "Synthetic local cart APIs and browser UI; not backend cart/payment provider/cache middleware qualification",
+    "sourceCapture": "Root exact cart prelaunch guard; independent eight-file snapshot occurred during run and matches post-run. Not an eight-file before-run capture.",
+    "v2": "Historical weaker source 99f passed 9 before additional first-case reload; not reused as qualification of finalc86a"
+  },
+  "limitations": {
+    "webKit": "UNVERIFIED local unsupported macOS 12.7.6; failed install log retained, no bypass; fresh candidate hosted WebKit required",
+    "fullCombinedOriginalSession": "No single-chain proof after decomposition",
+    "performance": "Test durations/headroom are local functional observations, not SLO or rendering benchmarks",
+    "oldHeadRerun": false,
+    "waiverOrGateChange": false,
+    "freshExactHeadCi": "PENDING including WebKit",
+    "reviewProtectedMergeDeployment": "PENDING",
+    "cache": "No new45/54 runtime or global proof execution; original43b results and historical 147 proof context remain unchanged / BLOCKED"
+  },
+  "metadata": {
+    "status": "PASS_PRECOMMIT",
+    "metadataTests": {
+      "passed": 36,
+      "failed": 0,
+      "suites": [
+        9,
+        6,
+        10,
+        11
+      ],
+      "rawLogs": {
+        "scripts/test-requirement-declarations.py": {
+          "path": "/private/tmp/tdf-633-cart-ci-refresh-20261026/test-requirement-declarations.py.log",
+          "sha256": "7c758af7411e05fc2e6c4fb89045f7a03d9a5957d5305092903a23a66373d034"
+        },
+        "scripts/test-specification-inventory.py": {
+          "path": "/private/tmp/tdf-633-cart-ci-refresh-20261026/test-specification-inventory.py.log",
+          "sha256": "627b30f92a69309dcd7164c1fac8481d81053255cfdbd99efae1a62cba0af21d"
+        },
+        "scripts/test-specification-conformance.py": {
+          "path": "/private/tmp/tdf-633-cart-ci-refresh-20261026/test-specification-conformance.py.log",
+          "sha256": "3b52bb56c49322209b6df4a784e17228349d9697dabc15b4f240420e17e2369d"
+        },
+        "scripts/test-new-specification-surfaces.py": {
+          "path": "/private/tmp/tdf-633-cart-ci-refresh-20261026/test-new-specification-surfaces.py.log",
+          "sha256": "c4e075983ba48ac0a042522de9678bc051568161c57e3af4d4291dc5a595ad04"
+        }
+      }
+    },
+    "orderedInventoryThenConformanceGeneration": "PASS",
+    "inventoryFreshness": "PASS",
+    "conformanceFreshness": "PASS",
+    "strictCatalog": {
+      "jsonExitCode": 0,
+      "csvExitCode": 0,
+      "candidates": 1341,
+      "csvRows": 1341,
+      "unreviewed": 0,
+      "stale": 0,
+      "completeDecisionsUnchanged": true
+    },
+    "generatedApi": {
+      "result": "PASS",
+      "clients": 2,
+      "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d"
+    },
+    "normative148RequirementsAnd222Manifest": "BYTE_EXACT d765",
+    "sourceAdmissionPrepared": [
+      {
+        "base": "d7657f3daf7ee037703a327d840a67e29ac61099",
+        "mappedChangedSurfaces": [
+          "e2e/web/marketplace-cart.spec.mjs"
+        ],
+        "result": "PASS_WORKING_TREE_PREPARATION"
+      },
+      {
+        "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+        "mappedChangedSurfaces": [
+          "e2e/web/marketplace-cart.spec.mjs",
+          "tdf-hq/src/TDF/App/Boot.hs",
+          "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
+          "tdf-hq/src/TDF/Server.hs",
+          "tdf-hq/tdf-hq.cabal",
+          "tdf-hq/test/MusicCredentialCacheMain.hs",
+          "tdf-hq/test/Spec.hs",
+          "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
+          "tdf-hq/test/TDF/ServerSpec.hs"
+        ],
+        "result": "PASS_WORKING_TREE_PREPARATION"
+      }
+    ],
+    "immutableCommittedAdmission": "PENDING root commit; no immutable-head claim for uncommitted worktree",
+    "all976BackendBytesAndGitModes": "BYTE_EXACT 43b",
+    "allPriorProofPinsHistoryAndPackets": "BYTE_EXACT d765",
+    "cacheRuntimeProofRepeats": 0,
+    "globalAssurance": "Historical147-row execution unchanged; current implementation/refinement UNPROVEN, release BLOCKED",
+    "testOrchestrationPreparation": "Initial private orchestration one-liner had a SyntaxError before any tests; corrected else spacing only, no test/source/gate change."
+  },
+  "archives": {
+    "original": "d765-original-failure.tar.gz",
+    "correction": "cart-test-correction.tar.gz",
+    "full70MbParentZipCommitted": false
+  }
+}

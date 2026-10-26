@@ -143,6 +143,7 @@ executable tdf-hq-exe
     TDF.MusicRelease.Domain
     TDF.MusicRelease.ContentValidation
     TDF.MusicRelease.Money
+    TDF.MusicRelease.CredentialCache
     TDF.MusicRelease.DDEX.ERN432
     TDF.MusicRelease.Storage.S3
     TDF.API.MusicRelease
@@ -356,6 +357,7 @@ test-suite tdf-hq-test
     TDF.MusicPublicationSpec
     TDF.InteractionWriteBudgetSpec
     TDF.MusicPurchaseSpec
+    TDF.MusicCredentialCacheSpec
     TDF.DriveReplaySpec
     TDF.WhatsAppRedeliverySpec
     TDF.CourseIdentitySpec
@@ -524,6 +526,7 @@ test-suite tdf-hq-test
     TDF.MusicRelease.ContentSpec
     TDF.MusicRelease.Storage.S3
     TDF.MusicRelease.Storage.S3Spec
+    TDF.MusicRelease.CredentialCache
     TDF.API.MusicRelease
     TDF.Server.MusicRelease
     TDF.Server.MusicReleaseAssets

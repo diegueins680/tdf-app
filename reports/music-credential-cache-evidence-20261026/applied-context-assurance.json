@@ -1,0 +1,16 @@
+{
+  "recordedAt": "2026-10-26T20:20:10.164016+00:00",
+  "command": "PYTHONPATH=<existing pinned z3/PyYAML site-packages> PYTHONDONTWRITEBYTECODE=1 python3 -B scripts/verification-report.py --output <new owned directory>",
+  "actualCheckout": "/private/tmp/tdf-music-credential-cache-20261026",
+  "head": "43b1b4b00715c5564525d7bce1fa838bf6366122",
+  "formalMetadataDirtyByReviewedPatch": true,
+  "exitCode": 0,
+  "executionPassed": true,
+  "releaseDecision": "BLOCKED",
+  "fullImplementationAndRefinementRequirements": "147 UNPROVEN",
+  "freshSMTInputs": 41,
+  "allInputsByteExactIndependentReviewedCPCInputs": true,
+  "rawReportSha256": "5257b0a28025516c647d124d08920a3765d7fdd170cbccb53c0e56dab99a092a",
+  "independentCertificateReport": "reports/music-credential-cache-formal-context-review-20261026.json",
+  "scope": "Actual applied-context execution, conditional source-derived obligations only; no whole implementation, cache-boundary mathematical proof or production release authorization."
+}
