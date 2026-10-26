@@ -18326,7 +18326,7 @@
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
-        "line": 40
+        "line": 46
       },
       "reviewBatch": "legacy-provider-actions-2026-10-26"
     },

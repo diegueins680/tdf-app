@@ -37,9 +37,15 @@ function classifyPlaybackUrl(raw: string | null | undefined, context: 'release' 
   // YouTube watch/shorts/live URLs. Non-embeddable profile/short-link pages still
   // require an external provider action rather than a native audio source.
   const normalized = normalizeStreamingSource({ url: parsed.href });
+  // Only the explicit content-download shape emitted by the existing Drive
+  // upload adapter belongs to native playback. Other /uc modes are ambiguous
+  // browser/viewer links; do not infer audio from a file ID alone.
+  const driveExports = parsed.searchParams.getAll('export');
+  const driveDownload = parsed.pathname === '/uc' && driveExports.length === 1
+    && driveExports[0] === 'download' && Boolean(parsed.searchParams.get('id')?.trim());
   const provider = normalized?.provider === 'spotify' || providerHost(host, 'spotify.com') || ['spotify.link', 'spoti.fi'].includes(host) ? 'Spotify'
     : normalized?.provider === 'youtube' || providerHost(host, 'youtube.com') || providerHost(host, 'youtu.be') || providerHost(host, 'youtube-nocookie.com') ? 'YouTube'
-      : host === 'drive.google.com' && !(parsed.pathname === '/uc' && parsed.searchParams.get('id')) ? 'Google Drive' : null;
+      : host === 'drive.google.com' && !driveDownload ? 'Google Drive' : null;
   if (provider) return { kind: 'provider', provider, context, url: parsed.href };
   // An artist profile fallback does not identify this selected recording.
   if (context === 'artist') return null;

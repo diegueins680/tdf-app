@@ -210,3 +210,27 @@ describe('contextual release playback actions', () => {
     }
   });
 });
+
+
+describe('Drive native delivery URL contract', () => {
+  it.each([
+    'https://drive.google.com/uc?export=view&id=synthetic',
+    'https://drive.google.com/uc?id=synthetic',
+    'https://drive.google.com/uc?export=download&export=view&id=synthetic',
+    'https://drive.google.com/uc?export=download&id=%20',
+  ])('keeps ambiguous/viewer Drive URL %s outside native playback', (url) => {
+    expect(resolveReleasePlaybackAction(release({ arSpotifyUrl: url }), {})).toMatchObject({
+      kind: 'provider', provider: 'Google Drive', context: 'release',
+    });
+    const dispatchEvent = jest.fn();
+    expect(() => dispatchReleaseToRadio(release(), url, { dispatchEvent })).toThrow();
+    expect(dispatchEvent).not.toHaveBeenCalled();
+  });
+
+  it('retains the existing canonical download builder URL byte for byte', () => {
+    // services/googleDrive.buildPublicContentUrl uses this parameter order,
+    // defaults export to download, and preserves an optional resource key.
+    const url = 'https://drive.google.com/uc?export=download&id=synthetic&resourcekey=example';
+    expect(resolveReleasePlaybackAction(release(), { 42: url })).toEqual({ kind: 'native', url });
+  });
+});

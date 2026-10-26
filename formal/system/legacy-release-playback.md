@@ -31,8 +31,11 @@ base for validation, permits HTTP(S), and rejects explicit non-HTTP schemes and
 URL username/password components. Known provider hosts are checked using host
 boundaries, not arbitrary query text or a hostname substring. Existing streaming
 normalization is reused; host aliases and share/profile pages outside its embed
-normalization are classified as provider navigation. A Drive `/uc` resource with
-an ID remains a native candidate; a Drive HTML/share page is an external action.
+normalization are classified as provider navigation. A Drive `/uc` resource is a
+native candidate only with exactly one `export=download` parameter and a nonblank
+ID, matching the existing direct-content URL builder. Other Drive references use
+an external action conservatively. This does not assert that every view/reference
+is always HTML; those references are not established native-audio endpoints.
 
 Direct resource URL bytes, including signed query strings, are retained where
 already explicitly supplied as HTTP(S) or relative references. Scheme-less
@@ -80,6 +83,7 @@ provider playback, gapless handoff or route continuity in the external tab.
 | Stable release identity, signed direct references and artist attribution | Same helper tests | TESTED command payloads; no decoder or rights acceptance. |
 | Feed action opens a contextual provider dialog/link without native selection | Actual `FanHubPage` and `ReleaseFeed` actions with API/UI dependencies declared as doubles | TESTED rendered JSDOM journey; actual external navigation is prevented. |
 | Dialog opening/cancel preserves global playback state; link activation pauses it | Actual `PlayerProvider` command/state integration with `play/pause/load` doubles | TESTED model of UI commands, not real media or provider playback. |
+| Provider dialog, keyboard link and popup navigation preserve the native-command boundary | Actual desktop Chromium and Pixel 7 browser journeys with wholly locally fulfilled API/provider responses | TESTED four rendered-browser cases on the recorded bundle; no provider network/playback or native decoding. |
 | No premature successful-playback announcement | Rendered `ReleaseFeed` regression | TESTED accessible text, not a complete WCAG audit. |
 | Real native decoding, successful provider playback, production rights and availability | Separate browser/target-environment acceptance | UNVERIFIED by this increment. |
 
@@ -94,8 +98,26 @@ of all audio in the application or device.
 The recorded implementation receipt binds source commit
 `6f9b192cd6d0b4652b9e3342e4e7db392082fd64`: 122 tests in seven suites passed,
 lint on six touched files passed, and TypeScript/Vite/bundle checks passed.
-Native browser decoding was not run. These executions retain their original
-source fingerprints; later integration requires current-candidate checks.
+Native browser decoding was not run. A separate source-bound browser receipt
+records four passing desktop Chromium/Pixel 7 journeys on the actual
+`6f9b192` application bundle. Those historical results precede the later Drive
+`export=download` correction. The browser fixture verifies dialog cancellation,
+contextual artist
+navigation, keyboard activation, 44-pixel link targets, popup URL, null opener,
+absent referrer and takeover/native-command observations. Every provider response
+and API reply is fulfilled locally; no external playback was tested. These
+executions retain their original source fingerprints and bundle hash; later
+integration requires current-candidate checks.
+
+The subsequent Drive correction has a separate working-source receipt at actual
+HEAD `f94a406c53fd2add1183d65d27043c483dfbd7ec`, merge parent
+`3af768dacd95c1223975c62da3ce8088bed89b47`: four expected baseline failures,
+49 passing tests in three current focused suites, lint on the two changed files,
+TypeScript/Vite/bundle checks at 335,240 gzip bytes and five preloads, and four
+refreshed browser cases on `index-CRz9rejh.js`. Only the adapter and its unit test
+changed from the earlier six implementation inputs. This is a dirty-source
+qualification bound by exact source/bundle hashes; it does not relabel the
+historical 122-test run as current or establish a clean-commit/deployment pass.
 
 Reproduce focused checks with the existing frontend tooling:
 

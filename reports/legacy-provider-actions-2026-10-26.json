@@ -67,16 +67,28 @@
     "totalCatalogDecisions": 1332
   },
   "verificationBoundary": {
-    "localSourceHashesVerifiedAgainstReceipt": true,
+    "localSourceHashesVerifiedAgainstReceipt": "Historical6f9 sources verified at metadata checkpointf94; current sources separately verified against Drive correction receipt.",
     "localEvidenceHashesVerifiedAgainstReceipt": true,
     "unitIntegration": "JSDOM actual helper/FanHub/ReleaseFeed/PlayerProvider command-state with declared API/UI/media doubles",
     "nativeRealMedia": "NOT_RUN",
-    "externalLinkNavigation": "Prevented in rendered tests; normal link attributes/event bridge checked",
+    "externalLinkNavigation": "JSDOM navigation prevented; actual Chromium popup navigation wholly intercepted and fulfilled locally in4source-bound browser cases, with noopener/noreferrer and event observations",
     "rightAvailabilityMime": "UNVERIFIED for arbitrary direct HTTP(S) resources",
     "browserFixture": {
       "path": "e2e/web/legacy-provider-playback.spec.mjs",
-      "status": "execution not yet source-bound in this report",
-      "scope": "Rendered browser/provider dialog and locally fulfilled popup navigation; no external provider network or native decoder claim"
+      "sha256": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
+      "passed": 4,
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "actualGitHead": "f94a406c53fd2add1183d65d27043c483dfbd7ec",
+      "actualMergeHead": "3af768dacd95c1223975c62da3ce8088bed89b47",
+      "sourceState": "Dirty source qualification during another owner's in-progress merge, not a clean-commit or release attestation.",
+      "actualBundleSha256": {
+        "index-CRz9rejh.js": "cbb185a497ae5aa6302429800f93f5254e970305a74983745572151008bad872"
+      },
+      "resultsSha256": "cacbe25a5a5a1e8fb6655ceb461e590d94c3783ab9a8e912e80ccc51c8e1f81d",
+      "scope": "Actual dialog/keyboard/popup navigation with wholly local synthetic API/provider responses; no external provider network/playback or native decoder claim"
     },
     "metadataRegressionTests": {
       "passed": 25,
@@ -85,13 +97,14 @@
         "specificationInventory": 6,
         "specificationConformance": 10
       }
-    }
+    },
+    "currentSourceAndEvidenceHashesVerified": true
   },
   "integration": {
     "pr": null,
-    "ci": "not established for final candidate",
+    "ci": "not established for refreshed final candidate",
     "review": "independent review pending",
-    "merge": "not performed",
+    "merge": "Normal main3af source reconciliation; no protected-main merge performed by this task.",
     "deployment": null,
     "productionBusinessWrites": 0,
     "migrations": 0,
@@ -119,7 +132,7 @@
         "reviewed": true,
         "evidence": {
           "file": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
-          "line": 40
+          "line": 46
         },
         "reviewBatch": "legacy-provider-actions-2026-10-26"
       },
@@ -150,13 +163,427 @@
       "candidateCount": 1332,
       "unreviewed": 0,
       "stale": 0,
-      "report": "docs/catalog-persistence/reports/static-list-inventory.json"
+      "report": "docs/catalog-persistence/reports/static-list-inventory.json",
+      "scope": "After browser fixture staging and Drive source correction;7source inputs unchanged before/after audit"
     },
     "noBlanketFixtureExemption": true,
     "strictAuditCsv": {
       "exitCode": 0,
       "candidateRows": 1332,
       "report": "docs/catalog-persistence/reports/list-consumer-matrix.csv"
-    }
+    },
+    "aliasEvidenceLocator": "Updated from historical line40 to current line46 after Drive correction; candidate id, host values and classification unchanged."
+  },
+  "mainRefresh": {
+    "target": "3af768dacd95c1223975c62da3ce8088bed89b47",
+    "fromMetadataCommit": "f94a406c53fd2add1183d65d27043c483dfbd7ec",
+    "method": "normal merge",
+    "requirementsPreservedFromMain": 142,
+    "additionalRequirement": "MEDIA-MUSIC-LEGACY-001",
+    "additionalRequirementUnchangedFrom": "f94a406c53fd2add1183d65d27043c483dfbd7ec",
+    "requirementsTotal": 143,
+    "catalogDecisionsPreservedFromMain": 1330,
+    "additionalTechnicalDecisions": 2,
+    "catalogDecisionsTotal": 1332,
+    "audioImplementationSources": "Main3af adds no audio change; the accompanying Drive correction changes onlyReleasePlayerActions.ts and its test. Other4implementation inputs retain6f9 hashes; current6hashes are recorded separately.",
+    "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "conflicts": [
+      "formal/system/inventory.json",
+      "formal/system/traceability.json"
+    ],
+    "freshness": "Final inventory/traceability generation,check and25metadata regressions; exact main142+legacy143 andmain1330+2catalog1332 preservation checks passed.",
+    "executionScope": "Preceding6f9local unit/build/browser results retain their exact source and bundle identities; no new fullUI execution, target deployment or provider playback implied."
+  },
+  "driveCorrection": {
+    "scope": "Drive host native only if pathname /uc, exactly one export parameter equal to download, and nonblank id; all other Drive links contextual external navigation. Preserve accepted URL bytes/resource keys.",
+    "regressionBaseline": "4 expected failures,31 passes in ReleasePlayerActions before correction",
+    "focusedPassed": 49,
+    "focusedSuites": 3,
+    "lintFiles": 2,
+    "build": {
+      "outcome": "PASS",
+      "initialJsGzipBytes": 335240,
+      "preloads": 5
+    },
+    "browserPassed": 4,
+    "noNativeDecoderProviderRightsAvailabilityClaim": true,
+    "receipt": "/private/tmp/tdf-legacy-drive-qualification-20261026.json",
+    "receiptSha256": "5f8de9ab0409c6da3e00a3281b01a6a8094b878f15b8231147a15274dc1c7743",
+    "changedFromHistorical6f9": [
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts"
+    ]
+  },
+  "historicalBrowserReceipt": {
+    "kind": "actual-browser-legacy-provider-selection-boundary",
+    "applicationCommit": "6f9b192cd6d0b4652b9e3342e4e7db392082fd64",
+    "sixImplementationFilesUnchangedFromImplementationReceipt": true,
+    "testPath": "/private/tmp/tdf-legacy-audio-links-20261026/e2e/web/legacy-provider-playback.spec.mjs",
+    "testSha256": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
+    "resultsPath": "/private/tmp/tdf-legacy-provider-browser-final/results.json",
+    "resultsSha256": "9b2708cf19744e0d9845a42e4c2cc3ccc718eec19f2bacaa70a9a45af1e470e6",
+    "actualBundleSha256": {
+      "index-elbjHYrn.js": "827a141b8161cd99f11698d9d90237c110d1de3ddc857cf15fd73a736292334a"
+    },
+    "observations": [
+      {
+        "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+        "project": "chromium-desktop",
+        "status": "passed",
+        "durationMs": 4463,
+        "fixtureBoundary": {
+          "providerUrl": "https://open.spotify.com/track/synthetic-release",
+          "releaseReads": 1,
+          "unexpectedMutations": [],
+          "deniedExternal": [
+            {
+              "origin": "https://open.spotify.com",
+              "resourceType": "document"
+            }
+          ],
+          "providerNavigations": [
+            {
+              "url": "https://open.spotify.com/track/synthetic-release",
+              "referer": null
+            }
+          ],
+          "declaredReconciliations": [
+            "/session/onboarding/reconcile"
+          ],
+          "loadedEntries": [
+            "http://127.0.0.1:4218/assets/index-elbjHYrn.js"
+          ],
+          "observed": {
+            "commands": [],
+            "takeovers": [
+              3177.899999976158
+            ]
+          },
+          "limitation": "Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence."
+        }
+      },
+      {
+        "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+        "project": "chromium-desktop",
+        "status": "passed",
+        "durationMs": 3184,
+        "fixtureBoundary": {
+          "providerUrl": "https://www.youtube.com/channel/synthetic-artist",
+          "releaseReads": 1,
+          "unexpectedMutations": [],
+          "deniedExternal": [],
+          "providerNavigations": [],
+          "declaredReconciliations": [
+            "/session/onboarding/reconcile"
+          ],
+          "loadedEntries": [
+            "http://127.0.0.1:4218/assets/index-elbjHYrn.js"
+          ],
+          "observed": {
+            "commands": [],
+            "takeovers": []
+          },
+          "limitation": "Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence."
+        }
+      },
+      {
+        "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+        "project": "chromium-phone",
+        "status": "passed",
+        "durationMs": 4037,
+        "fixtureBoundary": {
+          "providerUrl": "https://open.spotify.com/track/synthetic-release",
+          "releaseReads": 1,
+          "unexpectedMutations": [],
+          "deniedExternal": [
+            {
+              "origin": "https://open.spotify.com",
+              "resourceType": "document"
+            }
+          ],
+          "providerNavigations": [
+            {
+              "url": "https://open.spotify.com/track/synthetic-release",
+              "referer": null
+            }
+          ],
+          "declaredReconciliations": [
+            "/session/onboarding/reconcile"
+          ],
+          "loadedEntries": [
+            "http://127.0.0.1:4218/assets/index-elbjHYrn.js"
+          ],
+          "observed": {
+            "commands": [],
+            "takeovers": [
+              2728.7000000476837
+            ]
+          },
+          "limitation": "Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence."
+        }
+      },
+      {
+        "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+        "project": "chromium-phone",
+        "status": "passed",
+        "durationMs": 3972,
+        "fixtureBoundary": {
+          "providerUrl": "https://www.youtube.com/channel/synthetic-artist",
+          "releaseReads": 1,
+          "unexpectedMutations": [],
+          "deniedExternal": [],
+          "providerNavigations": [],
+          "declaredReconciliations": [
+            "/session/onboarding/reconcile"
+          ],
+          "loadedEntries": [
+            "http://127.0.0.1:4218/assets/index-elbjHYrn.js"
+          ],
+          "observed": {
+            "commands": [],
+            "takeovers": []
+          },
+          "limitation": "Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence."
+        }
+      }
+    ],
+    "initialHarnessFailures": {
+      "receipt": "/private/tmp/tdf-legacy-provider-browser-initial-failure.json",
+      "results": "/private/tmp/tdf-legacy-provider-browser-initial-results.json",
+      "log": "/private/tmp/tdf-legacy-provider-browser-initial-failure.log"
+    },
+    "limits": [
+      "Synthetic account/release/provider destination data, all API replies local.",
+      "No provider network or actual external playback evidence.",
+      "No native media decoder claim and no media methods/clocks replaced.",
+      "Existing onboarding reconciliation POST explicitly locally fulfilled with unchanged completion receipt; no production mutation."
+    ],
+    "sourceEditsByThisBrowserTask": [
+      "e2e/web/legacy-provider-playback.spec.mjs"
+    ]
+  },
+  "historicalBrowserReceiptSha256": "d25a4ede682bed4f0f11b6845ce43c006bd7da9ade82fe863523a413eba7540b",
+  "currentQualificationReceipt": {
+    "kind": "dirty-source-drive-native-boundary-qualification",
+    "qualifiedAtUtc": "2026-10-26T05:41:13.175999+00:00",
+    "worktree": "/private/tmp/tdf-legacy-audio-links-20261026",
+    "actualGitHead": "f94a406c53fd2add1183d65d27043c483dfbd7ec",
+    "actualMergeHead": "3af768dacd95c1223975c62da3ce8088bed89b47",
+    "sourceState": "Dirty source qualification during another owner's in-progress merge, not a clean-commit or release attestation.",
+    "sourceSha256": {
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "67c0980c3268cc54bda54b7ee871d8345a79d754b1e100e6c98f18340b1f1b68",
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": "c5ad21fcffed6f6d4096788ddfafef44cbdcf3b693dc6c9c37b1012e871c0faf",
+      "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx": "8efc3df3b7c1cb37c6a8c0c670b46f83099015634afa19d64a104d4beb11a1fa",
+      "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx": "5025c515898d64cf45433b275f81d8752d8f4b1c46ad3b7b82899ceccfa4ebb5",
+      "tdf-hq-ui/src/pages/FanHubPage.tsx": "e7bbd53c926c611a74a64883edc1a433faabd183234c2d0e90dfb564b62b848c",
+      "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d"
+    },
+    "changedFromHistorical6f9": [
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts"
+    ],
+    "policy": "Drive host native only if pathname /uc, exactly one export parameter equal to download, and nonblank id; all other Drive links contextual external navigation. Preserve accepted URL bytes/resource keys.",
+    "verification": {
+      "regressionBaseline": "4 expected failures,31 passes in ReleasePlayerActions before correction",
+      "currentFocused": "49/49 PASS in3suites: ReleaseActions,ReleaseFeed,FanHub playback",
+      "currentLint": "2 changed files PASS",
+      "currentBuild": "TypeScript,Vite,bundle gate PASS,335240 bytes gzip initialJS,5preloads",
+      "currentBrowser": "4/4 PASS chromiumdesktop+Pixel7,0skips/retries,syntheticAPI/provider navigation only",
+      "browserResultsPath": "/private/tmp/tdf-legacy-provider-browser-drive/results.json",
+      "browserResultsSha256": "cacbe25a5a5a1e8fb6655ceb461e590d94c3783ab9a8e912e80ccc51c8e1f81d",
+      "browserTestSha256": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
+      "browserObservations": [
+        {
+          "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 3298,
+          "boundary": {
+            "providerUrl": "https://open.spotify.com/track/synthetic-release",
+            "releaseReads": 1,
+            "unexpectedMutations": [],
+            "deniedExternal": [
+              {
+                "origin": "https://open.spotify.com",
+                "resourceType": "document"
+              }
+            ],
+            "providerNavigations": [
+              {
+                "url": "https://open.spotify.com/track/synthetic-release",
+                "referer": null
+              }
+            ],
+            "declaredReconciliations": [
+              "/session/onboarding/reconcile"
+            ],
+            "loadedEntries": [
+              "http://127.0.0.1:4218/assets/index-CRz9rejh.js"
+            ],
+            "observed": {
+              "commands": [],
+              "takeovers": [
+                2433.9000000953674
+              ]
+            },
+            "limitation": "Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence."
+          }
+        },
+        {
+          "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+          "project": "chromium-desktop",
+          "status": "passed",
+          "durationMs": 2453,
+          "boundary": {
+            "providerUrl": "https://www.youtube.com/channel/synthetic-artist",
+            "releaseReads": 1,
+            "unexpectedMutations": [],
+            "deniedExternal": [],
+            "providerNavigations": [],
+            "declaredReconciliations": [
+              "/session/onboarding/reconcile"
+            ],
+            "loadedEntries": [
+              "http://127.0.0.1:4218/assets/index-CRz9rejh.js"
+            ],
+            "observed": {
+              "commands": [],
+              "takeovers": []
+            },
+            "limitation": "Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence."
+          }
+        },
+        {
+          "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 3212,
+          "boundary": {
+            "providerUrl": "https://open.spotify.com/track/synthetic-release",
+            "releaseReads": 1,
+            "unexpectedMutations": [],
+            "deniedExternal": [
+              {
+                "origin": "https://open.spotify.com",
+                "resourceType": "document"
+              }
+            ],
+            "providerNavigations": [
+              {
+                "url": "https://open.spotify.com/track/synthetic-release",
+                "referer": null
+              }
+            ],
+            "declaredReconciliations": [
+              "/session/onboarding/reconcile"
+            ],
+            "loadedEntries": [
+              "http://127.0.0.1:4218/assets/index-CRz9rejh.js"
+            ],
+            "observed": {
+              "commands": [],
+              "takeovers": [
+                2344.6999999284744
+              ]
+            },
+            "limitation": "Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence."
+          }
+        },
+        {
+          "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+          "project": "chromium-phone",
+          "status": "passed",
+          "durationMs": 2598,
+          "boundary": {
+            "providerUrl": "https://www.youtube.com/channel/synthetic-artist",
+            "releaseReads": 1,
+            "unexpectedMutations": [],
+            "deniedExternal": [],
+            "providerNavigations": [],
+            "declaredReconciliations": [
+              "/session/onboarding/reconcile"
+            ],
+            "loadedEntries": [
+              "http://127.0.0.1:4218/assets/index-CRz9rejh.js"
+            ],
+            "observed": {
+              "commands": [],
+              "takeovers": []
+            },
+            "limitation": "Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence."
+          }
+        }
+      ],
+      "actualBundleSha256": {
+        "index-CRz9rejh.js": "cbb185a497ae5aa6302429800f93f5254e970305a74983745572151008bad872"
+      }
+    },
+    "evidenceSha256": {
+      "/private/tmp/tdf-legacy-drive-boundary-negative.log": "aa26f6bdf07adf100b37dec5527fa833c1019eaad5aeb045a8b73b62451e387c",
+      "/private/tmp/tdf-legacy-drive-boundary-positive.log": "357b3b283569b326ed26714f97e060e02b32d404ab6452a0ac36b1927f1a29df",
+      "/private/tmp/tdf-legacy-drive-build-final.log": "9027ffd4d996c84a447d2c951c49022f6ea2649f33388d8140f17518a6857cb7",
+      "/private/tmp/tdf-legacy-drive-lint-final.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "/private/tmp/tdf-legacy-provider-browser.log": "25f1e356ba55f2cbc460ac42bc337356869e9b0ce4a112966bd36d737a93536a"
+    },
+    "historicalReceiptsPreserved": [
+      "/private/tmp/tdf-legacy-audio-implementation-receipt.json",
+      "/private/tmp/tdf-legacy-provider-browser-receipt.json"
+    ],
+    "limits": [
+      "Conservative endpoint shape classification, not proof of Google Drive bytes, rights, or availability.",
+      "export=view and unspecified/duplicate export modes are ambiguous here; no claim every such URL always returns HTML.",
+      "No real provider requests, real production business writes, or actual external playback.",
+      "Current49tests and4browser journeys must not relabel the historical6f9 full122-test run."
+    ],
+    "primaryContractReference": "https://developers.google.com/workspace/drive/api/guides/manage-downloads",
+    "sourceFilesEditedByThisCorrection": [
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts"
+    ],
+    "stagingOrCommitByThisCorrection": false
+  },
+  "currentQualificationReceiptSha256": "5f8de9ab0409c6da3e00a3281b01a6a8094b878f15b8231147a15274dc1c7743",
+  "currentSourceSha256": {
+    "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "67c0980c3268cc54bda54b7ee871d8345a79d754b1e100e6c98f18340b1f1b68",
+    "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": "c5ad21fcffed6f6d4096788ddfafef44cbdcf3b693dc6c9c37b1012e871c0faf",
+    "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx": "8efc3df3b7c1cb37c6a8c0c670b46f83099015634afa19d64a104d4beb11a1fa",
+    "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx": "5025c515898d64cf45433b275f81d8752d8f4b1c46ad3b7b82899ceccfa4ebb5",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "e7bbd53c926c611a74a64883edc1a433faabd183234c2d0e90dfb564b62b848c",
+    "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d"
+  },
+  "currentQualificationScope": "Dirty working-source qualification at actualHEADf94/MERGE_HEAD3af; source hashes and built bundle bound by receipt, not a clean-commit or deployment attestation.",
+  "metadataValidation": {
+    "capture": "Actual final metadata test output from tool session11435; original per-command stdout was not separately persisted to disk. These are transcribed output excerpts, not fresh process executions.",
+    "scope": "Working source during normal main3af merge, after Drive correction and final doc/report content; not compiled HTTP/source-admission or new-specification-surfaces execution.",
+    "totalPassed": 25,
+    "commands": [
+      {
+        "command": "python3 scripts/test-requirement-declarations.py",
+        "passed": 9,
+        "exitCode": 0,
+        "outputExcerpt": "Ran 9 tests in 0.004s\nOK"
+      },
+      {
+        "command": "python3 scripts/test-specification-inventory.py",
+        "passed": 6,
+        "exitCode": 0,
+        "outputExcerpt": "Ran 6 tests in 13.848s\nOK"
+      },
+      {
+        "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+        "passed": 10,
+        "exitCode": 0,
+        "outputExcerpt": "Ran 10 tests in 6.811s\nOK"
+      }
+    ],
+    "notCountedAsExecutedHere": [
+      "scripts/test-new-specification-surfaces.py"
+    ],
+    "freshness": [
+      "specification-inventory.py --check PASS",
+      "specification-conformance.py --check PASS",
+      "git diff --cached --check PASS"
+    ],
+    "proofStatus": "No mathematical proof or source-to-model refinement claim."
   }
 }
