@@ -69,3 +69,19 @@ campaign or preference and sends nothing. Before any delivery, rollback restores
 the recorded notification/view authorities and prior public-listable capability,
 retains data, disables campaigns and removes the dispatch function. After delivery
 or an authority successor it refuses; use a reviewed forward repair.
+
+
+## Native publication confirmation and ownership
+
+The native image/video client validates a persisted ID and supported media before
+acknowledging publication. HTML, missing identity and a supplied different event
+are errors, never synthetic remote IDs. Reactions/comments validate their source;
+legacy responses may omit optional parent/event IDs. This is response-shape
+validation, not a proof of storage commit or general request idempotency.
+
+Reuse the native session version, usePartyOwnership and AuthQueryBoundary. A
+publication captures event, actor, mode, query key and owner predicate in mutation
+variables. Recheck before upload/create and after asynchronous results; an old
+response cannot restore its caption over a new draft. A→B→A does not revive the
+old session occurrence. Key event content by route event to retire the previous
+editor. Native audio/text and physical-device acceptance remain unavailable.

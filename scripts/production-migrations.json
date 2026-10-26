@@ -1095,6 +1095,11 @@
       "id": "2026-10-25_event_memory_source_moderation",
       "path": "tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql",
       "introducedBy": "3bb05ecd777a7243da6d60af0717044b15b59c41"
+    },
+    {
+      "id": "2026-10-25_event_memory_source_authorization",
+      "path": "tdf-hq/sql/2026-10-25_event_memory_source_authorization.sql",
+      "introducedBy": "c6ecae133a93b6bab93c84cee4d72290f9e28982"
     }
   ]
 }

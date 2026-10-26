@@ -20,7 +20,7 @@ opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
 runtime_paths=['tdf-hq/src/TDF/API/SocialEventsAPI.hs','tdf-hq/src/TDF/DTO/SocialEventsDTO.hs',
  'tdf-hq/src/TDF/Server/SocialEventsHandlers.hs','tdf-hq/src/TDF/Interactions/Notifications.hs',
  'tdf-hq/sql/2026-10-25_event_memory_invitations.sql','scripts/test-event-memories-http.py']
-if a.source_moderation:runtime_paths+=['tdf-hq/src/TDF/Interactions/API.hs','tdf-hq/src/TDF/Interactions/Server.hs','tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql']
+if a.source_moderation:runtime_paths+=['tdf-hq/src/TDF/Interactions/API.hs','tdf-hq/src/TDF/Interactions/Server.hs','tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql','tdf-hq/sql/2026-10-25_event_memory_source_authorization.sql']
 if a.browser:runtime_paths+=['scripts/test-event-memory-source-browser.mjs','tdf-hq-ui/src/components/events/EventMemoryModeration.tsx','tdf-hq-ui/src/api/eventMemoryModeration.ts','tdf-hq-ui/src/pages/SocialEventDetailPage.tsx']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/api/socialEvents.ts','tdf-hq-ui/src/api/client.ts','tdf-hq-ui/src/api/eventMemoryInvitations.ts']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/session/useSessionOwner.ts','tdf-hq-ui/src/session/useOwnedSessionDraft.ts','tdf-hq-ui/src/session/authEvents.ts','tdf-hq-ui/src/session/SessionContext.tsx','tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx','tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts']
@@ -190,6 +190,21 @@ def source_checks(owner,owner_token,participant,participant_token,source_moment)
  sql(f"UPDATE party_security_role p SET active=false FROM security_role r WHERE p.role_id=r.id AND p.party_id={owner} AND r.code='admin'")
  command(owner_token,remove,expected=(401,403))
  assert sql(f"SELECT source_moderation_state FROM event_moment WHERE id={ident}")=='visible'
+ # SQL NULL is not organizer authority, including a formerly authorized replay.
+ sql(f'UPDATE social_event SET organizer_party_id=NULL WHERE id={event}')
+ current=summary(participant_token);controls=current['sourceModeration']
+ assert all(controls[name] is False for name in ('canHide','canRestore','canRemove'))
+ assert request(f'/interactions/reports?sourceEvent={event}',participant_token)[0]=={'supported':True,'canReview':False,'items':[],'nextCursor':None}
+ audit_before=int(sql(f"SELECT count(*) FROM interaction_audit WHERE target_id='{target}'"))
+ for operation in ('source.hide','source.restore','source.remove','source.report.resolve'):
+  denied={'operation':operation,'reason':'Synthetic unassigned authority attempt','expectedVersion':current['version'],'expectedSourceRevision':controls['sourceRevision']}
+  if operation=='source.report.resolve':denied['decision']='dismissed'
+  command(participant_token,denied,expected=403)
+ command(owner_token,hide,hide_key,expected=403)
+ assert sql(f"SELECT source_moderation_state FROM event_moment WHERE id={ident}")=='visible'
+ assert int(sql(f"SELECT count(*) FROM interaction_audit WHERE target_id='{target}'"))==audit_before
+ sql(f"UPDATE social_event SET organizer_party_id='{owner}' WHERE id={event}")
+ record('Actual HTTP denies ownerless review/enforcement and former-organizer replay without effects')
  request(moment_path,owner_token,method='DELETE',expected=204)
  assert sql(f"SELECT retired_at IS NOT NULL FROM interaction_target WHERE id='{target}'")=='t'
  record('Actual private-parent denial, live moderator-role revocation and author deletion preserve scoped enforcement')
@@ -200,7 +215,10 @@ try:
  apply(root/'scripts/__tests__/fixtures/catalog-production-source-fixture.sql')
  batch=run(['node','scripts/render-production-migration-batch.mjs']);(out/'migrations.sql').write_bytes(batch);apply(out/'migrations.sql')
  if sql("SELECT to_regprocedure('event_memory_dispatch_batch(integer)') IS NULL")=='t':apply(root/'tdf-hq/sql/2026-10-25_event_memory_invitations.sql')
- if a.source_moderation:apply(root/'tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql')
+ if a.source_moderation:
+  if sql("SELECT to_regprocedure('event_memory_source_command(bigint,uuid,uuid,jsonb)') IS NULL")=='t':apply(root/'tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql')
+  apply(root/'tdf-hq/sql/2026-10-25_event_memory_source_authorization.sql')
+ authority_after_install=sql("SELECT jsonb_object_agg(signature,md5(pg_get_functiondef(signature::regprocedure))) FROM (SELECT signature FROM event_memory_moderation_authority UNION SELECT unnest(ARRAY['event_memory_source_context(uuid,bigint)','event_memory_source_reports(bigint,bigint,uuid,integer)','event_memory_source_command(bigint,uuid,uuid,jsonb)'])) definitions") if a.source_moderation else None
  start();report['actualVersion']=request('/version')[0]
  assert request('/session')[0] is None
  record('Actual anonymous session follows the nullable HTTP 200 response contract')
@@ -291,7 +309,7 @@ try:
  if a.source_moderation:
   refused=subprocess.run(['psql',*routing,'-d',db,'-Xq','-v','ON_ERROR_STOP=1','-f',str(root/'tdf-hq/sql/2026-10-25_event_memory_source_moderation_rollback.sql')],cwd=root,env=env,capture_output=True,timeout=30)
   assert refused.returncode!=0 and b'Retain source moderation authority after evidence' in refused.stderr
-  assert sql('SELECT bool_and(md5(pg_get_functiondef(signature::regprocedure))=installed_digest) FROM event_memory_moderation_authority')=='t'
+  assert sql("SELECT jsonb_object_agg(signature,md5(pg_get_functiondef(signature::regprocedure))) FROM (SELECT signature FROM event_memory_moderation_authority UNION SELECT unnest(ARRAY['event_memory_source_context(uuid,bigint)','event_memory_source_reports(bigint,bigint,uuid,integer)','event_memory_source_command(bigint,uuid,uuid,jsonb)'])) definitions")==authority_after_install
   record('Source rollback refuses after actual committed evidence and retains all installed privacy authorities')
  if a.browser:
   # Explicit synthetic fan grants for the actual product UI, never production.

@@ -52,3 +52,25 @@ model or an actor without a session is not a substitute for the HTTP boundary.
 Pilot fact: Diego confirmed in this conversation that event 141 took place and
 finished. Its production lifecycle must only be corrected once completed public
 events remain readable in the deployed system; consent stays a separate gate.
+
+
+## Absent organizer and explicit authority
+
+A NULL organizer is absence of authority. Normalize organizer/moderator flags to
+false and reject permission/access predicates unless explicitly true, before
+request replay and before source effects. Ordinary readers retain reporting,
+but receive no review rows/reasons and cannot hide, restore, remove or resolve
+source reports. Setting a former organizer to NULL revokes recorded replay.
+
+Migration 216 is an immutable forward repair of migration 215. It checks exact
+predecessor/repaired function bodies, language, volatility and invoker/config
+attributes before replacing the same functions and retaining their OIDs. Unknown
+successors are refused. The public command wrapper records the successor so the
+215 reapply/rollback guard cannot silently restore nullable authorization. The
+repair retains all content, reports, request keys, audit and captured authorities;
+recovery must retain the repair or use another reviewed forward repair.
+
+The actual-schema regression first observes an unauthorized synthetic hide on
+the predecessor, then verifies denial without effects, false capability flags,
+private review rows, legitimate scoped moderation and former-organizer replay
+revocation. Its fixtures roll back; HTTP, CI and production are separate scopes.

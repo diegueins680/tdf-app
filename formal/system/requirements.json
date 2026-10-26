@@ -12019,7 +12019,8 @@
         "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx",
         "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-        "tdf-hq/docs/openapi/interactions.yaml"
+        "tdf-hq/docs/openapi/interactions.yaml",
+        "tdf-hq/sql/2026-10-25_event_memory_source_authorization.sql"
       ],
       "tests": [
         "tdf-hq/test/integration/event_memory_source_moderation.sql",
@@ -12029,7 +12030,8 @@
         "tdf-hq-ui/src/api/eventMemoryModeration.test.ts",
         "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "tdf-hq/test/integration/event_memory_source_null_organizer.sql"
       ],
       "formalModels": [],
       "verification": "Executed full-schema SQL with replay, rollback and negative control; actual authenticated HTTP including simultaneous decisions, committed-evidence rollback refusal, desktop/phone browser persistence; no complete refinement, physical-device or production claim."
