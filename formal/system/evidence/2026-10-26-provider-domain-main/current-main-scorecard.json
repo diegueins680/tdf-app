@@ -1,0 +1,118 @@
+{
+  "source": "03713890ccd6c2a4a94c83cfe997ac7f5a61b8d8",
+  "protectedMain": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "requirements": {
+    "total": 148,
+    "critical": 118,
+    "financialCritical": 20,
+    "authorizationCritical": 12,
+    "countingRule": "Critical means risk P0; financial and authorization counts use PAY and AUTH interfaceBoundary, respectively."
+  },
+  "completeRequirementProofMetrics": {
+    "requirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 148,
+      "NOT_APPLICABLE": 0
+    },
+    "requirementsWithDeclaredAmbiguityEntries": 137,
+    "obligationsByCategory": {
+      "implementation": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 148,
+        "NOT_APPLICABLE": 0
+      },
+      "refinement": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 148,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-authorization-SMT": {
+        "PROVEN": 3,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-recovery-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      }
+    }
+  },
+  "providerQualification": {
+    "requirement": "PAY-DOMAIN-BINDING-001",
+    "assurance": "TESTED",
+    "modelChecking": "UNKNOWN",
+    "wholeImplementationEquivalence": "UNPROVEN",
+    "migrationCount": 223,
+    "matrixCases": 224,
+    "witnessedRaces": 16,
+    "databaseMutationControls": 10,
+    "commercialSnapshotCases": 4,
+    "compiledDiscoveredCases": 317,
+    "compiledExecutedCases": 317,
+    "compiledFailures": 0,
+    "compiledPending": 0,
+    "businessAdmissionDefectsCorrectedInCandidate": 1,
+    "businessDomains": 4,
+    "newProviderRails": 2
+  },
+  "providerQualificationSource": "cb7773790f15099933b92b184cfb50d7cf20c8aa",
+  "currentCompositionNativeQualification": "REQUIRED: current-head hosted CI; two inherited backend modules changed",
+  "repositoryQuality": {
+    "command": "npm run quality:repo",
+    "exitCode": 0,
+    "source": "03713890ccd6c2a4a94c83cfe997ac7f5a61b8d8",
+    "log": "protected-main-assurance-artifacts.tar.gz/repository-quality.log"
+  },
+  "ledgerDelivery": {
+    "pr": 621,
+    "state": "MERGED",
+    "mergeCommit": "78fa351b469c1d2031df3232204dd722ac480e3b",
+    "reviewedHead": "950c3f7c3f341cd05a48c237e7377cca66e35188",
+    "independentReviewer": "tdfrecords",
+    "successfulOrSkippedStatuses": 41
+  },
+  "providerDelivery": {
+    "pr": 596,
+    "stateAtMeasurement": "DRAFT",
+    "remainingGates": [
+      "publish final head",
+      "fresh compiled current-head CI",
+      "independent current-head approval",
+      "latest-main compatibility",
+      "protected FIFO admission",
+      "normal merge preserving SQL introduction ancestry"
+    ]
+  },
+  "verificationSystem": {
+    "optimizedHarnessFalseAcceptCounterexamples": 3,
+    "resolvedInCandidate": 3,
+    "optimizationSensitiveChecksRepaired": 22,
+    "helperControlsNormal": 4,
+    "helperControlsOptimized": 4,
+    "initialFullSchemaFailureCases": 3,
+    "fixturePreconditionsCorrected": 3,
+    "newUnpaidRefundCase": 1,
+    "accidentalReportSourceDriftDetected": true,
+    "emptyDiscoveryDefaultExit": 0,
+    "emptyDiscoveryFailOnEmptyExit": 1
+  },
+  "backlog": [
+    "Fresh final-head full-schema hosted checks and independent review; normal merge preserving456be073c944dd3d76eb9e3c2169fe7fbb4041ef.",
+    "Full SQL/application refinement, arbitrary schedules, provider/merchant environment correspondence and real external charge idempotency remain unresolved.",
+    "Review runtime privileges, function namespace policy, authorization changes, settlement recovery and provider webhook authenticity beyond this admission boundary."
+  ],
+  "productionOperations": false,
+  "scopeNotice": "No full requirement or implementation/refinement proof established. Conditional SMT and historical native results retain exact source scopes. Evidence publication does not qualify a later source revision."
+}

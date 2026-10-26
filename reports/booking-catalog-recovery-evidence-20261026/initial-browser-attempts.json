@@ -1,0 +1,30 @@
+[
+  {
+    "attempt": "browser-first-attempt",
+    "stats": {
+      "startTime": "2026-10-26T22:51:30.154Z",
+      "duration": 148912.163,
+      "expected": 0,
+      "skipped": 0,
+      "unexpected": 8,
+      "flaky": 0
+    },
+    "reason": "Combobox accessible name includes the selected service; exact Servicio selector did not match.",
+    "appCodeChanged": false,
+    "testSnapshotSha256": "5c70b70cb825459b6620c7c04b64fa4668ea95c955f1a4a9673fd32df6c1c022"
+  },
+  {
+    "attempt": "browser-second-attempt",
+    "stats": {
+      "startTime": "2026-10-26T22:54:43.158Z",
+      "duration": 161165.077,
+      "expected": 0,
+      "skipped": 0,
+      "unexpected": 8,
+      "flaky": 0
+    },
+    "reason": "The required date/time HTML label includes its required marker; exact label selector did not match the observed field.",
+    "appCodeChanged": false,
+    "testSnapshotSha256": "30aa1a28690324972186506287c0cae04ece1165dc40931e772a7f9bf73bca12"
+  }
+]

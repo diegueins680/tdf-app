@@ -1,0 +1,75 @@
+{
+  "observedAt": "2026-10-26T23:00:43.361857+00:00",
+  "branch": "fix/studio-booking-catalog-retry-20261026",
+  "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "problem": "A failed or empty public service catalog disables the form but the prior notice has no retry action. Reloading is the only explicit recovery.",
+  "scope": "BOOK-SERVICE-PICKER-001 is explicitly extended with actionable in-page recovery. All 146 other requirement objects and the outer register metadata are preserved. All 1341 catalog decisions are unchanged; only two generated consumer rows gain this test association. Backend/API/SQL/dependency/Mobile inputs are unchanged. Gallery PR628 source and review are untouched.",
+  "measuredFrequency": null,
+  "activationOrConversionImpactMeasured": false,
+  "qualification": {
+    "node": "22.14.0",
+    "focusedComponentTests": 16,
+    "priorNewTestsNegativeControl": {
+      "expectedFailures": 2,
+      "reason": "Reintentar catálogo button absent from original implementation"
+    },
+    "types": "PASS",
+    "scopedLint": "PASS",
+    "optimizedBuild": "PASS",
+    "gzipInitialJsBytes": 336473,
+    "preloads": 5,
+    "localBrowserCases": 8,
+    "localBrowserStats": {
+      "startTime": "2026-10-26T22:58:27.742Z",
+      "duration": 77765.86600000001,
+      "expected": 8,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "catalogCandidates": 1341,
+    "catalogUnreviewed": 0,
+    "catalogStale": 0,
+    "catalogControls": 8,
+    "inventory": "PASS",
+    "traceability": "PASS"
+  },
+  "executionIdentity": {
+    "checkoutHeadDuringLocalRuns": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "state": "Working tree includes the exact implementation/test bytes hashed below; this was not a clean committed-main execution. These material inputs will be checked against the published candidate.",
+    "materialInputsSha256": {
+      "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "6abc794d19484430b8e0b53da892826b80a20fefbb30c69f8ea0fccfb632be5b",
+      "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "caef6efc2017f76bfbc27eb6a1dbed146b016ac2d197cd4911e5c3fefd000293",
+      "e2e/web/booking-catalog-recovery.spec.mjs": "35a6fce88f2aad114112a9dd633cdb4d160b0032461bfb0215febd91666c4dbe"
+    },
+    "builtEntry": "/assets/index-BAHkF5q7.js",
+    "builtEntrySha256": "2d7537b3af77a0920af76d123d4ed9a1382768fe904156494410256544164294",
+    "builtBookingChunk": "/assets/PublicBookingPage-BspOnEmz.js",
+    "builtBookingChunkSha256": "cbd27e102ef9b3a9c2838ecfd4be3a461c8cbc938f256d588835bd909c168026"
+  },
+  "browserAttempts": "reports/booking-catalog-recovery-evidence-20261026/initial-browser-attempts.json",
+  "evidence": "reports/booking-catalog-recovery-evidence-20261026/",
+  "delivery": {
+    "implemented": true,
+    "testedLocally": true,
+    "merged": false,
+    "productionDeployed": false,
+    "productionVerified": false
+  },
+  "limits": [
+    "Error and empty responses are synthetic reproductions, not evidence of an actual production outage.",
+    "No backend/DB persistence, provider payment, physical device or human task-completion validation. No conversion benefit is claimed.",
+    "Local browsers are Chromium desktop, Pixel 7 emulation, 360px Android Chrome emulation and Firefox. WebKit and full hosted CI remain separate required checks.",
+    "Scoped axe covers the new warning/button. This does not establish whole-page WCAG conformance."
+  ],
+  "evidenceSha256": {
+    "reports/booking-catalog-recovery-evidence-20261026/before.json": "a7c4cb62e2126bd0c1bc412e3c66db8c1a52e6a2e1ce0dd31caf44a00ad30451",
+    "reports/booking-catalog-recovery-evidence-20261026/initial-browser-attempts.json": "0fac7790b7b44ffa19e37c6bb0fc7adaa0d9417a238689ad6e34b41ddd4e58fb",
+    "reports/booking-catalog-recovery-evidence-20261026/REPLAY.txt": "ee6c872a8ab46fb10d37175b4a941138cd96e2e71d122a3cb201ad5797cba49f",
+    "reports/booking-catalog-recovery-evidence-20261026/recovered-phone.png": "c7f9d20e4f64d63fbfd8e3eaaab7ec14c5470e7b48c9eb6da535448bacc3142d",
+    "reports/booking-catalog-recovery-evidence-20261026/recovered-desktop.png": "7fbcd861717630f3a7428aacfb52f1acc52dbfc99baa956a9578c3c134b1a1d5",
+    "reports/booking-catalog-recovery-evidence-20261026/browser-results.json": "16a224143042140df6abdb7228da4c1e56294e05bc16150a61b68b0dc3834d80",
+    "reports/booking-catalog-recovery-evidence-20261026/verify-before.mjs": "d2eb2113fa097f4ddebf43ff7b7200b106089b9b58714e6f38bfbd116fc40f4d",
+    "reports/booking-catalog-recovery-evidence-20261026/playwright.config.mjs": "9737dcff3e50ccc0bfae6cc73aa707a778c4dd2cdb43c9d365b472e2e5016a77"
+  }
+}
