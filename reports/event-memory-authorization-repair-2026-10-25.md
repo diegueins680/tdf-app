@@ -302,3 +302,51 @@ composición, además de los gates y revisión independientes de la entrega raí
 El CI principal de #615 pasó en 31c16bffe; el workflow RACI seguía compilando al
 último chequeo. No se ha fusionado #615 ni promovido esta preparación a #608,
 y no hay despliegue ni envíos productivos de recuerdos.
+
+
+## Verificación de la preparación 262295679 — 26/oct 05:52 UTC
+
+La compilación canónica y Hspec pasan en el checkout limpio
+`262295679df492dde850333779db431132092993`: **4.041 ejemplos, cero fallos,
+21 pendientes** de integración externos, que no se cuentan como aprobados.
+Los cuatro grupos musicales no vacíos también pasan. El binario nuevo conserva
+la identidad real 262295679, buildTime `2026-10-26T05:36:20Z`, SHA-256
+`f01ef34b75f1f1c1da4a41cdbb541de9b620fd4c1f4b24aba64025e7c1b6e17d`.
+
+La [API/DB con navegador](event-memory-source-evidence-20261025/http-protected-main-1c9-results.json)
+pasa **120 solicitudes/17 grupos** sobre 225 migraciones, escritorio y Pixel 7
+emulado, con 24 hashes coincidentes. Ese runner conserva dirty=true por sus dos
+enlaces de dependencias; el checkout que compiló el binario estaba limpio.
+Una [ejecución HTTP adicional limpia](event-memory-source-evidence-20261025/http-clean-protected-main-1c9-results.json)
+pasa 120 solicitudes/16 grupos con sourceWorktreeDirty=false e identidad
+compilada 262295679. Los servidores de ambos runners y sus bases se retiraron.
+También pasan sobre HEAD limpio los ocho casos SQL de revocación, NULL,
+sucesores/reversión e invitaciones con el esquema completo 225.
+
+El runner existente del directorio detectó un límite del fixture inicial: su
+base con locale C no pliega la mayúscula acentuada en LÚNA y falló una aserción
+real de búsqueda antes de llegar al HTTP. Ese fallo se conserva. La repetición
+sin modificar pruebas ni SQL, en una base nueva en_US.UTF-8, pasa consultas,
+facetas, 4.000 documentos sintéticos, replay, rollback/reaplicación con filas y
+ledger intactos, y **107 solicitudes HTTP** con el binario recién compilado.
+Los tiempos observados son descriptivos; no se atribuye mejora de rendimiento.
+La consulta productiva de solo lectura del 26/oct 05:50:35 UTC confirmó locale
+en_US.utf8, encoding UTF8 y el plegado correcto de LÚNA a lúna. Esto verifica
+ese dato ambiental; no demuestra despliegue de recuerdos ni modifica producción.
+
+El [recibo completo de preparación](event-memory-source-evidence-20261025/protected-main-1c9-verification.json)
+conserva revisiones, hashes, intentos fallidos y límites. La API compilada mantiene
+913 métodos/dos raw mounts y su snapshot coincide; las brechas globales siguen
+abiertas. El CI principal y RACI de #615 pasan en 31c16bffe, conservando esa
+identidad. La preparación 262 no tiene todavía CI protegido ni revisión de la
+entrega raíz. #615 sigue pendiente de revisión independiente; no se fusionó ni
+promovió esta preparación a #608. No hay despliegue ni invitaciones productivas.
+
+
+Capturas sintéticas de esta ejecución: [escritorio](event-memory-source-evidence-20261025/desktop-protected-main-1c9.png)
+y [Pixel 7 emulado](event-memory-source-evidence-20261025/phone-protected-main-1c9.png).
+El main avanzó después a `3af768dacd95c1223975c62da3ce8088bed89b47` al integrar
+#618, que conserva el diario durable de despliegue. El runtime aquí probado
+sigue siendo 262295679; sus recibos no acreditan los controles operativos nuevos.
+La preparación debe incorporar esa sucesión y verificar sus checks afectados
+antes de cualquier entrega protegida.
