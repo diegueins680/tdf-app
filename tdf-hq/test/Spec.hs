@@ -3935,6 +3935,71 @@ main = hspec $ do
                     body `shouldNotSatisfy` BS.isInfixOf "&metadata="
                 _ -> expectationFailure "Expected a strict customer PaymentIntent form body"
 
+        it "uses explicit cards for both web and mobile ticket intents on the pinned API" $ do
+            Stripe.defaultStripeApiVersion `shouldBe` "2026-04-22.dahlia"
+            forM_ [Nothing, Just "cus_ticket_123"] $ \customer -> do
+                request <- Stripe.buildTicketPaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    (Just "ticket-order-party_123-request_123")
+                    customer
+                    5100
+                    "USD"
+                    "Tickets for event 12 & guests"
+                    (Just "{\"order_id\":\"41\",\"event_id\":\"12\"}")
+                lookup "Idempotency-Key" (HTTP.requestHeaders request)
+                    `shouldBe` Just "ticket-order-party_123-request_123"
+                lookup "Stripe-Version" (HTTP.requestHeaders request)
+                    `shouldBe` Just (TE.encodeUtf8 Stripe.defaultStripeApiVersion)
+                case HTTP.requestBody request of
+                    HTTP.RequestBodyBS body -> do
+                        body `shouldSatisfy` BS.isInfixOf "payment_method_types[]=card"
+                        body `shouldNotSatisfy` BS.isInfixOf "automatic_payment_methods"
+                        body `shouldSatisfy` BS.isInfixOf "amount=5100&currency=usd&"
+                        body `shouldSatisfy` BS.isInfixOf "metadata[tdf_context]="
+                        body `shouldSatisfy` BS.isInfixOf "%22order_id%22%3a%2241%22"
+                        BS.isInfixOf "customer=cus_ticket_123&" body
+                            `shouldBe` not (isNothing customer)
+                    _ -> expectationFailure "Expected a strict ticket PaymentIntent form body"
+
+        it "preserves the ticket form contract for generated web/mobile requests" $
+            QC.property $ \(QC.Positive rawAmount) withCustomer withIdempotency -> QC.ioProperty $ do
+                let amount = 1 + (rawAmount `mod` 99999999 :: Int)
+                    customer = if withCustomer then Just "cus_ticket_123" else Nothing
+                    key = if withIdempotency then Just "ticket-order-generated" else Nothing
+                    context = "{\"order_id\":\"41\",\"event_id\":\"12\"}"
+                request <- Stripe.buildTicketPaymentIntentRequest
+                    (stripeTestConfig "whsec_test") key customer amount "USD"
+                    "Entradas & música = + invitación" (Just context)
+                pure $ case HTTP.requestBody request of
+                    HTTP.RequestBodyBS body ->
+                        let fields = HTTPTypes.parseQuery body
+                        in QC.conjoin
+                            [ lookup "amount" fields QC.=== Just (Just (TE.encodeUtf8 (Data.Text.pack (show amount))))
+                            , lookup "currency" fields QC.=== Just (Just "usd")
+                            , lookup "description" fields QC.=== Just (Just (TE.encodeUtf8 "Entradas & música = + invitación"))
+                            , lookup "metadata[tdf_context]" fields QC.=== Just (Just (TE.encodeUtf8 context))
+                            , lookup "customer" fields QC.=== (Just . TE.encodeUtf8 <$> customer)
+                            , lookup "Idempotency-Key" (HTTP.requestHeaders request) QC.=== (TE.encodeUtf8 <$> key)
+                            , [value | (name, value) <- fields, name == "payment_method_types[]"] QC.=== [Just "card"]
+                            , lookup "automatic_payment_methods[enabled]" fields QC.=== Nothing
+                            ]
+                    _ -> QC.counterexample "Expected a strict ticket form body" False
+
+        it "keeps automatic payment methods for other payment flows" $ do
+            request <- Stripe.buildPaymentIntentRequest
+                (stripeTestConfig "whsec_test") Nothing 2500 "USD" "Marketplace" Nothing
+            case HTTP.requestBody request of
+                HTTP.RequestBodyBS body -> do
+                    body `shouldSatisfy` BS.isInfixOf "automatic_payment_methods[enabled]=true"
+                    body `shouldNotSatisfy` BS.isInfixOf "payment_method_types[]"
+                _ -> expectationFailure "Expected a strict PaymentIntent form body"
+
+        it "rejects unsafe ticket idempotency keys before contacting Stripe" $
+            Stripe.createTicketPaymentIntent
+                (stripeTestConfig "whsec_test") (Just "   ") Nothing
+                5100 "USD" "Tickets" Nothing
+                `shouldReturn` Left "Stripe idempotency key must not be blank"
+
         it "rejects unsafe idempotency keys before allocating an HTTP manager" $ do
             Stripe.createPaymentIntentWithIdempotencyKey
                 (stripeTestConfig "whsec_test")

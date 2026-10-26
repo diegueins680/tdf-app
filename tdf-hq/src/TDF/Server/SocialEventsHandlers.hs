@@ -5211,7 +5211,14 @@ socialEventsServer user =
             currency = eventTicketOrderCurrency orderRecord
             -- Roll the order back to a state where the caller can retry without
             -- double-selling tickets or double-counting promo redemptions.
-            rollbackOrder errText = do
+            rollbackOrder providerError = do
+                liftIO . hPutStrLn stderr . T.unpack . TE.decodeUtf8 . BL.toStrict . Aeson.encode $
+                    Aeson.object
+                        [ "event" Aeson..= ("stripe_ticket_checkout_failed" :: T.Text)
+                        , "orderId" Aeson..= renderKeyText orderKey
+                        , "reason" Aeson..= (if "No valid payment method types" `T.isInfixOf` providerError
+                            then "payment_methods_unavailable" else "initialization_failed" :: T.Text)
+                        ]
                 unless reusedCheckout $
                     liftIO $
                         runSqlPool
@@ -5227,7 +5234,8 @@ socialEventsServer user =
                                     Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
                             )
                             envPool
-                throwError err500{errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe error: " <> errText))}
+                throwError err503
+                    { errBody = "Ticket card payments are temporarily unavailable. Please try again later." }
             storedPromoCode =
                 decodeTicketCheckoutMetadata (eventTicketOrderMetadata orderRecord)
                     >>= snd
@@ -5306,22 +5314,14 @@ socialEventsServer user =
                                 result <-
                                     liftIO $
                                         runStripeRequestSafely $
-                                            case stripeIdempotencyKey of
-                                                Nothing ->
-                                                    Stripe.createPaymentIntent
-                                                        stripeCfg
-                                                        finalAmountCents
-                                                        currency
-                                                        description
-                                                        metadataJson
-                                                Just idempotencyKey ->
-                                                    Stripe.createPaymentIntentWithIdempotencyKey
-                                                        stripeCfg
-                                                        idempotencyKey
-                                                        finalAmountCents
-                                                        currency
-                                                        description
-                                                        metadataJson
+                                            Stripe.createTicketPaymentIntent
+                                                stripeCfg
+                                                stripeIdempotencyKey
+                                                Nothing
+                                                finalAmountCents
+                                                currency
+                                                description
+                                                metadataJson
                                 either rollbackOrder handleLegacyPaymentIntent result
                             handleLegacyPaymentIntent paymentIntent = do
                                 (piId, clientSecret) <-
@@ -5362,24 +5362,14 @@ socialEventsServer user =
                                 piResult <-
                                     liftIO $
                                         runStripeRequestSafely $
-                                            case stripeIdempotencyKey of
-                                                Nothing ->
-                                                    Stripe.createPaymentIntentForCustomer
-                                                        stripeCfg
-                                                        customerId
-                                                        finalAmountCents
-                                                        currency
-                                                        description
-                                                        metadataJson
-                                                Just idempotencyKey ->
-                                                    Stripe.createPaymentIntentForCustomerWithIdempotencyKey
-                                                        stripeCfg
-                                                        idempotencyKey
-                                                        customerId
-                                                        finalAmountCents
-                                                        currency
-                                                        description
-                                                        metadataJson
+                                            Stripe.createTicketPaymentIntent
+                                                stripeCfg
+                                                stripeIdempotencyKey
+                                                (Just customerId)
+                                                finalAmountCents
+                                                currency
+                                                description
+                                                metadataJson
                                 either
                                     rollbackOrder
                                     (handleMobilePaymentIntent customerId ephemeralKeySecret publishableKey)
