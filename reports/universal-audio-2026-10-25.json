@@ -499,5 +499,15 @@
     "newAudioTechnicalDecisions": 9,
     "backendSqlManifestDependenciesMobile": "byte-identical to current main",
     "privacyLogoutImplementation": "retained from mergedPR616"
+  },
+  "releaseJournalMainRefresh": {
+    "base": "3af768dacd95c1223975c62da3ce8088bed89b47",
+    "preservedMainRequirements": 141,
+    "intentionalPlayerRequirementDelta": true,
+    "catalogDecisions": "1330 main objects unchanged plus nine audio technical decisions",
+    "runtimeChange": "No audio runtime changes; normal journal/main integration",
+    "priorApprovedCandidate": "70e4e2e2679ac607ee15af9967e56aac5a0f58f0",
+    "nativePriorHead": "PASS hosted121407000063; current merged head needs fresh hosted gates/review",
+    "deployment": "not performed"
   }
 }

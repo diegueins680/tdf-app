@@ -148,6 +148,21 @@ run_tlc ReleaseJournal.tla ReleaseJournal.cfg releasejournal
 run_negative_tlc ReleaseJournalNoIntent.cfg releasejournalnointent 'Invariant DurableIntentBeforeEffect is violated' ReleaseJournal.tla
 run_negative_tlc ReleaseJournalNewNonce.cfg releasejournalnewnonce 'Invariant OneReservedRelease is violated' ReleaseJournal.tla
 run_negative_tlc ReleaseJournalWrongObservation.cfg releasejournalwrongobservation 'Invariant BoundCompletion is violated' ReleaseJournal.tla
+# Separate terminal-succession contract; original journal model stays unchanged.
+run_tlc ReleaseJournalSuccession.tla ReleaseJournalSuccession.cfg releasejournalsuccession
+run_tlc ReleaseJournalSuccession.tla ReleaseJournalSuccessionTwo.cfg releasejournalsuccessiontwo
+run_negative_tlc ReleaseJournalSuccessionUnlocked.cfg releasejournalsuccessionunlocked 'Invariant OneGlobalLock is violated' ReleaseJournalSuccession.tla
+run_negative_tlc ReleaseJournalSuccessionPending.cfg releasejournalsuccessionpending 'Invariant TerminalPredecessor is violated' ReleaseJournalSuccession.tla
+run_negative_tlc ReleaseJournalSuccessionStaleTip.cfg releasejournalsuccessionstaletip 'Invariant ExactTipCompared is violated' ReleaseJournalSuccession.tla
+run_negative_tlc ReleaseJournalSuccessionReusedNonce.cfg releasejournalsuccessionreusednonce 'Invariant UniqueNonces is violated' ReleaseJournalSuccession.tla
+run_negative_tlc ReleaseJournalSuccessionNoIntent.cfg releasejournalsuccessionnointent 'Invariant DurableIntentBeforeEffect is violated' ReleaseJournalSuccession.tla
+run_negative_tlc ReleaseJournalSuccessionWrongObservation.cfg releasejournalsuccessionwrongobservation 'Invariant BoundCompletion is violated' ReleaseJournalSuccession.tla
+run_negative_tlc ReleaseJournalSuccessionDiscardHistory.cfg releasejournalsuccessiondiscardhistory 'Invariant HistoryChain is violated' ReleaseJournalSuccession.tla
+run_negative_tlc ReleaseJournalSuccessionForgetWrites.cfg releasejournalsuccessionforgetwrites 'Invariant WritesNeverForgotten is violated' ReleaseJournalSuccession.tla
+# Reachability witness, NOT a guard mutation: the correct model must reach three
+# complete releases and violate this intentionally false invariant. It uses the
+# existing expected-counterexample helper; report it separately from mutations.
+run_negative_tlc ReleaseJournalSuccessionWitness.cfg releasejournalsuccessionwitness 'Invariant ThreeCompletedUnreachable is violated' ReleaseJournalSuccession.tla
 run_tlc LogicalBackup.tla LogicalBackup.cfg logicalbackup
 run_negative_tlc LogicalBackupLostParent.cfg logicalbackuplostparent 'Invariant OneInflightBackup is violated' LogicalBackup.tla
 run_negative_tlc LogicalBackupFailedWork.cfg logicalbackupfailedwork 'Invariant CompletedReceipt is violated' LogicalBackup.tla

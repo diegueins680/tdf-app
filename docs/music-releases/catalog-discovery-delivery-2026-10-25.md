@@ -100,3 +100,7 @@ build and tests passed; it is not a local build pass and provides no current
 merged-candidate qualification. No production deployment or business write is
 established by this refresh. Exact result boundaries remain recorded in
 `reports/music-catalog-discovery-2026-10-25.json`.
+
+## Journal integration baseline
+
+The following normal refresh retains playback `7de7c292753565ae6ea64c57dd9aa4b97e330b6d` and protected main `3af768dacd95c1223975c62da3ce8088bed89b47` (release-journal #618). All 142 foundation requirement objects remain exact plus the unchanged discovery requirement. This refresh changes no audio/search/page implementation; 106 combined player/catalog/client/logout regressions in eight suites passed after the prior privacy integration. Exact new-head CI and review remain required.

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "Focused P1 release catalog search/pagination; universal search mission incomplete",
-  "foundation": "70e4e2e2679ac607ee15af9967e56aac5a0f58f0",
+  "foundation": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
   "baseline": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
   "combinedInitialCommit": "99ca66b07a7c9ef851d2dfb80199025b3307fc19",
   "sourceFingerprints": {
@@ -116,7 +116,7 @@
             "fixtureBoundary": {
               "catalogRequests": [
                 {
-                  "q": "Artista sintético",
+                  "q": "Artista sint\u00e9tico",
                   "limit": 25,
                   "offset": 24
                 },
@@ -181,7 +181,7 @@
             "fixtureBoundary": {
               "catalogRequests": [
                 {
-                  "q": "Artista sintético",
+                  "q": "Artista sint\u00e9tico",
                   "limit": 25,
                   "offset": 24
                 },
@@ -281,7 +281,7 @@
     "priorHeadEvidenceDoesNotEstablishNewHeadPass": true,
     "catalogDecisions": "Foundation preserves main1330 and9audio decisions; this P1refresh adds no catalog decision"
   },
-  "integrationBaseline": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+  "integrationBaseline": "3af768dacd95c1223975c62da3ce8088bed89b47",
   "previousHostedCandidate": {
     "head": "0a0dd901471653fc874175ebb401d4580fb0419b",
     "runId": 40266955707,
@@ -330,5 +330,19 @@
       "Pending Hspec examples and skipped browser tests are not counted as passes.",
       "No production deployment or current merged-candidate CI pass is established."
     ]
+  },
+  "releaseJournalRefresh": {
+    "foundation": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+    "main": "3af768dacd95c1223975c62da3ce8088bed89b47",
+    "preservedRequirements": 142,
+    "totalRequirements": 143,
+    "runtimeChanges": false,
+    "combinedPrivacyPlayerCatalogTests": {
+      "passed": 106,
+      "suites": 8,
+      "log": "/private/tmp/tdf-audio-discovery-privacy-focused.log"
+    },
+    "currentHeadHostedCI": "pending",
+    "deployment": "not performed"
   }
 }
