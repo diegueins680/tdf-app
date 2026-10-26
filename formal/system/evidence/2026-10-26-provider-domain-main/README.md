@@ -51,3 +51,5 @@ first; current-head hosted checks, independent review and normal merge ancestry
 remain mandatory. Keep guards across application rollback.
 
 Fresh integrated assurance: clean `1bca8b216d5cf1f41b053ca5c02c189760fe6eaf` report and repository quality pass. `assurance-artifacts.tar.gz` preserves raw report/SMT inputs and repository log. All144 complete requirements and288 implementation/refinement obligations remain UNPROVEN, separate from11 conditional source-derived SMT claims. No new independent CPC replay or mathematical proof of provider admission is claimed. `scorecard.json` preserves these scopes separately from the native317 execution atcb777.
+
+Protected-main integration supplement: `current-main-scorecard.json` and `protected-main-assurance-artifacts.tar.gz` record clean source `03713890ccd6c2a4a94c83cfe997ac7f5a61b8d8`, its successful repository checks and fresh scoped assurance report. The earlier scorecard and native317 results retain their original identities. Ledger #621 is now merged; current provider composition still requires fresh compiled CI and independent review.
