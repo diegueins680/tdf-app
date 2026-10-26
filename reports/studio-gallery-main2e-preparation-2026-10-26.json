@@ -7,8 +7,8 @@
   "preparedBranch": "prepare/studio-gallery-main-20261026",
   "protectedMainComposed": "2e01bbe1263e8761fa2692bd951f828c01142449",
   "preparationPublished": true,
-  "preparedPreviewVerified": false,
-  "composition": "Normal merge; no source rewrite. Every gallery runtime/test/photo byte matches approvedc219. Entire protected main147requirement register preserved except exact prior UX-WELCOME-001extension; all1341main catalog decisions/outer history preserved plus exact approvedPHOTOSdecision. Backend/API/SQL/dependencies/pin match protectedmain.",
+  "preparedPreviewVerified": true,
+  "composition": "Normal merge with protected main. Gallery runtime, test and photo bytes match approved c219279. The 147-requirement main register is preserved except the exact previously reviewed UX-WELCOME-001 associations. All 1,341 main catalog decisions and outer history are preserved, with the exact approved photo decision appended. Backend, API, SQL, dependencies and Mobile pin match protected main.",
   "inputsSha256": {
     "tdf-hq-ui/src/components/StudioGallery.tsx": "20cea2f374e690a0f3b65115628b2e76cfc080e31a96ac93cc5dfb2ab3e630b6",
     "tdf-hq-ui/src/components/StudioGallery.test.tsx": "fc58e06828af223b5bb382b87d7fb26f76240d058af7e699cf3cc1dbc3487af3",
@@ -47,12 +47,59 @@
     "sourcePRUpdated": false,
     "merged": false,
     "productionDeployed": false,
-    "productionVerified": false
+    "productionVerified": false,
+    "preparedPreviewVerified": true
   },
-  "nextStep": "Preserve approved source while625/626/627 advance. Compose actual final protected main once before updating628; qualify final head, obtain fresh independent review if head changes, satisfy all20protected gates, merge normally and verify actual published behavior. This preparation grants no admission or deployment authority.",
+  "nextStep": "Preserve the approved source while preceding PRs advance. Compose the final protected main before updating PR #628; qualify that head, obtain fresh independent review, satisfy all 20 protected gates, merge normally, and verify actual production behavior. This preparation grants no admission or deployment authority.",
   "limits": [
-    "Local32cases are ChromeDesktop,Pixel7emulation,360pxAndroidChromeemulation,Firefox. No newWebKit or physical-device execution.",
-    "APIs/session/business data are synthetic; no production state writes, human usability, provider or activation outcome claim.",
-    "Earlier c219hosted566+22/10/25results and its first twoWebKitfailures retain their original source and cannot be relabeled as7fc9runs."
-  ]
+    "Local 32 cases cover Chrome desktop, Pixel 7 emulation, 360px Android Chrome emulation and Firefox. No new WebKit or physical-device execution.",
+    "Hosted checks use actual Cloudflare static artifacts; all business/session APIs are fixtures and external requests are blocked. No production state writes, human usability, provider or activation outcome claim.",
+    "Earlier c219279 hosted results (566 passed, 22 skipped) and the first two WebKit failures retain their original source identity; these were not 7fc9d97 executions."
+  ],
+  "hostedPreview": {
+    "base": "https://b669cfb9.tdf-app.pages.dev",
+    "url": "https://b669cfb9.tdf-app.pages.dev/tdf#estudio",
+    "observedAt": "2026-10-26T22:35:53.816Z",
+    "source": "7fc9d9729018dda268e16845a797b2467b8d30fd",
+    "entry": "/assets/index-BQoXRz-9.js",
+    "entrySha256": "76e483a3cbab511141645d68bc377d0b775cab441cd090abe1366bb2d4eb6df5",
+    "cases": 2,
+    "contexts": [
+      "desktop light",
+      "Pixel 7 emulation dark"
+    ],
+    "thumbnailHashesPerContext": 6,
+    "enlargedHashesPerContext": 6,
+    "keyboardFocusAndRecovery": "PASS",
+    "overflowAt320px": false,
+    "seriousCriticalAxeViolations": 0,
+    "businessWrites": 0,
+    "pageErrors": 0,
+    "evidence": "reports/studio-gallery-main2e-evidence-20261026/hosted-preview/",
+    "scope": "Actual Cloudflare preview static artifact; all business/session APIs synthetic, external requests blocked. Not production, human usability or provider verification.",
+    "artifactIdentity": "Actual hosted artifact embeds prepared source SHA. Its entry differs from the local build; no byte identity between hosted and local bundles is claimed."
+  },
+  "protectedDeliveryObservation": {
+    "observedAt": "2026-10-26T22:36:55Z",
+    "sourcePRHead": "c219279b33ce13337f71ddee8d14171f5adfc069",
+    "sourcePRReview": "APPROVED for unchanged c219279 only",
+    "requiredContextsPassed": 19,
+    "requiredContextsTotal": 20,
+    "admission": {
+      "state": "pending",
+      "description": "Waiting for PR #596; base 2e01bbe1263e8761fa2692bd951f828c01142449",
+      "updatedAt": "2026-10-26T22:14:19Z"
+    },
+    "strictBase": true,
+    "staleApprovalDismissal": true,
+    "explanation": "Queue position is mutable. Earlier observations waiting for PR #625 are superseded by this exact observed admission status. No approval is transferred to the preparation or a future PR head."
+  },
+  "publishedEvidenceSha256": {
+    "reports/studio-gallery-main2e-evidence-20261026/hosted-preview/complete-photos-Pixel7-dark.json": "e8c73b7c95c16f4c0d6c1d841ade28503940605aecd681536b70d181124bc729",
+    "reports/studio-gallery-main2e-evidence-20261026/hosted-preview/complete-photos-desktop-light.json": "7bfcf930f7d015f21005b25fb474a45881246c71202326d7ae847c58094fda30",
+    "reports/studio-gallery-main2e-evidence-20261026/hosted-preview/preview-gallery-desktop-light.png": "8b7abba27fb30ed615b5dac2eacc99262d211b654d511e20942a0f98a0ac7405",
+    "reports/studio-gallery-main2e-evidence-20261026/hosted-preview/preview-photo-320-Pixel7-dark.png": "80427963d79d823f4335175d3df08d8f8f1ab8900debc7ddf16194cb72ca9650",
+    "reports/studio-gallery-main2e-evidence-20261026/hosted-preview/preview-results.json": "f858b54b6fa50fae5796e49fc02c61a34098b453da9f6becc2d6bcc0c46cd635",
+    "reports/studio-gallery-main2e-evidence-20261026/hosted-preview/verify-preview.mjs": "4d0008dd86ac6eaf0dc14b137cba18c3e4c23b649ef69621067a24cf7ad076dd"
+  }
 }

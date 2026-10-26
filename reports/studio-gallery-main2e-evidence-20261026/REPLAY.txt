@@ -3,3 +3,5 @@ Use Node22.14.0, install locked dependencies, initialize exactd832Mobilepin for 
 Run bash scripts/quality-ui.sh, then Playwright public-welcome.spec.mjs on chromium-desktop/chromium-phone/android-chrome-small/firefox-critical.
 Observer config here changes only absolute checkout/output paths, local preview port4288 and those4projects/serviceWorkersblock. Adjust paths on another machine. API fixtures are in the exact public test file and all external traffic is blocked.
 Do not relabel the old c219hosted/WebKit evidence as an execution on this preparation or future public source. No merge/production/backend/human outcome claimed.
+
+Hosted preview: hosted-preview/verify-preview.mjs is the exact executed observer. It requires Playwright, Chromium and axe; adjust dependency and output paths before replay. Both themes and all twelve derivative hashes passed. API/session responses are synthetic and all external traffic is blocked. Hosted and local entry assets differ and are identified separately in the receipt.
