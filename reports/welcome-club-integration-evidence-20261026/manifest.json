@@ -1,0 +1,37 @@
+{
+  "preparedAt": "2026-10-26T06:04:42.787350+00:00",
+  "status": "PREPARED-NOT-EXECUTED",
+  "source": "/private/tmp/tdf-welcome-main-integration-20261026",
+  "expectedSource": "fcc61665a1670a08bbcbaf273d6320a2cd4993c6",
+  "protectedBase": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+  "clubSource": "5ebcb33838a28db9acf14ad95d422fe6669d40d0",
+  "binary": "/private/tmp/tdf-alert-parity-repro-20261025/bin-post551/tdf-hq-exe",
+  "binaryQualifiedSource": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+  "binarySha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+  "copySha256": {
+    "run.py": "1c69e3c73cc01d9f0f327e229579803ede752fa0f688e3b609a5130ab2814cd9",
+    "runtime.mjs": "2d29b9c010771040d793519baf38ffb70927dea53467bc2bafbfece343dfa156",
+    "rehearsal.mjs": "0cb4de41cc2b17651db32f66264f8ab14d81bbde5468b3aabe9798b795d96d75",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "scope": "Existing full welcome/artist/fan/logout/privacy assertions plus two real missing-club/public-profile fallbacks and desktop503\u2192retry\u2192native404. No club provisioning, provider or human participation.",
+  "humanParticipants": 0,
+  "productionWrites": false,
+  "manualMode": false,
+  "sourceWorktreeStatusObserved": [
+    "?? node_modules",
+    "?? tdf-hq-ui/node_modules"
+  ],
+  "command": [
+    "python3",
+    "/private/tmp/tdf-welcome-club-runtime-20261026/run.py",
+    "--mode",
+    "rehearsal",
+    "--source",
+    "/private/tmp/tdf-welcome-main-integration-20261026",
+    "--expected-source",
+    "fcc61665a1670a08bbcbaf273d6320a2cd4993c6",
+    "--binary",
+    "/private/tmp/tdf-alert-parity-repro-20261025/bin-post551/tdf-hq-exe"
+  ]
+}
