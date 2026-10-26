@@ -764,7 +764,9 @@ BEGIN
     SELECT 1 FROM (VALUES
       ('commerce_checkout_session', 'trg_commerce_checkout_total', 'commerce_check_checkout_line_total', true, 5),
       ('commerce_checkout_line_item', 'trg_commerce_checkout_line_total', 'commerce_check_checkout_line_total', true, 5),
-      ('commerce_checkout_session', 'trg_commerce_checkout_money_immutable', 'commerce_protect_checkout_money', false, 19)
+      ('commerce_checkout_session', 'trg_commerce_checkout_money_immutable', 'commerce_protect_checkout_money', false, 19),
+      ('commerce_checkout_line_item', 'trg_commerce_checkout_line_fixed', 'commerce_reject_late_checkout_line', false, 7),
+      ('commerce_checkout_session', 'trg_commerce_checkout_created', 'commerce_register_checkout_creation', false, 5)
     ) expected(table_name, trigger_name, function_name, deferred, trigger_type)
     WHERE NOT EXISTS (
       SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
@@ -1931,6 +1933,22 @@ BEGIN
        OR actual.is_nullable <> expected.is_nullable
   ) THEN
     RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
+  END IF;
+  -- Replaying an older CREATE OR REPLACE FUNCTION can discard proconfig while
+  -- leaving its migration receipt and trigger binding intact. Inspect both
+  -- installed lookup boundaries instead of trusting those receipts.
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid=to_regprocedure('public.commerce_validate_ledger_posting()')
+      AND proconfig @> ARRAY['search_path=pg_catalog, public, pg_temp']::text[]
+      AND NOT prosecdef AND prorettype='trigger'::regtype
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid=to_regprocedure('public.commerce_protect_posted_ledger()')
+      AND proconfig @> ARRAY['search_path=pg_catalog, public, pg_temp']::text[]
+      AND NOT prosecdef AND prorettype='trigger'::regtype
+  ) THEN
+    RAISE EXCEPTION 'Ledger trigger trusted lookup settings are missing or changed';
   END IF;
   FOREACH commerce_table IN ARRAY ARRAY[
     'commerce_checkout_session',
