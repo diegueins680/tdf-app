@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T22:45:33.363Z",
+  "generatedAt": "2026-10-26T23:25:26.166Z",
   "repositoryRoot": ".",
   "filesScanned": 2405,
   "candidateCount": 1341,
@@ -76726,7 +76726,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 396,
+      "consumerCount": 398,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -76927,7 +76927,7 @@
         "scripts/test-music-s3-local.mjs",
         "scripts/test-player-session-model.mjs",
         "scripts/test-provider-domain-binding.py",
-        "scripts/test-provider-execution-runtime-migration.sh"
+        "scripts/test-provider-domain-harness.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/test-stripe-integration.sh",
@@ -77842,7 +77842,7 @@
         2954,
         3056
       ],
-      "consumerCount": 342,
+      "consumerCount": 343,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -78358,7 +78358,7 @@
       "lines": [
         7723
       ],
-      "consumerCount": 434,
+      "consumerCount": 435,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -160140,7 +160140,7 @@
       "lines": [
         409
       ],
-      "consumerCount": 396,
+      "consumerCount": 398,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -160340,7 +160340,7 @@
         "scripts/test-music-s3-local.mjs",
         "scripts/test-player-session-model.mjs",
         "scripts/test-provider-domain-binding.py",
-        "scripts/test-provider-execution-runtime-migration.sh"
+        "scripts/test-provider-domain-harness.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/test-stripe-integration.sh",

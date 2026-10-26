@@ -1,0 +1,25 @@
+{
+  "scope": "Real isolated native API/PostgreSQL and rendered optimized web with local synthetic SMTP. No real email/provider/device/production claim.",
+  "checks": {
+    "protectedIntentPreserved": true,
+    "uiSignupAndOriginalIntent": true,
+    "revokedSessionReturnsToLoginWithIntent": true,
+    "nativeLocalizedMailPreservesIntent": true,
+    "tokenRemovedFromVisibleUrl": true,
+    "expiredResetRejectedInUi": true,
+    "resetUiReturnsToOriginalIntent": true,
+    "oldPasswordRejected": true,
+    "newPasswordAuthenticatesSameParty": true,
+    "resetTokenSingleUse": true,
+    "earlierResetStillRejected": true,
+    "oldSessionRejected": true,
+    "activePriorSessionRevokedByReset": true,
+    "singlePersistedCredential": true
+  },
+  "blockedExternal": 10,
+  "blockedMutations": 0,
+  "blockedMutationPaths": [],
+  "pageErrors": 0,
+  "partyId": 4,
+  "status": "PASS"
+}
