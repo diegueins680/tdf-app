@@ -7,7 +7,7 @@ disponible para usuarios son hitos separados.
 
 ## Base y alcance de la observación
 
-- `main` protegido actual: `e938c72ba4b87010214f6838f06bfac45a0f45c0` (#614, después de #551/#611). La observación inicial partió de `a1dcb77fafbc66cd786b7f4249a3c8027bb64990`.
+- `main` protegido actual: `1c9c833cc1ba62b47822fca3c20e14e86cf28daa` (#616, después de #551/#611/#614). La observación inicial partió de `a1dcb77fafbc66cd786b7f4249a3c8027bb64990`.
 - Inspección productiva de solo lectura del 25/oct, 08:13:07 UTC:
   `/private/tmp/tdf-user-value-runtime-20261025.json`. Versión pública del backend:
   `4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`; 213 migraciones registradas.
@@ -55,19 +55,19 @@ tras controles negativos y ejecución descartable (85→91).
 
 | Orden | Trabajo existente o nuevo | Categoría | A/G/V/J/E/C/R/T | P | Estado y acción |
 | --- | --- | --- | --- | --- | --- |
-| 1, integrado | Evitar guardar borradores ajenos/sin lectura propia y revocar callbacks al cambiar credenciales | S0 | 4/5/4/5/5/4/4/4 | 91 | COMPLETE en alcance web acotado: #607 integrado como `cfe75b18`,20checks y revisión vigente verificados. Assets públicos y fixtures Chromium escritorio/Pixel7 pasan conservación/recuperación y callback antiguo revocado, sin reenviar API productiva. No certifica cuentas reales ni todo el recorrido de perfiles. |
-| 1 | Evitar restaurar identidad A tras logout fallido | S0 | 4/5/4/5/5/3/3/2 | 87 | #616 READY `9e96e07`, revisión independiente vigente y propietario activo; composición final aún pendiente. Intención persistida, scope/caché revocados y reintento sin falsa confirmación anónima. No duplicar ni confundir READY con entrega. |
-| 2 | Entregar términos aceptados, ledger y capturas inciertas | S0 | 3/5/5/5/5/3/2/2 | 86 | SOURCE MERGED: #551 `5114fe95` y #609 `000cf8ad`; backend/release BLOCKED. Conservar sus modelos, siete migraciones y restricciones. No duplicar #555/#569 ni activar proveedores. |
-| 3, dependencia | Admitir el siguiente release mediante control explícito | S0 | 3/5/4/4/5/2/2/2 | 79 | #618 remoto d682 aprobado; composición LOCAL con main e938/221, conserva código revisado y espera main final de616 antes de publicar. Sin invocación productiva ni permiso de despliegue. |
-| Entregado | Subir portada con sesión HttpOnly válida | S1 | 3/4/4/5/5/5/4/3 | 83 | COMPLETE para el transporte web cookie-only: #605 integrado como `9a927fa3` y publicado, con fixture de navegador verificado. Google real no certificado por esta prueba. |
-| Entregado | Reflejar foto guardada en Comunidad | S1 | 4/3/4/5/5/5/4/3 | 81 | COMPLETE en el alcance de invalidación web: #604 integrado como `512d590e` y assets publicados verificados. Browser real con API sintética; no afirma upload ni escritura productiva real. |
-| 4 | Abrir comprobantes privados desde gestión de entradas | S1 | 3/4/4/5/5/3/2/3 | 79 | BLOCKED para release. #603 integrado como `089dce6b`, backend productivo4dac; falta configuración privada durable y admisión de nuevo diario, y el assurance exacto sigue BLOCKED. |
-| 5, seleccionado | Alertas guardadas respetan filtros no geográficos | S1 | 2/3/3/4/5/2/3/2 | 64 | SOURCE MERGED: #614 integrado como e938,20gates y revisión ac2vigente;4039pruebas/0fallos/21pendientes y107HTTP reales locales yCI. Backend no desplegado; radio/fallback continúan PARTIAL. |
-| 6 | Correo/push de chat controlado por destinatario | S1 | 3/3/4/4/3/1/1/1 | 60 | BLOCKED para entrega; UNIMPLEMENTED el alcance externo #577, pendiente consentimiento, adaptadores y dispositivos. |
-| 7 | Habilitación explícita del club de un artista nuevo | S1 | 2/2/4/4/5/1/2/1 | 59 | UNIMPLEMENTED en #606; falta ese camino de contenido. El follow funciona y existen enlaces públicos alternativos. Nunca provisionar por GET ni crear miembros/contactos sin consentimiento. |
-| 8 | Ciclo completo de recuperación, expiración y vuelta al intento | S1 | 4/4/3/3/2/1/1/0 | 58 | PARTIAL, sin defecto adicional reproducido. Conservar ST-001 y el transporte existente. |
+| 1 | Salida privada y recuperación sin restaurar una cuenta anterior | S0 | 4/5/4/5/5/3/2/3 | 87 | #616 SOURCE MERGED como1c9: aprobación vigente42b9 y20controles, ensayo221 completo; verificación de web publicada pendiente. Native171c944 tiene validate verde y espera revisión; no cambiar el pin Mobile por inferencia. |
+| 2 | Conservar identidad, origen y auditoría de asientos contabilizados | S0 | 3/5/5/5/5/3/2/2 | 86 | DEFECTIVE en la base financiera verificada; candidato existente621185 aprobado sobre su propia fuente, pero requiere reconciliar actualmain, prefijo221+guard222, ambas historias del catálogo y CI/revisión del head final. No duplicar la implementación. |
+| 3 | Entregar backend financiero, comprobantes privados y correcciones ya integradas | S0 / gates S0 | 3/5/5/5/5/3/2/2 | 86 | BLOCKED para release.551/609/603/614 están integrados; imagen e938/221 está cualificada estáticamente,4039pruebas y107HTTP enCI. Guard621, configuración privada, diario/coordinador, recuperación/canary y disposición formal siguen pendientes. |
+| 4, ejecutable seleccionado | Admitir siguiente release conservando diario y exclusión global | S0, dependencia | 3/5/4/4/5/2/2/2 | 79 | PARTIAL.618 conserva código/modelos revisadosd682 y ahora compone main real1c9,142requisitos y221migraciones. Publicar una vez después de QA del árbol final; obtener CI/revisión vigentes. Ninguna invocación productiva autorizada. |
+| 5 | Entregar alertas y cerrar alcance restante534 | S1 | 2/3/3/4/5/2/3/2 | 64 | PARTIAL.614 no geográfico ya integrado comoe938, backend aún4dac en última observación. Radio requiere contrato explícito de centro aproximado/privacidad; fallbacklegacy continúa pendiente. |
+| 6 | Correo/push de chat controlado por destinatario | S1 | 3/3/4/4/3/1/1/1 | 60 | BLOCKED para entrega externa577 por consentimiento, adaptadores y dispositivos; avisos internos ya existen. |
+| 7 | Habilitación explícita del club de un artista nuevo | S1 | 2/2/4/4/5/1/2/1 | 59 | UNIMPLEMENTED en alcance606; conservar613draft y no provisionar por inferencia. |
+| 8 | Recuperación, expiración y vuelta al intento | S1 | 4/4/3/3/2/1/1/0 | 58 | PARTIAL ST-001; sin defecto adicional reproducido. |
+| Entregado | Borradores propios y callbacks de perfil607 | S0 | 4/5/4/5/5/4/4/4 | 91 | COMPLETE en su alcance web acotado y publicado: cfe75b18,3369pruebas yfixtures; no reabrir sin evidencia. |
+| Entregado | Transporte cookie-only de portada605 | S1 | 3/4/4/5/5/5/4/3 | 83 | COMPLETE en su alcance web publicado; Google real no certificado por la fixture. |
+| Entregado | Invalidación genérica de foto604 | S1 | 4/3/4/5/5/5/4/3 | 81 | COMPLETE en alcance caché web publicado; sin afirmar escritura productiva de una prueba interceptada. |
 
-La cola FIFO actual es #616→#618, después del merge protegido de #614 como `e938c72`. #614 recibió aprobación independiente de ac2 a03:46:19UTC y se integró a03:48:01UTC con20controles obligatorios verdes y árbol exacto del aprobado. #616 tiene propietario activo y compone la base final; #618 se conserva local hasta su resultado. No alterar drafts, protecciones ni revisiones. Las menciones posteriores a estados previos son evidencia histórica, no la cola actual.
+La cola FIFO actual es #618→#619→#620→#621, después del merge protegido de #616 como `1c9c833c` a04:41:10UTC. #616 conservó aprobación independiente42b9 de04:25:42UTC,20controles y árbol exacto6849. El ranking S0 no autoriza alterar FIFO, drafts, controles ni revisiones. Las menciones posteriores a estados previos son evidencia histórica; esta tabla y el cierre posterior616 gobiernan la prioridad actual.
 
 ## Hallazgo seleccionado: borradores de perfiles sin base propia
 
@@ -459,3 +459,13 @@ comprobantes y las restricciones formales/de release siguen independientes.
 ## Reconciliación local después del merge protegido de #614
 
 La base real es `e938c72`, con221migraciones y141requisitos. Se conserva cada objeto canónico de main salvo la extensión revisada de DEPLOY-JOURNAL-001 de d682; código, pruebas y modelos del diario no cambian. Las ejecuciones normal/optimizada en589 y los recibos d682 conservan sus identidades: esta composición no se presenta como una ejecución nueva. Inventario, trazabilidad y admisión de superficies se verifican de nuevo. La rama permanece local hasta main final de616; después requiere CI y revisión de su nuevo head.
+
+## Cierre protegido de616 y composición final de618
+
+616 se integró normalmente como1c9c833c, con padres e938+42b9 y árbol exacto6849ae7eda702460b893febb40b371c9505114f0. La composición618 conserva los142objetos salvo DEPLOY-JOURNAL-001, cuya extensión revisadad682 se mantiene exacta; las221migraciones, backend, cliente web y contratos permanecen exactos del main protegido. Solo se regeneran índices para esa unión y se actualiza este backlog. El remote618anterior d682 y sus aprobaciones/ejecuciones no se presentan como revisión del nuevo commit.
+
+La imagen e938 está ligada al índiceOCI1721e6b1a130a685aba1793a2144d9c0a060ba0771bf2d57157e6402e0b4bbd2, manifiestoamd64e5a0548af8ef458822ab9f7d20df42001118f59cfd9ab6819e68a5279bd2cf43, ejecutableCI641c964c2a33dfaa55ce53cd47508a40e28949f69c3e2faf2e980b3258d3650b ySQL221byteexacto. CI ejecutó4039ejemplos/0fallos/21pendientes y107HTTP. Es verificación estática y del CI existente, sin ejecutar la imagen ni declarar un canary/release; no incluye guard621. Su reporte exacto conserva141requisitos y282obligaciones completasUNPROVEN, releaseBLOCKED yningún riesgo aceptado.
+
+El defecto621 permite a un rol SQL ordinario cambiar transaction_type/origen/auditoría después de contabilizar. La evidencia existente y sus232huellas de entrada conservan identidades e57c/185; no es un incidente productivo ni prueba de doble cobro. Sobre e938, el arreglo se añade después del prefijo221; ambos catálogos de221elementos tienen diferentes fingerprints y deben conservar sus historias antes de revisar el sucesor222. No reconstruir la implementación de su responsable ni permitir release financiero con ese bloqueo abierto.
+
+Próximos cinco resultados: salida privada web/nativa; identidad financiera621; backend financiero/comprobantes/alertas; diario/control618; alcance restante534. Todas las puntuaciones de impacto siguen siendo hipótesis ordinales, sin usuarios afectados ni mejora de conversión medida.

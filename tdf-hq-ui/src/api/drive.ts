@@ -1,3 +1,4 @@
+import { assertNoLogoutIntent } from '../session/logoutIntent';
 import type { DriveUploadDTO } from './types';
 import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
 import { buildAuthorizationHeader } from './authHeader';
@@ -11,6 +12,7 @@ export interface DriveUploadOptions {
 }
 
 export async function uploadToDrive(file: File, options: DriveUploadOptions = {}): Promise<DriveFileInfo> {
+  assertNoLogoutIntent();
   const base = resolveApiBase();
   const authHeader = buildAuthorizationHeader();
 

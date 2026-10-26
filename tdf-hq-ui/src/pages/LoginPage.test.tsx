@@ -13,6 +13,8 @@ const GOOGLE_CONSENT_ERROR =
 
 const googleLoginRequestMock = jest.fn<(payload: Record<string, unknown>) => Promise<Record<string, unknown>>>();
 const loginMock = jest.fn();
+const logoutMock = jest.fn();
+const loginRequestMock = jest.fn<(payload: Record<string, unknown>) => Promise<Record<string, unknown>>>();
 const signupResetMock = jest.fn();
 const redeemArtistInvitationMock = jest.fn<
   (invitation: string, apiToken?: string | null) => Promise<Record<string, unknown>>
@@ -22,7 +24,7 @@ const analyticsCaptureMock = jest.fn();
 
 jest.unstable_mockModule('../api/auth', () => ({
   googleLoginRequest: (payload: Record<string, unknown>) => googleLoginRequestMock(payload),
-  loginRequest: jest.fn(),
+  loginRequest: loginRequestMock,
   requestPasswordReset: jest.fn(),
   signupRequest: Object.assign(signupRequestMock, { reset: signupResetMock }),
 }));
@@ -42,7 +44,7 @@ jest.unstable_mockModule('../api/session', () => ({
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  useSession: () => ({ session: null, loading: false, login: loginMock }),
+  useSession: () => ({ session: null, loading: false, login: loginMock, logout: logoutMock }),
 }));
 
 jest.unstable_mockModule('../theme/AppThemeProvider', () => ({
@@ -70,6 +72,8 @@ jest.unstable_mockModule('../utils/logger', () => ({
 const { default: LoginPage, isGoogleSignupConsentRequiredError, focusSignupEmailUnlessFieldActive } = await import(
   './LoginPage'
 );
+
+const { beginLogoutIntent, finishLogoutIntent } = await import('../session/logoutIntent');
 
 function RouteStateProbe() { const location = useLocation(); return <output data-testid="route-state">{JSON.stringify(location.state)}</output>; }
 
@@ -128,6 +132,7 @@ describe('LoginPage Google signup consent flow', () => {
   });
 
   beforeEach(async () => {
+    localStorage.clear(); sessionStorage.clear(); loginRequestMock.mockReset(); logoutMock.mockReset();
     await i18n.changeLanguage('es');
     googleCallback = null;
     googleLoginRequestMock.mockReset();
@@ -593,6 +598,52 @@ describe('LoginPage Google signup consent flow', () => {
         idToken: GOOGLE_CREDENTIAL, linkAccount: { username: 'existing-user', password: 'fictional-password' },
       }));
       expect(loginMock).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42 }), { remember: true });
+    } finally { await cleanup(); }
+  });
+
+  it.each(['password', 'google', 'signup'])('rejects a late %s response after a newer explicit logout', async (method) => {
+    let resolveLogin!: (value: Record<string, unknown>) => void;
+    const pending = new Promise<Record<string, unknown>>((resolve) => { resolveLogin = resolve; });
+    const requestMock = method === 'google' ? googleLoginRequestMock : method === 'signup' ? signupRequestMock : loginRequestMock;
+    requestMock.mockReturnValueOnce(pending);
+    const cleanup = await renderLoginPage(method === 'signup' ? '/login?signup=1' : '/login');
+    try {
+      if (method === 'google') {
+        await waitFor(() => expect(findButton('Google login test button')).not.toBeNull());
+        await act(async () => { findButton('Google login test button')?.click(); await flushPromises(); });
+      } else if (method === 'signup') {
+        const dialog = await waitFor(() => { const node = document.querySelector('[role="dialog"]'); expect(node).not.toBeNull(); return node!; });
+        await act(async () => {
+          fireEvent.change(dialog.querySelector('[name="email"]')!, { target: { value: 'fictional@example.test' } });
+          fireEvent.change(dialog.querySelector('[name="newPassword"]')!, { target: { value: 'Fictional-password-2026!' } });
+          await flushPromises();
+        });
+        await act(async () => { findButton('Crear e ingresar')?.click(); await flushPromises(); });
+      } else {
+        const username = document.querySelector('input[autocomplete="username"]')!;
+        await act(async () => {
+          fireEvent.change(username, { target: { value: 'fictional@example.test' } });
+          fireEvent.change(document.querySelector('input[autocomplete="current-password"]')!, { target: { value: 'Fictional-password-2026!' } });
+          await flushPromises();
+        });
+        await act(async () => { fireEvent.submit(username.closest('form')!); await flushPromises(); });
+      }
+      expect(requestMock).toHaveBeenCalledTimes(1);
+      await act(async () => { const revision = beginLogoutIntent(); finishLogoutIntent(revision, false); });
+      await act(async () => { resolveLogin({ token: 'late-fictional', partyId: 42, roles: [], modules: [] }); await flushPromises(); });
+      expect(loginMock).not.toHaveBeenCalled();
+      expect(redeemArtistInvitationMock).not.toHaveBeenCalled();
+      expect(document.querySelector('[data-testid="location"]')?.textContent).toContain('/login');
+    } finally { await cleanup(); }
+  });
+
+  it('shows an unconfirmed closure with an explicit retry action', async () => {
+    const revision = beginLogoutIntent(); finishLogoutIntent(revision, false);
+    const cleanup = await renderLoginPage();
+    try {
+      expect(document.body.textContent).toContain('no pudimos confirmar el cierre en el servidor');
+      await act(async () => { findButton('Reintentar cierre')?.click(); });
+      expect(logoutMock).toHaveBeenCalledTimes(1);
     } finally { await cleanup(); }
   });
 
