@@ -350,3 +350,25 @@ El main avanzó después a `3af768dacd95c1223975c62da3ce8088bed89b47` al integra
 sigue siendo 262295679; sus recibos no acreditan los controles operativos nuevos.
 La preparación debe incorporar esa sucesión y verificar sus checks afectados
 antes de cualquier entrega protegida.
+
+
+## Sucesión operativa incorporada — 26/oct 06:05 UTC
+
+La preparación incorpora mediante merge normal el main protegido `3af768d`
+(#618), preservando sus 142 requisitos exactamente y sus controles de diario
+sin reiniciar historia. Solo chocaron inventario y trazabilidad, regenerados
+desde las autoridades combinadas. `quality:repo` pasa con esos controles.
+Se comprobó con Git que todos los inputs de backend, frontend, móvil y
+package/lock permanecen idénticos al runtime 262295679 probado. No se cambia
+la identidad de su ejecutable ni se atribuye una compilación de otro commit.
+El [recibo de sucesión](event-memory-source-evidence-20261025/release-journal-main-preparation.json)
+registra ese límite y el hash del log completo.
+
+El main observado después avanzó a otra revisión que incluye la bienvenida
+#619. Esta preparación conserva su base congelada 3af768d; antes de promover
+#608 deben reconciliarse el main entonces vigente y sus controles, ejecutar los
+checks afectados, cumplir FIFO y obtener revisión/CI protegidos del root exacto.
+No se actualizó el head publicado de #615 ni el de #608 para forzar una fusión.
+El primero conserva CI principal/RACI satisfactorios y revisión independiente
+pendiente; el segundo permanece en borrador. Los intentos/envíos/entregas/fallos
+reales del evento 141 continúan en 0/0/0/0. No hay despliegue productivo de recuerdos.
