@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "OBSERVED_AGGREGATE_INVENTORY_NOT_ACTIVATION",
-  "repositoryBaseline": "e05d003669a930d54b4fe7dd71d72d09335c11ae",
+  "repositoryBaseline": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
   "branch": "docs/music-catalog-inventory-20261026",
   "execution": {
     "performedBy": "Root engineering session after explicit review",
@@ -144,7 +144,8 @@
     "newProductionLogicRequirement": false,
     "migrationManifestCount": 222,
     "migrationManifestBytesExact": true,
-    "wholeFileByteEquality": true
+    "wholeFileByteEquality": true,
+    "baseline": "9b7aa4648d4158f6da84fbb5e794267cd4953177"
   },
   "acceptance": {
     "historicalCoverage": "PARTIAL: canonical tables observed empty; legacy/context inventory and rights review remain incomplete.",
@@ -170,5 +171,26 @@
     "pr": null,
     "push": false,
     "productionWrites": 0
+  },
+  "historicalE05dCanonicalPreservation": {
+    "requirements": 146,
+    "allRequirementObjectsExact": true,
+    "catalogDecisions": 1339,
+    "allCatalogDecisionObjectsExact": true,
+    "newProductionLogicRequirement": false,
+    "migrationManifestCount": 222,
+    "migrationManifestBytesExact": true,
+    "wholeFileByteEquality": true,
+    "baseline": "e05d003669a930d54b4fe7dd71d72d09335c11ae"
+  },
+  "latestMainReconciliation": {
+    "baseline": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+    "source": "Actually merged PR623; no unapproved branch graft",
+    "requirements": 146,
+    "catalogDecisions": 1339,
+    "migrationEntries": 222,
+    "allCurrentMainCanonicalFilesExact": true,
+    "originalObservationAndCollectorBytesUnchanged": true,
+    "newRuntimeOrProductionExecution": false
   }
 }

@@ -164,3 +164,7 @@ The documentation branch began at `78fa351b` and normally merged current main
 `e05d0036` before final metadata checks. This ancestry refresh does not rerun or
 relabel the earlier production observation, its collector source revision or
 any feature candidate's runtime evidence.
+
+## Latest protected-main documentation refresh
+
+The branch normally incorporates protected main `9b7aa4648d4158f6da84fbb5e794267cd4953177` after PR623, preserving its 146 complete requirement objects, 1,339-decision file and 222-entry migration manifest. The earlier e05d preservation check remains recorded separately. The 17:47 observation, fixed collector and review-manifest bytes retain their original identities; no new SQL, SSH, storage, import, publication or production execution occurred in this documentation refresh.

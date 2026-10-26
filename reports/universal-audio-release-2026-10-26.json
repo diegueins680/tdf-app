@@ -4,7 +4,7 @@
   "scope": "Mission-level acceptance register; implementation, protected integration, conditional published-client checks, and actual production availability are distinct. No AC is declared fully met.",
   "baseline": {
     "initial": "b732efd65de23e5b97f3f619a2242397c64965c3",
-    "mainObserved": "e05d003669a930d54b4fe7dd71d72d09335c11ae",
+    "mainObserved": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
     "canonicalMigrationCount": 222
   },
   "missionComplete": false,
@@ -227,7 +227,9 @@
         "reviewedAt": "2026-10-26T17:11:09Z"
       }
     ],
-    "pendingHeadStatus": "All ordinary technical checks passed and independent approvals matched these exact heads in read-only snapshot; main advanced afterward. Current-main reconciliation, exact new-head checks/review and protected FIFO still required."
+    "pendingHeadStatus": "All ordinary technical checks passed and independent approvals matched these exact heads in read-only snapshot; main advanced afterward. Current-main reconciliation, exact new-head checks/review and protected FIFO still required.",
+    "latestProtectedBaseline": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+    "latestReconciliationScope": "Normal merge of actually protected main9b after PR623. All current-main146 requirement objects,1339 catalog-decision bytes and222 manifest retained. Earlier5f HTTP/binary evidence retains original source; no9b compiled HTTP pass or new production probe claimed."
   },
   "inventoryEvidence": "reports/music-catalog-inventory-evidence-20261026/observation.json",
   "evidencePacket": "reports/universal-audio-release-evidence-20261026",
