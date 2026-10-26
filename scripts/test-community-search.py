@@ -7,22 +7,35 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 from urllib.parse import urlparse
 
 root = Path(__file__).resolve().parents[1]
-url = os.environ['TDF_DISCOVERY_TEST_DATABASE_URL']
-parsed = urlparse(url)
-assert (parsed.hostname in ('127.0.0.1', 'localhost') or (os.environ.get('CI') == 'true' and parsed.hostname == 'postgres')) and parsed.path.endswith('_test'), 'Disposable loopback _test database required'
-source = (root / 'tdf-hq/src/TDF/Server/Directory.hs').read_text()
+emit_sql = sys.argv[1:2] == ['--emit-sql']
+if sys.argv[1:] and (not emit_sql or len(sys.argv) > 3):
+    raise SystemExit('Usage: test-community-search.py [--emit-sql [full-source-revision]]')
+if emit_sql and len(sys.argv) == 3:
+    revision = sys.argv[2]
+    assert re.fullmatch(r'[0-9a-f]{40}', revision), 'Immutable source revision required'
+    source = subprocess.check_output(['git', 'show', revision + ':tdf-hq/src/TDF/Server/Directory.hs'], cwd=root, text=True)
+else:
+    source = (root / 'tdf-hq/src/TDF/Server/Directory.hs').read_text()
+if not emit_sql:
+    url = os.environ['TDF_DISCOVERY_TEST_DATABASE_URL']
+    parsed = urlparse(url)
+    assert (parsed.hostname in ('127.0.0.1', 'localhost') or (os.environ.get('CI') == 'true' and parsed.hostname == 'postgres')) and parsed.path.endswith('_test'), 'Disposable loopback _test database required'
 
 def expression(name):
     start = name + (' sponsoredOnly' if name == 'searchSql' else '') + ' ='
     block = source.split(start, 1)[1].split('\n\n', 1)[0]
     block = block.replace('(if sponsoredOnly then "TRUE " else "FALSE ")', '"FALSE "')
-    tokens = re.findall(r'"(?:[^"\\]|\\.)*"|\b(?:searchDocumentsSql|directoryVisibleEventDocumentClause|directoryDerivedListingDedupClause|directorySourceProfileSql|directoryFilterClause|directoryEntityTypeClause)\b', block)
+    tokens = re.findall(r'"(?:[^"\\]|\\.)*"|\b(?:searchDocumentsSql|directoryVisibleEventDocumentClause|directoryDerivedListingDedupClause|directorySourceProfileSql|directoryFilterClause|directoryEntityTypeClause|directorySearchInputSql)\b', block)
     return ''.join(json.loads(token) if token.startswith('"') else expression(token) for token in tokens)
 
 sql = expression('searchSql')
+if emit_sql:
+    print(json.dumps({'search': sql, 'facets': expression('facetsSql')}))
+    raise SystemExit(0)
 
 fixture = """
 BEGIN;

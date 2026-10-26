@@ -27,25 +27,27 @@
       "tdf-hq-ui/src/pages/FanHubPage.tsx"
     ],
     "expectedBenefit": "Prevent unintended field erasure and copying profile drafts across accounts; allow recovery after a failed read.",
-    "observedBenefit": "En entornos descartables, perfiles intactos durante errores, cero despachos antiguos con nuevas credenciales, subida HttpOnly cookie-only y foto publicada persistida en PostgreSQL/refrescada en Comunidad. En producción se verificaron los assets y el comportamiento sintético publicado de604/605;607 todavía no está integrado.",
-    "implementationStatus": "FINAL_COMBINED_CANDIDATE_LOCALLY_VERIFIED",
+    "observedBenefit": "En entornos descartables se conservaron perfiles y se bloquearon callbacks antiguos con nuevas credenciales. La web canónica607 publicada pasó fixtures sintéticos escritorio/Pixel7:503/ceroPUT/reintento, guardado con campos conservados, subida cookie-only, caché y callback A tras confirmar en React el cambio de sesión a B sin PUT; B guarda sus propios datos. Cero API/escrituras productivas reenviadas; no es prueba de persistencia productiva o cuentas reales.",
+    "implementationStatus": "MERGED_WEB_SCOPE_DEPLOYED_VERIFIED",
     "validationStatus": "3369_TESTS_300_SUITES_BUILD_LINT_TYPES_NATIVE_RUNTIME_SOURCE_ADMISSION_PASS",
     "pullRequest": "https://github.com/diegueins680/tdf-app/pull/607",
-    "mergeStatus": "NOT_MERGED_REQUIRED_REVIEW_CI_AND_FIFO",
-    "productionStatus": "607_NOT_DEPLOYED_604_605_WEB_VERIFIED",
+    "mergeStatus": "MERGED_PROTECTED_REVIEW_AND_20_REQUIRED_CHECKS",
+    "productionStatus": "607_DEPLOYED_WEB_SYNTHETIC_FIXTURE_VERIFIED",
     "scope": "Web form ownership and load-state guard; preserve API/server authorization and historical migrations.",
     "risksAndDependencies": [
-      "New authentication-epoch guard and composed photo invalidation require final-head CI and independent review.",
-      "605 is being reconciled/qualified by its existing operator; do not create a parallel refresh.",
       "Already-dispatched requests and cross-device write versioning remain outside this client boundary.",
-      "Production benefit from607 is not yet observed."
+      "Deployed fixtures cover committed provider logout/login; before-React credential gap is separately verified by four local real-provider/fetch regressions.",
+      "No real-account authentication, production profile persistence or physical-device end-to-end claim."
     ],
     "branch": "fix/artist-profile-load-safety-20261025",
     "codeChanges": [
       "Shared useOwnedProfileDraft for successful-read baseline and account generation.",
       "Artist and fan form/handler save guards and explicit read retry.",
       "Captured save/upload callbacks and preservation of dirty drafts across background reads."
-    ]
+    ],
+    "mergeCommit": "cfe75b18786c18d18fb2fc806f843a95e029aeb0",
+    "mergeReceipt": "/private/tmp/tdf-user-value-607-merge-20261025.json",
+    "deploymentReceipt": "/private/tmp/tdf-user-value-607-deployed-20261025.json"
   },
   "historicalMeasurement": {
     "window": "2026-10-12/2026-10-18",
@@ -57,33 +59,46 @@
   },
   "nextFive": [
     {
-      "item": "Financial terms/ledger/capture consolidation",
-      "existingPullRequest": 551,
-      "status": "BLOCKED"
+      "item": "Privacy616 failed logout intent and actor/cache revocation",
+      "pullRequest": 616,
+      "tier": "S0",
+      "scoreHypothesis": 87,
+      "status": "READY_OWNER_ACTIVE_PENDING_COMPOSITION_AND_CURRENT_GATES",
+      "head": "9e96e07f45118e41f3e5e97097b846196a27452a",
+      "duplicated": false
     },
     {
-      "item": "Reviewed backend release admission/private receipt storage and exact assurance disposition",
-      "existingPullRequest": 603,
-      "status": "BLOCKED_ON_VERIFIED_RELEASE_GATES",
-      "relatedDrafts": [
-        495,
-        600
-      ]
+      "item": "Authorized delivery of merged financial551 and expiry609 safeguards",
+      "pullRequests": [
+        551,
+        609
+      ],
+      "tier": "S0",
+      "scoreHypothesis": 86,
+      "status": "SOURCE_MERGED_BACKEND_RELEASE_BLOCKED"
     },
     {
-      "item": "Saved alerts use shared non-geo search predicates",
-      "existingIssue": 534,
-      "status": "IMPLEMENTATION_AND_RUNTIME_QUALIFICATION_IN_PROGRESS"
+      "item": "Explicit next-release journal/control admission618",
+      "pullRequest": 618,
+      "tier": "S0_DEPENDENCY",
+      "scoreHypothesis": 79,
+      "status": "REMOTE_APPROVED_OWNER_LOCAL_COMPOSITION_HELD_NO_EXECUTION_AUTHORITY"
     },
     {
-      "item": "Recipient-controlled chat offline email/push",
-      "existingIssue": 577,
+      "item": "Current-head protected integration and authorized delivery of saved-alert614",
+      "pullRequest": 614,
+      "issue": 534,
+      "tier": "S1",
+      "scoreHypothesis": 64,
+      "status": "LOCAL_COMPOSITION_QUALIFIED_PENDING_FINAL_QA_PUSH_REVIEW_CI_FIRST_READY_FIFO",
+      "limits": "Geography and legacy-fallback-only changes remainPARTIAL."
+    },
+    {
+      "item": "Recipient-controlled offline chat delivery577",
+      "issue": 577,
+      "tier": "S1",
+      "scoreHypothesis": 60,
       "status": "BLOCKED_ON_CONSENT_ADAPTER_AND_DEVICE_QUALIFICATION"
-    },
-    {
-      "item": "Owner-controlled new artist club activation",
-      "existingIssue": 606,
-      "status": "UNIMPLEMENTED_EXPLICIT_OPT_IN_REQUIRED"
     }
   ],
   "limits": [
@@ -263,7 +278,7 @@
       "receipt": "/private/tmp/tdf-profile-final-catalog-20261025.json"
     }
   },
-  "updatedAt": "2026-10-25T19:09:05.986956+00:00",
+  "updatedAt": "2026-10-26T02:57:07.830833+00:00",
   "publicObservation": {
     "observedAt": "2026-10-25T08:25:38.806824+00:00",
     "readOnly": true,
@@ -293,7 +308,7 @@
   },
   "nextItemInvestigation": {
     "issue": 534,
-    "status": "REAL_POSTGRES_REPRODUCED_BOUNDED_REPAIR_IN_PROGRESS",
+    "status": "LOCAL_COMPOSITION_WITH_PROTECTED_FINANCIAL_MAIN_AND611_QUALIFIED_PENDING_FINAL_QA_PUBLICATION_REVIEW_CI",
     "findings": [
       "Trigger omits canonical non-geo filters and full-text parity.",
       "Mobile entityType all sentinel incorrectly excludes all document kinds."
@@ -309,7 +324,108 @@
     "cases": 27,
     "validQueryMismatches": 10,
     "externalChannels": 0,
-    "scope": "Real full213 PostgreSQL trigger and notification/delivery rows; public SQL clauses extracted from source. HTTP verification remains pending."
+    "scope": "Changed canonical indexed documents; geographic alerts and legacy-fallback-only changes remain outside this repair. No production/provider execution.",
+    "qualification": {
+      "status": "PASS_CURRENT_QUALIFIED_COMPOSITION_NOT_RELABELLED_FINAL_HEAD",
+      "qualificationHead": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+      "compiledCommit": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+      "binarySha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+      "migrations": 221,
+      "protectedMainPrefixExact": 220,
+      "sourceIntroductionAncestorsPreserved": 8,
+      "sqlCases": 68,
+      "utcControls": 16,
+      "planComparisons": 7,
+      "realHttpRequestsPassed": 107,
+      "fullPrefixReplayRollbackReapply": "PASS",
+      "savedJsonHashLedgerPreserved": true,
+      "backendInputsUnchangedAndEqualCompiledCommit": 263,
+      "entireSqlTreeEquivalentAfter611": true,
+      "post611BaseMerge": "321b4eb52e6c714ebc11845e7865bd052fc881d7",
+      "nativeStack": {
+        "command": "STACK_ROOT=/Users/macpro/.stack stack --no-terminal test --force-dirty tdf-hq --copy-bins --local-bin-path /private/tmp/tdf-alert-parity-repro-20261025/bin-post551",
+        "ghc": "9.10.3",
+        "exitCode": 0,
+        "examples": 4039,
+        "failures": 0,
+        "pending": 21,
+        "log": "/private/tmp/tdf-alert-parity-repro-20261025/stack-post551-composition.log",
+        "workingDirectory": "/private/tmp/tdf-alert-parity-20261025/tdf-hq"
+      },
+      "catalogUnitTests": {
+        "pass": 8,
+        "fail": 0,
+        "retiredApprovalsRejected": [
+          213,
+          214,
+          220
+        ]
+      },
+      "catalogStrict": {
+        "pass": true,
+        "candidates": 1328,
+        "unreviewed": 0
+      },
+      "finalReceipt": "/private/tmp/tdf-alert-parity-post551-20261026/results.json",
+      "post611Equivalence": "/private/tmp/tdf-alert-parity-post551-20261026/post611-equivalence.json",
+      "cleanup": {
+        "databaseRemoved": true,
+        "clusterStopped": true,
+        "portClosed": true
+      },
+      "externalChannels": 0,
+      "productionMutations": false,
+      "sourceCorrespondence": "Native API107 was executed onfe179 and its exact compiled backend inputs.611 changes only helpers/indexes; all backend,SQL,manifest/renderer/fixture/runner bytes remain equal. Final metadata head is not relabeled as that execution; hostedCI must build its exact checkout."
+    },
+    "contract": "docs/directory/saved-search-parity.md",
+    "pullRequest": "https://github.com/diegueins680/tdf-app/pull/614",
+    "mergeStatus": "OPEN_FIRST_READY_FIFO_REMOTE_OLD_HEAD_REVIEW_DOES_NOT_APPROVE_NEW_LOCAL_HEAD",
+    "productionStatus": "NOT_DEPLOYED",
+    "qualificationHistory": [
+      {
+        "status": "PASS",
+        "qualificationHead": "8b2f981fa952b6d281a22b4c3eb187f3828df870",
+        "sqlCases": 68,
+        "utcControls": 16,
+        "planComparisons": 7,
+        "realHttpRequestsPassed": 107,
+        "migrations": 214,
+        "fullPrefixReplayRollbackReapply": "PASS",
+        "savedJsonHashLedgerPreserved": true,
+        "backendSourcesUnchangedBeforeAfter": 263,
+        "finalReceipt": "/private/tmp/tdf-alert-parity-repro-20261025/v12-frozen-full214/results.json",
+        "cleanup": {
+          "databaseRemoved": true,
+          "clusterStopped": true,
+          "portClosed": true
+        },
+        "compiledCommit": "9a927fa390066f43cc27c872800bf1b0412e166e",
+        "binarySha256": "fc8c2819d29760efc7108e5b7c801fc58efc37ff7847bb37fb00d577b19e7d83",
+        "directorySha256": "d900bc237cf4331aa9ca03b67641bdefa832f52b6f801b1ce1c753ea97848494",
+        "sqlSha256": "673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4",
+        "nativeHspec": {
+          "examples": 4035,
+          "failures": 0,
+          "pending": 20,
+          "scope": "Direct execution of Stack-built test binary; original exe build exit0. Redundant stack test interrupted143 during duplicate exe build; not PASS."
+        },
+        "sourceCorrespondence": "All backend inputs match compiled base9a except Directory with previously built source hash; no runtime version overrides. CI must compile exact candidateHEAD. After the receipt only documents/trace metadata change plus one trailing fixture SQL space removed with identical SQL tokens. Backend, forward/rollback migrations and runners retain exact qualified bytes.",
+        "productionMutations": false,
+        "externalChannels": 0,
+        "catalogStrict": {
+          "status": "PASS",
+          "candidates": 1327,
+          "unreviewed": 0,
+          "receipt": "/private/tmp/tdf-alert-parity-repro-20261025/catalog-audit-frozen.json"
+        },
+        "fixtureWhitespaceCleanup": {
+          "qualifiedHead": "8b2f981fa952b6d281a22b4c3eb187f3828df870",
+          "cleanupCommit": "898d0a8bf",
+          "change": "One trailing space removed from integration SQL line15; complete SQL token sequence unchanged. No functional/test assertion change and no redundant107HTTP rerun claimed."
+        }
+      }
+    ],
+    "publishedHead": "77c03f639ed4c2ff30404a355ed7c7e01b907354"
   },
   "evidenceSha256": {
     "/private/tmp/tdf-profile-safety-full-web-20261025.log": "a480244a2aaa47f8136cff81c766814e6abc2925d212c5995df89cd2ab89717d",
@@ -329,7 +445,16 @@
     "/private/tmp/tdf-profile-final-runtime-20261025/qualification.json": "8ef3e8ada1d71e58805d7bde145bf7d6e3a361191d6e937094f6ef17760ef2a4",
     "/private/tmp/tdf-profile-auth-epoch-review-20261025.json": "924ab6ee782fcfebfb9af871f165ef9582203d30b1e451918979b0d5f5953a53",
     "/private/tmp/tdf-user-value-605-deployed-20261025.json": "8fe97601d9ac244563a7ccb085cd6c442143ac92e62436a668dbc50ff45a0c9a",
-    "/private/tmp/tdf-603-release-readiness-assessment-20261025.json": "75083d986cb06791b5d6878507c537ae8d595542aff589743c5396d2e9cc3505"
+    "/private/tmp/tdf-603-release-readiness-assessment-20261025.json": "75083d986cb06791b5d6878507c537ae8d595542aff589743c5396d2e9cc3505",
+    "/private/tmp/tdf-alert-parity-repro-20261025/v12-frozen-full214/results.json": "153da82b102dffe63b5fc4ca7dc1e3ba375b95924c74c0586ade0181e77a6ade",
+    "/private/tmp/tdf-alert-parity-repro-20261025/v12-frozen-full214/official-full214.log": "4f06ed0211905a7da80218ecbad60c29625065489ed8a8fdfeaf6529c325020f",
+    "/private/tmp/tdf-alert-parity-repro-20261025/hspec-native-built-by-stack.log": "25ebde6babf80bf205277aff3e737c8f6b4eff1b9f440c1d5fe5aa138b7dac52",
+    "/private/tmp/tdf-user-value-607-merge-20261025.json": "d4f17cdf5906aa262c4b5dfc48c3fdbe1e2eea587f8a1319698daa89cb56be00",
+    "/private/tmp/tdf-user-value-607-deployed-20261025.json": "ad7bca5fb9b5df9d265c7bb5f1ed0aac652d85923f5767731ea450f96dd878f3",
+    "/private/tmp/tdf-alert-parity-post551-20261026/results.json": "22cc575c2df55af25c8007eb67002dc99c413467860ee0a20e22082c76d1bfa8",
+    "/private/tmp/tdf-alert-parity-post551-20261026/post611-equivalence.json": "7cb16f66db3ab3d18a71398c93aeb13147c3c59a995bd1027e1f70151c4eb1e7",
+    "/private/tmp/tdf-alert-parity-post551-20261026/composition.json": "4d6250550444b4519457e56c4998371b4e190f4a049e32b74200764be855b431",
+    "/private/tmp/tdf-alert-parity-repro-20261025/stack-post551-composition.log": "d123a35b68eacc719aeb4ed25edfde8dad10bef7c90f2134312037b345d274b6"
   },
   "integrationRefresh": {
     "protectedMain": "089dce6ba410e5a76bee024c0d4be2ae3df0011d",
@@ -367,7 +492,7 @@
       "inventoryAndTraceability": "PASS"
     }
   },
-  "currentProtectedMain": "9a927fa390066f43cc27c872800bf1b0412e166e",
+  "currentProtectedMain": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
   "photoDelivery": {
     "pullRequest": 604,
     "state": "MERGED_AND_DEPLOYED_WEB_VERIFIED",
@@ -397,6 +522,49 @@
       "Backend/release/migration inputs089→9a unchanged.",
       "Fresh inspector213applied and0pending; preparation explicitlyexecutionAllowedfalse."
     ],
-    "productionMutations": false
+    "productionMutations": false,
+    "currentState": "BLOCKED_NO_DEPLOYMENT_AUTHORIZATION",
+    "currentLimits": "Source financial551 merged and image identity statically qualified; old storage/journal observations need refreshed verification. Exact assurance still280UNPROVEN; no current recovery/canary/production execution claim."
+  },
+  "profileSafetyDelivery": {
+    "pullRequest": 607,
+    "state": "MERGED_AND_DEPLOYED_WEB_SYNTHETIC_FIXTURE_VERIFIED",
+    "mergeCommit": "cfe75b18786c18d18fb2fc806f843a95e029aeb0",
+    "receipt": "/private/tmp/tdf-user-value-607-deployed-20261025.json",
+    "observedAt": "2026-10-25T19:49:43.915930+00:00",
+    "asset": "https://www.tdfrecords.net/assets/index-dzlEpVI6.js",
+    "assetSha256": "287eac22278297be85cf7e3ee8ddecc03ffd85558afd5dd7b749a4c6c9001997",
+    "backendCommit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+    "productionApiReadsForwarded": 0,
+    "productionWritesForwarded": 0,
+    "scope": "Actual deployed static assets and real SessionProvider/clients in desktop/Pixel7 Chromium with entirely synthetic API/session/profile/image fixtures. Post-React-commit old callback test is separate from four local before-render controls. No real account/provider/production persistence claim."
+  },
+  "sixthPriority": {
+    "item": "Explicit owner-controlled new artist club606",
+    "status": "UNIMPLEMENTED_EXPLICIT_OPT_IN_REQUIRED"
+  },
+  "seventhPriority": {
+    "item": "ST-001 recovery/expiration/return verification",
+    "status": "PARTIAL_NO_NEW_DEFECT_REPRODUCED"
+  },
+  "financialSourceDelivery": {
+    "pullRequest": 551,
+    "mergeCommit": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+    "state": "SOURCE_MERGED_BACKEND_RELEASE_BLOCKED",
+    "expiry609": "000cf8ad3b9dabbd612695c3c107ddde6896c96a",
+    "manifestEntries": 220,
+    "staticImageReceipt": "/private/tmp/tdf-5114-registry-qualification-20261026/receipt.json",
+    "scope": "Static image/source identity only; no current canary/recovery/deployment or provider activation claim. Existing storage/journal observations require reinspection; exact assurance280UNPROVEN remains."
+  },
+  "privacy616": {
+    "status": "READY_OWNER_ACTIVE_NOT_MERGED",
+    "head": "9e96e07f45118e41f3e5e97097b846196a27452a",
+    "scoreHypothesis": 87,
+    "scope": "Failed logoutPOST can restore cookie identityA; persistent intent/scope-cache revocation/retry identity guards. Independent evidence supplied by root; do not duplicate implementation.",
+    "receipts": [
+      "/private/tmp/tdf-616-p3-joint-review-20261025-evidence/receipt.json",
+      "/private/tmp/tdf-616-f9-independent-20261025-evidence/receipt.json"
+    ],
+    "identityLimit": "Real API/PG retry evidence identifiesf9; adapters/auth byte-equivalent9e;3411UI/303 and178native are separately recorded by owner."
   }
 }

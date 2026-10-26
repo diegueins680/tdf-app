@@ -11845,6 +11845,92 @@
         "classification": "PARTIAL",
         "reason": "Navigation implementation and local validation; independent review, hosted checks and production publication remain separate gates."
       }
+    },
+    {
+      "id": "DIR-SAVED-SEARCH-001",
+      "title": "Saved alerts share public non-geographic eligibility",
+      "statement": "Saved-search alerts and public directory queries share typed non-geographic and entity/derivation predicates, preserve public ranking/facets, reject unsafe new filters, and tolerate unsupported historical filters without broadening or aborting index updates.",
+      "domain": "DIR",
+      "authority": "Product owner user-value completion instruction 2026-10-25; existing directory saved-search contract and issue534.",
+      "source": "docs/music-directory/functional-spec.md saved-search section; issue534; docs/directory/saved-search-parity.md",
+      "property": "For valid non-geographic filters, a public eligible changed canonical indexed result matches its saved alert exactly once per version; invalid/unsupported filters never broaden a match.",
+      "contract": "docs/directory/saved-search-parity.md",
+      "actors": [
+        "Authenticated directory user",
+        "Public directory visitor",
+        "Directory document projector"
+      ],
+      "preconditions": [
+        "The complete reviewed migration prefix and additive parity migration are applied.",
+        "Saved alerts opt in and their frequency is not off."
+      ],
+      "inputs": [
+        "Typed public query filters",
+        "Saved canonical JSON",
+        "Canonical public search documents and aliases",
+        "Result source version"
+      ],
+      "state": {
+        "savedQuery": [
+          "valid-non-geographic",
+          "invalid",
+          "unsupported-geographic"
+        ],
+        "delivery": [
+          "absent",
+          "internal-notification-created"
+        ]
+      },
+      "allowedTransitions": [
+        "Valid query plus eligible new/modified version -> one internal notification.",
+        "Same version replay -> unchanged.",
+        "Unsupported radius removed -> valid alert save."
+      ],
+      "forbiddenTransitions": [
+        "Ignored non-geographic filter -> irrelevant notification.",
+        "Literal all/artist alias mismatch -> lost eligible notification.",
+        "Malformed historical cast -> unrelated document write abort.",
+        "New saved exact coordinates -> persisted payload.",
+        "Same result version -> duplicate delivery."
+      ],
+      "effects": [
+        "Use the same scalar SQL predicates for public and saved matching.",
+        "Preserve valid saved JSON/hash/name/history and public scoring/facets/cursor.",
+        "Unsupported geographic alerts stay unavailable with explicit new-request error."
+      ],
+      "authorization": "Existing authenticated actor owns saved searches; public/canonical visibility remains required for notification eligibility; no new grants or endpoints.",
+      "privacy": "Reject new saved exact coordinates and unknown/nested canonical fields; no historical payload rewrite or external provider activation.",
+      "concurrency": "Existing unique saved-search/result/version delivery fence and transactional notification are retained; no global worker/concurrency proof is claimed.",
+      "idempotency": "Existing saved-search actor/request identity and query hashes are preserved; same-version trigger replay cannot create a second delivery.",
+      "failure": "Invalid new filters return400; radius-enabled alerts return an actionable400; historical malformed/unsupported filters yield no-match without propagating known conversion errors.",
+      "recovery": "Remove unsupported/invalid filters and retry using the same existing endpoint; reviewed rollback restores the exact previous trigger with compatible previous backend.",
+      "observability": "Synthetic SQL/HTTP and plan receipts; minimized validation reasons; no profile payloads or credentials added to logs.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+        "tdf-hq/sql/2026-10-25_directory_saved_search_parity_rollback.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql",
+        "scripts/test-directory-saved-search-parity.mjs",
+        "scripts/__tests__/directory-saved-search-http.mjs",
+        "scripts/__tests__/directory-search-plan-parity.mjs",
+        "scripts/test-community-search.py",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Source-confirmed defect with real PostgreSQL negative characterization and candidate parity controls; hosted/deployed and physical-device evidence remain separate.",
+      "ambiguity": [
+        "Geographic saved-alert centers require an explicit privacy-compatible product contract; radius-only saved queries cannot be evaluated geographically."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded non-geographic repair; geographic delivery remains unsupported and release/deployed correspondence require independent review and gates."
+      },
+      "verification": "Full-schema PostgreSQL trigger/notification tests, protected input validation, rollback/reapply, shipped query/plan comparison and real authenticated HTTP lane; no mathematical proof claimed.",
+      "evidence": "Dated local reproduction and qualification receipts, final candidate source hashes and hosted checks."
     }
   ]
 }
