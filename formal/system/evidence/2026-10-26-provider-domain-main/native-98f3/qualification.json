@@ -24,12 +24,21 @@
   "productionOperations": false,
   "deliveryAtMeasurement": {
     "pr": 596,
-    "state": "OPEN",
+    "state": "MERGED",
     "head": "98f3ed230d2bcc87971d9e7c9b2083bd1cb9700d",
     "independentReviewer": "tdfrecords",
     "approvedAt": "2026-10-26T22:37:11Z",
     "codexReview": "No major issues at98f3ed230",
-    "hostedCI": "Backend, financial, migration and browser journey checks pass; the event-RACI real-browser workflow remains required."
+    "hostedCI": "All43 statuses SUCCESS or explicitly SKIPPED",
+    "mergedAt": "2026-10-26T23:10:30Z",
+    "mergeCommit": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+    "statusCount": 43,
+    "mergeParents": [
+      "2e01bbe1263e8761fa2692bd951f828c01142449",
+      "98f3ed230d2bcc87971d9e7c9b2083bd1cb9700d"
+    ],
+    "mergedTreeEqualsReviewedHead": true,
+    "originalProviderAndLedgerIntroductionAncestryVerified": true
   },
   "limits": [
     "Finite synthetic database cases; real provider HTTP, production data, arbitrary schedules, liveness and external exactly-once charges are not proven.",
