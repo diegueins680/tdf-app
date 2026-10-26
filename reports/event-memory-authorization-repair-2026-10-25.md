@@ -372,3 +372,34 @@ No se actualizó el head publicado de #615 ni el de #608 para forzar una fusión
 El primero conserva CI principal/RACI satisfactorios y revisión independiente
 pendiente; el segundo permanece en borrador. Los intentos/envíos/entregas/fallos
 reales del evento 141 continúan en 0/0/0/0. No hay despliegue productivo de recuerdos.
+
+
+## Comprobación pública y bloqueo de entrega — 26/oct 06:10 UTC
+
+La [consulta pública final](event-memory-source-evidence-20261025/public-readonly-final-20261026.json)
+respondió 200 para la URL canónica del evento 141, salud (DB ok) y versión.
+El backend publicado sigue en `4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`,
+anterior a la funcionalidad de esta entrega. El shell 200 no se cuenta como
+prueba del compositor nuevo. Python no pudo validar su cadena local de CA;
+se conserva ese intento fallido y se utilizó curl del sistema con validación
+TLS normal, sin desactivar certificados. No se escribió en producción.
+
+Los tres worktrees propios de base, fuente y preparación quedaron limpios tras
+retirar solo sus enlaces temporales; se conservaron los directorios destino y
+los logs. API/Vite/Metro y el PostgreSQL sintético están detenidos; las bases
+sintéticas se retiraron. El checkout original divergente y las ramas de otros
+operadores se conservaron.
+
+El bloqueo inmediato es revisión independiente de #615 (31c16bffe, CI verde)
+y de la cadena móvil #168/#169/#170. La entrega raíz #608 sigue en borrador:
+debe incorporar el sucesor revisado, el main entonces vigente (incluida la
+bienvenida posterior a esta preparación), CI y aprobación nuevos del root,
+imagen/recuperación/canary autorizados y comprobación productiva. Después puede
+corregirse el estado del evento confirmado y comprobar preferencias/eligibilidad
+reales antes de cualquier invitación. Consentidos elegibles y exclusiones siguen
+sin un total acreditado; intentadas/enviadas/entregadas/fallidas: **0/0/0/0**.
+También permanecen las limitaciones funcionales enumeradas: medios privados y
+revocables, galerías mixtas, audio/texto nativo, etiquetado estructurado de la
+publicación, idempotencia general, previews específicos y medición D7/D30.
+Esto es avance implementado y probado, con preparación publicada; no una entrega
+integrada, desplegada o verificada funcionalmente en producción.
