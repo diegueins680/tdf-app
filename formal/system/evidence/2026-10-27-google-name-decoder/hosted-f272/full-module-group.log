@@ -1,0 +1,19 @@
+Google public-name privacy through token decoding
+  keeps private contact data out of the public name for a missing name [✔]
+  keeps private contact data out of the public name for a null name [✔]
+  keeps private contact data out of the public name for a empty name [✔]
+  keeps private contact data out of the public name for a whitespace name [✔]
+  keeps private contact data out of the public name for a punctuation name [✔]
+  keeps private contact data out of the public name for a hidden format name [✔]
+  keeps private contact data out of the public name for a control character name [✔]
+  keeps private contact data out of the public name for a overlong name [✔]
+  keeps private contact data out of the public name for a explicit name [✔]
+  retains authentication rejection for unverified email [✔]
+  retains authentication rejection for wrong audience [✔]
+  retains authentication rejection for wrong issuer [✔]
+  retains authentication rejection for blank subject [✔]
+  retains authentication rejection for invalid email [✔]
+  retains authentication rejection for expired token [✔]
+
+Finished in 0.0051 seconds
+15 examples, 0 failures

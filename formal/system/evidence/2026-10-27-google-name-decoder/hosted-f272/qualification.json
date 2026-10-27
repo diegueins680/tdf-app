@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-27T04:41:51.870223+00:00",
+  "requirementId": "AUTH-ENTRY-002",
+  "status": "TESTED",
+  "candidateHead": "985be1ca49908260d57ca608e1faf278115ed10c",
+  "actualCheckout": "f2723ec0867d8f3a4a6cf003f94db16c26efcd29",
+  "identicalTree": "3734b78af47d20f286d54a0a3c3e7de49b9c6496",
+  "workflowRun": 40446969997,
+  "workflowConclusion": "success",
+  "backendJob": 122001043076,
+  "backendJobConclusion": "success",
+  "backendJobCompletedAt": "2026-10-27T04:35:21Z",
+  "fullModuleRegression": {
+    "examples": 15,
+    "failures": 0,
+    "pending": 0
+  },
+  "sourceProbe": {
+    "examples": 19,
+    "failures": 0,
+    "pending": 0,
+    "restoredFallbackExamples": 19,
+    "restoredFallbackFailures": 8,
+    "tools": {
+      "python": "3.11.2",
+      "stack": "3.3.1",
+      "ghc": "9.10.3",
+      "hspec": "2.11.17",
+      "aeson": "2.2.5.0",
+      "text": "2.1.3",
+      "time": "1.12.2"
+    },
+    "sources": {
+      "tdf-hq/src/TDF/ServerAuth.hs": "48686841bfe8bb363c2652390574e0de1ae99807e344b9f2f9623ac249158613",
+      "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
+      "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
+      "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
+      "scripts/verify-google-account-name.py": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
+      "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+      "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
+      "tdf-hq/tdf-hq.cabal": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a"
+    }
+  },
+  "aggregateHspec": {
+    "examples": 4058,
+    "failures": 0,
+    "pending": 21
+  },
+  "requiredTechnicalChecks": [
+    {
+      "context": "quality",
+      "appId": 15368,
+      "checkId": 122012014807,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T04:35:27Z"
+    },
+    {
+      "context": "api-contracts",
+      "appId": 15368,
+      "checkId": 122001289293,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:59:40Z"
+    },
+    {
+      "context": "production-migrations",
+      "appId": 15368,
+      "checkId": 122002131179,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T04:02:22Z"
+    },
+    {
+      "context": "specification-contracts",
+      "appId": 15368,
+      "checkId": 122000435652,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T04:00:51Z"
+    },
+    {
+      "context": "verify",
+      "appId": 15368,
+      "checkId": 122000435807,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T04:06:46Z"
+    },
+    {
+      "context": "postgres-foundation",
+      "appId": 15368,
+      "checkId": 122000435933,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:57:55Z"
+    },
+    {
+      "context": "postgres-api",
+      "appId": 15368,
+      "checkId": 122000435809,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:57:20Z"
+    },
+    {
+      "context": "postgres-task-commit",
+      "appId": 15368,
+      "checkId": 122000435760,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:57:13Z"
+    },
+    {
+      "context": "postgres-task-read",
+      "appId": 15368,
+      "checkId": 122000435746,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:57:19Z"
+    },
+    {
+      "context": "postgres-task-revision",
+      "appId": 15368,
+      "checkId": 122000435803,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:57:42Z"
+    },
+    {
+      "context": "postgres-task-revisioned-read",
+      "appId": 15368,
+      "checkId": 122000435856,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:57:23Z"
+    },
+    {
+      "context": "postgres-raci-reassignment",
+      "appId": 15368,
+      "checkId": 122000436277,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:58:35Z"
+    },
+    {
+      "context": "postgres-raci-editor-context",
+      "appId": 15368,
+      "checkId": 122000435848,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:57:35Z"
+    },
+    {
+      "context": "postgres-task-completion",
+      "appId": 15368,
+      "checkId": 122000435860,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:58:18Z"
+    },
+    {
+      "context": "postgres-complete-schema",
+      "appId": 15368,
+      "checkId": 122000435891,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:57:17Z"
+    },
+    {
+      "context": "models-and-postgres",
+      "appId": 15368,
+      "checkId": 122000435833,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:59:18Z"
+    },
+    {
+      "context": "social-client",
+      "appId": 15368,
+      "checkId": 122000436021,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T04:04:31Z"
+    },
+    {
+      "context": "postgres-properties",
+      "appId": 15368,
+      "checkId": 122000435580,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:57:46Z"
+    },
+    {
+      "context": "hardcoded-list-audit",
+      "appId": 15368,
+      "checkId": 122000435484,
+      "conclusion": "success",
+      "completedAt": "2026-10-27T03:58:56Z"
+    }
+  ],
+  "independentReview": {
+    "id": 5662064063,
+    "login": "tdfrecords",
+    "head": "985be1ca49908260d57ca608e1faf278115ed10c",
+    "submittedAt": "2026-10-27T04:01:27Z"
+  },
+  "mainIntegrationAdmission": {
+    "context": "main-integration-admission",
+    "state": "pending",
+    "description": "Waiting for PR #628; base 1129112f89d3c00d33b8c86043a6bd197031dcff",
+    "created_at": "2026-10-27T03:56:58Z"
+  },
+  "queue": {
+    "context": "main-integration-admission",
+    "base": "1129112f89d3c00d33b8c86043a6bd197031dcff",
+    "admittedPR": 628,
+    "admittedHead": "ec4594f6363399be3dce13d8a76c509cf3dce1a4",
+    "waitingPRs": [
+      495,
+      573,
+      592,
+      593,
+      599,
+      601,
+      608,
+      629,
+      631,
+      633,
+      634,
+      636,
+      637,
+      638,
+      639,
+      640,
+      642,
+      643,
+      646
+    ],
+    "duplicateHeads": [],
+    "applied": false
+  },
+  "completeRequirementProofs": 0,
+  "limits": [
+    "Finite real-module and source-probe tests; no implementation/refinement equivalence proof.",
+    "Aggregate pending examples are separate from completed external runners and are not labelled executed here.",
+    "These are dated post-execution/merge-readiness snapshots, not proof that earlier merges enforced these gates.",
+    "Canonical FIFO is pending; this receipt is not merge admission or deployment authorization."
+  ],
+  "artifacts": {
+    "README.md": "30f8aef2ae02eec70359ff325039a9c705b405857d4eee47b8f5040b7551f778",
+    "backend-job.json": "e96a288d748d2e5a8a161f5d9fe2756690823d937404f2d767fb45405ad3e706",
+    "backend-job.log.gz": "4ae066ed51131daa4686afbe620d857ae120797d616acc57dc09ea02071236bc",
+    "check-runs-snapshot.json": "cc312979cdb6800f7593221b9a208ab2ae5dca5b053e3e23c8193abd4907ce8d",
+    "full-module-group.log": "fcf27923058b4864f17f14d9e524d190c6fc0f0b25a4cfa1421294f1b0739c02",
+    "native.json": "61df17e002624f673a0e9f6e2ea619d63b6fb7e6fcc65428a181cc9c0581233a",
+    "protection-snapshot.json": "c7faee329215accb9fa474e6818144b99f293e7081dc77853334a56b90c075f6",
+    "queue-snapshot.json": "1450072b9258072fb6bb1845bd72819e8aa4ecc0ab35183e339d281c7a2c1636",
+    "reviews-snapshot.json": "ed9fff662a2ccccf86a3ce0dee1972f3892c681f633e3c3310ff802751dc6192",
+    "status-contexts-snapshot.json": "9f45c9557456cc27d01c5dc07d5d6a48f01dd9617da4d241204d91b04223592d",
+    "workflow.json": "e190b345f5a0feed5c6a2336d188fc2dfe462a181605a40fb9c00429fdee3c21"
+  },
+  "evidenceProcessor": {
+    "python": "3.13.5",
+    "git": "git version 2.37.1 (Apple Git-137.1)",
+    "gh": "gh version 2.96.0 (2026-07-02)"
+  },
+  "backendInputSnapshot": {
+    "path": "../hosted-805/backend-inputs.json",
+    "sha256": "523329aecc5004bf87a6531d7c5962ba0aa2e096a8dd52d9f54c47e3049fe12b",
+    "files": 451
+  }
+}
