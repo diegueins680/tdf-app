@@ -1,0 +1,29 @@
+{
+  "files": {
+    "summary.json": {
+      "bytes": 2624,
+      "sha256": "f73c60872dad04d0f913c543252059ec4c78bfcf4a6d7ad8b0cf32245722ab51"
+    },
+    "hosted-e9-evidence.tar.gz": {
+      "bytes": 1137300,
+      "sha256": "82e7f4fce98835df59a10924aaf7f398a99fbc9d1bcd320d72483b92ec7fafb3"
+    },
+    "source-reference.json": {
+      "bytes": 400,
+      "sha256": "67fc31a7ab1093eec25c75ff559ff20b29a21b25e44a8a34afba025970b5e5a1"
+    },
+    "archive-member-hashes.json": {
+      "bytes": 2615,
+      "sha256": "10c377260d9f42a07810ec5b7c77a115bb31968c41ddd2dce7265140597992c0"
+    },
+    "README.md": {
+      "bytes": 1951,
+      "sha256": "cbca189bcae8d3dbf8aa9729bcefd3fa0741f9f18d627d17ffa333e0fd530a36"
+    },
+    "build-archive.py": {
+      "bytes": 729,
+      "sha256": "70e334f82c87f47d89ca38d0eee4e0aadbeb0905fda57aca40ca45640bd6c2f0"
+    }
+  },
+  "selfExcluded": true
+}
