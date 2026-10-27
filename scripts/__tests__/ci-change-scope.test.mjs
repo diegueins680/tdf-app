@@ -134,6 +134,7 @@ test('ledger runtime and verification changes select the real PostgreSQL backend
     'scripts/test-ledger-posting.sh',
     'scripts/test-provider-retry-runtime.sh',
     'scripts/verify-payment-intent-expiry.py',
+    'scripts/verify-google-account-name.py',
     'scripts/__tests__/ledger-posting-upgrade.py',
     'scripts/__tests__/ledger-posting-snapshot.py',
     'scripts/__tests__/ledger-posting-namespace.py',
