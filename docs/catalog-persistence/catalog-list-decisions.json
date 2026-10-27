@@ -19588,6 +19588,28 @@
         "sourceSha256": "c0da4534df22f6993d1a95379878d3e1be72845fc8e412cb7914f197ee3c9077",
         "requirement": "COMM-FOLLOW-RECOVERY-001"
       }
+    },
+    {
+      "id": "5a14eed55bff18836c73",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-versioned-editorial-asset-manifest",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Publishing unapproved photos or attributing people/equipment availability from archive content.",
+      "justification": "This six-entry manifest identifies immutable bundled photo files and their accessible descriptions for one owner-approved studio gallery. Each ID resolves to a versioned local WebP with source/hash provenance; labels describe observed scenes rather than selectable rooms, services, inventory, identities or permissions. Persisted booking/service catalogs remain authoritative. Changes require a source change, renewed asset review and normal protected delivery; this does not grant editorial-CMS or provider authority.",
+      "reviewed": true,
+      "reviewMethod": "source-specific-editorial-asset-review",
+      "reviewBatch": "studio-gallery-owner-approved-2026-10-26",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/StudioGallery.tsx",
+        "line": 6,
+        "kind": "array",
+        "name": "PHOTOS",
+        "valueCount": 6,
+        "consumerCount": 0,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
     }
   ]
 }

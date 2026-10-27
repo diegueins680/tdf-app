@@ -12141,8 +12141,8 @@
     {
       "id": "UX-WELCOME-001",
       "title": "Public discovery shows value before personal profiling",
-      "statement": "The public start page /inicio explains TDF and offers anonymous exploration before the existing directory form. /buscar keeps direct URL-backed search; search controls describe the requested result rather than visitor identity. /tdf exposes studio, services and published work before contextual signup. Exploration does not require registration, geolocation or role selection and remains usable when directory data fails.",
-      "authority": "Explicit product owner execution request 2026-10-25 incorporating eight supplied visitor voice comments.",
+      "statement": "The public start page /inicio explains TDF and offers anonymous exploration before the existing directory form. /buscar keeps direct URL-backed search; search controls describe the requested result rather than visitor identity. /tdf exposes studio, services and published work before contextual signup. Exploration does not require registration, geolocation or role selection and remains usable when directory data fails. The studio section includes six owner-approved archive photographs, local lazy-loaded thumbnails and a keyboard-accessible complete-photo dialog with truthful failure and retry states.",
+      "authority": "Explicit product owner execution request 2026-10-25 incorporating eight supplied visitor voice comments. Owner supplied three approved Drive folders on 2026-10-26 and instructed selection of photos.",
       "domain": "UX",
       "source": "docs/engineering/welcome-first-discovery-2026-10-25.md",
       "contract": "docs/engineering/welcome-first-discovery-2026-10-25.md",
@@ -12188,8 +12188,8 @@
       "privacy": "New welcome CTA events contain only fixed route and destination labels; no search query, identity, coordinates or user-entered data. Existing consent controls remain authoritative.",
       "concurrency": "Welcome is independent of asynchronous directory data; existing account-scoped search cache and mutation guards are unchanged.",
       "idempotency": "Exploration is read-only navigation; existing directory write contracts unchanged.",
-      "failure": "Directory failures preserve the welcome and independent exploration links. Analytics failure must not interrupt welcome navigation.",
-      "recovery": "Existing directory retry and URL-backed search remain available.",
+      "failure": "Directory failures preserve the welcome and independent exploration links. Analytics failure must not interrupt welcome navigation. Individual photograph failure leaves other photographs and public navigation available.",
+      "recovery": "Existing directory retry and URL-backed search remain available. Full-photo retry makes a new local asset request; closing restores focus to the originating thumbnail.",
       "observability": "public_discovery_cta_clicked is exploratory intent, never successful activation. No measured conversion uplift is claimed.",
       "property": "WelcomeBeforeProfiling; DirectSearchPreserved; PublicExplorationWithoutSignup",
       "implementation": [
@@ -12197,7 +12197,8 @@
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts"
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        "tdf-hq-ui/src/components/StudioGallery.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
@@ -12207,7 +12208,8 @@
         "e2e/web/directory-entry.spec.mjs",
         "e2e/web/directory-favorite-recovery.spec.mjs",
         "e2e/web/directory-language.spec.mjs",
-        "e2e/web/public-welcome.spec.mjs"
+        "e2e/web/public-welcome.spec.mjs",
+        "tdf-hq-ui/src/components/StudioGallery.test.tsx"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
@@ -12215,7 +12217,7 @@
       "status": "specified and implemented",
       "critical": false,
       "openQuestions": [
-        "Unidentified host portrait from voice feedback; authoritative studio gallery and teaching clips; interior plan/VR; human comprehension and production outcomes."
+        "Unidentified host portrait, teaching clips, interior plan/VR, human comprehension and production outcomes remain unverified."
       ],
       "confidence": "Qualitative visitor feedback and scoped source/browser evidence; frequency and causal activation impact unknown.",
       "ambiguity": [],

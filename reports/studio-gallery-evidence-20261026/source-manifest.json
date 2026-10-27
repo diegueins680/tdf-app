@@ -1,0 +1,13 @@
+{
+  "checkoutHead": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+  "sourceState": "Tracked gallery working-tree inputs; built entry reports checkout identity3c25a9, not a published gallery commit. Subsequent report-only and protected-base composition must preserve these UI input bytes or requalify.",
+  "files": {
+    "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+    "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
+    "tdf-hq-ui/package.json": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d",
+    "tdf-hq-ui/src/components/StudioGallery.tsx": "20cea2f374e690a0f3b65115628b2e76cfc080e31a96ac93cc5dfb2ab3e630b6",
+    "tdf-hq-ui/src/components/StudioGallery.test.tsx": "fc58e06828af223b5bb382b87d7fb26f76240d058af7e699cf3cc1dbc3487af3",
+    "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": "2819d1faed38a5727f09f8b7085553ad10e00954da29e4c149ceded3fb339232",
+    "e2e/web/public-welcome.spec.mjs": "5102a2614b4f1ba3f9f94a8f65666e1610cfdb7172513ee8edf938028142c494"
+  }
+}
