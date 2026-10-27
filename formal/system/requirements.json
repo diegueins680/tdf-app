@@ -5773,7 +5773,8 @@
         "Explicit event/identify/page properties",
         "SDK-generated event.properties, $set and $set_once",
         "Current/referrer URLs",
-        "Project configuration"
+        "Project configuration",
+        "SDK initial-person properties used by feature flag and remote configuration requests"
       ],
       "state": {
         "client": [
@@ -5791,7 +5792,8 @@
         "uninitialized + missing key/window -> disabled no-op",
         "uninitialized + configured browser -> ready with before_send sanitization",
         "raw named payload -> sanitized SDK event",
-        "SDK failure -> fixed operation-class warning"
+        "SDK failure -> fixed operation-class warning",
+        "Configured web SDK -> flags and remote configuration disabled; sanitized event capture and session-owned application flags remain available"
       ],
       "forbiddenTransitions": [
         "Transmit a named sensitive field in nested event or person-property envelopes",
@@ -5799,7 +5801,8 @@
         "Log arbitrary SDK exception payloads",
         "Treat an unconfigured client as provider receipt evidence",
         "Private code, buyer details, URL credential or SDK exception payload -> telemetry/log",
-        "Unknown URL query key -> unredacted value"
+        "Unknown URL query key -> unredacted value",
+        "Initial-person URL -> unsanitized SDK flags request outside before_send"
       ],
       "effects": [
         "Sanitized optional telemetry; core user action remains separate",
@@ -5819,7 +5822,8 @@
       ],
       "tests": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
-        "tdf-hq-ui/src/analytics/errorReporting.test.ts"
+        "tdf-hq-ui/src/analytics/errorReporting.test.ts",
+        "e2e/web/analytics-privacy.spec.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -5830,10 +5834,10 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Incoming reviewed main implementation has mapped deterministic examples; fresh combined-candidate execution and deployed analytics configuration/consent correspondence remain required."
+        "reason": "A published-client synthetic counterexample demonstrates initial reset URL disclosure through SDK flags outside before_send. The event-only SDK repair requires exact-source browser/CI qualification and production deployment; complete consent and provider retention remain open."
       },
       "property": "Named sensitive payloads do not survive recognized serializer boundaries; public attribution and configured project token remain usable.",
-      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof. Synthetic client-error and actual route-boundary tests cover raw-error exclusion, embedded URL sentinels, selected context, throwing getters and console failure; scope and exclusions are in formal/system/client-error-privacy.md.",
+      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof. Synthetic client-error and actual route-boundary tests cover raw-error exclusion, embedded URL sentinels, selected context, throwing getters and console failure; scope and exclusions are in formal/system/client-error-privacy.md. Bundled-SDK browser regression requires decoded anonymous pageview and identified events, retains public attribution, and denies flags/configuration requests with all provider and business traffic intercepted.",
       "evidence": "Exact-candidate UI gate; original main PR487 validation is historical for subsequent merged trees."
     },
     {
@@ -8988,7 +8992,7 @@
       "id": "AUTH-ENTRY-002",
       "title": "Low-friction account entry that lands on Comunidad or the interrupted intent",
       "statement": "Email signup requires only email and password with clickwrap terms; first-time Google users create an account without another form or popup; successful entry lands on Comunidad unless a validated same-origin return path or explicit intent applies.",
-      "authority": "product owner request after real-user mobile test (2026-10-07)",
+      "authority": "product owner request after real-user mobile test (2026-10-07); product owner User Value Activation Sprint privacy/public-information review requirement (2026-10-26), following an isolated before-save disclosure counterexample",
       "domain": "AUTH",
       "actors": [
         "Visitor",
@@ -9022,19 +9026,20 @@
       "forbiddenTransitions": [
         "required name/phone/profile at signup",
         "external, protocol-relative or backslash redirect target",
-        "account linking by email alone"
+        "account linking by email alone",
+        "private email or its local part -> automatic public account name before explicit profile editing"
       ],
       "effects": [
-        "Server records accepted terms version; display name starts from the email local part and is editable later."
+        "Server records the accepted terms version. Email signup and Google signup without a supplied profile name start with a neutral account label, independent of the private email, and people can choose their public name later."
       ],
       "authorization": "Return paths are honored only when same-origin and accessible to the returned roles; Google linking still requires existing credentials.",
-      "privacy": "No marketing consent implied; no credentials in URLs or telemetry.",
+      "privacy": "No implied marketing consent or credentials in URLs/telemetry. Automatic account display-name defaults must not use a private email or its local part. Explicitly supplied names, credential email and existing account names remain unchanged.",
       "concurrency": "Late Google callbacks reuse the stored handler; creation reuses the single credential.",
       "idempotency": "Signup submit is disabled while pending.",
       "failure": "Inline field errors and friendly server messages; no raw errors.",
       "recovery": "Retry, switch to email/password, or link an existing account.",
       "observability": "signup_completed/login_completed/signup_failed analytics and auth_flow client errors.",
-      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
+      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation; User Value Activation Sprint (2026-10-26): preserve minimal registration while preventing private contact data becoming an automatic public name.",
       "implementation": [
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/utils/signupFields.ts",
@@ -9045,7 +9050,10 @@
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
         "tdf-hq-ui/src/api/auth.ts",
-        "tdf-hq-ui/src/utils/authErrorMessage.ts"
+        "tdf-hq-ui/src/utils/authErrorMessage.ts",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Auth/AccountName.hs",
+        "tdf-hq/tdf-hq.cabal"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
@@ -9057,7 +9065,8 @@
         "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
-        "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx"
+        "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+        "tdf-hq/test/TDF/Auth/AccountNameSpec.hs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -12538,6 +12547,87 @@
         "classification": "PARTIAL",
         "reason": "Scoped implementation and full-schema tests exist; current-head hosted evidence, independent review and production correspondence remain separate."
       }
+    },
+    {
+      "id": "COMM-FOLLOW-RECOVERY-001",
+      "title": "Recover uncertain follow responses through current server membership",
+      "statement": "After a follow or unfollow has an ambiguous response, the current authenticated occurrence reads server membership before confirming the requested state. Recovery never repeats the write. Unknown membership remains unknown, offers a read retry, and prevents blind toggles. A late result cannot confirm another account or profile lifetime. Only the existing evidence-checked onboarding completion receipt can emit first-value analytics.",
+      "domain": "COMM",
+      "actors": [
+        "Authenticated fan",
+        "Artist following another artist"
+      ],
+      "preconditions": [
+        "Existing follow/unfollow and membership APIs retain backend ownership, authorization and transactional event rules."
+      ],
+      "inputs": [
+        "Captured account occurrence and artist identifier",
+        "Follow or unfollow result",
+        "Fresh membership response",
+        "Explicit read retry"
+      ],
+      "state": {
+        "confirmation": [
+          "pending-write",
+          "pending-read",
+          "confirmed-current-state",
+          "unknown"
+        ]
+      },
+      "allowedTransitions": [
+        "Ambiguous write -> one fresh membership GET for the captured current account.",
+        "Successful read -> display current server membership, including unchanged state after a write failed before commit.",
+        "Failed read -> unknown -> explicit read retry.",
+        "Confirmed newly followed state -> existing server-evidence onboarding completion handshake."
+      ],
+      "forbiddenTransitions": [
+        "Ambiguous response -> automatic follow/unfollow replay.",
+        "Unknown or in-flight membership -> blind toggle.",
+        "Account change during read -> cache or confirm old response.",
+        "Unconfirmed read or stale local membership -> assert desired relationship exists.",
+        "Membership GET -> emit first-value analytics without server completion evidence."
+      ],
+      "effects": [
+        "Refresh existing account-scoped membership cache and related artist reads; clear only confirmed current-profile follow intent."
+      ],
+      "authorization": "Capture the exact SessionUser occurrence; guard before and after the fresh read and before write/first-value handoff. Backend authorization remains authoritative. Comunidad retains the existing Fan/Customer capability for membership reads, actions and explicit retries; cached data cannot enable unsupported actions. Public catalog retry never refetches denied fan resources.",
+      "privacy": "No tokens or raw diagnostics in UI or receipts. Existing SessionProviders client isolation remains in force; this change adds no credentials or persisted personal data.",
+      "concurrency": "Coalesce repeated clicks while the write and confirmation read settle. Cancel superseded account-key queries, explicitly invalidate without a refetch, then fetch fresh once with no automatic retry. Guard queryFn before returning data so a retired occurrence cannot cache its response. Delayed URL cleanup requires the captured navigation lifetime to remain current; same-artist navigation preserves its latest search/hash and only the current valid resume intent may be consumed.",
+      "idempotency": "Never replay POST/DELETE in response recovery. Existing server onboarding completion newlyCompleted receipt controls analytics emission.",
+      "failure": "An unavailable read returns unknown, preserves the unconfirmed state and exposes a read retry; a fresh unchanged state never fabricates success.",
+      "recovery": "Public profile and Comunidad reuse the same read helper. Explicit retry repeats the GET only; preserve unrelated URL search and hash.",
+      "observability": "Pre-change component and real API/PostgreSQL counterexamples; actual-component success, failure, account-switch and repeated-click controls; exact-source isolated browser receipts.",
+      "source": "User-authorized activation journeys A8/A9 and B5/B6/B8; response-loss counterexample after actual API200 and PostgreSQL commit.",
+      "implementation": [
+        "tdf-hq-ui/src/features/fans/reconcileFollowState.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "e2e/web/artist-follow.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped component transitions only; exact-source browser/API/database qualification, protected integration and production delivery are separate gates.",
+      "ambiguity": [
+        "Membership reads establish current state, not that this request created a new relationship. Pre-existing and synthetic relationships are excluded from VAR.",
+        "Cross-device concurrency can change state after a read. Durable exactly-once analytics and backend session revocation are outside this change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Executable component invariants and isolated response-loss evidence do not establish universal refinement, production delivery, human comprehension or real-user value."
+      },
+      "critical": false,
+      "authority": "Activation sprint graceful network failure recovery and authoritative first-value measurement.",
+      "property": "An uncertain response is resolved only by a fresh authorized server read under the captured occurrence, with zero recovery writes.",
+      "contract": "formal/system/follow-response-recovery.md",
+      "verification": "Shared-helper and actual-page regression controls, pre-change negative controls, isolated real HTTP/PostgreSQL response-loss tests.",
+      "evidence": "Source-bound receipts retain actual web/API/SQL identity and exclude fixtures from activation metrics."
     },
     {
       "id": "MEDIA-MUSIC-SOURCES-001",

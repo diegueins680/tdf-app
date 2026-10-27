@@ -1,0 +1,83 @@
+{
+  "plan": {
+    "mode": "rehearsal",
+    "humanParticipants": 0,
+    "productionWrites": false,
+    "providersUsed": false,
+    "fixtureSetup": "One fictional artist and six fictional fans; follow/unfollow committed-response loss, failed confirmation reads, pre-commit failures and cross-context return. No club provisioning.",
+    "ports": {
+      "postgres": 55534,
+      "api": 18714,
+      "web": 4257
+    },
+    "scope": "Optimized candidate web and qualified native 1dd657a API with disposable222-schema PostgreSQL. Successful POST/DELETE responses are discarded after commit; separate pre-commit aborts and confirmation503s exercise failures. Artist/auth/club backend unchanged; receipt backend and real providers excluded."
+  },
+  "startedAt": "2026-10-26T22:48:59.005297+00:00",
+  "source": "582e2a1d41098547a81adcaf821809a5fafd2c0f",
+  "sourceTree": "d04f5d9989b7fcc486bce91e28bd96b097359874",
+  "binaryRevision": "1dd657aca9186b9c4a1b0116826223b6eca03c86",
+  "schemaAuthority": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "migrationCount": 222,
+  "steps": [
+    {
+      "step": "compile-test-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "step": "deny-nonloopback-egress",
+      "exitCode": 0
+    },
+    {
+      "step": "init",
+      "exitCode": 0
+    },
+    {
+      "step": "start",
+      "exitCode": 0
+    },
+    {
+      "step": "create",
+      "exitCode": 0
+    },
+    {
+      "step": "full222-schema",
+      "exitCode": 0
+    },
+    {
+      "step": "build-isolated-web",
+      "exitCode": 0
+    },
+    {
+      "step": "actual-api-browser",
+      "exitCode": 1
+    },
+    {
+      "step": "drop",
+      "exitCode": 0
+    },
+    {
+      "step": "stop",
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "status": "FAILED",
+  "networkIsolation": {
+    "threeListenersLoopbackOnly": true,
+    "lanRequestsDenied": true,
+    "nonLoopbackEgressDeniedWithPositiveControl": true,
+    "noAddressRetained": true
+  },
+  "actualVersion": {
+    "buildTime": "2026-10-26T22:44:06Z",
+    "commit": "1dd657aca9186b9c4a1b0116826223b6eca03c86",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "failureType": "RuntimeError",
+  "finishedAt": "2026-10-26T22:50:30.065051+00:00"
+}

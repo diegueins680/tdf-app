@@ -1,0 +1,73 @@
+{
+  "capturedAt": "2026-10-26T23:44:41.585263+00:00",
+  "status": "VERIFIED-isolated-only",
+  "executedWebSource": "1ebdd79a9c0029f6dad1d32c329286b8995b9738",
+  "executedWebTree": "928ee2fd266f4b3a3dce38a23a15b81f435b602f",
+  "actualBackend": {
+    "buildTime": "2026-10-26T23:38:02Z",
+    "commit": "f0ba27468785574fce3a538224c6acf0e5f74b7c",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "binarySha256": "f7a285c955dd0aaca2dc62e31efd2c0f6db08130d09cae6f00e6d1a631cfddaa",
+  "protectedMain": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "migrationCount": 223,
+  "tests": {
+    "componentPassed": 158,
+    "suites": 8,
+    "typescript": "PASS",
+    "eslint": "PASS",
+    "catalogControlsPassed": 8,
+    "catalogCandidates": 1342,
+    "unreviewedCandidates": 0,
+    "requirements": 149,
+    "protectedRequirementsPreserved": 148,
+    "protectedDecisionsPreserved": 1341,
+    "mappedMaterialSurfaces": 9
+  },
+  "componentEvidenceScope": "Tests ran on the changed app bytes before the6dc checkpoint; all863 UI inputs are byte-identical through executed1ebdd. Adding this evidence does not claim a rerun under the evidence commit.",
+  "logs": {
+    "resume-single-navigation-negative.log": {
+      "sha256": "9d1e25153243ca22e642e7429a8ff2181ed2f1bc74bb9d82db710eb531b7ef44",
+      "bytes": 4626
+    },
+    "resume-single-navigation-positive.log": {
+      "sha256": "fb7e309949dbb74f24481c8b4a8bd045b233381fafca58937d71b39cd0036a6c",
+      "bytes": 3054
+    },
+    "resume-single-navigation-all-components.log": {
+      "sha256": "0f3068eaefaa04099e71f505cbec71129d5f2d97c85d3a5ac5ca848d1c527862",
+      "bytes": 1281
+    },
+    "resume-single-navigation-types.log": {
+      "sha256": "374272fbc00ca6ef6338ca1ef99d9719ba7935457fd2f5351dbcf271e42b5ed3",
+      "bytes": 66
+    },
+    "resume-single-navigation-lint.log": {
+      "sha256": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+      "bytes": 71
+    },
+    "main596-catalog-controls.log": {
+      "sha256": "14f3009f91d78b2c2d4bbe8a7bdf82c2f6ad19eb62929fea634dda492d2d1ace",
+      "bytes": 1921
+    },
+    "main596-source-admission.log": {
+      "sha256": "a3ad150e055d9c2b95836e095cbeae3a91d4a9e29ef00d0fbd209b96d378839a",
+      "bytes": 881
+    },
+    "main596-doctor.log": {
+      "sha256": "f98844f66f41b98e777b9dfc22c1bc7f8abbff5d633d892cf198480111b07680",
+      "bytes": 967
+    }
+  },
+  "artifacts": {
+    "runtime-main596.json": "562b70d203a166fa3ef5277e239e8216f6379df4c68599238554f474ec5afee3",
+    "full-journeys-runtime-main596.json": "470a6a52511f45af1eb977c3c237ef0a9622f44bc3b4250c6101a15fd840d4c1",
+    "full-journeys-observation-main596.json": "38a6e57c97996ff0c78e99962d0a06fc6d4b1815c443d40631cc4ab20f7cf9be"
+  },
+  "humanParticipants": 0,
+  "productionBusinessWrites": false,
+  "realProviderCertification": false,
+  "productionDeploymentVerified": false,
+  "fullFormalProofClaim": false
+}

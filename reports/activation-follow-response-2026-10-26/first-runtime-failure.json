@@ -1,0 +1,83 @@
+{
+  "plan": {
+    "mode": "rehearsal",
+    "humanParticipants": 0,
+    "productionWrites": false,
+    "providersUsed": false,
+    "fixtureSetup": "One fictional artist and six fictional fans; follow/unfollow committed-response loss, failed confirmation reads, pre-commit failures and cross-context return. No club provisioning.",
+    "ports": {
+      "postgres": 55534,
+      "api": 18714,
+      "web": 4257
+    },
+    "scope": "Optimized candidate web and qualified native fe179 API with disposable221-schema PostgreSQL. Successful POST/DELETE responses are discarded after commit; separate pre-commit aborts and confirmation503s exercise failures. Artist/auth/club backend unchanged; receipt backend and real providers excluded."
+  },
+  "startedAt": "2026-10-26T07:45:54.974150+00:00",
+  "source": "6b328069938462bc9645b7d4be7842c4bb1a6dea",
+  "sourceTree": "be38823337bbc4a98edd4d5dbc0d082c93fca293",
+  "binaryRevision": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+  "steps": [
+    {
+      "step": "compile-test-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "step": "deny-nonloopback-egress",
+      "exitCode": 0
+    },
+    {
+      "step": "init",
+      "exitCode": 0
+    },
+    {
+      "step": "start",
+      "exitCode": 0
+    },
+    {
+      "step": "create",
+      "exitCode": 0
+    },
+    {
+      "step": "full221-schema",
+      "exitCode": 0
+    },
+    {
+      "step": "build-isolated-web",
+      "exitCode": 0
+    },
+    {
+      "step": "actual-api-browser",
+      "exitCode": 1
+    },
+    {
+      "step": "drop",
+      "exitCode": 0
+    },
+    {
+      "step": "stop",
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "status": "FAILED",
+  "networkIsolation": {
+    "threeListenersLoopbackOnly": true,
+    "lanRequestsDenied": true,
+    "nonLoopbackEgressDeniedWithPositiveControl": true,
+    "noAddressRetained": true
+  },
+  "actualVersion": {
+    "buildTime": "2026-10-26T02:41:57Z",
+    "commit": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "failureType": "RuntimeError",
+  "finishedAt": "2026-10-26T07:46:53.036834+00:00",
+  "failureExplanation": "Test adapter incorrectly expected204 for DELETE. The unchanged Servant contract and actual native API return200. App code and API/SQL assertions were not changed.",
+  "rawReceiptSha256": "288d539a3356a4a071f021009ed091fdb9181bccf73618e3f962c7c56ede33df"
+}
