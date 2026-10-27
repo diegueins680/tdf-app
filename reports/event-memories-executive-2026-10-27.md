@@ -1,6 +1,6 @@
 # TDF Records: recuerdos de eventos — actualización ejecutiva
 
-Corte: 27/oct/2026 05:06 UTC. **Implementado y probado en aislamiento; pendiente de integrar y desplegar mediante las protecciones del repositorio. Sin invitaciones reales.** Esta actualización conserva las identidades del [informe anterior](event-memories-executive-2026-10-26.md).
+Corte: 27/oct/2026 05:34 UTC. **Implementado y probado en aislamiento; pendiente de integrar y desplegar mediante las protecciones del repositorio. Sin invitaciones reales.** Esta actualización conserva las identidades del [informe anterior](event-memories-executive-2026-10-26.md).
 
 ## 1. Diagnóstico y reutilización
 
@@ -22,27 +22,31 @@ Los objetos de medios tienen URL pública. La interfaz informa ese alcance; ocul
 
 ## 4. Commits, PRs e integración
 
-Aplicación probada: **67f72f8dd6a2b03cbf6e7bfbda1768ea31b376d4**, merge normal de2a4 y main protegido1129112f89d3c00d33b8c86043a6bd197031dcff. Conserva los150 objetos normativos de main+4 originales=**154**, y las227 migraciones y SQL originales exactos. Catálogo estricto:1350 candidatos. El commit posterior de evidencia no cambia aplicación, contratos, migraciones ni dependencias.
+Aplicación corregida y probada: **4ced63fdef3642762ffa3d2f18f4516a8ad92eab**. Conserva el merge normal67f de2a4 y main protegido1129112f89d3c00d33b8c86043a6bd197031dcff; añade la corrección5cc8282a1 y sus índices4ced. Conserva los150 objetos normativos de main+4 originales=**154**, y las227 migraciones y SQL originales exactos. Catálogo estricto:1350 candidatos. El commit posterior de evidencia no cambia aplicación, contratos, migraciones ni dependencias.
+
+La revisión encontró un caso histórico que la suite anterior no cubría: DELETE devolvía500 con hijos anteriores al cutover. Se reprodujo y corrigió reutilizando el trigger de fuente; no se altera la protección de escrituras ni el SQL. La regresión verifica borrado antes de activar, después y en pausa, además de permisos, borrado de cuerpos y retiro del target. [Diagnóstico, fallo original y pase corregido](event-memory-legacy-deletion-2026-10-27.md).
 
 El [PR raíz608](https://github.com/diegueins680/tdf-app/pull/608) concentra la entrega. Las aprobaciones independientes5661958818/5661961095 corresponden a2a4; no se atribuyen a esta nueva composición. Las fuentes615/632/635/641 y sus evidencias se preservan.615 conserva su base534 archivada y sus dos hilos abiertos; no se resuelven como autor. La integración final debe satisfacer la revisión, CI, conversaciones y admisión exigidas por main. No se evade la cola ni se presenta una rama de preparación como main.
 
 ## 5. Pruebas ejecutadas
 
-- Web local y [CI40450116519](https://github.com/diegueins680/tdf-app/actions/runs/40450116519): **3635 pruebas/316 suites**, lint, tipos y build;5preloads/336562bytes gzip.880 archivos de entrada exactos.
-- Compilación local canónica Stack/GHC9.10.3: **exit0**,986 entradas exactas antes/después; cuatro pruebas Hspec de nombre público neutral satisfactorias. El CI general terminó12 jobs satisfactorios/2 omitidos (staging y Android instalado), sin fallos. Hspec:4045 ejemplos,0 fallos,21 pendientes; los pendientes no son pases.
+- Web local sin cambios y [CI40450116519](https://github.com/diegueins680/tdf-app/actions/runs/40450116519): **3635 pruebas/316 suites**, lint, tipos y build;5preloads/336562bytes gzip.880 archivos de entrada exactos.
+- Compilación local canónica Stack/GHC9.10.3: **exit0**,986 entradas exactas antes/después; cuatro pruebas Hspec de nombre público neutral satisfactorias. El CI general anterior67f terminó12 jobs satisfactorios/2 omitidos (staging y Android instalado), sin fallos. Hspec:4045 ejemplos,0 fallos,21 pendientes; los pendientes no son pases.
 - Recorridos web de CI: **608 satisfactorios/22 omitidos**, más10 controles de activación y25 de descubrimiento. Las omisiones no son pases.
-- API/PostgreSQL/navegador nuevos: **127 peticiones/20 grupos/277 hashes actuales y de Git exactos/13 comprobaciones de navegador**. Ledger real227/227; controles de IDOR, autoría, moderación, revocación, replay y persistencia. Base desechable y procesos retirados después.
+- API/PostgreSQL/navegador de la corrección4ced: **143 peticiones/21 grupos/277 hashes actuales y de Git exactos/13 comprobaciones de navegador**. Ledger real227/227; controles de IDOR, autoría, moderación, revocación, replay y persistencia. Base desechable y procesos retirados después.
 - Ocho controles de historial,11 comandos de especificación, catálogo JSON/CSV estricto y calidad general local satisfactorios. El intento inicial ENOSPC y los fallos anteriores conservan su alcance; no cuentan como pases.
 
-El informe formal verifica1406 archivos actuales y de Git exactos y ejecuta satisfactoriamente solver/modelos/controles acotados. Mantiene **154 obligaciones globales UNPROVEN, releaseBLOCKED/executionAllowedfalse**, sin riesgos aceptados. No demuestra aptitud de despliegue.
+El [CI nuevo4ced](https://github.com/diegueins680/tdf-app/actions/runs/40455097941) mantiene su propia ejecución, todavía en curso al corte; el pase anterior67f no acredita el manejador corregido.
+
+El informe formal nuevo4ced verifica1406 archivos actuales y de Git exactos y ejecuta satisfactoriamente solver/modelos/controles acotados. Mantiene **154 obligaciones globales UNPROVEN, releaseBLOCKED/executionAllowedfalse**, sin riesgos aceptados. No demuestra aptitud de despliegue.
 
 ## 6. Evidencia web y móvil
 
-API real67f/build04:56:30UTC; ejecutable Darwin x86_64 SHA256`85dac8cbb8f1bc43df9f58446c7d399b24ee23285645919385da707aa315d051`, PostgreSQL16 y Chrome150 de escritorio/Pixel7. La cuenta creada por interfaz publica un PNG sintético con bytes duraderos y nombre público neutral. La recuperación conserva el destino y publica texto. Ambos recuerdos sobreviven al reinicio real del API, sin roles concedidos por el fixture.
+API real4ced/build05:27:53UTC; ejecutable Darwin x86_64 SHA256`51037e6c5e75524cb773850afac1fd3833c2e1804c7683f5ed9a11a562539aa3`, PostgreSQL16 y Chrome150 de escritorio/Pixel7. La cuenta creada por interfaz publica un PNG sintético con bytes duraderos y nombre público neutral. La recuperación conserva el destino y publica texto. Ambos recuerdos sobreviven al reinicio real del API, sin roles concedidos por el fixture.
 
-El desafío se consume una vez: replay400, sesión/contraseña anteriores401, nueva contraseña200, evento privado404. SMTP está deshabilitado; el puente privado usa el token realmente emitido. **No acredita entrega de correo.** [Fotografía sintética](event-memory-source-evidence-20261025/main-1129/signup-first-memory-phone.png) y [publicación tras recuperación](event-memory-source-evidence-20261025/main-1129/recovery-memory-phone.png).
+El desafío se consume una vez: replay400, sesión/contraseña anteriores401, nueva contraseña200, evento privado404. SMTP está deshabilitado; el puente privado usa el token realmente emitido. **No acredita entrega de correo.** [Fotografía sintética](event-memory-source-evidence-20261025/main-1129/legacy-delete-signup-first-memory-phone.png) y [publicación tras recuperación](event-memory-source-evidence-20261025/main-1129/legacy-delete-recovery-memory-phone.png).
 
-El ejecutable Linux probado por CI también se descargó y contrastó: artefacto12711376058, ELF SHA256`0a798c04f3689b1642ce67c08965c2958d682508e8b28a46e22252bc3a1aa49a`, ZIP SHA256`4df80478b7e7dfdd85bf132e61fd4c6fc21ab3949e5b7903865668987bfabc20`. Conserva su identidad separada del binario Darwin; no es una imagen desplegada.
+El ejecutable Linux **anterior67f**, que no incluye la corrección4ced, también se descargó y contrastó: artefacto12711376058, ELF SHA256`0a798c04f3689b1642ce67c08965c2958d682508e8b28a46e22252bc3a1aa49a`, ZIP SHA256`4df80478b7e7dfdd85bf132e61fd4c6fc21ab3949e5b7903865668987bfabc20`. Conserva su identidad separada del binario Darwin; no es una imagen desplegada.
 
 El pin móvil7000 mantiene **653 pruebas/98 suites** en CI. Las ampliaciones172/173/[174](https://github.com/diegueins680/TDF-mobile/pull/174) conservan sus fuentes/evidencias separadas.174 tiene builds Android/iOS Simulator inspeccionados y759 pruebas; no está integrado aquí ni acredita recorrido instalado, dispositivo físico, firma productiva o tiendas. Los flujos Maestro existentes cubren interacciones generales, no este recorrido de recuerdos.
 
@@ -69,4 +73,4 @@ Recibos internos, aperturas atribuidas, publicaciones posteriores y agregados de
 
 P0: integrar con revisión/CI actuales; calificar recuperación, almacenamiento e imagen; desplegar y aceptar permisos/persistencia en producción. P1: corregir estado141 después de esa aceptación, verificar cohort autorizado y registrar invitaciones permitidas. P2: integrar y ejecutar móvil extendido; completar galerías, etiquetas, privacidad de archivos y previews. P3: medición restante y optimización con evidencia real.
 
-[Recibo agregado de esta aplicación](event-memory-source-evidence-20261025/main-1129/qualification.json). Implementado, probado, integrado, desplegado y verificado en producción son estados distintos; el objetivo integral sigue pendiente.
+[Recibo agregado de la aplicación corregida](event-memory-source-evidence-20261025/main-1129/legacy-delete-qualification.json). Implementado, probado, integrado, desplegado y verificado en producción son estados distintos; el objetivo integral sigue pendiente.
