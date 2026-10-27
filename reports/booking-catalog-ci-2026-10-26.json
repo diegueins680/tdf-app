@@ -1,0 +1,71 @@
+{
+  "observedAt": "2026-10-27T00:26:48.525406+00:00",
+  "pr": 636,
+  "candidate": "9b6c1eb940b00b4edb476ad05d940f2739467731",
+  "base": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "workflow": 40421134285,
+  "checkout": "0e51c997cf22f0bb93b81138a25f8122ecdcc1ee",
+  "candidateAndCheckoutWholeTree": "5724e8bed1a455ade5b5f2c16807b105e3602dac",
+  "wholeTreeIdentityVerified": true,
+  "ui": {
+    "job": 121918855955,
+    "conclusion": "success",
+    "suites": 308,
+    "tests": 3516,
+    "gzipInitialJsBytes": 336462,
+    "preloads": 5
+  },
+  "persona": {
+    "job": 121918855958,
+    "conclusion": "success",
+    "passed": 594,
+    "skipped": 22,
+    "failed": 0,
+    "elapsedMinutes": 17.6,
+    "defaultOffCases": 10,
+    "discoveryCases": 25,
+    "scope": "Linux hosted Playwright full matrix, including WebKit desktop and iPhone emulation. All API/session/business responses are fixtures, not backend persistence or physical devices."
+  },
+  "previousFailure": {
+    "candidate": "8bdafbeb059cf4a53ce1a07580479cd1957b882d",
+    "workflow": 40416891311,
+    "personaJob": 121901775474,
+    "passed": 593,
+    "skipped": 22,
+    "failed": 1,
+    "reason": "Immediate320px overflow read before the mobile React view appeared. Original trace and screenshot retained in feature report; corrected by waiting for the existing mobile step label while keeping the same zero-overflow assertion."
+  },
+  "independentReview": {
+    "candidate": "9b6c1eb940b00b4edb476ad05d940f2739467731",
+    "reviewer": "tdfrecords",
+    "state": "APPROVED",
+    "submittedAt": "2026-10-26T23:46:30Z"
+  },
+  "pendingAtObservation": {
+    "aggregateQualityJob": 121932604331,
+    "aggregateQualityStatus": "queued",
+    "protectedAdmission": "pending; earlierPR626precedes gallery and booking",
+    "currentMain": "63c56aaf919a07e919a61280311be1dc809cd6fe"
+  },
+  "relatedPreparation": {
+    "source": "de192a14e572da05b6cc5f41c95739914d133c2d",
+    "hostedJointCases": 4,
+    "evidence": "reports/studio-gallery-booking-joint-2026-10-26.json",
+    "scope": "Separate preparation overc66, not covered by source PR approvals and not a test on later main63."
+  },
+  "delivery": {
+    "implemented": true,
+    "currentCandidateUiAndPersonaVerified": true,
+    "approvedCurrentHead": true,
+    "draft": true,
+    "merged": false,
+    "productionDeployed": false,
+    "productionVerified": false
+  },
+  "limits": [
+    "A successful browser matrix is not full production or mathematical correctness proof.",
+    "Full workflow/quality and admission were still pending when this receipt was written. No bypass, workflow/test exclusions or timeout relaxation.",
+    "After the final protected main composition, requalify that new source and obtain its own independent approval.",
+    "No production business writes, real booking/payment/provider, human usability, physical device or causal activation/conversion claim."
+  ]
+}
