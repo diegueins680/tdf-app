@@ -48,6 +48,7 @@ import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
 import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
+import qualified TDF.Auth.GoogleProfileNameSpec as GoogleProfileNameSpec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
@@ -885,6 +886,7 @@ sampleSriScriptRequest =
 main :: IO ()
 main = hspec $ do
     AccountNameSpec.spec
+    GoogleProfileNameSpec.spec
     FailureBoundarySpec.spec
     ReadinessSpec.spec
     ReceiptSpec.spec

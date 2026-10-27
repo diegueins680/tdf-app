@@ -9066,7 +9066,9 @@
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
         "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
-        "tdf-hq/test/TDF/Auth/AccountNameSpec.hs"
+        "tdf-hq/test/TDF/Auth/AccountNameSpec.hs",
+        "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
+        "scripts/verify-google-account-name.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -9082,8 +9084,8 @@
       "critical": true,
       "property": "MinimalSignup, NoSecondGoogleForm and SafeReturnPath",
       "contract": "formal/system/mobile-entry-ux.md",
-      "verification": "LoginPage component tests with mocked auth APIs, routing unit tests with hostile return paths, and browser signup/login journeys.",
-      "evidence": "LoginPage, signupFields and loginRouting tests; e2e auth-landing, persona-public and event-rsvp-sharing.",
+      "verification": "LoginPage component tests with mocked auth APIs, routing unit tests with hostile return paths, and browser signup/login journeys. Google default-name privacy: compile the actual JSON decoder, validation functions and name selector; execute 19 cases and reject a restored-email-fallback mutation with eight failures. The registered backend spec also imports the full ServerAuth module.",
+      "evidence": "LoginPage, signupFields and loginRouting tests; e2e auth-landing, persona-public and event-rsvp-sharing. Google decoder counterexample and correction are source-fragment TESTED, not a provider, HTTP, SQL or implementation/refinement proof; current evidence records source hashes and tool versions.",
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
     {
