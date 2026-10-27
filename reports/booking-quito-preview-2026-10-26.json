@@ -50,9 +50,20 @@
     "implemented": true,
     "hostedUI": "passed",
     "preview": "4PASS",
-    "hostedFullBrowser": "pending",
+    "hostedFullBrowser": "passed, including compatible Linux WebKit desktop and emulated iPhone",
     "merged": false,
-    "deployedCanonicalProduction": false
+    "deployedCanonicalProduction": false,
+    "draft": false,
+    "autoMergeEnabled": false,
+    "requiredChecks": {
+      "success": 19,
+      "pending": 1,
+      "failure": 0,
+      "pendingContext": "main-integration-admission",
+      "pendingReason": "Waiting for PR627; base4b81ab4",
+      "sourceAppId": 15368,
+      "policy": "Strict current base, one independent review, stale-review dismissal, admin enforcement and conversation resolution retained."
+    }
   },
   "queue": {
     "observedProtectedMain": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
@@ -73,6 +84,43 @@
   "limits": [
     "UI3521CI and preview counts preserve their own execution identities; old63 local336524 build is not this remote artifact.",
     "No production timezone correction, real booking, payments, conversion, provider or physical-device claims.",
-    "Public wrapper paths adapted for replay; executed private observer and config retained locally."
-  ]
+    "Public wrapper paths adapted for replay; executed private observer and config retained locally.",
+    "Local macOS12 WebKit inability remains historical; compatible hosted WebKit now passes for actual approved source75. No equivalence to physical iPhone or human activation."
+  ],
+  "chronology": [
+    {
+      "state": "UI and preview passed; full browser CI pending",
+      "evidenceCommit": "39be85184",
+      "snapshotPreservedByGit": true
+    }
+  ],
+  "hostedFullBrowser": {
+    "run": 40432182775,
+    "job": 121952593340,
+    "checkout": "7649164aed4d1e6396737c62f27f1afd9e348ff0",
+    "checkoutTree": "293e8b37c9f18c9d439b89875179a39d77e2c132",
+    "entireTreeEqualsApprovedSource": true,
+    "conclusion": "SUCCESS",
+    "passed": 594,
+    "preexistingSkipped": 22,
+    "failed": 0,
+    "minutes": 14.1,
+    "defaultOffPassed": 10,
+    "discoveryPassed": 25,
+    "newTimezoneCasesPassed": 14,
+    "coveredProjects": [
+      "chromium-desktop",
+      "chromium-phone",
+      "chromium-tablet",
+      "android-chrome-small",
+      "webkit-iphone",
+      "firefox-critical",
+      "webkit-critical"
+    ],
+    "qualityAggregate": {
+      "id": 121957967818,
+      "appId": 15368,
+      "conclusion": "SUCCESS"
+    }
+  }
 }
