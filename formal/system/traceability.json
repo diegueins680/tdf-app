@@ -13695,7 +13695,7 @@
     "scripts/test-music-release-platform-migration.sh": "ff447aefbf0c12ceb562ae5e528678343e89b425c029a83562254265156bdbe4",
     "scripts/test-music-release-worker-runtime.mjs": "cf8ed92b7f4a702051cef5705308171f17fcbdf55a7bf18190cd5a019d28b5a5",
     "scripts/test-music-s3-local.mjs": "882173441c83b1eaa823bcdad88f54a37573de2fdae3375302523b7f2dc43d61",
-    "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+    "scripts/test-music-source-projection.mjs": "1efdc0a81e8ae85e78f56814057d2636ebc20c2470c7621a24876696982b6416",
     "scripts/test-music-worker-image.mjs": "77621bf3782591ee259de08068c291ecefd88f939d5db4667b082093041707e3",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-operations-inbound-capture.sh": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
@@ -31270,7 +31270,7 @@
     {
       "id": "SURFACE-b7ace60c7f571ef1",
       "path": "scripts/test-music-source-projection.mjs",
-      "sha256": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      "sha256": "1efdc0a81e8ae85e78f56814057d2636ebc20c2470c7621a24876696982b6416",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

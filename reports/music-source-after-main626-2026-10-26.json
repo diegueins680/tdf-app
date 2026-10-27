@@ -1,0 +1,56 @@
+{
+  "observedAt": "2026-10-27T01:42:02.189535+00:00",
+  "classification": "PARTIAL_630_CURRENT_PROTECTED_PARENT_COMPOSITION_QUALIFIED;FIFO_FINAL_REVIEW_PENDING",
+  "compositionSource": "bf221dcbda621636a964c4a96e7c535de7e7ce76",
+  "actualProtected626Main": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+  "soleMaterialDelta": "scripts/test-music-source-projection.mjs",
+  "protectedParentRequirements": 149,
+  "allParentNormativeObjectsAndCatalogHistoryExact": true,
+  "backendUiSqlCiOpsDeclaredDependencyFilesMobileExactProtectedMain": true,
+  "localEvidence": {
+    "nativeSqlExecutionSource": "35a69bd72e2540c1bad875311bd4f48eb5eaa1bd",
+    "migrations": 223,
+    "baselineCounterexamples": 10,
+    "candidateQueries": 4,
+    "policyRemovalControls": 4,
+    "bindingControls": 8,
+    "sqlInputAndHandlerHashesExactOriginalExecution": true,
+    "runtimeReexecuted": false,
+    "qualifiedCatalogSource": "436f6f63231ab7fc00dc81c38e08a5546ce25853",
+    "strictCandidates": 1341,
+    "jsonCsvAndEightHistoryTestsRetainedWithOriginalIdentities": true,
+    "catalogReexecuted": false,
+    "newPythonIndicesGenerated": true,
+    "immutableAdmission": {
+      "base": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+      "head": "bf221dcbda621636a964c4a96e7c535de7e7ce76",
+      "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+      "mappedChangedSurfaces": [
+        "scripts/test-music-source-projection.mjs"
+      ],
+      "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+    }
+  },
+  "replayAndHistory": "The immutable after-main625packet preserves original35aSQL execution and originalcatalog/history source stamps. This report adds actualprotected4bparent composition; no old result is relabeled as bf221.",
+  "publication": {
+    "pr": 630,
+    "publicHead": "533b469bc3334f62eeb73a77ddcedb1408100c39",
+    "draft": true,
+    "baseBranch": "fix/music-source-availability-20261026",
+    "newHeadPublished": false,
+    "parent626ActuallyMerged": true,
+    "nativeLowerPrNumbers": [
+      627,
+      628,
+      629
+    ],
+    "hold": "Nativequeue requires earlier non-draft main PRs before merging630. Finalreview/publichead update is deferred to preserve a stable finalbase; this is an executionchoice, not a separate GitHub rule requiring delayedpublication.",
+    "next": "Reconcile latestactualmain after predecessors, retain tests onlywith exactinputs, publishsinglefinalhead toexistingPR630, currentheadCI/review/admission, normalprotectedmerge."
+  },
+  "scopeLimits": [
+    "Real finiteSQL and lexicalbinding controls, not compiledHTTP/mediabyte or globalrefinement proof.",
+    "No parentbackendrollout/provideractivation/productionbusinesswrite or financialtransaction.",
+    "CI on eventualfinalpublichead and actualindependentreview remainrequired."
+  ]
+}

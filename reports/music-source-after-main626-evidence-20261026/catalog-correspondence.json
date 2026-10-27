@@ -1,0 +1,29 @@
+{
+  "observedAt": "2026-10-27T01:34:38.383063+00:00",
+  "actualProtected626Main": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+  "qualifiedCatalogSource": "436f6f63231ab7fc00dc81c38e08a5546ce25853",
+  "scannerRoots": [
+    "tdf-hq/app",
+    "tdf-hq/.env.example",
+    "tdf-hq/config",
+    "tdf-hq/db",
+    "tdf-hq/docs/openapi",
+    "tdf-hq/sql",
+    "tdf-hq/src",
+    "tdf-hq/test",
+    "tdf-hq-ui/src",
+    "tdf-hq-ui/.env.example",
+    "tdf-mobile/app",
+    "tdf-mobile/src",
+    "tdf-mobile/.env.example",
+    "scripts",
+    ".github/workflows"
+  ],
+  "allScannerRootFilesDependenciesMobileAndDecisionsExact": true,
+  "reusedOriginalJsonAndCsvBytes": true,
+  "catalogReexecuted": false,
+  "retainedHistoryTests": 8,
+  "historyTestsReexecuted": false,
+  "note": "Original1341strictJSON/CSV and8history executions retain their identities; actualmainmerge changes only docs/report metadata beyond qualified436 source inputs. Python specification indices regenerated separately.",
+  "dependencyScope": "Declaredpackage/lockfiles unchanged. Originalparserexecution is retained, not a currentre-execution or fullbinary/toolchainproof."
+}

@@ -1,0 +1,111 @@
+{
+  "observedAt": "2026-10-26T23:44:55.007204+00:00",
+  "classification": "PARTIAL_PRIVATE_COMPATIBILITY_QUALIFIED;PUBLIC630_PARENT_INTEGRATION_PENDING",
+  "source": "35a69bd72e2540c1bad875311bd4f48eb5eaa1bd",
+  "protectedMain": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "composition": {
+    "observedAt": "2026-10-26T23:42:57.687227+00:00",
+    "protectedMain": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+    "private630Parent": "fad853ecbf2b799dec42e3ff283a59ac5a94901e",
+    "requirements": 149,
+    "allBothParentNormativeObjectsExact": true,
+    "decisions": 1341,
+    "protected223ManifestSuccessor": "2634b239375f2ad309ba",
+    "old222ManifestRowArchivedExactlyByProtectedMain": true,
+    "allOtherBothParentCatalogObjectsAndHistoryExact": true,
+    "migrations": 223,
+    "allSqlAndRegistryExactProtectedMain": true,
+    "musicAppUiAndRunnerExactPrivate630Parent": true,
+    "published630Unchanged": "533b469bc3334f62eeb73a77ddcedb1408100c39",
+    "scope": "Private preparation only; actual626protectedintegration required before finalsourcepublication."
+  },
+  "runtimeReceipt": "/private/tmp/tdf-music-source-main596-20261026-6wu_0bcm/results.json",
+  "runtimeSha256": "2723102df239cf0755d07647950baa1785d0dbcb0895910c4e0820d17a47af8a",
+  "runtime": {
+    "startedAt": "2026-10-26T23:43:28.406380+00:00",
+    "source": "35a69bd72e2540c1bad875311bd4f48eb5eaa1bd",
+    "mainBaseline": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+    "status": "PASS_SCOPED_FULL223_SQL_AND_BINDING_CONTROLS",
+    "newCompilation": false,
+    "productionWrites": false,
+    "steps": [
+      {
+        "name": "init",
+        "exitCode": 0,
+        "expectedExitCode": 0
+      },
+      {
+        "name": "start",
+        "exitCode": 0,
+        "expectedExitCode": 0
+      },
+      {
+        "name": "baseline",
+        "exitCode": 1,
+        "expectedExitCode": 1
+      },
+      {
+        "name": "candidate",
+        "exitCode": 0,
+        "expectedExitCode": 0
+      },
+      {
+        "name": "stop",
+        "exitCode": 0,
+        "expectedExitCode": 0
+      }
+    ],
+    "cleanup": {
+      "ownedDatabasesRemoved": true,
+      "clusterStopped": true,
+      "postgresListenerClosed": true
+    },
+    "inputSha256": {
+      "scripts/test-music-source-projection.mjs": "1efdc0a81e8ae85e78f56814057d2636ebc20c2470c7621a24876696982b6416",
+      "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
+      "scripts/production-migrations.json": "2ef157906e6bc8f922fd5f3f838b5daca8b1ef60f5943f5f7b136ec3f9225699",
+      "scripts/lib/production-release.mjs": "837a2952f669b8d9819a31548652d1491b35dd37282603dd333a64a2303166c3",
+      "scripts/lib/music-test-database.mjs": "b63039bc86ab6dd58a17cd7448bf26ad439e27e23a0c7ab7b67b3eca94d7ebaf",
+      "scripts/__tests__/fixtures/production-schema-20260814.sql": "d8872748af4142954076cdbf587709d0115b4041837302530d273c8372d517cf",
+      "scripts/__tests__/fixtures/catalog-production-source-fixture.sql": "20d601eaf885eedf213e1110da3fa9489d19eed8629cd32f149e690fd947512c",
+      "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3"
+    },
+    "handlerHashes": {
+      "baseline": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
+      "candidate": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f"
+    },
+    "protocolSha256": "ec180c74bb2ecfe25c30452c542a2c6179072c19822b717b75ba9cdda74f3645",
+    "scope": "Real disposable PostgreSQL16 full223 canonical schema and same source runner on main and candidate. FiniteSQL/lexical tests, not nativeHTTP/media/production proof. Baseline adds only untracked qualification runner; candidate application code stays frozen.",
+    "postgresVersion": "PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit",
+    "baselineAgreementFailures": [
+      "FAIL: getPublicRelease: preview-only listener must receive no denied full rendition",
+      "FAIL: getPublicRelease: EC must receive no US-only sources",
+      "FAIL: getPublicRelease: every emitted source agrees with delivery policy",
+      "FAIL: getPublicRelease: every emitted source agrees with delivery policy",
+      "FAIL: listFavorites: preview-only listener must receive no denied full rendition",
+      "FAIL: listFavorites: every emitted source agrees with delivery policy",
+      "FAIL: listPlaylists: preview-only listener must receive no denied full rendition",
+      "FAIL: listPlaylists: every emitted source agrees with delivery policy",
+      "FAIL: listPlaybackHistory: preview-only listener must receive no denied full rendition",
+      "FAIL: listPlaybackHistory: every emitted source agrees with delivery policy"
+    ],
+    "candidate": {
+      "kind": "music-source-projection-qualification",
+      "sourceRevision": "35a69bd72e2540c1bad875311bd4f48eb5eaa1bd",
+      "migrations": 223,
+      "surfaces": 4,
+      "policyRemovalControls": 4,
+      "bindingArgumentControls": 8,
+      "policySha256": "3cdef784382b64064b3c343313361406217f849fb6c1502008f92be31df916f9",
+      "handlerSha256": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
+      "scope": "Complete canonical schema and finite real SQL/lexical controls; not compiled HTTP, bytes, performance or production acceptance"
+    },
+    "finishedAt": "2026-10-26T23:44:04.586832+00:00"
+  },
+  "published630Head": "533b469bc3334f62eeb73a77ddcedb1408100c39",
+  "limits": [
+    "Actual canonical223 disposableSQL and finite policy/binding controls, not compiled HTTP/media bytes/production or global formal proof.",
+    "Privatecandidate; actual626protectedintegration and finalinputcorrespondence required before existing630publication.",
+    "No provider activation/financial transactions/production writes; everyownedDB/cluster removed/stopped."
+  ]
+}

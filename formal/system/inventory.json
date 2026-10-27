@@ -5813,7 +5813,7 @@
     {
       "id": "SURFACE-b7ace60c7f571ef1",
       "path": "scripts/test-music-source-projection.mjs",
-      "sha256": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      "sha256": "1efdc0a81e8ae85e78f56814057d2636ebc20c2470c7621a24876696982b6416",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21130,7 +21130,7 @@
     },
     {
       "path": "docs/music-releases/authorized-source-projection.md",
-      "sha256": "5e36cc49df752de95f6c58360dd5fb48bcb9beb89f5e0bc5170e39b405ce8f64",
+      "sha256": "1a87a10c9b39653e0dca044be6a325d2c84b85ff25017c35e20ebea663b903a7",
       "authority": "inferred",
       "authorityBasis": "Status: source controls tested; exact-candidate compiled CI and release evidence pending.",
       "kind": "requirement-candidate"
@@ -27549,7 +27549,7 @@
     },
     {
       "path": "formal/system/music-source-projection.md",
-      "sha256": "7dc84ab24d3b9ac9741d1fe66fa3050100726f00695240fb58c2e97b29adb25f",
+      "sha256": "e4f9b3d7783a3df8ab2a0068d080a79f0dc798ac71d9e6bc283e9228c697b805",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
