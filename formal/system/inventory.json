@@ -465,6 +465,7 @@
       "scripts/test-event-ingestion-boundaries.sh",
       "scripts/test-event-memories-http.py",
       "scripts/test-event-memories.sh",
+      "scripts/test-event-memory-recovery-browser.mjs",
       "scripts/test-event-memory-signup-browser.mjs",
       "scripts/test-event-memory-source-browser.mjs",
       "scripts/test-event-memory-source-moderation.sh",
@@ -2782,7 +2783,7 @@
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "eedb2562c8c44b72d2651ce4bd63d3249422bf4b3160d2388546bf144b978ac6",
+      "sha256": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5386,13 +5387,19 @@
     {
       "id": "SURFACE-92e34e327b523dc8",
       "path": "scripts/test-event-memories-http.py",
-      "sha256": "e55095bbc7da498dccb0479186e980c988bc227cb8effaa576fb1babb05e0d5c",
+      "sha256": "586d26cdb1e463465904a27dc50be8ca88b3e856f0c5b5d79744c60469e38205",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a238b6eeaf81b28a",
       "path": "scripts/test-event-memories.sh",
       "sha256": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7c35f0b6ec69fa6b",
+      "path": "scripts/test-event-memory-recovery-browser.mjs",
+      "sha256": "1a5c39899720aaaf94277504ba848a10fdce790cf00ce037ef49359e2be54938",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5404,7 +5411,7 @@
     {
       "id": "SURFACE-f6d09097c41b38d4",
       "path": "scripts/test-event-memory-source-browser.mjs",
-      "sha256": "83f22ccfa3a209280c6752cda13c6932635362b9681147cab6476813f77eaa7a",
+      "sha256": "99584c7466da353a297908f8b1fb856d60850f18dba24afd219d60be22a1ca6e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27094,7 +27101,7 @@
     },
     {
       "path": "formal/system/event-memories.md",
-      "sha256": "245cd154e7b2d8e34b368cdae7c98685df210e3fa23a161093e65d9686f67988",
+      "sha256": "a2aee45f6ad159d06c3dbd2883060dcc56b4cc1429afead1115e3d10fd6c7a4f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27542,7 +27549,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "9fbe3924a92bc6735bbaa569dafd5e3434bb9a69c54623521c1d55a2fc7bf27e",
+      "sha256": "8151486f6a3bc17ccf7fd91e301291d7cd9267c50d924edf37d65054a8364b41",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -41,3 +41,12 @@ La API, Vite, navegador y base desechable propios se retiraron; el cluster propi
 Esta rama está apilada sobre#635. Las revisiones de#615/#632/#635 y la cadena móvil siguen pendientes, incluidos los hallazgos de autorización. Los149 requisitos globales continúan UNPROVEN y el informe formal conserva releaseBLOCKED; las pruebas acotadas no son prueba completa de implementación/refinamiento ni autorización de producción. Faltan composición revisada con main vigente, CI/protecciones/FIFO, correspondencia de artefactos y recovery/canary/despliegue y aceptación canónica.
 
 Evento141: el usuario confirmó que se celebró y finalizó. No se cambió su estado ni se efectuaron escrituras/despliegues de esta entrega. Invitaciones reales intentadas/enviadas/entregadas/fallidas0/0/0/0; elegibilidad con consentimiento y exclusiones no establecidas. No se atribuyen mejoras de adquisición, conversión o retención a las cuentas sintéticas. Medios privados/revocables, galerías mixtas, tags, idempotencia general, previews por publicación y mediciónD7/D30 conservan los límites del [informe ejecutivo](event-memories-executive-2026-10-26.md).
+
+
+## Corrección del primer control alojado de especificaciones
+
+El primer head publicado d1dc0cf4f recibió un fallo real del job121933306203: el índice de descubrimiento no incluía el helper nuevo ni las huellas actualizadas. Ese fallo permanece en40426454893 y no se considera pase. Se regeneraron inventory y traceability y se revisó su diff: un archivo nuevo registrado, huellas de los helpers/workflow y enlaces a los dos requisitos propios; los campos normativos y `semanticConformance=not-established-by-discovery` permanecen sin promoverse.
+
+El [preflight local completo](event-memory-source-evidence-20261025/recovery-specification-preflight.json) ejecutó los once comandos originales del workflow con parada ante cualquier código distinto de cero; todos finalizaron0. Incluye seis regresiones de inventario y diez de conformidad. Esta corrección solo afecta metadatos/informes; los276 archivos de la ejecución8b2 siguen exactos. Se requiere CI alojado nuevo del head corregido.
+
+La previsualización auxiliar de Vercel informó `build-rate-limit`. La consulta de protección vigente muestra20 contextos obligatorios, sin Vercel. El fallo del proveedor se mantiene separado de la validación del código; no se modificaron plan ni controles. El informe formal global calificado del padre conserva149 requisitos UNPROVEN/releaseBLOCKED; el primer control fallido del sucesor no acredita ejecución formal completa.

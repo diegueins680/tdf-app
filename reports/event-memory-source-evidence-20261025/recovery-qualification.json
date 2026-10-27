@@ -130,5 +130,27 @@
     "noOpenFiles": true,
     "fullyRestorable": true,
     "sealedExecutablesAndCommittedSourcesUntouched": true
+  },
+  "hostedFirstAttempt": {
+    "head": "d1dc0cf4feceff67a359faef3b245ff1f07aa879",
+    "workflow": 40426454893,
+    "job": 121933306203,
+    "failure": "Specification discovery index is stale",
+    "failureRetained": true,
+    "logSha256": "8c633ad172152f53d2e3739725987af6277dafc19980062b6121897a3a91978f",
+    "repair": "Regenerated discovery inventory and traceability; source/runtime/application unchanged",
+    "localFailFastPreflightCommands": 11,
+    "localInventoryRegressionCases": 6,
+    "localConformanceRegressionCases": 10,
+    "allPreflightCommandsExitZero": true,
+    "freshHostedCiRequired": true
+  },
+  "preview": {
+    "provider": "Vercel",
+    "status": "FAILURE",
+    "reason": "build-rate-limit",
+    "requiredByCurrentMainPolicy": false,
+    "policyRequiredContexts": 20,
+    "planOrPolicyChanged": false
   }
 }
