@@ -20864,7 +20864,7 @@
     },
     {
       "path": "docs/music-releases/authorized-source-projection.md",
-      "sha256": "b5a801543ac94d427a3c92e5b21a430f0e24e40c74c71c40ad44b73ee3a8f6a6",
+      "sha256": "da965d709c106515dc707df935a0915fb99f0581b9dd10fac77d2e32f487691b",
       "authority": "inferred",
       "authorityBasis": "Status: source controls tested; exact-candidate compiled CI and release evidence pending.",
       "kind": "requirement-candidate"

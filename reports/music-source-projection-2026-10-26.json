@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "QUALIFIED_SOURCE_CONTROLS_PROVIDER_MAIN_METADATA_REFRESH_PENDING_EXACT_HEAD_CI",
+  "status": "QUALIFIED_SOURCE_PRESERVED_AUTH_RECOVERY_MAIN_METADATA_REFRESH_PENDING_EXACT_HEAD_CI",
   "scope": "Four public-listening source projections; finite SQL/policy agreement only",
   "baseline": "3af768dacd95c1223975c62da3ce8088bed89b47",
   "branch": "fix/music-source-availability-20261026",
@@ -181,7 +181,7 @@
       "artifact": "/private/tmp/tdf-audio-source-catalog-audit-20261026.json"
     }
   ],
-  "integrationBaseline": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "integrationBaseline": "63c56aaf919a07e919a61280311be1dc809cd6fe",
   "historicalMetadataValidationAt3af": {
     "passed": 25,
     "commands": [
@@ -655,6 +655,83 @@
       "cabalStackAppSourceInputsUnchanged": true,
       "privateReceiptSha256": "de79b84d73e2f7d90d594bf7c26ddb23ff6df573a76caea89ed1e83e11fbe4f4"
     }
+  },
+  "protectedAuthRecoveryMainRefresh": {
+    "oldHead": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
+    "main": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+    "counts": {
+      "mainRequirements": 148,
+      "mergedRequirements": 149,
+      "wholeMainDecisions": 1341,
+      "manifestEntries": 223
+    },
+    "allMainRequirementObjectsAndUnchangedSourceObject": "PRESERVED_EXACTLY",
+    "wholeMainCatalogRetirementHistoryAnd223Manifest": "BYTE_EXACT_MAIN",
+    "allFiveCurrentSourceInputsAndApiSha256": {
+      "tdf-hq/src/TDF/Server/MusicRelease.hs": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
+      "tdf-hq/src/TDF/API/MusicRelease.hs": "fdf3cf3710f04a251d71092cf4da21dbb1ff23541553936b24fbf2157f3b949d",
+      "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      "scripts/ci-change-scope.mjs": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+      "scripts/__tests__/ci-change-scope.test.mjs": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
+      ".github/workflows/ci.yml": "834142e79aed673d4ba12ec7ca78e0b302d877dee72f97761fcd9e1e0f124190"
+    },
+    "wholeBackendBytesUnchangedFromA376": true,
+    "inheritedUiChanges": [
+      "tdf-hq-ui/src/api/auth.test.ts",
+      "tdf-hq-ui/src/api/auth.ts",
+      "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+      "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+      "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+      "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+      "tdf-hq-ui/src/utils/authErrorMessage.ts"
+    ],
+    "qualification": "Earlier selected14 SQL/lexical controls retain their execution identities; no new Stack/PostgreSQL/HTTP/browser/full223 qualification. Newmain UI authentication changes are inherited protected code, not fresh UI qualification by this metadata task.",
+    "metadata": {
+      "metadataTests": {
+        "passed": 36,
+        "failed": 0,
+        "suites": [
+          9,
+          6,
+          10,
+          11
+        ]
+      },
+      "ciContracts": {
+        "passed": 46,
+        "failed": 0,
+        "node": "22.14.0",
+        "logSha256": "69894153f7d0d3857ae8645e4544d9a2c013e386ca707fcd3126782fc190cf4b"
+      },
+      "strictCatalog": {
+        "jsonExitCode": 0,
+        "csvExitCode": 0,
+        "candidates": 1341,
+        "csvRows": 1341,
+        "stale": 0,
+        "unreviewed": 0
+      },
+      "generatedApi": {
+        "clients": 2,
+        "mobile": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+        "status": "PASS"
+      },
+      "finalFreshness": "PASS final ordered inventory/conformance checks",
+      "immutableAdmission": "PENDING root normal merge commit",
+      "runtimeReruns": 0,
+      "preparedAdmission": {
+        "status": "PASS_WORKING_TREE_PREPARATION",
+        "mappedPaths": [
+          ".github/workflows/ci.yml",
+          "scripts/__tests__/ci-change-scope.test.mjs",
+          "scripts/ci-change-scope.mjs",
+          "scripts/test-music-source-projection.mjs",
+          "tdf-hq/src/TDF/Server/MusicRelease.hs"
+        ],
+        "immutableCommittedGate": "PENDING root normal merge commit"
+      }
+    },
+    "release": "Pinned63c normal merge only; exact candidate CI/current review/protected integration remain gates. No push/Git/services/production by metadata owner."
   },
   "fullSchemaQualification": {
     "source": "7187e17af15a46495aa6ebf388717eed6322f4d7",
