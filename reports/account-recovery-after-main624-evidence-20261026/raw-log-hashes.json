@@ -1,0 +1,33 @@
+{
+  "archiveSha256": "707b1111354e1ea4b581a67d4651e078b47585752f7567fae727d8d5da80a48e",
+  "members": {
+    "native-build.log": {
+      "bytes": 1938715,
+      "sha256": "86555c230324558fd9aca868b5c920e2809ff28c97923158b05eff4714b8c541"
+    },
+    "ui-quality.log": {
+      "bytes": 1156522,
+      "sha256": "701e5ece8653f6013938c0ba32f65aa7997ec00b04b0c0e033dcd5840a0e7b18"
+    },
+    "repo-quality.log": {
+      "bytes": 134631,
+      "sha256": "d1d389224c7455323ed947ebaa91c6c95ebd73273e1a5b8b99d4b0ebdbee0eb5"
+    },
+    "runtime-execution.log": {
+      "bytes": 240,
+      "sha256": "1360ee847de5cf0011b5fe4c7bb2eb3fafa2f0fb50d739d29c4e9dccf83b9833"
+    },
+    "runtime-browser.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "static-acceptance.log": {
+      "bytes": 61,
+      "sha256": "ac8aefa38b7a1367f02a73e3b5648b77f8cc8e208e4af30ed473f4344e9c31c1"
+    },
+    "first-pre-resource-path-failure.log": {
+      "bytes": 1393,
+      "sha256": "2a9346872cf770b27701fb9524158ad824c2847fdc85fdb3c9a37921cb2fe60d"
+    }
+  }
+}
