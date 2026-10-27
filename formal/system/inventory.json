@@ -597,6 +597,7 @@
       "scripts/verify-cors-boundary.py",
       "scripts/verify-event-operations-formal.sh",
       "scripts/verify-event-operations-pluscal.mjs",
+      "scripts/verify-google-account-name.py",
       "scripts/verify-improvement-loop.mjs",
       "scripts/verify-invoice-receipt-api.mjs",
       "scripts/verify-invoice-receipts.py",
@@ -2166,6 +2167,7 @@
       "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
       "tdf-hq/test/TDF/Artists/PromotionSpec.hs",
       "tdf-hq/test/TDF/Auth/AccountNameSpec.hs",
+      "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
       "tdf-hq/test/TDF/Catalog/PipelineSpec.hs",
       "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
       "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
@@ -3290,7 +3292,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
+      "sha256": "d70e3198ddc1a725e5d05780e342a48b9ed0194c21305d76e667e8b6e3dd52b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4004,7 +4006,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+      "sha256": "3af16deb3278b958633501a3a05cd214b0e74b2cf9bee1912d3d2fc10b1b30fc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4670,7 +4672,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
+      "sha256": "d61623b87c76e6949e88744d7163cad0c3b4a189133d1a7517e38f41f44941fd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6171,6 +6173,12 @@
       "id": "SURFACE-6c75a638587af83c",
       "path": "scripts/verify-event-operations-pluscal.mjs",
       "sha256": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0c79563c67a4f75d",
+      "path": "scripts/verify-google-account-name.py",
+      "sha256": "81ec6ad0c9e12c2d0655384050c4c7c59268560f19a1743c08b8852949541c29",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15164,7 +15172,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "2c536c7370dba0dd252a7c16f6f2d167324c007c374aa321f10e3ce4202a2c87",
+      "sha256": "48686841bfe8bb363c2652390574e0de1ae99807e344b9f2f9623ac249158613",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15452,7 +15460,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+      "sha256": "f81c6ec38602204eaa77e47a1bb244ce769bb9d05da6ed59aa4ebf0e84fa3a3a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15524,7 +15532,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "dcc3317a2483c78d414a6685a737e9deead33c65b33ad862ee13318e05012d53",
+      "sha256": "19fd2531ef5d52b284b11a40f31e3464dcfbc9c0cf67b089c413d48860bc8fa6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15549,6 +15557,12 @@
       "id": "SURFACE-72e82ca292de1c33",
       "path": "tdf-hq/test/TDF/Auth/AccountNameSpec.hs",
       "sha256": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f8421d762d19db99",
+      "path": "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
+      "sha256": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15866,7 +15880,7 @@
     {
       "id": "SURFACE-7c37a9a53d010234",
       "path": "tdf-hq/test/TDF/ServerAuthSpec.hs",
-      "sha256": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
+      "sha256": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27220,7 +27234,7 @@
     },
     {
       "path": "formal/system/mobile-entry-ux.md",
-      "sha256": "0297d2b5521eeb801449c59c22b9525f67fa5ed3b11116856ea464bfb8125f76",
+      "sha256": "652590275ce2c11edbd954cafb77f9b7e6ce2248de23000571f50618182af164",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27493,7 +27507,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e9ce8ba75f51f5c3958719ecbd9b51717284257da0498eac7ad99e7f52d422b8",
+      "sha256": "f8ce8c166a3601f6153a29f4938634a0368fdb0050f6b61626f1a9e4fd8ad212",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
