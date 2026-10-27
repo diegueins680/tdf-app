@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T22:02:14.067Z",
+  "generatedAt": "2026-10-26T23:25:26.166Z",
   "repositoryRoot": ".",
-  "filesScanned": 2404,
+  "filesScanned": 2405,
   "candidateCount": 1341,
   "byClassification": {
     "dynamic-business-catalog": 863,
@@ -4408,7 +4408,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 1076,
+      "consumerCount": 1077,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -4696,7 +4696,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 1076,
+      "consumerCount": 1077,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -6429,7 +6429,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 634,
+      "consumerCount": 635,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -6817,7 +6817,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1076,
+      "consumerCount": 1077,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -17104,7 +17104,7 @@
       "lines": [
         627
       ],
-      "consumerCount": 660,
+      "consumerCount": 661,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -24835,7 +24835,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 690,
+      "consumerCount": 691,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -28735,7 +28735,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 664,
+      "consumerCount": 665,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32002,7 +32002,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 664,
+      "consumerCount": 665,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -36020,7 +36020,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 643,
+      "consumerCount": 644,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -52375,7 +52375,7 @@
       "lines": [
         147
       ],
-      "consumerCount": 1099,
+      "consumerCount": 1100,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -53893,7 +53893,7 @@
       "lines": [
         402
       ],
-      "consumerCount": 1078,
+      "consumerCount": 1079,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -54547,7 +54547,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 700,
+      "consumerCount": 701,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -65979,7 +65979,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1084,
+      "consumerCount": 1085,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -70727,7 +70727,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 664,
+      "consumerCount": 665,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -75419,7 +75419,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "3ad9915d69339318f9ff",
+      "id": "0ebaf6c35df246735cd0",
       "file": "tdf-hq-ui/src/utils/authErrorMessage.ts",
       "sourceKind": "production",
       "surface": "web",
@@ -75431,20 +75431,22 @@
         "network",
         "timeout",
         "credentials",
+        "reset-token",
         "starting",
         "response"
       ],
-      "valueCount": 5,
+      "valueCount": 6,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
         3
       ],
-      "consumerCount": 47,
+      "consumerCount": 48,
       "backendConsumers": [
         "tdf-hq/src/TDF/API/MerchReputation.hs",
         "tdf-hq/src/TDF/App/StartupResponse.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/StartupResponseSpec.hs"
       ],
       "webConsumers": [
@@ -75508,13 +75510,13 @@
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
-      "justification": "Reviewed 2026-09-18: AuthErrorCode union in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "risk": "Client response classification only; cannot authorize access, extend reset expiry, replay confirmation, or change the backend token authority.",
+      "justification": "Reviewed 2026-10-26: fixed auth failure discriminants and their localized copy mapping now include reset-token only for the reset-confirmation endpoint's exact invalid/expired-token response at400/401. Login credential, transport, server and other validation meanings are retained.30 focused tests pass; disabling endpoint classification fails4 expected regressions. This protocol classification is not an editable business catalog. Original decision 3ad9915d69339318f9ff remains in immutable protected source ed9eb9a1600f0a827e002bb2ab64a608f8352b2c.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
     {
-      "id": "4b3f6f86992b9c64f7a3",
+      "id": "b855e017c65163224770",
       "file": "tdf-hq-ui/src/utils/authErrorMessage.ts",
       "sourceKind": "production",
       "surface": "web",
@@ -75526,17 +75528,19 @@
         "network",
         "timeout",
         "credentials",
+        "reset-token",
         "starting"
       ],
-      "valueCount": 4,
+      "valueCount": 5,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
         15
       ],
-      "consumerCount": 57,
+      "consumerCount": 58,
       "backendConsumers": [
         "tdf-hq/src/TDF/App/StartupResponse.hs",
         "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/StartupResponseSpec.hs"
       ],
       "webConsumers": [
@@ -75613,8 +75617,8 @@
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
-      "justification": "Reviewed 2026-09-18: error.code translation switch in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "risk": "Client response classification only; cannot authorize access, extend reset expiry, replay confirmation, or change the backend token authority.",
+      "justification": "Reviewed 2026-10-26: fixed auth failure discriminants and their localized copy mapping now include reset-token only for the reset-confirmation endpoint's exact invalid/expired-token response at400/401. Login credential, transport, server and other validation meanings are retained.30 focused tests pass; disabling endpoint classification fails4 expected regressions. This protocol classification is not an editable business catalog. Original decision 4b3f6f86992b9c64f7a3 remains in immutable protected source ed9eb9a1600f0a827e002bb2ab64a608f8352b2c.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -76722,7 +76726,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 396,
+      "consumerCount": 398,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -76923,7 +76927,7 @@
         "scripts/test-music-s3-local.mjs",
         "scripts/test-player-session-model.mjs",
         "scripts/test-provider-domain-binding.py",
-        "scripts/test-provider-execution-runtime-migration.sh"
+        "scripts/test-provider-domain-harness.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/test-stripe-integration.sh",
@@ -77838,7 +77842,7 @@
         2954,
         3056
       ],
-      "consumerCount": 342,
+      "consumerCount": 343,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -78354,7 +78358,7 @@
       "lines": [
         7723
       ],
-      "consumerCount": 434,
+      "consumerCount": 435,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -79178,7 +79182,7 @@
       "lines": [
         10697
       ],
-      "consumerCount": 938,
+      "consumerCount": 939,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -82599,7 +82603,7 @@
       "lines": [
         13866
       ],
-      "consumerCount": 1077,
+      "consumerCount": 1078,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -83334,7 +83338,7 @@
       "lines": [
         14211
       ],
-      "consumerCount": 348,
+      "consumerCount": 349,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/docs/openapi/user-roles.yaml",
@@ -83604,7 +83608,7 @@
       "lines": [
         14268
       ],
-      "consumerCount": 1077,
+      "consumerCount": 1078,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -85657,7 +85661,7 @@
         16729,
         16781
       ],
-      "consumerCount": 1076,
+      "consumerCount": 1077,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -87426,7 +87430,7 @@
       "lines": [
         18275
       ],
-      "consumerCount": 933,
+      "consumerCount": 934,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -87801,7 +87805,7 @@
       "lines": [
         18318
       ],
-      "consumerCount": 1083,
+      "consumerCount": 1084,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -151804,7 +151808,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 63,
+      "consumerCount": 64,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
@@ -151836,6 +151840,7 @@
         "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
         "tdf-hq-ui/src/features/featureRegistry.ts"
@@ -151877,6 +151882,7 @@
         "scripts/verify-request-failures.py"
       ],
       "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-mobile/src/api/generated/types.ts",
@@ -153213,7 +153219,7 @@
       "lines": [
         1197
       ],
-      "consumerCount": 1076,
+      "consumerCount": 1077,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -160134,7 +160140,7 @@
       "lines": [
         409
       ],
-      "consumerCount": 396,
+      "consumerCount": 398,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -160334,7 +160340,7 @@
         "scripts/test-music-s3-local.mjs",
         "scripts/test-player-session-model.mjs",
         "scripts/test-provider-domain-binding.py",
-        "scripts/test-provider-execution-runtime-migration.sh"
+        "scripts/test-provider-domain-harness.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/test-stripe-integration.sh",
