@@ -8989,7 +8989,7 @@
       "id": "AUTH-ENTRY-002",
       "title": "Low-friction account entry that lands on Comunidad or the interrupted intent",
       "statement": "Email signup requires only email and password with clickwrap terms; first-time Google users create an account without another form or popup; successful entry lands on Comunidad unless a validated same-origin return path or explicit intent applies.",
-      "authority": "product owner request after real-user mobile test (2026-10-07)",
+      "authority": "product owner request after real-user mobile test (2026-10-07); product owner User Value Activation Sprint privacy/public-information review requirement (2026-10-26), following an isolated before-save disclosure counterexample",
       "domain": "AUTH",
       "actors": [
         "Visitor",
@@ -9023,19 +9023,20 @@
       "forbiddenTransitions": [
         "required name/phone/profile at signup",
         "external, protocol-relative or backslash redirect target",
-        "account linking by email alone"
+        "account linking by email alone",
+        "private email or its local part -> automatic public account name before explicit profile editing"
       ],
       "effects": [
-        "Server records accepted terms version; display name starts from the email local part and is editable later."
+        "Server records the accepted terms version. Email signup and Google signup without a supplied profile name start with a neutral account label, independent of the private email, and people can choose their public name later."
       ],
       "authorization": "Return paths are honored only when same-origin and accessible to the returned roles; Google linking still requires existing credentials.",
-      "privacy": "No marketing consent implied; no credentials in URLs or telemetry.",
+      "privacy": "No implied marketing consent or credentials in URLs/telemetry. Automatic account display-name defaults must not use a private email or its local part. Explicitly supplied names, credential email and existing account names remain unchanged.",
       "concurrency": "Late Google callbacks reuse the stored handler; creation reuses the single credential.",
       "idempotency": "Signup submit is disabled while pending.",
       "failure": "Inline field errors and friendly server messages; no raw errors.",
       "recovery": "Retry, switch to email/password, or link an existing account.",
       "observability": "signup_completed/login_completed/signup_failed analytics and auth_flow client errors.",
-      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
+      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation; User Value Activation Sprint (2026-10-26): preserve minimal registration while preventing private contact data becoming an automatic public name.",
       "implementation": [
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/utils/signupFields.ts",
@@ -9046,7 +9047,10 @@
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
         "tdf-hq-ui/src/api/auth.ts",
-        "tdf-hq-ui/src/utils/authErrorMessage.ts"
+        "tdf-hq-ui/src/utils/authErrorMessage.ts",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Auth/AccountName.hs",
+        "tdf-hq/tdf-hq.cabal"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
@@ -9058,7 +9062,8 @@
         "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
-        "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx"
+        "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+        "tdf-hq/test/TDF/Auth/AccountNameSpec.hs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -13537,8 +13542,8 @@
     "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": "071f7a3d488fd88687cffda5cb6c4a505018aaec8380c51e88c3f73560d28371",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx": "c7ee179cb1dd5e0326054d9cc06d6f0c433ecd48b7620a9b25d0ae278ade6218",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": "b3d9afb2fcef5772f8397011443b084abf8d65e47b9ff4ac2187bca2a027c14a",
-    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "29cbe90efd800dfa0b84334f8e40d1df1c3019d9230311eda67577db67bccaad",
-    "tdf-hq-ui/src/pages/LoginPage.tsx": "41bba4678c5386a6a1f0bc6104ab214ae4c4ac12d44d1b7eaa0130b8b1f13c6d",
+    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "424eb5cbb64ff0bdfe6bd7b42a5a675485d04c36d9fa5486789d2b404f3aa5a2",
+    "tdf-hq-ui/src/pages/LoginPage.tsx": "9cccc4c45c2497fbf70418f149871d0682166252954bad338361de2532d8a252",
     "tdf-hq-ui/src/pages/MarketplacePage.tsx": "b129902039b0dca4eba1ed7077c2a61d7909da0a02bcb4eca2c35650c07cd102",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
     "tdf-hq-ui/src/pages/MobileAppPage.tsx": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
@@ -13631,8 +13636,8 @@
     "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts": "4fc6a2d58724ce481dc6b6a35c51ad3a32e19f843389d70b406979b3caee6ed1",
     "tdf-hq-ui/src/utils/radioRouteVisibility.ts": "66d5ec3d66762d3e3af53bd9d29ef8a59c0a847194ff836ebbb2de8e278dcd9f",
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
-    "tdf-hq-ui/src/utils/signupFields.test.ts": "d64b0791128645c24fe39a5abb49b1a0c32b2d9fa193248b8e44e8cc514b7d87",
-    "tdf-hq-ui/src/utils/signupFields.ts": "6f819b6c1897ad2440ecddf4c863887db3b6011481b64fb68b60d6abfea44f70",
+    "tdf-hq-ui/src/utils/signupFields.test.ts": "5fa74df8f8faf643a00cdfcc30ac02e5097f07d8e6496c4bc644821ef46b7a24",
+    "tdf-hq-ui/src/utils/signupFields.ts": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
     "tdf-hq-ui/src/vite-env.d.ts": "28fae652abf43eaed9c5a3615cb2f362f8d81efdd7815347fa995b222908a22e",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
     "tdf-hq/Dockerfile": "9d4b6b0747296ff98277153a7fa31ae5e75a14709a0900ffd3abf2588b20cf4f",
@@ -13763,6 +13768,7 @@
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
     "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
+    "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
     "tdf-hq/src/TDF/CampaignAutomation.hs": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
     "tdf-hq/src/TDF/Catalog/Security.hs": "91fd8939b7bfb352044eae190f55eb94f8c6015230b7f93b5a35b09031115b99",
@@ -13843,7 +13849,7 @@
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
-    "tdf-hq/src/TDF/ServerAuth.hs": "ef2424821bcfa8d0cd2a8729dd9534a10c0c1ef39aab9ddc818d95f0896ac8a3",
+    "tdf-hq/src/TDF/ServerAuth.hs": "2c536c7370dba0dd252a7c16f6f2d167324c007c374aa321f10e3ce4202a2c87",
     "tdf-hq/src/TDF/ServerExtra.hs": "ba415c384195ae77200926d96d85257e8654986ff64455b32ede127bc7bc42b9",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
@@ -13862,14 +13868,15 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "1427f603a60bed8c4d0a9bd70d51e9e65bddb7785f50ba798e24d87bc012fafb",
+    "tdf-hq/tdf-hq.cabal": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "f30f9a0f0d0672bc72e4bb20a4d32733951a50786620e15fe7cd9ec3d798c449",
+    "tdf-hq/test/Spec.hs": "dcc3317a2483c78d414a6685a737e9deead33c65b33ad862ee13318e05012d53",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
+    "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -15550,6 +15557,10 @@
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/utils/roles.ts": [
@@ -15901,6 +15912,10 @@
       },
       {
         "requirement": "DEPLOY-READINESS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-ENTRY-002",
         "relationship": "implementation"
       },
       {
@@ -22652,6 +22667,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Auth/AccountName.hs": [
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/utils/signupFields.test.ts": [
       {
         "requirement": "AUTH-ENTRY-002",
@@ -22691,6 +22712,12 @@
       }
     ],
     "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx": [
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": [
       {
         "requirement": "AUTH-ENTRY-002",
         "relationship": "tests"
@@ -36510,7 +36537,7 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "29cbe90efd800dfa0b84334f8e40d1df1c3019d9230311eda67577db67bccaad",
+      "sha256": "424eb5cbb64ff0bdfe6bd7b42a5a675485d04c36d9fa5486789d2b404f3aa5a2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36538,7 +36565,7 @@
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "41bba4678c5386a6a1f0bc6104ab214ae4c4ac12d44d1b7eaa0130b8b1f13c6d",
+      "sha256": "9cccc4c45c2497fbf70418f149871d0682166252954bad338361de2532d8a252",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38923,7 +38950,7 @@
     {
       "id": "SURFACE-43dc31225ddf1005",
       "path": "tdf-hq-ui/src/utils/signupFields.test.ts",
-      "sha256": "d64b0791128645c24fe39a5abb49b1a0c32b2d9fa193248b8e44e8cc514b7d87",
+      "sha256": "5fa74df8f8faf643a00cdfcc30ac02e5097f07d8e6496c4bc644821ef46b7a24",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38935,7 +38962,7 @@
     {
       "id": "SURFACE-1db49bff24529d0b",
       "path": "tdf-hq-ui/src/utils/signupFields.ts",
-      "sha256": "6f819b6c1897ad2440ecddf4c863887db3b6011481b64fb68b60d6abfea44f70",
+      "sha256": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43499,6 +43526,18 @@
       ]
     },
     {
+      "id": "SURFACE-4aefc15cf75d9548",
+      "path": "tdf-hq/src/TDF/Auth/AccountName.hs",
+      "sha256": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-8c41b16bda1eb6d1",
       "path": "tdf-hq/src/TDF/CMS/Models.hs",
       "sha256": "7cbd5b8e31dd3214114c63b162408af2438d674759e1ec3c528fe8a66bf7484f",
@@ -45335,7 +45374,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "ef2424821bcfa8d0cd2a8729dd9534a10c0c1ef39aab9ddc818d95f0896ac8a3",
+      "sha256": "2c536c7370dba0dd252a7c16f6f2d167324c007c374aa321f10e3ce4202a2c87",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45360,6 +45399,10 @@
         },
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-ENTRY-002",
           "relationship": "implementation"
         }
       ]
@@ -45822,7 +45865,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "1427f603a60bed8c4d0a9bd70d51e9e65bddb7785f50ba798e24d87bc012fafb",
+      "sha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45843,6 +45886,10 @@
         },
         {
           "requirement": "DEPLOY-READINESS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-ENTRY-002",
           "relationship": "implementation"
         },
         {
@@ -45964,7 +46011,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "f30f9a0f0d0672bc72e4bb20a4d32733951a50786620e15fe7cd9ec3d798c449",
+      "sha256": "dcc3317a2483c78d414a6685a737e9deead33c65b33ad862ee13318e05012d53",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46062,6 +46109,18 @@
       "sha256": "25a6ee8483bbc8b485f039b6d45cdfe417979ad3f93d3fba10f05e24a12ddd83",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-72e82ca292de1c33",
+      "path": "tdf-hq/test/TDF/Auth/AccountNameSpec.hs",
+      "sha256": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-bcc8793e04f6ed01",
@@ -53731,7 +53790,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f94ca71284b6f7004d61e6fa63577335bcffee8e4f3e7651de71d89a921c8d59",
+      "sourceSha256": "d8cdcd0c705d6467ac9b227ab87bcdcb9236c0a356fba9780a77c38c85cd4fad",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -53759,7 +53818,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f94ca71284b6f7004d61e6fa63577335bcffee8e4f3e7651de71d89a921c8d59",
+      "sourceSha256": "d8cdcd0c705d6467ac9b227ab87bcdcb9236c0a356fba9780a77c38c85cd4fad",
       "definition": {
         "states": [
           "absent",
@@ -53789,7 +53848,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f94ca71284b6f7004d61e6fa63577335bcffee8e4f3e7651de71d89a921c8d59",
+      "sourceSha256": "d8cdcd0c705d6467ac9b227ab87bcdcb9236c0a356fba9780a77c38c85cd4fad",
       "definition": {
         "export": [
           "queued",
