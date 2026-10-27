@@ -4075,8 +4075,13 @@ socialEventsServer user =
     deleteMoment :: T.Text -> T.Text -> AppM NoContent
     deleteMoment rawEvent rawMoment = do
         _ <- changeOwnMoment rawEvent rawMoment $ \key _ -> do
-            deleteWhere [EventMomentReactionMomentId ==. key]
-            deleteWhere [EventMomentCommentMomentId ==. key]
+            canonical <- Interactions.activated
+            -- After cutover, direct writes to frozen children are fenced. The
+            -- parent deletion trigger clears them and retains canonical
+            -- tombstones, including when interaction commands are paused.
+            unless canonical $ do
+                deleteWhere [EventMomentReactionMomentId ==. key]
+                deleteWhere [EventMomentCommentMomentId ==. key]
             delete key
             pure (Right key)
         pure NoContent

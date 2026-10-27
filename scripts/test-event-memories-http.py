@@ -276,7 +276,38 @@ try:
  sql(f"INSERT INTO social_event(id,organizer_party_id,title,start_time,end_time,event_type_id,workflow_state_id,metadata) SELECT 919143002,'{owner}','Private HTTP fixture',now()-interval '2 days',now()-interval '1 day',id,'00000000-0000-4000-8000-000000000238','{{\"isPublic\":false}}' FROM event_type WHERE code='concert'")
  sql(f"INSERT INTO social_event(id,organizer_party_id,title,start_time,end_time,event_type_id,workflow_state_id,metadata) SELECT 919143003,'{owner}','Suppressed HTTP fixture',now()-interval '2 days',now()-interval '1 day',id,'00000000-0000-4000-8000-000000000238','{{\"isPublic\":true}}' FROM event_type WHERE code='concert'")
  sql("INSERT INTO external_event_ref(provider,external_id,event_id,city,last_seen_at,missing_runs,source_status) VALUES('ticketmaster','memory-suppressed',919143003,'Quito',now(),0,'suppressed')")
+ # Historical children must remain deletable through the parent after cutover.
+ # Build these through the real legacy endpoints before activation, rather than
+ # bypassing the frozen-table fence or inventing canonical migration evidence.
+ legacy_moments=[]
+ legacy_reaction=sql("SELECT id FROM reaction_type WHERE code='fire' AND active LIMIT 1")
+ assert sql('SELECT activated_once FROM interaction_runtime WHERE singleton')=='f'
+ for label in ('before activation','after activation','after pause'):
+  legacy_moment=request('/social-events/events/919143001/moments',owner_token,body={'emCreateCaption':'Historical '+label,'emCreateMediaType':'image','emCreateMediaUrl':'https://assets.persona.test/historical.png'},method='POST')[0]
+  legacy_path=f"/social-events/events/919143001/moments/{legacy_moment['emId']}"
+  request(legacy_path+'/reactions',participant_token,body={'emrrReactionTypeId':legacy_reaction,'emrrActive':True},method='POST')
+  request(legacy_path+'/comments',participant_token,body={'emccBody':'Historical discussion '+label},method='POST')
+  legacy_moments.append((int(legacy_moment['emId']),legacy_path))
+  assert sql(f"SELECT (SELECT count(*) FROM event_moment_comment WHERE moment_id={legacy_moment['emId']})=1 AND (SELECT count(*) FROM event_moment_reaction WHERE moment_id={legacy_moment['emId']})=1")=='t'
+ request(legacy_moments[0][1],owner_token,method='DELETE',expected=204)
  sql('UPDATE interaction_runtime SET enabled=true WHERE singleton')
+ for index,(legacy_id,legacy_path) in enumerate(legacy_moments[1:]):
+  if index:sql('UPDATE interaction_runtime SET enabled=false WHERE singleton')
+  assert sql('SELECT activated_once FROM interaction_runtime WHERE singleton')=='t'
+  target=str(uuid.UUID(sql(f"SELECT id FROM interaction_target WHERE entity_kind='event_moment' AND entity_key='{legacy_id}'")))
+  assert sql(f"SELECT count(*) FROM interaction_comment WHERE target_id='{target}' AND body LIKE 'Historical discussion %'")=='1'
+  # A direct child delete must still be rejected; the parent trigger is the
+  # scoped nested operation allowed to clear frozen historical children.
+  sql(f"DO $$ BEGIN DELETE FROM event_moment_comment WHERE moment_id={legacy_id}; RAISE EXCEPTION 'Legacy child write fence missing'; EXCEPTION WHEN SQLSTATE '55000' THEN NULL; END $$;")
+  request(legacy_path,participant_token,method='DELETE',expected=404)
+  request('/social-events/events/919143002/moments/'+str(legacy_id),owner_token,method='DELETE',expected=404)
+  request(legacy_path,owner_token,method='DELETE',expected=204)
+  assert sql(f"SELECT NOT EXISTS(SELECT 1 FROM event_moment WHERE id={legacy_id}) AND NOT EXISTS(SELECT 1 FROM event_moment_comment WHERE moment_id={legacy_id}) AND NOT EXISTS(SELECT 1 FROM event_moment_reaction WHERE moment_id={legacy_id})")=='t'
+  assert sql(f"SELECT retired_at IS NOT NULL FROM interaction_target WHERE id='{target}'")=='t'
+  assert sql(f"SELECT count(*)=1 AND bool_and(state='removed' AND body='') FROM interaction_comment WHERE target_id='{target}'")=='t'
+  assert sql(f"SELECT count(*) FROM interaction_reaction WHERE target_id='{target}'")=='0'
+ sql('UPDATE interaction_runtime SET enabled=true WHERE singleton')
+ record('Historical source deletion works before activation and after live/paused cutover; canonical tombstones, author scope and the frozen-child write fence remain intact')
  request('/social-events/events/919143001/moments?extended',expected=401)
  request('/social-events/events/919143002/moments?extended',participant_token,expected=404)
  request('/social-events/events/919143002/moments',participant_token,body={'emCreateMediaType':'text','emCreateCaption':'Forbidden private write'},method='POST',expected=404)
