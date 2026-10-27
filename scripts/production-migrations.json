@@ -1132,6 +1132,11 @@
       "introducedBy": "5cc26ad46c958a029ec4539c60cc1ca77fec1d01"
     },
     {
+      "id": "2026-10-16_provider_domain_payment_binding",
+      "path": "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql",
+      "introducedBy": "456be073c944dd3d76eb9e3c2169fe7fbb4041ef"
+    },
+    {
       "id": "2026-10-25_event_memory_invitations",
       "path": "tdf-hq/sql/2026-10-25_event_memory_invitations.sql",
       "introducedBy": "18690e78a9ce97255529bade31c5ce2250b7ce22"

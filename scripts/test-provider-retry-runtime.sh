@@ -64,52 +64,30 @@ if [ "$table_count" != "0" ]; then
   echo "Provider retry test database must be empty; no existing data was changed" >&2
   exit 1
 fi
-psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto' >/dev/null
-psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
-  -f "$TDF_PROVIDER_RETRY_ROOT/scripts/__tests__/fixtures/provider-retry-ledger-base.sql" >/dev/null
+# Every provider/refund fixture now runs against the complete reviewed schema.
+# No reduced domain projections or disabled triggers are permitted in this gate.
+sh "$TDF_PROVIDER_RETRY_ROOT/scripts/load-payment-test-schema.sh" "$TDF_PROVIDER_RETRY_URL"
 
+# Preserve the pre-existing empty rollback/reapply rehearsals on the full schema,
+# before any provider or refund case inserts financial history.
 for migration in \
-  2026-08-04_service_storefront \
-  2026-08-13_service_storefront_phase0_hardening \
-  2026-08-13_unified_checkout_core \
-  2026-08-14_service_storefront_checkout_runtime \
-  2026-08-25_commerce_trigger_row_binding_compatibility \
-  2026-08-15_marketplace_sale_checkout_runtime \
-  2026-08-15_marketplace_rental_checkout_runtime \
-  2026-08-14_checkout_event_refund_runtime \
-  2026-08-17_service_booking_manual_payments \
-  2026-09-09_canonical_payment_lifecycle \
-  2026-09-10_payment_attempt_intent_binding \
-  2026-09-11_payment_intent_runtime_sync \
-  2026-09-11_manual_bank_provider_activation \
-  2026-09-11_provider_capability_catalog \
-  2026-09-13_provider_execution_runtime \
-  2026-09-15_provider_query_recovery \
-  2026-09-16_payment_intent_refund_sync \
-  2026-10-04_checkout_amount_correspondence \
-  2026-10-05_ticket_admission_audit \
+  2026-10-06_ticket_refund_allocation \
+  2026-10-06_ticket_refund_allocation_rollback \
   2026-10-06_ticket_refund_allocation \
   2026-10-06_ticket_refund_request_binding \
-  2026-10-12_ledger_posting_integrity \
-  2026-10-16_ledger_entry_write_fence \
-  2026-10-24_ledger_guard_namespace \
-  2026-10-25_ledger_posted_header \
-  2026-10-12_checkout_line_snapshot_fixed; do
+  2026-10-06_ticket_refund_request_binding_rollback \
+  2026-10-06_ticket_refund_request_binding; do
   psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
     -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/$migration.sql" >/dev/null
 done
+psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
+  -f "$TDF_PROVIDER_RETRY_ROOT/scripts/__tests__/fixtures/provider-domain-fixtures.sql" >/dev/null
 
-# New allocation schema replays without dropping operator history; empty rollback
-# is permitted only before any ticket refund has used it.
-for migration in 2026-10-06_ticket_refund_allocation 2026-10-06_ticket_refund_allocation_rollback 2026-10-06_ticket_refund_allocation; do
-  psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
-    -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/$migration.sql" >/dev/null
-done
+python3 "$TDF_PROVIDER_RETRY_ROOT/scripts/test-provider-domain-harness.py"
+python3 -O "$TDF_PROVIDER_RETRY_ROOT/scripts/test-provider-domain-harness.py"
 
-for migration in 2026-10-06_ticket_refund_request_binding 2026-10-06_ticket_refund_request_binding_rollback 2026-10-06_ticket_refund_request_binding; do
-  psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
-    -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/$migration.sql" >/dev/null
-done
+TDF_PROVIDER_RETRY_DATABASE_URL="$TDF_PROVIDER_RETRY_URL" \
+  python3 -O "$TDF_PROVIDER_RETRY_ROOT/scripts/test-provider-domain-binding.py"
 
 # Exercise repeat-apply and empty rollback with exact operator-seed retention
 # before test data is inserted. Never roll back a used queue or financial history.
@@ -137,7 +115,7 @@ PGOPTIONS='-c statement_timeout=15000 -c lock_timeout=10000' \
 
 TDF_PROVIDER_RETRY_DATABASE_URL="$TDF_PROVIDER_RETRY_URL" \
 PGOPTIONS='-c statement_timeout=15000 -c lock_timeout=10000' \
-  stack test --test-arguments='--match=provider-retry-runtime +RTS -N2 -RTS'
+  stack test --test-arguments='--match=provider-retry-runtime --fail-on=empty +RTS -N2 -RTS'
 
 # Nonempty rollback must fail and leave all history readable.
 if psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
