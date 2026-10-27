@@ -1,0 +1,30 @@
+{
+  "source": "0bb095149b376d1a235bb1accfeca7f2f943d22d",
+  "sourceTree": "6b543d8f807df6c4a403fc69cab71a53a2b0a517",
+  "backendTree": "6f1ae5c79738df53157c7b1cf8b809fd4488bcb8",
+  "unmergedDependencySource": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
+  "protectedSchemaAuthority": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+  "scope": "PRIVATE native macOS dependency coexistence only. Incoming626 NOT protected, approved, deployed or producer-qualified by this build. No runtime acceptance before actual /version/API/SQL verification.",
+  "resolver": "lts-24.42",
+  "compiler": "GHC9.10.3 selected by Stack",
+  "command": [
+    "stack",
+    "--no-terminal",
+    "build",
+    "--force-dirty",
+    "--jobs",
+    "2",
+    "tdf-hq:exe:tdf-hq-exe",
+    "--copy-bins",
+    "--local-bin-path",
+    "/private/tmp/tdf-activation-private626-binary-20261026"
+  ],
+  "startedAt": "2026-10-27T00:28:13.339794+00:00",
+  "status": "BUILT_NOT_RUNTIME_QUALIFIED",
+  "exitCode": 0,
+  "binarySha256": "049c438ad1e75da2270da86b4cf5517d2656ce9bebaae1351a2c21a9127a5de1",
+  "finishedAt": "2026-10-27T00:29:01.466409+00:00",
+  "stackLogSha256": "9bf3f8601d600a57719c3b8377ab52dd9a807c48262d777a008b576096bfb115",
+  "runtimeQualified": false,
+  "productionImageQualified": false
+}
