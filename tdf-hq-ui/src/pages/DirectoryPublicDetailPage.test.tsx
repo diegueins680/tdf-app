@@ -80,22 +80,27 @@ function LocationProbe() {
   return <output aria-label="Destino protegido">{`${location.pathname}${location.search}`}</output>;
 }
 
-function renderPage(initialEntry: string) {
+const testClients = new Set<QueryClient>();
+afterEach(() => { for (const client of testClients) client.clear(); testClients.clear(); });
+
+function renderPage(initialEntry: string, authenticationFallback?: string) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
       mutations: { retry: false },
     },
   });
+  testClients.add(queryClient);
   const view = render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route path="/directorio/:slug" element={<DirectoryPublicDetailPage kind="profile" />} />
-          <Route path="/eventos/:eventId" element={<DirectoryPublicDetailPage kind="event" />} />
+          <Route path="/eventos/:eventId" element={<DirectoryPublicDetailPage kind="event" authenticationFallback={authenticationFallback} />} />
           <Route path="/venues/:venueId" element={<DirectoryPublicDetailPage kind="venue" />} />
           <Route path="/social/eventos/:eventId" element={<LocationProbe />} />
           <Route path="/mis-clasificados" element={<LocationProbe />} />
+          <Route path="/login" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -298,5 +303,37 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
     expect(image.getAttribute('src')).toBe('https://cdn.example.test/venue.jpg');
     view.unmount();
     view.queryClient.clear();
+  });
+});
+
+
+describe('canonical public event authentication fallback', () => {
+  const event = { id: 141, title: 'Synthetic completed event', startTime: '2026-10-24T19:00:00Z', endTime: '2026-10-25T02:00:00Z', timezone: 'America/Guayaquil', isPublic: true, workflowStateCode: 'completed', publicShareEligible: true, rsvpEligible: false };
+  beforeEach(() => { sessionMock = null; profileMock.mockReset(); });
+  afterEach(cleanup);
+
+  it.each([401, 403, 404])('retains the original protected target when public metadata is unavailable (%s)', async status => {
+    profileMock.mockRejectedValueOnce(new ApiError('Unavailable', status));
+    const login = '/login?redirect=%2Fsocial%2Feventos%2F141%3Futm_source%3Dinvitation%23momentos';
+    renderPage('/eventos/141', login);
+    expect((await screen.findByLabelText('Destino protegido')).textContent).toBe(login);
+    expect(screen.queryByText(event.title)).toBeNull();
+  });
+
+  it('offers retry after transient failure instead of classifying it as a private event', async () => {
+    profileMock.mockRejectedValueOnce(new ApiError('Temporary unavailable', 503)).mockResolvedValueOnce(event);
+    renderPage('/eventos/141', '/login?redirect=%2Fsocial%2Feventos%2F141');
+    const retry = await screen.findByRole('button', { name: 'Reintentar' });
+    expect(screen.queryByLabelText('Destino protegido')).toBeNull();
+    fireEvent.click(retry);
+    expect(await screen.findByText(event.title)).toBeTruthy();
+    expect(profileMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves invitation attribution when the guest explicitly chooses to publish', async () => {
+    profileMock.mockResolvedValueOnce(event);
+    renderPage('/eventos/141?utm_source=invitation&memoryInvite=synthetic', '/login?redirect=event');
+    const link = await screen.findByRole('link', { name: 'Compartir mis momentos' });
+    expect(link.getAttribute('href')).toBe('/social/eventos/141?utm_source=invitation&memoryInvite=synthetic&compose=1#momentos');
   });
 });

@@ -281,7 +281,7 @@ spec = describe "social event handler helpers" $ do
                 , eiuName = Just "poster.png"
                 }
 
-    it "publishes event and moment images atomically and rejects deletion tombstones" $
+    it "publishes event posters atomically and requires a real session for moment uploads" $
         withSystemTempDirectory "social-event-image-lock" $ \assetsRoot -> do
             cfg <- Config.loadConfig
             pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
@@ -392,11 +392,14 @@ spec = describe "social event handler helpers" $ do
                     runReaderT
                         (socialEventMomentImageUploadHandlerFor (strictAdminSocialEventUser 3) "29" uploadForm)
                         env
+            -- A synthetic SQLite actor has no real bearer witness. Positive
+            -- moment upload/bytes/path/tombstone assertions now run through the
+            -- real PostgreSQL/API lane in test-event-memories-http.py in CI.
             case uploadedMoment of
-                Left err -> expectationFailure ("Expected moment image upload to succeed, got: " <> show err)
-                Right response -> do
-                    eiuPath response `shouldSatisfy` T.isInfixOf "/moments/"
-                    doesFileExist (assetsRoot </> T.unpack (eiuPath response)) `shouldReturn` True
+                Left err -> errHTTPCode err `shouldBe` 401
+                Right response -> expectationFailure ("A synthetic actor must not upload moment media: " <> show response)
+            doesDirectoryExist (assetsRoot </> "social-events" </> "events" </> "29" </> "moments")
+                `shouldReturn` False
 
             rejectedMoment <-
                 runHandler $
@@ -404,7 +407,7 @@ spec = describe "social event handler helpers" $ do
                         (socialEventMomentImageUploadHandlerFor (strictAdminSocialEventUser 3) "30" uploadForm)
                         env
             case rejectedMoment of
-                Left err -> errHTTPCode err `shouldBe` 404
+                Left err -> errHTTPCode err `shouldBe` 401
                 Right response ->
                     expectationFailure
                         ("Expected tombstoned moment image upload to fail, got: " <> show response)
@@ -1062,7 +1065,12 @@ spec = describe "social event handler helpers" $ do
                         (EventMomentCreateDTO Nothing Nothing "https://cdn.example.com/moment.jpg" "image" (Just 800) (Just 600) Nothing)
                     )
                     env
-        assertHiddenEventRoute "moment" momentResult
+        -- This SQLite actor has no live-session witness. Session rejection must
+        -- precede source visibility; authenticated private/suppressed-parent
+        -- publication is asserted through the real HTTP/PostgreSQL lane.
+        case momentResult of
+            Left err -> errHTTPCode err `shouldBe` 401
+            Right response -> expectationFailure ("A synthetic actor must not publish a moment: " <> show response)
 
         stripeResult <-
             runHandler $

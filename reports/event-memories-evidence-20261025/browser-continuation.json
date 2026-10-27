@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "b26e70005278cb4cb1651cf6e739cd5d0844d6b3",
+  "sourceWorktreeDirty": true,
+  "testSha256": "197d325765bbd6268167b65c1da217c9b960568b39d99bc92fd356871812e9d0",
+  "scope": "Synthetic API/browser journeys; no real database, provider or production action.",
+  "runs": [
+    {
+      "name": "Chrome four layouts, anonymous and expired sessions",
+      "stats": {
+        "startTime": "2026-10-25T21:31:43.104Z",
+        "duration": 90427.522,
+        "expected": 8,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "retries": 0,
+      "reportSha256": "92cc09f32e052e0ff4960951ddf55deea2d552c9f129a0db026b437dc70ed612"
+    },
+    {
+      "name": "Firefox, anonymous and expired sessions",
+      "stats": {
+        "startTime": "2026-10-25T21:33:12.571Z",
+        "duration": 24662.873,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "retries": 0,
+      "reportSha256": "1a13e1d8ee3d051599c2e5b0333d6e24c2fa7707e3a49680058daabe35647baf"
+    }
+  ],
+  "previousRuns": [
+    {
+      "name": "Chrome account-entry and memory journeys, four layouts",
+      "passed": 28,
+      "failed": 0
+    },
+    {
+      "name": "Firefox expired-session journey",
+      "passed": 1,
+      "failed": 0
+    }
+  ],
+  "hostedFailuresRetained": [
+    40227718934,
+    40228461354
+  ],
+  "limits": [
+    "Local Chrome and Firefox are not WebKit/Linux evidence.",
+    "The executable app was built from the composed parent; API responses were synthetic.",
+    "The changed test was uncommitted at execution; its exact hash is retained."
+  ]
+}
