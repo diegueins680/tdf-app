@@ -1,0 +1,244 @@
+{
+  "observedAt": "2026-10-26T23:23:37.609988+00:00",
+  "sourceComposition": "f24771a60dac5092b3f370af94a8e37564e8b8ce",
+  "protectedMain": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "problem": "El enlace de recuperación vencido mostraba el error técnico inglés en la pantalla española.",
+  "expectedBenefit": "Comprender el vencimiento y solicitar otro enlace conservando destino e idioma; impacto sobre activación aún no medido.",
+  "implementation": "Clasificación reset-token limitada al endpoint y respuestas400/401 previstas; traducciones ES/EN y reutilización del flujo existente. Código sin cambios desde ff07; incorporación normal de main con223 migraciones.",
+  "composition": {
+    "observedAt": "2026-10-26T23:22:08.453859+00:00",
+    "protectedMain": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+    "qualifiedRuntimeSource": "032fe6ddb544317d5e02096c7ac213beca96fe5e",
+    "priorPublicSource": "ff07fa5d2c836004ac357ddf750c697b46aeb5e6",
+    "requirements": 148,
+    "allProtectedRequirementFieldsPreservedExceptAuthImplementationAndTests": true,
+    "decisions": 1341,
+    "allProtectedCatalogObjectsAndHistoryPreservedExceptTwoArchivedAuthSuccessors": true,
+    "qualifiedRuntimeAllBackendAndUiInputsExact": true,
+    "allBackendSqlTestsExactProtectedMain": true,
+    "frontendAndDependenciesExactPriorPublicHead": true,
+    "changesSinceRuntimeQualification": [
+      "formal/system/evidence/2026-10-26-provider-domain-main/README.md",
+      "formal/system/evidence/2026-10-26-provider-domain-main/expiry-gate-controls-artifacts.tar.gz",
+      "formal/system/evidence/2026-10-26-provider-domain-main/expiry-gate-controls.json",
+      "formal/system/evidence/2026-10-26-provider-domain-main/sha256.json",
+      "formal/system/inventory.json",
+      "formal/system/traceability.json",
+      "scripts/test-provider-domain-harness.py",
+      "scripts/test-provider-retry-runtime.sh"
+    ],
+    "protectedMainParents": [
+      "2e01bbe1263e8761fa2692bd951f828c01142449",
+      "98f3ed230d2bcc87971d9e7c9b2083bd1cb9700d"
+    ],
+    "protectedMainTree": "6b8e7e06fc6bcab7ef8e247a7b82436367e96121",
+    "registryPath": "scripts/production-migrations.json",
+    "registryEntries": 223,
+    "fullRegistryExactQualified032AndProtectedC66": true,
+    "allBackendAppCompileInputsExactNative2e": true
+  },
+  "runtime": {
+    "startedAt": "2026-10-26T22:49:33.567780+00:00",
+    "source": "032fe6ddb544317d5e02096c7ac213beca96fe5e",
+    "tree": "0e237ba57644b99c52d234273d25e233aae98316",
+    "binarySource": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "binarySha256": "8dbe98ed4719573d83ae91e37b5df4c84a6dc1e48485c6ae4ac1b0f6d51cd1a5",
+    "sourceStatus": [
+      "?? node_modules",
+      "?? tdf-hq-ui/node_modules"
+    ],
+    "steps": [
+      {
+        "step": "compile-loopback-bind-adapter",
+        "exitCode": 0
+      },
+      {
+        "step": "deny-nonloopback-egress",
+        "exitCode": 0
+      },
+      {
+        "step": "deny-nonlocal-egress",
+        "exitCode": 0
+      },
+      {
+        "step": "init",
+        "exitCode": 0
+      },
+      {
+        "step": "start",
+        "exitCode": 0
+      },
+      {
+        "step": "create",
+        "exitCode": 0
+      },
+      {
+        "step": "full-schema",
+        "exitCode": 0
+      },
+      {
+        "step": "build-web",
+        "exitCode": 0
+      },
+      {
+        "step": "browser",
+        "exitCode": 0
+      },
+      {
+        "step": "drop",
+        "exitCode": 0
+      },
+      {
+        "step": "stop",
+        "exitCode": 0
+      }
+    ],
+    "cleanup": {
+      "runtimesStopped": true,
+      "databaseRemoved": true,
+      "clusterStopped": true
+    },
+    "status": "VERIFIED-synthetic-local-only",
+    "humanParticipants": 0,
+    "productionWrites": false,
+    "mailScope": "Actual native MIME generation/SMTP transport to non-relaying loopback synthetic inbox; no real mailbox, TLS/provider/deliverability claim.",
+    "harnessSha256": {
+      "run.py": "02b7779b4536e9fad73954976e7a868c7126f5cbd8e9c4bd44b203319db6c6c7",
+      "smtp.py": "16c60c50bcb83b440e4549a170db2a523a1e2a6491b6a32a3d78a030916f6209",
+      "browser.mjs": "37b84eee2e8d329f878fa27b8f20850dffb5f6df5b2d7972c8f62cf3fee778f9",
+      "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+    },
+    "migrations": 223,
+    "ledgerHeaderTriggerEnabled": "O",
+    "frontend": {
+      "entry": "/assets/index-DWZjjS8W.js",
+      "sha256": "164800ad88847cc55d37f496c38455ff37798dce54a0f2fdf95e5376582f4e2d",
+      "sourceVerified": true,
+      "freshCompilation": true
+    },
+    "networkIsolation": {
+      "fourListenersLoopbackOnly": true,
+      "lanRequestsDenied": true,
+      "unlistedLanPortDeniedWithPositiveControl": true,
+      "nonlocalTcpDeniedWithPositiveControl": true,
+      "scope": "Services forced to literal127.0.0.1 and four LAN ingress probes refused. SBPL allows local-machine PostgreSQL/SMTP destination ports only; separate positive-outside/denied-inside GitHub443 TCP control sends no application data. Bounded observed controls, not a theorem about all network traffic."
+    },
+    "actualVersion": {
+      "buildTime": "2026-10-26T22:08:29Z",
+      "commit": "2e01bbe1263e8761fa2692bd951f828c01142449",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "journey": {
+      "scope": "Real isolated native API/PostgreSQL and rendered optimized web with local synthetic SMTP. No real email/provider/device/production claim.",
+      "checks": {
+        "protectedIntentPreserved": true,
+        "uiSignupAndOriginalIntent": true,
+        "revokedSessionReturnsToLoginWithIntent": true,
+        "nativeLocalizedMailPreservesIntent": true,
+        "tokenRemovedFromVisibleUrl": true,
+        "expiredResetRejectedInUi": true,
+        "resetUiReturnsToOriginalIntent": true,
+        "oldPasswordRejected": true,
+        "newPasswordAuthenticatesSameParty": true,
+        "resetTokenSingleUse": true,
+        "earlierResetStillRejected": true,
+        "oldSessionRejected": true,
+        "activePriorSessionRevokedByReset": true,
+        "singlePersistedCredential": true
+      },
+      "blockedExternal": 10,
+      "blockedMutations": 0,
+      "blockedMutationPaths": [],
+      "pageErrors": 0,
+      "partyId": 4,
+      "status": "PASS"
+    },
+    "finishedAt": "2026-10-26T22:51:00.319674+00:00"
+  },
+  "observedBenefit": "14/14 comprobaciones del recorrido nativo aislado con API/PostgreSQL223/SMTP no relaying; ocho casos ES/EN de cliente con respuestas de negocio simuladas conservan su fuente553.",
+  "retainedEvidence": {
+    "ui": {
+      "source": "553e0562135072b556f49f31b04a2d568ad5dfe3",
+      "tests": 3520,
+      "suites": 309,
+      "lintTypesBuild": "PASS; original execution, identical frontend inputs"
+    },
+    "native": {
+      "source": "2e01bbe1263e8761fa2692bd951f828c01142449",
+      "examples": 4039,
+      "failures": 0,
+      "pending": 21,
+      "scope": "Original Stack/GHC9.10.3 execution; app compile inputs exact, not re-execution of main596 updated financial test fixtures"
+    },
+    "hostedPriorHead": {
+      "head": "ff07fa5d2c836004ac357ddf750c697b46aeb5e6",
+      "run": 40411069813,
+      "conclusion": "SUCCESS",
+      "scope": "Historical head only; new final-head checks required"
+    }
+  },
+  "targetedCurrentCompositionChecks": {
+    "immutableChangedSourceAdmission": "PASS, seven auth material files",
+    "providerHarness": {
+      "normal": 6,
+      "optimized": 6,
+      "failures": 0
+    },
+    "requirementDeclarations": {
+      "tests": 9,
+      "failures": 0
+    },
+    "inventoryAndTraceabilityFreshness": "PASS",
+    "catalogHistoryRegression": {
+      "passed": 8,
+      "failed": 0
+    },
+    "strictCatalog": {
+      "executionComposition": "f24771a60dac5092b3f370af94a8e37564e8b8ce",
+      "observedAt": "2026-10-26T23:28:58.442743+00:00",
+      "candidates": 1341,
+      "jsonAndCsvPassed": true,
+      "unreviewed": 0,
+      "stale": 0,
+      "filesScanned": 2405,
+      "consumerRowsRefreshed": 4,
+      "decisionsAddedOrRemoved": 0,
+      "jsonSha256": "9c58ae623ae280e6073e6826f9b5bcc4521e8a4f8f204a0aba1adaa1043cd2d6",
+      "csvSha256": "d94063da811f6b1cb02afd2432de049d080c4cb69601312c36917858ebbd0ae4"
+    }
+  },
+  "reviewAndDelivery": {
+    "pr": 625,
+    "merged": false,
+    "productionDeployed": false,
+    "next": "Publish final evidence-only successor; observe final-head CI and obtain actual independent review required by dismiss_stale_reviews before normal protected merge."
+  },
+  "limitations": [
+    "Synthetic users only; no measured human activation/retention benefit.",
+    "No real financial transaction, provider activation, actual production recovery/mail or backend rollout.",
+    "Full assurance remains UNPROVEN/BLOCKED; scoped passing tests do not prove complete correctness."
+  ],
+  "productionIdentityObservation": {
+    "observedAt": "2026-10-26T23:26:04.918579+00:00",
+    "scope": "Unauthenticated public GET identity/health only; no business write or ledger inspection. Python local certificate-store setup rejected before HTTP; system curl retains certificate validation.",
+    "version": {
+      "buildTime": "2026-10-24T01:24:48Z",
+      "commit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "health": {
+      "db": "ok",
+      "status": "ok"
+    },
+    "web": {
+      "entry": "/assets/index-_plwwxvZ.js",
+      "sha256": "6dd7dfdee3c101d717737370a36084487831282debe343532ad951ab781d6768",
+      "commits": [
+        "c66a65a10a8e5e48f89172d61f6f57fb81697896"
+      ]
+    },
+    "interpretation": "Canonical web already publishes financial mainc66; auth625 is not deployed. API remains4dac, healthy; this public probe does not inspect migration ledger or production flags."
+  }
+}
