@@ -20,7 +20,8 @@ export async function verifyRecoveredPublication({ context, owner, config, origi
   const requested = page.waitForResponse(response => new URL(response.url()).pathname === '/v1/password-reset' && response.request().method() === 'POST');
   await dialog.locator('button[type="submit"]').click();
   const issuance = await requested;
-  expect(issuance.status()).toBe(204);
+  // PasswordResetAPI is Post '[JSON] NoContent (HTTP200), not PostNoContent204.
+  expect(issuance.status()).toBe(200);
   expect(new URL(issuance.url()).searchParams.get('redirect')).toBe(destination);
   expect(new URL(issuance.url()).searchParams.get('locale')).toBe('es');
   expect(issuance.request().postDataJSON().email).toBe(config.accounts[1].email);
