@@ -46,6 +46,7 @@ STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-cors-boundary.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-request-failures.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-readiness.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-invoice-receipts.py"
+STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-google-account-name.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-checkout-money.py"
 
 # Exercise the real contact handler and financial overview query against a

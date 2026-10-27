@@ -1,7 +1,7 @@
 # Mobile entry, landing and commerce UX contract
 
 Source: a real-user test on a Redmi Android phone in Chrome (2026-10-07), with four screenshots and the tester's report, reproduced under 360px emulation in PR #512.
-This contract covers web (`tdf-hq-ui`) behavior only. Backend authorization and validation stay authoritative.
+This contract covers web (`tdf-hq-ui`) behavior and the explicit backend account-name default below. Backend authorization and validation stay authoritative.
 
 ## SYS-WEB-SHELL-001: no blank application shell
 - A valid navigation ends either in rendered content or in a recovery state with actions (reload, Comunidad, sign in).
@@ -46,3 +46,39 @@ Email signup still asks only for email and password. A missing account name must
 An isolated counterexample registered an artist with a fictional email, activated the profile and performed no profile PUT: an anonymous public-profile GET and directory search returned the email-derived marker before the first edit. The repaired email flow must return no such marker before saving, and must still publish a deliberately chosen artistic name after the ordinary save. Two LoginPage request tests fail on the old behavior and require a neutral name while preserving the actual credential email. The five signup-name cases retain coverage of aliases, punctuation and long private identifiers without publishing them.
 
 The backend pure AccountNameSpec covers absent, empty, whitespace-only and supplied provider names. Actual Google/Apple provider login, historical account-name remediation and human comprehension are not established by these checks. This is a narrow default-name requirement, not a claim that all profile-publication or identity-consent obligations are proved.
+
+### Google decoder-to-name obligation
+
+**Preconditions:** a verified Google identity passes the existing audience, issuer,
+subject, email and expiry checks; normal signup consent and creation policy apply.
+Google documents that `name` is optional even with the profile scope:
+[OpenID Connect ID-token claims](https://developers.google.com/identity/openid-connect/openid-connect).
+This is a supported input, not an authentication failure.
+
+**Invariant/postcondition:** absent, null, empty, whitespace-only or rejected
+provider names produce `gpName = Nothing` and the initial public label
+`Cuenta TDF`. The normalized credential email remains in `gpEmail` and must not
+be substituted into `gpName`. A valid explicit provider name retains its trimmed
+value. Existing account names are outside this new-account default rule.
+
+**Counterexample:** parent f41c993a56e55242b5b0c09c4d5da96970ca21ae replaced a
+missing/sanitized-away name with the private email inside
+`validateGoogleIdTokenInfo`, before `initialAccountName` could apply its neutral
+fallback. Eight actual-decoder cases fail; helper-only tests miss this path.
+Two historical validator assertions specified that defective email fallback;
+the correction preserves their inputs and requires absence instead.
+
+**Verification:** `STACK_ROOT=/path/to/stack python3 scripts/verify-google-account-name.py`
+compiles exact source fragments and the same registered regression module with
+Stack's GHC. Nineteen examples must complete without failures or pending cases;
+restoring the fallback must complete all nineteen with exactly eight failures.
+Six negative authentication cases retain rejection of invalid credentials.
+The backend quality lane additionally compiles the full module and executes the
+registered spec through `Spec.hs`; script-only changes select that lane.
+
+**Assumptions and limits:** the extraction, caller correspondence check, Haskell
+libraries and compiler are trusted. The local result is TESTED, with one detected
+mutation; it is not mathematical proof, live Google login, HTTP/database
+execution, migration of historical names or full AUTH-ENTRY-002 refinement.
+Evidence is invalidated by source/build-input changes. No new liveness or
+concurrency property is established by this pure-function regression.
