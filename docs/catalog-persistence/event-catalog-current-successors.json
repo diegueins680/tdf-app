@@ -13,43 +13,52 @@
     },
     {
       "historicalReplacementId": "74f76e178df15df54768",
-      "currentId": "48cbf22770303d844cdc",
+      "currentId": "34210b76e81fd04cffae",
       "file": "tdf-hq-ui/src/api/socialEvents.ts",
       "kind": "object-registry",
       "name": "SocialEventsAPI",
-      "valueCount": 72,
-      "change": "SocialEventsAPI adds getManualPaymentReceipt. The 71 existing typed methods remain; this review covers technical dispatch names and does not authorize receipt access or payment approval.",
+      "valueCount": 75,
+      "change": "Combine protected receipt read with memory edit/delete and scoped media upload; transport methods retain server authorization. Both parent reviews are preserved in the active classification decision.",
       "previousResolution": {
         "historicalReplacementId": "74f76e178df15df54768",
-        "currentId": "620eb81ffe787eca6636",
+        "currentId": "48cbf22770303d844cdc",
         "file": "tdf-hq-ui/src/api/socialEvents.ts",
         "kind": "object-registry",
         "name": "SocialEventsAPI",
-        "valueCount": 71,
-        "change": "SocialEventsAPI adds the bank-transfer refund completion call; reviewed client methods are unchanged implementation mechanics.",
+        "valueCount": 72,
+        "change": "SocialEventsAPI adds getManualPaymentReceipt. The 71 existing typed methods remain; this review covers technical dispatch names and does not authorize receipt access or payment approval.",
         "previousResolution": {
           "historicalReplacementId": "74f76e178df15df54768",
-          "currentId": "c69afb90768a2e78770a",
+          "currentId": "620eb81ffe787eca6636",
           "file": "tdf-hq-ui/src/api/socialEvents.ts",
           "kind": "object-registry",
           "name": "SocialEventsAPI",
-          "valueCount": 70,
-          "change": "SocialEventsAPI adds staff invoice list and resend calls; the reviewed client methods are unchanged and remain implementation mechanics.",
+          "valueCount": 71,
+          "change": "SocialEventsAPI adds the bank-transfer refund completion call; reviewed client methods are unchanged implementation mechanics.",
           "previousResolution": {
             "historicalReplacementId": "74f76e178df15df54768",
-            "currentId": "e858a9fa43eea647e38e",
+            "currentId": "c69afb90768a2e78770a",
             "file": "tdf-hq-ui/src/api/socialEvents.ts",
             "kind": "object-registry",
             "name": "SocialEventsAPI",
-            "valueCount": 68,
-            "change": "SocialEventsAPI adds the staff manual bank transfer list and review calls; the reviewed 66 existing client methods are unchanged and remain implementation mechanics.",
+            "valueCount": 70,
+            "change": "SocialEventsAPI adds staff invoice list and resend calls; the reviewed client methods are unchanged and remain implementation mechanics.",
             "previousResolution": {
               "historicalReplacementId": "74f76e178df15df54768",
-              "currentId": "74f76e178df15df54768",
+              "currentId": "e858a9fa43eea647e38e",
               "file": "tdf-hq-ui/src/api/socialEvents.ts",
               "kind": "object-registry",
               "name": "SocialEventsAPI",
-              "valueCount": 66
+              "valueCount": 68,
+              "change": "SocialEventsAPI adds the staff manual bank transfer list and review calls; the reviewed 66 existing client methods are unchanged and remain implementation mechanics.",
+              "previousResolution": {
+                "historicalReplacementId": "74f76e178df15df54768",
+                "currentId": "74f76e178df15df54768",
+                "file": "tdf-hq-ui/src/api/socialEvents.ts",
+                "kind": "object-registry",
+                "name": "SocialEventsAPI",
+                "valueCount": 66
+              }
             }
           }
         }
@@ -73,11 +82,20 @@
     },
     {
       "historicalReplacementId": "068d6f3f0c164631ab35",
-      "currentId": "a7561a719beb23884345",
+      "currentId": "4a5404a4a008a8f296dd",
       "file": "tdf-mobile/src/api/events.ts",
       "kind": "object-registry",
       "name": "Events",
-      "valueCount": 30
+      "valueCount": 31,
+      "change": "Add durable event-scoped media upload using the shared authenticated API client. No new product catalog or Drive dependency.",
+      "previousResolution": {
+        "historicalReplacementId": "068d6f3f0c164631ab35",
+        "currentId": "a7561a719beb23884345",
+        "file": "tdf-mobile/src/api/events.ts",
+        "kind": "object-registry",
+        "name": "Events",
+        "valueCount": 30
+      }
     },
     {
       "historicalReplacementId": "2a1f5ad58ef7b8fc4bf3",
@@ -352,13 +370,55 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "2634b239375f2ad309ba",
+      "currentId": "a2bb0e828d5b94c1cb31",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 223,
-      "change": "The 223-entry deployment registry preserves the complete 222-entry ledger candidate f3e3217ac12a04be2a221ee6ac8bea67875d46c5 prefix, including all221 protected-main migrations and the original posted-header migration, and appends only the provider/domain admission migration introduced by456be073c944dd3d76eb9e3c2169fe7fbb4041ef. Historical SQL bodies and introduction ancestors are unchanged. Both222-entry and209-entry source reviews are retained by canonical hashes. This technical review grants no provider activation, production execution or waiver of current-head CI, independent review and protected merge admission.",
+      "valueCount": 227,
+      "change": "Preserve the complete223-entry protected main4b81ab4 migration prefix, including posted-ledger-header and provider/domain guards, and append only the four original event-memory migrations with unchanged SQL and introduction ancestors. Preserve both exact223-entry main and226-entry memory review graphs and every distinct historical review variant. This227-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required.",
       "sourceReviewReferences": [
+        {
+          "sourceRevision": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9201bfd098de5c87217d90ed3e7e13019fdc38e579dd8197d4501803fc63a34f",
+          "sourceEntry": {
+            "id": "79a6def1e91baee6e937"
+          },
+          "sourceEntryCanonicalSha256": "978e4a28b767ba92ef815fe45ac919ae7550742d9fd9b8cc1007e09e4d0291d9",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "05793bdcb06612ca1a75fc8326ac01a8f0a59defe7c04aef4286889cf7aa6b95",
+          "sourceEntry": {
+            "id": "8229b8202552298c955e"
+          },
+          "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "ebac187c9b96682c741671ba1dccfb133acc4cb7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "3578a38dd23e995e330c80a6f4577eff2a0cd1f0ce396839416d61f5084f4574",
+          "sourceEntry": {
+            "id": "cff15f30aa13965e5729"
+          },
+          "sourceEntryCanonicalSha256": "9f3858a91f37caf5b4b1916fbc280a6ce891cd34536d0ee8953ce2331b8f3fb5",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
+        {
+          "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+          "sourceEntry": {
+            "id": "6ff395b6131079017c9d"
+          },
+          "sourceEntryCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+        },
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
           "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
@@ -571,6 +631,26 @@
           },
           "sourceEntryCanonicalSha256": "32cd5ae343876f255c2af30e9af955c720c9b541a495ac92ebb4e96538741d09",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "a6c0154f57880afc321df54ddca480626b08fe94883c0fbc1d1d2bb8fdc0acfb",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "3d992795280f1826de2333f8b4e7dd68aac8d70bb6ba698ca6937b56b66233ed",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "5670d9d68e0ebf0c164cfe4afb1d8ff341f9a2bd8673679f4d5f6dad3aa389eb",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "67f0eedfd96b8a7ae85c0d7be7cfa23d61c10e165b8eaecdf6054ce50aefed9b",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "previousCurrentIds": [
@@ -581,10 +661,1102 @@
         "a1eb1e750e7543b88fe1",
         "c94cd70c1272ec9ede1b",
         "b7cc47848f3f9882770f",
+        "79a6def1e91baee6e937",
         "8229b8202552298c955e",
         "9ada14767bee1662f97d",
+        "cff15f30aa13965e5729",
         "6ff395b6131079017c9d",
-        "a70a9a4dd05ce44e950b"
+        "a70a9a4dd05ce44e950b",
+        "f48c34252ff8930b3d74",
+        "2634b239375f2ad309ba"
+      ],
+      "previousResolution": {
+        "historicalReplacementId": "7578a30aa3cc5aa23870",
+        "currentId": "f48c34252ff8930b3d74",
+        "file": "scripts/production-migrations.json",
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 226,
+        "change": "Preserve the exact222-entry protected main78fa351b prefix, including the posted-ledger-header guard, and append only the four original event-memory migrations without changing any historical SQL or introduction anchor. Retain the complete225-entry memory and222-entry header review decisions, including their financial/directory provenance. This226-entry technical execution-registry review grants no production action, campaign consent, financial transaction, permission change or release waiver; combined tests, independent PR review and protected integration remain required.",
+        "sourceReviewReferences": [
+          {
+            "sourceRevision": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "9201bfd098de5c87217d90ed3e7e13019fdc38e579dd8197d4501803fc63a34f",
+            "sourceEntry": {
+              "id": "79a6def1e91baee6e937"
+            },
+            "sourceEntryCanonicalSha256": "978e4a28b767ba92ef815fe45ac919ae7550742d9fd9b8cc1007e09e4d0291d9",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+          },
+          {
+            "sourceRevision": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "05793bdcb06612ca1a75fc8326ac01a8f0a59defe7c04aef4286889cf7aa6b95",
+            "sourceEntry": {
+              "id": "8229b8202552298c955e"
+            },
+            "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+          },
+          {
+            "sourceRevision": "ebac187c9b96682c741671ba1dccfb133acc4cb7",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "3578a38dd23e995e330c80a6f4577eff2a0cd1f0ce396839416d61f5084f4574",
+            "sourceEntry": {
+              "id": "cff15f30aa13965e5729"
+            },
+            "sourceEntryCanonicalSha256": "9f3858a91f37caf5b4b1916fbc280a6ce891cd34536d0ee8953ce2331b8f3fb5",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+          },
+          {
+            "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+            "sourceEntry": {
+              "id": "6ff395b6131079017c9d"
+            },
+            "sourceEntryCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+          }
+        ],
+        "previousCurrentIds": [
+          "e60cbdb9121493f47fa6",
+          "a8128668e1b74b7c0ae4",
+          "3f336173e03f10fc023c",
+          "2b073f20afd2f3798b1e",
+          "a1eb1e750e7543b88fe1",
+          "c94cd70c1272ec9ede1b",
+          "b7cc47848f3f9882770f",
+          "79a6def1e91baee6e937",
+          "8229b8202552298c955e",
+          "9ada14767bee1662f97d",
+          "cff15f30aa13965e5729",
+          "6ff395b6131079017c9d"
+        ],
+        "previousResolution": {
+          "historicalReplacementId": "7578a30aa3cc5aa23870",
+          "currentId": "79a6def1e91baee6e937",
+          "file": "scripts/production-migrations.json",
+          "kind": "json-array",
+          "name": "migrations",
+          "valueCount": 224,
+          "change": "Protected221-entry foundation prefix plus the three unchanged source successors; retain both complete review histories.",
+          "sourceReviewReferences": [
+            {
+              "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "77666d36946b95794d2448265a41175555ee4e9d80daf31b9cb0411c8df9eb14",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "b996540ed5405833a0804d5e08f090d38e6d4f27abfe90ce3913f22083d151b0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+            },
+            {
+              "sourceRevision": "17a864579e43cafe9f56caceb08dddef6a70cfee",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "6661657850e55919718e7b219cefc05f5731b869d92f1d767b94649e2771f4df",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "ee9d3df97d76ec5414f6e06b5ab897c65ae2fcba7fa58c8736280a2d268bd41d",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+            },
+            {
+              "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "2d187abb91c2ff39cb5506d0ddb6b62613e26cfb0049a38c5c9393f17b556f3b",
+              "sourceEntry": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870"
+              },
+              "sourceEntryCanonicalSha256": "b0807f471978a4d450e1146ede3625705f79860bac46c1b70861578e68303220",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "2f1b6f5b481990e147f6eadfba927520f49663b40452d24b8f9b775308f106ba",
+              "sourceEntry": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870"
+              },
+              "sourceEntryCanonicalSha256": "743e5631efbf40cbdc4d09db4b9c06443c6d8243778cdf21d2bd212e49408bf4",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "c39bca1016ca0701cd5120ef3dc8905ca5a67baee89ba4a31f407f92dd7fc76b",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "972567b86a9a1c4256b14d90b265d8c63b5ee962d0fa18b477d02e637f6a0df9",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "0fa5bd8b05943ea7a2d32580d5a95439444b37618e1e838f5f93b754162afd0f",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "2c38a806a6b1b6150d94ab831bd323c9bb5944e9c65924dcdfdb5dc3c0fdb576",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "50369165341a735c5b6800cb19fae9f5698f8dae9e1592883b4491ab080e081f",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "6c94c901f843bb75f67806b3ede3745fb956f116b5a30d73dc346b433ab783cb",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "f58f6ac1859d3cc294a3ed3cee23cb3da6fac487",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "c2963899713fd5892d34fbef026ecdb1f1994496656f148292bb9cd2b0f267e7",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "58155370c86a44f196a15035661b79a80c72f3690295e23146d936b6fa8744fd",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "8de1bae4c30961eaa11637e5b4307271250ee176",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "935beed5d053bfc75d1a0e1a6e4ae204c1c64423",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "3db0c4480bf0ffde30c41a564b836831134da16c39bb4c7df2b06f3f910221d1",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "455e25dae4f5762b166b55846ddad5482362f8ce15387e4a07ec0ca3f8c44d31",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "380da8855ade877f79593e80f93291cd314d311d",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "9afc8f12626eeb1b5a2b1c2183d9e2c514f9ff12fa34b5b24006076fada0feb9",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "79ba6acb6cabcb85d7d5c789bae340ce39e95921794ce093bcfdae689f5deeb9",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "b9ae3d73b0aba7c407c8d1fc27cda99fe40c3f37",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "10ce2dabd94e98ffdae8a5cf8f9d5b4381da3f90817e498d7acd66efb66bc669",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "47af3bff5dc25704664d0dcfde68a6ea7a97d2f267a325b25d176aee9844b076",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+              "sourceEntry": {
+                "id": "3f336173e03f10fc023c"
+              },
+              "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+              "sourceEntry": {
+                "id": "2b073f20afd2f3798b1e"
+              },
+              "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "1402ca0b572fee685b0f274c8babe057e2a63f65cae7542ebf70f04814d938fa",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "ddcb71c2b853a84719e1fffe73b7cc872aa94901f30f8b26a28e3a139fcb6c85",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "42d813e3d10f9a965a7139131082ba4c8c78f3cd823d183030b932c5bbaafdb5",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "46deb4f238272a122238b751e1a181319fb6530abcb231baff74289732a3a854",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "534c5631ac79e927c887c5c730e252fe4dad7cc5",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "7365197b8d3af17f8c5ff141d28d9a6af56a601d4f97c64ad5e463202d56a5a3",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "4a53fa1a13f64587242cce0c69ae896c0f04c9aa08d1dc8d6f2b4e2b2d489bc0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            }
+          ],
+          "previousCurrentIds": [
+            "e60cbdb9121493f47fa6",
+            "a8128668e1b74b7c0ae4"
+          ],
+          "previousResolution": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870",
+            "currentId": "d55b0d93ab3224fe96ac",
+            "file": "scripts/production-migrations.json",
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 217,
+            "change": "Append canonical source permission locking after the unchanged216-entry prefix; retain every earlier review and source resolution.",
+            "sourceReviewReferences": [
+              {
+                "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "77666d36946b95794d2448265a41175555ee4e9d80daf31b9cb0411c8df9eb14",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "b996540ed5405833a0804d5e08f090d38e6d4f27abfe90ce3913f22083d151b0",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+                "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+              },
+              {
+                "sourceRevision": "17a864579e43cafe9f56caceb08dddef6a70cfee",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "6661657850e55919718e7b219cefc05f5731b869d92f1d767b94649e2771f4df",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "ee9d3df97d76ec5414f6e06b5ab897c65ae2fcba7fa58c8736280a2d268bd41d",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+                "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+              },
+              {
+                "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "2d187abb91c2ff39cb5506d0ddb6b62613e26cfb0049a38c5c9393f17b556f3b",
+                "sourceEntry": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870"
+                },
+                "sourceEntryCanonicalSha256": "b0807f471978a4d450e1146ede3625705f79860bac46c1b70861578e68303220",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "2f1b6f5b481990e147f6eadfba927520f49663b40452d24b8f9b775308f106ba",
+                "sourceEntry": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870"
+                },
+                "sourceEntryCanonicalSha256": "743e5631efbf40cbdc4d09db4b9c06443c6d8243778cdf21d2bd212e49408bf4",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "c39bca1016ca0701cd5120ef3dc8905ca5a67baee89ba4a31f407f92dd7fc76b",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "972567b86a9a1c4256b14d90b265d8c63b5ee962d0fa18b477d02e637f6a0df9",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "0fa5bd8b05943ea7a2d32580d5a95439444b37618e1e838f5f93b754162afd0f",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "2c38a806a6b1b6150d94ab831bd323c9bb5944e9c65924dcdfdb5dc3c0fdb576",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "50369165341a735c5b6800cb19fae9f5698f8dae9e1592883b4491ab080e081f",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "6c94c901f843bb75f67806b3ede3745fb956f116b5a30d73dc346b433ab783cb",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "f58f6ac1859d3cc294a3ed3cee23cb3da6fac487",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "c2963899713fd5892d34fbef026ecdb1f1994496656f148292bb9cd2b0f267e7",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "58155370c86a44f196a15035661b79a80c72f3690295e23146d936b6fa8744fd",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "8de1bae4c30961eaa11637e5b4307271250ee176",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "935beed5d053bfc75d1a0e1a6e4ae204c1c64423",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "3db0c4480bf0ffde30c41a564b836831134da16c39bb4c7df2b06f3f910221d1",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "455e25dae4f5762b166b55846ddad5482362f8ce15387e4a07ec0ca3f8c44d31",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "380da8855ade877f79593e80f93291cd314d311d",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "9afc8f12626eeb1b5a2b1c2183d9e2c514f9ff12fa34b5b24006076fada0feb9",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "79ba6acb6cabcb85d7d5c789bae340ce39e95921794ce093bcfdae689f5deeb9",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "b9ae3d73b0aba7c407c8d1fc27cda99fe40c3f37",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "10ce2dabd94e98ffdae8a5cf8f9d5b4381da3f90817e498d7acd66efb66bc669",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "47af3bff5dc25704664d0dcfde68a6ea7a97d2f267a325b25d176aee9844b076",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+                "sourceEntry": {
+                  "id": "3f336173e03f10fc023c"
+                },
+                "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+                "sourceEntry": {
+                  "id": "2b073f20afd2f3798b1e"
+                },
+                "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "1402ca0b572fee685b0f274c8babe057e2a63f65cae7542ebf70f04814d938fa",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "ddcb71c2b853a84719e1fffe73b7cc872aa94901f30f8b26a28e3a139fcb6c85",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "42d813e3d10f9a965a7139131082ba4c8c78f3cd823d183030b932c5bbaafdb5",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "46deb4f238272a122238b751e1a181319fb6530abcb231baff74289732a3a854",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "534c5631ac79e927c887c5c730e252fe4dad7cc5",
+                "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                "sourceFileSha256": "7365197b8d3af17f8c5ff141d28d9a6af56a601d4f97c64ad5e463202d56a5a3",
+                "sourceEntry": {
+                  "index": 8
+                },
+                "sourceEntryCanonicalSha256": "4a53fa1a13f64587242cce0c69ae896c0f04c9aa08d1dc8d6f2b4e2b2d489bc0",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              }
+            ],
+            "previousCurrentIds": [
+              "e60cbdb9121493f47fa6",
+              "a8128668e1b74b7c0ae4"
+            ],
+            "previousResolution": {
+              "historicalReplacementId": "7578a30aa3cc5aa23870",
+              "currentId": "38bbe0c3d9b9d4ddaa9d",
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 216,
+              "change": "Append the guarded NULL-organizer authorization repair after the unchanged 215-entry prefix; retain every earlier review and source resolution.",
+              "sourceReviewReferences": [
+                {
+                  "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
+                  "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                  "sourceFileSha256": "77666d36946b95794d2448265a41175555ee4e9d80daf31b9cb0411c8df9eb14",
+                  "sourceEntry": {
+                    "index": 8
+                  },
+                  "sourceEntryCanonicalSha256": "b996540ed5405833a0804d5e08f090d38e6d4f27abfe90ce3913f22083d151b0",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+                  "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+                },
+                {
+                  "sourceRevision": "17a864579e43cafe9f56caceb08dddef6a70cfee",
+                  "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                  "sourceFileSha256": "6661657850e55919718e7b219cefc05f5731b869d92f1d767b94649e2771f4df",
+                  "sourceEntry": {
+                    "index": 8
+                  },
+                  "sourceEntryCanonicalSha256": "ee9d3df97d76ec5414f6e06b5ab897c65ae2fcba7fa58c8736280a2d268bd41d",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+                  "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+                },
+                {
+                  "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
+                  "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                  "sourceFileSha256": "2d187abb91c2ff39cb5506d0ddb6b62613e26cfb0049a38c5c9393f17b556f3b",
+                  "sourceEntry": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870"
+                  },
+                  "sourceEntryCanonicalSha256": "b0807f471978a4d450e1146ede3625705f79860bac46c1b70861578e68303220",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                },
+                {
+                  "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
+                  "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                  "sourceFileSha256": "2f1b6f5b481990e147f6eadfba927520f49663b40452d24b8f9b775308f106ba",
+                  "sourceEntry": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870"
+                  },
+                  "sourceEntryCanonicalSha256": "743e5631efbf40cbdc4d09db4b9c06443c6d8243778cdf21d2bd212e49408bf4",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                },
+                {
+                  "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
+                  "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                  "sourceFileSha256": "c39bca1016ca0701cd5120ef3dc8905ca5a67baee89ba4a31f407f92dd7fc76b",
+                  "sourceEntry": {
+                    "index": 8
+                  },
+                  "sourceEntryCanonicalSha256": "972567b86a9a1c4256b14d90b265d8c63b5ee962d0fa18b477d02e637f6a0df9",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                },
+                {
+                  "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+                  "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                  "sourceFileSha256": "0fa5bd8b05943ea7a2d32580d5a95439444b37618e1e838f5f93b754162afd0f",
+                  "sourceEntry": {
+                    "index": 8
+                  },
+                  "sourceEntryCanonicalSha256": "2c38a806a6b1b6150d94ab831bd323c9bb5944e9c65924dcdfdb5dc3c0fdb576",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                },
+                {
+                  "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+                  "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                  "sourceFileSha256": "50369165341a735c5b6800cb19fae9f5698f8dae9e1592883b4491ab080e081f",
+                  "sourceEntry": {
+                    "index": 8
+                  },
+                  "sourceEntryCanonicalSha256": "6c94c901f843bb75f67806b3ede3745fb956f116b5a30d73dc346b433ab783cb",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                },
+                {
+                  "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+                  "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                  "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+                  "sourceEntry": {
+                    "index": 8
+                  },
+                  "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                }
+              ],
+              "previousCurrentIds": [
+                "e60cbdb9121493f47fa6",
+                "a8128668e1b74b7c0ae4"
+              ],
+              "previousResolution": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870",
+                "currentId": "7ca220a96b9b65a0fe15",
+                "file": "scripts/production-migrations.json",
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 215,
+                "change": "Append immutable source moderation after the unchanged 214-entry prefix; retain every earlier registry approval and source mapping.",
+                "sourceReviewReferences": [
+                  {
+                    "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
+                    "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                    "sourceFileSha256": "77666d36946b95794d2448265a41175555ee4e9d80daf31b9cb0411c8df9eb14",
+                    "sourceEntry": {
+                      "index": 8
+                    },
+                    "sourceEntryCanonicalSha256": "b996540ed5405833a0804d5e08f090d38e6d4f27abfe90ce3913f22083d151b0",
+                    "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+                    "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+                  },
+                  {
+                    "sourceRevision": "17a864579e43cafe9f56caceb08dddef6a70cfee",
+                    "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                    "sourceFileSha256": "6661657850e55919718e7b219cefc05f5731b869d92f1d767b94649e2771f4df",
+                    "sourceEntry": {
+                      "index": 8
+                    },
+                    "sourceEntryCanonicalSha256": "ee9d3df97d76ec5414f6e06b5ab897c65ae2fcba7fa58c8736280a2d268bd41d",
+                    "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+                    "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+                  },
+                  {
+                    "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
+                    "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                    "sourceFileSha256": "2d187abb91c2ff39cb5506d0ddb6b62613e26cfb0049a38c5c9393f17b556f3b",
+                    "sourceEntry": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870"
+                    },
+                    "sourceEntryCanonicalSha256": "b0807f471978a4d450e1146ede3625705f79860bac46c1b70861578e68303220",
+                    "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                  },
+                  {
+                    "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
+                    "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                    "sourceFileSha256": "2f1b6f5b481990e147f6eadfba927520f49663b40452d24b8f9b775308f106ba",
+                    "sourceEntry": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870"
+                    },
+                    "sourceEntryCanonicalSha256": "743e5631efbf40cbdc4d09db4b9c06443c6d8243778cdf21d2bd212e49408bf4",
+                    "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                  },
+                  {
+                    "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
+                    "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                    "sourceFileSha256": "c39bca1016ca0701cd5120ef3dc8905ca5a67baee89ba4a31f407f92dd7fc76b",
+                    "sourceEntry": {
+                      "index": 8
+                    },
+                    "sourceEntryCanonicalSha256": "972567b86a9a1c4256b14d90b265d8c63b5ee962d0fa18b477d02e637f6a0df9",
+                    "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                  },
+                  {
+                    "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+                    "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                    "sourceFileSha256": "0fa5bd8b05943ea7a2d32580d5a95439444b37618e1e838f5f93b754162afd0f",
+                    "sourceEntry": {
+                      "index": 8
+                    },
+                    "sourceEntryCanonicalSha256": "2c38a806a6b1b6150d94ab831bd323c9bb5944e9c65924dcdfdb5dc3c0fdb576",
+                    "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                  },
+                  {
+                    "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+                    "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                    "sourceFileSha256": "50369165341a735c5b6800cb19fae9f5698f8dae9e1592883b4491ab080e081f",
+                    "sourceEntry": {
+                      "index": 8
+                    },
+                    "sourceEntryCanonicalSha256": "6c94c901f843bb75f67806b3ede3745fb956f116b5a30d73dc346b433ab783cb",
+                    "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                  },
+                  {
+                    "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+                    "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                    "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+                    "sourceEntry": {
+                      "index": 8
+                    },
+                    "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+                    "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                  }
+                ],
+                "previousCurrentIds": [
+                  "e60cbdb9121493f47fa6",
+                  "a8128668e1b74b7c0ae4"
+                ],
+                "previousResolution": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870",
+                  "currentId": "c28667c70e40dcc18a55",
+                  "file": "scripts/production-migrations.json",
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 214,
+                  "change": "Append exactly one memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. Preserve every prior entry, introduction SHA and historical SQL byte; no delivery or deployment authorization.",
+                  "sourceReviewReferences": [
+                    {
+                      "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
+                      "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                      "sourceFileSha256": "77666d36946b95794d2448265a41175555ee4e9d80daf31b9cb0411c8df9eb14",
+                      "sourceEntry": {
+                        "index": 8
+                      },
+                      "sourceEntryCanonicalSha256": "b996540ed5405833a0804d5e08f090d38e6d4f27abfe90ce3913f22083d151b0",
+                      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+                      "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+                    },
+                    {
+                      "sourceRevision": "17a864579e43cafe9f56caceb08dddef6a70cfee",
+                      "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                      "sourceFileSha256": "6661657850e55919718e7b219cefc05f5731b869d92f1d767b94649e2771f4df",
+                      "sourceEntry": {
+                        "index": 8
+                      },
+                      "sourceEntryCanonicalSha256": "ee9d3df97d76ec5414f6e06b5ab897c65ae2fcba7fa58c8736280a2d268bd41d",
+                      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+                      "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+                    },
+                    {
+                      "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
+                      "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                      "sourceFileSha256": "2d187abb91c2ff39cb5506d0ddb6b62613e26cfb0049a38c5c9393f17b556f3b",
+                      "sourceEntry": {
+                        "historicalReplacementId": "7578a30aa3cc5aa23870"
+                      },
+                      "sourceEntryCanonicalSha256": "b0807f471978a4d450e1146ede3625705f79860bac46c1b70861578e68303220",
+                      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                    },
+                    {
+                      "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
+                      "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                      "sourceFileSha256": "2f1b6f5b481990e147f6eadfba927520f49663b40452d24b8f9b775308f106ba",
+                      "sourceEntry": {
+                        "historicalReplacementId": "7578a30aa3cc5aa23870"
+                      },
+                      "sourceEntryCanonicalSha256": "743e5631efbf40cbdc4d09db4b9c06443c6d8243778cdf21d2bd212e49408bf4",
+                      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                    },
+                    {
+                      "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
+                      "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                      "sourceFileSha256": "c39bca1016ca0701cd5120ef3dc8905ca5a67baee89ba4a31f407f92dd7fc76b",
+                      "sourceEntry": {
+                        "index": 8
+                      },
+                      "sourceEntryCanonicalSha256": "972567b86a9a1c4256b14d90b265d8c63b5ee962d0fa18b477d02e637f6a0df9",
+                      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                    },
+                    {
+                      "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+                      "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                      "sourceFileSha256": "0fa5bd8b05943ea7a2d32580d5a95439444b37618e1e838f5f93b754162afd0f",
+                      "sourceEntry": {
+                        "index": 8
+                      },
+                      "sourceEntryCanonicalSha256": "2c38a806a6b1b6150d94ab831bd323c9bb5944e9c65924dcdfdb5dc3c0fdb576",
+                      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                    },
+                    {
+                      "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+                      "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                      "sourceFileSha256": "50369165341a735c5b6800cb19fae9f5698f8dae9e1592883b4491ab080e081f",
+                      "sourceEntry": {
+                        "index": 8
+                      },
+                      "sourceEntryCanonicalSha256": "6c94c901f843bb75f67806b3ede3745fb956f116b5a30d73dc346b433ab783cb",
+                      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                    },
+                    {
+                      "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+                      "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                      "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+                      "sourceEntry": {
+                        "index": 8
+                      },
+                      "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+                      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                    }
+                  ],
+                  "previousCurrentIds": [
+                    "e60cbdb9121493f47fa6",
+                    "a8128668e1b74b7c0ae4"
+                  ],
+                  "previousResolution": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870",
+                    "currentId": "3f336173e03f10fc023c",
+                    "file": "scripts/production-migrations.json",
+                    "kind": "json-array",
+                    "name": "migrations",
+                    "valueCount": 213,
+                    "change": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+                    "sourceReviewReferences": [
+                      {
+                        "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
+                        "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                        "sourceFileSha256": "77666d36946b95794d2448265a41175555ee4e9d80daf31b9cb0411c8df9eb14",
+                        "sourceEntry": {
+                          "index": 8
+                        },
+                        "sourceEntryCanonicalSha256": "b996540ed5405833a0804d5e08f090d38e6d4f27abfe90ce3913f22083d151b0",
+                        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+                        "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+                      },
+                      {
+                        "sourceRevision": "17a864579e43cafe9f56caceb08dddef6a70cfee",
+                        "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                        "sourceFileSha256": "6661657850e55919718e7b219cefc05f5731b869d92f1d767b94649e2771f4df",
+                        "sourceEntry": {
+                          "index": 8
+                        },
+                        "sourceEntryCanonicalSha256": "ee9d3df97d76ec5414f6e06b5ab897c65ae2fcba7fa58c8736280a2d268bd41d",
+                        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+                        "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+                      },
+                      {
+                        "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
+                        "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                        "sourceFileSha256": "2d187abb91c2ff39cb5506d0ddb6b62613e26cfb0049a38c5c9393f17b556f3b",
+                        "sourceEntry": {
+                          "historicalReplacementId": "7578a30aa3cc5aa23870"
+                        },
+                        "sourceEntryCanonicalSha256": "b0807f471978a4d450e1146ede3625705f79860bac46c1b70861578e68303220",
+                        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                      },
+                      {
+                        "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
+                        "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                        "sourceFileSha256": "2f1b6f5b481990e147f6eadfba927520f49663b40452d24b8f9b775308f106ba",
+                        "sourceEntry": {
+                          "historicalReplacementId": "7578a30aa3cc5aa23870"
+                        },
+                        "sourceEntryCanonicalSha256": "743e5631efbf40cbdc4d09db4b9c06443c6d8243778cdf21d2bd212e49408bf4",
+                        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                      },
+                      {
+                        "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
+                        "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                        "sourceFileSha256": "c39bca1016ca0701cd5120ef3dc8905ca5a67baee89ba4a31f407f92dd7fc76b",
+                        "sourceEntry": {
+                          "index": 8
+                        },
+                        "sourceEntryCanonicalSha256": "972567b86a9a1c4256b14d90b265d8c63b5ee962d0fa18b477d02e637f6a0df9",
+                        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                      },
+                      {
+                        "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+                        "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                        "sourceFileSha256": "0fa5bd8b05943ea7a2d32580d5a95439444b37618e1e838f5f93b754162afd0f",
+                        "sourceEntry": {
+                          "index": 8
+                        },
+                        "sourceEntryCanonicalSha256": "2c38a806a6b1b6150d94ab831bd323c9bb5944e9c65924dcdfdb5dc3c0fdb576",
+                        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                      },
+                      {
+                        "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+                        "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                        "sourceFileSha256": "50369165341a735c5b6800cb19fae9f5698f8dae9e1592883b4491ab080e081f",
+                        "sourceEntry": {
+                          "index": 8
+                        },
+                        "sourceEntryCanonicalSha256": "6c94c901f843bb75f67806b3ede3745fb956f116b5a30d73dc346b433ab783cb",
+                        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                      },
+                      {
+                        "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+                        "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+                        "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+                        "sourceEntry": {
+                          "index": 8
+                        },
+                        "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+                        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                      }
+                    ],
+                    "previousCurrentIds": [
+                      "e60cbdb9121493f47fa6",
+                      "a8128668e1b74b7c0ae4"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "concurrentReviewHistory": [
+        {
+          "historicalReplacementId": "7578a30aa3cc5aa23870",
+          "currentId": "2634b239375f2ad309ba",
+          "file": "scripts/production-migrations.json",
+          "kind": "json-array",
+          "name": "migrations",
+          "valueCount": 223,
+          "change": "The 223-entry deployment registry preserves the complete 222-entry ledger candidate f3e3217ac12a04be2a221ee6ac8bea67875d46c5 prefix, including all221 protected-main migrations and the original posted-header migration, and appends only the provider/domain admission migration introduced by456be073c944dd3d76eb9e3c2169fe7fbb4041ef. Historical SQL bodies and introduction ancestors are unchanged. Both222-entry and209-entry source reviews are retained by canonical hashes. This technical review grants no provider activation, production execution or waiver of current-head CI, independent review and protected merge admission.",
+          "sourceReviewReferences": [
+            {
+              "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "77666d36946b95794d2448265a41175555ee4e9d80daf31b9cb0411c8df9eb14",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "b996540ed5405833a0804d5e08f090d38e6d4f27abfe90ce3913f22083d151b0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+            },
+            {
+              "sourceRevision": "17a864579e43cafe9f56caceb08dddef6a70cfee",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "6661657850e55919718e7b219cefc05f5731b869d92f1d767b94649e2771f4df",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "ee9d3df97d76ec5414f6e06b5ab897c65ae2fcba7fa58c8736280a2d268bd41d",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+            },
+            {
+              "sourceRevision": "46f477373d0f2f3802e38fb2ac2c832c0a2e4be3",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "2d187abb91c2ff39cb5506d0ddb6b62613e26cfb0049a38c5c9393f17b556f3b",
+              "sourceEntry": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870"
+              },
+              "sourceEntryCanonicalSha256": "b0807f471978a4d450e1146ede3625705f79860bac46c1b70861578e68303220",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "6ceca759cdb19a100afbce7063eef6a7fe09a117",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "2f1b6f5b481990e147f6eadfba927520f49663b40452d24b8f9b775308f106ba",
+              "sourceEntry": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870"
+              },
+              "sourceEntryCanonicalSha256": "743e5631efbf40cbdc4d09db4b9c06443c6d8243778cdf21d2bd212e49408bf4",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "e99978c4ab1ed9c78fce36fbb366b1d10dd96fae",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "c39bca1016ca0701cd5120ef3dc8905ca5a67baee89ba4a31f407f92dd7fc76b",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "972567b86a9a1c4256b14d90b265d8c63b5ee962d0fa18b477d02e637f6a0df9",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "0fa5bd8b05943ea7a2d32580d5a95439444b37618e1e838f5f93b754162afd0f",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "2c38a806a6b1b6150d94ab831bd323c9bb5944e9c65924dcdfdb5dc3c0fdb576",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "50369165341a735c5b6800cb19fae9f5698f8dae9e1592883b4491ab080e081f",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "6c94c901f843bb75f67806b3ede3745fb956f116b5a30d73dc346b433ab783cb",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "f58f6ac1859d3cc294a3ed3cee23cb3da6fac487",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "c2963899713fd5892d34fbef026ecdb1f1994496656f148292bb9cd2b0f267e7",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "58155370c86a44f196a15035661b79a80c72f3690295e23146d936b6fa8744fd",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "8de1bae4c30961eaa11637e5b4307271250ee176",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "935beed5d053bfc75d1a0e1a6e4ae204c1c64423",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "3db0c4480bf0ffde30c41a564b836831134da16c39bb4c7df2b06f3f910221d1",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "455e25dae4f5762b166b55846ddad5482362f8ce15387e4a07ec0ca3f8c44d31",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "380da8855ade877f79593e80f93291cd314d311d",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "9afc8f12626eeb1b5a2b1c2183d9e2c514f9ff12fa34b5b24006076fada0feb9",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "79ba6acb6cabcb85d7d5c789bae340ce39e95921794ce093bcfdae689f5deeb9",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "b9ae3d73b0aba7c407c8d1fc27cda99fe40c3f37",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "10ce2dabd94e98ffdae8a5cf8f9d5b4381da3f90817e498d7acd66efb66bc669",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "47af3bff5dc25704664d0dcfde68a6ea7a97d2f267a325b25d176aee9844b076",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+              "sourceEntry": {
+                "id": "3f336173e03f10fc023c"
+              },
+              "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+              "sourceEntry": {
+                "id": "2b073f20afd2f3798b1e"
+              },
+              "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "1402ca0b572fee685b0f274c8babe057e2a63f65cae7542ebf70f04814d938fa",
+              "sourceEntry": {
+                "index": 8
+              },
+              "sourceEntryCanonicalSha256": "ddcb71c2b853a84719e1fffe73b7cc872aa94901f30f8b26a28e3a139fcb6c85",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "460a86438e3fd6c3c675b5481174571100659685",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "16866931c2ed39d5dea2d5978dd4c4900626dc34760076c5f8ba9e356281232a",
+              "sourceEntry": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870"
+              },
+              "sourceEntryCanonicalSha256": "df36744232de1d7f87c0945fe39e81a5b1e9e5d5206bb927299cdc18e9d18ca5",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Preserve the exact reviewed213-entry current pointer before advancing to the separately reviewed214-entry successor; no retired fingerprint becomes an active approval."
+            },
+            {
+              "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "42d813e3d10f9a965a7139131082ba4c8c78f3cd823d183030b932c5bbaafdb5",
+              "sourceEntry": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870"
+              },
+              "sourceEntryCanonicalSha256": "46deb4f238272a122238b751e1a181319fb6530abcb231baff74289732a3a854",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "49dfdb8b3f5c449ca64d25ddfa21e7c88161e8e0a228e257bcca00ea2e07c7a5",
+              "sourceEntry": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870"
+              },
+              "sourceEntryCanonicalSha256": "6b6bab0b74b772b0ba73cd535f80a15669f8d76361bf8eb71070847a702f8e65",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "0781fe749d852505dfec130b5373a4163a20c90fa82bea42eeabedbd2e9d3260",
+              "sourceEntry": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870"
+              },
+              "sourceEntryCanonicalSha256": "112f5ebf1c5195bc059835f58689f407b6c5e13acf2ce8167afc97ae428b4b38",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
+              "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+              "sourceFileSha256": "97afb8872444b3a58853c36e2120fa4e2a01f75e468135434fab66777c1a0317",
+              "sourceEntry": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870"
+              },
+              "sourceEntryCanonicalSha256": "32cd5ae343876f255c2af30e9af955c720c9b541a495ac92ebb4e96538741d09",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            }
+          ],
+          "previousCurrentIds": [
+            "e60cbdb9121493f47fa6",
+            "a8128668e1b74b7c0ae4",
+            "3f336173e03f10fc023c",
+            "2b073f20afd2f3798b1e",
+            "a1eb1e750e7543b88fe1",
+            "c94cd70c1272ec9ede1b",
+            "b7cc47848f3f9882770f",
+            "8229b8202552298c955e",
+            "9ada14767bee1662f97d",
+            "6ff395b6131079017c9d",
+            "a70a9a4dd05ce44e950b"
+          ]
+        }
       ]
     }
   ]
