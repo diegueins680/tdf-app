@@ -43,6 +43,7 @@ import qualified TDF.CMS.Models as CMS
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import TDF.DB (Env(..))
 import TDF.MusicRelease.Money (musicMinorUnitsJSON, parseMusicMinorUnits)
+import TDF.Server.MusicReleaseAssets (downloadableAssetPredicate)
 import qualified TDF.Server.ServiceStorefront as Provider
 
 type AppM = ReaderT Env Handler
@@ -127,7 +128,7 @@ createMusicPurchase user idempotencyHeader edgeCountry MusicPurchaseCreateReques
   unless (T.length expectedCurrency == 3 && T.all isAsciiUpper expectedCurrency) $
     throwError (badRequest "expectedCurrency must be an ISO 4217 currency code")
   offerRows <- runDB (rawSql
-    "SELECT public.release_version_id,rule.price_minor,rule.currency,rule.downloadable_asset_id,public.title,party.display_name,party.primary_email FROM music_availability_rule rule JOIN music_public_release public ON public.release_version_id=rule.release_version_id JOIN party ON party.id=? WHERE rule.id=?::uuid AND rule.purchasable=TRUE AND rule.download_policy='purchase' AND rule.price_minor>0 AND rule.currency='USD' AND rule.downloadable_asset_id IS NOT NULL AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW()) AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories))) OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories))))"
+    ("SELECT public.release_version_id,rule.price_minor,rule.currency,rule.downloadable_asset_id,public.title,party.display_name,party.primary_email FROM music_availability_rule rule JOIN music_public_release public ON public.release_version_id=rule.release_version_id JOIN music_asset asset ON asset.id=rule.downloadable_asset_id AND asset.release_version_id=public.release_version_id JOIN party ON party.id=? WHERE rule.id=?::uuid AND rule.purchasable=TRUE AND rule.download_policy='purchase' AND rule.price_minor>0 AND rule.currency='USD' AND rule.downloadable_asset_id IS NOT NULL AND " <> downloadableAssetPredicate <> " AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW()) AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories))) OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories))))")
     [ PersistInt64 actor, toPersistValue musicPurchaseAvailabilityRuleId
     , optionalText trustedTerritory, optionalText trustedTerritory, optionalText trustedTerritory
     ]

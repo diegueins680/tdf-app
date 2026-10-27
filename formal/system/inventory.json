@@ -523,6 +523,7 @@
       "scripts/test-music-payment-outcomes.sh",
       "scripts/test-music-playback-identity.mjs",
       "scripts/test-music-publication.sh",
+      "scripts/test-music-purchase-asset-query.py",
       "scripts/test-music-purchase.sh",
       "scripts/test-music-release-api-e2e.mjs",
       "scripts/test-music-release-api-e2e.sh",
@@ -3329,7 +3330,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
+      "sha256": "2468ed2a2b2d1fa6a4f4ade43fa7ebeb54dc4757d0bda287e0639420a277c73d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4049,7 +4050,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+      "sha256": "3f1f732578935d9e9a0a6757c0bc61ed5cc14c7d3bd9eddaefffe8252261103f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5763,9 +5764,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ab9e572edc8e2409",
+      "path": "scripts/test-music-purchase-asset-query.py",
+      "sha256": "0c806fcb2cb50ec1ecbe466ed0f4078c2968553792925eb86222cc857e415c93",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f20a2491f3dcc4d3",
       "path": "scripts/test-music-purchase.sh",
-      "sha256": "881cf0f42840cc2e2fff2fdba60ddc661d791e40d2f8749a2bf9da326beb309c",
+      "sha256": "8350074dd1db51c06cee7b133f047c9376c004ee0e08deca0a4c70271ac55583",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15245,7 +15252,7 @@
     {
       "id": "SURFACE-bf94f0cb1cbb82d0",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
-      "sha256": "e0742f56e34371946ef5ffd5ca814c768332e85be2d8c27701c5727bb9a9fc76",
+      "sha256": "b8a242ab8938a53cefac018e4b8c5b0c529b3fbeb7752876549ebd1078cdc8d0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15257,7 +15264,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "44cc676fab692ead582f71d854211c29accd5ff61a3553ac16d9700f49caa49c",
+      "sha256": "8d8fe192caa40d561ba1b25016e3ad7555e1bff84374bb5b32ab88b9a548257e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15965,7 +15972,7 @@
     {
       "id": "SURFACE-7e8c0b5502e595f0",
       "path": "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
-      "sha256": "dd6fa335332f1f475089b6b9b389a81124822c08d8a6d9c5b39e458a8b2d74e2",
+      "sha256": "e04f6350a2e753356f043d5e961751969f33c7bf94d925881b235c73ee5b8a35",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27535,7 +27542,7 @@
     },
     {
       "path": "formal/system/music-purchase-entitlement.md",
-      "sha256": "1844d24d66b59d6a83a6da2c9c7b4a176d867c7f60c4dcb967b50cef35faf7f1",
+      "sha256": "58418d335deaec5ec51f62cfd426117f756016bddd96cbf17a3868e8da7f70eb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27745,7 +27752,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "acec7dc8d02aa760bf6609488a885d55163fd7a6ec1dbac9a65617d202392c5d",
+      "sha256": "47222c602f14134cb2d1224a257562c634f8b068046b1476014a1c64f7b836ed",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

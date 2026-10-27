@@ -8487,11 +8487,11 @@
       "title": "Music downloads only through verified purchase entitlements",
       "domain": "PAY",
       "critical": true,
-      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; the projection settles a payable purchase and grants exactly one entitlement, ending it on refund or chargeback. Verified money for a closed purchase follows PAY-MUSIC-OUTCOME-001 and grants no entitlement. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request.",
+      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; the projection settles a payable purchase and grants exactly one entitlement, ending it on refund or chargeback. Verified money for a closed purchase follows PAY-MUSIC-OUTCOME-001 and grants no entitlement. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request. Purchase creation admits the rule only when its asset belongs to the offered release version and satisfies the same downloadable-asset predicate at the offer query snapshot; rejection creates no purchase.",
       "authority": "Unreviewed recovered local implementation; ADR-005 in docs/music-releases/architecture-and-data-model.md",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
       "contract": "formal/system/music-purchase-entitlement.md",
-      "property": "A purchase entitlement is granted once, by the paid transition of a checkout carrying bound verified evidence, and a download URL is issued only for an active entitlement of the requesting buyer within its counted limit.",
+      "property": "A purchase entitlement is granted once, by the paid transition of a checkout carrying bound verified evidence, and a download URL is issued only for an active entitlement of the requesting buyer within its counted limit. At purchase offer admission, asset.release_version_id equals the offered release version and the existing shared downloadable-asset predicate is true.",
       "actors": [
         "Buyer",
         "Payment provider"
@@ -8554,17 +8554,19 @@
         "scripts/test-music-download-predicate.mjs",
         "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
         "scripts/test-music-purchase.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/test-music-purchase-asset-query.py"
       ],
-      "verification": "Bounded TLA+ model with six negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
-      "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
+      "verification": "Bounded TLA+ model with six negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised. A 324-case extracted-SQL relation projection independently checks purchase/download admission agreement and requires two guard-removal counterexamples. Nine real-handler rejection cases are registered in the existing fully migrated PostgreSQL runner; new-candidate hosted execution is pending.",
+      "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10. See formal/system/evidence/2026-10-27-music-purchase-asset/README.md for source-bound admission evidence and its exact limits.",
       "confidence": "Medium for the payment record, entitlement and download rules, which run on PostgreSQL in tests; low for the provider calls and failure handling, which are untested and have open defects.",
       "ambiguity": [
         "No live payment provider wiring for music_download has been verified.",
         "Music payments bypass the shared payment runtime and the production provider switches; only the commerce flag for the checkout environment gates them.",
         "A failure after the provider charged leaves no reconciliation record; no webhook or reconciliation path exists for this domain.",
         "Partial refunds keep the entitlement and disputes revoke it permanently; both need a product decision.",
-        "Download limits count authorizations, not transferred bytes; a replay retains the original 300-second expiry. Cross-provider admission and ambiguous transport recovery are not established."
+        "Download limits count authorizations, not transferred bytes; a replay retains the original 300-second expiry. Cross-provider admission and ambiguous transport recovery are not established.",
+        "Purchase asset admission is sampled at the offer query, before the order transaction and provider execution. No guarantee against later withdrawal, storage loss or availability changes is established; publication reachability of all synthetic matrix combinations is not claimed."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -13495,7 +13497,7 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": "63b371bcbcf9338de2e4d022515bc9438cfd45f2b884411e913abcde5e713268",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
-    "scripts/__tests__/ci-change-scope.test.mjs": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
+    "scripts/__tests__/ci-change-scope.test.mjs": "2468ed2a2b2d1fa6a4f4ade43fa7ebeb54dc4757d0bda287e0639420a277c73d",
     "scripts/__tests__/ci-pipeline.test.mjs": "76ec02976468affc43319d2d77b4461ac6304a89065f9fe3ce483ca819b49760",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
@@ -13565,7 +13567,7 @@
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
-    "scripts/ci-change-scope.mjs": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+    "scripts/ci-change-scope.mjs": "3f1f732578935d9e9a0a6757c0bc61ed5cc14c7d3bd9eddaefffe8252261103f",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
@@ -13687,7 +13689,8 @@
     "scripts/test-music-payment-outcomes.sh": "f529c92e471a8118013eab1c229abc7c0cc9ec64b8ac925a8ef677e9f57c02ac",
     "scripts/test-music-playback-identity.mjs": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
     "scripts/test-music-publication.sh": "51f8af48e80f50d7043f8f301f95c994ef2dd110358013c12ef0cae8cc623417",
-    "scripts/test-music-purchase.sh": "881cf0f42840cc2e2fff2fdba60ddc661d791e40d2f8749a2bf9da326beb309c",
+    "scripts/test-music-purchase-asset-query.py": "0c806fcb2cb50ec1ecbe466ed0f4078c2968553792925eb86222cc857e415c93",
+    "scripts/test-music-purchase.sh": "8350074dd1db51c06cee7b133f047c9376c004ee0e08deca0a4c70271ac55583",
     "scripts/test-music-release-api-e2e.mjs": "46c88d6264901d60a7b813fa39f950daf6f4179f94ca439e6397523281ac6eb2",
     "scripts/test-music-release-api-e2e.sh": "fb56372d6b979d29e762ab609ceb779012be64efd4d152105060a9ebc559116e",
     "scripts/test-music-release-artwork-pipeline.sh": "5bebd08d1b8863c166080ecd5e56437a9d957306f87c08c007c1dbc2ff68c73f",
@@ -14279,9 +14282,9 @@
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
     "tdf-hq/src/TDF/Server/MusicRelease.hs": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
-    "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs": "e0742f56e34371946ef5ffd5ca814c768332e85be2d8c27701c5727bb9a9fc76",
+    "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs": "b8a242ab8938a53cefac018e4b8c5b0c529b3fbeb7752876549ebd1078cdc8d0",
     "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs": "2c848527dfcff004e724d1c32ce61ecc1b7279a996de43195b348de088e324f2",
-    "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "44cc676fab692ead582f71d854211c29accd5ff61a3553ac16d9700f49caa49c",
+    "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "8d8fe192caa40d561ba1b25016e3ad7555e1bff84374bb5b32ab88b9a548257e",
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "14ff9f888212e5a78d41708c1e61a68c3983bbfb794a9a57f837cf59bc57a56e",
@@ -14347,7 +14350,7 @@
     "tdf-hq/test/TDF/LedgerPostingSpec.hs": "b709ea453c050a6af2df6c14f61c3d490a5923cc2d90e6935f9d6a3b91b1d28e",
     "tdf-hq/test/TDF/MetaRedeliverySpec.hs": "e1e1dcf22068ce44f41ea985d546235c844e468cdfe35a23ff297d6d0b8782b4",
     "tdf-hq/test/TDF/MusicPublicationSpec.hs": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
-    "tdf-hq/test/TDF/MusicPurchaseSpec.hs": "dd6fa335332f1f475089b6b9b389a81124822c08d8a6d9c5b39e458a8b2d74e2",
+    "tdf-hq/test/TDF/MusicPurchaseSpec.hs": "e04f6350a2e753356f043d5e961751969f33c7bf94d925881b235c73ee5b8a35",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
     "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs": "ee4a8d3cf9ad83a44752aa9e90021a981941bc48cf7842aa62cc50ec9615d3e3",
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "87adc6974c0b77da9983747c5900ec34687cd4c790084db30fcb521750daedb8",
@@ -22462,6 +22465,12 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-music-purchase-asset-query.py": [
+      {
+        "requirement": "PAY-MUSIC-DOWNLOAD-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/MusicEntitlement.cfg": [
       {
         "requirement": "PAY-MUSIC-DOWNLOAD-001",
@@ -26764,7 +26773,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
+      "sha256": "2468ed2a2b2d1fa6a4f4ade43fa7ebeb54dc4757d0bda287e0639420a277c73d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28102,7 +28111,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+      "sha256": "3f1f732578935d9e9a0a6757c0bc61ed5cc14c7d3bd9eddaefffe8252261103f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31152,9 +31161,21 @@
       ]
     },
     {
+      "id": "SURFACE-ab9e572edc8e2409",
+      "path": "scripts/test-music-purchase-asset-query.py",
+      "sha256": "0c806fcb2cb50ec1ecbe466ed0f4078c2968553792925eb86222cc857e415c93",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-MUSIC-DOWNLOAD-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-f20a2491f3dcc4d3",
       "path": "scripts/test-music-purchase.sh",
-      "sha256": "881cf0f42840cc2e2fff2fdba60ddc661d791e40d2f8749a2bf9da326beb309c",
+      "sha256": "8350074dd1db51c06cee7b133f047c9376c004ee0e08deca0a4c70271ac55583",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46548,7 +46569,7 @@
     {
       "id": "SURFACE-bf94f0cb1cbb82d0",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
-      "sha256": "e0742f56e34371946ef5ffd5ca814c768332e85be2d8c27701c5727bb9a9fc76",
+      "sha256": "b8a242ab8938a53cefac018e4b8c5b0c529b3fbeb7752876549ebd1078cdc8d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46580,7 +46601,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "44cc676fab692ead582f71d854211c29accd5ff61a3553ac16d9700f49caa49c",
+      "sha256": "8d8fe192caa40d561ba1b25016e3ad7555e1bff84374bb5b32ab88b9a548257e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48016,7 +48037,7 @@
     {
       "id": "SURFACE-7e8c0b5502e595f0",
       "path": "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
-      "sha256": "dd6fa335332f1f475089b6b9b389a81124822c08d8a6d9c5b39e458a8b2d74e2",
+      "sha256": "e04f6350a2e753356f043d5e961751969f33c7bf94d925881b235c73ee5b8a35",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55340,7 +55361,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "acec7dc8d02aa760bf6609488a885d55163fd7a6ec1dbac9a65617d202392c5d",
+      "sourceSha256": "47222c602f14134cb2d1224a257562c634f8b068046b1476014a1c64f7b836ed",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -55368,7 +55389,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "acec7dc8d02aa760bf6609488a885d55163fd7a6ec1dbac9a65617d202392c5d",
+      "sourceSha256": "47222c602f14134cb2d1224a257562c634f8b068046b1476014a1c64f7b836ed",
       "definition": {
         "states": [
           "absent",
@@ -55398,7 +55419,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "acec7dc8d02aa760bf6609488a885d55163fd7a6ec1dbac9a65617d202392c5d",
+      "sourceSha256": "47222c602f14134cb2d1224a257562c634f8b068046b1476014a1c64f7b836ed",
       "definition": {
         "export": [
           "queued",
