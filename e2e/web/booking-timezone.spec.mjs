@@ -65,6 +65,11 @@ for (const scenario of [
       // Existing input normalization brings 07:45 forward to opening.
       await expect(date).toHaveValue(`${scenario.day}T${scenario.open}`);
       await expect.poll(() => availability.at(-1)?.startsAt).toBe(`${scenario.day}T13:00:00.000Z`);
+      // Repeated quick suggestions must keep the selected physical Quito day.
+      for (let click = 0; click < 2; click += 1) {
+        await page.getByRole('button').filter({ hasText: new RegExp('^' + scenario.open + '$') }).click();
+        await expect(date).toHaveValue(`${scenario.day}T${scenario.open}`);
+      }
       await page.getByRole('button', { name: 'Revisar reserva', exact: true }).click();
       await expect(page.getByRole('button', { name: 'Confirmar reserva', exact: true })).toBeVisible();
       await page.getByRole('button', { name: 'Volver', exact: true }).click();
@@ -74,6 +79,13 @@ for (const scenario of [
       await expect(date).toHaveValue(`${scenario.nextDay}T${scenario.late}`);
       await expect(page.getByLabel('Duración (min)', { exact: true })).toHaveValue('30');
       const expectedUtc = `${scenario.nextDay}T02:30:00.000Z`;
+      // A late Quito slot is on the next visitor-calendar day. Suggestions
+      // still belong to the chosen Quito date, and must not drift on each click.
+      for (let click = 0; click < 2; click += 1) {
+        await page.getByRole('button').filter({ hasText: new RegExp('^' + scenario.open + '$') }).click();
+        await expect(date).toHaveValue(`${scenario.day}T${scenario.open}`);
+      }
+      await date.fill(`${scenario.nextDay}T${scenario.late}`);
       await expect.poll(() => availability.at(-1)?.startsAt).toBe(expectedUtc);
       await page.getByRole('button', { name: 'Revisar reserva', exact: true }).click();
       await expect(card).toContainText(`Zona: Estudio GMT-5 · Tú ${scenario.expectedLabel}`);

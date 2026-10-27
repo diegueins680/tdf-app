@@ -12540,10 +12540,89 @@
       }
     },
     {
+      "id": "MEDIA-MUSIC-SOURCES-001",
+      "domain": "MEDIA",
+      "title": "Authorized public-listening source projection in release detail and personal music collections",
+      "critical": true,
+      "authority": "Explicit user universal audio implementation directive2026-10-25, sections4,9,13,14,17 and P0/P1; focused continuation2026-10-26. Release review and deployment remain separately gated.",
+      "source": "docs/music-releases/authorized-source-projection.md",
+      "contract": "formal/system/music-source-projection.md",
+      "statement": "Public release detail and authenticated favorites,playlists and listening-history source arrays emit only ready current stream/preview assets satisfying the existing public delivery-policy predicate for the trusted requesting territory. Existing identities,metadata,personal row ownership and available-flag semantics remain unchanged; later playback still requires fresh authorization.",
+      "property": "At a projection database snapshot, every returned source asset satisfies music_public_asset_accessible(assetId, trustedTerritory)=true using that handlers actual positional territory binding. The projection issues no delivery credential and does not imply future delivery success or rights.",
+      "actors": [
+        "Public listener viewing a release",
+        "Authenticated listener viewing own saved music",
+        "Backend public source projection and existing delivery-policy predicate"
+      ],
+      "preconditions": [
+        "Existing public feature gates and authenticated principal/account predicates apply.",
+        "Trusted edge territory is derived by the existing handler boundary and bound consistently to source and visibility checks.",
+        "Existing public-release,availability,preview-policy functions and schema are deployed; their correctness is a trusted dependency of this focused contract."
+      ],
+      "inputs": [
+        "Public release slug or authenticated saved-collection principal",
+        "Trusted edge territory or unknown territory",
+        "Existing release/track/recording links,rendition readiness and preview metadata,availability policy and personal saved rows"
+      ],
+      "state": {
+        "boundary": "Read-only sources projection in getPublicRelease,listFavorites,listPlaylists,listPlaybackHistory",
+        "snapshot": "Current database/public-release/availability policy at query execution",
+        "output": "Existing assetId/role/mediaType/technicalMetadata source objects; no newly issued URL"
+      },
+      "allowedTransitions": [
+        "Query authorized public detail or own saved rows -> filter each source with the existing public asset predicate",
+        "Preview-only policy -> current authorized preview references without denied full renditions",
+        "Territory exclusion or withdrawn public version -> empty authorized sources or unavailable detail while preserving existing personal saved-row semantics",
+        "Select a returned source later -> independent current delivery authorization; projection metadata grants no access"
+      ],
+      "forbiddenTransitions": [
+        "A returned source reference fails the existing public delivery predicate for the same trusted territory at the projection snapshot.",
+        "A denied full rendition is advertised to a preview-only listener through an affected source array.",
+        "The source filter changes personal account ownership,row identity,metadata fields or available-flag meaning.",
+        "Manual fixture parameters are treated as proof of the actual handler binding or compiled HTTP behavior."
+      ],
+      "effects": [
+        "Read-only filtered rendition references on four existing response surfaces",
+        "No mutation of masters,publication,rights or saved collection data"
+      ],
+      "authorization": "Retain requirePublicFeature,authenticated handlers,currentPartyId and trusted edge territory. Reuse the same public asset predicate as getPublicMusicAssetAccess; owner/editor access and paid download entitlements remain separate. Delivery rechecks policy independently.",
+      "privacy": "Withhold denied rendition references/technical metadata from affected source arrays and issue no credentials. Existing other public metadata,personal saved titles,artwork and availability fields remain unchanged and are not proven private by this filter.",
+      "concurrency": "Projection agreement is relative to one database snapshot; policy may change before playback. No cross-request snapshot,global transaction or immediate revocation of previously issued URLs is added.",
+      "idempotency": "Read-only projection; repeated requests against unchanged authorized inputs preserve existing row/source identities and ordering.",
+      "failure": "Unavailable rendition policy produces an empty source array; existing detail/collection errors and unavailable saved rows retain their semantics. available means a resolved public version,not assured playable bytes.",
+      "recovery": "Existing player may authorize another valid source or report unavailability. Application-source rollback needs no schema/data reversal but restores the known broader source metadata exposure.",
+      "observability": "Source-bound PostgreSQL controls,policy-removal mutants and actual binding-list correspondence checks with explicit limits; final execution receipt and exact-candidate CI remain required.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs"
+      ],
+      "tests": [
+        "scripts/test-music-source-projection.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Finite PostgreSQL checks execute actual source SQL with authoritative policy functions; actual adjacent Haskell binding lists are extracted, whitelisted and used for fixture parameters. Four policy-removal controls and eight omitted/reordered binding controls detect regressions. Lexical translation does not execute compiled Haskell HTTP routing or prove actual authorized bytes; no theorem is claimed.",
+      "evidence": "reports/music-source-projection-2026-10-26.json binds sourceade78b5ab11ba297cf419a96012032ebf289820d, four SQL surfaces, four policy mutants, eight binding controls and17CIselection tests; final exact-candidate hosted checks and target release remain separate.",
+      "status": "specified and implemented",
+      "confidence": "TESTED finite real PostgreSQL, lexical binding and CI-scope controls on recorded source identities; compiled Stack/HTTP, actual media and production acceptance remain unverified.",
+      "ambiguity": [
+        "The public delivery predicate and trusted territory origin are dependencies,not proved by projection agreement.",
+        "available retains existing resolved-public-version semantics and can coexist with no sources.",
+        "All other public/private metadata boundaries,storage existence,media quality/decoding and target-environment HTTP behavior require separate evidence.",
+        "Previously issued delivery credentials retain existing expiry/cache bounds; immediate byte revocation is not established.",
+        "Representative query-plan/performance impact and production deployment remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Four source projections agree with the authoritative delivery predicate under finite PostgreSQL fixtures; gate-removal, actual lexical argument binding and CI-selection controls pass. Full compiled handler/HTTP behavior, media/storage bytes, target performance and production acceptance require separate evidence; no whole-system authorization proof."
+      }
+    },
+    {
       "id": "BOOK-STUDIO-TIMEZONE-001",
       "title": "Public studio hours use Quito time independently of visitor preferences",
       "domain": "BOOK",
-      "statement": "The public studio booking page interprets 08:00–22:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving.",
+      "statement": "The public studio booking page interprets 08:00–22:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
       "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00–22:00.",
       "source": "Direct owner confirmation after anonymous production observation showed studio UTC.",
       "contract": "formal/system/public-booking-timezone.md",
@@ -12569,12 +12648,14 @@
       },
       "allowedTransitions": [
         "Contact -> schedule -> confirmation for an interval within the Quito opening window",
-        "Confirmation -> recoverable booking error without false success"
+        "Confirmation -> recoverable booking error without false success",
+        "Schedule -> suggested time within the same selected Quito calendar date"
       ],
       "forbiddenTransitions": [
         "General display timezone changes the physical studio zone",
         "Start before 08:00 or end after 22:00 Quito admitted by the public form",
-        "Reinterpret persisted UTC booking timestamps"
+        "Reinterpret persisted UTC booking timestamps",
+        "A quick-suggestion click moves the booking to the previous Quito calendar date"
       ],
       "effects": [
         "Studio opening hours remain in Quito; selected visitor-local instants are serialized in UTC."
@@ -12595,7 +12676,7 @@
         "e2e/web/booking-timezone.spec.mjs"
       ],
       "formalModels": [],
-      "verification": "Rendered component regression with general UTC preference; browser boundary and refused synthetic submission tests for UTC and summer Europe/Madrid visitors. Not a proof of backend hours enforcement.",
+      "verification": "Rendered component regression with general UTC preference; browser boundary and refused synthetic submission tests for UTC and summer Europe/Madrid visitors. Not a proof of backend hours enforcement. Rendered-form regression reproduces original75 shifting January15 toJanuary14; corrected form preserves the date through repeated clicks. Browser UTC/Madrid scenarios now click suggestions repeatedly before and after a visitor-local midnight crossing.",
       "evidence": "reports/booking-quito-timezone-2026-10-26.json",
       "status": "specified and implemented",
       "critical": false,

@@ -1090,7 +1090,7 @@ export default function PublicBookingPage() {
     const duration = normalizeDurationMinutes(form.durationMinutes);
     const nowUser = DateTime.now().setZone(userTimeZone).plus({ minutes: 15 });
     const baseDay = DateTime.fromISO(form.startsAt || '', { zone: userTimeZone });
-    const day = baseDay.isValid ? baseDay.startOf('day') : nowUser.startOf('day');
+    const day = (baseDay.isValid ? baseDay : nowUser).setZone(studioTimeZone).startOf('day');
 
     const openStudio = day
       .setZone(studioTimeZone)

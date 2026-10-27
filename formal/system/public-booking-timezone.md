@@ -27,3 +27,17 @@ motivated this correction; it is separate from catalog recovery PR636.
 Protected CI, independent review, queue admission and deployed-source verification
 are still required. No production environment change or timestamp migration is
 part of this correction.
+
+## Quick suggestions preserve the selected Quito date
+
+Review comment4384399010 on source75b2cd1 identified a real regression:
+January15 at13:00UTC means January15 at08:00Quito, but flooring the visitor
+date to midnight before conversion produced January14 suggestions. Repeated
+selection could move the booking back another day. Convert the selected instant
+to the studio zone before taking the start of day. Quick selections must preserve
+the Quito date; a late Quito slot may fall on the following visitor-calendar day.
+
+The original rendered component fails with expectedJanuary15 and actualJanuary14.
+The corrected form and strengthened UTC/Madrid browser cases click suggestions
+repeatedly at opening and after a local-midnight crossing. Original75 full-CI
+success remains historical; this correction requires its own hosted validation.
