@@ -1,0 +1,168 @@
+{
+  "status": "PARTIAL",
+  "capturedAt": "2026-10-27T02:21:15.464059+00:00",
+  "problem": "A synthetic email local-part became an anonymous public artist name immediately after activation, before the first profile PUT.",
+  "baseline": {
+    "status": "VERIFIED",
+    "environment": "Isolated native API and disposable PostgreSQL223; no production accounts or people",
+    "source": "b3f5244eb0919c14b3c33445bc953b1834b8bf3d",
+    "binaryRevision": "0bb095149b376d1a235bb1accfeca7f2f943d22d",
+    "observation": {
+      "humanParticipants": 0,
+      "profilePutRequests": 0,
+      "privateMarkerPublic": true,
+      "editorInitialName": "Private identity 938421",
+      "artistId": 4,
+      "anonymousProfileStatus": 200,
+      "publicName": "Private identity 938421",
+      "anonymousSearchStatus": 200,
+      "publicSearchNames": [
+        "Private identity 938421"
+      ],
+      "status": "VERIFIED-synthetic-default-name-disclosure",
+      "browserClosed": true
+    },
+    "databaseAssertions": {
+      "oneArtistProfileBeforeAnyUiSave": true,
+      "zeroFollows": true,
+      "zeroFollowEvents": true
+    },
+    "cleanup": {
+      "runtimesStopped": true,
+      "databaseRemoved": true,
+      "clusterStopped": true
+    },
+    "receiptSha256": "f0872d77c52e6376287f6b37d31f62cd4438cbc7fefbb31138d4d44aba48cfa2"
+  },
+  "fix": {
+    "status": "PARTIAL",
+    "localSource": "48eb295581e31a27b52e4a0353defce8aca890d0",
+    "frontendTests": {
+      "suites": 13,
+      "passed": 225
+    },
+    "haskellHelperExamples": 4,
+    "runtimeAcceptance": {
+      "status": "VERIFIED-isolated-neutral-default-before-profile-save",
+      "executedWebSource": "79027c996a8d7642abf5f3eae29e4a032ac39902",
+      "actualApiVersion": {
+        "buildTime": "2026-10-27T02:08:16Z",
+        "commit": "48eb295581e31a27b52e4a0353defce8aca890d0",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      },
+      "migrationCount": 223,
+      "privacyObservation": {
+        "humanParticipants": 0,
+        "profilePutRequests": 0,
+        "privateMarkerPublic": false,
+        "editorInitialName": "Cuenta TDF",
+        "artistId": 4,
+        "anonymousProfileStatus": 200,
+        "publicName": "Cuenta TDF",
+        "anonymousSearchStatus": 200,
+        "publicSearchNames": [],
+        "status": "VERIFIED-isolated-neutral-default-before-profile-save",
+        "browserClosed": true
+      },
+      "databaseAssertions": {
+        "oneArtistProfileBeforeAnyUiSave": true,
+        "zeroFollows": true,
+        "zeroFollowEvents": true
+      },
+      "cleanup": {
+        "runtimesStopped": true,
+        "databaseRemoved": true,
+        "clusterStopped": true
+      },
+      "overallAcceptance": "PASS in isolation; canonical deployment and independent review remain pending"
+    },
+    "productionDeployment": "NOT TESTED",
+    "typecheck": "PASS",
+    "fullUiLint": "PASS",
+    "protectedBase": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "sixFollowRecoveryCases": {
+      "status": "VERIFIED-isolated-follow-response-recovery-only",
+      "source": "79027c996a8d7642abf5f3eae29e4a032ac39902",
+      "sourceTree": "dc3874361376fd5be784b8a4124dcf621e35ba28",
+      "binaryRevision": "48eb295581e31a27b52e4a0353defce8aca890d0",
+      "migrationCount": 223,
+      "databaseAssertions": {
+        "syntheticPairs": 6,
+        "followRows": 6,
+        "followEvents": 8,
+        "explicitUnfollowEvents": 2,
+        "serverFirstValues": 6,
+        "clubRows": 0,
+        "artistProfiles": 1,
+        "duplicateRows": 0
+      },
+      "cleanup": {
+        "runtimesStopped": true,
+        "databaseRemoved": true,
+        "clusterStopped": true
+      }
+    },
+    "catalog": {
+      "status": "PASS",
+      "candidates": 1342,
+      "unreviewed": 0,
+      "stale": 0,
+      "regressionControlsPassed": 8
+    },
+    "generatedApiClients": "PASS unchanged",
+    "sourceAdmission": {
+      "status": "PASS",
+      "changedMappedSurfaces": 18
+    },
+    "fullArtistTwoFanJourney": {
+      "status": "VERIFIED-isolated-full-artist-fan-journeys-only",
+      "source": "79027c996a8d7642abf5f3eae29e4a032ac39902",
+      "sourceTree": "dc3874361376fd5be784b8a4124dcf621e35ba28",
+      "actualApiVersion": {
+        "buildTime": "2026-10-27T02:08:16Z",
+        "commit": "48eb295581e31a27b52e4a0353defce8aca890d0",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      },
+      "migrationCount": 223,
+      "databaseAssertions": {
+        "syntheticPairs": 2,
+        "followRows": 2,
+        "followEvents": 2,
+        "serverFirstValues": 2,
+        "artistUiFollowerCount": 2,
+        "clubRows": 0,
+        "artistProfiles": 1,
+        "duplicateRows": 0
+      },
+      "cleanup": {
+        "runtimesStopped": true,
+        "databaseRemoved": true,
+        "clusterStopped": true
+      }
+    }
+  },
+  "scopeLimits": [
+    "No existing-account mass rename or historical remediation",
+    "No actual Google or Apple authentication",
+    "No human participants, production signup/follow, provider publication or transactions"
+  ],
+  "priority": "P0 privacy prevention before expanding activation",
+  "infrastructureFailuresPreserved": [
+    {
+      "stage": "Stack helper preparation with --package hspec",
+      "reason": "Hackage index download ran out of storage; no Hspec test executed",
+      "resolution": "Canonical Stack exec using installed hspec passed4examples; API compiled successfully with Stack"
+    },
+    {
+      "stage": "Strict catalog output and first six-follow rehearsal",
+      "reason": "ENOSPC writing output during schema setup; follow business cases not executed",
+      "resolution": "Own leftover PostgreSQL stopped;8explicit own stopped fixture clusters archived with every file hash verified. Identical-source six-follow/full-journey and strict-catalog retries PASS. Original errors retained.",
+      "scope": "No application failure established; no unrelated processes/files removed"
+    }
+  ],
+  "evidenceDirectory": "reports/activation-default-name-privacy-2026-10-26",
+  "protectedIntegration": "NOT TESTED new head not yet published",
+  "rollback": "Protected revert; no SQL or account rewrites. Existing account names are unchanged and historical remediation is separate."
+}

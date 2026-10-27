@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-27T00:25:01.004Z",
+  "generatedAt": "2026-10-27T02:18:22.455Z",
   "repositoryRoot": ".",
-  "filesScanned": 2408,
+  "filesScanned": 2410,
   "candidateCount": 1342,
   "byClassification": {
     "dynamic-business-catalog": 863,
@@ -31256,7 +31256,7 @@
       "lines": [
         105
       ],
-      "consumerCount": 471,
+      "consumerCount": 473,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -39087,7 +39087,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 453,
+      "consumerCount": 455,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -47116,7 +47116,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 207,
+      "consumerCount": 206,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -53114,7 +53114,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 207,
+      "consumerCount": 206,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -150650,7 +150650,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 747,
+      "line": 748,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -150662,7 +150662,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        747
+        748
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -159648,7 +159648,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 207,
+      "consumerCount": 206,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/docs/openapi/api.yaml",
