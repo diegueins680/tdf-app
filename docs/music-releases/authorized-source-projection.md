@@ -167,7 +167,7 @@ acceptance remain separate release gates; no deployment is performed.
 
 The fresh root-orchestrated PostgreSQL run on 2026-10-26 passed all four
 projection groups, four policy-removal mutation controls and eight lexical
-argument controls, using a new owned PG16 cluster and Node22. Its source
+argument controls, using a new owned PG16 cluster and Node 22. Its source
 fingerprints bind the combined handler above and unchanged runner. All random
 databases were removed, the cluster stopped and port55571 verified closed; the
 older search cluster was untouched. This executes the selected 14-file SQL
@@ -200,6 +200,44 @@ This baseline is explicitly pinned to the post-#624 main above. A later main
 advance requires its own reconciliation. The existing remote `ac396190` and its
 review remain untouched until parent-controlled publication; no push, new review
 request or production change is performed by this task.
+
+## Protected provider-domain main reconciliation
+
+This normal merge advances local parent
+`52aa82ea70ed1e2b3dc26180977d9a0b838dea59` to actual protected main
+`c66a65a10a8e5e48f89172d61f6f57fb81697896` (#596). All 148 main requirement
+objects, including `PAY-DOMAIN-BINDING-001`, remain exact. The unchanged scoped
+`MEDIA-MUSIC-SOURCES-001` object makes 149 total. The entire 1,341-decision main
+catalog file, its provider retirement history and the 223-entry migration manifest
+remain byte-exact to protected main. No production migration is applied here.
+
+All existing runtime, UI and API source bytes/modes remain unchanged from 52aa.
+The release handler retains hash `2cc0c863...`; the four projection functions,
+actual bindings and public catalog search therefore retain their exact qualified
+fragments. The SQL runner and both CI-selection inputs remain unchanged. The
+workflow legitimately inherits main's `python3-psycopg2` build dependency while
+retaining both dedicated PostgreSQL steps, so the older five-input workflow
+receipt is not represented as wholly byte-identical.
+
+Protected main also adds provider-domain SQL and updates `ProviderRetrySpec`;
+whole-backend source identity is consequently not claimed. The earlier source
+qualification and selected 14-file PostgreSQL/lexical controls keep their actual
+source/runtime identities. No fresh Stack, PostgreSQL, compiled HTTP, browser,
+full 223-schema or media-delivery qualification is claimed by this reconciliation.
+The later music-search feature remains a separate stack above this parent.
+
+Ordered inventory/conformance generation, metadata/source admission, strict
+catalog JSON/CSV, API-client freshness and CI-scope checks qualify the combined
+metadata separately. Exact-head hosted checks, current independent review and
+protected integration remain required after parent-controlled publication. This
+baseline is pinned to c66; later advances require their own reconciliation.
+No production, source qualification or other active worktree is changed here.
+
+The merged metadata passed 36 regression cases and 46 CI-selection/pipeline cases on Node 22. Strict catalog JSON/CSV checks passed with 1,341 candidates/rows and no stale/unreviewed decisions; both generated API clients remain fresh at Mobile d832bb3. Source equivalence compares this merged worktree with 52aa, not raw c66: all tracked non-test/non-SQL backend inputs remain exact, while inherited SQL/test changes make whole-backend identity false. Git-derived compilation metadata still differs on a future build; no existing binary is retagged as this candidate. Immutable source admission follows root's normal merge commit.
+
+## Retained historical #630 qualification
+
+The following records the earlier scoped execution and its original source identities. The private223 follow-up remains separate, and actual protected parent integration is required before publication.
 
 ## Full canonical financial-main qualification
 
