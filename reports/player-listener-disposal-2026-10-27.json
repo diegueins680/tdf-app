@@ -148,5 +148,101 @@
     "sha256": "66a064efd55498b0cde56ad67002661c2e049a3433e127468fc9360706d7c5d6",
     "sourceCaptures": "All 491 root runtime/specification inputs and the three changed unit inputs match their before/after captures. This is not a clean committed-candidate claim.",
     "selfHashes": "The document and report omit their own hashes to avoid self-reference; the packet is independently sealed."
+  },
+  "hostedFollowup": {
+    "recordedAt": "2026-10-27T05:32:29.827772+00:00",
+    "source": {
+      "qualifiedSource": "e9f23483c7d4164a4551e6a90d6b82e6b09fd13a",
+      "actualCICheckout": "aacc4cecb7ddb42ac2869930af6513caa1e5d1d5",
+      "sharedWholeGitTree": "c69c2e0003f69eb4f57318fddbfb6e800820b07c",
+      "integrationBaseline": "1129112f89d3c00d33b8c86043a6bd197031dcff",
+      "boundary": "E9 execution evidence only. This documentation branch has no new runtime execution or inherited approval claim."
+    },
+    "evidence": {
+      "qualifiedSource": {
+        "qualifiedSource": "e9f23483c7d4164a4551e6a90d6b82e6b09fd13a",
+        "actualCICheckout": "aacc4cecb7ddb42ac2869930af6513caa1e5d1d5",
+        "sharedWholeGitTree": "c69c2e0003f69eb4f57318fddbfb6e800820b07c",
+        "integrationBaseline": "1129112f89d3c00d33b8c86043a6bd197031dcff",
+        "boundary": "E9 execution evidence only. This documentation branch has no new runtime execution or inherited approval claim."
+      },
+      "primaryCI": {
+        "run": 40452462229,
+        "status": "SUCCESS"
+      },
+      "ui": {
+        "passed": 3578,
+        "suites": 311,
+        "initialGzipBytes": 337614
+      },
+      "native": {
+        "passed": 50,
+        "decoder": 40,
+        "denial": 5,
+        "mock": 5,
+        "skipped": 0,
+        "retries": 0,
+        "profiles": [
+          "chromium-desktop",
+          "chromium-phone",
+          "chromium-tablet",
+          "firefox-critical",
+          "webkit-critical"
+        ]
+      },
+      "persona": {
+        "corePassed": 594,
+        "existingSkipped": 22,
+        "rolloutPassed": 10,
+        "discoveryPassed": 25
+      },
+      "ancillaryCI": {
+        "runId": 40452462209,
+        "firstAttempt": {
+          "jobId": 122018108829,
+          "passed": 3577,
+          "failed": 1,
+          "failure": "Unchanged non-player event workspace remained at its lazy-loading fallback.",
+          "exactCause": "UNVERIFIED"
+        },
+        "secondAttempt": {
+          "jobId": 122024566906,
+          "status": "SUCCESS",
+          "passed": 3578,
+          "suites": 311,
+          "sameSourceAndCommands": true
+        },
+        "codeAssertionTimeoutOrRetryConfigurationChanged": false,
+        "history": "The failed first attempt remains failed and archived; the successful second attempt is separate."
+      },
+      "preview": {
+        "status": "PASS",
+        "cases": 2,
+        "entrySHA256": "0dbfcf9be13eb1320c14cb577da8ad6773408ae7765167f9d0efd97e1cee8167",
+        "scope": "Anonymous idle directory only; not authorized playback or production."
+      },
+      "archive": {
+        "bytes": 1137300,
+        "sha256": "82e7f4fce98835df59a10924aaf7f398a99fbc9d1bcd320d72483b92ec7fafb3",
+        "members": 19
+      },
+      "release": {
+        "requiredChecksPassedAtObservation": 19,
+        "requiredChecksTotal": 20,
+        "pending": "FIFO PR628 and independent exact-head review",
+        "autoMerge": false,
+        "merged": false,
+        "productionDeployed": false
+      },
+      "limits": [
+        "Generated media and synthetic account/authorization fixtures.",
+        "Linux WebKit is not a physical iOS or Safari OS test.",
+        "No new formal proof, live delivery/revocation, full WCAG or SLO qualification.",
+        "Unchanged-path primary backend/Mobile/database test skips remain skips.",
+        "Vercel rate-limit failure is outside the observed 20 required contexts; no policy changed."
+      ]
+    },
+    "packet": "reports/player-listener-disposal-evidence-20261027/hosted-e9/README.md",
+    "acceptanceBoundary": "Original 23 statuses retain their capture scope. Hosted checks add E9 execution evidence, not full acceptance or production qualification."
   }
 }
