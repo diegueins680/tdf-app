@@ -66,7 +66,7 @@ for (const phase of phases) {
   const dir = resolve(out, phase.name); mkdirSync(dir);
   writeFileSync(resolve(dir, 'public-welcome.spec.mjs'), phase.text);
   const config = `import base from ${JSON.stringify(pathToFileURL(resolve(root, 'playwright.config.mjs')).href)};
-export default {...base,captureGitInfo:{commit:false,diff:false},testDir:${JSON.stringify(dir)},testMatch:'public-welcome.spec.mjs',grep:/studio photos open with keyboard/,repeatEach:${phase.repeats},projects:base.projects.filter(p=>['webkit-critical','webkit-iphone'].includes(p.name)),outputDir:${JSON.stringify(resolve(dir, 'test-results'))},reporter:[['line'],['json',{outputFile:${JSON.stringify(resolve(dir, 'results.json'))}}]],use:{...base.use,baseURL:${JSON.stringify(origin)},serviceWorkers:'block'},webServer:undefined};`;
+export default {...base,captureGitInfo:{commit:false,diff:false},testDir:${JSON.stringify(dir)},testMatch:'public-welcome.spec.mjs',grep:/studio photos open with keyboard/,repeatEach:${phase.repeats},projects:base.projects.filter(p=>['webkit-critical','webkit-iphone'].includes(p.name)).map(p=>({...p,grep:/studio photos open with keyboard/})),outputDir:${JSON.stringify(resolve(dir, 'test-results'))},reporter:[['line'],['json',{outputFile:${JSON.stringify(resolve(dir, 'results.json'))}}]],use:{...base.use,baseURL:${JSON.stringify(origin)},serviceWorkers:'block'},webServer:undefined};`;
   const configPath = resolve(dir, 'playwright.config.mjs'); writeFileSync(configPath, config);
   const run = spawnSync(process.execPath, [resolve(root, 'node_modules/@playwright/test/cli.js'), 'test', '--config=' + configPath],
     { cwd: root, stdio: 'inherit', env: process.env });
