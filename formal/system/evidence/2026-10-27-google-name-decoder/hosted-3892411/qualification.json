@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-27T14:33:07.690711+00:00",
+  "requirementId": "AUTH-ENTRY-002",
+  "status": "TESTED",
+  "candidateHead": "7c8735349debe1ca47cb2aeefdbc626d4048c58b",
+  "actualCheckout": "3892411d563cdd01c58ab04bfb29b4b134dd890a",
+  "identicalTree": "6523b76181a9024e5329c4f600a495bef27fc534",
+  "workflowRun": 40516556755,
+  "workflowConclusion": "success",
+  "backendJob": 122232049546,
+  "backendJobConclusion": "success",
+  "backendJobCompletedAt": "2026-10-27T14:26:01Z",
+  "fullModuleRegression": {
+    "examples": 15,
+    "failures": 0,
+    "pending": 0,
+    "failOnEmpty": true
+  },
+  "sourceProbe": {
+    "examples": 19,
+    "failures": 0,
+    "pending": 0,
+    "restoredFallbackExamples": 19,
+    "restoredFallbackFailures": 8,
+    "sourceInputHashesMatched": 8,
+    "tools": {
+      "python": "3.11.2",
+      "stack": "3.3.1",
+      "ghc": "9.10.3",
+      "hspec": "2.11.17",
+      "aeson": "2.2.5.0",
+      "text": "2.1.3",
+      "time": "1.12.2"
+    }
+  },
+  "aggregateHspec": {
+    "examples": 4060,
+    "failures": 0,
+    "pending": 21,
+    "pendingCountedAsExecuted": false
+  },
+  "browser": {
+    "personaJob": 122232049627,
+    "actualCheckout": "3892411d563cdd01c58ab04bfb29b4b134dd890a",
+    "node": "22.23.4",
+    "playwrightImage": "mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53",
+    "engineBinaryVersion": "not independently printed in this log",
+    "skipped": 22,
+    "passed": 608,
+    "separateInvocationsPassed": [
+      10,
+      25
+    ],
+    "historicalFailureRetained": "../hosted-805/"
+  },
+  "backendInputSnapshot": {
+    "files": 455,
+    "sha256": "e393364a9c142036c24194cbcc7d7b199e01d922d0eb61232da0cd96b693bc57"
+  },
+  "priorFreshAssurance": {
+    "qualifiedSource": "85693b37d7cfaf43b409d9f4543fe162512b575e",
+    "sourceHashesMatched": 1408,
+    "newSolverExecutionClaimed": false,
+    "completeRequirementProofs": 0
+  },
+  "requiredTechnicalChecks": [
+    {
+      "context": "quality",
+      "appId": 15368,
+      "id": 122247919083,
+      "conclusion": "success"
+    },
+    {
+      "context": "api-contracts",
+      "appId": 15368,
+      "id": 122232809996,
+      "conclusion": "success"
+    },
+    {
+      "context": "production-migrations",
+      "appId": 15368,
+      "id": 122233969696,
+      "conclusion": "success"
+    },
+    {
+      "context": "specification-contracts",
+      "appId": 15368,
+      "id": 122231817808,
+      "conclusion": "success"
+    },
+    {
+      "context": "verify",
+      "appId": 15368,
+      "id": 122231817787,
+      "conclusion": "success"
+    },
+    {
+      "context": "postgres-foundation",
+      "appId": 15368,
+      "id": 122231817740,
+      "conclusion": "success"
+    },
+    {
+      "context": "postgres-api",
+      "appId": 15368,
+      "id": 122231817603,
+      "conclusion": "success"
+    },
+    {
+      "context": "postgres-task-commit",
+      "appId": 15368,
+      "id": 122231818004,
+      "conclusion": "success"
+    },
+    {
+      "context": "postgres-task-read",
+      "appId": 15368,
+      "id": 122231817775,
+      "conclusion": "success"
+    },
+    {
+      "context": "postgres-task-revision",
+      "appId": 15368,
+      "id": 122231817747,
+      "conclusion": "success"
+    },
+    {
+      "context": "postgres-task-revisioned-read",
+      "appId": 15368,
+      "id": 122231817926,
+      "conclusion": "success"
+    },
+    {
+      "context": "postgres-raci-reassignment",
+      "appId": 15368,
+      "id": 122231817958,
+      "conclusion": "success"
+    },
+    {
+      "context": "postgres-raci-editor-context",
+      "appId": 15368,
+      "id": 122231818034,
+      "conclusion": "success"
+    },
+    {
+      "context": "postgres-task-completion",
+      "appId": 15368,
+      "id": 122231818167,
+      "conclusion": "success"
+    },
+    {
+      "context": "postgres-complete-schema",
+      "appId": 15368,
+      "id": 122231817835,
+      "conclusion": "success"
+    },
+    {
+      "context": "models-and-postgres",
+      "appId": 15368,
+      "id": 122231816981,
+      "conclusion": "success"
+    },
+    {
+      "context": "social-client",
+      "appId": 15368,
+      "id": 122231817458,
+      "conclusion": "success"
+    },
+    {
+      "context": "postgres-properties",
+      "appId": 15368,
+      "id": 122231816460,
+      "conclusion": "success"
+    },
+    {
+      "context": "hardcoded-list-audit",
+      "appId": 15368,
+      "id": 122231816955,
+      "conclusion": "success"
+    }
+  ],
+  "independentReview": {
+    "id": 5668387551,
+    "user": "tdfrecords",
+    "commit": "7c8735349debe1ca47cb2aeefdbc626d4048c58b",
+    "submittedAt": "2026-10-27T14:08:34Z",
+    "commitCreatedAt": "2026-10-27T08:54:53-05:00"
+  },
+  "mainIntegrationAdmission": {
+    "state": "pending",
+    "admittedPR": 628,
+    "mainAtQualification": "301810ae3861ea36b1fa790beee940bfe2461a02"
+  },
+  "completeRequirementProofs": 0,
+  "limits": [
+    "Compiled finite tests, not complete requirement or refinement proof.",
+    "Aggregate21 pending cases are not counted as executed or individually discharged by other runners.",
+    "No Google HTTP/account persistence or historical-name remediation is established.",
+    "Current protection/check snapshots are post-execution observations, not proof of historical enforcement or later merge admission.",
+    "No main merge or deployment performed; FIFO remains mandatory."
+  ],
+  "artifacts": {
+    "README.md": "5b1544fd0d1cffbe92e8077a9f8155d86136dae9d11f67eec27bdfb2312eb86a",
+    "backend-inputs.json": "e393364a9c142036c24194cbcc7d7b199e01d922d0eb61232da0cd96b693bc57",
+    "backend-job.json": "359d6e4619c5e9603038d824e6952ad9d43d4b09aaa0274c27bff3f367071701",
+    "backend-job.log.gz": "5f5e1650ba4144eb301f3c9a519f1517dea23322d3a9ca59cb921c54b45b53f5",
+    "check-runs-snapshot.json": "18c4cf9ece114481da0172165d26a86f2238096fed12b80b3ef15e29dabe70e9",
+    "full-module-group.log": "a0d64b2d67ae35665c49d0b6baa62d42bfa0375a31bc048d750d1e6032c43847",
+    "native.json": "0a9bc6edac5c494d9066892e1a5b31563d83dfc169a7e3fc5084d9c54632a4df",
+    "persona.log.gz": "03719c693d8c969a5d79473639a8ccf37289d07f767954ef2c50018b89c04c7c",
+    "protection-snapshot.json": "c7faee329215accb9fa474e6818144b99f293e7081dc77853334a56b90c075f6",
+    "queue-snapshot.json": "4962eefc97fbe1bee1912cc24850945b2f1d8d0c7818017abb933e1fa3752af8",
+    "reviews-snapshot.json": "a67f6b4eef8f3dc0cafbb5414ed68ea980de41037c807c09f1d52d3069463266",
+    "status-contexts-snapshot.json": "0b787532d65f74c6cd6d1330a71c52f03f52eafefd64ed852427ce5ecb4390ed",
+    "workflow.json": "582c3fbdd956e723f100fd44c8fc1625a7e7209f64539e9d173ddf1f46ba8d59"
+  }
+}

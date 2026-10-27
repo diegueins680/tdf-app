@@ -1,0 +1,29 @@
+{
+  "context": "main-integration-admission",
+  "base": "301810ae3861ea36b1fa790beee940bfe2461a02",
+  "admittedPR": 628,
+  "admittedHead": "eecb54709b877ee13d6875557dea304d89f7b796",
+  "waitingPRs": [
+    495,
+    573,
+    592,
+    593,
+    599,
+    601,
+    629,
+    630,
+    631,
+    633,
+    634,
+    636,
+    637,
+    638,
+    639,
+    640,
+    642,
+    643,
+    646
+  ],
+  "duplicateHeads": [],
+  "applied": false
+}
