@@ -13227,7 +13227,7 @@
     "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
     "scripts/test-event-memories-http.py": "d146da2cc9a376301e9bbaf281a11054d4d7b6345a31db6767f16a97e4333240",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
-    "scripts/test-event-memory-recovery-browser.mjs": "b4f89e2b933168965753ee7480eee9856a02a705d58e85f71d7023510a3b5085",
+    "scripts/test-event-memory-recovery-browser.mjs": "1a5c39899720aaaf94277504ba848a10fdce790cf00ce037ef49359e2be54938",
     "scripts/test-event-memory-signup-browser.mjs": "53325a4eec001efb223ce5a3913518b7a8dd658dea6ea8f2d19f46df0fca2a86",
     "scripts/test-event-memory-source-browser.mjs": "99584c7466da353a297908f8b1fb856d60850f18dba24afd219d60be22a1ca6e",
     "scripts/test-event-memory-source-moderation.sh": "3d25115a7c4767df9537e4c4112ccad2ab88eada159a577925c8665206f0be29",

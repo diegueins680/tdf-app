@@ -34,8 +34,9 @@ export async function verifyRecoveredPublication({ context, owner, config, origi
   const challenge = JSON.parse(readFileSync(linkFile, 'utf8'));
   if (challenge.source !== 'actual-owned-reset-issuance' || !Number.isSafeInteger(challenge.partyId)
     || !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/.test(challenge.token)) throw new Error('Invalid owned recovery relay');
-  const link = new URL('/reset-password', origin);
-  link.searchParams.set('token', challenge.token); link.searchParams.set('redirect', destination);
+  // Match Email.passwordResetLinkWithLocale and the existing public /reset route.
+  const link = new URL('/reset', origin);
+  link.searchParams.set('token', challenge.token); link.searchParams.set('redirect', destination); link.searchParams.set('lang', 'es');
   await page.goto(link.href, { waitUntil: 'domcontentloaded' }).catch(() => { throw new Error('Owned recovery navigation failed'); });
   await expect(page.locator('input[autocomplete="new-password"]')).toHaveCount(2);
   await expect.poll(() => new URL(page.url()).searchParams.has('token')).toBe(false);
