@@ -9,7 +9,7 @@ const assetId = (i, q) => `55000000-0000-4000-8000-0000000000${i}${q}`;
 const qualities = ['low', 'high', 'lossless'];
 const previewAssetId = '55000000-0000-4000-8000-000000000099';
 
-async function prepare(page, { previewFallback = false, holdSameOwnerSession = false } = {}) {
+async function prepare(page, { previewFallback = false, holdSameOwnerSession = false, resolvedListenerPartyId = 101 } = {}) {
   const fixture = JSON.parse(process.env.TDF_NATIVE_MUSIC_FIXTURE);
   const events = [], deniedNetwork = [], assetRequests = [];
   const cachedListener = { partyId: 101, username: 'synthetic-native-listener', displayName: 'Synthetic listener', roles: ['customer'] };
@@ -58,7 +58,7 @@ async function prepare(page, { previewFallback = false, holdSameOwnerSession = f
     if (url.pathname === '/session') {
       if (!holdSameOwnerSession) return route.fulfill({ status: 401, json: { error: 'synthetic visitor' } });
       await pendingSession;
-      return route.fulfill({ json: cachedListener });
+      return route.fulfill({ json: { ...cachedListener, partyId: resolvedListenerPartyId } });
     }
     if (url.pathname === '/session/onboarding/reconcile') return route.fulfill({ json: {
       newlyCompleted: false, progress: { eligible: false, completedAt: null, firstValue: null },
@@ -214,6 +214,78 @@ test('@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer s
   await expect.poll(() => audio.evaluate((a) => a.currentSrc)).toMatch(/\/media\/first\//);
   await expect(player.getByText('Pista nativa 1', { exact: true })).toBeVisible();
   await expect(player.getByText('Old saved selection A', { exact: true })).toHaveCount(0);
+});
+
+test('@critical PW-MUSIC-NATIVE-09 listener replacement cancels pending rendition metadata before the new listener plays', async ({ page }, testInfo) => {
+  // Account/catalog/authorization metadata is synthetic. Delay actual FLAC
+  // bytes from the loopback server; never replace media methods or properties.
+  const { player, audio, fixture, finishSession } = await prepare(page, {
+    holdSameOwnerSession: true, resolvedListenerPartyId: 202,
+  });
+  await seek(player, 8);
+  let releaseBytes;
+  const pendingBytes = new Promise((resolve) => { releaseBytes = resolve; });
+  let requested = false;
+  let finishedDelivery;
+  const deliveryDone = new Promise((resolve) => { finishedDelivery = resolve; });
+  let deliveryFailure = null;
+  await page.route(`${fixture.endpoint}/media/first/lossless`, async (route) => {
+    try {
+      const response = await route.fetch();
+      requested = true;
+      await pendingBytes;
+      await route.fulfill({ response });
+    } catch (error) {
+      // An owner change intentionally cancels this old native request. Only
+      // that observed cancellation is expected; unrelated fixture errors fail.
+      deliveryFailure = route.request().failure()?.errorText ?? String(error);
+      if (!route.request().failure()) throw error;
+    } finally {
+      finishedDelivery();
+    }
+  });
+  try {
+    const options = await openOptions(page, player);
+    await options.getByRole('combobox', { name: 'Calidad de audio' }).click();
+    await page.getByRole('option', { name: 'Lossless', exact: true }).click();
+    await expect.poll(() => requested).toBe(true);
+    await expect.poll(() => audio.evaluate((element) => element.getAttribute('src'))).toMatch(/\/media\/first\/lossless$/);
+    expect(await audio.evaluate((element) => element.readyState)).toBeLessThan(1);
+    const response = page.waitForResponse((result) => new URL(result.url()).pathname === '/session' && result.status() === 200);
+    finishSession();
+    expect((await (await response).json()).partyId).toBe(202);
+    await expect(player).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => globalThis.__originalNativeAudio.paused
+      && !globalThis.__originalNativeAudio.isConnected
+      && !globalThis.__originalNativeAudio.getAttribute('src'))).toBe(true);
+    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('tdf-global-player/v1')).ownerPartyId)).toBe(202);
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('tdf-global-player/v1')));
+    expect(saved.queue.tracks).toEqual([]);
+    expect(saved.positions).toEqual({});
+    releaseBytes();
+    await deliveryDone;
+    const trackButtons = page.getByRole('button', { name: 'Reproducir', exact: true });
+    await expect(trackButtons).toHaveCount(2);
+    await trackButtons.nth(1).click();
+    await expect(player.getByText('Pista nativa 2', { exact: true })).toBeVisible();
+    await expect(audio).toHaveCount(1);
+    expect(await audio.evaluate((element) => element === globalThis.__originalNativeAudio)).toBe(false);
+    await expect.poll(() => audio.evaluate((element) => element.currentSrc)).toMatch(/\/media\/second\/lossless$/);
+    const before = await audio.evaluate((element) => element.currentTime);
+    await expect.poll(() => audio.evaluate((element, start) => !element.paused && !element.error && element.currentTime > start + 0.5, before), {
+      message: 'The new listener must decode actual media after old rendition cancellation', timeout: 15000,
+    }).toBe(true);
+    expect(await page.evaluate(() => globalThis.__originalNativeAudio.paused && !globalThis.__originalNativeAudio.isConnected)).toBe(true);
+    expect(await page.evaluate(() => [...document.querySelectorAll('audio')].filter((element) => !element.paused).length)).toBe(1);
+    await testInfo.attach('listener-metadata-composition.json', { body: JSON.stringify({
+      initialOwner: 101, resolvedOwner: 202, heldSourceRequested: requested, deliveryFailure,
+      selectedTrack: trackId(2), currentSrc: await audio.evaluate((element) => element.currentSrc),
+      limitation: 'Real loopback FLAC/clock with controlled session/API and HTTP delay, not live account or CDN authorization.',
+    }), contentType: 'application/json' });
+  } finally {
+    releaseBytes();
+    if (requested) await deliveryDone;
+  }
 });
 
 test('@critical PW-MUSIC-NATIVE-02 native ended advances the queue and repetition actually restarts audio', async ({ page }) => {

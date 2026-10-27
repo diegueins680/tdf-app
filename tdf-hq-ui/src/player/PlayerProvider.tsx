@@ -522,7 +522,11 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       playAttemptRef.current += 1;
       loadedSourceRef.current = null;
       autoplayRef.current = false;
-      audio?.pause();
+      if (audio) {
+        audio.pause();
+        audio.removeAttribute('src');
+        audio.load();
+      }
     };
   }, [cancelRetry]);
 

@@ -222,3 +222,35 @@ Historical runtime results retain their original source boundaries. Root private
 commit/admission, any later publication, exact-head CI/review and target release
 acceptance remain distinct pending steps. No production data, flags, masters,
 account state or provider execution changed.
+
+## Follow-up: release the disposed session's native source
+
+A separate privacy-only follow-up normally merges private privacy preparation
+`3de0406ff241c03a1878810f718b2e587ee4ad8b` with protected integration baseline
+`1129112f89d3c00d33b8c86043a6bd197031dcff`. It does not import the search or
+metadata-readiness implementation from PR640. Prior qualifications above retain
+their own source identities; no approval or hosted result is inherited.
+
+An actual listener change or application unmount must invalidate old source work,
+cancel its retry timer, clear play intent and pause the old element. It must also
+remove that element's `src` attribute and call `load()` once to reset the attached
+media resource. This intentional disposal load is distinct from a scheduled
+network retry; advancing the existing ten-second cancellation window may not
+produce another load, play or authorization request.
+
+Two new actual-App/session tests first reproduce the pause-only implementation
+retaining `A.m4a` after listener replacement and after unmount. They additionally
+require the old element to be detached and paused, its source absent, one disposal
+load, and no revival on late old media events. After an owner change, only a new
+explicit selection can play on the new owner's element. JSDOM media doubles test
+those calls and state transitions; they do not demonstrate decoder/network
+resource release or server-private byte isolation.
+
+The root-owned real-media listener-replacement case tests native disposal
+separately. Its baseline, corrected result, exact source fingerprints and any
+remaining unsupported browser/environment scope belong to the new
+[focused delivery report](../../reports/player-listener-disposal-2026-10-27.json).
+The existing owner envelope, same-owner continuity, initial intent precedence and
+source-generation/play-attempt guards remain unchanged. No new mathematical model,
+refinement proof, server authorization policy, cross-tab guarantee, secure erasure
+or production disclosure conclusion follows from this cleanup obligation.

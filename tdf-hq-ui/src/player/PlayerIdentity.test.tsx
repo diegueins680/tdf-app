@@ -237,3 +237,46 @@ it('actual App rejects a corrupt matching-owner track with a null source while k
   await choose('B', 4); expect(player.currentTrack?.id).toBe('public-B');
   expect(player.status).toBe('playing');
 });
+
+it('releases the old source on listener replacement and only the new owner can play', async () => {
+  snapshot = async () => userA;
+  mountApp(); await actor(101); await choose('A', 12);
+  const oldAudio = document.querySelector('audio')!;
+  const load = jest.mocked(HTMLMediaElement.prototype.load);
+  const oldLoads = () => load.mock.contexts.filter(context => context === oldAudio).length;
+  const beforeLoads = oldLoads();
+  expect(oldAudio.getAttribute('src')).toContain('/A.m4a');
+  fireEvent.click(screen.getByRole('button', { name: 'login B' })); await actor(202);
+  expect(oldAudio.isConnected).toBe(false);
+  expect(oldAudio.paused).toBe(true);
+  expect(oldAudio.getAttribute('src')).toBeNull();
+  expect(oldLoads()).toBe(beforeLoads + 1);
+  expect(player.currentTrack).toBeNull(); expect(player.queue.tracks).toEqual([]);
+  await choose('B', 4);
+  const newAudio = document.querySelector('audio')!;
+  expect(newAudio).not.toBe(oldAudio);
+  act(() => { oldAudio.dispatchEvent(new Event('loadedmetadata')); oldAudio.dispatchEvent(new Event('playing')); });
+  expect(player.currentTrack?.id).toBe('public-B');
+  expect(newAudio.paused).toBe(false);
+  expect(oldLoads()).toBe(beforeLoads + 1);
+});
+
+it('releases the detached source once when the actual App unmounts', async () => {
+  snapshot = async () => userA;
+  const view = mountApp(); await actor(101); await choose('A', 12);
+  const oldAudio = document.querySelector('audio')!;
+  const load = jest.mocked(HTMLMediaElement.prototype.load);
+  const oldLoads = () => load.mock.contexts.filter(context => context === oldAudio).length;
+  const beforeLoads = oldLoads();
+  expect(oldAudio.getAttribute('src')).toContain('/A.m4a');
+  view.unmount();
+  expect(oldAudio.isConnected).toBe(false);
+  expect(oldAudio.paused).toBe(true);
+  expect(oldAudio.getAttribute('src')).toBeNull();
+  expect(oldLoads()).toBe(beforeLoads + 1);
+  const play = jest.mocked(HTMLMediaElement.prototype.play);
+  const afterPlay = play.mock.calls.length;
+  await act(async () => { oldAudio.dispatchEvent(new Event('loadedmetadata')); oldAudio.dispatchEvent(new Event('playing')); });
+  expect(oldLoads()).toBe(beforeLoads + 1);
+  expect(play.mock.calls.length).toBe(afterPlay);
+});
