@@ -1,0 +1,60 @@
+{
+  "stats": {
+    "startTime": "2026-10-27T00:17:20.171Z",
+    "duration": 45102.054000000004,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "title": "studio photos lead to booking and recover an error catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 14206,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "studio photos lead to booking and recover an empty catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-desktop",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 4963,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "studio photos lead to booking and recover an error catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 15284,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "title": "studio photos lead to booking and recover an empty catalog without losing contact details @critical @mobile-flow",
+      "project": "chromium-phone",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 6916,
+          "errors": []
+        }
+      ]
+    }
+  ]
+}
