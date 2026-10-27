@@ -1,0 +1,73 @@
+{
+  "recordedAt": "2026-10-27T00:31:11.792340+00:00",
+  "qualifiedComposition": "8ecc837d62cff32804756966a6e67a869ee1fd92",
+  "previousPublishedHead": "3206faad3999f85d610360175e05389e0a7addf2",
+  "protectedMain": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+  "normalMergeParents": [
+    "3206faad3999f85d610360175e05389e0a7addf2",
+    "63c56aaf919a07e919a61280311be1dc809cd6fe"
+  ],
+  "compositionTree": "f6a800928c17f89e8d492c71e7021ef8f33acde7",
+  "allSevenProtectedAuthFilesExact": true,
+  "allFiveOwnCiSurfacesExact3206": true,
+  "allProductBackendSqlE2eOpsDependenciesMobileExactMain63": true,
+  "sqlManifestCount": 223,
+  "requirements": 148,
+  "protected147WholeObjectsExact": true,
+  "ownCiRequirementExact3206": true,
+  "strictCatalog": {
+    "jsonAndCsvCandidates": 1341,
+    "decisionsBytesExactMain": true,
+    "allIdsValuesClassificationsDecisionsExact": true,
+    "unreviewed": 0,
+    "stale": 0
+  },
+  "localValidation": {
+    "node": "22.14.0",
+    "ciControls": 50,
+    "inventoryControls": 6,
+    "traceControls": 10,
+    "admissionControls": 11,
+    "localExecutionIdentity": "HEAD3206 with normal-merge working tree; exact CI/control inputs preserved in committed8ecc. No clean8ecc execution claim.",
+    "actualPinnedCliCases": 602,
+    "allIdentitiesExact": true,
+    "listingIsExecution": false,
+    "inventoryAndTraceFreshnessChecks": "PASS before merge commit; committed derived bytes unchanged",
+    "committedSourceAdmission": "PASS4materialsurfaces; root config explicitly mapped/separately checked"
+  },
+  "preservedHostedSuccess": {
+    "head": "3206faad3999f85d610360175e05389e0a7addf2",
+    "base": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+    "checkout": "8a40665add3d4630479e7ae4631b3e1915e2a642",
+    "persona": {
+      "passed": 580,
+      "skipped": 22,
+      "failed": 0
+    },
+    "rollout": 10,
+    "discovery": 25,
+    "socialTests": 63,
+    "quality": "SUCCESS",
+    "notExecutionOfNewComposition": true
+  },
+  "earlierFailures": "Both7bed failed full runs and fd5 drift rejection retained in prior capacity packet. RootcauseUNPROVEN. No additional old-head replay.",
+  "budgets": {
+    "globalCiWorkers": 2,
+    "eachWebKitProjectWorkers": 1,
+    "caseTimeoutMs": 30000,
+    "expectTimeoutMs": 8000,
+    "retries": 0,
+    "all602CasesFiltersAssertionsFixturesAndArtifactsPreserved": true
+  },
+  "freshCurrentHeadLinuxCi": "REQUIRED/PENDING after publication",
+  "freshIndependentReview": "REQUIRED/PENDING after publication;3206approvalnotinherited",
+  "draft": true,
+  "autoMerge": false,
+  "protectedMainMerge": false,
+  "backendRollout": false,
+  "storeRelease": false,
+  "productionWrites": 0,
+  "delivered": false,
+  "evidenceDirectory": "reports/social-browser-after-account-recovery-evidence-20261026",
+  "boundedCredentialFormatScan": "0matches in selected packet; not a universal privacy proof"
+}
