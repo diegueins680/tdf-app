@@ -1,0 +1,16 @@
+{
+  "base": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "head": "f24771a60dac5092b3f370af94a8e37564e8b8ce",
+  "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mappedChangedSurfaces": [
+    "tdf-hq-ui/src/api/auth.test.ts",
+    "tdf-hq-ui/src/api/auth.ts",
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+    "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+    "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+    "tdf-hq-ui/src/utils/authErrorMessage.ts"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}
