@@ -1,0 +1,10 @@
+Exact post-ledger qualification on source86d78e8c9cc117054d9f69ae7625a932f29f70d1, normal parentsdc21bb7f63169d389aa4b306ffa5361176db82c1 and protectedmain78fa351b469c1d2031df3232204dd722ac480e3b.
+
+In one new PRIVATE temporary packet directory place THIS run.py, smtp.py and loopback-bind.c from reports/account-recovery-evidence-20261026, and browser.mjs from reports/account-recovery-after-welcome-evidence-20261026. The four exact hashes are in account-recovery-after-ledger-2026-10-26.json. No raw email/token data is published.
+
+Use a clean86d78 checkout, exact installed Node22.14.0/dependencies, PostgreSQL16, and the retained fe179/cfe718 native executable required by run.py. No native recompilation or version override is claimed.
+python3 /absolute/new/private/packet/run.py --source /absolute/clean/checkout --expected-source 86d78e8c9cc117054d9f69ae7625a932f29f70d1
+
+The new protocol retains the14-case browser, SMTP and listener controls. It requires exact221 protectedmain620 migration prefix plus only ledgerheader222, a complete canonical schema run and the enabled header trigger. It also adds a real positive-outside/denied-inside GitHub443 TCP handshake control (no application data), while retaining the earlier unlisted-LAN-port control. Network claims describe these bounded observed controls and literal loopback listeners. Existing account/credential/single-use/reset-session assertions remain unchanged.
+
+Four ports55589/18859/4295/18860 must be unoccupied; all database/services are disposable and owned. OriginalREADME retains provider/physicaldevice/production restrictions. No ordinary session TTL assertion or full ST-001/human conversion claim. Do not rerun against production.

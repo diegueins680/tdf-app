@@ -110,6 +110,7 @@ export default {
   "createEnter": "Crear e ingresar",
   "tdfAccount": "Cuenta TDF",
   "invalidReset": "Este enlace no incluye un token válido.",
+  "resetTokenExpired": "Este enlace no es válido o ya venció. Solicita uno nuevo para continuar.",
   "passwordMismatch": "Las contraseñas no coinciden.",
   "resetError": "No pudimos restablecer la contraseña.",
   "access": "Acceso",

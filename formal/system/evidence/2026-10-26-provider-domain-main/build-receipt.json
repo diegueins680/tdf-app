@@ -1,0 +1,14 @@
+{
+  "source": "cb7773790f15099933b92b184cfb50d7cf20c8aa",
+  "startedClean": true,
+  "exitCode": 0,
+  "command": [
+    "stack",
+    "build",
+    "--test",
+    "--no-run-tests"
+  ],
+  "stack": "3.7.1",
+  "logSha256": "294407ac2ac82f0d072931ad56451ca21cfca348c777f54abdc1137513e7598a",
+  "finishedAt": "2026-10-26T05:31:20.909627+00:00"
+}

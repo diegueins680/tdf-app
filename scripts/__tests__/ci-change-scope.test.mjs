@@ -57,6 +57,12 @@ test('music catalog search runner alone selects real PostgreSQL backend validati
   });
 });
 
+test('music source projection runner alone selects real PostgreSQL backend validation', () => {
+  assert.deepEqual(classifyChangedFiles(['scripts/test-music-source-projection.mjs']), {
+    repo: true, ui: false, mobile: false, backend: true, contracts: false, migrations: false,
+  });
+});
+
 test('OpenAPI changes validate both generated clients', () => {
   assert.deepEqual(classifyChangedFiles(['tdf-hq/docs/openapi/api.yaml']), {
     repo: true,

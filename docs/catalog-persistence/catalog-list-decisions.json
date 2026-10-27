@@ -523,6 +523,22 @@
       "mainParent": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
       "headerParent": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
       "currentDecisionId": "6ff395b6131079017c9d"
+    },
+    "providerDomainMainIntegration": {
+      "document": "docs/catalog-persistence/provider-domain-main-reconciliation-20261026.json",
+      "ledgerParent": "f3e3217ac12a04be2a221ee6ac8bea67875d46c5",
+      "providerParent": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
+      "currentDecisionId": "2634b239375f2ad309ba"
+    },
+    "accountRecovery20261026": {
+      "protectedBase": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+      "previousDecisionFileBlob": "b4251640e3242f2ec5ac45733831c6b043f158c5",
+      "previousDecisionFileSha256": "05793bdcb06612ca1a75fc8326ac01a8f0a59defe7c04aef4286889cf7aa6b95",
+      "replacedDecisionIds": {
+        "3ad9915d69339318f9ff": "0ebaf6c35df246735cd0",
+        "4b3f6f86992b9c64f7a3": "b855e017c65163224770"
+      },
+      "scope": "Only AuthErrorCode union and error.code switch extension; every other baseline decision object is unchanged."
     }
   },
   "decisions": [
@@ -7117,23 +7133,23 @@
       "reviewed": true
     },
     {
-      "id": "3ad9915d69339318f9ff",
+      "id": "0ebaf6c35df246735cd0",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
-      "justification": "Reviewed 2026-09-18: AuthErrorCode union in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "risk": "Client response classification only; cannot authorize access, extend reset expiry, replay confirmation, or change the backend token authority.",
+      "justification": "Reviewed 2026-10-26: fixed auth failure discriminants and their localized copy mapping now include reset-token only for the reset-confirmation endpoint's exact invalid/expired-token response at400/401. Login credential, transport, server and other validation meanings are retained.30 focused tests pass; disabling endpoint classification fails4 expected regressions. This protocol classification is not an editable business catalog. Original decision 3ad9915d69339318f9ff remains in immutable protected source ed9eb9a1600f0a827e002bb2ab64a608f8352b2c.",
       "reviewed": true
     },
     {
-      "id": "4b3f6f86992b9c64f7a3",
+      "id": "b855e017c65163224770",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
-      "justification": "Reviewed 2026-09-18: error.code translation switch in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "risk": "Client response classification only; cannot authorize access, extend reset expiry, replay confirmation, or change the backend token authority.",
+      "justification": "Reviewed 2026-10-26: fixed auth failure discriminants and their localized copy mapping now include reset-token only for the reset-confirmation endpoint's exact invalid/expired-token response at400/401. Login credential, transport, server and other validation meanings are retained.30 focused tests pass; disabling endpoint classification fails4 expected regressions. This protocol classification is not an editable business catalog. Original decision 4b3f6f86992b9c64f7a3 remains in immutable protected source ed9eb9a1600f0a827e002bb2ab64a608f8352b2c.",
       "reviewed": true
     },
     {
@@ -18063,15 +18079,15 @@
       "reviewBatch": "checkout-session-readiness-2026-10-14"
     },
     {
-      "id": "6ff395b6131079017c9d",
+      "id": "2634b239375f2ad309ba",
       "classification": "security-system-registry",
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "The 222-entry deployment registry preserves the complete 221-entry protected main e938c72ba4b87010214f6838f06bfac45a0f45c0 prefix, including saved-alert migration eb2f71d62740783369a6eb2a6d35fc024484cb71, and appends only the posted-header guard introduced by 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Both independently developed 221-entry predecessor reviews are retained with exact canonical hashes and source references. Historical SQL and introduction SHAs are unchanged. This is a technical source review; current-head CI, independent PR approval and production authorization remain separate requirements.",
+      "justification": "The 223-entry deployment registry preserves the complete 222-entry ledger candidate f3e3217ac12a04be2a221ee6ac8bea67875d46c5 prefix, including all221 protected-main migrations and the original posted-header migration, and appends only the provider/domain admission migration introduced by456be073c944dd3d76eb9e3c2169fe7fbb4041ef. Historical SQL bodies and introduction ancestors are unchanged. Both222-entry and209-entry source reviews are retained by canonical hashes. This technical review grants no provider activation, production execution or waiver of current-head CI, independent review and protected merge admission.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "ledger-header-main-technical-review-20261025",
+      "reviewBatch": "provider-domain-main-technical-review-20261026",
       "sourceReviewReferences": [
         {
           "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
@@ -18142,6 +18158,26 @@
           },
           "sourceEntryCanonicalSha256": "6528ab5a8a23254d2e4ad4222e392f7f8f052b9f2818ef6e9eb8fc3a461a7003",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "f3e3217ac12a04be2a221ee6ac8bea67875d46c5",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "529f4972e422295562c0a67e1101346a97b2549ee0544072b69476c80edd0503",
+          "sourceEntry": {
+            "id": "6ff395b6131079017c9d"
+          },
+          "sourceEntryCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "be3b04226bda54e2dd6abdaddd434039ef7b457defe59942ec49dbed98013a73",
+          "sourceEntry": {
+            "id": "a70a9a4dd05ce44e950b"
+          },
+          "sourceEntryCanonicalSha256": "018a1dc08aafe97b3af2257fe2ad24bac9a8f47f724975df0eec07e729ba8058",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "evidence": {
@@ -18149,12 +18185,12 @@
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 222
+        "valueCount": 223
       },
       "previousDecisionReferences": {
-        "document": "docs/catalog-persistence/ledger-header-main-reconciliation-20261025.json",
-        "mainId": "8229b8202552298c955e",
-        "headerId": "9ada14767bee1662f97d"
+        "document": "docs/catalog-persistence/provider-domain-main-reconciliation-20261026.json",
+        "ledgerId": "6ff395b6131079017c9d",
+        "providerId": "a70a9a4dd05ce44e950b"
       }
     },
     {
