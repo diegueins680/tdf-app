@@ -9758,6 +9758,8 @@ paths:
                 items: { $ref: '#/components/schemas/MusicPurchaseOrder' }
         '401': { description: Authentication required }
         '503': { description: Music commerce is disabled in the applicable environment }
+  /music/search:
+    $ref: './music-search.yaml#/paths/~1music~1search'
   /music/releases/{releaseId}/versions/{versionId}/validate:
     post:
       tags: [Music releases]
