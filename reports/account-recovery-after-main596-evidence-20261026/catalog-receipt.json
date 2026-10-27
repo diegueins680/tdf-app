@@ -1,0 +1,13 @@
+{
+  "executionComposition": "f24771a60dac5092b3f370af94a8e37564e8b8ce",
+  "observedAt": "2026-10-26T23:28:58.442743+00:00",
+  "candidates": 1341,
+  "jsonAndCsvPassed": true,
+  "unreviewed": 0,
+  "stale": 0,
+  "filesScanned": 2405,
+  "consumerRowsRefreshed": 4,
+  "decisionsAddedOrRemoved": 0,
+  "jsonSha256": "9c58ae623ae280e6073e6826f9b5bcc4521e8a4f8f204a0aba1adaa1043cd2d6",
+  "csvSha256": "d94063da811f6b1cb02afd2432de049d080c4cb69601312c36917858ebbd0ae4"
+}

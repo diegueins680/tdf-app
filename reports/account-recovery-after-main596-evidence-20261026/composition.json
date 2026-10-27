@@ -1,0 +1,28 @@
+{
+  "observedAt": "2026-10-26T23:22:08.453859+00:00",
+  "protectedMain": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "qualifiedRuntimeSource": "032fe6ddb544317d5e02096c7ac213beca96fe5e",
+  "priorPublicSource": "ff07fa5d2c836004ac357ddf750c697b46aeb5e6",
+  "requirements": 148,
+  "allProtectedRequirementFieldsPreservedExceptAuthImplementationAndTests": true,
+  "decisions": 1341,
+  "allProtectedCatalogObjectsAndHistoryPreservedExceptTwoArchivedAuthSuccessors": true,
+  "qualifiedRuntimeAllBackendAndUiInputsExact": true,
+  "allBackendSqlTestsExactProtectedMain": true,
+  "frontendAndDependenciesExactPriorPublicHead": true,
+  "changesSinceRuntimeQualification": [
+    "formal/system/evidence/2026-10-26-provider-domain-main/README.md",
+    "formal/system/evidence/2026-10-26-provider-domain-main/expiry-gate-controls-artifacts.tar.gz",
+    "formal/system/evidence/2026-10-26-provider-domain-main/expiry-gate-controls.json",
+    "formal/system/evidence/2026-10-26-provider-domain-main/sha256.json",
+    "formal/system/inventory.json",
+    "formal/system/traceability.json",
+    "scripts/test-provider-domain-harness.py",
+    "scripts/test-provider-retry-runtime.sh"
+  ],
+  "protectedMainParents": [
+    "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "98f3ed230d2bcc87971d9e7c9b2083bd1cb9700d"
+  ],
+  "protectedMainTree": "6b8e7e06fc6bcab7ef8e247a7b82436367e96121"
+}

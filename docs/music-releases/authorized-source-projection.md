@@ -234,3 +234,29 @@ baseline is pinned to c66; later advances require their own reconciliation.
 No production, source qualification or other active worktree is changed here.
 
 The merged metadata passed 36 regression cases and 46 CI-selection/pipeline cases on Node 22. Strict catalog JSON/CSV checks passed with 1,341 candidates/rows and no stale/unreviewed decisions; both generated API clients remain fresh at Mobile d832bb3. Source equivalence compares this merged worktree with 52aa, not raw c66: all tracked non-test/non-SQL backend inputs remain exact, while inherited SQL/test changes make whole-backend identity false. Git-derived compilation metadata still differs on a future build; no existing binary is retagged as this candidate. Immutable source admission follows root's normal merge commit.
+
+## Protected authentication-recovery main refresh
+
+This normal merge advances source parent
+`a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c` to actual protected main
+`63c56aaf919a07e919a61280311be1dc809cd6fe` (#625). All 148 current-main
+requirement objects are preserved exactly, with unchanged `MEDIA-MUSIC-SOURCES-001`
+for 149 total. The entire 1,341-decision main catalog, retirement history and
+223-entry migration manifest remain byte-exact to current main.
+
+All backend, API, Cabal/Stack and current source-qualification inputs remain
+unchanged from a376, including the four projection functions/bindings and
+public catalog query. Main legitimately changes seven frontend authentication
+source/test/locale files; those protected changes are inherited, not represented
+as unchanged UI or fresh local UI qualification. No runtime/UI source is edited
+by this metadata refresh. The original selected 14-file SQL/lexical evidence keeps
+its actual source and environment identity; no new Stack, SQL, compiled HTTP,
+browser or full 223 execution is claimed.
+
+Ordered metadata/source-admission, strict catalog, API-client and CI contracts
+are checked separately. This baseline is explicitly pinned to 63c; later main
+advances need their own reconciliation. Required exact-head CI, current review,
+protected integration and target deployment acceptance remain gates. No production,
+original master, data migration, other branch or pinned Mobile source is changed.
+
+Current 63c metadata checks passed 36 regression cases, 46 CI-selection/pipeline cases, strict 1,341-entry JSON/CSV scans and both generated-client checks at Mobile d832bb3. These are structural/current-source gates; they do not relabel earlier SQL or playback execution. Final freshness and committed admission are recorded separately in the refresh receipt.

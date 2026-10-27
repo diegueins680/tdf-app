@@ -1224,6 +1224,7 @@
       "tdf-hq-ui/src/pages/ReputationPreferencesPage.test.tsx",
       "tdf-hq-ui/src/pages/ReputationPreferencesPage.tsx",
       "tdf-hq-ui/src/pages/ReservasEquipoPage.tsx",
+      "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
       "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
       "tdf-hq-ui/src/pages/RoomsPage.tsx",
       "tdf-hq-ui/src/pages/SecurityPage.test.tsx",
@@ -6620,13 +6621,13 @@
     {
       "id": "SURFACE-aecace78aa4aecae",
       "path": "tdf-hq-ui/src/api/auth.test.ts",
-      "sha256": "ae5de69adf0ca516180ce0078770eb6654bfa2ca617b1c8c2a9762108f7b8bf7",
+      "sha256": "e49f4b09c0738d72071bf395f2d1c8a43975a2b0e818b4983c58c63e4879db72",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2a14b72d994c2399",
       "path": "tdf-hq-ui/src/api/auth.ts",
-      "sha256": "c2f502db09c6082917f0a796be6258b780a7086329565aea55c3d4661f7e15bb",
+      "sha256": "9fc3a39e212fc453ba5c38b701a69dce8c4129addba3aba4ae823cd1d0db57fa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8630,13 +8631,13 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "d886e1ac1352a582a8b44e658d47ee8681328c928379869a338d3144965cdb92",
+      "sha256": "31583e47dca59d77c2e7e74b50ff4672ac2ebbdaae21240669a8a46408b78868",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "a95c1358ae8817800742f6e9a7e0505e8d10efc6aa7ee0421cf9840436f2a3e7",
+      "sha256": "78299818099457a78e8e76f5aa63d06e416aa16a59bf470c88d3390296bff21a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9906,6 +9907,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-9238e8af58167428",
+      "path": "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+      "sha256": "23fac48ff6208ec8ca79f31118dfc63eb54d8184aedb0f8ad7f8fbe98a4b663a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-e9006bbb523fee68",
       "path": "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
       "sha256": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
@@ -10580,13 +10587,13 @@
     {
       "id": "SURFACE-5b07999bb7f69286",
       "path": "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
-      "sha256": "9b61797cb55489b188d11fab7b357401194e8a9d62fa2b003c09c4707e899309",
+      "sha256": "9c5762f7ecc5a28095746ce56460955fc98de234efbf7fa185eb9d4ec6c6eb6e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3b725d897439a2a6",
       "path": "tdf-hq-ui/src/utils/authErrorMessage.ts",
-      "sha256": "b4e5b9000a68c8ec9169d299246f947c44e160330dc460a20fac799bdbcc7c38",
+      "sha256": "1983475914b88d680127ff4e2beb785d5e550d84821895b912e97496739890f8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20857,7 +20864,7 @@
     },
     {
       "path": "docs/music-releases/authorized-source-projection.md",
-      "sha256": "cbe2ac6bc9706b65b07dc4c2ca434a5807e5dbae81f42f6a9cf7d967883547af",
+      "sha256": "5e36cc49df752de95f6c58360dd5fb48bcb9beb89f5e0bc5170e39b405ce8f64",
       "authority": "inferred",
       "authorityBasis": "Status: source controls tested; exact-candidate compiled CI and release evidence pending.",
       "kind": "requirement-candidate"
@@ -27171,7 +27178,7 @@
     },
     {
       "path": "formal/system/mobile-entry-ux.md",
-      "sha256": "e3474a676d51bac581db88721626644c13f925f8b138d46dfdabbc5255c767c1",
+      "sha256": "cf2c29c56754da71b2036523e85cb5b1d26f33217a6b5894c8613c88bd285642",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27444,7 +27451,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8ee79e1e330b187a8acda61dce9665310478eeb44fa698bfe9a7b96da913b79f",
+      "sha256": "ee7a10eb92f78cadeaf6015dc7a54cdb33b0a03776c55df0030c3513dd701e62",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
