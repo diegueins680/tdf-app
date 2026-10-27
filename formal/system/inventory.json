@@ -28,6 +28,7 @@
       "e2e/interactions/interactions.spec.mjs",
       "e2e/web/account-deletion-rollout.spec.mjs",
       "e2e/web/account-deletion.spec.mjs",
+      "e2e/web/analytics-privacy.spec.mjs",
       "e2e/web/artist-follow.spec.mjs",
       "e2e/web/artist-merch.spec.mjs",
       "e2e/web/auth-landing.spec.mjs",
@@ -2824,6 +2825,12 @@
       "id": "SURFACE-9258b3c42ab418b4",
       "path": "e2e/web/account-deletion.spec.mjs",
       "sha256": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-848ebd3a9c8f9b4e",
+      "path": "e2e/web/analytics-privacy.spec.mjs",
+      "sha256": "7919f29fba68e18b86e9bb32b3ad4bd66236e926c664b3158229934960332b06",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6465,7 +6472,7 @@
     {
       "id": "SURFACE-6fb3830cc5f24988",
       "path": "tdf-hq-ui/src/__tests__/analytics.test.ts",
-      "sha256": "99f56aa4ca5dd09cd6db8fd88535673f1b8418983ec461c591a9998b65fbcd71",
+      "sha256": "72aa8e30a1a14092bcd77ba295d18e7e57810c877d6245df1fd08be839b20272",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6537,7 +6544,7 @@
     {
       "id": "SURFACE-96eef8ce345a4711",
       "path": "tdf-hq-ui/src/analytics/posthog.ts",
-      "sha256": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
+      "sha256": "c718aa9686d42146e3a8b820dc3876b7346a1faa6f7a723c06bd5dd14be06eb7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19317,7 +19324,7 @@
     },
     {
       "path": "docs/analytics.md",
-      "sha256": "7ff775631ec60a0dc26ff1f69f67cf3dae147411d11e3cd0bc82d285a920a21a",
+      "sha256": "de97d1084db4ba906edc1d8bbea02efffd8fa0a5ab11d4f8115dbb3d720bc5a7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27451,7 +27458,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ee7a10eb92f78cadeaf6015dc7a54cdb33b0a03776c55df0030c3513dd701e62",
+      "sha256": "23f8acb9ed1b876d7b6e55ed5bbea7f306a89183a639a839a5ae9764f64a74c5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

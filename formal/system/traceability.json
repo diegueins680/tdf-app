@@ -5774,7 +5774,8 @@
         "Explicit event/identify/page properties",
         "SDK-generated event.properties, $set and $set_once",
         "Current/referrer URLs",
-        "Project configuration"
+        "Project configuration",
+        "SDK initial-person properties used by feature flag and remote configuration requests"
       ],
       "state": {
         "client": [
@@ -5792,7 +5793,8 @@
         "uninitialized + missing key/window -> disabled no-op",
         "uninitialized + configured browser -> ready with before_send sanitization",
         "raw named payload -> sanitized SDK event",
-        "SDK failure -> fixed operation-class warning"
+        "SDK failure -> fixed operation-class warning",
+        "Configured web SDK -> flags and remote configuration disabled; sanitized event capture and session-owned application flags remain available"
       ],
       "forbiddenTransitions": [
         "Transmit a named sensitive field in nested event or person-property envelopes",
@@ -5800,7 +5802,8 @@
         "Log arbitrary SDK exception payloads",
         "Treat an unconfigured client as provider receipt evidence",
         "Private code, buyer details, URL credential or SDK exception payload -> telemetry/log",
-        "Unknown URL query key -> unredacted value"
+        "Unknown URL query key -> unredacted value",
+        "Initial-person URL -> unsanitized SDK flags request outside before_send"
       ],
       "effects": [
         "Sanitized optional telemetry; core user action remains separate",
@@ -5820,7 +5823,8 @@
       ],
       "tests": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
-        "tdf-hq-ui/src/analytics/errorReporting.test.ts"
+        "tdf-hq-ui/src/analytics/errorReporting.test.ts",
+        "e2e/web/analytics-privacy.spec.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -5831,10 +5835,10 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Incoming reviewed main implementation has mapped deterministic examples; fresh combined-candidate execution and deployed analytics configuration/consent correspondence remain required."
+        "reason": "A published-client synthetic counterexample demonstrates initial reset URL disclosure through SDK flags outside before_send. The event-only SDK repair requires exact-source browser/CI qualification and production deployment; complete consent and provider retention remain open."
       },
       "property": "Named sensitive payloads do not survive recognized serializer boundaries; public attribution and configured project token remain usable.",
-      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof. Synthetic client-error and actual route-boundary tests cover raw-error exclusion, embedded URL sentinels, selected context, throwing getters and console failure; scope and exclusions are in formal/system/client-error-privacy.md.",
+      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof. Synthetic client-error and actual route-boundary tests cover raw-error exclusion, embedded URL sentinels, selected context, throwing getters and console failure; scope and exclusions are in formal/system/client-error-privacy.md. Bundled-SDK browser regression requires decoded anonymous pageview and identified events, retains public attribution, and denies flags/configuration requests with all provider and business traffic intercepted.",
       "evidence": "Exact-candidate UI gate; original main PR487 validation is historical for subsequent merged trees."
     },
     {
@@ -12638,6 +12642,7 @@
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
+    "e2e/web/analytics-privacy.spec.mjs": "7919f29fba68e18b86e9bb32b3ad4bd66236e926c664b3158229934960332b06",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
     "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
@@ -13273,13 +13278,13 @@
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "e9b604b8d0c83c918608e020e2c4e8e1ba38658387c3d81fa8fa39650ccbbdb5",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
-    "tdf-hq-ui/src/__tests__/analytics.test.ts": "99f56aa4ca5dd09cd6db8fd88535673f1b8418983ec461c591a9998b65fbcd71",
+    "tdf-hq-ui/src/__tests__/analytics.test.ts": "72aa8e30a1a14092bcd77ba295d18e7e57810c877d6245df1fd08be839b20272",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
     "tdf-hq-ui/src/analytics/errorReporting.test.ts": "c56a20ab2521faed8bfd6e435636898248694c6ba0d75ce2ea66514aca688bc8",
     "tdf-hq-ui/src/analytics/errorReporting.ts": "c47953821d45c98c9feddca8a4ebb90fdcf350e64e6a568cf243f82129fa52b4",
     "tdf-hq-ui/src/analytics/growthAttribution.test.ts": "fefe42899bf23e119afc88b328c9b2732fa35af6bf28af6caf744ae9d926c6fa",
     "tdf-hq-ui/src/analytics/growthAttribution.ts": "3eae34e72a50e70261d8ff2880f1ec43dfcaeef5f963013f480f1a72a7c09789",
-    "tdf-hq-ui/src/analytics/posthog.ts": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
+    "tdf-hq-ui/src/analytics/posthog.ts": "c718aa9686d42146e3a8b820dc3876b7346a1faa6f7a723c06bd5dd14be06eb7",
     "tdf-hq-ui/src/analytics/ticketFunnel.test.ts": "ca9c5a75a44c760c705555f424bccb37cf6c33090315360ba9089271caa68854",
     "tdf-hq-ui/src/analytics/ticketFunnel.ts": "f1cc18363c574670cae4aba3a78e3e4f4016d8e1695fd0a6afa59c7c309679c0",
     "tdf-hq-ui/src/analytics/useTicketFunnel.ts": "d71e28707630aabb3681977a3faf2ea23393dd80586f07dda7d338ef0347fd32",
@@ -19052,6 +19057,12 @@
         "relationship": "tests"
       }
     ],
+    "e2e/web/analytics-privacy.spec.mjs": [
+      {
+        "requirement": "PRIV-ANALYTICS-001",
+        "relationship": "tests"
+      }
+    ],
     "functions/_shared/ticket-page.mjs": [
       {
         "requirement": "EVT-PRESENTATION-001",
@@ -24775,6 +24786,18 @@
       "requirements": [
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-848ebd3a9c8f9b4e",
+      "path": "e2e/web/analytics-privacy.spec.mjs",
+      "sha256": "7919f29fba68e18b86e9bb32b3ad4bd66236e926c664b3158229934960332b06",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-ANALYTICS-001",
           "relationship": "tests"
         }
       ]
@@ -31534,7 +31557,7 @@
     {
       "id": "SURFACE-6fb3830cc5f24988",
       "path": "tdf-hq-ui/src/__tests__/analytics.test.ts",
-      "sha256": "99f56aa4ca5dd09cd6db8fd88535673f1b8418983ec461c591a9998b65fbcd71",
+      "sha256": "72aa8e30a1a14092bcd77ba295d18e7e57810c877d6245df1fd08be839b20272",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31656,7 +31679,7 @@
     {
       "id": "SURFACE-96eef8ce345a4711",
       "path": "tdf-hq-ui/src/analytics/posthog.ts",
-      "sha256": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
+      "sha256": "c718aa9686d42146e3a8b820dc3876b7346a1faa6f7a723c06bd5dd14be06eb7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53553,7 +53576,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ee7a10eb92f78cadeaf6015dc7a54cdb33b0a03776c55df0030c3513dd701e62",
+      "sourceSha256": "23f8acb9ed1b876d7b6e55ed5bbea7f306a89183a639a839a5ae9764f64a74c5",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -53581,7 +53604,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ee7a10eb92f78cadeaf6015dc7a54cdb33b0a03776c55df0030c3513dd701e62",
+      "sourceSha256": "23f8acb9ed1b876d7b6e55ed5bbea7f306a89183a639a839a5ae9764f64a74c5",
       "definition": {
         "states": [
           "absent",
@@ -53611,7 +53634,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ee7a10eb92f78cadeaf6015dc7a54cdb33b0a03776c55df0030c3513dd701e62",
+      "sourceSha256": "23f8acb9ed1b876d7b6e55ed5bbea7f306a89183a639a839a5ae9764f64a74c5",
       "definition": {
         "export": [
           "queued",
