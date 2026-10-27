@@ -192,3 +192,6 @@ Only the read-only Git identity call now receives HOME; SQL and renderer childre
 retain the unchanged scrubbed environment. No wildcard or globaloperator trust
 setting is introduced. The complete SQL qualification was repeated after this
 runner correction, with its new source identity retained.
+
+
+Qualification on protected main608 (`301810ae…`, 27 October): the unchanged runner passed a new actual PostgreSQL16 execution with all227 canonical migrations, apply/replay/readiness, four real projection queries, four policy-removal controls and eight argument controls. Execution source remains `d80eb182052de02ac94cd9de21e85e44bfa4bf5b`; the original223/222 receipts remain historical, not relabeled. All154 requirements and the1,350 catalog authority entries are preserved from main. See `reports/music-source-main608-2026-10-27.json`. This is finite SQL/lexical evidence, not HTTP/media/production or universal correctness assurance.

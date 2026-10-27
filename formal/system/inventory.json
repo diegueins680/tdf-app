@@ -21130,7 +21130,7 @@
     },
     {
       "path": "docs/music-releases/authorized-source-projection.md",
-      "sha256": "da965d709c106515dc707df935a0915fb99f0581b9dd10fac77d2e32f487691b",
+      "sha256": "cb58d0ce86df2877e2495501c43e0a23aaa79a2e493d344e133300b30b816c0b",
       "authority": "inferred",
       "authorityBasis": "Status: source controls tested; exact-candidate compiled CI and release evidence pending.",
       "kind": "requirement-candidate"
@@ -27549,7 +27549,7 @@
     },
     {
       "path": "formal/system/music-source-projection.md",
-      "sha256": "d831cbdf0bc850b25a89dd5b0a8180438e777fc38a2ab2d5be570194e8e28299",
+      "sha256": "654c6f6b436bcfcf589c5010a4ed0e2f11d0957cbd898c95ad93839b916ebbc7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
