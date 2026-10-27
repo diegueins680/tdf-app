@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Actual API and durable media checks; only an owned disposable PostgreSQL DB."""
-import argparse, base64, concurrent.futures, hashlib, io, json, os, pathlib, signal, subprocess, threading, time, urllib.error, urllib.request, uuid, wave
+import argparse, base64, concurrent.futures, errno, hashlib, io, json, os, pathlib, pty, signal, subprocess, threading, time, urllib.error, urllib.request, uuid, wave
 p=argparse.ArgumentParser();p.add_argument('--binary',required=True);p.add_argument('--output',required=True);p.add_argument('--source-moderation',action='store_true');p.add_argument('--browser',action='store_true');a=p.parse_args()
 assert not a.browser or a.source_moderation,'The integrated browser lane requires source moderation'
 root=pathlib.Path(__file__).resolve().parent.parent
@@ -46,7 +46,7 @@ def runtime_sources():return {path:hashlib.sha256((root/path).read_bytes()).hexd
 report={'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),
  'sourceWorktreeDirty':bool(subprocess.check_output(['git','status','--porcelain'],cwd=root,text=True).strip()),
  'runtimeSources':runtime_sources(),'binarySha256':hashlib.sha256(binary.read_bytes()).hexdigest(),'requests':[],'assertions':[],'externalProviderCalls':0}
-owned=False;server=None;log=None
+owned=False;server=None;log=None;output_drain=None;output_errors=[]
 
 def run(args,stdin=None):
  r=subprocess.run(args,cwd=root,env=env,input=stdin,capture_output=True,timeout=180)
@@ -70,7 +70,7 @@ def request(path,token=None,body=None,method='GET',expected=200,raw=None,content
  return result,r.headers
 
 def start():
- global server,log
+ global server,log,output_drain
  assets=out/'assets';assets.mkdir(exist_ok=True)
  variables={**env,'APP_ENV':'test','DATABASE_URL':f'postgresql://{role}@{host}:{port}/{db}','APP_PORT':api_port,
   'RESET_DB':'false','RUN_MIGRATIONS':'false','AUTO_APPLY_PRODUCTION_MIGRATIONS':'false','SEED_DB':'false','DEFAULT_LOCALE':'es',
@@ -78,7 +78,23 @@ def start():
   'HQ_ASSETS_BASE_URL':'https://assets.persona.test/assets/serve','EVENT_DISCOVERY_ENABLED':'false','ARTIST_ENRICHMENT_ENABLED':'false',
   'EVENT_LOGISTICS_RECHECK_ENABLED':'false','OPERATIONS_WORKER_ENABLED':'false'}
  log=(out/('backend-'+str(len(report['requests']))+'.log')).open('wb')
- server=subprocess.Popen([str(binary)],cwd=root,env=variables,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+ # GHC line-buffers stdout on a terminal. A private PTY preserves actual output
+ # before SIGTERM, including the positive SMTP-disabled evidence; no log or API
+ # response is synthesized and nothing is written to the user's terminal.
+ master,slave=pty.openpty();output_handle=log
+ try:server=subprocess.Popen([str(binary)],cwd=root,env=variables,stdin=subprocess.DEVNULL,stdout=slave,stderr=subprocess.STDOUT,start_new_session=True)
+ except BaseException:os.close(master);raise
+ finally:os.close(slave)
+ def drain_output():
+  try:
+   while True:
+    chunk=os.read(master,65536)
+    if not chunk:break
+    output_handle.write(chunk)
+  except OSError as error:
+   if error.errno!=errno.EIO:output_errors.append(type(error).__name__)
+  finally:os.close(master)
+ output_drain=threading.Thread(target=drain_output,daemon=True);output_drain.start()
  for _ in range(120):
   assert server.poll() is None,'Candidate API exited during startup'
   try:
@@ -94,6 +110,9 @@ def stop():
   os.killpg(server.pid,signal.SIGTERM)
   try:server.wait(timeout=10)
   except subprocess.TimeoutExpired:os.killpg(server.pid,signal.SIGKILL);server.wait(timeout=10)
+ if output_drain:
+  output_drain.join(timeout=5)
+  if output_drain.is_alive():output_errors.append('Owned output drain did not stop')
  if log:log.close()
 
 def upload(event,token,name,mime,data,expected=200):
@@ -404,6 +423,8 @@ try:
  assert json.loads(sql("SELECT coalesce(jsonb_agg(migration_id ORDER BY migration_id),'[]'::jsonb) FROM tdf_schema_migration"))==expected_migration_ids,'The migration ledger changed during the actual HTTP/browser execution'
  assert report['runtimeSources']==runtime_sources(),'Runtime sources changed during the HTTP execution'
  assert report['binarySha256']==hashlib.sha256(binary.read_bytes()).hexdigest(),'Candidate binary changed during the HTTP execution'
+ assert not output_errors,'Owned API output capture failed'
+ report['outputCapture']='private PTY; actual server bytes, no synthetic log output'
  report['status']='PASS'
 finally:
  stop()
