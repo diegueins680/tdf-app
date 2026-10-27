@@ -65,7 +65,7 @@ async function prepareSearch(page, baseURL, { holdQueryA = false } = {}) {
         releaseVersionId: detail.track.releaseVersionId,
         sourceAssetIds: detail.track.sources.map((source) => source.assetId) });
     });
-    for (const type of ['playing', 'pause', 'timeupdate', 'error', 'loadedmetadata']) document.addEventListener(type, (event) => {
+    for (const type of ['playing', 'pause', 'timeupdate', 'seeking', 'seeked', 'error', 'loadedmetadata']) document.addEventListener(type, (event) => {
       if (event.target instanceof HTMLAudioElement) globalThis.__searchNativeEvents.push({
         type, trusted: event.isTrusted, time: event.target.currentTime, source: event.target.currentSrc,
       });
@@ -189,6 +189,10 @@ test('@critical @mobile-flow PW-MUSIC-SEARCH-NATIVE-01 plays the exact matched r
   await options.getByRole('combobox', { name: 'Calidad de audio', exact: true }).click();
   await page.getByRole('option', { name: 'Lossless', exact: true }).click();
   await expect.poll(() => audio.evaluate((element) => element.currentSrc)).toMatch(/\/media\/second\/lossless$/);
+  // Measure advancement after restoration, so the seek itself cannot count as
+  // decoded playback. These are observed native events, with no media mocks.
+  await expect.poll(() => page.evaluate(() => globalThis.__searchNativeEvents.some((event) =>
+    event.type === 'seeked' && event.trusted && event.source.endsWith('/media/second/lossless')))).toBe(true);
   const losslessStart = await audio.evaluate((element) => element.currentTime);
   await expect.poll(() => audio.evaluate((element, start) => !element.paused && !element.error && element.currentTime > start + 0.3, losslessStart)).toBe(true);
   await options.getByRole('button', { name: 'Cerrar opciones', exact: true }).click();

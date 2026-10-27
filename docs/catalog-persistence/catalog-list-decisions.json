@@ -530,6 +530,16 @@
       "providerParent": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
       "currentDecisionId": "2634b239375f2ad309ba"
     },
+    "accountRecovery20261026": {
+      "protectedBase": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+      "previousDecisionFileBlob": "b4251640e3242f2ec5ac45733831c6b043f158c5",
+      "previousDecisionFileSha256": "05793bdcb06612ca1a75fc8326ac01a8f0a59defe7c04aef4286889cf7aa6b95",
+      "replacedDecisionIds": {
+        "3ad9915d69339318f9ff": "0ebaf6c35df246735cd0",
+        "4b3f6f86992b9c64f7a3": "b855e017c65163224770"
+      },
+      "scope": "Only AuthErrorCode union and error.code switch extension; every other baseline decision object is unchanged."
+    },
     "musicTrackSearchDispatchSuccessor": {
       "baseline": "52aa82ea70ed1e2b3dc26180977d9a0b838dea59",
       "review": {
@@ -7138,23 +7148,23 @@
       "reviewed": true
     },
     {
-      "id": "3ad9915d69339318f9ff",
+      "id": "0ebaf6c35df246735cd0",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
-      "justification": "Reviewed 2026-09-18: AuthErrorCode union in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "risk": "Client response classification only; cannot authorize access, extend reset expiry, replay confirmation, or change the backend token authority.",
+      "justification": "Reviewed 2026-10-26: fixed auth failure discriminants and their localized copy mapping now include reset-token only for the reset-confirmation endpoint's exact invalid/expired-token response at400/401. Login credential, transport, server and other validation meanings are retained.30 focused tests pass; disabling endpoint classification fails4 expected regressions. This protocol classification is not an editable business catalog. Original decision 3ad9915d69339318f9ff remains in immutable protected source ed9eb9a1600f0a827e002bb2ab64a608f8352b2c.",
       "reviewed": true
     },
     {
-      "id": "4b3f6f86992b9c64f7a3",
+      "id": "b855e017c65163224770",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
-      "justification": "Reviewed 2026-09-18: error.code translation switch in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "risk": "Client response classification only; cannot authorize access, extend reset expiry, replay confirmation, or change the backend token authority.",
+      "justification": "Reviewed 2026-10-26: fixed auth failure discriminants and their localized copy mapping now include reset-token only for the reset-confirmation endpoint's exact invalid/expired-token response at400/401. Login credential, transport, server and other validation meanings are retained.30 focused tests pass; disabling endpoint classification fails4 expected regressions. This protocol classification is not an editable business catalog. Original decision 4b3f6f86992b9c64f7a3 remains in immutable protected source ed9eb9a1600f0a827e002bb2ab64a608f8352b2c.",
       "reviewed": true
     },
     {
@@ -18590,22 +18600,6 @@
       "reviewBatch": "legacy-provider-actions-2026-10-26"
     },
     {
-      "id": "2f954948d7719fb87a37",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the event sequence could remove an adversarial interleaving or invalidate a model replay.",
-      "justification": "Finite-design regression event sequence with abstract queries/recordings and network/navigation events. It is test protocol data, not a production business catalog.",
-      "reviewed": true,
-      "evidence": {
-        "file": "scripts/__tests__/music-track-search-model.test.mjs",
-        "line": 106
-      },
-      "reviewBatch": "music-track-search-2026-10-26",
-      "reviewMethod": "manual-source-review"
-    },
-    {
       "id": "a54bc30988f056e6d713",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -18617,6 +18611,22 @@
       "evidence": {
         "file": "tdf-hq-ui/src/api/musicReleases.ts",
         "line": 518
+      },
+      "reviewBatch": "music-track-search-2026-10-26",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "2f954948d7719fb87a37",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the event sequence could remove an adversarial interleaving or invalidate a model replay.",
+      "justification": "Finite-design regression event sequence with abstract queries/recordings and network/navigation events. It is test protocol data, not a production business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/__tests__/music-track-search-model.test.mjs",
+        "line": 106
       },
       "reviewBatch": "music-track-search-2026-10-26",
       "reviewMethod": "manual-source-review"

@@ -110,6 +110,7 @@ export default {
   "createEnter": "Create account and sign in",
   "tdfAccount": "TDF account",
   "invalidReset": "This recovery link is incomplete. Request a new link.",
+  "resetTokenExpired": "This link is invalid or has expired. Request a new link to continue.",
   "passwordMismatch": "Passwords do not match.",
   "resetError": "Could not reset your password. Please try again.",
   "access": "Access",

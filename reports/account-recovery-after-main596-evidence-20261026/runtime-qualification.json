@@ -1,0 +1,49 @@
+{
+  "observedAt": "2026-10-26T22:53:48.225789+00:00",
+  "source": "032fe6ddb544317d5e02096c7ac213beca96fe5e",
+  "privateParents": [
+    "ff07fa5d2c836004ac357ddf750c697b46aeb5e6",
+    "f9e77b73f6ff12ea5f5d892e6386751678fa65a0"
+  ],
+  "public625Unchanged": "ff07fa5d2c836004ac357ddf750c697b46aeb5e6",
+  "runtimeReceipt": "/private/tmp/tdf-account-recovery-20261026-fyy_lc11/results.json",
+  "runtimeSha256": "50780d8ab745c72784a30c6b1b1a651604990e933985aa6970861bcaef290dc1",
+  "checksPassed": 14,
+  "migrations": 223,
+  "headerTrigger": "O",
+  "allAppCompileInputsExactProtected2e": true,
+  "nativeBinaryActualSource": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "nativeBinarySha256": "8dbe98ed4719573d83ae91e37b5df4c84a6dc1e48485c6ae4ac1b0f6d51cd1a5",
+  "actualVersion": {
+    "buildTime": "2026-10-26T22:08:29Z",
+    "commit": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "frontend": {
+    "entry": "/assets/index-DWZjjS8W.js",
+    "sha256": "164800ad88847cc55d37f496c38455ff37798dce54a0f2fdf95e5376582f4e2d",
+    "sourceVerified": true,
+    "freshCompilation": true
+  },
+  "allCleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "ownedPortsClosed": {
+    "55589": true,
+    "18859": true,
+    "18860": true,
+    "4295": true,
+    "55594": true
+  },
+  "privateCheckoutClean": true,
+  "schemaGuard": "Exactauditedf9full223manifestandprotected2e222prefix; allpriorSQLbytes/introducedBypreserved.",
+  "limits": [
+    "Privatef9snapshotqualification only. Latest596head98f3 differs in tests/evidence; actualprotectedmainmerge and materialcorrespondence must be checked before publication.",
+    "Retain oldC3520webtests andactual2e4039Hspecidentities; not a new execution of updatedfinancialtestfixtures.",
+    "RealownedSQL/API/SMTPbut syntheticaccount/noexternalmail/provider/financialtransaction/productionwrites.",
+    "Not globalformalrefinement or deploymentauthorization."
+  ]
+}

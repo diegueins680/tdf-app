@@ -17,6 +17,7 @@ This contract covers web (`tdf-hq-ui`) behavior only. Backend authorization and 
   2. an explicit onboarding intent;
   3. Comunidad (`/fans`), whose artist discovery precedes promotional cards.
 - External, protocol-relative, backslash and `/login` targets are rejected.
+- A rejected recovery token is explained in the active ES/EN locale and offers a new-link action preserving the safe return path and language. Only the reset-confirmation endpoint's known invalid/expired-token response at HTTP400/401 gets this classification; login credential errors, server failures and other validation retain their own meaning. Reset expiry and single use remain authoritative backend decisions.
 
 ## MKT-CART-001: discoverable Marketplace cart
 - A header cart control with a count badge is visible at every width on Marketplace pages, and on other pages while the cart has items. It opens the cart in one interaction.

@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "status": "C88_FULL222_QUALIFICATION_PRESERVED_REFRESHED_PARENT150_FULL223_BUILD_HTTP_AND_EXACT_HEAD_CI_PENDING",
+  "status": "HOSTED_B8A_FAILURES_PRESERVED_LOCAL_CORRECTIONS_PASS_FRESH_HOSTED_WEBKIT_FINAL_HEAD_RELEASE_PENDING",
   "source": {
     "branch": "feat/universal-music-search-20261026",
     "backendCheckpoint": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
-    "stackedParent": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
-    "protectedMainBaseline": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
-    "frontendNativeAndModel": "Qualified through exact earlier source fingerprints; complete0dd checkpoint and current parent merge do not relabel historicalc88/UI/native executions",
+    "stackedParent": "7bee8d45a3e54aa350fb810e722609ad3c608cca",
+    "protectedMainBaseline": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+    "frontendNativeAndModel": "Historical executions retain exact old fingerprints; current wire/empty-state/player changes have separate scoped unit/legacy-browser checks; fresh native run in progress.",
     "parentRequirementObjectsPreserved": 149,
     "currentRequirementObjects": 150,
     "parentDecisionsPreservedActiveOrExactHistory": 1341,
@@ -14,7 +14,14 @@
     "activeReviewedDecisions": 1343,
     "newTechnicalDecisions": 3,
     "productionMigrationEntries": 223,
-    "featureCheckpoint": "0dd0c65161da2a23cea7ea4d90659b8c944f031e"
+    "featureCheckpoint": "0dd0c65161da2a23cea7ea4d90659b8c944f031e",
+    "integratedBackendCheckpoint": "b8a13e66fb40613250c047df92b6775a04eebf67",
+    "backendCheckpointBoundary": "backendCheckpoint remains historicalc88; integratedBackendCheckpoint owns fresh full223 compilation/HTTP below",
+    "canonicalSdkCheckpoint": "f630d5cc7c9fd00ad78b2782e3376437016bb277",
+    "mobilePin": "8d69b011bd6c0dc7b0a9751c20ff9610dcc8b7bd",
+    "latestProtectedMainPendingIntegration": null,
+    "currentCorrectionSourceContext": "ObservedHEADf630 with root-owned current parent composition/corrections in working tree; raw source fingerprints bind executions, not a clean final commit claim.",
+    "latestProtectedMainObserved": "4b81ab4ab92416aa31dc816057fb8e6a736596d1"
   },
   "results": {
     "frontend": {
@@ -148,7 +155,7 @@
       "boundary": "Actual compiled GET/HEAD search on owned PostgreSQL16/full222schema and synthetic publication fixtures. No signup/login, HTTP mutation, S3/signing/media/object/browser/production/SLO claim.",
       "rootExecutionSession": 77655
     },
-    "hostedExactCandidateCi": "PENDING",
+    "hostedExactCandidateCi": "NOT_GREEN: b8a hosted persona10fail/native2WebKitfail retained; localcorrections await fresh exact-head hosted checks",
     "reviewProtectedMergeDeployment": "PENDING",
     "fullUiSuite": {
       "result": "PASS",
@@ -253,9 +260,378 @@
       "limitations": "Typed declarations only; existing undocumented/unmounted/status debt remains. No final merged candidate/current223schema compile/test claim."
     },
     "currentCompositionFull223": {
-      "canonicalWarmBuild": "PENDING after root merge commit",
-      "compiledHttp": "PENDING actual223schema/currentbinary execution",
-      "historicalC88Full222": "PASS105assertions66steps retained at actualc88 source, not promoted to current223/HEAD"
+      "schemaVersion": 1,
+      "status": "PASS_LOCAL_B8A_FULL223_METADATA_HTTP_RELEASE_GATES_PENDING",
+      "checkpoint": "b8a13e66fb40613250c047df92b6775a04eebf67",
+      "protectedMainBaseline": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+      "stackedParent": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
+      "canonicalBuild": {
+        "actualExitCode": 0,
+        "rootSession": 56020,
+        "logSha256": "f74eb25dd46cb342e8f2069c6116f42fa19008abe224f4306a869a73516f7808"
+      },
+      "compiledHttp": {
+        "status": "PASS-real-compiled-track-search-http-synthetic-metadata-only",
+        "rootSession": 61918,
+        "actualExitCode": 0,
+        "schemaEntries": 223,
+        "assertions": 105,
+        "steps": 66,
+        "backendFilesVerified": 975,
+        "manifestCapturedBeforeBuild": true,
+        "manifestSha256": "9b62e9b12fa3173294e1cce6c344633be9aaa973ce7bf8dd39812dec55d194d3",
+        "actualVersion": {
+          "buildTime": "2026-10-27T00:01:20Z",
+          "commit": "b8a13e66fb40613250c047df92b6775a04eebf67",
+          "name": "tdf-hq",
+          "version": "0.1.0.0"
+        },
+        "binarySha256": "8df6e58359fe29ec2a841d232094106038be08f703abb5a698eeb23eb6cb51cb",
+        "resultsSha256": "9930a5c59146176348426fe7efedb170b213ec8fcc5dede190c3cd146f5bfbe9",
+        "cleanup": {
+          "backendStopped": true,
+          "databaseRemoved": true,
+          "clusterStopped": true
+        },
+        "frontendMetadataChangedDuringRun": false,
+        "wholeCheckoutCleanClaimed": false
+      },
+      "compiledPayloadRegressions": {
+        "examples": 10,
+        "failures": 0,
+        "actualExitCode": 0,
+        "boundary": "Pure ContentSpec compatibility, not a full backend suite or search HTTP substitute"
+      },
+      "compiledApi": {
+        "status": "PASS_DECLARATION_SNAPSHOT_COMPARISON_NOT_CONFORMANCE_APPROVAL",
+        "operations": 906,
+        "rawMounts": 2,
+        "undocumented": 400,
+        "previousUndocumentedDebt": 399,
+        "newUndocumentedOperation": "GET /music/search",
+        "cause": "Standalone music-search.yaml is not referenced by canonical api.yaml; clean contract integration under separate review. This packet changes no YAML or types.",
+        "documentedWithoutTypedRoute": 25,
+        "statusDifferences": 8,
+        "competing": 0,
+        "boundary": "Typed declarations and existing policies; not all runtime JSON/auth conformance or a general API green result"
+      },
+      "sourceAdmission": {
+        "status": "PASS",
+        "base": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
+        "head": "b8a13e66fb40613250c047df92b6775a04eebf67",
+        "mappedMaterialPaths": 22
+      },
+      "metadata": {
+        "cases": 36,
+        "suites": [
+          9,
+          6,
+          10,
+          11
+        ],
+        "ciContractCases": 47,
+        "activeDecisions": 1343,
+        "requirements": 150,
+        "schemaEntries": 223,
+        "boundary": "Parent-refresh receipt and logs retained; no freshness regeneration by this evidence packaging task"
+      },
+      "nativeConfigurationDiscovery": {
+        "executionsListed": 14,
+        "projects": 7,
+        "webkitIphoneListed": 2,
+        "boundary": "--list only, not hosted or additional native execution"
+      },
+      "historicalOldPacket": {
+        "leavesPreserved": 29,
+        "manifest": "reports/music-track-search-evidence-20261026/artifact-hashes.json",
+        "preservedExactly": true,
+        "scope": "Historical c88/full222, frontend and local three-project native evidence remains original-source-bound"
+      },
+      "scope": "Actual local compiled GET/HEAD metadata using fresh owned PostgreSQL16/full223 and synthetic publication fixtures. No HTTP mutation/signup/login, object/media/signing/production journey, SLO or physical-device qualification.",
+      "release": {
+        "draftPr": "https://github.com/diegueins680/tdf-app/pull/640",
+        "basePr": 626,
+        "hostedExactHeadCi": "PENDING",
+        "independentReview": "PENDING",
+        "protectedMerge": "PENDING",
+        "deployment": "NOT_PERFORMED",
+        "productionFlagsChanged": false,
+        "fullMissionComplete": false
+      },
+      "archive": {
+        "path": "local-current223-execution-evidence.tar.gz",
+        "bytes": 342096,
+        "sha256": "eb780d168da2d23c4852d0407249055913e44849f553097500b2af5026c1e73f",
+        "members": 60
+      }
+    },
+    "existingDirectoryRegression": {
+      "schemaVersion": 1,
+      "status": "PARTIAL_ENVIRONMENT_NOT_RELEASE_QUALIFICATION",
+      "sourceRevision": "b8a13e66fb40613250c047df92b6775a04eebf67",
+      "rootSession": 74683,
+      "actualExitCode": 1,
+      "executions": 11,
+      "passed": 10,
+      "failed": 1,
+      "skipped": 0,
+      "flaky": 0,
+      "retries": 0,
+      "reruns": 0,
+      "qaReceiptSha256": "ac2f0c5952786ad204d81812bfff8b173c5d6b5f894af507400882237fdb7e9e",
+      "discovery": {
+        "actualCases": 11,
+        "chromiumDesktop": 3,
+        "chromiumPhone": 3,
+        "firefoxCritical": 5,
+        "reason": "Installed Playwright config.js:152 uses takeFirst(projectConfig.grep, config.grep, defaultGrep); Firefox @critical replaces root selection filter. Initial9-case estimate corrected; no skip/filter/test modification during run."
+      },
+      "failure": "Spanish Chromium desktop screenshot98 ENOSPC followed by write/mkdir errors and30s timeout; failed case is not promoted to pass. Later geolocation/map/Axe checks were not executed.",
+      "accessibility": "Existing serious/critical Axe assertions pass in10 successful cases only; not full WCAG.",
+      "sourceBoundary": "Seven repository source/config hashes and private config are unchanged. Synthetic directory/session/favorite/music replies; empty music fixture; no actual backend/audio/production journey.",
+      "availableOriginalArtifacts": 12,
+      "archivedArtifactPolicy": "All available original artifact hashes retained. PNG/HTML bloat and videos omitted. No failed screenshot/trace claimed or invented.",
+      "archive": {
+        "path": "directory-regression-failure-evidence.tar.gz",
+        "members": 8,
+        "bytes": 7422,
+        "sha256": "213f061154bcf0517cf0818a8365394adcd38d61a8cdb7a7848baa6c4dd635ba"
+      },
+      "previousEvidenceLeavesPreserved": 41,
+      "previousNativeOrHttpResultsReclassified": false,
+      "release": "Directory regression incomplete; current exact-head hosted CI/review and environment correction remain gates."
+    },
+    "canonicalSdkMobileQualification": {
+      "schemaVersion": 1,
+      "status": "LOCAL_CANONICAL_SDK_MOBILE_QUALIFICATION_PASS_LATEST_INTEGRATION_HOSTED_PENDING",
+      "rootCheckpoint": "f630d5cc7c9fd00ad78b2782e3376437016bb277",
+      "qualifiedRuntimeCheckpoint": "b8a13e66fb40613250c047df92b6775a04eebf67",
+      "latestProtectedMainPendingIntegration": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+      "canonicalContract": {
+        "canonicalRefIntegrated": true,
+        "priorResolvedOperationsPreserved": 531,
+        "currentResolvedOperations": 532,
+        "onlyAddedOperation": "GET /music/search",
+        "canonicalApiSha256": "0c34c59a78d764e911031128f01bd84fc6eafb18438132e49b59f3fb14b87ea3",
+        "priorGeneratedMemberLeavesPreserved": 1543,
+        "webMobileTypesByteIdentical": true,
+        "generatedTypesSha256": "36e46d7af5ad300b8cfa91786439facf1daeb92b903571ab5d88f4476101564e",
+        "webTypesDiff": "+105/-0",
+        "mobileTypesDiff": "+105/-0",
+        "apiYamlDiff": "+2/-0",
+        "generatorNode": "22.14.0",
+        "webAppTypecheckExitCode": 0,
+        "finalCanonicalReflectionAfterGeneration": "PENDING",
+        "boundary": "Canonical operation and generated declaration preservation does not prove every runtime payload/auth or remove all existing conformance debt."
+      },
+      "mobile": {
+        "commit": "8d69b011bd6c0dc7b0a9751c20ff9610dcc8b7bd",
+        "draftPr": "https://github.com/diegueins680/TDF-mobile/pull/175",
+        "qualityNode": "20.19.4",
+        "releaseCheckExitCode": 0,
+        "jestTests": 627,
+        "jestSuites": 97,
+        "jestExitCode": 0,
+        "packageAndLockUnchanged": true,
+        "dependencyPreparation": "Exact source-cache package/lock match; COW538MB dependency copy; no install, dotenv or network during checks",
+        "dependencyFloor": {
+          "rootChecked": 20,
+          "mobileChecked": 21,
+          "status": "PASS_KNOWN_FLOORS_ONLY_NOT_ADVISORY_SCAN"
+        },
+        "hostedValidate": "DISPATCH_ACTIVE_RUN_ID_NOT_OBSERVED",
+        "publicationHistory": "Initial push without existing auth helper exit128 is operator-stdout-only; authorized existing gh auth helper push then succeeded. Connected PR creation403, CLI authorized fallback created draft175. No raw logs fabricated."
+      },
+      "metroStartup": {
+        "status": "PASS_STARTUP_ONLY_WITH_LISTENER_ISOLATION_ADAPTER",
+        "scope": "Actual npm start/Expo/Metro with test-only loopback listen-argument guard; GET/status only. No bundle, app execution, device, API, EAS, signing, deployment or production claim.",
+        "receiptSha256": "b8f593c6f86053bf7fef2db4c2a115595d88590e8a15518c7a2b5f440f50136b",
+        "actualRootExitCode": 0,
+        "statusResponse": {
+          "url": "http://127.0.0.1:8091/status",
+          "method": "GET",
+          "status": 200,
+          "body": "packager-status:running",
+          "projectRoot": "/private/tmp/tdf-universal-music-search-20261026/tdf-mobile"
+        },
+        "cleanup": {
+          "ownedNpmProcessExited": true,
+          "ownedProcessGroupStopped": true,
+          "portClosed": true,
+          "trackedAndKnownUntrackedSourceUnchanged": true
+        },
+        "loopbackAndOwnedListenerConfirmed": true,
+        "nonLoopbackEgressDeniedPositiveControl": true,
+        "lanConnectionDenied": true,
+        "sourceHashesUnchanged": true,
+        "priorAttempt": {
+          "status": "FAILED",
+          "stage": "Duplicate same-path npm global/user config rejected before Expo initialization",
+          "actualExitCode": 1,
+          "receiptSha256": "412d9d4c276a67b24b3aec849cd3a6e6ef85c9647e1364fd5d6020ea975adda0"
+        },
+        "setupCorrection": "Two distinct owned empty npmrc paths; no app/source/assertion/timeout weakening; v1/v2 plans/review manifests/diff/raw logs retained",
+        "limitations": "Test-only net.Server.listen argument guard forces real8091 IPv4loopback. Actual npm/Expo/Metro+GET/status, not JS bundle/app/device/API/audio/EAS/signing/deployment. EXPO_OFFLINE intentionally skips its network dependency validation."
+      },
+      "archive": {
+        "path": "canonical-contract-mobile-evidence.tar.gz",
+        "members": 37,
+        "bytes": 467109,
+        "sha256": "3234c8df84d4bc812bab72809067aaa1bbc66f8a9bcc84cd0f8f0fd3bb536216"
+      },
+      "priorLeavesPreserved": 47,
+      "release": "Draft640/175 only. New63c parent integration, final generated-client drift/reflection, exact-head hosted CI/review/protected merge and production deployment remain pending. Earlierb8a/full223 runtime evidence is not relabelled f630 or63c."
+    },
+    "canonicalApiReferenceIntegration": {
+      "status": "IMPLEMENTED_CHECKED_AND_COMPILED_DECLARATION_REFLECTION_PASS",
+      "canonicalOperations": 532,
+      "all531PriorPreserved": true,
+      "undocumentedPreexisting": 399,
+      "finalBinarySourceAttestation": "PENDING",
+      "binaryRemains": "b8a8df6",
+      "historicalB8aInspector": "Old400included399prior+then-newgap; newcanonicalref resolves only that gap."
+    },
+    "hostedFailuresAndLocalCorrections": {
+      "schemaVersion": 1,
+      "status": "LOCAL_CORRECTIONS_TESTED_HOSTED_WEBKIT_AND_EXACT_CANDIDATE_RELEASE_PENDING",
+      "hostedFailureSource": "b8a13e66fb40613250c047df92b6775a04eebf67",
+      "hostedRun": 40423799149,
+      "testedMerge": "c5e44c0af9a321d7c0c8d5dae3450d2842a060eb",
+      "personaFailure": {
+        "job": 121925970481,
+        "artifact": 12701041459,
+        "passed": 570,
+        "failed": 10,
+        "skipped": 22,
+        "artifactSha256": "b2c32baad965639510710078b5d9d589ac4e355073d2569508032a4bdf1804f4",
+        "confirmedCauses": "7 legacy empty-title regressions and3 detail-link failures after /music/search200text/html SPA fallback reached unvalidated map; exact trace/real-client counterexamples retained."
+      },
+      "nativeFailure": {
+        "job": 121925970570,
+        "artifact": 12700297671,
+        "passed": 52,
+        "failed": 2,
+        "failedProjects": [
+          "webkit-iphone",
+          "webkit-critical"
+        ],
+        "artifactSha256": "2b90e46a3ed33fd4698f60e97460195aafefcc78527245950e2777079b73f2bf",
+        "boundary": "Hosted search happy-path advancing-clock assertions failed. Deterministic metadata readiness corrections and local Chromium/Firefox passes do not prove WebKit repaired; fresh hosted WebKit remains UNVERIFIED."
+      },
+      "localSourceContext": "ObservedHEADf630 with root-owned current parent composition/corrections in working tree; raw source fingerprints bind executions, not a clean final commit claim.",
+      "corrections": {
+        "directoryAndWireGuard": {
+          "affectedTests": 100,
+          "suites": 5,
+          "status": "PASS",
+          "lintFiles": 4,
+          "appTypecheck": "PASS",
+          "counterexample": "Real client previously resolved HTML and actualPage crashed; two desired tests fail before closed response validation. Legacy directory title restored with scoped paragraph.",
+          "receiptSha256": "783130eb6c2d174bdc6d24d8f58b9585a47d22942bf1eeab6136ffc1e8ac25ec"
+        },
+        "playerMetadataReadiness": {
+          "affectedTests": 115,
+          "suites": 7,
+          "status": "PASS",
+          "lint": "PASS",
+          "appTypecheck": "PASS",
+          "baseline": "2 desired failures/1pass/39notselected; fractional restore sought before metadata and pause during readiness incorrectly autoplayed.",
+          "receiptSha256": "6556f381441ccf968151b86793c0a1967f017441ad9b7eec7eb39c71baae14b6",
+          "webKit": "UNVERIFIED_PENDING_FRESH_HOSTED"
+        },
+        "intermediateTitleOnly63": "Historical narrower prototype retained; superseded by100-case validated-client correction, not final separate proof."
+      },
+      "localBrowsers": {
+        "legacyDirectory": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "flaky": 0,
+          "scope": "Original discovery3 and welcome5 installed-project executions, exact unchanged legacy tests; synthetic intercepted APIs. Not the full earlier11-case directory run or WebKit."
+        },
+        "nativeRegression": {
+          "passed": 30,
+          "failed": 0,
+          "skipped": 0,
+          "flaky": 0,
+          "projects": [
+            "Chromium desktop",
+            "phone web emulation",
+            "Firefox"
+          ],
+          "scope": "Existing real-media regressions plus mockglobal-player scenario and new exactB/deniedB cases. Synthetic API/auth/media replies; no production or WebKit qualification."
+        },
+        "strongerSearchNative": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "flaky": 0,
+          "rootSession": 19625,
+          "actualExitCode": 0,
+          "sourceFilesCompared": 877,
+          "sourceUnchanged": true,
+          "change": "Search happy-path now awaits trusted lossless seeked completion before recording advancing-clock baseline; no timeout/retry bypass. Local stricter successor, not retroactive repair of prior results.",
+          "scope": "Same3 installed browser projects; exactB realAAC/FLAC decoder/clock plus deniedB/noA fallback. Synthetic services; lateA cancelled does not prove delivered stale response."
+        }
+      },
+      "canonicalReflection": {
+        "actualExitCode": 0,
+        "typedOperations": 906,
+        "rawMounts": 2,
+        "canonicalDocumentedOperations": 532,
+        "undocumentedPreexisting": 399,
+        "documentedWithoutTypedRoute": 25,
+        "statusDifferences": 8,
+        "competing": 0,
+        "newSearchReferenceGapResolved": true,
+        "binarySha256": "8df6e58359fe29ec2a841d232094106038be08f703abb5a698eeb23eb6cb51cb",
+        "binarySource": "b8a13e66fb40613250c047df92b6775a04eebf67",
+        "observedLocalHead": "f630d5cc7c9fd00ad78b2782e3376437016bb277",
+        "boundary": "Actual compiled declaration inspector with current canonical docs; oldb8a binary, not final-source build attestation or whole API conformance approval."
+      },
+      "mobileHostedValidate": {
+        "run": 40427917280,
+        "head": "8d69b011bd6c0dc7b0a9751c20ff9610dcc8b7bd",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/40427917280",
+        "scope": "Actual hosted Validate workflow result, not native device/EAS/deployment or rootPR640 success."
+      },
+      "integration": {
+        "currentCompositionParent": "7bee8d45a3e54aa350fb810e722609ad3c608cca",
+        "latestProtectedMain": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+        "latestMainRelationship": "PR626 is actually protected-merged at01:28:41UTC to4b81; rawREST confirms merged. 7bee and4b81 Git trees equivalent; normal ancestry merge and PR640 retarget still pending at packaging.",
+        "mainProtection": {
+          "strict": true,
+          "requiredChecks": 20,
+          "requiredApprovals": 1
+        },
+        "sourceReview": {
+          "backendPathsCompared": 975,
+          "onlyBackendDeltaFromQualifiedB8a": [
+            "tdf-hq/docs/openapi/api.yaml"
+          ],
+          "reviewSha256": "dd1fb23b4bb96bf9de5ff348a957d2df9b93ae780f382ce5206dc86b0f74dd13"
+        },
+        "historicalPremergeObservation": "Earlier root observation of Vercel rate-limit/review unknown preceded actual protected merge; not current pending626 status."
+      },
+      "metadata": "Prepared-final receipt and checks preserved as BEFORE this evidence/doc refresh. Drift gate correctly caught native-spec edit; root must regenerate/check final freshness after packaging. No child generators/metadata/source writes.",
+      "archive": {
+        "path": "hosted-failures-local-corrections-evidence.tar.gz",
+        "members": 114,
+        "bytes": 8148918,
+        "sha256": "48b3a6e8a85ac987b8d4c1d11d67bcea4c14c4b5f2a02434a6a68139d2a27ee2"
+      },
+      "priorLeavesPreserved": 56,
+      "limits": "No production writes, real upload, server/storage/media rights, SLO/device or full mission acceptance. No check failures, skips or histories hidden."
+    },
+    "mobileHostedValidate": {
+      "run": 40427917280,
+      "head": "8d69b011bd6c0dc7b0a9751c20ff9610dcc8b7bd",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/40427917280",
+      "scope": "Actual hosted Validate workflow result, not native device/EAS/deployment or rootPR640 success."
     }
   },
   "captureHistory": {
@@ -274,14 +650,17 @@
     "methodology": "No representative-device/network SLO benchmark executed. Test timeouts, case durations and decoder clock polls are functional controls, not p95 measurements."
   },
   "release": {
-    "published": false,
+    "published": true,
     "merged": false,
     "deployed": false,
     "productionWrites": false,
     "productionFlagsChanged": false,
     "productionPlaybackVerified": false,
     "coverage": "Canonical music releases only; no universal historical/legacy/social/event attachment coverage claim",
-    "assurance": "Finite design check is not implementation refinement; existing global release gates remain blocked or unfulfilled."
+    "assurance": "Finite design check is not implementation refinement; existing global release gates remain blocked or unfulfilled.",
+    "publicationKind": "DRAFT_PR_ONLY_NOT_DEPLOYMENT",
+    "draftPr": "https://github.com/diegueins680/tdf-app/pull/640",
+    "draftHeadAtQualification": "b8a13e66fb40613250c047df92b6775a04eebf67"
   },
   "archive": {
     "path": "reports/music-track-search-evidence-20261026/local-execution-evidence.tar.gz",
@@ -358,21 +737,21 @@
     "AC-001": "UNVERIFIED: no real authorized upload journey or HTTP mutation executed by this increment.",
     "AC-002": "UNVERIFIED: real upload processing/status lifecycle is not qualified; native derivatives are generated local fixtures.",
     "AC-003": "PARTIAL: actual canonical public-release search eligibility tested; universal historical/non-release/private-owner discovery remains incomplete.",
-    "AC-004": "PARTIAL: actual metadata HTTP context and injected-service native exact selection tested independently; joined production search-to-playback journey unverified.",
+    "AC-004": "PARTIAL: historical b8a/full223 compiled metadata and corrected local exactB realAAC/FLAC decoder/clock pass; fresh hostedWebKit and joined production search-to-media journey unverified.",
     "AC-005": "UNVERIFIED: no representative p95 startup/cached-start/search or rebuffer SLO measurement.",
     "AC-006": "TESTED_SCOPED: local native route continuity in three projects with injected services; production continuity unverified.",
     "AC-007": "PARTIAL: existing global engine reused with scoped native single-element continuity; no all-surface or multi-tab duplicate-playback proof.",
-    "AC-008": "PARTIAL: existing unit suites, adapter/queue identity and exact selection covered; no complete queue/seek/repeat/shuffle/all-transport journey.",
-    "AC-009": "UNVERIFIED: transient network/expired-source recovery not qualified here; synthetic403 denial is terminal, not a recovery proof.",
-    "AC-010": "PARTIAL: actual SQL/full222 HTTP private/withdrawn/territorial discovery isolation plus injected403 behavior; actual production media-delivery authorization unverified.",
+    "AC-008": "PARTIAL: existing queue/identity/transport units and new pending-position/seek/pause races pass; no complete all-control real-browser journey or WebKit correction proof.",
+    "AC-009": "UNVERIFIED: transient network/expired-source recovery not comprehensively qualified; deterministic1200-second recovery fixture now requires metadata before restoration, and synthetic403 is terminal, not a recovery proof.",
+    "AC-010": "PARTIAL: actual SQL/full222 and integratedb8a/full223 HTTP private/withdrawn/territorial discovery isolation plus injected403 behavior; production media-delivery authorization unverified.",
     "AC-011": "UNVERIFIED: no actual expiring/revoked credential media enforcement test; withdrawn search exclusion and synthetic403 do not establish that boundary.",
     "AC-012": "UNMET: universal historical catalog indexing/migration/reconciliation not implemented by this canonical-release increment.",
-    "AC-013": "PARTIAL: Chromium desktop/phone web emulation and Firefox local cases; hosted WebKit execution and physical-device support matrix unverified.",
+    "AC-013": "PARTIAL: corrected local Chromium desktop/phone-web/Firefox native30 and strongersearch6 pass; earlier hosted WebKit2fail retained and freshrepairUNVERIFIED. Physicaldevices unverified.",
     "AC-014": "UNVERIFIED: Media Session hardware/lock-screen/background controls were not qualified.",
-    "AC-015": "PARTIAL: semantic labels/native keyboard controls tested; complete applicable WCAG2.2AA audit unverified.",
+    "AC-015": "PARTIAL: semantic labels/native keyboard controls and existing serious/critical Axe assertions in10 directory cases pass; ESdesktop screenshot98 ENOSPC leaves latergeo/map/Axe unexecuted. Complete applicable WCAG2.2AA audit unverified.",
     "AC-016": "PARTIAL: original masters unchanged; actual fixture AAC/FLAC decoding covered, without quantitative fidelity/loudness/clipping quality validation.",
     "AC-017": "PARTIAL: finite design states/mutants and implementation tests recorded separately; implementation refinement and all critical system invariants remain unproven/unverified.",
-    "AC-018": "PENDING: current merged-candidate canonical build/full223 HTTP, immutable admission, required exact-head CI and reviews remain release gates.",
+    "AC-018": "PARTIAL: local unit100+115, static checks, legacy8/native30/stronger6 pass; canonical reflected docs and MobileValidate40427917280 pass. Hostedb8a persona10fail/native2WebKitfail retained. Final source commit/metadatafreshness/current-head hosted CI/fresh review/protected merge pending; b8a compiled binary not relabelled.",
     "AC-019": "UNMET_RELEASE_GATE: correctness/privacy/security release gates remain incomplete; this increment is not production-qualified and does not certify zero system regressions.",
     "AC-020": "UNMET: production playback/processing/indexing observability and SLO evidence are not established here.",
     "AC-021": "PARTIAL: read-only exact context/recording/release IDs preserved with no content migration or ownership mutation; historical relationship universe unverified.",
@@ -383,10 +762,34 @@
     "packet": "reports/music-track-search-evidence-20261026/README.md",
     "memberHashes": "reports/music-track-search-evidence-20261026/archive-member-hashes.json",
     "leafHashes": "reports/music-track-search-evidence-20261026/artifact-hashes.json",
-    "sourceHashes": "reports/music-track-search-evidence-20261026/qualified-source-inputs.json"
+    "sourceHashes": "reports/music-track-search-evidence-20261026/qualified-source-inputs.json",
+    "currentMain223": {
+      "summary": "reports/music-track-search-evidence-20261026/current-main-223/summary.json",
+      "leafHashes": "reports/music-track-search-evidence-20261026/current-main-223/artifact-hashes.json",
+      "archive": "reports/music-track-search-evidence-20261026/current-main-223/local-current223-execution-evidence.tar.gz",
+      "historicalLeavesPreserved": 29
+    },
+    "directoryRegression": {
+      "summary": "reports/music-track-search-evidence-20261026/directory-regression/summary.json",
+      "leafHashes": "reports/music-track-search-evidence-20261026/directory-regression/artifact-hashes.json",
+      "archive": "reports/music-track-search-evidence-20261026/directory-regression/directory-regression-failure-evidence.tar.gz",
+      "priorLeavesPreserved": 41
+    },
+    "canonicalContract": {
+      "summary": "reports/music-track-search-evidence-20261026/canonical-contract/summary.json",
+      "leafHashes": "reports/music-track-search-evidence-20261026/canonical-contract/artifact-hashes.json",
+      "archive": "reports/music-track-search-evidence-20261026/canonical-contract/canonical-contract-mobile-evidence.tar.gz",
+      "priorLeavesPreserved": 47
+    },
+    "hostedCorrections": {
+      "summary": "reports/music-track-search-evidence-20261026/hosted-corrections/summary.json",
+      "leafHashes": "reports/music-track-search-evidence-20261026/hosted-corrections/artifact-hashes.json",
+      "archive": "reports/music-track-search-evidence-20261026/hosted-corrections/hosted-failures-local-corrections-evidence.tar.gz",
+      "priorLeavesPreserved": 56
+    }
   },
-  "nextHighestValueAction": "Checkpoint frozen feature evidence, normally merge protectedc66, reconcile223manifest and new requirement, then fresh metadata/source/CI/review gates. Keep c88/full222 execution historical; target rollout/upload/media/SLO acceptance remains separate.",
-  "recordedAt": "2026-10-26T23:39:06.401034+00:00",
+  "nextHighestValueAction": "Commit current corrected/ancestor-integrated source, regenerate final ordered metadata/freshness, publish exact candidate for hosted persona/nativeWebKit and required checks; fresh independent review/protected merge follow. No production activation before gates.",
+  "recordedAt": "2026-10-27T01:44:07.510046+00:00",
   "historicalPackagingSnapshot": {
     "receipt": "reports/music-track-search-evidence-20261026/qualification-summary.json",
     "boundary": "Original snapshot and42-member archive remain unchanged; later results are additive"
@@ -400,7 +803,7 @@
     "catalog": "1343active, retaining main2634manifest successor, exact old6ff in main reconciliation and exact old56e2 dispatch history in feature reconciliation; all3feature technical objects unchanged",
     "manifest": "223entries byte-exact refreshedparent; no migration applied by metadata owner",
     "runtimeSource": "Existing app/UI/API/model/native/runner source unchanged from0dd; inherited newSQL+ProviderRetrySpec means whole-backend identity false",
-    "versionIdentity": "Historical binary remains actualc88. New currentHEAD canonical build and223schema HTTP are separate pending root tasks; no retagging or override.",
+    "versionIdentity": "Fresh integratedb8a canonical build0 and actualversion/full223metadataHTTP105assertions66steps PASS; historicalc88/222 remains unchanged.",
     "evidence": "All29 tracked premerge packet leaves and compressed archives unchanged",
     "metadata": {
       "metadataTests": {
@@ -425,7 +828,13 @@
       "publicRouteAdmission": "PASS",
       "apiAvailabilityAndResponseStatus": "PASS existing policy unchanged; no new deferral/status exception",
       "finalFreshness": "PASS final inventory/conformance checks after mapping fix",
-      "immutableSourceAdmission": "PENDING root normal merge commit; prepared mapping recorded in private receipt",
+      "immutableSourceAdmission": {
+        "result": "PASS",
+        "base": "a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c",
+        "head": "b8a13e66fb40613250c047df92b6775a04eebf67",
+        "mappedMaterialPaths": 22,
+        "receiptSha256": "5d7744ccddcc27abf96be199f89f8a23094a87f9907a9afa710a573ae804c005"
+      },
       "preparedSourceAdmission": {
         "result": "PASS_WORKING_TREE_PREPARATION",
         "mappedMaterialPaths": 22,
@@ -693,5 +1102,230 @@
       "qualifiedSchemaStill": 222,
       "boundary": "No current-main integration, 223-schema execution, hosted CI, merge, deployment or production acceptance is claimed"
     }
+  },
+  "currentMain223Supplement": {
+    "summary": "reports/music-track-search-evidence-20261026/current-main-223/summary.json",
+    "leafHashes": "reports/music-track-search-evidence-20261026/current-main-223/artifact-hashes.json",
+    "archive": "reports/music-track-search-evidence-20261026/current-main-223/local-current223-execution-evidence.tar.gz",
+    "historicalLeavesPreserved": 29
+  },
+  "directoryRegressionSupplement": {
+    "summary": "reports/music-track-search-evidence-20261026/directory-regression/summary.json",
+    "leafHashes": "reports/music-track-search-evidence-20261026/directory-regression/artifact-hashes.json",
+    "archive": "reports/music-track-search-evidence-20261026/directory-regression/directory-regression-failure-evidence.tar.gz",
+    "priorLeavesPreserved": 41
+  },
+  "canonicalContractSupplement": {
+    "summary": "reports/music-track-search-evidence-20261026/canonical-contract/summary.json",
+    "leafHashes": "reports/music-track-search-evidence-20261026/canonical-contract/artifact-hashes.json",
+    "archive": "reports/music-track-search-evidence-20261026/canonical-contract/canonical-contract-mobile-evidence.tar.gz",
+    "priorLeavesPreserved": 47
+  },
+  "finalProtectedMainComposition": {
+    "checkpointBeforeNormalMerge": "f630d5cc7c9fd00ad78b2782e3376437016bb277",
+    "refreshedParent": "7bee8d45a3e54aa350fb810e722609ad3c608cca",
+    "protectedMain": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+    "requirements": {
+      "parentObjectsExact": 149,
+      "ownId": "MEDIA-MUSIC-TRACK-SEARCH-001",
+      "total": 150,
+      "delta": "Own canonical api.yaml/Web/Mobile generated mapping plus wire/legacy-title/readiness clauses; all parent requirement objects unchanged."
+    },
+    "migrationEntries": 223,
+    "mobilePin": "8d69b011bd6c0dc7b0a9751c20ff9610dcc8b7bd",
+    "wholeBackendIdentityVersusB8a": false,
+    "backendChangedPathsVersusB8a": [
+      "tdf-hq/docs/openapi/api.yaml"
+    ],
+    "compiledSourcesAndBuildConfigurationVersusB8a": "UNCHANGED; earlier binary remains b8a, never relabelled current HEAD",
+    "inheritedAuthUiPaths": [
+      "tdf-hq-ui/src/api/auth.test.ts",
+      "tdf-hq-ui/src/api/auth.ts",
+      "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+      "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+      "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+      "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+      "tdf-hq-ui/src/utils/authErrorMessage.ts"
+    ],
+    "sourceCorrections": {
+      "wireValidation": "Closed music response schema rejects malformed/HTML/proxy/unexpected fields into music-only error.",
+      "directoryTitle": "Legacy translated directory empty title retained; active music query adds scope clarification.",
+      "playerPreparation": "Nonzero positions restored once only after matching-source metadata/current generation; newer seeks, pause, terminal errors and cleanup respected."
+    },
+    "localTests": {
+      "wireAndDirectorySelection": {
+        "tests": 100,
+        "status": "PASS_ROOT_OPERATOR_REPORTED",
+        "rawReceipt": "PENDING_ROOT_PATH"
+      },
+      "playerAndIdentity": {
+        "tests": 115,
+        "suites": 7,
+        "status": "PASS",
+        "receipt": "/private/tmp/tdf-player-metadata-readiness-20261027/final-receipt.json",
+        "receiptSha256": "6556f381441ccf968151b86793c0a1967f017441ad9b7eec7eb39c71baae14b6",
+        "lintExit": 0,
+        "appTypecheckExit": 0
+      },
+      "counting": "100 and115 are overlapping scoped suites; never sum as disjoint tests.",
+      "legacyBrowser": {
+        "cases": 8,
+        "status": "PASS_ROOT_OPERATOR_REPORTED",
+        "scope": "3 original Chrome Discovery plus5 old-title local profiles;871 UI/spec fingerprints unchanged during run."
+      },
+      "native30CurrentSource": {
+        "status": "PASS_ROOT_OPERATOR_REPORTED",
+        "actualExitCode": 0,
+        "cases": 30,
+        "projects": 3,
+        "operatorSession": 13315,
+        "sourceFingerprintsPrePost": 877,
+        "exact": true,
+        "nativeSearchSpecSha256": "74b1f2c2f0d521efc31e20fbf6a015fcf4f7eb80b4c93e2ba7cfeb9701927042",
+        "boundary": "Local base/new/mock browser cases after provider correction; original weaker new-search sampling did not explicitly wait for trustedseeked before the clock baseline."
+      },
+      "webkitFix": "UNVERIFIED_UNCHANGED_HOSTED_ADVANCING_CLOCK_ASSERTION_REQUIRED",
+      "strongerNativeSearch6": {
+        "status": "PENDING_ROOT_EXECUTION",
+        "nativeSearchSpecSha256": "6cebd8f6c76d01e42a3eb6690ba71b16a7d24762361068ec16044729fa2fccfa",
+        "change": "Passive seeking/seeked observers and trusted matching-lossless seeked precondition before unchanged clock-baseline sampling; no timeout/retry/fixture/clock-predicate weakening."
+      }
+    },
+    "priorCandidateCi": {
+      "head": "b8a13e66fb40613250c047df92b6775a04eebf67",
+      "run": 40423799149,
+      "native": {
+        "passed": 52,
+        "failed": 2,
+        "job": 121925970570,
+        "observed": "WebKit quality-switch FLAC currentTime frozen despite playing/pausedfalse/errornull; pre-metadata default-position seek is a correction hypothesis, not proven root cause."
+      },
+      "persona": "FAILED; original logs retained, not reclassified by local corrections.",
+      "privateArtifacts": "/private/tmp/tdf-640-b8a-ci-failures-20261027",
+      "rerunOriginalHead": false
+    },
+    "canonicalContract": {
+      "canonicalOperations": 532,
+      "prior531OperationsExact": true,
+      "newOperation": "GET /music/search",
+      "expectedRemainingUndocumentedDebt": 399,
+      "finalActualBinaryInspector": "PENDING_ROOT_AFTER_METADATA_FREEZE",
+      "policyChanges": false,
+      "deferrals": 25,
+      "statusContracts": 8,
+      "pairedGenerationAndCommittedDriftCheck": "PASS_ROOT_OPERATOR_REPORTED_AT_F630"
+    },
+    "hostedMobile": {
+      "head": "8d69b011bd6c0dc7b0a9751c20ff9610dcc8b7bd",
+      "run": 40427917280,
+      "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/40427917280",
+      "status": "SUCCESS_ROOT_OPERATOR_REPORTED",
+      "scope": "Validate including release/Jest/Python/ExpoDoctor; no device/audio/production claim."
+    },
+    "evidenceLeavesPreserved": 56,
+    "metadata": {
+      "status": "PASS_ORDERED_GENERATION_FOCUSED_GATES_AND_FRESHNESS",
+      "metadataTests": {
+        "passed": 36,
+        "suites": [
+          9,
+          6,
+          10,
+          11
+        ],
+        "failed": 0,
+        "receiptSha256": "1fe53f1c95f2d1e6654c36212acf49d76a8fd7de17dae1226943d10557f97a04"
+      },
+      "ciContracts": {
+        "passed": 47,
+        "failed": 0,
+        "logSha256": "633a1bd925d4def48af06366112c702c1fb73e89431adc12371234a4f4a40334"
+      },
+      "strictCatalog": {
+        "jsonExitCode": 0,
+        "csvExitCode": 0,
+        "candidateCount": 1343,
+        "csvRows": 1343,
+        "unreviewed": 0,
+        "stale": 0
+      },
+      "generatedApi": {
+        "clients": 2,
+        "mobileRevision": "8d69b011bd6c0dc7b0a9751c20ff9610dcc8b7bd",
+        "exitCode": 0
+      },
+      "publicRouteAdmission": "PASS",
+      "apiAvailabilityAndResponseStatus": "PASS25deferrals/8statuscontracts unchanged; no new exception",
+      "canonicalOperations": 532,
+      "preparedAdmission": {
+        "status": "PASS_WORKING_TREE_PREPARATION",
+        "mappedMaterialPaths": 27,
+        "base": "7bee8d45a3e54aa350fb810e722609ad3c608cca"
+      },
+      "immutableAdmission": "PENDING_ROOT_NORMAL_MERGE_COMMIT",
+      "actualCompiledInspector": "PENDING_ROOT_AFTER_METADATA_WRITERS_FREEZE",
+      "finalFreshness": "PASS_INVENTORY_AND_CONFORMANCE_CHECKS"
+    },
+    "immutableAdmission": "PENDING_ROOT_COMMIT",
+    "release": "Drafts only; current exact-head hosted gates/fresh review/protected integration/deployment remain required.",
+    "catalogSourceReview": {
+      "method": "Individual manual inspection of current musicReleases.ts parser and actual current-source scanner output; no scanner/policy exemptions or automatic classifications.",
+      "actualCandidates": 1343,
+      "unknown": 0,
+      "stale": 0,
+      "dispatch": {
+        "id": "a54bc30988f056e6d713",
+        "result": "EXACT_REVIEWED_OBJECT_PRESERVED",
+        "reason": "Method-key object registry unchanged; get<unknown>().then parser changes implementation but not the scanner registry identity. No false retirement generated. Original56e2 retirement history remains unchanged."
+      },
+      "closedWireFields": [
+        {
+          "location": "parseMusicTrackSearchResponse/source exactFields",
+          "fields": [
+            "assetId",
+            "role",
+            "mediaType",
+            "technicalMetadata"
+          ],
+          "classification": "genuine-technical-constant",
+          "reason": "Exact JSON property keys of the public source DTO; protocol validation mechanics, not configurable persisted business values."
+        },
+        {
+          "location": "parseMusicTrackSearchResponse/hit exactFields",
+          "fields": [
+            "trackId",
+            "recordingId",
+            "releaseId",
+            "releaseVersionId",
+            "releaseSlug",
+            "releaseTitle",
+            "title",
+            "displayArtist",
+            "durationMs",
+            "sources"
+          ],
+          "classification": "genuine-technical-constant",
+          "reason": "Exact JSON property keys of the public hit DTO; fail-closed wire validation, not a user-facing domain catalog."
+        }
+      ],
+      "scannerBoundary": "Inline literal arrays used as function-call arguments are not emitted by the existing scanner; manual review records this limitation rather than inventing candidate IDs.",
+      "sourceSha256": "07776593433c18bda040520d9416d4c4606bdf65802d50101af77c06eb87e9b0",
+      "rawDiscoverySha256": "126101cdb22d1099beeb5cc14064d41b06b27a695ff6bc155788e1d576778b1a"
+    },
+    "generationInterruption": {
+      "status": "FAILED_SOURCE_FINGERPRINT_GUARD_THEN_ORDERED_REGENERATION",
+      "path": "e2e/web/music-search-native.spec.mjs",
+      "oldSha256": "74b1f2c2f0d521efc31e20fbf6a015fcf4f7eb80b4c93e2ba7cfeb9701927042",
+      "newSha256": "6cebd8f6c76d01e42a3eb6690ba71b16a7d24762361068ec16044729fa2fccfa",
+      "cause": "Root strengthened native assertion after original30-case local run. Prepared-admission guard correctly rejected stale generated source hash; metadata owner did not edit source.",
+      "receipt": "/private/tmp/tdf-track-search-final63c-20261027/native-source-drift-failure.json",
+      "originalOutput": "Original tool response only; no fabricated raw original stdout file."
+    }
+  },
+  "hostedCorrectionsSupplement": {
+    "summary": "reports/music-track-search-evidence-20261026/hosted-corrections/summary.json",
+    "leafHashes": "reports/music-track-search-evidence-20261026/hosted-corrections/artifact-hashes.json",
+    "archive": "reports/music-track-search-evidence-20261026/hosted-corrections/hosted-failures-local-corrections-evidence.tar.gz",
+    "priorLeavesPreserved": 56
   }
 }

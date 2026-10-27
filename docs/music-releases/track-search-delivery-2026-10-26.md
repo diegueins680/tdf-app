@@ -1,134 +1,67 @@
-# Track discovery in universal search — refreshed-parent delivery evidence
+# Track discovery in universal search — integrated local delivery evidence
 
 ## A. Executive summary
 
-`/buscar` now has an authorized recording-search contract and selects the exact
-clicked track through the existing persistent player. The implementation addresses
-release-first-track substitution and separates music errors/pages from directory
-search. Local source-bound qualification exists for the earlier code and schema;
-current-parent integration and release gates remain separate.
+`/buscar` searches authorized canonical release recordings and selects the exact clicked recording through the persistent player. The integrated candidate has passed local compiled metadata HTTP on the full223 schema. Hosted release gates and the production upload-to-playback mission remain incomplete.
 
 ## B. Repository baseline
 
-Complete feature checkpoint `0dd0c65161da2a23cea7ea4d90659b8c944f031e` is normally
-merging refreshed source-availability parent
-`a37690f9c0d3f81f340c3a7c1a1f3c4cb273e96c`, which includes protected main
-`c66a65a10a8e5e48f89172d61f6f57fb81697896`. All 149 parent requirement objects
-remain exact; scoped `MEDIA-MUSIC-TRACK-SEARCH-001` makes 150 total. Its
-behavioral clauses remain unchanged; one implementation ownership mapping for
-the material OpenAPI YAML is added after the admission gate correctly rejected
-that previously unmapped surface. The active
-catalog has 1,343 reviewed decisions. It retains main's 223-entry manifest decision
-`2634b239375f2ad309ba`, the exact old `6ff395b6131079017c9d` object in main's
-reconciliation document, and the exact old API-dispatch decision `56e2b5d3ce52bde290e8`
-in this feature's history. Its three reviewed technical successors remain unchanged.
-The 223-entry production manifest is byte-exact to the refreshed parent; no
-migration is applied by this metadata reconciliation.
+Current normal composition starts at SDK checkpoint `f630d5cc7c9fd00ad78b2782e3376437016bb277` and merges refreshed source-availability parent `7bee8d45a3e54aa350fb810e722609ad3c608cca`, containing protected main `63c56aaf919a07e919a61280311be1dc809cd6fe`. All149 parent requirement objects remain exact; owned `MEDIA-MUSIC-TRACK-SEARCH-001` makes150, with explicit canonical/Web/Mobile contract ownership and wire/readiness clauses. The223-entry migration manifest remains exact. Actual current-source catalog review yields1343 candidates, with no stale/unreviewed entries and prior retired objects retained in exact history. The dispatch registry keys remain unchanged; two closed inline wire-field lists receive an explicit individual manual review without fabricated scanner IDs.
 
-Runtime/UI/API/model/native/SQL-runner inputs remain unchanged from checkpoint
-0dd. Protected main adds provider SQL and modifies `ProviderRetrySpec`, so current
-whole-backend identity is FALSE. Historical backend compilation and HTTP results
-remain bound to actual `c88e3849f33f52619f786bf7f6ef4d2819b26fab` and the 222-entry
-schema. New current-head compilation and full223 HTTP qualification are pending.
-No old binary is retagged; Git-derived version/time identity remains build-specific.
+The only backend-tree difference from qualified `b8a13e66fb40613250c047df92b6775a04eebf67` is canonical `tdf-hq/docs/openapi/api.yaml`; compiled sources and build configuration remain exact, while whole-backend identity is false. That b8a binary/full223 execution is never relabelled currentHEAD. Seven authentication UI paths inherited from protected main are recorded individually in the machine report; old3544 UI/native results retain their original fingerprints. All56 existing evidence leaves remain immutable.
 
 ## C. Completed capabilities
 
-The [contract](../../formal/system/music-track-search.md) and
-[OpenAPI](../../tdf-hq/docs/openapi/music-search.yaml) define `GET /music/search`.
-It retains the public feature and trusted-territory policy, narrows public contexts
-by text inside the database, then requires eligible exact-version/recording sources
-before result projection, recording deduplication or pagination. Minimal deferred
-IDs and numeric bitrate/loudness are returned with private/no-store; no delivery
-URL or arbitrary technical metadata is exposed. The existing engine reauthorizes
-selection. This is canonical release search, not universal historical/attachment
-indexing, constant-time retrieval or a measured latency guarantee.
-
-The independent ES/EN music region in `/buscar` hides obsolete draft-query actions,
-distinguishes empty/service errors, supports retry/pages and synchronously selects
-the precise clicked recording. It introduces no result-wide signing waterfall,
-mount autoplay or second player. Directory filters/history and `/inicio` behavior
-remain intact. The shared adapter preserves release/recording/asset identity.
+The [contract](../../formal/system/music-track-search.md) and standalone [OpenAPI](../../tdf-hq/docs/openapi/music-search.yaml) describe `GET /music/search`: trusted-territory/public-feature policy, exact eligible version/recording sources, deduplication before paging, minimal deferred asset IDs and private/no-store handler responses. The engine reauthorizes explicit selection. The independent ES/EN music region hides obsolete draft-query actions, separates directory errors/pages and synchronously selects the precise recording without result-wide signing or mount autoplay. Closed wire-schema validation rejects malformed or unexpected music payloads into a music-only error. The legacy directory empty-state title remains, with a separate scope clarifier for active music queries. Nonzero rendition positions wait for matching metadata under the current generation, retain newer seeks and respect current pause intent before playback. Directory history/filters and `/inicio` behavior remain intact. This covers canonical releases, not historical/social/event uploads or private-owner discovery.
 
 ## D. Verification
 
-The [machine report](../../reports/music-track-search-2026-10-26.json) maps the
-requirement through design properties, implementation, tests, pending final CI
-and release. Its acceptanceScope matrix records all 23 acceptance criteria with
-explicit scoped, partial, unmet or unverified status. All 29 actual premerge [evidence packet](../../reports/music-track-search-evidence-20261026/README.md)
-leaves and original compressed archives remain byte-exact; historical failures
-and their source identities are not rewritten by this refresh.
+The [machine report](../../reports/music-track-search-2026-10-26.json) retains23 explicit acceptance statuses. The [new full223 supplement](../../reports/music-track-search-evidence-20261026/current-main-223/README.md) independently hashes fresh evidence while preserving all29 earlier packet leaves/archives exactly.
 
-- Earlier frontend checks passed 55 affected tests, API-client checks passed 23
-  in root's tool stdout without a retained raw log, app type checking/lint passed,
-  and the full UI suite passed 3,544 tests in 312 suites. Synthetic APIs/media
-  doubles remain distinct from actual HTTP and decoder evidence.
-- Actual shipped SQL/binding controls passed the selected 14-migration fixture;
-  the impossible blank-artist fixture failure and correction remain separate.
-- The actual c88 canonical build passed after its retained install/strip ENOSPC
-  failure. Its real binary and full222 PostgreSQL metadata-only HTTP run passed
-  105 assertions/66 steps. Ten compiled pure payload regressions also passed;
-  these do not establish a full backend-suite result or new223 execution.
-- Annotation-only native source74b passed six cases locally in v4 after retained
-  v3 ENOSPC afterEach failure (five passes, one failed case). Three journeys decode
-  real AAC/FLAC and three exercise injected denied-B delivery. APIs, authority,
-  content and media delivery are injected local fixtures; A/B share one test tone.
-  Identity follows IDs/URLs, not audible recognition. Late A requests were cancelled,
-  not proven delivered stale. Actual local configuration discovery selects 14 cases across seven projects,
-  including two WebKit iPhone cases. Enumeration is not browser execution or hosted CI. Local WebKit is unsupported without a bypass.
-- The independent finite design model checks 9,642 states/54,454 transitions through
-  12 events with 936 frontier states, six counterexample mutants and ten replay
-  tests. Safety is MODEL_CHECKED_WITH_BOUNDS; conditional completion is bounded,
-  liveness PARTIAL and implementation refinement UNPROVEN.
+- The fresh canonical build exited0 at b8a. Its actual `/version` returns b8a and binary SHA256 is `8df6e58359fe29ec2a841d232094106038be08f703abb5a698eeb23eb6cb51cb`. Real compiled GET/HEAD metadata qualification passed105 assertions/66 steps on fresh owned PostgreSQL16/full223. All three cleanup flags are true; frontend/metadata context stayed unchanged. Tests cover exactB identities, query/paging/territory bindings, handler cache headers, private/withdrawn/missing/territorial eligibility, deduplication and fresh withdrawal exclusion. Parser400 has no handler-cache promise. Synthetic fixtures establish no production rights or object/CDN behavior.
+- At b8a, the compiled ContentSpec payload selection passed10 examples/0 failures. This is not the full backend suite. Immutable source admission maps22 changed material paths; parent-refresh metadata36, CI-scope47, strict1343JSON/CSV, generated-client freshness and existing route/status policies are archived separately. Those archived checks retain their b8a context; current metadata checks are reported separately below.
+- At the earlier b8a/full223 checkpoint, actual-binary declaration snapshot comparison passes (906 operations/two Raw mounts). It is not API conformance approval:400 undocumented operations include399 previous gaps **and the new `/music/search` gap**, because canonical `api.yaml` does not yet reference the standalone file. Twenty-five documented routes lack typed declarations and eight status differences remain. That archived gap is subsequently corrected by the canonical successor below; the later actual canonical reflection passes with399 prior gaps, as recorded below. No gate is weakened here.
+- Earlier source-bound checks retain55 affected UI tests,23 operator-attested API-client checks without an initial retained raw log, and3544 tests/312 suites in the full UI run. Selected SQL/binding fixtures, priorc88/full222105/66 and its retained ENOSPC build failure stay historical.
+- Current annotated native source previously passed six cases locally in v4, after retained v3 five-pass/one-failed ENOSPC afterEach. Three decode fixture AAC/FLAC and three inject deniedB responses; API/authorization/catalog/media are synthetic, A/B share one tone, and lateA requests were cancelled. These runs are not rerun/relabelled b8a. Actual configuration enumeration lists14 executions across seven projects, including two WebKit iPhone cases; enumeration is not hosted/browser execution. Local WebKit is unsupported on macOS12.7.6.
+- The independent finite model checks9642 states/54454 transitions through12 events with936 frontier states, six mutant counterexamples and ten replay tests. Safety is MODEL_CHECKED_WITH_BOUNDS; conditional completion is bounded, liveness PARTIAL and implementation refinement UNPROVEN.
 
-Current-parent ordered metadata, strict catalog, source admission, API-client and
-CI-scope checks are recorded separately after this refresh. Existing API availability
-and response-status policies need no exemption: the new route is mounted with a
-reachable 200 success, not a deferred or deliberately503 handler. The compiler
-snapshot adds only GET/music/search to 905 existing operation semantics and two
-Raw mounts (ordinal shifts only); final actual-binary comparison remains a gate.
+The separate [existing-directory regression packet](../../reports/music-track-search-evidence-20261026/directory-regression/README.md) is **PARTIAL_ENVIRONMENT**: root session74683 exited1 with11 actual executions,10 passes and one failed Spanish desktop case,0 skips/retries/flaky cases. Firefox project-level grep overrides the initial root filter, explaining11 rather than the initial9 estimate. Screenshot98 fails with ENOSPC, followed by filesystem errors and30s timeout; later geolocation/map/Axe assertions in that case were not executed. Existing serious/critical Axe assertions passed in the other10 cases. Seven source/config hashes and the private config stayed unchanged; APIs/music are synthetic/empty fixtures. No rerun, failed-case promotion, complete WCAG claim or backend/audio/production acceptance is inferred. This does not reclassify the independent earlier native or compiled HTTP results.
 
-The refreshed-parent metadata passed 36 regression cases, 47 CI-scope/pipeline
-cases, strict 1,343-entry JSON/CSV checks, two generated-client freshness checks,
-public-route admission and existing availability/status-policy checks. Final
-ordered freshness and immutable post-commit admission are recorded separately.
-These metadata gates do not promote old runtime evidence to full223/currentHEAD.
+AC004 and AC018 remain PARTIAL: local compiled metadata and separately injected native playback evidence do not complete hosted/review/deployment or a joined production search-to-media journey.
+
+The [canonical SDK/Mobile supplement](../../reports/music-track-search-evidence-20261026/canonical-contract/README.md) records checkpoint `f630d5cc7c9fd00ad78b2782e3376437016bb277`: canonical `api.yaml` adds the search reference, all531 previous resolved operations stay exact (532 total), and both generated clients preserve1543 prior member leaves with105 added lines each. Web/Mobile outputs are byte-identical. Generation/drift checks and full web app typecheck pass. At that generation snapshot, final canonical reflection was pending; the later actual declaration result is recorded below; this fixes the new reference omission without claiming all prior API debt resolved.
+
+Mobile draft[175](https://github.com/diegueins680/TDF-mobile/pull/175) pins `8d69b011bd6c0dc7b0a9751c20ff9610dcc8b7bd`. Actual Node20 release-check and627 tests/97 suites pass, with exact package/lock-matching cached dependencies copied by COW and no install/dotenv/network. Known floor checks pass20root/21Mobile; no fresh advisory audit is claimed. Real npm/Expo/Metro startup and GET/status pass with all cleanup/source guards. Its first duplicate-npmrc setup failure is retained separately; two blank config files correct only that harness setup. A disclosed test-only listen argument adapter forces the actual server to owned loopback8091. No app bundle/device/API/audio/EAS/signing/deploy is tested. Root reports exact Mobile8d Validate [run40427917280](https://github.com/diegueins680/TDF-mobile/actions/runs/40427917280) SUCCESS, including release/Jest/Python/ExpoDoctor; this does not prove device/audio/production behavior.
+
+Published b8a [CI run40423799149](https://github.com/diegueins680/tdf-app/actions/runs/40423799149) has failed persona/native jobs; the native job reports52 passes and two WebKit clock failures after a FLAC quality switch. The original failed results/traces remain failed. A pre-metadata default-position seek is the correction hypothesis; deterministic unit tests do not establish that browser root cause. The separate100-case wire/directory selection set and115-case player/identity set pass with overlapping coverage and must not be summed. Eight current-source legacy browser cases pass by root execution (three original Chrome Discovery plus five old-title profiles), with871 UI/spec fingerprints unchanged during that run. The current-provider local30-case base/new/mock run passed by root execution (877 source fingerprints unchanged); its original new-search spec sampled the clock without explicitly awaiting trusted seek completion. Root subsequently strengthened that spec with passive seeking/seeked observers and a trusted matching-lossless seeked precondition before the unchanged clock-baseline/predicate; its separate six-case qualification subsequently passed with root-confirmed exit0 and877 unchanged source fingerprints, as recorded below. The prepared-admission fingerprint check caught that source change and required ordered regeneration; WebKit correction remains UNVERIFIED until the unchanged hosted advancing-clock assertion passes. No timeout/retry/assertion/gate is weakened.
+
+Before the final evidence append, ordered metadata checks passed36 cases; CI-scope contracts47, strict1343JSON/CSV, both generated clients at8d, public-route admission and unchanged25/8 API policies pass. Canonical traceability now declares532 operations including search. Prepared working-source admission maps27 material paths. At that prepared metadata snapshot, immutable normal-merge admission, compiled reflection and exact-head hosted gates were pending. Actual canonical declaration reflection subsequently passed as recorded below; final immutable admission, refreshed freshness and exact-head hosted gates remain pending. Inventory/conformance freshness passed only for the earlier metadata snapshot. All56 existing evidence files remain byte-exact.
+
+The [hosted-failure/correction supplement](../../reports/music-track-search-evidence-20261026/hosted-corrections/README.md) preserves actual b8a run40423799149: persona570pass/10fail/22skip (seven lost legacy titles and three HTML200 music-response crashes), plus native52pass/two WebKit advancing-clock failures. Full artifact hashes and bounded traces/logs remain available; no hosted failure becomes a pass retrospectively. Restoring legacy title/scoped copy and closed actual-client response validation passes100 affected tests/5suites. Metadata-readiness corrections pass115tests/7suites after reproducing premature fractional seek and pause/autoplay counterexamples. Lint/app types pass; these mocked-unit results do not establish WebKit repair.
+
+Corrected unchanged legacy tests pass8 installed-browser executions. Native regression passes30; a stronger search-only successor passes6 after awaiting trusted lossless seeked completion before clock baseline. Root confirmed exit0 and877 unchanged source fingerprints. These local Chromium/phone-web/Firefox runs use synthetic API/auth/media, including mock-player and denial cases; production/physical-device/WebKit acceptance remains unverified. Earlier ENOSPC and hosted failures remain intact.
+
+Actual canonical declaration reflection now passes with532 documented operations and399 prior undocumented gaps (the new search ref gap is resolved),25unmounted/eightstatus differences. Binary8df6 remains actualb8a; observedf630 dirty correction/parent context is not a final-source compile attestation. Mobile[Validate40427917280](https://github.com/diegueins680/TDF-mobile/actions/runs/40427917280) succeeds at8d69b; no root640/device/deployment green claim follows. PR626 actually protected-merged at01:28:41UTC to4b81 (rawREST archived). Source626 composition7bee and protectedmain4b81 are tree-equivalent; normal ancestry integration/retarget is separate. Root NUL-safe source review compares975 backend paths and finds only canonicalapi.yaml changed from qualifiedb8a. Main protection requires20 strict checks and one approval; this is not finalPR640 release clearance. Prepared metadata logs are historical before this evidence update; root must regenerate final freshness. All56 earlier packet leaves remain exact.
 
 ## E. Performance
 
-Startup/search p95, rebuffering and representative-device/network SLOs remain
-unmeasured (`null`). Functional test budgets, case durations and advancing decoder
-clocks are not SLO measurements or benchmark exceptions.
+Startup/search p95, rebuffering and representative-device/network SLOs remain unmeasured (`null`). Functional durations, request timeouts and advancing decoder clocks are not SLO measurements.
 
 ## F. Integration
 
-This complete feature candidate is unpublished, unmerged and not deployed. Its
-normal parent merge is pending root commit. Exact-head CI, current independent
-review, parent integration and protected merge safeguards remain required.
-No failed result, assertion, retry, timeout, skip or API gate is waived.
+[Draft PR640](https://github.com/diegueins680/tdf-app/pull/640) is published at b8a with base626. It is not protected-merged. Hosted exact-candidate CI, fresh independent review and parent integration remain required. The canonical OpenAPI reference is now integrated at f630 with generated Web/Mobile clients; actual canonical declaration reflection now passes using the qualifiedb8a binary and current docs. This does not attest a newly built final-source binary; fresh exact-head hosted gates remain pending. No failure/assertion/timeout/retry/skip or API gate is waived.
 
 ## G. Deployment
 
-No production flag, account, data, master or provider is changed by this metadata
-work. Historical full222 results do not imply current full223 or production
-acceptance. Root owns the fresh compiled binary/schema qualification and release
-workflow after the exact merge candidate is committed.
+No production deployment, flags, account/content/master changes or provider execution occurred. The full223 rehearsal writes only to its fresh owned disposable database, then removes it. It executes no signup/login or mutating HTTP, source signing, object/media transfer, real upload or production playback journey.
 
 ## H. Remaining risks
 
-Non-release/historical/social/event sources, private-owner catalog search, actual
-object/CDN delivery/revocation, upload-to-playback, physical mobile/background
-behavior, hosted WebKit, complete WCAG AA, production observability and SLOs remain
-unqualified by this increment. Existing global formal release gates remain.
-Application-source rollback needs no music migration or master rewrite; target
-rollback execution is unverified. Coordinate backend/frontend rollout so unavailable
-music search is recoverable while directory search continues.
+Historical/non-release/social/event coverage, actual object/CDN revocation, upload processing, private-owner discovery, physical mobile/background controls, hosted WebKit, complete WCAG2.2AA, production observability and SLOs remain unqualified. Existing global formal release gates remain. Application-source rollback needs no music migration/master rewrite; target rollback execution is unverified. Coordinate activation so unavailable music search remains recoverable while directory search continues.
 
 ## I. Next highest-value action
 
-Commit the reconciled current-parent candidate, capture its exact backend inputs,
-run the canonical warm build and actual full223 metadata HTTP qualification, then
-complete current-head CI/review before publication and protected integration.
+Finish normal ancestry integration with protectedmain4b81 (tree-equivalent to merged6267bee), final metadata/freshness and immutable source admission, then fresh hosted native/WebKit/persona gates and independent review before protected integration. Canonical declaration reflection is already observed PASS using the earlierb8a binary; no final-source binary identity is inferred. The directory environment failure remains explicitly incomplete. Production activation, authorized upload-to-playback, observability and SLO acceptance remain subsequent release work.
 
 The following section preserves pre-integration execution chronology through0dd;
 its statements about a pending c66 integration describe that historical checkpoint.

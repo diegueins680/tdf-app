@@ -9042,7 +9042,10 @@
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/utils/authErrorMessage.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
@@ -9051,7 +9054,10 @@
         "e2e/web/auth-landing.spec.mjs",
         "e2e/web/persona-public.spec.mjs",
         "e2e/web/event-rsvp-sharing.spec.mjs",
-        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx"
+        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
+        "tdf-hq-ui/src/api/auth.test.ts",
+        "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -12648,7 +12654,9 @@
         "Draft edit -> hide old actions -> request committed query/page with cancellation; stale results remain outside current view",
         "Explicit Play -> synchronous exact-hit deferred-descriptor command -> current engine source authorization",
         "Search failure -> independent retry; result arrival/pagination/navigation preserve selected engine session",
-        "Revoked selected source -> selected-recording failure without unrelated fallback"
+        "Revoked selected source -> selected-recording failure without unrelated fallback",
+        "Malformed or out-of-contract music wire response -> independent music error; directory results and legacy empty-state title remain usable.",
+        "Nonzero source position -> await matching-source metadata under current generation -> restore latest requested seek -> honor current explicit play/pause intent."
       ],
       "forbiddenTransitions": [
         "Project a hidden recording/source through an artist or release-title match without eligible same-context audio.",
@@ -12659,13 +12667,14 @@
       ],
       "effects": [
         "Read-only private/no-store authorized track metadata; fresh delivery authorization remains separate",
-        "Twelve visible music hits plus one lookahead, independent ES/EN accessible status/retry/navigation controls"
+        "Twelve visible music hits plus one lookahead, independent ES/EN accessible status/retry/navigation controls",
+        "Retain the legacy directory empty-state title, adding scope clarification for active music queries; closed wire-schema field checks reject unexpected keys and malformed hits."
       ],
       "authorization": "Reuse requirePublicFeature, trustedEdgeTerritory, published view and music_public_asset_accessible per same recording/version source before JSON projection. Every returned hit must have eligible audio regardless of text match. Selection reauthorizes through the existing engine.",
       "privacy": "Return only exact context/display metadata and eligible deferred source IDs; technical metadata is numeric bitrate/loudness only. No URL, storage location, master/uploader/rights blob, private index or new listening persistence. Internal database text matching is not a timing noninterference proof.",
-      "concurrency": "AbortSignal plus query/page identity and immediate draft-action hiding. Existing engine generations protect delivery; offset pages have no snapshot guarantee under concurrent catalog mutation.",
+      "concurrency": "AbortSignal plus query/page identity and immediate draft-action hiding. Existing engine generations protect delivery; offset pages have no snapshot guarantee under concurrent catalog mutation. Nonzero rendition restoration waits for matching source metadata, rejects superseded generations, preserves a newer queued seek and never overrides explicit pause.",
       "idempotency": "GET is read-only; stable catalog requests preserve stable recording/context ordering. Explicit commands use existing engine ownership and do not create media or server jobs.",
-      "failure": "Disabled or failed service stays a recoverable independent music error. Invalid query/pagination fails400; late results do not acquire current actions. Denied selected delivery does not substitute another recording.",
+      "failure": "Disabled or failed service stays a recoverable independent music error. Invalid query/pagination fails400; late results do not acquire current actions. Denied selected delivery does not substitute another recording. Malformed music wire data fails closed as a music-only error without crashing directory rendering.",
       "recovery": "Retry the current search or previous music page without resetting playback. Application-source rollback needs no schema or master changes; coordinate frontend/backend order.",
       "observability": "Source-bound actual SQL/binding controls, finite design exploration/mutants, component and native-decoder fixtures, actual compiled HTTP qualification and exact-head CI recorded separately. No operational p95 or production acceptance claim.",
       "implementation": [
@@ -12684,7 +12693,10 @@
         "scripts/quality-repo.sh",
         "playwright.config.mjs",
         "playwright.music-native.config.mjs",
-        "tdf-hq/docs/openapi/music-search.yaml"
+        "tdf-hq/docs/openapi/music-search.yaml",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "interactions": [
         "MEDIA-MUSIC-SOURCES-001",

@@ -66,7 +66,10 @@ selected context, existing engine generation)`.
    pagination remains independent from directory pagination and filters.
 4. Loading, empty and service-unavailable states are distinct. An unavailable or
    disabled music API is not reported as an observed empty catalog. Directory
-   emptiness is labeled as directory emptiness when music is present.
+   emptiness retains its legacy translated title; an active music query adds a
+   separate directory-scope clarifier. Malformed or out-of-contract music wire
+   data becomes a music-only error before rendering. Closed schema-field lists
+   reject unexpected fields; the directory remains independently usable.
 5. An explicit Play click synchronously converts the exact hit into deferred
    source descriptors and dispatches the existing player event. No release-detail
    lookup, first-track guess, per-result signing or artwork request precedes it.
@@ -76,6 +79,13 @@ selected context, existing engine generation)`.
 7. Permission revocation after discovery is enforced by fresh selected-source
    delivery authorization. Denial remains a failure of that selected recording,
    never a substitution of a different recording.
+8. A nonzero saved position for a rendition/recovery source is restored only
+   after that source has metadata. Source identity and selection generation
+   reject obsolete preparation; preparation timeupdate zero cannot replace the
+   intended position. A newer seek, including zero, replaces the queued target.
+   Play is issued only after restoration and only if current user intent still
+   permits it; explicit pause, terminal failure and unmount cannot be undone by
+   late metadata. Initial zero-position startup keeps its existing path.
 
 These obligations refine PLAYER-002/003/005/006 and MEDIA-002/003 within the
 stated boundaries. They do not prove those invariants for the entire platform.
@@ -94,7 +104,9 @@ Actual SQL/binding controls execute through
 uses 14 selected historical migrations plus the actual normalizer/publication
 functions; it is not the full-schema or compiled-handler proof. Component tests
 cover exact selection, stale data, no autoplay, query/page transitions and
-independent errors. Native tests use real AAC/FLAC clocks with synthetic API and
+independent errors, wire validation and metadata-position preparation. These
+event-driven unit tests do not prove the observed WebKit clock stall is repaired;
+the unchanged real advancing-clock assertion remains a fresh hosted gate. Native tests use real AAC/FLAC clocks with synthetic API and
 authorization responses, not actual production media delivery.
 
 Compiled HTTP routing, full-schema fixtures, final model bounds, native outcomes,
