@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "75b2cd18745800b6432e5dd80870886af213319d",
+  "sourceTree": "293e8b37c9f18c9d439b89875179a39d77e2c132",
+  "preview": {
+    "before": {
+      "observedAt": "2026-10-27T01:37:38.734Z",
+      "base": "https://7946ab20.tdf-app.pages.dev",
+      "source": "75b2cd18745800b6432e5dd80870886af213319d",
+      "entry": "/assets/index-BMTqO_LR.js",
+      "sha256": "b315864f7b96ff1195268b2806ea80da60d1990a24d50f7ac87215cce9534556"
+    },
+    "after": {
+      "observedAt": "2026-10-27T01:37:59.582Z",
+      "base": "https://7946ab20.tdf-app.pages.dev",
+      "source": "75b2cd18745800b6432e5dd80870886af213319d",
+      "entry": "/assets/index-BMTqO_LR.js",
+      "sha256": "b315864f7b96ff1195268b2806ea80da60d1990a24d50f7ac87215cce9534556"
+    },
+    "stats": {
+      "startTime": "2026-10-27T01:37:40.711Z",
+      "duration": 18765.787,
+      "expected": 4,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "scope": "Actual preview documents/assets; every business/session API synthetic. External traffic aborted, no actual booking/payment. Not canonical production or physical devices."
+  },
+  "hostedUI": {
+    "job": 121952593179,
+    "run": 40432182775,
+    "passedTests": 3521,
+    "passedSuites": 309,
+    "initialGzipBytes": 336533,
+    "preloads": 5,
+    "checkout": "7649164aed4d1e6396737c62f27f1afd9e348ff0",
+    "checkoutTree": "293e8b37c9f18c9d439b89875179a39d77e2c132",
+    "entireTreeEqualsSource": true,
+    "proof": "Independent GitHub git/commits tree read matches locally committed source tree. Full UI log confirms checkout and test/build totals."
+  },
+  "review": {
+    "id": 5661237790,
+    "login": "tdfrecords",
+    "commit": "75b2cd18745800b6432e5dd80870886af213319d",
+    "submittedAt": "2026-10-27T01:33:12Z",
+    "state": "APPROVED"
+  },
+  "delivery": {
+    "implemented": true,
+    "hostedUI": "passed",
+    "preview": "4PASS",
+    "hostedFullBrowser": "pending",
+    "merged": false,
+    "deployedCanonicalProduction": false
+  },
+  "queue": {
+    "observedProtectedMain": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "predecessor626": "merged by other owner; normal parents63c+7bee verified locally",
+    "next": "627, then628;642 requires final actual base composition and fresh current-head CI/review if source changes."
+  },
+  "evidenceFiles": {
+    "booking-quito-preview-evidence-20261026/attestation-after.json": "8a29b2906b0f9149f7f3d90719a0f245bac58a6d5f153024ec2687b3d75dd5a8",
+    "booking-quito-preview-evidence-20261026/results.json": "09d9e15567fd6580c424e5f90aa23d18cc2a76f751bd7ab0168d32f448946a4d",
+    "booking-quito-preview-evidence-20261026/verify.mjs": "46cf87cfbbc75ce873b1604f503776d053824ab0811a7d34adbbc18408edc256",
+    "booking-quito-preview-evidence-20261026/README.md": "70aa835aa1b6d5d6f96965ec362f4f09f2ba92661762cae77724de5c067fcdbe",
+    "booking-quito-preview-evidence-20261026/attestation-before.json": "9cdc8f5ca182b520235bfb8bb40524b1f90c0ccb992b2c154938019ebb190dc6",
+    "booking-quito-preview-evidence-20261026/verification.json": "c88cd31cac3375a1e58f02673ed2a55818cce2658429c492d2bc70381757c577",
+    "booking-quito-preview-evidence-20261026/booking-timezone-Studio-ho-3cc34-ooking-critical-mobile-flow-chromium-desktop.png": "886dca85a557dfc0f3adbac9b66959c3d12074cc8b329f90aaf9c2672ee990cd",
+    "booking-quito-preview-evidence-20261026/booking-timezone-Studio-ho-3cc34-ooking-critical-mobile-flow-chromium-phone.png": "588a15997d94b9004a0fe07538f9b8d071895ec55cf18ec82a4d3970624f9810",
+    "booking-quito-preview-evidence-20261026/playwright.config.mjs": "8db908e9f9a5acc1610ba8063c49ccc2eb94b7f567e24cf7ca428b89247b0e1e"
+  },
+  "limits": [
+    "UI3521CI and preview counts preserve their own execution identities; old63 local336524 build is not this remote artifact.",
+    "No production timezone correction, real booking, payments, conversion, provider or physical-device claims.",
+    "Public wrapper paths adapted for replay; executed private observer and config retained locally."
+  ]
+}

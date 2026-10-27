@@ -1,0 +1,25 @@
+{
+  "before": {
+    "observedAt": "2026-10-27T01:37:38.734Z",
+    "base": "https://7946ab20.tdf-app.pages.dev",
+    "source": "75b2cd18745800b6432e5dd80870886af213319d",
+    "entry": "/assets/index-BMTqO_LR.js",
+    "sha256": "b315864f7b96ff1195268b2806ea80da60d1990a24d50f7ac87215cce9534556"
+  },
+  "after": {
+    "observedAt": "2026-10-27T01:37:59.582Z",
+    "base": "https://7946ab20.tdf-app.pages.dev",
+    "source": "75b2cd18745800b6432e5dd80870886af213319d",
+    "entry": "/assets/index-BMTqO_LR.js",
+    "sha256": "b315864f7b96ff1195268b2806ea80da60d1990a24d50f7ac87215cce9534556"
+  },
+  "stats": {
+    "startTime": "2026-10-27T01:37:40.711Z",
+    "duration": 18765.787,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "scope": "Actual preview documents/assets; every business/session API synthetic. External traffic aborted, no actual booking/payment. Not canonical production or physical devices."
+}
