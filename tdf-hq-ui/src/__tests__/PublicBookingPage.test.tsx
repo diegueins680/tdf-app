@@ -352,6 +352,22 @@ describe('PublicBookingPage', () => {
     ) as unknown as typeof fetch;
   });
 
+  it('keeps the physical studio in Quito when the general display preference is UTC', async () => {
+    const runtime = window as Window & { __ENV__?: Record<string, string> };
+    const previous = runtime.__ENV__;
+    runtime.__ENV__ = { ...previous, VITE_DEFAULT_TIMEZONE: 'UTC' };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      expect(container.textContent).toContain('08:00–22:00, Quito (GMT-5)');
+    } finally {
+      await cleanup();
+      container.remove();
+      runtime.__ENV__ = previous;
+    }
+  });
+
   it('stacks the service reviews below the booking card in a column so phones never squeeze the card', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -559,6 +575,7 @@ describe('PublicBookingPage', () => {
     const idempotencyKey = createPublicMock.mock.calls[0]?.[1];
     expect(payload).toMatchObject({
       pbServiceOfferingId: BAND_RECORDING_ID,
+      pbStartsAt: '2030-01-01T17:00:00.000Z',
       pbResourceIds: null,
     });
     expect(idempotencyKey).toMatch(/^service-booking-/);

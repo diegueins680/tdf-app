@@ -31,6 +31,7 @@
       "e2e/web/artist-follow.spec.mjs",
       "e2e/web/artist-merch.spec.mjs",
       "e2e/web/auth-landing.spec.mjs",
+      "e2e/web/booking-timezone.spec.mjs",
       "e2e/web/campaign-accessibility.spec.mjs",
       "e2e/web/chat-notification-navigation.spec.mjs",
       "e2e/web/checkout-readiness.spec.mjs",
@@ -2841,6 +2842,12 @@
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
       "sha256": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a58a6650faecc2e6",
+      "path": "e2e/web/booking-timezone.spec.mjs",
+      "sha256": "90fc5de59db64a4c8476079f928f6c4a09640173c5272de642a724d7077430fe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6440,7 +6447,7 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "e9b604b8d0c83c918608e020e2c4e8e1ba38658387c3d81fa8fa39650ccbbdb5",
+      "sha256": "31be0bb8e21e70358412f6e782fd8919eb3910b8d59c4bded1f694b4734f3e28",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9776,7 +9783,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "495911682a5a165839906d23f3ed5581be3b950b961a777ebc6eeec23893653c",
+      "sha256": "2c2a4d20e63e1466f27200fc5e15079043429c26da74b1afd4c32eade5c1b150",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27366,6 +27373,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/public-booking-timezone.md",
+      "sha256": "2aa7f3495b6438719067730f7af3acc0fc9d094d215308da47bf25342b40e647",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/public-knowledge-retrieval.md",
       "sha256": "4a00570991ab6ad89525de51e2b5b2a77127116bd8743d1f6175f6d977047c4d",
       "authority": "inferred",
@@ -27430,7 +27444,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4dccdbbaee1effe652e203d7c7c4190a8ed80a6dcf56681df7a2cffea895c650",
+      "sha256": "e80481b4ce2ddfce494dc17fbbdda5f93d703c13400893405194600d26e356bf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
