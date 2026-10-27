@@ -5773,7 +5773,8 @@
         "Explicit event/identify/page properties",
         "SDK-generated event.properties, $set and $set_once",
         "Current/referrer URLs",
-        "Project configuration"
+        "Project configuration",
+        "SDK initial-person properties used by feature flag and remote configuration requests"
       ],
       "state": {
         "client": [
@@ -5791,7 +5792,8 @@
         "uninitialized + missing key/window -> disabled no-op",
         "uninitialized + configured browser -> ready with before_send sanitization",
         "raw named payload -> sanitized SDK event",
-        "SDK failure -> fixed operation-class warning"
+        "SDK failure -> fixed operation-class warning",
+        "Configured web SDK -> flags and remote configuration disabled; sanitized event capture and session-owned application flags remain available"
       ],
       "forbiddenTransitions": [
         "Transmit a named sensitive field in nested event or person-property envelopes",
@@ -5799,7 +5801,8 @@
         "Log arbitrary SDK exception payloads",
         "Treat an unconfigured client as provider receipt evidence",
         "Private code, buyer details, URL credential or SDK exception payload -> telemetry/log",
-        "Unknown URL query key -> unredacted value"
+        "Unknown URL query key -> unredacted value",
+        "Initial-person URL -> unsanitized SDK flags request outside before_send"
       ],
       "effects": [
         "Sanitized optional telemetry; core user action remains separate",
@@ -5819,7 +5822,8 @@
       ],
       "tests": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
-        "tdf-hq-ui/src/analytics/errorReporting.test.ts"
+        "tdf-hq-ui/src/analytics/errorReporting.test.ts",
+        "e2e/web/analytics-privacy.spec.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -5830,10 +5834,10 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Incoming reviewed main implementation has mapped deterministic examples; fresh combined-candidate execution and deployed analytics configuration/consent correspondence remain required."
+        "reason": "A published-client synthetic counterexample demonstrates initial reset URL disclosure through SDK flags outside before_send. The event-only SDK repair requires exact-source browser/CI qualification and production deployment; complete consent and provider retention remain open."
       },
       "property": "Named sensitive payloads do not survive recognized serializer boundaries; public attribution and configured project token remain usable.",
-      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof. Synthetic client-error and actual route-boundary tests cover raw-error exclusion, embedded URL sentinels, selected context, throwing getters and console failure; scope and exclusions are in formal/system/client-error-privacy.md.",
+      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof. Synthetic client-error and actual route-boundary tests cover raw-error exclusion, embedded URL sentinels, selected context, throwing getters and console failure; scope and exclusions are in formal/system/client-error-privacy.md. Bundled-SDK browser regression requires decoded anonymous pageview and identified events, retains public attribution, and denies flags/configuration requests with all provider and business traffic intercepted.",
       "evidence": "Exact-candidate UI gate; original main PR487 validation is historical for subsequent merged trees."
     },
     {
