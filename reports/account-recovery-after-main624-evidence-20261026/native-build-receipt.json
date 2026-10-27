@@ -1,0 +1,30 @@
+{
+  "source": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "backendTree": "31c739558ac9a830403f27b122838fe725343324",
+  "startedAt": "2026-10-26T21:47:31.312146+00:00",
+  "status": "PASS",
+  "compiler": "9.10.3",
+  "resolver": "lts-24.42",
+  "command": [
+    "stack",
+    "--no-terminal",
+    "test",
+    "--force-dirty",
+    "--jobs",
+    "2",
+    "tdf-hq",
+    "--copy-bins",
+    "--local-bin-path",
+    "/private/tmp/tdf-account-recovery-main624-native-20261026/bin"
+  ],
+  "scope": "Fresh canonical Stack compile and aggregate unit tests on immutable protectedmain2e. PostgreSQL/external runners and HTTP journey qualified separately; pending tests are not passes.",
+  "exitCode": 0,
+  "finishedAt": "2026-10-26T22:09:15.287592+00:00",
+  "binary": "/private/tmp/tdf-account-recovery-main624-native-20261026/bin/tdf-hq-exe",
+  "binarySha256": "8dbe98ed4719573d83ae91e37b5df4c84a6dc1e48485c6ae4ac1b0f6d51cd1a5",
+  "haskellAggregate": {
+    "examples": 4039,
+    "failures": 0,
+    "pending": 21
+  }
+}

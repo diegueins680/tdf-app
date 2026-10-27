@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "status": "IMPLEMENTED_COMMITTED_LOCALLY_TESTED_NOT_RELEASED",
-  "branch": "fix/player-listening-identity-20261026",
+  "status": "PRIVATE_PREPARED_MAIN4B81_METADATA_ONLY_NOT_PUBLISHED_OR_APPROVED",
+  "branch": "integrate/player-listening-main4b81-20261027",
   "initialPlaybackBaseline": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
-  "integrationBaseline": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "integrationBaseline": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
   "scope": "Client-owned local listening state and latest user-intent precedence; no server/private-byte/secureerase/cross-tab proof",
   "audit": {
     "sourceBaseline": "3af768dacd95c1223975c62da3ce8088bed89b47",
@@ -99,10 +99,10 @@
     "other141InheritedRequirementObjectsExact": true,
     "ownedPlayerOtherFieldsExact": true,
     "proofStatus": "TESTED; no mathematical or model-checked identity claim",
-    "integrationInheritedRequirements": 148,
-    "integrationForeignParentObjectsExact": 147,
+    "integrationInheritedRequirements": 149,
+    "integrationForeignParentObjectsExact": 148,
     "integrationOwnedPlayerOnlyImplementationAppend": true,
-    "integrationTotalRequirements": 149
+    "integrationTotalRequirements": 150
   },
   "limits": [
     "Client identity readiness is not server authentication",
@@ -1028,8 +1028,8 @@
     "all1339OriginalDecisionObjectsPreservedActiveOrHistory": true,
     "allOtherReconciliationFieldsExact": true
   },
-  "plannedIntegrationParent": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
-  "protectedMainBaseline": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "plannedIntegrationParent": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+  "protectedMainBaseline": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
   "preIntegrationMetadataValidation": {
     "sourceCommit": "b6259692c11c7b502b974cf6bee7d4ca189925f7",
     "status": "PASS",
@@ -1068,46 +1068,34 @@
     ]
   },
   "metadataValidation": {
-    "integrationParent": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
-    "status": "PASS",
+    "integrationParent": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "status": "PASS_PRIVATE_PREPARED_STRUCTURAL_CHECKS",
     "total": 36,
-    "commands": [
-      {
-        "command": "python3 scripts/test-requirement-declarations.py",
-        "tests": 9,
-        "result": "PASS",
-        "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/declarations.log",
-        "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
-      },
-      {
-        "command": "python3 scripts/test-specification-inventory.py",
-        "tests": 6,
-        "result": "PASS",
-        "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/inventory-tests.log",
-        "sha256": "905de6d4975c4d56bdc3fa6639ec8638abacb03fab8b32e1ec7e1e5d59757f52"
-      },
-      {
-        "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
-        "tests": 10,
-        "result": "PASS",
-        "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/conformance-tests.log",
-        "sha256": "6cff289c8f9b10024d769cb88905c9ec223516b69c45d06f37a492e612bfb224"
-      },
-      {
-        "command": "python3 scripts/test-new-specification-surfaces.py",
-        "tests": 11,
-        "result": "PASS",
-        "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/surfaces-tests.log",
-        "sha256": "19db965d48e52660e6144657258866330f0c36e52fd48ef26b1713f1ebb54d6f"
-      }
+    "suites": [
+      9,
+      6,
+      10,
+      11
     ],
-    "generatedClients": {
-      "result": "PASS",
-      "clients": 2,
-      "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d"
-    },
-    "preservationAssertions": "149 requirements:147foreign main objects exact; PLAYER only SessionProviders implementation append; ownPRIVACY unchanged. All1341 main catalog objects preserved1340active+one exact oldqueue inhistory with one reviewed active successor; every main reconciliation/top-level field retained including2634/archived6ff;223manifest andall sixb625 hashes exact.",
-    "freshness": "PASS final inventory --check and traceability --check; git diff --check PASS"
+    "ciContractCases": 46,
+    "generatedClients": 2,
+    "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "apiAvailabilityAndResponseStatus": "PASS25deferrals/8statuscontracts unchanged; public-route admission PASS",
+    "freshness": "PASS retry ordered inventory->conformance generation and both --check operations; original exit120/ENOSPC retained separately.",
+    "scope": "Structural metadata only; no runtime/currentbinary/hostedCI/review/production qualification.",
+    "logsSha256": {
+      "api-policies.log": "836e594c31c73b948a751a597724b8e3abe89dc7246920f427733b03be943a6e",
+      "test-new-specification-surfaces.py.log": "f649dea40e7222b50d643232583a8416613b0bd02ce5d8f63e9e803ff94fce6c",
+      "conformance-generate.log": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6",
+      "inventory-generate.log": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5",
+      "public-routes.log": "4ad03c0d0d33fb8f67aded7ef3baabfe5ddd1edc69f54946b871f0987a449c99",
+      "test-specification-conformance.py.log": "be789bb827ead5071c5ba1694e2a0a890ec901cc60bcbcbc3bdb1b6e303135c2",
+      "generated-api.log": "ec414fe10f3e065edca49796e2bd783b512a5a18b8b22b0bcf69ccc8cd8575cb",
+      "test-requirement-declarations.py.log": "7c758af7411e05fc2e6c4fb89045f7a03d9a5957d5305092903a23a66373d034",
+      "ci-contracts.log": "0cc401afb4cb412b5fc70e456afc9ec373eeb1a316f79e454a6d5404ad93891c",
+      "test-specification-inventory.py.log": "c31bb3d555c64368831f6bd0f28613dfc561becbcf69d91822da6605c562768e",
+      "prepared-source-admission.log": "57ef89d271abe393635b1cca94260379c8450b1a0ced068c63d9c9b6cff29e3e"
+    }
   },
   "preIntegrationCatalogValidation": {
     "status": "PASS strictJSON/CSV zero unreviewed/stale",
@@ -1138,33 +1126,20 @@
     ]
   },
   "catalogValidation": {
-    "integrationParent": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
-    "status": "PASS strictJSON/CSV zero unreviewed/stale",
-    "finalActiveDecisions": 1341,
+    "integrationParent": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "status": "PASS_PRIVATE_STRICT_JSON_CSV",
+    "candidateCount": 1341,
+    "csvRows": 1341,
+    "unreviewed": 0,
+    "stale": 0,
+    "jsonExitCode": 0,
+    "csvExitCode": 0,
     "unchangedActiveParentObjects": 1340,
     "supersededParentObjectsPreservedExactInHistory": 1,
-    "activeSuccessorsIndividuallyReviewed": 1,
-    "all1341MainDecisionObjectsPreservedActiveOrHistory": true,
-    "allNewMainReconciliationFieldsExact": true,
-    "otherTopLevelCatalogFieldsExactMain": true,
-    "commands": [
-      {
-        "command": "/private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/bin/node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format json --output docs/catalog-persistence/reports/static-list-inventory.json --fail-on-unreviewed",
-        "result": "PASS exit0",
-        "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/catalog-json.log",
-        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "artifact": "docs/catalog-persistence/reports/static-list-inventory.json",
-        "artifactSha256": "4b23dfb0975ba76772edc6bcaf5e9ae0effb74e60f22b41dd72fc3bce7fcfec9"
-      },
-      {
-        "command": "/private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/bin/node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv --fail-on-unreviewed",
-        "result": "PASS exit0",
-        "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/catalog-csv.log",
-        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "artifact": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
-        "artifactSha256": "b0a9ac5e2be451f170279cfa48730dfba774debf53bd1a0f5d22b87ea0083d66"
-      }
-    ]
+    "activeExistingPrivacySuccessorExact": true,
+    "allMainReconciliationAndTopLevelFieldsExact": true,
+    "sourceChangesByMetadataOwner": 0,
+    "scope": "Actual scanner outputs and individual existing queue successor/history review; no policy exemptions or blanket classifications."
   },
   "historicalIntegrationBaselines": [
     {
@@ -1612,6 +1587,116 @@
           "sha256": "c9abb9e462058e2bdb2d4350c4fc4cb19990915c87942e423cf87c16ff75be17"
         }
       }
+    },
+    {
+      "main": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+      "retainedAt": "2026-10-27T02:08:23.215158+00:00",
+      "privateRefreshPreviousContext": {
+        "branch": "fix/player-listening-identity-20261026",
+        "status": "IMPLEMENTED_COMMITTED_LOCALLY_TESTED_NOT_RELEASED",
+        "integrationBaseline": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+        "plannedIntegrationParent": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+        "protectedMainBaseline": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+        "metadataValidation": {
+          "integrationParent": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+          "status": "PASS",
+          "total": 36,
+          "commands": [
+            {
+              "command": "python3 scripts/test-requirement-declarations.py",
+              "tests": 9,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/declarations.log",
+              "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
+            },
+            {
+              "command": "python3 scripts/test-specification-inventory.py",
+              "tests": 6,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/inventory-tests.log",
+              "sha256": "905de6d4975c4d56bdc3fa6639ec8638abacb03fab8b32e1ec7e1e5d59757f52"
+            },
+            {
+              "command": "PYTHONPATH=/private/tmp/tdf-activation-python-deps-20261025 python3 scripts/test-specification-conformance.py",
+              "tests": 10,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/conformance-tests.log",
+              "sha256": "6cff289c8f9b10024d769cb88905c9ec223516b69c45d06f37a492e612bfb224"
+            },
+            {
+              "command": "python3 scripts/test-new-specification-surfaces.py",
+              "tests": 11,
+              "result": "PASS",
+              "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/surfaces-tests.log",
+              "sha256": "19db965d48e52660e6144657258866330f0c36e52fd48ef26b1713f1ebb54d6f"
+            }
+          ],
+          "generatedClients": {
+            "result": "PASS",
+            "clients": 2,
+            "mobileRevision": "d832bb3057dd03d44c0f35eea05be9f36320429d"
+          },
+          "preservationAssertions": "149 requirements:147foreign main objects exact; PLAYER only SessionProviders implementation append; ownPRIVACY unchanged. All1341 main catalog objects preserved1340active+one exact oldqueue inhistory with one reviewed active successor; every main reconciliation/top-level field retained including2634/archived6ff;223manifest andall sixb625 hashes exact.",
+          "freshness": "PASS final inventory --check and traceability --check; git diff --check PASS"
+        },
+        "catalogValidation": {
+          "integrationParent": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+          "status": "PASS strictJSON/CSV zero unreviewed/stale",
+          "finalActiveDecisions": 1341,
+          "unchangedActiveParentObjects": 1340,
+          "supersededParentObjectsPreservedExactInHistory": 1,
+          "activeSuccessorsIndividuallyReviewed": 1,
+          "all1341MainDecisionObjectsPreservedActiveOrHistory": true,
+          "allNewMainReconciliationFieldsExact": true,
+          "otherTopLevelCatalogFieldsExactMain": true,
+          "commands": [
+            {
+              "command": "/private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/bin/node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format json --output docs/catalog-persistence/reports/static-list-inventory.json --fail-on-unreviewed",
+              "result": "PASS exit0",
+              "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/catalog-json.log",
+              "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "artifact": "docs/catalog-persistence/reports/static-list-inventory.json",
+              "artifactSha256": "4b23dfb0975ba76772edc6bcaf5e9ae0effb74e60f22b41dd72fc3bce7fcfec9"
+            },
+            {
+              "command": "/private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/bin/node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv --fail-on-unreviewed",
+              "result": "PASS exit0",
+              "log": "/private/tmp/tdf-player-privacy-mainc66-20261026/catalog-csv.log",
+              "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "artifact": "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+              "artifactSha256": "b0a9ac5e2be451f170279cfa48730dfba774debf53bd1a0f5d22b87ea0083d66"
+            }
+          ]
+        },
+        "sourceAdmission": {
+          "status": "PENDING_ROOT_NORMAL_MERGE_COMMIT",
+          "base": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+          "command": "python3 scripts/check-new-specification-surfaces.py --base c66a65a10a8e5e48f89172d61f6f57fb81697896 --head HEAD",
+          "scope": "Prepared structural mappings then immutable descendant check after root commit; no semantic proof or production claim.",
+          "preparedStatus": "PASS six mapped changed material paths; immutable committed descendant check pending root merge commit",
+          "preparedReceipt": {
+            "path": "/private/tmp/tdf-player-privacy-mainc66-20261026/preservation.json",
+            "sha256": "58310561bd4d94d4161d87274f843b2319defff848aa5fd0bf82ccf974d5e0e3"
+          }
+        },
+        "currentMainReconciliation": {
+          "priorHead": "fc5cedb5ff7abb28c10c89d543656b5da3e38559",
+          "main": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+          "method": "normal merge; six canonical/generated conflicts manually reconciled; no runtime edit",
+          "sixQualifiedSourceHashesUnchanged": true,
+          "packageGraphAndLockUnchanged": true,
+          "nativeBrowserQualification": "Historical b62527 cases and fc5 hosted evidence retain original source identities; no rerun or relabel.",
+          "currentUnitStatus": "Not repeated: all six qualified runtime/test source hashes and package graph remain exactfc5.",
+          "wholeBackendQualified": false,
+          "wholeBackendReason": "Current main introduces inherited SQL/test/migration inputs; historical compiled backend binaries and HTTP receipts do not qualify this whole merged backend.",
+          "production": "NOT_DEPLOYED_OR_VERIFIED",
+          "inheritedMigrationCount": 223,
+          "preparedPreservation": {
+            "path": "/private/tmp/tdf-player-privacy-mainc66-20261026/preservation.json",
+            "sha256": "58310561bd4d94d4161d87274f843b2319defff848aa5fd0bf82ccf974d5e0e3"
+          }
+        }
+      }
     }
   ],
   "migrations": {
@@ -1622,14 +1707,14 @@
     "scope": "Inherited223-entry current-main manifest byte-identical; no migration execution claimed."
   },
   "sourceAdmission": {
-    "status": "PENDING_ROOT_NORMAL_MERGE_COMMIT",
-    "base": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
-    "command": "python3 scripts/check-new-specification-surfaces.py --base c66a65a10a8e5e48f89172d61f6f57fb81697896 --head HEAD",
-    "scope": "Prepared structural mappings then immutable descendant check after root commit; no semantic proof or production claim.",
-    "preparedStatus": "PASS six mapped changed material paths; immutable committed descendant check pending root merge commit",
+    "status": "PENDING_PRIVATE_ROOT_NORMAL_MERGE_COMMIT",
+    "base": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "command": "/private/tmp/tdf-event-memories-venv/bin/python3 scripts/check-new-specification-surfaces.py --base 4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "scope": "Prepared actual source mappings then immutable private descendant check after root commit; not publication or semantic proof.",
+    "preparedStatus": "PASS six changed material paths, actual source bytes and current canonical mappings; immutable private descendant check still pending root normal merge commit",
     "preparedReceipt": {
-      "path": "/private/tmp/tdf-player-privacy-mainc66-20261026/preservation.json",
-      "sha256": "58310561bd4d94d4161d87274f843b2319defff848aa5fd0bf82ccf974d5e0e3"
+      "path": "/private/tmp/tdf-privacy-629-main4b81-20261027/prepared-source-admission.json",
+      "sha256": "57ef89d271abe393635b1cca94260379c8450b1a0ced068c63d9c9b6cff29e3e"
     }
   },
   "parentReleaseSnapshot": {
@@ -1697,20 +1782,88 @@
     "backendMusicActivation": "NOT_PERFORMED_OR_CLAIMED"
   },
   "currentMainReconciliation": {
-    "priorHead": "fc5cedb5ff7abb28c10c89d543656b5da3e38559",
-    "main": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
-    "method": "normal merge; six canonical/generated conflicts manually reconciled; no runtime edit",
-    "sixQualifiedSourceHashesUnchanged": true,
-    "packageGraphAndLockUnchanged": true,
-    "nativeBrowserQualification": "Historical b62527 cases and fc5 hosted evidence retain original source identities; no rerun or relabel.",
-    "currentUnitStatus": "Not repeated: all six qualified runtime/test source hashes and package graph remain exactfc5.",
+    "priorHead": "58155236768627c47b7d3dc68591bd857e734513",
+    "main": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "method": "Private normal merge into integrate/player-listening-main4b81-20261027; six canonical/generated conflicts reconciled; source frozen.",
+    "publication": "PRIVATE_PREPARED_ONLY; published PR629 remains at58155236768627c47b7d3dc68591bd857e734513 with its own prior review/CI identity. This private composition has no new approval, hosted CI, publication or binary qualification.",
+    "requirements": {
+      "main": 149,
+      "foreignMainObjectsExact": 148,
+      "playerOnlySessionProvidersImplementationAppend": true,
+      "ownPrivacyUnchanged": true,
+      "total": 150
+    },
+    "catalog": {
+      "main": 1341,
+      "unchangedActive": 1340,
+      "oldQueueRetirementExact": true,
+      "ownSuccessorExact": true,
+      "allMainHistoryExact": true,
+      "active": 1341
+    },
+    "sixQualifiedSourceHashesUnchanged581AndFc5": true,
+    "sixSourceSha256": {
+      "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
+      "tdf-hq-ui/src/session/SessionProviders.tsx": "993723d58cfd86b5604c9a0faae84c0c21db167a50b8459f0b0439e7381617c4",
+      "tdf-hq-ui/src/player/PlayerProvider.tsx": "4f1981b2830bc5cd71b1d4279a25771c234bee1b4c4612d467b36ad4e22b233a",
+      "tdf-hq-ui/src/player/queue.ts": "5c55aa09fdd0dbf24c32aea638fb1bcf38b620d761d6ca98c3b12c44c6ef375f",
+      "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "1c3b69fcee274bf425973960622a2aeb9ef9dc2eba003d82a8ad9df29709b06d",
+      "e2e/web/music-player-native.spec.mjs": "622572b204235ac202fa0ffa550a3d7820b86ab15b2f943e23726552e299966e"
+    },
+    "inheritedSourceFiveSha256": {
+      ".github/workflows/ci.yml": "834142e79aed673d4ba12ec7ca78e0b302d877dee72f97761fcd9e1e0f124190",
+      "scripts/__tests__/ci-change-scope.test.mjs": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
+      "scripts/ci-change-scope.mjs": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+      "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      "tdf-hq/src/TDF/Server/MusicRelease.hs": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f"
+    },
+    "inheritedAuthSevenSha256": {
+      "tdf-hq-ui/src/api/auth.test.ts": "e49f4b09c0738d72071bf395f2d1c8a43975a2b0e818b4983c58c63e4879db72",
+      "tdf-hq-ui/src/api/auth.ts": "9fc3a39e212fc453ba5c38b701a69dce8c4129addba3aba4ae823cd1d0db57fa",
+      "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "31583e47dca59d77c2e7e74b50ff4672ac2ebbdaae21240669a8a46408b78868",
+      "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "78299818099457a78e8e76f5aa63d06e416aa16a59bf470c88d3390296bff21a",
+      "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx": "23fac48ff6208ec8ca79f31118dfc63eb54d8184aedb0f8ad7f8fbe98a4b663a",
+      "tdf-hq-ui/src/utils/authErrorMessage.test.ts": "9c5762f7ecc5a28095746ce56460955fc98de234efbf7fa185eb9d4ec6c6eb6e",
+      "tdf-hq-ui/src/utils/authErrorMessage.ts": "1983475914b88d680127ff4e2beb785d5e550d84821895b912e97496739890f8"
+    },
     "wholeBackendQualified": false,
-    "wholeBackendReason": "Current main introduces inherited SQL/test/migration inputs; historical compiled backend binaries and HTTP receipts do not qualify this whole merged backend.",
-    "production": "NOT_DEPLOYED_OR_VERIFIED",
+    "wholeBackendReason": "Current main SOURCE handler/query and earlier inherited SQL/test inputs differ from the historical privacy qualification context. Exact six privacy paths do not qualify this whole backend or compose unmerged feature640 fixes.",
+    "historicalEvidence": "All125 prior nonowned report leaves unchanged; original privacy runtime/unit/native/compiled/hosted receipts retain exact source identities.",
+    "runtimeReruns": 0,
+    "packageGraphAndLockUnchanged": true,
     "inheritedMigrationCount": 223,
-    "preparedPreservation": {
-      "path": "/private/tmp/tdf-player-privacy-mainc66-20261026/preservation.json",
-      "sha256": "58310561bd4d94d4161d87274f843b2319defff848aa5fd0bf82ccf974d5e0e3"
+    "manifestExactMain": true,
+    "metadata": {
+      "tests": 36,
+      "ciContracts": 46,
+      "strictJsonCandidates": 1341,
+      "strictCsvRows": 1341,
+      "clients": 2,
+      "apiPolicies": "PASS unchanged25/8",
+      "publicRoutes": "PASS",
+      "preparedAdmission": 6,
+      "freshness": "PASS_RETRY_ORDERED_INVENTORY_AND_CONFORMANCE_CHECKS"
+    },
+    "immutableAdmission": "PENDING_ROOT_PRIVATE_NORMAL_MERGE_COMMIT",
+    "production": "NO_ACTIONS_OR_NEW_VERIFICATION",
+    "capacityInterruption": {
+      "status": "FAILED_ORIGINAL_FINAL_GENERATION_THEN_OWNED_CAPACITY_RECOVERY",
+      "originalConformanceGenerationExitCode": 120,
+      "originalLog": "/private/tmp/tdf-privacy-629-main4b81-20261027/final-conformance-generate.log",
+      "originalLogBytes": 0,
+      "originalStderr": "No retained raw stderr; actual tool exit120 and subsequent shell no-space-left-on-device responses observed. No invented original log.",
+      "followupFreshnessAndAdmission": "Not started: shell could not create output logs due ENOSPC.",
+      "traceAfterFailure": "Read-only valid JSON2874992bytes/150requirements; not accepted as a successful generation.",
+      "rootRecovery": "Root-owned feature640 regenerable compiler-cache cleanup actual0, receipt /private/tmp/tdf-track-search-hosted-518c-20261027/cache-cleanup.json; no source/evidence/qualified executable deletion.",
+      "retry": "Only ordered metadata generation/freshness/prepared admission, no runtime/fulltest rerun.",
+      "retryOutcome": {
+        "inventoryGenerateExit": 0,
+        "conformanceGenerateExit": 0,
+        "inventoryCheckExit": 0,
+        "conformanceCheckExit": 0,
+        "preparedSixAdmissionExit": 0,
+        "runtimeTestsRerun": false
+      }
     }
   }
 }

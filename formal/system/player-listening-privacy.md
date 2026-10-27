@@ -175,7 +175,7 @@ correction only; all other inherited requirement fields remain exact.
 composition + guarded local hydration -> actual App/identity tests + engine/session
 regressions -> exact-candidate CI -> independent review -> target acceptance`.
 
-## Current-main metadata reconciliation
+## Historical c66 metadata reconciliation
 
 The prepared normal merge from `c66a65a10a8e5e48f89172d61f6f57fb81697896` retains all six qualified
 privacy runtime/test source files byte-for-byte from `fc5cedb5ff7abb28c10c89d543656b5da3e38559`.
@@ -188,3 +188,37 @@ structural consistency only. Historical unit/native receipts retain their origin
 source identities; they are not a new whole-backend, hosted-candidate or production
 qualification. Inherited SQL/test changes make whole-backend qualification false
 for this metadata-only refresh. Exact-candidate CI, review and release remain pending.
+
+## Private current-main metadata preparation
+
+The private normal merge of protected main `4b81ab4ab92416aa31dc816057fb8e6a736596d1`
+starts from `58155236768627c47b7d3dc68591bd857e734513` on
+`integrate/player-listening-main4b81-20261027`. It is **PRIVATE_PREPARED**:
+published PR629 remains at its previous581 candidate; this preparation has no
+new approval, hosted CI, published head or current binary qualification.
+
+The union contains150 requirements:148 exact foreign main objects, the existing
+player row with only the disclosed `SessionProviders` implementation append,
+and the unchanged privacy requirement. All1341 main catalog objects remain
+active or in exact retirement history; only the existing reviewed privacy queue
+successor replaces its old queue dispatch entry. Allmain reconciliation history
+and the223-entry migration manifest remain exact.
+
+All six privacy runtime/test files remain byte-exact to581 andfc5. The five
+source-availability inputs and seven authentication UI files inherit current-main
+bytes exactly; they are not old privacy runtime test evidence. All125 existing
+nonowned report leaves remain unchanged. Whole-backend qualification is false:
+the inherited SOURCE query and earlier SQL/test inputs do not acquire a fresh
+backend execution merely because the six privacy files are unchanged. Unmerged
+feature640 readiness/wire corrections are not grafted into this branch.
+
+Current metadata36, CI-contract46, strict1341 JSON/CSV, both generated clients
+at unchanged Mobile d832, public-route admission and unchanged25/8 API policies
+pass. Prepared source admission maps the six privacy files. Ordered freshness and
+root immutable admission are recorded separately in the machine report/private
+preparation receipt. This preparation reruns
+no Stack build, native decoder, PostgreSQL fixture or global formal proof.
+Historical runtime results retain their original source boundaries. Root private
+commit/admission, any later publication, exact-head CI/review and target release
+acceptance remain distinct pending steps. No production data, flags, masters,
+account state or provider execution changed.

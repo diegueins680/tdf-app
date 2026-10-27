@@ -9043,7 +9043,10 @@
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/utils/authErrorMessage.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
@@ -9052,7 +9055,10 @@
         "e2e/web/auth-landing.spec.mjs",
         "e2e/web/persona-public.spec.mjs",
         "e2e/web/event-rsvp-sharing.spec.mjs",
-        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx"
+        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
+        "tdf-hq-ui/src/api/auth.test.ts",
+        "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -12532,6 +12538,85 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Scoped implementation and full-schema tests exist; current-head hosted evidence, independent review and production correspondence remain separate."
+      }
+    },
+    {
+      "id": "MEDIA-MUSIC-SOURCES-001",
+      "domain": "MEDIA",
+      "title": "Authorized public-listening source projection in release detail and personal music collections",
+      "critical": true,
+      "authority": "Explicit user universal audio implementation directive2026-10-25, sections4,9,13,14,17 and P0/P1; focused continuation2026-10-26. Release review and deployment remain separately gated.",
+      "source": "docs/music-releases/authorized-source-projection.md",
+      "contract": "formal/system/music-source-projection.md",
+      "statement": "Public release detail and authenticated favorites,playlists and listening-history source arrays emit only ready current stream/preview assets satisfying the existing public delivery-policy predicate for the trusted requesting territory. Existing identities,metadata,personal row ownership and available-flag semantics remain unchanged; later playback still requires fresh authorization.",
+      "property": "At a projection database snapshot, every returned source asset satisfies music_public_asset_accessible(assetId, trustedTerritory)=true using that handlers actual positional territory binding. The projection issues no delivery credential and does not imply future delivery success or rights.",
+      "actors": [
+        "Public listener viewing a release",
+        "Authenticated listener viewing own saved music",
+        "Backend public source projection and existing delivery-policy predicate"
+      ],
+      "preconditions": [
+        "Existing public feature gates and authenticated principal/account predicates apply.",
+        "Trusted edge territory is derived by the existing handler boundary and bound consistently to source and visibility checks.",
+        "Existing public-release,availability,preview-policy functions and schema are deployed; their correctness is a trusted dependency of this focused contract."
+      ],
+      "inputs": [
+        "Public release slug or authenticated saved-collection principal",
+        "Trusted edge territory or unknown territory",
+        "Existing release/track/recording links,rendition readiness and preview metadata,availability policy and personal saved rows"
+      ],
+      "state": {
+        "boundary": "Read-only sources projection in getPublicRelease,listFavorites,listPlaylists,listPlaybackHistory",
+        "snapshot": "Current database/public-release/availability policy at query execution",
+        "output": "Existing assetId/role/mediaType/technicalMetadata source objects; no newly issued URL"
+      },
+      "allowedTransitions": [
+        "Query authorized public detail or own saved rows -> filter each source with the existing public asset predicate",
+        "Preview-only policy -> current authorized preview references without denied full renditions",
+        "Territory exclusion or withdrawn public version -> empty authorized sources or unavailable detail while preserving existing personal saved-row semantics",
+        "Select a returned source later -> independent current delivery authorization; projection metadata grants no access"
+      ],
+      "forbiddenTransitions": [
+        "A returned source reference fails the existing public delivery predicate for the same trusted territory at the projection snapshot.",
+        "A denied full rendition is advertised to a preview-only listener through an affected source array.",
+        "The source filter changes personal account ownership,row identity,metadata fields or available-flag meaning.",
+        "Manual fixture parameters are treated as proof of the actual handler binding or compiled HTTP behavior."
+      ],
+      "effects": [
+        "Read-only filtered rendition references on four existing response surfaces",
+        "No mutation of masters,publication,rights or saved collection data"
+      ],
+      "authorization": "Retain requirePublicFeature,authenticated handlers,currentPartyId and trusted edge territory. Reuse the same public asset predicate as getPublicMusicAssetAccess; owner/editor access and paid download entitlements remain separate. Delivery rechecks policy independently.",
+      "privacy": "Withhold denied rendition references/technical metadata from affected source arrays and issue no credentials. Existing other public metadata,personal saved titles,artwork and availability fields remain unchanged and are not proven private by this filter.",
+      "concurrency": "Projection agreement is relative to one database snapshot; policy may change before playback. No cross-request snapshot,global transaction or immediate revocation of previously issued URLs is added.",
+      "idempotency": "Read-only projection; repeated requests against unchanged authorized inputs preserve existing row/source identities and ordering.",
+      "failure": "Unavailable rendition policy produces an empty source array; existing detail/collection errors and unavailable saved rows retain their semantics. available means a resolved public version,not assured playable bytes.",
+      "recovery": "Existing player may authorize another valid source or report unavailability. Application-source rollback needs no schema/data reversal but restores the known broader source metadata exposure.",
+      "observability": "Source-bound PostgreSQL controls,policy-removal mutants and actual binding-list correspondence checks with explicit limits; final execution receipt and exact-candidate CI remain required.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs"
+      ],
+      "tests": [
+        "scripts/test-music-source-projection.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Finite PostgreSQL checks execute actual source SQL with authoritative policy functions; actual adjacent Haskell binding lists are extracted, whitelisted and used for fixture parameters. Four policy-removal controls and eight omitted/reordered binding controls detect regressions. Lexical translation does not execute compiled Haskell HTTP routing or prove actual authorized bytes; no theorem is claimed.",
+      "evidence": "reports/music-source-projection-2026-10-26.json binds sourceade78b5ab11ba297cf419a96012032ebf289820d, four SQL surfaces, four policy mutants, eight binding controls and17CIselection tests; final exact-candidate hosted checks and target release remain separate.",
+      "status": "specified and implemented",
+      "confidence": "TESTED finite real PostgreSQL, lexical binding and CI-scope controls on recorded source identities; compiled Stack/HTTP, actual media and production acceptance remain unverified.",
+      "ambiguity": [
+        "The public delivery predicate and trusted territory origin are dependencies,not proved by projection agreement.",
+        "available retains existing resolved-public-version semantics and can coexist with no sources.",
+        "All other public/private metadata boundaries,storage existence,media quality/decoding and target-environment HTTP behavior require separate evidence.",
+        "Previously issued delivery credentials retain existing expiry/cache bounds; immediate byte revocation is not established.",
+        "Representative query-plan/performance impact and production deployment remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Four source projections agree with the authoritative delivery predicate under finite PostgreSQL fixtures; gate-removal, actual lexical argument binding and CI-selection controls pass. Full compiled handler/HTTP behavior, media/storage bytes, target performance and production acceptance require separate evidence; no whole-system authorization proof."
       }
     },
     {
