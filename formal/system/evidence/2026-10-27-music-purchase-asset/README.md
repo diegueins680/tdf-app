@@ -39,3 +39,16 @@ This check samples eligibility at offer-query time; it establishes no lock
 through provider capture, future asset availability, object bytes, provider
 truthfulness, historical-data repair or production correspondence. Existing
 provider/transport/activation blockers remain; keep music commerce disabled.
+
+A stronger database counterexample also constructs the complete graph from
+`MusicPublicationSpec` with just two input changes: the original cover is
+`valid`, and the Worldwide250USD purchase rule references that cover. Ordinary
+submission checks report zero errors; approval/scheduling/publication triggers
+remain enabled throughout; `music_publish_due` publishes one version and the
+public view returns it. Original offer SQL accepts it; corrected SQL rejects it.
+This establishes one reachable database publication, without claiming that all
+324 projected combinations pass publication or that HTTP/session authorization
+and provider execution have been established. The synthetic authoring fixture
+is committed in a separate disposable database to advance transaction time;
+the subsequent publication/read transaction is rolled back. No real provider
+or object store is contacted.
