@@ -15,3 +15,5 @@ Calificación actual: current-main-qualification.json, runtime-main596.json y fu
 La regresión de navegación tiene dos controles negativos sobre582e2a1 (success/recovery:2reemplazos cuando se exige1), ambos positivos tras6dc100e;158pruebas relacionadas/8suites y tipos/lint pasan. Backend/SQL/dependencias/Mobile son exactos main c66; no hay migración propia. Una nueva compilación exige su propia procedencia/hash revisados, sin desactivar el guard.
 
 PRIVATE dependency coexistence only: current runner pins native source0bb095149b376d1a235bb1accfeca7f2f943d22d with source626 a376 UNMERGED. Schema authority remains protected main63c/223. This is not approval, protected integration or deployment. Historical current-main receipts keep their executed sources. Never publish this dependency as delivered before its independent gates.
+
+Private coexistence runtime acceptance is retained in private626-runtime.json and private626-full-journeys-runtime.json. Executed web4290571/API0bb0951, not protected626. Both isolated protocols and all cleanup pass. No mediaHTTPauthorization or production claim follows from these relationship tests.
