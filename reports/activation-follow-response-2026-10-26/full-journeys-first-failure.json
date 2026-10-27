@@ -1,0 +1,83 @@
+{
+  "plan": {
+    "mode": "rehearsal",
+    "humanParticipants": 0,
+    "productionWrites": false,
+    "providersUsed": false,
+    "fixtureSetup": "Existing fictional artist+twofan UI signup/profile/upload-save503/follow/Comunidad/logout/relogin/artist-count protocol. No club provisioning.",
+    "ports": {
+      "postgres": 55534,
+      "api": 18714,
+      "web": 4257
+    },
+    "scope": "Explicit selected candidate web, newly qualified native API and disposablePG16 with222migrations matching protected2e. Realproviders/humans/productionwrites excluded; Drive/media and initial upload-save503 are declared adapters."
+  },
+  "startedAt": "2026-10-26T23:26:44.992003+00:00",
+  "source": "6dc100e55c77c3d6d41fda8352e39f3151c9f1e4",
+  "sourceTree": "af6d9639a1fe63dde1d13d4c7491430a0de49c21",
+  "binaryRevision": "1dd657aca9186b9c4a1b0116826223b6eca03c86",
+  "schemaAuthority": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "migrationCount": 222,
+  "steps": [
+    {
+      "step": "compile-test-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "step": "deny-nonloopback-egress",
+      "exitCode": 0
+    },
+    {
+      "step": "init",
+      "exitCode": 0
+    },
+    {
+      "step": "start",
+      "exitCode": 0
+    },
+    {
+      "step": "create",
+      "exitCode": 0
+    },
+    {
+      "step": "full222-schema",
+      "exitCode": 0
+    },
+    {
+      "step": "build-isolated-web",
+      "exitCode": 0
+    },
+    {
+      "step": "actual-api-browser",
+      "exitCode": 1
+    },
+    {
+      "step": "drop",
+      "exitCode": 0
+    },
+    {
+      "step": "stop",
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "status": "FAILED",
+  "networkIsolation": {
+    "threeListenersLoopbackOnly": true,
+    "lanRequestsDenied": true,
+    "nonLoopbackEgressDeniedWithPositiveControl": true,
+    "noAddressRetained": true
+  },
+  "actualVersion": {
+    "buildTime": "2026-10-26T22:44:06Z",
+    "commit": "1dd657aca9186b9c4a1b0116826223b6eca03c86",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "failureType": "RuntimeError",
+  "finishedAt": "2026-10-26T23:28:30.261564+00:00"
+}

@@ -3,7 +3,6 @@ import { isValidAuthPassword } from './passwordPolicy';
 // Mirrors the server's practical requirement (local@domain.tld); the server
 // remains the authority and normalizes/validates again.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const MAX_DISPLAY_NAME_CHARS = 80;
 
 export interface SignupFieldErrors {
   email?: string;
@@ -28,18 +27,9 @@ export function validateSignupFields(email: string, password: string | null, t: 
 }
 
 /**
- * Initial display name for an email/password account: the email local part,
- * the same fallback Google accounts receive when they have no profile name.
- * Users can replace it from their profile later (progressive profiling).
+ * Keep the legacy argument for callers, but never use private contact data
+ * as an automatic public identity. People choose their public name later.
  */
-export function deriveSignupDisplayName(email: string): string {
-  const local = email.trim().split('@')[0] ?? '';
-  const cleaned = local
-    .split('+')[0]!
-    .replace(/[._-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, MAX_DISPLAY_NAME_CHARS);
-  if (!/[\p{L}\p{N}]/u.test(cleaned)) return 'Fan TDF';
-  return cleaned.charAt(0).toLocaleUpperCase('es') + cleaned.slice(1);
+export function deriveSignupDisplayName(_email: string): string {
+  return 'Cuenta TDF';
 }

@@ -1,0 +1,93 @@
+{
+  "plan": {
+    "mode": "rehearsal",
+    "humanParticipants": 0,
+    "productionWrites": false,
+    "providersUsed": false,
+    "fixtureSetup": "Existing fictional artist+twofan UI signup/profile/upload-save503/follow/Comunidad/logout/relogin/artist-count protocol. No club provisioning.",
+    "ports": {
+      "postgres": 55534,
+      "api": 18714,
+      "web": 4257
+    },
+    "scope": "Explicit selected candidate web, newly qualified native API and disposablePG16 with223migrations matching protected main626. Realproviders/humans/productionwrites excluded; Drive/media and initial upload-save503 are declared adapters."
+  },
+  "startedAt": "2026-10-27T02:17:59.013088+00:00",
+  "source": "79027c996a8d7642abf5f3eae29e4a032ac39902",
+  "sourceTree": "dc3874361376fd5be784b8a4124dcf621e35ba28",
+  "binaryRevision": "48eb295581e31a27b52e4a0353defce8aca890d0",
+  "schemaAuthority": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+  "migrationCount": 223,
+  "qualificationScope": "Candidate activation/privacy implementation based on protected main626; not approved, merged or deployed",
+  "steps": [
+    {
+      "step": "compile-test-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "step": "deny-nonloopback-egress",
+      "exitCode": 0
+    },
+    {
+      "step": "init",
+      "exitCode": 0
+    },
+    {
+      "step": "start",
+      "exitCode": 0
+    },
+    {
+      "step": "create",
+      "exitCode": 0
+    },
+    {
+      "step": "full223-schema",
+      "exitCode": 0
+    },
+    {
+      "step": "build-isolated-web",
+      "exitCode": 0
+    },
+    {
+      "step": "actual-api-browser",
+      "exitCode": 0
+    },
+    {
+      "step": "drop",
+      "exitCode": 0
+    },
+    {
+      "step": "stop",
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "status": "VERIFIED-isolated-full-artist-fan-journeys-only",
+  "networkIsolation": {
+    "threeListenersLoopbackOnly": true,
+    "lanRequestsDenied": true,
+    "nonLoopbackEgressDeniedWithPositiveControl": true,
+    "noAddressRetained": true
+  },
+  "actualVersion": {
+    "buildTime": "2026-10-27T02:08:16Z",
+    "commit": "48eb295581e31a27b52e4a0353defce8aca890d0",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "databaseAssertions": {
+    "syntheticPairs": 2,
+    "followRows": 2,
+    "followEvents": 2,
+    "serverFirstValues": 2,
+    "artistUiFollowerCount": 2,
+    "clubRows": 0,
+    "artistProfiles": 1,
+    "duplicateRows": 0
+  },
+  "finishedAt": "2026-10-27T02:19:21.827194+00:00"
+}
