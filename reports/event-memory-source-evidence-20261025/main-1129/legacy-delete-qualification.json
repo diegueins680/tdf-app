@@ -1,0 +1,432 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-27T05:34:07.555385+00:00",
+  "qualifiedApplicationSource": "4ced63fdef3642762ffa3d2f18f4516a8ad92eab",
+  "fixCommit": "5cc8282a1",
+  "metadataCommit": "4ced63fdef3642762ffa3d2f18f4516a8ad92eab",
+  "runtime": {
+    "recordedAt": "2026-10-27T05:32:45.012826+00:00",
+    "source": "4ced63fdef3642762ffa3d2f18f4516a8ad92eab",
+    "actualVersion": {
+      "buildTime": "2026-10-27T05:27:53Z",
+      "commit": "4ced63fdef3642762ffa3d2f18f4516a8ad92eab",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "binarySha256": "51037e6c5e75524cb773850afac1fd3833c2e1804c7683f5ed9a11a562539aa3",
+    "platform": "Darwin x86_64 Stack/GHC9.10.3, PostgreSQL16, Chrome150 desktop/Pixel7 browser",
+    "sourceWorktreeDirty": true,
+    "requests": 143,
+    "assertionGroups": 21,
+    "runtimeSourcesCurrentAndCommittedExact": 277,
+    "browserAssertions": 13,
+    "browserRuntime": {
+      "channel": "chrome",
+      "version": "150.0.7871.125"
+    },
+    "historicalDeletion": {
+      "beforeActivation": "204",
+      "afterLiveCutover": "204",
+      "afterPausedCutover": "204",
+      "directFrozenChildFence": "SQLSTATE55000 twice; no bypass",
+      "wrongAuthorAndWrongEvent": "404",
+      "canonicalBodiesErased": true,
+      "reactionsCleared": true,
+      "targetsRetired": true,
+      "original67fResult": "500 after cutover; retained separately",
+      "actualDeleteRequests": [
+        {
+          "method": "DELETE",
+          "path": "/social-events/events/919143001/moments/1",
+          "status": 204
+        },
+        {
+          "method": "DELETE",
+          "path": "/social-events/events/919143001/moments/2",
+          "status": 404
+        },
+        {
+          "method": "DELETE",
+          "path": "/social-events/events/919143001/moments/2",
+          "status": 204
+        },
+        {
+          "method": "DELETE",
+          "path": "/social-events/events/919143001/moments/3",
+          "status": 404
+        },
+        {
+          "method": "DELETE",
+          "path": "/social-events/events/919143001/moments/3",
+          "status": 204
+        }
+      ]
+    },
+    "migrationLedger": {
+      "expectedCount": 227,
+      "appliedCount": 227,
+      "idsSha256": "3fecbee4adf7399f2a8bea133695375db5efcf7dc5847d46cd2320671e23f62b",
+      "batchSha256": "28a09b70372763e4385f2ca797534286cbdce51f13e88748fb8997fb9eb4f84a"
+    },
+    "newAccountPersistence": {
+      "partyId": 7,
+      "momentId": "11",
+      "assetSha256": "2c7e2665529fcb52c595dad1b8cc6230d02226df97810386658d4a0e41acf968",
+      "survivesRealApiRestart": true,
+      "fixtureRoleGrants": 0
+    },
+    "recoveryPersistence": {
+      "partyId": 5,
+      "momentId": "12",
+      "survivesRealApiRestart": true,
+      "challengeConsumed": true,
+      "challengeReplayStatus": 400,
+      "oldSessionStatus": 401,
+      "oldPasswordStatus": 401,
+      "newPasswordStatus": 200,
+      "privateEventStatus": 404,
+      "outboundEmail": "disabled; explicit private relay only",
+      "fixtureRoleGrantsDuringRecovery": 0
+    },
+    "runtimesStopped": true,
+    "ownedDatabaseRemoved": true,
+    "frontendStopped": true,
+    "externalProviderCalls": 0,
+    "status": "PASS",
+    "files": {
+      "signup-first-memory-phone.png": "fc9f40674883eef238e29031adbabe42c6d2f65b4b612f4bac16335e94ee66ca",
+      "results.json": "4417c0a2b633ddb6500c2c6d7156a5b9e7def1e11fe52e84c6765d2b8f686f8b",
+      "browser-results.json": "9c3eb1048e04fa36d9e57a96bd560eb6813d19b47061ea79ab611a6ddf0f4ccb",
+      "recovery-memory-phone.png": "33863ee9e579f618d3942f3bece976d20c75d14aa1b931706737903f4dfd63a3"
+    }
+  },
+  "build": {
+    "at": "2026-10-27T05:29:25.800781+00:00",
+    "source": "4ced63fdef3642762ffa3d2f18f4516a8ad92eab",
+    "stackExitCode": 0,
+    "trackedBackendInputsExact": 986,
+    "binarySha256": "51037e6c5e75524cb773850afac1fd3833c2e1804c7683f5ed9a11a562539aa3",
+    "bytes": 111090664,
+    "format": "Darwin Mach-O x86_64"
+  },
+  "formal": {
+    "recordedAt": "2026-10-27T05:26:02.821491+00:00",
+    "source": "4ced63fdef3642762ffa3d2f18f4516a8ad92eab",
+    "sourceFiles": 1406,
+    "scopes": {
+      "root": 1306,
+      "native7000": 100
+    },
+    "allCurrentAndCommittedSourceHashesExact": true,
+    "sourceWorktreeDirty": true,
+    "execution": {
+      "passed": true,
+      "reason": "Fresh solver execution, controls and ten serialized SMT problems replayed successfully",
+      "python": "3.13.5 (v3.13.5:6cb20a219a8, Jun 11 2025, 12:23:45) [Clang 16.0.0 (clang-1600.0.26.6)]"
+    },
+    "metrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 154,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 139,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 154,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 154,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "release": {
+      "decision": "BLOCKED",
+      "executionAllowed": false,
+      "criticalUnprovenRequirements": [
+        "SYS-RELEASE-001",
+        "SYS-VERIFY-001",
+        "SYS-VERIFY-002",
+        "SYS-MONEY-001",
+        "SYS-MONEY-002",
+        "SYS-MONEY-003",
+        "SYS-VERIFY-003",
+        "SYS-ESCROW-001",
+        "SYS-ESCROW-002",
+        "SYS-ESCROW-003",
+        "SYS-RELEASE-002",
+        "SYS-API-001",
+        "SYS-API-002",
+        "SYS-INVENTORY-001",
+        "SYS-TRACE-001",
+        "SYS-STATE-001",
+        "AUTH-CORS-001",
+        "AUTH-REGISTRY-001",
+        "ID-ARTIST-CLAIM-001",
+        "ID-SESSION-001",
+        "ID-SESSION-002",
+        "ID-CLAIM-REVIEW-001",
+        "ID-SESSION-003",
+        "DEPLOY-BUILD-001",
+        "PAY-CHECKOUT-001",
+        "PAY-CHECKOUT-002",
+        "PAY-CHECKOUT-003",
+        "REF-RECOVERY-001",
+        "PAY-FULFILLMENT-001",
+        "PAY-RECOVERY-001",
+        "DEPLOY-TARGET-001",
+        "DEPLOY-MIGRATION-001",
+        "MSG-ACCESS-001",
+        "MSG-ATOMIC-001",
+        "DEPLOY-RESTORE-001",
+        "DEPLOY-STARTUP-001",
+        "AUTH-BOOK-001",
+        "BOOK-CALENDAR-001",
+        "PRIV-RAG-001",
+        "MEDIA-PERSIST-001",
+        "SYS-API-003",
+        "SYS-VERIFY-004",
+        "PAY-RETRY-001",
+        "AUTH-RADIO-001",
+        "COURSE-SUBJECT-001",
+        "OPS-ENRICH-001",
+        "MKT-REPUTATION-001",
+        "REC-DDEX-001",
+        "REC-CATALOG-001",
+        "PRIV-WEBHOOK-001",
+        "AUTH-WEBHOOK-001",
+        "MEDIA-DRIVE-001",
+        "PRIV-CACHE-001",
+        "PRIV-CACHE-002",
+        "MEDIA-STREAM-001",
+        "PRIV-DELETE-001",
+        "EVT-OWNER-CLAIM-001",
+        "EVT-TICKET-001",
+        "OPS-COMMAND-001",
+        "OPS-APPROVAL-001",
+        "OPS-WORKER-001",
+        "OPS-METRICS-001",
+        "OPS-MANUAL-001",
+        "AUTH-OPS-READ-001",
+        "AUTH-PUBLIC-001",
+        "OPS-AUX-WRITE-001",
+        "SYS-CI-001",
+        "NOTIF-TICKET-001",
+        "PRIV-ERROR-001",
+        "PRIV-ANALYTICS-001",
+        "EVT-PRESENTATION-001",
+        "PAY-INVOICE-001",
+        "DEPLOY-BACKUP-001",
+        "DEPLOY-READINESS-001",
+        "DEPLOY-CANARY-001",
+        "DEPLOY-FILES-001",
+        "DEPLOY-ENVELOPE-001",
+        "DEPLOY-JOURNAL-001",
+        "MOB-ONBOARD-001",
+        "MOB-SOCIAL-001",
+        "MOB-BUILD-001",
+        "OPS-CLIENT-001",
+        "MEDIA-INVENTORY-001",
+        "OPS-INTEGRATION-001",
+        "DEPLOY-PHYSICAL-001",
+        "SOC-ABUSE-001",
+        "PRIV-INTAKE-001",
+        "EVT-TICKET-MANUAL-001",
+        "EVT-TICKET-INVOICE-001",
+        "PRIV-WHATSAPP-001",
+        "MEDIA-MUSIC-RELEASE-001",
+        "MEDIA-MUSIC-ASSET-001",
+        "MEDIA-MUSIC-DDEX-001",
+        "PAY-MUSIC-DOWNLOAD-001",
+        "MEDIA-MUSIC-PLAYER-001",
+        "AUTH-ARTIST-INVITE-001",
+        "AUTH-ACCESS-PROVISION-001",
+        "SYS-WEB-SHELL-001",
+        "AUTH-ENTRY-002",
+        "MSG-WHATSAPP-REDELIVERY-001",
+        "MSG-META-REDELIVERY-001",
+        "PRIV-RAG-002",
+        "OPS-INBOUND-CAPTURE-001",
+        "DATA-INDEX-DECLARATION-001",
+        "OPS-FAILURE-REPLAY-001",
+        "MSG-NOTIFY-001",
+        "PAY-MUSIC-PURCHASE-REPLAY-001",
+        "PAY-MUSIC-MONEY-WIRE-001",
+        "PAY-MUSIC-OUTCOME-001",
+        "DEPLOY-VERSION-001",
+        "MEDIA-DRIVE-002",
+        "COMMUNITY-PROFILE-001",
+        "PAY-INTENT-EXPIRY-001",
+        "AUTH-LOGOUT-001",
+        "PAY-LEDGER-HEADER-001",
+        "MEDIA-MUSIC-DISCOVERY-001",
+        "MEDIA-MUSIC-LEGACY-001",
+        "PAY-DOMAIN-BINDING-001",
+        "MEDIA-MUSIC-SOURCES-001",
+        "SOCIAL-EVENT-MEMORY-001",
+        "SOCIAL-EVENT-INVITATION-001",
+        "SOCIAL-EVENT-MODERATION-001",
+        "SOCIAL-EVENT-SESSION-001"
+      ],
+      "acceptedRisks": [],
+      "reason": "Mandatory implementation/refinement evidence is missing. No authenticated owner risk acceptance or release-artifact correspondence is established.",
+      "enforcementBoundary": "The --require-release command refuses release. Existing Hetzner planner remains executionAllowed=false; no guarded production executor exists here."
+    },
+    "provenanceDigest": "718186ec4204802f0ad5e1717796c498161c08214081540cfdc2d7013dbfef0f",
+    "reportSha256": "8290e35bdc2b02953a6d0cf5aea6720ad1795b9c5f49c26c622141ac9076de44"
+  },
+  "primaryCiAtCut": {
+    "conclusion": "",
+    "headSha": "4ced63fdef3642762ffa3d2f18f4516a8ad92eab",
+    "jobs": [
+      {
+        "name": "changes",
+        "status": "completed",
+        "conclusion": "success",
+        "databaseId": 122026837215
+      },
+      {
+        "name": "payment-staging-inspection",
+        "status": "completed",
+        "conclusion": "skipped",
+        "databaseId": 122026838081
+      },
+      {
+        "name": "native-music-e2e",
+        "status": "completed",
+        "conclusion": "success",
+        "databaseId": 122027033113
+      },
+      {
+        "name": "api-contract-tests",
+        "status": "completed",
+        "conclusion": "success",
+        "databaseId": 122027033134
+      },
+      {
+        "name": "ui-quality",
+        "status": "in_progress",
+        "conclusion": "",
+        "databaseId": 122027033177
+      },
+      {
+        "name": "repo-quality",
+        "status": "in_progress",
+        "conclusion": "",
+        "databaseId": 122027033185
+      },
+      {
+        "name": "migration-tests",
+        "status": "completed",
+        "conclusion": "success",
+        "databaseId": 122027033236
+      },
+      {
+        "name": "backend-quality",
+        "status": "in_progress",
+        "conclusion": "",
+        "databaseId": 122027033240
+      },
+      {
+        "name": "mobile-quality",
+        "status": "completed",
+        "conclusion": "success",
+        "databaseId": 122027033245
+      },
+      {
+        "name": "persona-web-e2e",
+        "status": "in_progress",
+        "conclusion": "",
+        "databaseId": 122027033301
+      },
+      {
+        "name": "api-contracts",
+        "status": "completed",
+        "conclusion": "success",
+        "databaseId": 122027379442
+      },
+      {
+        "name": "production-migrations",
+        "status": "completed",
+        "conclusion": "success",
+        "databaseId": 122028294614
+      }
+    ],
+    "status": "in_progress"
+  },
+  "catalog": {
+    "strictJson": "PASS",
+    "strictCsv": "PASS",
+    "candidates": 1350,
+    "newNormativeDecisions": 0
+  },
+  "specificationPrerequisites": 11,
+  "requirements": 154,
+  "migrations": 227,
+  "sqlOrPermissionChanges": false,
+  "cleanup": {
+    "at": "2026-10-27T05:32:57.941732+00:00",
+    "ownedClusterStopped": true,
+    "databaseListAfter": [
+      "postgres"
+    ],
+    "ownTemporaryLinksRemoved": [
+      "node_modules",
+      "tdf-hq-ui/node_modules"
+    ],
+    "dependencyTargetsPreserved": true,
+    "apiBrowserFrontendStopped": true,
+    "sharedChrome18800Untouched": true,
+    "productionAccess": false
+  },
+  "originalReproduction": "legacy-delete-reproduction.json remains a failed original67f execution, not overwritten",
+  "originalReproductionPassed": false,
+  "correctedRegressionPassed": true,
+  "production": {
+    "deploymentsByTask": 0,
+    "writesByTask": 0,
+    "event141StateChanged": false
+  },
+  "realInvitations141": {
+    "eligibleAuthorized": null,
+    "excluded": null,
+    "attempted": 0,
+    "sent": 0,
+    "delivered": 0,
+    "failed": 0
+  },
+  "limitations": [
+    "Corrected binary qualification is Darwin/PostgreSQL16/Chrome150; previous67f Linux artifact is not the corrected binary",
+    "SourceWorktreeDirty true from owned dependency links; all277runtime and1406formal inputs current+committed exact",
+    "Current4ced hostedCI pending at cut; cannot report complete until inspected",
+    "SMTP disabled/private actual issued challenge relay; no email-delivery claim",
+    "Native installed event-memory journey, physical devices and stores not qualified",
+    "154 global requirements UNPROVEN/releaseBLOCKED/executionAllowedfalse; no accepted risks",
+    "Independent final-head review and unresolved review conversation still required"
+  ]
+}

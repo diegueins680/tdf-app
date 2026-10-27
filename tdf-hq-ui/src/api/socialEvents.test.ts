@@ -46,6 +46,9 @@ jest.unstable_mockModule('./client', () => ({
 const { SocialEventsAPI } = await import('./socialEvents');
 
 describe('SocialEventsAPI', () => {
+  const published = { emId: '77', emEventId: '141', emAuthorName: 'Synthetic', emCaption: 'Synthetic memory', emMediaUrl: '', emMediaType: 'text' };
+  const textPayload = { emCreateCaption: 'Synthetic memory', emCreateMediaUrl: '', emCreateMediaType: 'text' as const };
+
   beforeEach(() => {
     getMock.mockReset();
     postMock.mockReset();
@@ -254,4 +257,26 @@ describe('SocialEventsAPI', () => {
     expect(getMock).not.toHaveBeenCalled();
     expect(putMock).not.toHaveBeenCalled();
   });
+  it.each(['<html>not a publication</html>', null, {}, { ...published, emId: null }, { ...published, emEventId: '142' }, { ...published, emCaption: null }])('keeps malformed or cross-event acknowledgements unconfirmed: %p', async (reply) => {
+    postMock.mockResolvedValue(reply);
+    await expect(SocialEventsAPI.createMoment('141', textPayload)).rejects.toThrow('No se pudo confirmar la publicación');
+  });
+  it('confirms a persisted moment and retains compatible legacy replies without eventId', async () => {
+    postMock.mockResolvedValue(published);
+    await expect(SocialEventsAPI.createMoment('141', textPayload)).resolves.toEqual(published);
+    const { emEventId: _event, ...legacy } = published;
+    postMock.mockResolvedValue(legacy);
+    await expect(SocialEventsAPI.createMoment('141', textPayload)).resolves.toEqual(legacy);
+  });
+  it('does not confirm another source when editing or an HTML fallback when deleting', async () => {
+    putMock.mockResolvedValue({ ...published, emId: '78' });
+    await expect(SocialEventsAPI.editMoment('141', '77', 'Synthetic', '2026-10-25T00:00:00Z')).rejects.toThrow('No se pudo confirmar');
+    putMock.mockResolvedValue(published);
+    await expect(SocialEventsAPI.editMoment('141', '77', 'Synthetic', '2026-10-25T00:00:00Z')).resolves.toEqual(published);
+    delMock.mockResolvedValue('<html>not a deletion</html>');
+    await expect(SocialEventsAPI.deleteMoment('141', '77')).rejects.toThrow('No se pudo confirmar la eliminación');
+    delMock.mockResolvedValue(undefined);
+    await expect(SocialEventsAPI.deleteMoment('141', '77')).resolves.toBeUndefined();
+  });
+
 });

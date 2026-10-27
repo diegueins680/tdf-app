@@ -1135,6 +1135,26 @@
       "id": "2026-10-16_provider_domain_payment_binding",
       "path": "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql",
       "introducedBy": "456be073c944dd3d76eb9e3c2169fe7fbb4041ef"
+    },
+    {
+      "id": "2026-10-25_event_memory_invitations",
+      "path": "tdf-hq/sql/2026-10-25_event_memory_invitations.sql",
+      "introducedBy": "18690e78a9ce97255529bade31c5ce2250b7ce22"
+    },
+    {
+      "id": "2026-10-25_event_memory_source_moderation",
+      "path": "tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql",
+      "introducedBy": "3bb05ecd777a7243da6d60af0717044b15b59c41"
+    },
+    {
+      "id": "2026-10-25_event_memory_source_authorization",
+      "path": "tdf-hq/sql/2026-10-25_event_memory_source_authorization.sql",
+      "introducedBy": "c6ecae133a93b6bab93c84cee4d72290f9e28982"
+    },
+    {
+      "id": "2026-10-25_event_memory_source_permission_locks",
+      "path": "tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql",
+      "introducedBy": "baab857f085b74f333c9f5d29e31306072fbc496"
     }
   ]
 }
