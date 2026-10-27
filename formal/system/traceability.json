@@ -12620,6 +12620,85 @@
       "contract": "formal/system/follow-response-recovery.md",
       "verification": "Shared-helper and actual-page regression controls, pre-change negative controls, isolated real HTTP/PostgreSQL response-loss tests.",
       "evidence": "Source-bound receipts retain actual web/API/SQL identity and exclude fixtures from activation metrics."
+    },
+    {
+      "id": "MEDIA-MUSIC-SOURCES-001",
+      "domain": "MEDIA",
+      "title": "Authorized public-listening source projection in release detail and personal music collections",
+      "critical": true,
+      "authority": "Explicit user universal audio implementation directive2026-10-25, sections4,9,13,14,17 and P0/P1; focused continuation2026-10-26. Release review and deployment remain separately gated.",
+      "source": "docs/music-releases/authorized-source-projection.md",
+      "contract": "formal/system/music-source-projection.md",
+      "statement": "Public release detail and authenticated favorites,playlists and listening-history source arrays emit only ready current stream/preview assets satisfying the existing public delivery-policy predicate for the trusted requesting territory. Existing identities,metadata,personal row ownership and available-flag semantics remain unchanged; later playback still requires fresh authorization.",
+      "property": "At a projection database snapshot, every returned source asset satisfies music_public_asset_accessible(assetId, trustedTerritory)=true using that handlers actual positional territory binding. The projection issues no delivery credential and does not imply future delivery success or rights.",
+      "actors": [
+        "Public listener viewing a release",
+        "Authenticated listener viewing own saved music",
+        "Backend public source projection and existing delivery-policy predicate"
+      ],
+      "preconditions": [
+        "Existing public feature gates and authenticated principal/account predicates apply.",
+        "Trusted edge territory is derived by the existing handler boundary and bound consistently to source and visibility checks.",
+        "Existing public-release,availability,preview-policy functions and schema are deployed; their correctness is a trusted dependency of this focused contract."
+      ],
+      "inputs": [
+        "Public release slug or authenticated saved-collection principal",
+        "Trusted edge territory or unknown territory",
+        "Existing release/track/recording links,rendition readiness and preview metadata,availability policy and personal saved rows"
+      ],
+      "state": {
+        "boundary": "Read-only sources projection in getPublicRelease,listFavorites,listPlaylists,listPlaybackHistory",
+        "snapshot": "Current database/public-release/availability policy at query execution",
+        "output": "Existing assetId/role/mediaType/technicalMetadata source objects; no newly issued URL"
+      },
+      "allowedTransitions": [
+        "Query authorized public detail or own saved rows -> filter each source with the existing public asset predicate",
+        "Preview-only policy -> current authorized preview references without denied full renditions",
+        "Territory exclusion or withdrawn public version -> empty authorized sources or unavailable detail while preserving existing personal saved-row semantics",
+        "Select a returned source later -> independent current delivery authorization; projection metadata grants no access"
+      ],
+      "forbiddenTransitions": [
+        "A returned source reference fails the existing public delivery predicate for the same trusted territory at the projection snapshot.",
+        "A denied full rendition is advertised to a preview-only listener through an affected source array.",
+        "The source filter changes personal account ownership,row identity,metadata fields or available-flag meaning.",
+        "Manual fixture parameters are treated as proof of the actual handler binding or compiled HTTP behavior."
+      ],
+      "effects": [
+        "Read-only filtered rendition references on four existing response surfaces",
+        "No mutation of masters,publication,rights or saved collection data"
+      ],
+      "authorization": "Retain requirePublicFeature,authenticated handlers,currentPartyId and trusted edge territory. Reuse the same public asset predicate as getPublicMusicAssetAccess; owner/editor access and paid download entitlements remain separate. Delivery rechecks policy independently.",
+      "privacy": "Withhold denied rendition references/technical metadata from affected source arrays and issue no credentials. Existing other public metadata,personal saved titles,artwork and availability fields remain unchanged and are not proven private by this filter.",
+      "concurrency": "Projection agreement is relative to one database snapshot; policy may change before playback. No cross-request snapshot,global transaction or immediate revocation of previously issued URLs is added.",
+      "idempotency": "Read-only projection; repeated requests against unchanged authorized inputs preserve existing row/source identities and ordering.",
+      "failure": "Unavailable rendition policy produces an empty source array; existing detail/collection errors and unavailable saved rows retain their semantics. available means a resolved public version,not assured playable bytes.",
+      "recovery": "Existing player may authorize another valid source or report unavailability. Application-source rollback needs no schema/data reversal but restores the known broader source metadata exposure.",
+      "observability": "Source-bound PostgreSQL controls,policy-removal mutants and actual binding-list correspondence checks with explicit limits; final execution receipt and exact-candidate CI remain required.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs"
+      ],
+      "tests": [
+        "scripts/test-music-source-projection.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Finite PostgreSQL checks execute actual source SQL with authoritative policy functions; actual adjacent Haskell binding lists are extracted, whitelisted and used for fixture parameters. Four policy-removal controls and eight omitted/reordered binding controls detect regressions. Lexical translation does not execute compiled Haskell HTTP routing or prove actual authorized bytes; no theorem is claimed.",
+      "evidence": "reports/music-source-projection-2026-10-26.json binds sourceade78b5ab11ba297cf419a96012032ebf289820d, four SQL surfaces, four policy mutants, eight binding controls and17CIselection tests; final exact-candidate hosted checks and target release remain separate.",
+      "status": "specified and implemented",
+      "confidence": "TESTED finite real PostgreSQL, lexical binding and CI-scope controls on recorded source identities; compiled Stack/HTTP, actual media and production acceptance remain unverified.",
+      "ambiguity": [
+        "The public delivery predicate and trusted territory origin are dependencies,not proved by projection agreement.",
+        "available retains existing resolved-public-version semantics and can coexist with no sources.",
+        "All other public/private metadata boundaries,storage existence,media quality/decoding and target-environment HTTP behavior require separate evidence.",
+        "Previously issued delivery credentials retain existing expiry/cache bounds; immediate byte revocation is not established.",
+        "Representative query-plan/performance impact and production deployment remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Four source projections agree with the authoritative delivery predicate under finite PostgreSQL fixtures; gate-removal, actual lexical argument binding and CI-selection controls pass. Full compiled handler/HTTP behavior, media/storage bytes, target performance and production acceptance require separate evidence; no whole-system authorization proof."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -12627,7 +12706,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "0ae74b6e12c2e2eb03ad899af76bb8b67b6d48c317fc298ee2f131dbcffff26b",
+    ".github/workflows/ci.yml": "834142e79aed673d4ba12ec7ca78e0b302d877dee72f97761fcd9e1e0f124190",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -13003,7 +13082,7 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": "975060fbc49a4c767e15e7ade1a4cbcf189e36155f8c6e44963ce6d648c42811",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
-    "scripts/__tests__/ci-change-scope.test.mjs": "51dfd59c5f1a2c70a16e7acb552711a7806e90f39af21a6c0ace4e3c4f1da8c7",
+    "scripts/__tests__/ci-change-scope.test.mjs": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
     "scripts/__tests__/ci-pipeline.test.mjs": "76ec02976468affc43319d2d77b4461ac6304a89065f9fe3ce483ca819b49760",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
@@ -13071,7 +13150,7 @@
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
-    "scripts/ci-change-scope.mjs": "56dd35bfe3648d8732b28ed6066e118cf743e58093fef5657b031dada0a1112e",
+    "scripts/ci-change-scope.mjs": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
@@ -13193,6 +13272,7 @@
     "scripts/test-music-release-platform-migration.sh": "ff447aefbf0c12ceb562ae5e528678343e89b425c029a83562254265156bdbe4",
     "scripts/test-music-release-worker-runtime.mjs": "cf8ed92b7f4a702051cef5705308171f17fcbdf55a7bf18190cd5a019d28b5a5",
     "scripts/test-music-s3-local.mjs": "882173441c83b1eaa823bcdad88f54a37573de2fdae3375302523b7f2dc43d61",
+    "scripts/test-music-source-projection.mjs": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
     "scripts/test-music-worker-image.mjs": "77621bf3782591ee259de08068c291ecefd88f939d5db4667b082093041707e3",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-operations-inbound-capture.sh": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
@@ -13747,7 +13827,7 @@
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "752c46c93d45ae82b5fce380a9616764a5bb2d97858f0b56a09285ef19b8dfaf",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
-    "tdf-hq/src/TDF/Server/MusicRelease.hs": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
+    "tdf-hq/src/TDF/Server/MusicRelease.hs": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
     "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs": "e0742f56e34371946ef5ffd5ca814c768332e85be2d8c27701c5727bb9a9fc76",
     "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs": "2c848527dfcff004e724d1c32ce61ecc1b7279a996de43195b348de088e324f2",
     "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "44cc676fab692ead582f71d854211c29accd5ff61a3553ac16d9700f49caa49c",
@@ -14512,6 +14592,10 @@
       {
         "requirement": "MEDIA-MUSIC-DISCOVERY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-SOURCES-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/integration/ledger_posting_balance.sql": [
@@ -14607,6 +14691,10 @@
       },
       {
         "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-SOURCES-001",
         "relationship": "tests"
       }
     ],
@@ -15012,6 +15100,10 @@
       {
         "requirement": "PAY-DOMAIN-BINDING-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-SOURCES-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/api/generated/types.ts": [
@@ -20988,6 +21080,10 @@
       {
         "requirement": "MEDIA-MUSIC-DISCOVERY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-SOURCES-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs": [
@@ -24515,6 +24611,12 @@
         "requirement": "COMM-FOLLOW-RECOVERY-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/test-music-source-projection.mjs": [
+      {
+        "requirement": "MEDIA-MUSIC-SOURCES-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -24583,7 +24685,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "0ae74b6e12c2e2eb03ad899af76bb8b67b6d48c317fc298ee2f131dbcffff26b",
+      "sha256": "834142e79aed673d4ba12ec7ca78e0b302d877dee72f97761fcd9e1e0f124190",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24641,6 +24743,10 @@
         {
           "requirement": "PAY-DOMAIN-BINDING-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-SOURCES-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -25684,7 +25790,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "51dfd59c5f1a2c70a16e7acb552711a7806e90f39af21a6c0ace4e3c4f1da8c7",
+      "sha256": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25701,6 +25807,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-SOURCES-001",
           "relationship": "tests"
         }
       ]
@@ -27001,7 +27111,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "56dd35bfe3648d8732b28ed6066e118cf743e58093fef5657b031dada0a1112e",
+      "sha256": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27014,6 +27124,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-SOURCES-001",
           "relationship": "implementation"
         }
       ]
@@ -30049,6 +30163,18 @@
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-ASSET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b7ace60c7f571ef1",
+      "path": "scripts/test-music-source-projection.mjs",
+      "sha256": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-SOURCES-001",
           "relationship": "tests"
         }
       ]
@@ -44906,7 +45032,7 @@
     {
       "id": "SURFACE-83d8f1c82facfb02",
       "path": "tdf-hq/src/TDF/Server/MusicRelease.hs",
-      "sha256": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
+      "sha256": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44919,6 +45045,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-MUSIC-SOURCES-001",
           "relationship": "implementation"
         }
       ]
@@ -52481,7 +52611,8 @@
     "AUTH-LOGOUT-001",
     "MEDIA-MUSIC-DISCOVERY-001",
     "MEDIA-MUSIC-LEGACY-001",
-    "PAY-DOMAIN-BINDING-001"
+    "PAY-DOMAIN-BINDING-001",
+    "MEDIA-MUSIC-SOURCES-001"
   ],
   "stateMachines": [
     {
@@ -53600,7 +53731,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3e596c04f8919735ea0f62919157b3e928831af847a5488a6c8b8f7a837035c7",
+      "sourceSha256": "f94ca71284b6f7004d61e6fa63577335bcffee8e4f3e7651de71d89a921c8d59",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -53628,7 +53759,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3e596c04f8919735ea0f62919157b3e928831af847a5488a6c8b8f7a837035c7",
+      "sourceSha256": "f94ca71284b6f7004d61e6fa63577335bcffee8e4f3e7651de71d89a921c8d59",
       "definition": {
         "states": [
           "absent",
@@ -53658,7 +53789,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3e596c04f8919735ea0f62919157b3e928831af847a5488a6c8b8f7a837035c7",
+      "sourceSha256": "f94ca71284b6f7004d61e6fa63577335bcffee8e4f3e7651de71d89a921c8d59",
       "definition": {
         "export": [
           "queued",
@@ -75934,7 +76065,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 149,
+    "PARTIAL": 150,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
