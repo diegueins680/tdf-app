@@ -1,0 +1,119 @@
+{
+  "startedAt": "2026-10-26T22:49:33.567780+00:00",
+  "source": "032fe6ddb544317d5e02096c7ac213beca96fe5e",
+  "tree": "0e237ba57644b99c52d234273d25e233aae98316",
+  "binarySource": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "binarySha256": "8dbe98ed4719573d83ae91e37b5df4c84a6dc1e48485c6ae4ac1b0f6d51cd1a5",
+  "sourceStatus": [
+    "?? node_modules",
+    "?? tdf-hq-ui/node_modules"
+  ],
+  "steps": [
+    {
+      "step": "compile-loopback-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "step": "deny-nonloopback-egress",
+      "exitCode": 0
+    },
+    {
+      "step": "deny-nonlocal-egress",
+      "exitCode": 0
+    },
+    {
+      "step": "init",
+      "exitCode": 0
+    },
+    {
+      "step": "start",
+      "exitCode": 0
+    },
+    {
+      "step": "create",
+      "exitCode": 0
+    },
+    {
+      "step": "full-schema",
+      "exitCode": 0
+    },
+    {
+      "step": "build-web",
+      "exitCode": 0
+    },
+    {
+      "step": "browser",
+      "exitCode": 0
+    },
+    {
+      "step": "drop",
+      "exitCode": 0
+    },
+    {
+      "step": "stop",
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "status": "VERIFIED-synthetic-local-only",
+  "humanParticipants": 0,
+  "productionWrites": false,
+  "mailScope": "Actual native MIME generation/SMTP transport to non-relaying loopback synthetic inbox; no real mailbox, TLS/provider/deliverability claim.",
+  "harnessSha256": {
+    "run.py": "02b7779b4536e9fad73954976e7a868c7126f5cbd8e9c4bd44b203319db6c6c7",
+    "smtp.py": "16c60c50bcb83b440e4549a170db2a523a1e2a6491b6a32a3d78a030916f6209",
+    "browser.mjs": "37b84eee2e8d329f878fa27b8f20850dffb5f6df5b2d7972c8f62cf3fee778f9",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "migrations": 223,
+  "ledgerHeaderTriggerEnabled": "O",
+  "frontend": {
+    "entry": "/assets/index-DWZjjS8W.js",
+    "sha256": "164800ad88847cc55d37f496c38455ff37798dce54a0f2fdf95e5376582f4e2d",
+    "sourceVerified": true,
+    "freshCompilation": true
+  },
+  "networkIsolation": {
+    "fourListenersLoopbackOnly": true,
+    "lanRequestsDenied": true,
+    "unlistedLanPortDeniedWithPositiveControl": true,
+    "nonlocalTcpDeniedWithPositiveControl": true,
+    "scope": "Services forced to literal127.0.0.1 and four LAN ingress probes refused. SBPL allows local-machine PostgreSQL/SMTP destination ports only; separate positive-outside/denied-inside GitHub443 TCP control sends no application data. Bounded observed controls, not a theorem about all network traffic."
+  },
+  "actualVersion": {
+    "buildTime": "2026-10-26T22:08:29Z",
+    "commit": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "journey": {
+    "scope": "Real isolated native API/PostgreSQL and rendered optimized web with local synthetic SMTP. No real email/provider/device/production claim.",
+    "checks": {
+      "protectedIntentPreserved": true,
+      "uiSignupAndOriginalIntent": true,
+      "revokedSessionReturnsToLoginWithIntent": true,
+      "nativeLocalizedMailPreservesIntent": true,
+      "tokenRemovedFromVisibleUrl": true,
+      "expiredResetRejectedInUi": true,
+      "resetUiReturnsToOriginalIntent": true,
+      "oldPasswordRejected": true,
+      "newPasswordAuthenticatesSameParty": true,
+      "resetTokenSingleUse": true,
+      "earlierResetStillRejected": true,
+      "oldSessionRejected": true,
+      "activePriorSessionRevokedByReset": true,
+      "singlePersistedCredential": true
+    },
+    "blockedExternal": 10,
+    "blockedMutations": 0,
+    "blockedMutationPaths": [],
+    "pageErrors": 0,
+    "partyId": 4,
+    "status": "PASS"
+  },
+  "finishedAt": "2026-10-26T22:51:00.319674+00:00"
+}
