@@ -1,6 +1,6 @@
 {
   "observedAt": "2026-10-27T14:01:46.122148+00:00",
-  "status": "QUALIFIED_PRIVATE_SOURCE_FULL227;PUBLIC_DRAFT_UPDATE_PENDING;NOT_MERGED_OR_DEPLOYED",
+  "status": "FULL227_QUALIFIED;PROTECTED_DELIVERY_PENDING;NOT_MERGED_OR_DEPLOYED",
   "pr": 630,
   "protectedMain": "301810ae3861ea36b1fa790beee940bfe2461a02",
   "executedSource": "d80eb182052de02ac94cd9de21e85e44bfa4bf5b",
@@ -327,11 +327,11 @@
   ],
   "evidenceSha256": {
     "source-admission.json": "45f6a6a6cca6e1ee44a284486d4059dd3050d5db6f4d9e4fc12d5ff58d80f319",
-    "inventory-before-merge-failure.log": "5caf4da22fef8caf803009ffd3243630fb8808bd1436d4416811aa74770d4f5a",
     "run227.py": "3fb615e0412d11035622b785cadf591e6721d2c96609facffdcf959f5ed49d13",
-    "candidate.log": "a5c969432b356640ba57b583818a8f462c39367a61f84fa72d30452961d4ac6b",
     "whitespace-scope.json": "847af8fc844595f433132dd0fcd3510cbca705ed31dcb3d17f0a786947c96f2d",
     "results.json": "5a946ac17aa1a0a2da7da649fe798f93b312193940ec3f33f28b23e5e00f7e71",
-    "metadata-commit-no-change.log": "e08c7e29d68fbc94661c7984d13fef5d5eec926fdb9fa7e93507f37bad1cec91"
-  }
+    "raw-log-hashes.json": "58f9c1e945185f08539aab05857c1513241ff3e53182ee67c4090d00fd71a963",
+    "raw-logs.tar.gz": "1ee7780fbad0620752215de22a70f4f0ac89591c90612ebd4ccc5637f2309b8e"
+  },
+  "rawLogs": "Deterministic raw-logs.tar.gz retains exact bytes; raw-log-hashes.json binds each member. Original private runtime logs also remain unchanged."
 }
