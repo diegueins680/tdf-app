@@ -1,0 +1,260 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-booking-quito-suggestions-preview-20261026/playwright.config.mjs",
+    "rootDir": "/private/tmp/tdf-studio-booking-quito-20261026/e2e/web",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 1,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-booking-quito-suggestions-preview-20261026/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-desktop",
+        "name": "chromium-desktop",
+        "testDir": "/private/tmp/tdf-studio-booking-quito-20261026/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "booking-timezone.spec.mjs"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-booking-quito-suggestions-preview-20261026/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-phone",
+        "name": "chromium-phone",
+        "testDir": "/private/tmp/tdf-studio-booking-quito-20261026/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "booking-timezone.spec.mjs"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/tdf-booking-quito-suggestions-preview-20261026/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "booking-timezone.spec.mjs",
+      "file": "booking-timezone.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Studio hours for UTC",
+          "file": "booking-timezone.spec.mjs",
+          "line": 20,
+          "column": 8,
+          "specs": [
+            {
+              "title": "Quito boundaries and UTC submission survive a refused synthetic booking @critical @mobile-flow",
+              "ok": true,
+              "tags": [
+                "critical",
+                "mobile-flow"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-desktop",
+                  "projectName": "chromium-desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4388,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T03:47:03.231Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99982cac4bdff07b432d-e3a35edaee549a1931dc",
+              "file": "booking-timezone.spec.mjs",
+              "line": 22,
+              "column": 5
+            },
+            {
+              "title": "Quito boundaries and UTC submission survive a refused synthetic booking @critical @mobile-flow",
+              "ok": true,
+              "tags": [
+                "critical",
+                "mobile-flow"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-phone",
+                  "projectName": "chromium-phone",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4637,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T03:47:12.881Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99982cac4bdff07b432d-c0fb2ded08858718455b",
+              "file": "booking-timezone.spec.mjs",
+              "line": 22,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "Studio hours for Europe/Madrid",
+          "file": "booking-timezone.spec.mjs",
+          "line": 20,
+          "column": 8,
+          "specs": [
+            {
+              "title": "Quito boundaries and UTC submission survive a refused synthetic booking @critical @mobile-flow",
+              "ok": true,
+              "tags": [
+                "critical",
+                "mobile-flow"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-desktop",
+                  "projectName": "chromium-desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3640,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T03:47:07.854Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99982cac4bdff07b432d-68cb8241af3909724a3e",
+              "file": "booking-timezone.spec.mjs",
+              "line": 22,
+              "column": 5
+            },
+            {
+              "title": "Quito boundaries and UTC submission survive a refused synthetic booking @critical @mobile-flow",
+              "ok": true,
+              "tags": [
+                "critical",
+                "mobile-flow"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-phone",
+                  "projectName": "chromium-phone",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4478,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T03:47:17.795Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99982cac4bdff07b432d-3439c5ab4c979ccf46c5",
+              "file": "booking-timezone.spec.mjs",
+              "line": 22,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-27T03:47:01.958Z",
+    "duration": 20613.887,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

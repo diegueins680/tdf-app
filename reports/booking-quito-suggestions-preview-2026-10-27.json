@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "source": "0b46cc5fb4ac63884f32c8170c18dd75418ceb26",
+  "tree": "0fca01d888e2184057c67818fc23a5383dfe3067",
+  "preview": {
+    "before": {
+      "observedAt": "2026-10-27T03:47:00.043Z",
+      "base": "https://1ad9172b.tdf-app.pages.dev",
+      "source": "0b46cc5fb4ac63884f32c8170c18dd75418ceb26",
+      "entry": "/assets/index-DR_gIhfO.js",
+      "sha256": "a230ec73b1d898af54f6989136dc3f054cdffcd79947abf23af2c4274d9208d5"
+    },
+    "after": {
+      "observedAt": "2026-10-27T03:47:22.660Z",
+      "base": "https://1ad9172b.tdf-app.pages.dev",
+      "source": "0b46cc5fb4ac63884f32c8170c18dd75418ceb26",
+      "entry": "/assets/index-DR_gIhfO.js",
+      "sha256": "a230ec73b1d898af54f6989136dc3f054cdffcd79947abf23af2c4274d9208d5"
+    },
+    "stats": {
+      "startTime": "2026-10-27T03:47:01.958Z",
+      "duration": 20613.887,
+      "expected": 4,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "scope": "Actual preview documents/assets; every business/session API synthetic. External traffic aborted, no actual booking/payment. Not canonical production or physical devices."
+  },
+  "hostedCI": {
+    "run": 40443103562,
+    "conclusion": "SUCCESS",
+    "checkout": "16bd7e3b483c12c9212170e0ba6057d425aea7ba",
+    "checkoutTree": "0fca01d888e2184057c67818fc23a5383dfe3067",
+    "entireTreeEqualsCandidate": true,
+    "ui": {
+      "job": 121988402266,
+      "passed": 3522,
+      "suites": 309,
+      "initialGzipBytes": 336531,
+      "preloads": 5
+    },
+    "browser": {
+      "job": 121988402345,
+      "passed": 594,
+      "existingSkipped": 22,
+      "failed": 0,
+      "minutes": 21.6,
+      "rolloutPassed": 10,
+      "discoveryPassed": 25,
+      "includes": "All14timezonecases with repeated suggestion checks across7projects, includingLinuxWebKitdesktopandemulatediPhone."
+    },
+    "quality": {
+      "job": 121996300213,
+      "conclusion": "SUCCESS"
+    }
+  },
+  "reviewThread": {
+    "id": "PRRT_kwDOQPdUrM6wheWK",
+    "comment": 4384399010,
+    "resolved": true,
+    "basis": "Published code correction, actual original-component negative control,16unit and8local browser cases; now also full hosted594 browser pass."
+  },
+  "delivery": {
+    "implemented": true,
+    "hostedCI": "passed",
+    "immutablePreview": "4PASS",
+    "merged": false,
+    "canonicalProductionVerified": false,
+    "autoMergeEnabled": false
+  },
+  "baseStatus": {
+    "qualifiedBase": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "laterProtectedMainObserved": "301810ae3861ea36b1fa790beee940bfe2461a02",
+    "limitation": "Strict final-base composition, current-head independent review and protected FIFO still required; do not merge this old-base head from historical CI alone."
+  },
+  "limits": [
+    "All business APIs synthetic; no actual reservation/payment,person,physical-device or conversion claim.",
+    "Different Linux UI/local/CF asset sizes and hashes preserve their actual execution identities.",
+    "Original75approval and CI are not inherited as0b46review evidence."
+  ],
+  "evidenceHashes": {
+    "attestation-after.json": "886bfaa4f8ee42f97b085064fb4b337c81ea16b407d12f858c1152f324326e41",
+    "results.json": "df56b4905b9410cfe453d976bf05651a4c501fc928380e05a85a9538638be5be",
+    "verify.mjs": "379cb738283c8a3849e02d312319dcc111ae3bd5603f30ef65cd87d3077d4838",
+    "README.md": "a9100b575f06c1ad89ab9984db37c3086271e989947c81b08115d8372bfa35b1",
+    "phone-quick-suggestions.png": "ba2723ab58f28db536ada33d09e2eeee87373d5845c8b87d8d698efc411e17a1",
+    "attestation-before.json": "c3508fc90787881eb991efde533cd34584c0ba3f0646ad9d51b5ca84bc1b4bc9",
+    "verification.json": "880a4a6375864e34db2b13738b915c23388b5eaf705ce8c1c63f7020bf80c23a",
+    "playwright.config.mjs": "dc75d1c68dc98bdaf3cae2e8719d4e7c4dab70c009f00121876a59deec8af3b5"
+  }
+}
