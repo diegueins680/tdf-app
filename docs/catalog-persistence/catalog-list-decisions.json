@@ -529,6 +529,16 @@
       "ledgerParent": "f3e3217ac12a04be2a221ee6ac8bea67875d46c5",
       "providerParent": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
       "currentDecisionId": "2634b239375f2ad309ba"
+    },
+    "accountRecovery20261026": {
+      "protectedBase": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+      "previousDecisionFileBlob": "b4251640e3242f2ec5ac45733831c6b043f158c5",
+      "previousDecisionFileSha256": "05793bdcb06612ca1a75fc8326ac01a8f0a59defe7c04aef4286889cf7aa6b95",
+      "replacedDecisionIds": {
+        "3ad9915d69339318f9ff": "0ebaf6c35df246735cd0",
+        "4b3f6f86992b9c64f7a3": "b855e017c65163224770"
+      },
+      "scope": "Only AuthErrorCode union and error.code switch extension; every other baseline decision object is unchanged."
     }
   },
   "decisions": [
@@ -7123,23 +7133,23 @@
       "reviewed": true
     },
     {
-      "id": "3ad9915d69339318f9ff",
+      "id": "0ebaf6c35df246735cd0",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
-      "justification": "Reviewed 2026-09-18: AuthErrorCode union in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "risk": "Client response classification only; cannot authorize access, extend reset expiry, replay confirmation, or change the backend token authority.",
+      "justification": "Reviewed 2026-10-26: fixed auth failure discriminants and their localized copy mapping now include reset-token only for the reset-confirmation endpoint's exact invalid/expired-token response at400/401. Login credential, transport, server and other validation meanings are retained.30 focused tests pass; disabling endpoint classification fails4 expected regressions. This protocol classification is not an editable business catalog. Original decision 3ad9915d69339318f9ff remains in immutable protected source ed9eb9a1600f0a827e002bb2ab64a608f8352b2c.",
       "reviewed": true
     },
     {
-      "id": "4b3f6f86992b9c64f7a3",
+      "id": "b855e017c65163224770",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing these transport/protocol discriminants independently from authFetch and localized views would misclassify retryable failures. They grant no permissions.",
-      "justification": "Reviewed 2026-09-18: error.code translation switch in authErrorMessage.ts enumerates fixed client failure categories network, timeout, credentials, starting and fallback response. It is an executable protocol-to-copy mapping, not an editable business catalog or authorization role registry.27 focused tests and25 browser journeys exercise producers/consumers without weakening catalog detection.",
+      "risk": "Client response classification only; cannot authorize access, extend reset expiry, replay confirmation, or change the backend token authority.",
+      "justification": "Reviewed 2026-10-26: fixed auth failure discriminants and their localized copy mapping now include reset-token only for the reset-confirmation endpoint's exact invalid/expired-token response at400/401. Login credential, transport, server and other validation meanings are retained.30 focused tests pass; disabling endpoint classification fails4 expected regressions. This protocol classification is not an editable business catalog. Original decision 4b3f6f86992b9c64f7a3 remains in immutable protected source ed9eb9a1600f0a827e002bb2ab64a608f8352b2c.",
       "reviewed": true
     },
     {
@@ -18573,6 +18583,25 @@
         "line": 7
       },
       "reviewBatch": "legacy-provider-actions-2026-10-26"
+    },
+    {
+      "id": "2e1934058d8b99179c1e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Making required CI gate identifiers editable independently of workflow jobs and branch protection can admit unverified changes or block valid validation.",
+      "justification": "Individually reviewed: quality, api-contracts and production-migrations are the three fixed GitHub Actions aggregate job/status identifiers. The Node helper dispatches their dependency plans from the checked-in workflow; it neither reads nor defines application business catalog data. The audit's lexical quality matches in application/SQL consumers do not establish a data binding to these CI protocol keys. Keep the mapping in code and require reviewed source changes, tests and GitHub admission.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "ci-selected-job-admission-2026-10-26",
+      "evidence": {
+        "file": "scripts/ci-job-admission.mjs",
+        "line": 26,
+        "kind": "object-registry",
+        "name": "plans",
+        "valueCount": 3
+      }
     }
   ]
 }
