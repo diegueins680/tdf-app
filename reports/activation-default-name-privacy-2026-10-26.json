@@ -141,6 +141,16 @@
         "databaseRemoved": true,
         "clusterStopped": true
       }
+    },
+    "formalBindingReview": "reports/activation-default-name-privacy-2026-10-26/formal-binding-review.json",
+    "hostedStaticPreview6a09737": {
+      "status": "VERIFIED-static-client-with-synthetic-business",
+      "url": "https://317e5922.tdf-app.pages.dev",
+      "source": "6a097370d59d3c2b72ee2d387dc633b3eca98d96",
+      "cases": 10,
+      "realApiWrites": 0,
+      "humanParticipants": 0,
+      "scope": "8follow response-loss/readretry cases +2neutral signup-name payload cases desktop/Pixel7; every API/session/business response synthetic. Not server/database/production availability."
     }
   },
   "scopeLimits": [
@@ -163,6 +173,6 @@
     }
   ],
   "evidenceDirectory": "reports/activation-default-name-privacy-2026-10-26",
-  "protectedIntegration": "NOT TESTED new head not yet published",
+  "protectedIntegration": "PARTIAL:6a09737 independent approval actual5661543143; failed formal source bindings corrected locally. Newhead requires fresh CI and independent approval.",
   "rollback": "Protected revert; no SQL or account rewrites. Existing account names are unchanged and historical remediation is separate."
 }
