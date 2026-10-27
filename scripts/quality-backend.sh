@@ -42,6 +42,7 @@ STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-cors-boundary.py"
   for group in music-unit-domain music-unit-content music-unit-ddex music-unit-storage; do
     "$test_binary" "--match=$group" --fail-on=empty
   done
+  "$test_binary" "--match=Google public-name privacy through token decoding" --fail-on=empty
 )
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-request-failures.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-readiness.py"

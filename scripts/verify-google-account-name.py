@@ -116,6 +116,10 @@ def run():
                 'stack': subprocess.check_output(['stack', '--numeric-version'], text=True).strip(),
                 'ghc': subprocess.check_output(['stack', '--stack-yaml', str(ROOT/'tdf-hq/stack.yaml'),
                                                'exec', '--', 'ghc', '--numeric-version'], text=True).strip()}
+    for package in ['hspec', 'aeson', 'text', 'time']:
+        versions[package] = subprocess.check_output(
+            ['stack', '--stack-yaml', str(ROOT/'tdf-hq/stack.yaml'), 'exec', '--',
+             'ghc-pkg', 'field', package, 'version', '--simple-output'], text=True).strip()
     print(json.dumps({'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'],
           cwd=ROOT, text=True).strip(),
           'worktreeDirty': bool(subprocess.check_output(['git', 'status', '--porcelain'],
