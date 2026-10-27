@@ -72,7 +72,7 @@
   "baseStatus": {
     "qualifiedBase": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
     "laterProtectedMainObserved": "301810ae3861ea36b1fa790beee940bfe2461a02",
-    "limitation": "Strict final-base composition, current-head independent review and protected FIFO still required; do not merge this old-base head from historical CI alone."
+    "limitation": "Current0b independent approval exists. Strict final-base composition is still necessary; a changed head needs its own CI and independent review. Do not merge against main3018 from qualifiedbase4b CI alone."
   },
   "limits": [
     "All business APIs synthetic; no actual reservation/payment,person,physical-device or conversion claim.",
@@ -88,5 +88,13 @@
     "attestation-before.json": "c3508fc90787881eb991efde533cd34584c0ba3f0646ad9d51b5ca84bc1b4bc9",
     "verification.json": "880a4a6375864e34db2b13738b915c23388b5eaf705ce8c1c63f7020bf80c23a",
     "playwright.config.mjs": "dc75d1c68dc98bdaf3cae2e8719d4e7c4dab70c009f00121876a59deec8af3b5"
+  },
+  "review": {
+    "id": 5661957426,
+    "login": "tdfrecords",
+    "state": "APPROVED",
+    "commit": "0b46cc5fb4ac63884f32c8170c18dd75418ceb26",
+    "submittedAt": "2026-10-27T03:41:36Z",
+    "verifiedFrom": "GitHub pull642 reviews; previous75 approval explicitly dismissed."
   }
 }
