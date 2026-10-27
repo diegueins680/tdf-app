@@ -29,16 +29,20 @@
     "independentReviewer": "tdfrecords",
     "approvedAt": "2026-10-26T22:37:11Z",
     "codexReview": "No major issues at98f3ed230",
-    "hostedCI": "All43 statuses SUCCESS or explicitly SKIPPED",
+    "hostedCI": "At23:19:39Z, after the23:10:30Z merge, all43 snapshot entries were observed successful or explicitly skipped; this does not establish pre-merge enforcement.",
     "mergedAt": "2026-10-26T23:10:30Z",
     "mergeCommit": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
-    "statusCount": 43,
     "mergeParents": [
       "2e01bbe1263e8761fa2692bd951f828c01142449",
       "98f3ed230d2bcc87971d9e7c9b2083bd1cb9700d"
     ],
     "mergedTreeEqualsReviewedHead": true,
-    "originalProviderAndLedgerIntroductionAncestryVerified": true
+    "originalProviderAndLedgerIntroductionAncestryVerified": true,
+    "postMergeSnapshotEntryCount": 43,
+    "snapshotMeasuredAt": "2026-10-26T23:19:39.941001+00:00",
+    "historicalRequiredGateEnforcement": "UNKNOWN",
+    "chronology": "delivery-chronology.json",
+    "correction": "Earlier wording incorrectly treated eventual status completion as pre-merge gating. The original raw snapshot is unchanged."
   },
   "limits": [
     "Finite synthetic database cases; real provider HTTP, production data, arbitrary schedules, liveness and external exactly-once charges are not proven.",
