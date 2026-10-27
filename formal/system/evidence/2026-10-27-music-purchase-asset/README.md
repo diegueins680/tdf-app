@@ -42,7 +42,7 @@ provider/transport/activation blockers remain; keep music commerce disabled.
 
 A stronger database counterexample also constructs the complete graph from
 `MusicPublicationSpec` with just two input changes: the original cover is
-`valid`, and the Worldwide 250 USD purchase rule references that cover. Ordinary
+`valid`, and the Worldwide purchase rule for 250 USD minor units ($2.50) references that cover. Ordinary
 submission checks report zero errors; approval/scheduling/publication triggers
 remain enabled throughout; `music_publish_due` publishes one version and the
 public view returns it. Original offer SQL accepts it; corrected SQL rejects it.

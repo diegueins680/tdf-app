@@ -209,7 +209,12 @@
     "thisRepairIntegratedIntoMain": false,
     "providerCalls": 0,
     "productionChanges": 0,
-    "newPR": "not yet created at evidence capture"
+    "newPR": {
+      "number": 649,
+      "url": "https://github.com/diegueins680/tdf-app/pull/649",
+      "state": "OPEN",
+      "assurance": "Fresh current-head hosted CI and independent review required"
+    }
   },
   "earlierAttempts": {
     "broadBuild": "interrupted after linked test component; not whole-command PASS",
@@ -311,7 +316,9 @@
     "assurance/authorization/cardinality-zero.smt2": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c"
   },
   "artifacts": {
-    "README.md": "016c5ac516bc072bf054ac08ebbc418d787f9a36eb5db1ebb60b2e1d29a805e6",
+    "README.md": "9e6c70a5513f10655fbac3fcdd720423f43048584a7378e52beb990dc9a3b51d",
     "artifacts.tar.gz": "468f0530484377b33be4872d3923081f8bb275dbfb9957d7bbdf0df13708d4c9"
-  }
+  },
+  "deliveryUpdatedAt": "2026-10-27T15:05:00.705547+00:00",
+  "narrativeCorrection": "Fixture price_minor=250 means USD2.50; no code, assertion, source input or raw evidence changed."
 }
