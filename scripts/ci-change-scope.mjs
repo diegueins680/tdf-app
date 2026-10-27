@@ -107,6 +107,7 @@ export function classifyChangedFiles(files, options = {}) {
         || file === '.dockerignore'
         || file === 'scripts/test-public-booking-http-concurrency.sh'
         || file === 'scripts/test-music-catalog-search.mjs'
+        || file === 'scripts/test-music-source-projection.mjs'
         || file === 'scripts/test-event-operations-http.sh'
         || file === 'scripts/test-event-operations-http-ci.sh'
         || file === 'scripts/run-event-operations-http-harness.sh'
