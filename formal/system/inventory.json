@@ -524,6 +524,7 @@
       "scripts/test-music-release-platform-migration.sh",
       "scripts/test-music-release-worker-runtime.mjs",
       "scripts/test-music-s3-local.mjs",
+      "scripts/test-music-source-projection.mjs",
       "scripts/test-music-worker-image.mjs",
       "scripts/test-new-specification-surfaces.py",
       "scripts/test-notification-alert-context.mjs",
@@ -2747,7 +2748,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4638cc560899eb91aa0891017d5b434643e1bd2fb9dc1075e07ff8b0e797551b",
+      "sha256": "f8114f086cf9a8fb84ad4c1020d0e899cc75a3bd806a5d5dfe1b06abfd0b49c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3281,7 +3282,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "14e7d50b706c76ea2a08ea34bd9322d81f4a0c7dc85d57e801d23b4e619c0be7",
+      "sha256": "79b6186e102713934dfba527d7ce5c69ed9bcfad75db9e771622bdcd7886a8b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4007,7 +4008,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "9c537f3f2c105f94dd36acb461f091437d626ecc978e30c1d6935e0a10444419",
+      "sha256": "c89aaa9963b6cb6aa80e224724bda30972f2a1f4d23dae5f3bdeaec8c40c0ab0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5730,6 +5731,12 @@
       "id": "SURFACE-f45404c1bc182465",
       "path": "scripts/test-music-s3-local.mjs",
       "sha256": "882173441c83b1eaa823bcdad88f54a37573de2fdae3375302523b7f2dc43d61",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b7ace60c7f571ef1",
+      "path": "scripts/test-music-source-projection.mjs",
+      "sha256": "be8d5865645e51743add2211a9bce26fc391742ddf8ea83aee2bccadf2b996d0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15023,7 +15030,7 @@
     {
       "id": "SURFACE-83d8f1c82facfb02",
       "path": "tdf-hq/src/TDF/Server/MusicRelease.hs",
-      "sha256": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
+      "sha256": "2cc0c8634833e09dae8f42804cac61fbc2f2f7200bc9bb82e080444ea310118f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20874,6 +20881,13 @@
       "sha256": "e7476647709acce95fe53ce881bef012037111bef59d47f0a8db0551f66c9029",
       "authority": "inferred",
       "authorityBasis": "Estado: aceptada, 2026-09-12.",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/music-releases/authorized-source-projection.md",
+      "sha256": "5e36cc49df752de95f6c58360dd5fb48bcb9beb89f5e0bc5170e39b405ce8f64",
+      "authority": "inferred",
+      "authorityBasis": "Status: source controls tested; exact-candidate compiled CI and release evidence pending.",
       "kind": "requirement-candidate"
     },
     {
@@ -27268,6 +27282,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-source-projection.md",
+      "sha256": "7dc84ab24d3b9ac9741d1fe66fa3050100726f00695240fb58c2e97b29adb25f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/music-test-entrypoint.md",
       "sha256": "5e54ac29f493a52114166a56ab68c6038d5d85eaf51b1a5a4ef32c1a5f122279",
       "authority": "inferred",
@@ -27458,7 +27479,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2dc7970de4fd142f1c3c4595192fc007674d251049a5ce9757c5c28e9523c215",
+      "sha256": "c650e9345ac0fe00f3b77e1f4a6c59dd005d941fab28f73ab9cc354e7e92fb03",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
