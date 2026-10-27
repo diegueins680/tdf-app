@@ -1,0 +1,7 @@
+{
+  "status": "PASS_SCOPED_PATTERNS",
+  "findings": 0,
+  "files": 59,
+  "nestedZipMembersReviewed": true,
+  "limitations": "Known high-confidence patterns only, not all-secret proof. Successfulbackendlog intentional serializednegativecontrols retained, not actualjob failures."
+}

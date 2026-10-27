@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "scope": "Newhosted518supplementonly;excludes self;all66olderleaves exact.",
+  "files": {
+    "summary.json": {
+      "bytes": 5576,
+      "sha256": "873d4adeea9b5e12b94ab16aab1f01f0c8f403fa118178dc0a0e1dbb6df486d7"
+    },
+    "delivery-before-hosted.md": {
+      "bytes": 19758,
+      "sha256": "6487399e88d7a5001fca907e10cb36578eafd555544dbe5eb057ea6cd381a0c1"
+    },
+    "qualification-evidence.tar.gz": {
+      "bytes": 5131507,
+      "sha256": "6a95ddf21cf5ce112aee3c32a55d5e0a2a4d1c071b75a49969c27af29c544546"
+    },
+    "scoped-security-review.json": {
+      "bytes": 280,
+      "sha256": "3b62384a966a37e628152a101a6a97483cb57ae37534ee3357114540c58173bc"
+    },
+    "archive-member-hashes.json": {
+      "bytes": 7908,
+      "sha256": "c12d7751b5b90c1fe913492e0848e8fcf23760ebdbc20f3a8958dcb8779f40cf"
+    },
+    "README.md": {
+      "bytes": 5164,
+      "sha256": "5860d134a3d83ffad60a2b1314e38d5cdc0902e3e133dc1ebe67efefb4853a09"
+    },
+    "feature-report-before-hosted.json": {
+      "bytes": 68559,
+      "sha256": "1ea2d47f9eb27f186b1788d91272958757246ab2013afa8facf148a3417b5f1d"
+    },
+    "root-final-qualification.json": {
+      "bytes": 4842,
+      "sha256": "6e2cbb7f70a6c9e3a5e1239f122fa9ac3270f110765abdc7664c8a3fd77a8ebb"
+    },
+    "build-archive.py": {
+      "bytes": 1354,
+      "sha256": "2fe791b72c4cbefaf62557c10f21c9af317e0ebe778b4fcb2dc085842af4d19e"
+    }
+  }
+}
