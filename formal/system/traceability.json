@@ -13655,7 +13655,7 @@
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-directory-saved-search-parity.mjs": "9d90a0f9d1267893f5867dd367b06a54e13956b89ba00e5f3835750220a7c238",
-    "scripts/test-event-memories-http.py": "586d26cdb1e463465904a27dc50be8ca88b3e856f0c5b5d79744c60469e38205",
+    "scripts/test-event-memories-http.py": "4b7ac919b63bbb78d1ced9033b36d7975ebd1e8d2fed21ca408b4c8a8470ff89",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
     "scripts/test-event-memory-recovery-browser.mjs": "1a5c39899720aaaf94277504ba848a10fdce790cf00ce037ef49359e2be54938",
     "scripts/test-event-memory-signup-browser.mjs": "53325a4eec001efb223ce5a3913518b7a8dd658dea6ea8f2d19f46df0fca2a86",
@@ -14288,7 +14288,7 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "0eaa6243aa6730bd5af594bc2a04b2724e013ee8512e36313b6e62456506c7e4",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "bd2e6b817c0a96ad2320b8047fa53cddde10d06ff0d071dfa378c152bf5410be",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
@@ -30553,7 +30553,7 @@
     {
       "id": "SURFACE-92e34e327b523dc8",
       "path": "scripts/test-event-memories-http.py",
-      "sha256": "586d26cdb1e463465904a27dc50be8ca88b3e856f0c5b5d79744c60469e38205",
+      "sha256": "4b7ac919b63bbb78d1ced9033b36d7975ebd1e8d2fed21ca408b4c8a8470ff89",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46716,7 +46716,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "0eaa6243aa6730bd5af594bc2a04b2724e013ee8512e36313b6e62456506c7e4",
+      "sha256": "bd2e6b817c0a96ad2320b8047fa53cddde10d06ff0d071dfa378c152bf5410be",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

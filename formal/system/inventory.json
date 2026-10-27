@@ -5435,7 +5435,7 @@
     {
       "id": "SURFACE-92e34e327b523dc8",
       "path": "scripts/test-event-memories-http.py",
-      "sha256": "586d26cdb1e463465904a27dc50be8ca88b3e856f0c5b5d79744c60469e38205",
+      "sha256": "4b7ac919b63bbb78d1ced9033b36d7975ebd1e8d2fed21ca408b4c8a8470ff89",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15323,7 +15323,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "0eaa6243aa6730bd5af594bc2a04b2724e013ee8512e36313b6e62456506c7e4",
+      "sha256": "bd2e6b817c0a96ad2320b8047fa53cddde10d06ff0d071dfa378c152bf5410be",
       "semanticConformance": "not-established-by-discovery"
     },
     {

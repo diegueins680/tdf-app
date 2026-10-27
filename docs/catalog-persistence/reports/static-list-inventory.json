@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-27T04:10:13.504Z",
+  "generatedAt": "2026-10-27T05:18:59.808Z",
   "repositoryRoot": ".",
   "filesScanned": 2441,
   "candidateCount": 1350,
@@ -17636,7 +17636,7 @@
       "lines": [
         5
       ],
-      "consumerCount": 47,
+      "consumerCount": 48,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
@@ -17690,6 +17690,7 @@
       "automationConsumers": [
         "scripts/__tests__/production-catalog-inventory.test.mjs",
         "scripts/interactions/test-api.py",
+        "scripts/test-event-memories-http.py",
         "scripts/test-event-memory-source-permissions.py"
       ],
       "apiAndIntegrationConsumers": [
@@ -154474,7 +154475,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 47,
+      "consumerCount": 48,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
@@ -154528,6 +154529,7 @@
       "automationConsumers": [
         "scripts/__tests__/production-catalog-inventory.test.mjs",
         "scripts/interactions/test-api.py",
+        "scripts/test-event-memories-http.py",
         "scripts/test-event-memory-source-permissions.py"
       ],
       "apiAndIntegrationConsumers": [
