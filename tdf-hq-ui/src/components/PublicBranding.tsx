@@ -99,8 +99,13 @@ export default function PublicBranding({
     if (location.pathname.startsWith('/marketplace')) {
       return { label: t('authEntry.help'), kind: 'route', value: '/feedback' };
     }
+    if (/^\/(?:social\/)?eventos\/[1-9]\d{0,18}$/.test(location.pathname)) {
+      const params = new URLSearchParams(contextualLoginPath.split('?')[1]);
+      params.set('signup', '1');
+      return { label: t('authEntry.createAccount'), kind: 'route', value: `/login?${params.toString()}` };
+    }
     return { label: t('authEntry.createAccount'), kind: 'route', value: '/login?signup=1&redirect=/fans' };
-  }, [location.pathname, t]);
+  }, [contextualLoginPath, location.pathname, t]);
   const footerSecondaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
       return { label: t('authEntry.signInAutofill'), kind: 'route', value: contextualLoginPath };

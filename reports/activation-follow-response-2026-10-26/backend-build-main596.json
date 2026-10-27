@@ -1,0 +1,43 @@
+{
+  "source": "f0ba27468785574fce3a538224c6acf0e5f74b7c",
+  "sourceTree": "42b0136f4cc02cd014124e08f3f526fc013c762a",
+  "backendTree": "7280a29d9e4ece9ccacf6fbb0b42f496ec2d8567",
+  "protectedBackendSource": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "resolver": "lts-24.42",
+  "compiler": "GHC9.10.3 selected by Stack",
+  "command": [
+    "stack",
+    "--no-terminal",
+    "build",
+    "--force-dirty",
+    "--jobs",
+    "2",
+    "tdf-hq:exe:tdf-hq-exe",
+    "--copy-bins",
+    "--local-bin-path",
+    "/private/tmp/tdf-activation-main596-binary-rebuilt-20261026"
+  ],
+  "startedAt": "2026-10-26T23:37:41.488616+00:00",
+  "status": "BUILT_NOT_RUNTIME_QUALIFIED",
+  "scope": "Native macOS build only; actual runtime/version validation separate. No production image or rollout claim.",
+  "exitCode": 0,
+  "binarySha256": "f7a285c955dd0aaca2dc62e31efd2c0f6db08130d09cae6f00e6d1a631cfddaa",
+  "finishedAt": "2026-10-26T23:38:22.022089+00:00",
+  "stackBuildLogSha256": "a62e8b738822b693aa15214299e0702338cefcffc734152db73cd740f4bc3390",
+  "runtimeQualified": false,
+  "productionImageQualified": false,
+  "priorCopyAttempt": {
+    "status": "Stack succeeded but reused earlier version module",
+    "source": "f0ba27468785574fce3a538224c6acf0e5f74b7c",
+    "binaryRevision": "1dd657aca9186b9c4a1b0116826223b6eca03c86",
+    "binarySha256": "daa75566f3ac69f1cd52f388d9813c590d1442fc2ade15e0c7102580d6fdb37e",
+    "scope": "Original artifacts retained; never represented as a newly embedded source."
+  },
+  "versionCacheRefresh": {
+    "objectsBackedUp": 4,
+    "ownedArtifactsOnly": true,
+    "sourceChanges": false,
+    "canonicalStackForceDirty": true,
+    "scope": "Version.o/hi/dynamic counterparts backed up recoverably; Stack recompiled TDF.Version and linked executable."
+  }
+}
