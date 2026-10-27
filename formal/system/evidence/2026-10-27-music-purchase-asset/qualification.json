@@ -1,0 +1,317 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-27T15:00:16.262355+00:00",
+  "requirement": "PAY-MUSIC-DOWNLOAD-001",
+  "qualifiedSource": "4f7cd24d03ccf121be235bdd5160ed086d832451",
+  "nativeSource": "c2cd0a2d8f42c15d03cb169190040ce37ac1beec",
+  "integratedMain": "ff39d5e181764d99d3712b95545e0575f3749837",
+  "integrationMerge": "34662d7e635725a24282104222f099092164bcfa",
+  "assuranceInputs": 1409,
+  "nativeBackendInputsMatched": 454,
+  "migrationCount": 227,
+  "mobilePin": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "preservedMain": [
+    "tdf-hq/sql/",
+    "tdf-hq-ui/",
+    "e2e/",
+    "scripts/production-migrations.json",
+    "formal/system/compiled-api-surface.json",
+    ".github/workflows/ci.yml",
+    "docs/catalog-persistence/catalog-list-decisions.json",
+    "tdf-mobile"
+  ],
+  "native": {
+    "qualifiedSource": "c2cd0a2d8f42c15d03cb169190040ce37ac1beec",
+    "originalSourceSha256": "8d8fe192caa40d561ba1b25016e3ad7555e1bff84374bb5b32ab88b9a548257e",
+    "baselineSourceRevision": "301810ae3861ea36b1fa790beee940bfe2461a02",
+    "baselineSourceSha256": "44cc676fab692ead582f71d854211c29accd5ff61a3553ac16d9700f49caa49c",
+    "scope": "actual compiled MusicReleaseCommerce in the existing real handler/PostgreSQL test component; no provider HTTP; server executable not used by the control",
+    "baseline": {
+      "examples": 32,
+      "failures": 9,
+      "pending": 0,
+      "exit": 1,
+      "seed": 20261027
+    },
+    "fixed": {
+      "examples": 32,
+      "failures": 0,
+      "pending": 0,
+      "exit": 0,
+      "seed": 20261027
+    }
+  },
+  "tools": {
+    "python": "3.13.5 (v3.13.5:6cb20a219a8, Jun 11 2025, 12:23:45) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "stack": "3.7.1",
+    "ghc": "9.10.3",
+    "libraries": {
+      "hspec": "2.11.17",
+      "aeson": "2.2.5.0",
+      "text": "2.1.3",
+      "time": "1.12.2"
+    },
+    "node": "v24.13.1",
+    "postgres": "16.13 (Homebrew)",
+    "platform": "macOS-12.7.6-x86_64-i386-64bit-Mach-O",
+    "macOS": "12.7.6",
+    "compileFlags": "Stack --fast (no Cabal/system GHC invocation)"
+  },
+  "query": {
+    "status": "TESTED",
+    "scope": "finite extracted SQL relation projection",
+    "commit": "4f7cd24d03ccf121be235bdd5160ed086d832451",
+    "workingTreeClean": true,
+    "sourceHashes": {
+      "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "8d8fe192caa40d561ba1b25016e3ad7555e1bff84374bb5b32ab88b9a548257e",
+      "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs": "b8a242ab8938a53cefac018e4b8c5b0c529b3fbeb7752876549ebd1078cdc8d0",
+      "scripts/test-music-purchase-asset-query.py": "0c806fcb2cb50ec1ecbe466ed0f4078c2968553792925eb86222cc857e415c93"
+    },
+    "postgresServerVersion": "16.13 (Homebrew)",
+    "cases": 324,
+    "accepted": 20,
+    "mismatches": 0,
+    "negativeControls": {
+      "drop-download-policy": {
+        "mismatches": 142,
+        "firstCase": [
+          "quarantined",
+          "master_audio",
+          false,
+          "quarantine",
+          true
+        ],
+        "expected": 0,
+        "actual": 1
+      },
+      "drop-release-version": {
+        "mismatches": 20,
+        "firstCase": [
+          "valid",
+          "master_audio",
+          true,
+          "standard",
+          false
+        ],
+        "expected": 0,
+        "actual": 1
+      }
+    }
+  },
+  "publication": {
+    "schemaMigrations": 227,
+    "publicationTriggers": "enabled throughout; no replication-role change",
+    "fixtureSource": "tdf-hq/test/TDF/MusicPublicationSpec.hs",
+    "fixtureSourceSha256": "f1e201ad215e4485d6bbf6c22c88dc482996e68183637a084395350cc04ee0e3",
+    "fixtureChanges": [
+      "original cover processing state ready -> valid",
+      "Worldwide download sale points at that cover"
+    ],
+    "observed": [
+      "submission_errors=0",
+      "published=1",
+      "public_rows=1",
+      "baseline_offers=1",
+      "fixed_offers=0"
+    ],
+    "transaction": "synthetic authoring fixture committed in dedicated disposable DB to advance transaction time; publication/read transaction rolled back",
+    "providerCalls": 0,
+    "scope": "actual database authoring validation, approval/scheduling/publication state triggers and extracted offer SQL; HTTP/session/provider execution not established"
+  },
+  "assuranceMetrics": {
+    "requirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 154,
+      "NOT_APPLICABLE": 0
+    },
+    "requirementsWithDeclaredAmbiguityEntries": 139,
+    "obligationsByCategory": {
+      "implementation": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 154,
+        "NOT_APPLICABLE": 0
+      },
+      "refinement": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 154,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-authorization-SMT": {
+        "PROVEN": 3,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-recovery-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      }
+    }
+  },
+  "release": "BLOCKED",
+  "scorecard": {
+    "requirementsTotal": 154,
+    "criticalRequirements": 123,
+    "financialCritical": 20,
+    "authorizationCritical": 12,
+    "completeRequirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 154,
+      "NOT_APPLICABLE": 0
+    },
+    "obligationsByCategory": {
+      "implementation": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 154,
+        "NOT_APPLICABLE": 0
+      },
+      "refinement": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 154,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-authorization-SMT": {
+        "PROVEN": 3,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-recovery-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      }
+    },
+    "selectedFinancialProperty": "TESTED, not complete requirement/refinement proven",
+    "financialCounterexampleFamilies": 1,
+    "counterexamples": "One ordinary database publication; nine real-handler admission failures with old code;304 projected policy mismatches. These overlap and are not summed as distinct defects.",
+    "thisRepairIntegratedIntoMain": false,
+    "providerCalls": 0,
+    "productionChanges": 0,
+    "newPR": "not yet created at evidence capture"
+  },
+  "earlierAttempts": {
+    "broadBuild": "interrupted after linked test component; not whole-command PASS",
+    "testTarget": "compiled/linked tests but package copy failed because main executable unfinished; retained failure",
+    "directHandlerFirst": "32examples/1failure: own PostgreSQL max_connections10 exhausted by existing pool20; no product assertion or concurrency changed",
+    "correctedCapacity": "own private cluster increased to40;32/0. Proper server build/test target/canonical runner then completed0. No placeholder executable or ignored build failure."
+  },
+  "limits": [
+    "Offer-query snapshot only, not a lock through provider capture.",
+    "Historical/pending orders are not retroactively repaired.",
+    "SQL projection is finite and abstracts the full asset graph; one complete database publication counterexample separately executes real validation/state triggers.",
+    "Hspec fixtures bypass publication during seeding; the separate full publication probe never disables those triggers.",
+    "Provider HTTP/object bytes/production correspondence and whole-program refinement remain unverified.",
+    "Music commerce must remain disabled pending its existing provider/reconciliation blockers."
+  ],
+  "archiveEntries": {
+    "native/control.json": "8e8f865544bd519174fdacad5f311a90b56d1f16182fa5b588eb3765a572288c",
+    "native/control.py": "95c22da798bd93c9bbfcc6cccd575dd26f39654759b7c64a15032699705c1042",
+    "native/baseline-build.log": "b35e252347e54550825b70730527adb2ac7261749b8a549c064267fe8cea2e34",
+    "native/baseline-tests.log": "28f4b71c5593c41ae61570a4a189d3a7cd8543b7c886a3648467c461fe0a5d45",
+    "native/fixed-build.log": "8627d3830c6f69eb85459678a6608bf3188a979e47d0faafa266c46de7b13398",
+    "native/fixed-tests.log": "70e427ae2bf4f641c434e949dbe757643eae1a99cdad636c56f34c9764eed335",
+    "native/server-build.log": "b6787849010479ba037d9bd4563fabeaf4ef3ddac6c33702a6a07074b1cd01e0",
+    "native/test-component-complete.log": "ca84a0da4d99ed563bcb63bdaf7db900800c82051974c7070bebb91a23a16b0f",
+    "native/canonical-runner.log": "b60b99c3c2a14ecc5a733a1c5becea959d84bf5078b3d35cd93fbad3bd789877",
+    "native/backend-inputs.json": "318ea9327dab03c39e37145a40b4334a9a04a47be4d9011ae5d1cc778eeddb47",
+    "native/tools.json": "f479e6efd83904a6c35fdb389876466b8fe199782df3492be53fb29bac1fbab4",
+    "native/package-versions.txt": "1666dc98a2622c4434e2c23cd19791f77b05a1b0b48fc92e8174a8ab7317afa1",
+    "earlier/broad-build-interrupted.log": "8d5ab22f983b40db7b66b223f498edd1c335c900409c35f7571bc33637a1e483",
+    "earlier/test-target-copy-failed.log": "891ca489cce30ab56a48a61eb04890ee6e19425b01ba34279badac6cdeb67100",
+    "earlier/too-few-db-connections.log": "12f4d515a431d51f75d52f92fd0d47ef80751a3f8363f88484a0a555cba49596",
+    "earlier/capacity-corrected-tests.log": "dec5c5316bed522be50dd30fc7fd25c01db59b93e75b7cad5fc70b30e50dfa4c",
+    "earlier/private-db-capacity-restart.log": "8db95e2a0ec84c72c6d7118a29a204a2513b26251c88fbc2e2f5eb0bd8fbbd6a",
+    "query/baseline-projection.json": "d96d375de9844cbd032eec074ad11f43b40c88a2b51835e928eb1065b6d3938d",
+    "query/source-bound-projection.json": "203a9fa9a4261613ae5b2ac0f6e528f3db4199156a3e34489e4d28772c53212b",
+    "publication/counterexample.py": "58e1c7b2f8ab0b51bc9a0ed522dc8b18dd0fafcff0562fc806611ce2b538bb96",
+    "publication/counterexample.sql": "7153f2e9d073f936d2cfb08ffd00851f4d46f14ab8c38fb0f18f199b4c7d2597",
+    "publication/result.json": "31ad4c86b034072906ecba611e6e06033c305162b1ac33a64836e880371a8524",
+    "publication/schema-apply-replay.log": "af70f43d3ce079e3181d1a515cd6f79c47ea31a2164e526f99dfa74eadc0da6a",
+    "schema-apply-replay.log": "36c3c0fa9476120fe54517234a3fe03665cf8e8d02ecf196a7787dd54270abf4",
+    "quality-repo.log": "8da13b3440e1234ec32dc1a85de6756f91d07ee75ef38064465f19d756da16fe",
+    "source-admission.json": "6afe6728cdfa80b02fb056d4e41ec5314c56315a0d245435c96ce74588bf5570",
+    "catalog.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "catalog.json": "2ba1e4995c4af4561ae2f89402fa74dcf1e9dd7cf7acf9ed7d3dc509ceb907f2",
+    "scope-tests.log": "5b776edc44bfebc86025124e89e3a1fb016f83cea3644a1d891dea2200c8e0d4",
+    "assurance/recovery-execution.log": "bc646e33d49f848988bd7fc2da13dc43b84ec08ba646ad10878b36d3eca20277",
+    "assurance/sources.json": "6d3a20397a2dee076b0997b91b9bc943e58b618a9a946f294555fd13140e72c1",
+    "assurance/authorization-replay.json": "859274a485839265a5663fbf5afde628be2a80448171456e1fc749a9dbdb2993",
+    "assurance/report.json": "c9f9a8e523412c4d625c2e9c1869e10ee6c088d71d43477c53b1171acb90ce5c",
+    "assurance/report.md": "5ef1d7e3672dba6a0b85f5ab3a000bbc451cec7124dad786323f90dd3ff9b09d",
+    "assurance/recovery-replay.json": "2d78916bbcee8b537364251a2914c842cbcccfb947c8dfb7ffdf993136842cf6",
+    "assurance/execution-0.log": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+    "assurance/replay.json": "8ac7d963ca2bd83b91a5945626203f9d3cb82bb6f579b006e69e8fbbb2dfc60d",
+    "assurance/authorization-execution.log": "f02487772bdcec79f52b1936180a867e3f2fbd3c2e46927ac159c083c7cc7625",
+    "assurance/execution-1.log": "3715a8ae7a0dbc651cbc5d6ac5e8ea1797f8c142d457d607ed9b61da986844b6",
+    "assurance/recovery/schema-correspondence.smt2": "6ce0edc16b6585748c551b0e3f2f39e0b8ec6b2b6a931f40d6eb9f385b1e2f88",
+    "assurance/recovery/result.json": "adb7248a10690342b3c965e0fb302f1db784d1d57484d3c4adccce346bf7ccec",
+    "assurance/recovery/witness-9223372036854774907-0.smt2": "5e06c2fa0197b355f0732c263cdb9285cfc3a73a472a0a6c3ba0467798389757",
+    "assurance/recovery/control-issuance-lifetime.smt2": "cfd0154fac07d92d6320df2df02035cf8afd022248f13b240d83f61dd1bde1b0",
+    "assurance/recovery/control-inclusive-deadline.smt2": "fbdbdd1c6dc83f045527dd24b4131ca7ca84889884d93871d530ff129473836e",
+    "assurance/recovery/issuance-admission.smt2": "f06b27694c3a5ffd9ea9e8ca124d07869f0dca809705a4d04d103e106b054dbe",
+    "assurance/recovery/witness-overflow-rejection.smt2": "3133dccb8735eb77f646b547ef2574ecc854d2327620d46a8d38b81f41db9d55",
+    "assurance/recovery/witness-0-0.smt2": "4e6a8d78e1319e57b40f42b97f9f1e135dfac1283aa76bb60f7d3268399a90b9",
+    "assurance/recovery/control-validator-lifetime.smt2": "8eaee02d8eeaf4e73202a21fbfe11f5af08f8dc349248636235bd0d5b9f17050",
+    "assurance/recovery/window-equivalence.smt2": "0eaf4d81ea08baff7a1fee36724590647fad2d9451c316d7b9e1dc90076232f3",
+    "assurance/recovery/witness-9223372036854774907-899.smt2": "57c3d882e4bc67cf89eb9f7093a2ce472c3d38510dba98d7aca99b13f4d183e0",
+    "assurance/recovery/control-future-issuance.smt2": "ac99cecccaef4c4e243272a9f5474ad11f0d3ac023e1a8533db4afb1c3234414",
+    "assurance/recovery/witness-0-899.smt2": "092874565efa8d1bf7fcde8aef1a23f1fd6945b98adc9ea14d560dded7696118",
+    "assurance/recovery/issuance-exact.smt2": "43a56c1e5385f426bf415d5f46658a1b364a552fb2d8afa2bdd65f3319660d99",
+    "assurance/recovery/control-database-lifetime.smt2": "bf333432149c853d3b8d22fb84afe72b46c4eb23472e619eced03c5dd3e48829",
+    "assurance/arithmetic/result.json": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+    "assurance/arithmetic/capture-legacy-counterexample.smt2": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+    "assurance/arithmetic/refund-witness-1.smt2": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+    "assurance/arithmetic/refund-witness-0.smt2": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+    "assurance/arithmetic/refund-legacy-counterexample.smt2": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+    "assurance/arithmetic/refund-admission.smt2": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+    "assurance/arithmetic/refund-safety.smt2": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+    "assurance/arithmetic/capture-safety.smt2": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+    "assurance/arithmetic/capture-witness-1.smt2": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+    "assurance/arithmetic/capture-witness-0.smt2": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+    "assurance/arithmetic/capture-admission.smt2": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+    "assurance/authorization/cardinality-nonnegative.smt2": "538c1648575c93dcf01c97ad2acf74e6ac86bbb0c8bc09225e0d298dfb7a3915",
+    "assurance/authorization/ingestion-admission-witness-false.smt2": "e812df3fef5cadd0a37fafb4cbc760ec34443a4a2fbd514c753711a987df551c",
+    "assurance/authorization/control-module-implies-admin.smt2": "7b7b07ad81bd0f453b589ed24e4dca7a6e29f01d6f96bff8bbfe4b28891af912",
+    "assurance/authorization/result.json": "aaa5e1cc1c42e5cf1d774fe736f42dfa32e2ed468af97f2e60cb0c56236f9e0f",
+    "assurance/authorization/strict-admin-witness-true.smt2": "70b2a1205bbe7f4f5cdb8c8a17ff9dd57ac60ee96fbc0265e0ed63bf9b251ea0",
+    "assurance/authorization/control-admit-operational-role.smt2": "c0eb0fafc11e007470c645ccab64665f20e44bc8e23b0fc3323361796c046e59",
+    "assurance/authorization/module-access-witness-true.smt2": "b69a30273b6417f139fbad50f0f06566ee5bb85ab9d585602afc888cf18f9b04",
+    "assurance/authorization/cardinality-sum.smt2": "f7354ee4a94da5df4c7055469e6e717351460ed89f8955df2c45685ad1c4e3dc",
+    "assurance/authorization/module-access-witness-false.smt2": "513953eccb5de4ec24b36f2a755007c915d0967c5dc276715d798a73b9b9594e",
+    "assurance/authorization/strict-admin.smt2": "7fc3e60bbba531afc47b543e41978f668b1ea0d693b36afe295f713154b4296e",
+    "assurance/authorization/module-access.smt2": "b501d1aa1ee540182d45946adae64be2dd961b1018bc4c63cc191edd0731d0f6",
+    "assurance/authorization/control-drop-coherence.smt2": "1aa33b1d244326d8ee1d79787f3fe5ec5e762adc228f422d56296efb6ee6e3cd",
+    "assurance/authorization/ingestion-admission-witness-true.smt2": "727d41a67f48c39ccf6f2dce096eb46bd1568c19bd72bc7307a5e86f1ae13243",
+    "assurance/authorization/ingestion-admission.smt2": "33bc931447fac518c2660bdc38614b10a9f0c3dcbea488537e8bdba7f43a90bf",
+    "assurance/authorization/strict-admin-witness-false.smt2": "eeaed47cf2849128d81eee8543f1488f2538ec607e5f1054314300b199e0fe6d",
+    "assurance/authorization/control-allow-zero-identity.smt2": "0dc3e705e2041bdb5a58f01562167fb6a0f6b581e434df1f3ec959e8da6a7b33",
+    "assurance/authorization/control-drop-module-grant.smt2": "e9f92c4f12111b7c5984b4c5c2f8300976eaff22b07ef83767ea678231e221e4",
+    "assurance/authorization/cardinality-zero.smt2": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c"
+  },
+  "artifacts": {
+    "README.md": "016c5ac516bc072bf054ac08ebbc418d787f9a36eb5db1ebb60b2e1d29a805e6",
+    "artifacts.tar.gz": "468f0530484377b33be4872d3923081f8bb275dbfb9957d7bbdf0df13708d4c9"
+  }
+}
