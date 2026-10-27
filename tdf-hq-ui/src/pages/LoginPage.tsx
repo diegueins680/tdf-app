@@ -796,8 +796,8 @@ export default function LoginPage() {
     }
 
     // Only email + password are asked for. The account API still needs a
-    // display-name part, so start from the email's local part (the same
-    // fallback Google accounts get); people can change it later in their profile.
+    // display-name part. Start with a neutral label so private email details
+    // cannot become public before people choose a name in their profile.
     const payload = {
       ...buildSignupPayload(
         { ...signupForm, firstName: deriveSignupDisplayName(signupForm.email), lastName: '' },

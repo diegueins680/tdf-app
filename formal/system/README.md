@@ -15,6 +15,8 @@ Historical green results are not current-candidate evidence.
 
 - [fan-club-read-recovery.md](fan-club-read-recovery.md): distinguish read failures from confirmed missing clubs, retain artist/deep-link context and gate dependent content reads.
 
+- [follow-response-recovery.md](follow-response-recovery.md): reconcile ambiguous follow/unfollow responses with current account-scoped server truth and no automatic write replay.
+
 ## Executable gates
 
 These checks make drift fail CI; run them before changing a mapped surface.

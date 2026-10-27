@@ -467,9 +467,9 @@ describe('LoginPage Google signup consent flow', () => {
         findButton('Crear e ingresar')?.click();
         await flushPromises();
       });
-      // The display name starts from the email and can be changed later.
+      // Account creation must not turn the private email into a public name.
       expect(signupRequestMock).toHaveBeenCalledWith(expect.objectContaining({
-        firstName: 'Andrea', lastName: '', email: 'andrea@example.com', termsAccepted: true,
+        firstName: 'Cuenta TDF', lastName: '', email: 'andrea@example.com', termsAccepted: true,
         termsVersion: 'tdf-account-terms-v1', marketingOptIn: false,
       }), expect.objectContaining({ client: expect.anything() }));
       expect(signupRequestMock.mock.calls[0]?.[0]).not.toHaveProperty('phone', expect.anything());
