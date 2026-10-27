@@ -1,0 +1,241 @@
+{
+  "source": "9b65121259f2869a444936c042157d8e912576fd",
+  "sourceWorktreeDirty": true,
+  "runtimeSources": {
+    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "0bcd509d2fc77d6c47e6cb8aa736c28a5be3936ba43fee5a0fd892670f911e09",
+    "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "7a7dd24778786ee9d82a687af35f24f05adf9fbdfa4b160e47d742cee9e15ade",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "c6eb7e7d75f9c382b05f723c0b7a4d3e77f388a3275a23c5215e683919c7ff05",
+    "tdf-hq/src/TDF/Interactions/Notifications.hs": "52d3ec0c8f5f3cbafe283966253cca558ff8c892fa1431ddb9901f24ddd22118",
+    "tdf-hq/sql/2026-10-25_event_memory_invitations.sql": "ccf205e8fb797512223620e48d8b4bddf4663f20c63f73f6904eb85ac14c6b83",
+    "scripts/test-event-memories-http.py": "8d2f174ffa1f58a939fbedba21e80b29f0029fbbd21633efd2b74fa4911d2784"
+  },
+  "binarySha256": "0c9ddc2f0402b07a49af61e8843cb6050199eeb07d249c9c5db7e5efe361655a",
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/version",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/signup",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/signup",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143002/moments?extended",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143002/moments",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143003/moments",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/media",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/assets/serve/social-events/events/919143001/moments/c10ded7f-c6cb-478a-8062-cb6be978d347-memory.png",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/media",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143002/moments/media",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143099/moments/media",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143003/moments/media",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/media",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/media",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/media",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/919143001/moments/4",
+      "status": 404
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/919143001/moments/4",
+      "status": 404
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/919143001/moments/4",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/919143001/moments/4",
+      "status": 409
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/919143002/moments/4",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/4/reactions",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/4/reactions",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/4/comments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/me/memory-invitations",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/me/memory-invitations",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/memory-invitations",
+      "status": 404
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/919143001/memory-invitations",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/memory-invitations/8613f4fa-6bce-4a85-9282-f17ae5b1b5bd/open",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/memory-invitations",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/919143001/moments/4",
+      "status": 204
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/assets/serve/social-events/events/919143001/moments/c10ded7f-c6cb-478a-8062-cb6be978d347-memory.png",
+      "status": 200
+    }
+  ],
+  "assertions": [
+    "Public media bytes persist and are recoverable through the actual asset route",
+    "Private and deleted parents cannot create public assets; forged signatures are rejected",
+    "A real QuickTime MOV container uploads without depending on generic Drive storage",
+    "All four moment types persist; legacy feed remains compatible and authenticated reads are no-store",
+    "Author edit/delete and cross-event IDOR guards apply; stale edits conflict",
+    "Existing canonical reactions and comments work for an extended text memory",
+    "Actual organizer API exposes aggregates; one synthetic inbox delivery and publication suppress reminder",
+    "Source deletion persists; surviving moments and media remain after a real API restart"
+  ],
+  "externalProviderCalls": 0,
+  "actualVersion": {
+    "buildTime": "2026-10-25T10:21:46Z",
+    "commit": "9b65121259f2869a444936c042157d8e912576fd",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "status": "PASS",
+  "runtimesStopped": true,
+  "ownedDatabaseRemoved": true,
+  "finishedAt": "2026-10-25T10:22:53Z"
+}

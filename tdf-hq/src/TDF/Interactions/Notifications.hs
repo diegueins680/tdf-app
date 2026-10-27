@@ -8,6 +8,7 @@ import Control.Exception (SomeException, SomeAsyncException, fromException, thro
 import Control.Monad (forever, void)
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int64)
+import Data.Text (Text)
 import Database.Persist (Entity, PersistValue(..), selectList, count, Filter, SelectOpt(..), (==.))
 import Database.Persist.Sql (Single(..), SqlPersistT, rawSql, fromSqlKey, toSqlKey, runSqlPool)
 import Database.Persist.SqlBackend (getRDBMS)
@@ -56,14 +57,27 @@ notificationUnreadCount user = do
   else Right <$> count [NotificationRecipientPartyId ==. auPartyId user, NotificationIsRead ==. False]
   where actor = PersistInt64 (fromSqlKey (auPartyId user))
 
+-- Separate transactions keep a failing memory campaign from rolling back
+-- unrelated interaction notices (and vice versa).
 startInteractionNotifications :: ConnectionPool -> IO ()
-startInteractionNotifications pool = void . forkIO . forever $ do
-  outcome <- try $ runSqlPool (do
-    ready <- available
-    if ready then void (rawSql "SELECT interaction_dispatch_events(20)" [] :: SqlPersistT IO [Single Int]) else pure ()) pool
-  case outcome of
-    Right () -> pure ()
-    Left (err :: SomeException) -> case fromException err :: Maybe SomeAsyncException of
-      Just _ -> throwIO err
-      Nothing -> Log.addLog Log.LogError "[Interactions] Notification batch failed; retained for retry"
-  threadDelay (10 * 1000000)
+startInteractionNotifications pool = do
+  spawn available "SELECT interaction_dispatch_events(20)" "[Interactions]"
+  spawn memoryAvailable "SELECT event_memory_dispatch_batch(20)" "[EventMemories]"
+  where
+    memoryAvailable = do
+      backend <- getRDBMS
+      if backend /= "postgresql" then pure False else do
+        rows <- rawSql "SELECT to_regprocedure('event_memory_dispatch_batch(integer)') IS NOT NULL" []
+          :: SqlPersistT IO [Single Bool]
+        pure (rows == [Single True])
+    spawn :: SqlPersistT IO Bool -> Text -> Text -> IO ()
+    spawn probe statement label = void . forkIO . forever $ do
+      outcome <- try $ runSqlPool (do
+        ready <- probe
+        if ready then void (rawSql statement [] :: SqlPersistT IO [Single Int]) else pure ()) pool
+      case outcome of
+        Right () -> pure ()
+        Left (err :: SomeException) -> case fromException err :: Maybe SomeAsyncException of
+          Just _ -> throwIO err
+          Nothing -> Log.addLog Log.LogError (label <> " Notification batch failed; retained for retry")
+      threadDelay (10 * 1000000)

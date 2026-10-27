@@ -479,6 +479,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeMomentCaption,
     normalizeMomentCommentBody,
     normalizeMomentMediaType,
+    validMomentMediaSignature,
     normalizeLiveBroadcastTitle,
     normalizeLiveBroadcastDescription,
     normalizeLiveBroadcastQuality,
@@ -11813,6 +11814,12 @@ main = hspec $ do
                         ("Expected unexpected invitation create keys to be rejected, got " <> show parsed)
 
     describe "social event moment request parsing" $ do
+        it "decodes a text memory without fabricating a media URL" $ do
+            let parsed = eitherDecode "{\"emCreateMediaType\":\"text\",\"emCreateCaption\":\"A real memory\"}" :: Either String EventMomentCreateDTO
+            fmap emCreateMediaUrl parsed `shouldBe` Right ""
+            fmap emCreateMediaType parsed `shouldBe` Right "text"
+
+
         it "accepts canonical moment payloads and rejects unexpected keys before handlers silently ignore them" $ do
             case eitherDecode
                 "{\"emCreateAuthorName\":\"Ada\",\"emCreateCaption\":\"Aftermovie\",\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"emCreateMediaWidth\":1080}"
@@ -12541,7 +12548,16 @@ main = hspec $ do
         it "normalizes supported media types and reactions" $ do
             normalizeMomentMediaType " PHOTO " `shouldBe` Just "image"
             normalizeMomentMediaType "clip" `shouldBe` Just "video"
-            normalizeMomentMediaType "audio" `shouldBe` Nothing
+            normalizeMomentMediaType "audio" `shouldBe` Just "audio"
+            normalizeMomentMediaType "text" `shouldBe` Just "text"
+            normalizeMomentMediaType "document" `shouldBe` Nothing
+
+        it "rejects forged media bytes even when a raster MIME was supplied" $ do
+            validMomentMediaSignature "image/png" "<html>not a photo</html>" `shouldBe` False
+            validMomentMediaSignature "audio/mpeg" "ID3synthetic-audio" `shouldBe` True
+            validMomentMediaSignature "video/mp4" "0000ftypisom" `shouldBe` True
+            validMomentMediaSignature "image/png" (BS.pack [137,80,78,71,13,10,26,10]) `shouldBe` True
+            validMomentMediaSignature "text/html" "<html>" `shouldBe` False
 
         it "accepts blank captions as missing and rejects oversize captions" $ do
             normalizeMomentCaption (Just "   ") `shouldBe` Right Nothing
