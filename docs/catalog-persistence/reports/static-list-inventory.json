@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T23:58:50.183Z",
+  "generatedAt": "2026-10-27T00:20:00.403Z",
   "repositoryRoot": ".",
   "filesScanned": 2426,
   "candidateCount": 1347,
@@ -47224,7 +47224,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 207,
+      "consumerCount": 208,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -47368,7 +47368,8 @@
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
-        "scripts/lib/production-release.mjs"
+        "scripts/lib/production-release.mjs",
+        "scripts/test-event-memory-recovery-browser.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/cms.test.ts",
@@ -53551,7 +53552,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 207,
+      "consumerCount": 208,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -53695,7 +53696,8 @@
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
-        "scripts/lib/production-release.mjs"
+        "scripts/lib/production-release.mjs",
+        "scripts/test-event-memory-recovery-browser.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/cms.test.ts",
@@ -160215,7 +160217,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 207,
+      "consumerCount": 208,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -160358,7 +160360,8 @@
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
-        "scripts/lib/production-release.mjs"
+        "scripts/lib/production-release.mjs",
+        "scripts/test-event-memory-recovery-browser.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/cms.test.ts",

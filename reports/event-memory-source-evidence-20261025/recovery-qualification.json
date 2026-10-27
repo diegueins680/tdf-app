@@ -1,0 +1,134 @@
+{
+  "recordedAt": "2026-10-27T00:17:18.685868+00:00",
+  "source": "8b2bc818bc2a1eff130e105af0e94464133692a8",
+  "parent": "29c9f45560c60da9273f0e9271e075c981c2e3c7",
+  "requests": 127,
+  "httpGroups": 20,
+  "browserAssertions": 13,
+  "runtimeHashes": 276,
+  "allHashesCommittedAndCurrentExact": true,
+  "normativeRecords": 149,
+  "changedOwnRequirementTestAssociations": [
+    "SOCIAL-EVENT-MEMORY-001",
+    "SOCIAL-EVENT-SESSION-001"
+  ],
+  "allOtherNormativeFieldsExact": true,
+  "allApplicationBackendNativeDependenciesSqlAndParentCatalogDecisionsExact": true,
+  "actualApiVersion": {
+    "buildTime": "2026-10-26T05:36:20Z",
+    "commit": "262295679df492dde850333779db431132092993",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "binarySha256": "f01ef34b75f1f1c1da4a41cdbb541de9b620fd4c1f4b24aba64025e7c1b6e17d",
+  "sourceWorktreeDirty": true,
+  "sourceDirtyScope": "two owned dependency symlinks; tracked source frozen",
+  "newBackendBuild": false,
+  "cleanReleaseAttestation": false,
+  "recovery": {
+    "partyId": 5,
+    "momentId": "9",
+    "survivesRealApiRestart": true,
+    "challengeConsumed": true,
+    "challengeReplayStatus": 400,
+    "oldSessionStatus": 401,
+    "oldPasswordStatus": 401,
+    "newPasswordStatus": 200,
+    "privateEventStatus": 404,
+    "outboundEmail": "disabled; explicit private relay only",
+    "fixtureRoleGrantsDuringRecovery": 0
+  },
+  "browserRecovery": {
+    "partyId": 5,
+    "momentId": "9",
+    "requestStatus": 200,
+    "confirmationStatus": 200,
+    "publicationStatus": 200,
+    "tokenRemovedFromUrl": true,
+    "delivery": "private relay from owned disposable DB; SMTP disabled, no email delivery claimed",
+    "invitationPreferenceBefore": true,
+    "invitationPreferenceAfter": true,
+    "privateReadStatus": 404,
+    "organizerCampaignStatus": 404,
+    "fixtureRoleGrantsDuringRecovery": 0
+  },
+  "browserRuntime": {
+    "channel": "chrome",
+    "version": "150.0.7871.125"
+  },
+  "outputCapture": "private PTY; actual server bytes, no synthetic log output",
+  "migrationLedger": {
+    "expectedCount": 226,
+    "appliedCount": 226,
+    "idsSha256": "37fbc984065234d4adfa0af656c9f1432cfeb0ae18a9c5f3b8bb664dd3d787cb",
+    "batchSha256": "4be40505e7b80f95454090352ced456d612984ef8f8850b7584c5cf1c6d864df"
+  },
+  "cleanup": {
+    "apiStopped": true,
+    "databaseRemoved": true,
+    "frontendStopped": true,
+    "ownedPostgresStopped": true
+  },
+  "productionWrites": 0,
+  "realInvitations": 0,
+  "hostedCurrentSourceCi": "NOT_ESTABLISHED_BY_THIS_LOCAL_RECEIPT; current-head hosted execution required",
+  "independentReview": "NOT_ESTABLISHED_BY_THIS_LOCAL_RECEIPT; separate current-head review required",
+  "catalog": {
+    "candidates": 1347,
+    "strictJson": "PASS",
+    "strictCsv": "PASS",
+    "sourceFrozenThroughoutFinalScans": true
+  },
+  "checks": {
+    "runner": 12,
+    "requirementDeclarations": 9,
+    "newSpecificationSurfaces": 11,
+    "traceability": "PASS",
+    "catalogHistory": 8
+  },
+  "repositoryQuality": {
+    "currentLocalFull": "NOT_RUN; parent local SSH-standin stall is separately recorded",
+    "parentHead29Hosted": "SUCCESS",
+    "currentHeadHosted": "PENDING_PUBLICATION_AND_EXECUTION"
+  },
+  "attemptHistory": "recovery-attempt-history.json",
+  "logs": {
+    "final-runner-controls": {
+      "bytes": 2607,
+      "sha256": "30f6dfa9455ae4c1f642b293de6ad0568a3889761bc3a3bae60919a8c94ac811"
+    },
+    "final-declarations": {
+      "bytes": 107,
+      "sha256": "5f0635b83af38a6c5d516fcb60dc3fa63c9c6ca4854e51a6a29ca33c92ccef16"
+    },
+    "final-surfaces": {
+      "bytes": 110,
+      "sha256": "808d90dd5d483e8066535fd15c444926dcc5345172a9ede649053a278420403b"
+    },
+    "final-trace": {
+      "bytes": 35,
+      "sha256": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e"
+    },
+    "qualified-catalog-json": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "qualified-catalog-csv": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "catalogHistory": {
+      "bytes": 1956,
+      "sha256": "1d4c68196e201d69e0a114443c6a3ccc62f2821a028a8611a08bbedd2d92911f"
+    }
+  },
+  "ownedCacheCompression": {
+    "originalBytes": 394681061,
+    "archiveBytes": 74301191,
+    "archiveSha256": "4748b4af4b16b46e1329ab4ceff60b92d7be8755d54d4e8bb6bacc83f4781c1d",
+    "allArchivedBytesExact": true,
+    "noOpenFiles": true,
+    "fullyRestorable": true,
+    "sealedExecutablesAndCommittedSourcesUntouched": true
+  }
+}

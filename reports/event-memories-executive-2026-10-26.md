@@ -1,6 +1,6 @@
 # TDF Records — Informe ejecutivo de recuerdos de eventos
 
-Corte de esta continuación: 26 de octubre de 2026, 23:25 UTC. **Implementado y probado parcialmente, publicado para revisión; sin integración protegida, despliegue productivo ni invitaciones reales de esta entrega. El objetivo integral continúa pendiente.**
+Corte de esta continuación: 27/Oct/2026 00:25 UTC (26/oct en Ecuador). **Implementado y probado parcialmente, publicado para revisión; sin integración protegida, despliegue productivo ni invitaciones reales de esta entrega. El objetivo integral continúa pendiente.**
 
 ## 1. Diagnóstico y capacidades reutilizadas
 
@@ -48,6 +48,8 @@ El sucesor de validación usa la rama `test/event-memory-signup-publication-2026
 La nueva preparación incorpora las reparaciones protegidas del reproductor y las identidades/cabeceras contables. Conserva **los 145 requisitos de main exactos más cuatro propios: 149**, el prefijo protegido de 222 migraciones más las cuatro originales: **226**, y todos los bytes SQL/ancestros de introducción. El pin móvil de esta preparación sigue `7000df1d`; las calificaciones posteriores #172–#174 conservan sus identidades separadas y requieren integración nativa revisada. No se alteraron #608/#615 ni ramas ajenas para sustituir revisiones pendientes. El checkout original divergente se conserva.
 
 ## 5. Pruebas ejecutadas y resultados
+
+La nueva [calificación de recuperación](event-memory-recovery-2026-10-26.md), fuente8b2bc818b sobre#635, pasa127 peticiones/20 grupos/276 hashes/13 comprobaciones de navegador con solicitud/confirmación reales, mismo compositor atribuido, rechazo de credenciales anteriores/replay y publicación persistida tras reiniciar la API. SMTP se mantiene deshabilitado; un puente de prueba lee únicamente el token real de su base propia, sin demostrar entrega de correo. Los intentos fallidos y la captura privada PTY están documentados. Aplicación, backend, móvil, dependencias y226 migraciones permanecen exactos al padre; CI nuevo y revisión siguen pendientes. El [padre29 ya completó CI](event-memory-source-evidence-20261025/signup-parent29-hosted-complete.json):31 resultados satisfactorios/8 jobs omitidos, con las identidades separadas de ejecución.
 
 La ejecución alojada anterior de#635, head `46aca1786` y checkout real `8b9d49139` (árbol completo idéntico), terminó: **29 checks satisfactorios/8 jobs omitidos**. Su [runner Linux](event-memory-source-evidence-20261025/signup-hosted-46-qualification.json) compiló con Stack/GHC9.10.3 y pasó ocho casos RACI más el flujo de recuerdos con PostgreSQL17/pgvector Docker:122 peticiones/19 grupos/269 hashes/11 comprobaciones de navegador. Conserva versión y binario Linux propios; el reporte declara metadatos generados y no acredita una release limpia. Esta ejecución antecede a la corrección de credenciales43 y no valida ese cambio.
 
