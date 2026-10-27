@@ -1,0 +1,12 @@
+{
+  "qualifiedBinarySource": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "qualifiedBinarySha256": "8dbe98ed4719573d83ae91e37b5df4c84a6dc1e48485c6ae4ac1b0f6d51cd1a5",
+  "changedOnlyThreePinnedBackendIdentityAssignments": true,
+  "allOtherHarnessAstExact": true,
+  "sameNetworkAndResourceGuards": true,
+  "smtpBrowserAndCByteExact": true,
+  "originalRunnerSha256": "dc0caafecfd5ed3031c74c89e0770e02e7e8d0c55e5b78bddbbea8d0d3e748a6",
+  "runnerSha256": "b3f3104b6b33af62498705aa80c25293f2d23c4db672128c7491eab184678a73",
+  "originalReceiptPreserved": true,
+  "scope": "New actual protected-main binary replaces historicalfe179; no weakening of source, hash,222ledger,listener/egress or14journey assertions."
+}
