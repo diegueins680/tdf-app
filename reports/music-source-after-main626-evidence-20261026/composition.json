@@ -1,0 +1,15 @@
+{
+  "observedAt": "2026-10-27T01:37:29.804884+00:00",
+  "actualProtectedParentMerge": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+  "approvedParentHead": "7bee8d45a3e54aa350fb810e722609ad3c608cca",
+  "qualifiedSqlSource": "35a69bd72e2540c1bad875311bd4f48eb5eaa1bd",
+  "all149ProtectedNormativeObjectsExact": true,
+  "wholeCatalogAndHistoryExactProtectedMain": true,
+  "catalogCandidates": 1341,
+  "entireBackendUiE2eCiOpsDependencyFilesMobileAndSqlExactProtectedMain": true,
+  "soleMaterialDelta": "scripts/test-music-source-projection.mjs",
+  "sqlAndHandlerInputsExactQualified35a": true,
+  "parentReportFieldsPreserved": true,
+  "newRuntimeExecuted": false,
+  "scope": "Actual protectedparent composition, not future featurebranch. Finalpublication waits nativepredecessors and currentmain reconciliation/CI/review."
+}
