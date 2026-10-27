@@ -1,0 +1,16 @@
+{
+  "source-admission.json": "b6530730bb54a8320ddca3cf64b29279651775be108f54666d8d6804ec8cb247",
+  "run.py": "ec180c74bb2ecfe25c30452c542a2c6179072c19822b717b75ba9cdda74f3645",
+  "test-music-source-projection.mjs": "1efdc0a81e8ae85e78f56814057d2636ebc20c2470c7621a24876696982b6416",
+  "qualification.json": "8dd5089134eed5a6ea18412a74371fb0bbf47f90af8318ba5a83071355dbeca5",
+  "REPLAY.txt": "0da95c876a4473913c3d7f69ced3dd04bf4022c65a1355a4e51e8a72a1afbd2e",
+  "results.json": "2723102df239cf0755d07647950baa1785d0dbcb0895910c4e0820d17a47af8a",
+  "current-catalog-regression.log": "9811fa3707c29a7b4c8682e4c0b6d7d6caa00e83ec897d292a16a161f42dfb2f",
+  "runtime-artifact-hashes.json": "c6c5ea9cd58a4f5cd0e5d4ccd3118056111fc96002786e2cba519922428b5396",
+  "current-source-admission.json": "bc24e5cf1a94ffd48271de8e86ff2ae8a81df1217f1d432465e016daf30ee441",
+  "raw-log-hashes.json": "ed0414fc239dfab3c7eea3514d39bc89be5dab52e06a860b0cb4fa0d7d35f763",
+  "composition.json": "2cf602493952efe13d4c6257fb5072ae816f2194e955e59550691de082fc2a31",
+  "current-composition.json": "38ac52f42d8b87a42c93b40c8b4a033bcb2fad3263a8185e05ae6124d106f20e",
+  "raw-logs.tar.gz": "6c2dc90b8812be27144b578e6f631ae04379247ce89569569f23764079cdc7b7",
+  "protocol-composition.json": "eb4085f464b3ca11b1b6916e69a977dcea12c7cdd0e3d599f29eb3f37545af29"
+}
