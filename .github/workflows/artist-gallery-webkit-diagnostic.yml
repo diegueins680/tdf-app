@@ -1,0 +1,29 @@
+name: Artist gallery WebKit paint diagnostic
+on:
+  push:
+    branches: [diagnose/artist-gallery-webkit-20261027]
+permissions:
+  contents: read
+jobs:
+  gallery-webkit-paint-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+      options: --init --ipc=host --user 1001
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/verify-playwright-image.mjs
+      - name: Compare original, paint-ready and negative controls
+        run: node scripts/artist-gallery-webkit-paint-diagnostic.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: artist-gallery-webkit-paint-${{ github.run_id }}
+          path: artifacts/artist-gallery-webkit-paint
+          retention-days: 7
