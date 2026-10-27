@@ -57,15 +57,34 @@
     "implemented": true,
     "currentCandidateUiAndPersonaVerified": true,
     "approvedCurrentHead": true,
-    "draft": true,
+    "draft": false,
     "merged": false,
     "productionDeployed": false,
-    "productionVerified": false
+    "productionVerified": false,
+    "fullCurrentCandidateCI": "success",
+    "readyForProtectedQueue": true
   },
   "limits": [
     "A successful browser matrix is not full production or mathematical correctness proof.",
-    "Full workflow/quality and admission were still pending when this receipt was written. No bypass, workflow/test exclusions or timeout relaxation.",
+    "Full CI and aggregate quality completed successfully in the final observation. The earlier pendingAtObservation object retains the prior timestamped state; main admission and final base composition still block delivery.",
     "After the final protected main composition, requalify that new source and obtain its own independent approval.",
     "No production business writes, real booking/payment/provider, human usability, physical device or causal activation/conversion claim."
-  ]
+  ],
+  "finalWorkflowObservation": {
+    "observedAt": "2026-10-27T00:30:09.976074+00:00",
+    "workflowConclusion": "success",
+    "aggregateQualityJob": 121932604331,
+    "aggregateQualityConclusion": "success",
+    "allRequiredGitHubActionsChecks": 19,
+    "requiredContextsTotal": 20,
+    "requiredAppId": 15368,
+    "remainingRequiredContext": {
+      "name": "main-integration-admission",
+      "state": "pending",
+      "description": "Waiting for PR #626; base 63c56aaf919a07e919a61280311be1dc809cd6fe"
+    },
+    "strictBase": true,
+    "staleReviewDismissal": true,
+    "approvalsRequired": 1
+  }
 }
