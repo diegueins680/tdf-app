@@ -449,6 +449,7 @@
       "scripts/test-catalog-production-cutover.sh",
       "scripts/test-chat-notifications.sh",
       "scripts/test-checkout-event-refund-runtime-migration.sh",
+      "scripts/test-checkout-money-verifier.py",
       "scripts/test-checkout-policy-terms-identity-migration.sh",
       "scripts/test-checkout-terms-history.sh",
       "scripts/test-checkout-terms-upgrade-concurrency.py",
@@ -3278,7 +3279,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "51dfd59c5f1a2c70a16e7acb552711a7806e90f39af21a6c0ace4e3c4f1da8c7",
+      "sha256": "8c3a565505613129e3ca48be5a00c9c0fb22f697a2b40713d547258c998d45ad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3992,7 +3993,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "56dd35bfe3648d8732b28ed6066e118cf743e58093fef5657b031dada0a1112e",
+      "sha256": "3d19e78e90ba10887c73e292963ae402e27919cc3c60e4a437e9fa78f3c0da9a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4676,7 +4677,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "8e167b6a04ebeeef2d6a3b4a8782f08bea04baf96448f62f17c007bf66091d15",
+      "sha256": "6ab24ba5f47bf471e7b116fd0acc251d30515d0ceb899bff078afc2b9d0526d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5277,6 +5278,12 @@
       "id": "SURFACE-1910077a9107778a",
       "path": "scripts/test-checkout-event-refund-runtime-migration.sh",
       "sha256": "32324ad3adc0f2b943284b71637548b54ee2e9d38adf68b483037dd0555e8710",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1b1c5e57fb68ec97",
+      "path": "scripts/test-checkout-money-verifier.py",
+      "sha256": "cff1bbe3bfb77b881d3e2c8e9f3f04070615f7e1353ccffc5c7891e30e2c023c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6134,7 +6141,7 @@
     {
       "id": "SURFACE-8b6766b7ee7590fd",
       "path": "scripts/verify-checkout-money.py",
-      "sha256": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
+      "sha256": "bf698645e4ca026a168234a99a13371e1d359e26010b3771867158cb0bd47d6d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26898,7 +26905,7 @@
     },
     {
       "path": "formal/system/checkout-arithmetic.md",
-      "sha256": "e076c317f3ab6740d9b4118d5dad938fd6acb5a4e527c48e2acba01fd70014e3",
+      "sha256": "e815c0a2aea29facf4cd1934d09d9708f4cdabe7bbbfda6293ce4185faf313e9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27430,7 +27437,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4dccdbbaee1effe652e203d7c7c4190a8ed80a6dcf56681df7a2cffea895c650",
+      "sha256": "49b29f7dd9bfeef18473273f717201726775a49edb942fe03e057a0b8e1bdd03",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
