@@ -1,3 +1,20 @@
+# Hosted518 qualification — current evidence supplement
+
+The approved518candidate now has successful hosted productCI. [The hosted A-I report](../../reports/music-track-search-evidence-20261026/hosted-518c/README.md) and [machine summary](../../reports/music-track-search-evidence-20261026/hosted-518c/summary.json) record the exact02:36UTC snapshot.
+
+- CI40434617199 passes: native54/54singleattempt across7projects (42decoderfixtures/7denial/5mock), UI3600tests/313suites+lint/types/build, persona580pass/22existingSKIP plus10rollout/25discovery, backendPASS. Both earlierWebKitclockjourneys pass on this new tree; originalb8afailures remain failed.
+- Actual CI clean sourcec128 shares the entireGit treea7cced8 with518c. Its LinuxbinarySHAecbf0e369a4aae4fe3757df6abd2ba25615e0cbe3d1b948b41504883ad097511 is observed by canonical compiledinspector (906typed/twoRaw/399priorgaps/25unmounted/eightstatus differences). CI publishes declaration/results evidence, not an executablebinaryartifact or systemconformanceproof.
+- Exact518review5661482742 is APPROVED;0threads. Nineteenrequiredapp15368checks pass; FIFO627/mainadmission remains pending atsealedtime. NormalautoMERGE enabled02:34:22 with expectedhead518. PR640 is queued,NOTMERGED; production is not deployed or qualified. Safeguards unchanged.
+- Actual Cloudflarepreviewdesktop/phone renders unavailablemusicUI without autoplay. Zero musicresponses; separatepreviewOriginGET400Unsupportedorigin versusproductionOrigin404. No live API/search-to-playback/directoryAPI journey or flag-only explanation is inferred; origin/auth policies remain enforced.
+
+The23acceptancecriteria remain explicitly scoped/partial/unverified. Realupload/processing/livecatalog/CDNrights/physicaldevices/fullWCAG/SLOs/observability/productionrollback remain incomplete. Tests are TESTEDfixtures, not PROVENsystem/refinement. Successfulbackendrawlog includes expected negative-controlcounterexamples, not failedactualjobs.
+
+All66 prior evidence leaves remain byte-exact. This documentation branch is a separate follow-up stacked on640; never merge it into the reviewedfeaturebranch. Retargetmain only AFTER actualprotected640merge, then handle approved liveactivation/acceptance separately.
+
+## Historical committed518 delivery snapshot
+
+The prose below is retained exactly as the reviewed518 documentation snapshot before later hosted completion. Its pendingCI/review/WebKit statements describe that earlier checkpoint and are superseded only by the source-bound hosted observations above.
+
 # Track discovery in universal search — integrated local delivery evidence
 
 ## A. Executive summary
