@@ -13111,6 +13111,77 @@
       ],
       "formalModels": [],
       "verification": "Three observed pre-render counterexamples followed by corrected zero-dispatch regressions, late response and existing real session-provider/profile tests. Browser/API integration is qualified separately."
+    },
+    {
+      "id": "EVT-REPORT-LINK-001",
+      "title": "Read-only event closeout accessible by an unguessable link",
+      "domain": "EVT",
+      "statement": "Serve the organizer-authorized PATCH CULTURE provisional financial closeout within the TDF application only to a complete matching capability; preserve its reconciliation qualifications and permit revocation and rotation without exposing accounting records.",
+      "authority": "Direct organizer instruction on 2026-10-27: the URL must be inside the application; implement what is necessary in the repository, continuing the request for Anyone who has the link privacy.",
+      "source": "docs/events/report-link-access.md",
+      "contract": "docs/events/report-link-access.md",
+      "actors": [
+        "Organizer",
+        "Recipient with report capability",
+        "Unauthenticated visitor"
+      ],
+      "preconditions": [
+        "The approved snapshot is deployed as server-only Pages Function code",
+        "A cryptographically random 32-byte capability is delivered separately to the organizer"
+      ],
+      "inputs": [
+        "HTTP method",
+        "Route capability",
+        "Enable binding",
+        "Expected SHA-256 digest binding"
+      ],
+      "state": {
+        "enabled": "Absent or exact true binding",
+        "capability": "SHA-256 digest; raw token is not persisted in source",
+        "content": "Provisional snapshot, not a live ledger"
+      },
+      "allowedTransitions": [
+        "Matching capability and enabled configuration -> GET HTML or empty successful HEAD",
+        "Disable or rotate -> former link denied on next request in that deployment",
+        "Malformed or missing capability -> generic 404"
+      ],
+      "forbiddenTransitions": [
+        "Publish snapshot in static assets or React bundles",
+        "Admit by predictable event ID, name, query string or session alone",
+        "Mutate ledger, payment, event or attendee data",
+        "Render snapshot for a revoked or incorrect capability"
+      ],
+      "effects": [
+        "Read-only HTML response and protective HTTP headers"
+      ],
+      "authorization": "The full 256-bit random bearer capability is required at the edge; only its SHA-256 digest is in source. No credential or role is inferred from page content.",
+      "privacy": "No client analytics, index/listing, third-party resource, frame, script or referrer. Responses and redirects are no-store. Recipients may retain copies; provider URL logging and historical deployments remain operational boundaries.",
+      "concurrency": "Each request checks the current deployment configuration; no writes or mutable shared state.",
+      "idempotency": "Repeated reads have no business side effects.",
+      "failure": "Invalid capability/configuration -> empty generic 404; unsupported methods -> 405. Malformed report paths do not fall through to the SPA.",
+      "recovery": "Disable the binding or rotate its digest and redeploy all serving environments; retire previously distributed preview deployments separately.",
+      "observability": "Node Request/Response tests, installed local Pages worker and browser inspection; never log a real token in test output.",
+      "implementation": [
+        "functions/_shared/event-report-data.mjs",
+        "functions/_shared/event-report.mjs",
+        "functions/reportes/eventos/[token].js",
+        "functions/_middleware.js"
+      ],
+      "tests": [
+        "scripts/__tests__/event-preview.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Finite handler and middleware boundary checks; not a cryptographic proof or a proof of all hosting/CDN configurations.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Handler implementation and explicit negative access tests exist; canonical hosted deployment and provider cache/log behavior require release verification."
+      },
+      "property": "No report content is returned without an enabled matching capability; a valid link confers read-only access to the authorized provisional snapshot only.",
+      "verification": "Actual handler tests for match/deny, rotation, revocation, method refusal, escaping and cache/referrer/robot policy; local Pages routing and browser smoke before release.",
+      "evidence": "17 local event/transaction tests pass including seven new report tests; source-bound deployment evidence remains pending."
     }
   ],
   "sourceFingerprints": {
@@ -13458,15 +13529,18 @@
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
     "formal/system/recovery-expiry-arithmetic.json": "ef15fb5c615f577bf11c4158d8032a04714318f1033b68ffdb3f00e5f040c43f",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
-    "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
+    "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
     "functions/_shared/event-preview.mjs": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
+    "functions/_shared/event-report-data.mjs": "07f246130dd4e0ad99c931320ef1699c556ab561fc80c9532796ddbeed149e86",
+    "functions/_shared/event-report.mjs": "0366c2cc7dd5e13ee80a49040dbb8dff4f07951205cf1c2fb0aac303cdd76e93",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
     "functions/descargar.js": "30b8a78e97f7a164b9804c11e2cc48e2c1c543bfe3a233a6a10bd8316ec7fdb5",
     "functions/download.js": "30b8a78e97f7a164b9804c11e2cc48e2c1c543bfe3a233a6a10bd8316ec7fdb5",
     "functions/eventos/[eventId].js": "b187d6e72c55ccb34930bac8e64928470ef98def12849c046d4004a14aec2fb8",
     "functions/eventos/[eventId]/entradas.js": "be5191ae682341eaa679c12d900363bf02df50dfe7edcc8aa0fd7ec64877c55c",
     "functions/eventos/[eventId]/orden/[orderId].js": "4590c38182a6223fe6b8c62f6b329a0aaca66b377a13b6085e5e32dee4cc0de4",
+    "functions/reportes/eventos/[token].js": "c4145e461e1abd457f3d94c6c993bd3b1516efebe14f4661e94bee41206785c5",
     "ops/hetzner/backup-postgres.py": "f54d3bc769fcad8ddb047c6fb30b4bcf69193c81fc1e50c23f1102c253518117",
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
@@ -13508,7 +13582,7 @@
     "scripts/__tests__/disposable-postgres-url.test.mjs": "76cf3c7aaeed689164a94da6d79b6297b5bf84b95ef05782436c46c84e93e636",
     "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
-    "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
+    "scripts/__tests__/event-preview.test.mjs": "a967dc17aa7e09a856e79ed1d84bec3b84364924984e62fe5aa81cf2224fe404",
     "scripts/__tests__/event-raci-browser-runner.test.mjs": "0a036a388afece87cf55c150dfac92e411ffcc4c82e76301f502b8c288d9c657",
     "scripts/__tests__/event-raci-editor-context-runner.test.mjs": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
     "scripts/__tests__/fixtures/provider-domain-fixtures.sql": "17d645e924bd5d6533523dcfb1e3a4522a403ac420de7dde45f94a44eca9e14d",
@@ -19716,6 +19790,10 @@
       {
         "requirement": "WEB-CANONICAL-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-REPORT-LINK-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq/src/TDF/Invoice/Receipt.hs": [
@@ -23492,6 +23570,10 @@
       {
         "requirement": "WEB-CANONICAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-REPORT-LINK-001",
+        "relationship": "implementation"
       }
     ],
     "functions/eventos/[eventId].js": [
@@ -25571,6 +25653,24 @@
         "requirement": "SOCIAL-EVENT-SESSION-001",
         "relationship": "tests"
       }
+    ],
+    "functions/_shared/event-report-data.mjs": [
+      {
+        "requirement": "EVT-REPORT-LINK-001",
+        "relationship": "implementation"
+      }
+    ],
+    "functions/_shared/event-report.mjs": [
+      {
+        "requirement": "EVT-REPORT-LINK-001",
+        "relationship": "implementation"
+      }
+    ],
+    "functions/reportes/eventos/[token].js": [
+      {
+        "requirement": "EVT-REPORT-LINK-001",
+        "relationship": "implementation"
+      }
     ]
   },
   "surfaces": [
@@ -26318,11 +26418,15 @@
     {
       "id": "SURFACE-6d25c31944ebbae3",
       "path": "functions/_middleware.js",
-      "sha256": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
+      "sha256": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-REPORT-LINK-001",
           "relationship": "implementation"
         }
       ]
@@ -26351,6 +26455,30 @@
         },
         {
           "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-fad664812f6bd2b4",
+      "path": "functions/_shared/event-report-data.mjs",
+      "sha256": "07f246130dd4e0ad99c931320ef1699c556ab561fc80c9532796ddbeed149e86",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-REPORT-LINK-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-93bd665a68aee2b9",
+      "path": "functions/_shared/event-report.mjs",
+      "sha256": "0366c2cc7dd5e13ee80a49040dbb8dff4f07951205cf1c2fb0aac303cdd76e93",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-REPORT-LINK-001",
           "relationship": "implementation"
         }
       ]
@@ -26423,6 +26551,18 @@
       "requirements": [
         {
           "requirement": "EVT-PRESENTATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-028892e356c1a73b",
+      "path": "functions/reportes/eventos/[token].js",
+      "sha256": "c4145e461e1abd457f3d94c6c993bd3b1516efebe14f4661e94bee41206785c5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-REPORT-LINK-001",
           "relationship": "implementation"
         }
       ]
@@ -26988,7 +27128,7 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
+      "sha256": "a967dc17aa7e09a856e79ed1d84bec3b84364924984e62fe5aa81cf2224fe404",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26997,6 +27137,10 @@
         },
         {
           "requirement": "WEB-CANONICAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-REPORT-LINK-001",
           "relationship": "tests"
         }
       ]
@@ -54261,7 +54405,8 @@
     "MEDIA-MUSIC-SOURCES-001",
     "SOCIAL-EVENT-MEMORY-001",
     "SOCIAL-EVENT-MODERATION-001",
-    "SOCIAL-EVENT-SESSION-001"
+    "SOCIAL-EVENT-SESSION-001",
+    "EVT-REPORT-LINK-001"
   ],
   "stateMachines": [
     {
@@ -55380,7 +55525,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "53b0c3b53ca2c8df73826c1b71aa511152fb92da03d9fbce669f90c36d5c6b75",
+      "sourceSha256": "7fa6d95b44d3e097aa07fb64e341c5f9f605865819539edc67879dc4ec3b3dbb",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -55408,7 +55553,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "53b0c3b53ca2c8df73826c1b71aa511152fb92da03d9fbce669f90c36d5c6b75",
+      "sourceSha256": "7fa6d95b44d3e097aa07fb64e341c5f9f605865819539edc67879dc4ec3b3dbb",
       "definition": {
         "states": [
           "absent",
@@ -55438,7 +55583,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "53b0c3b53ca2c8df73826c1b71aa511152fb92da03d9fbce669f90c36d5c6b75",
+      "sourceSha256": "7fa6d95b44d3e097aa07fb64e341c5f9f605865819539edc67879dc4ec3b3dbb",
       "definition": {
         "export": [
           "queued",
@@ -77912,7 +78057,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 154,
+    "PARTIAL": 155,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

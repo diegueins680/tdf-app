@@ -74,12 +74,15 @@
       "functions/_middleware.js",
       "functions/_shared/app-smart-link.mjs",
       "functions/_shared/event-preview.mjs",
+      "functions/_shared/event-report-data.mjs",
+      "functions/_shared/event-report.mjs",
       "functions/_shared/ticket-page.mjs",
       "functions/descargar.js",
       "functions/download.js",
       "functions/eventos/[eventId].js",
       "functions/eventos/[eventId]/entradas.js",
-      "functions/eventos/[eventId]/orden/[orderId].js"
+      "functions/eventos/[eventId]/orden/[orderId].js",
+      "functions/reportes/eventos/[token].js"
     ],
     "ops": [
       "ops/hetzner/backup-postgres.py",
@@ -3103,7 +3106,7 @@
     {
       "id": "SURFACE-6d25c31944ebbae3",
       "path": "functions/_middleware.js",
-      "sha256": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
+      "sha256": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3116,6 +3119,18 @@
       "id": "SURFACE-48f151ff03188032",
       "path": "functions/_shared/event-preview.mjs",
       "sha256": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fad664812f6bd2b4",
+      "path": "functions/_shared/event-report-data.mjs",
+      "sha256": "07f246130dd4e0ad99c931320ef1699c556ab561fc80c9532796ddbeed149e86",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-93bd665a68aee2b9",
+      "path": "functions/_shared/event-report.mjs",
+      "sha256": "0366c2cc7dd5e13ee80a49040dbb8dff4f07951205cf1c2fb0aac303cdd76e93",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3152,6 +3167,12 @@
       "id": "SURFACE-29ec9a025d2c7d61",
       "path": "functions/eventos/[eventId]/orden/[orderId].js",
       "sha256": "4590c38182a6223fe6b8c62f6b329a0aaca66b377a13b6085e5e32dee4cc0de4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-028892e356c1a73b",
+      "path": "functions/reportes/eventos/[token].js",
+      "sha256": "c4145e461e1abd457f3d94c6c993bd3b1516efebe14f4661e94bee41206785c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3421,7 +3442,7 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
+      "sha256": "a967dc17aa7e09a856e79ed1d84bec3b84364924984e62fe5aa81cf2224fe404",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20534,6 +20555,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/events/report-link-access.md",
+      "sha256": "f8755e8e2db10f7b104ee8594302aaf2a515e963da3bc38e89069e673ff28b93",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/events/ticket-electronic-invoices.md",
       "sha256": "42bd8249b44424d0902c5c2d1782f5d085719e00b87b823d25f37a1b7b473221",
       "authority": "inferred",
@@ -27115,7 +27143,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "3bc84f42151c341af9bbbeb0d83a55a3d1f0a530712b5d19687678fc98260de0",
+      "sha256": "fecc0b746c1c51ed42ce072a0db98042e2b3432cca0c6d0b3925d75c22cfc1c0",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -27759,7 +27787,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "53b0c3b53ca2c8df73826c1b71aa511152fb92da03d9fbce669f90c36d5c6b75",
+      "sha256": "7fa6d95b44d3e097aa07fb64e341c5f9f605865819539edc67879dc4ec3b3dbb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
