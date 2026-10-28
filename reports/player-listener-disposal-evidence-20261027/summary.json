@@ -1,0 +1,63 @@
+{
+  "status": "LOCAL_QUALIFIED_SOURCE_BOUND_NOT_HOSTED_OR_DEPLOYED",
+  "archive": {
+    "name": "listener-disposal-evidence.tar.gz",
+    "bytes": 382695,
+    "sha256": "66a064efd55498b0cde56ad67002661c2e049a3433e127468fc9360706d7c5d6",
+    "members": 47
+  },
+  "node": "22.14.0",
+  "native": {
+    "status": "PASS",
+    "exit": 0,
+    "cases": 30,
+    "singleAttemptCases": 30,
+    "decoderFixturePairs": 24,
+    "denialFixturePairs": 3,
+    "explicitMockSmokePairs": 3,
+    "projects": [
+      "chromium-desktop",
+      "chromium-phone",
+      "firefox-critical"
+    ],
+    "sourceInputsUnchangedAcrossFullRun": 491,
+    "baselineObservedFailures": {
+      "nativeChromium": 1,
+      "unit": 2
+    },
+    "runtimeDeltaFromNativeFailure": [
+      "only old-element unmount disposal block in PlayerProvider.tsx"
+    ],
+    "scope": "Generated local media; actual browser decoders/clocks except three explicit mock cases; synthetic account/catalog/authorization. No physical device, WebKit, production or CDN authorization claim."
+  },
+  "unit": {
+    "tests": 87,
+    "suites": 8,
+    "baselineDesiredFailures": 2
+  },
+  "wholeUI": {
+    "numPassedTests": 3578,
+    "numPassedTestSuites": 311,
+    "numFailedTests": 0,
+    "numFailedTestSuites": 0,
+    "numPendingTests": 0,
+    "numPendingTestSuites": 0
+  },
+  "static": {
+    "recordedAt": "2026-10-27T04:38:28.657353+00:00",
+    "node": "22.14.0",
+    "fullLintExit": 0,
+    "productionBuildExit": 0,
+    "initialGzipBytes": 337618,
+    "preloads": 5,
+    "indexHTMLSHA256": "9bea54a286a6087f6b1a5901832aee2128d4aa9dfc4822a8786175dc0a42e72f",
+    "startupSLO": "UNMEASURED",
+    "buildLogSHA256": "836dbfb1af6150f743f8cc48662a98db5e8712a97a2968fd8d12804e59a6d91c"
+  },
+  "history": "One actual Chromium and two desired unit failures retained. Initial module-lookup and zero-case selector setup failures remain separate. No budgets/retries/assertions weakened.",
+  "baselineLargeArtifacts": "Privately retained and hash-listed; raw errors/results archived.",
+  "secretPatternScan": "Zero matches for three high-confidence patterns; not exhaustive.",
+  "hostedCI": "NOT_EXECUTED_FOR_THIS_PRIVATE_HEAD",
+  "production": "NO_ACTIONS_NO_ACCEPTANCE",
+  "performance": "Startup/rebuffer/search SLOs UNMEASURED"
+}

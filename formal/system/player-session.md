@@ -64,7 +64,7 @@ on retry one, success on retry two, and terminal failure after retry two.
 
 | Property | Status at this boundary | Evidence and limit |
 | --- | --- | --- |
-| PLAYER-001 single owner | Assumed by model; implementation must be TESTED | `App` owns one provider/audio element around the route switch; model's `engine = 1` does not prove application topology or other legacy players. |
+| PLAYER-001 single owner | Assumed by model; implementation must be TESTED | `SessionProviders` owns one identity-aware provider/audio element above keyed query scopes and App routes; model's `engine = 1` does not prove application topology or other legacy players. |
 | PLAYER-002 selection consistency | MODEL_CHECKED_WITH_BOUNDS | Loaded and playing generations equal the selected generation; A/B/A prevents identity equality masking an obsolete request. Authorization of the bytes is an environmental assumption. |
 | PLAYER-003 state consistency | MODEL_CHECKED_WITH_BOUNDS | `playing` requires current source, current play attempt and play intent. Native browser events/actual sound are outside this model. |
 | PLAYER-004 queue integrity | UNVERIFIED by this model | Queue reducer tests are a separate obligation; no queue algorithm is modeled here. |
@@ -89,7 +89,7 @@ an extracted implementation, refinement proof, or temporal model checker.
 | pause | `PlayerProvider.pause`, autoplay intent, attempt invalidation and recovery timer cancellation |
 | media event | `PlayerProvider` native listeners, loaded track/current source checks and playback intent |
 | retry | `PlayerProvider` error handler, retry count/timer, source-refresh effect |
-| navigation | `App.tsx` keeps `PlayerProvider` around the route switch and global player |
+| navigation | `SessionProviders.tsx`: `SessionProvider -> PlayerProvider -> keyed SessionQueryProvider -> App`; App renders routes/global player without creating another provider |
 
 Model nondeterminism includes arbitrary response order, response rejection,
 authorization denial, browser play rejection, user pause/resume, selection
@@ -122,3 +122,10 @@ JavaScript number exhaustion and process crashes are excluded.
 The exact traces and explored counts are printed in test logs. This contract
 does not assert that another browser tab cannot play audio, that every platform
 surface uses this provider, or that every historical asset is discoverable.
+
+The ownership correspondence was updated by the listener-scoped privacy increment.
+Same-owner readiness and navigation retain this provider; actual owner changes
+intentionally end the prior listening session. See
+[player-listening-privacy.md](player-listening-privacy.md) for finite identity and
+real-decoder evidence. Owner tags, hydration and preference retention are outside
+this bounded model; its counts, assumptions and verification statuses are unchanged.
