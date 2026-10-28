@@ -105,6 +105,71 @@ it.each(['success', 'failure'] as const)('holds saved state during pending boots
   await waitFor(() => expect(readSaved().positions).toEqual({ 'public-A': 12 }));
 });
 
+it('restores paused after cookie bootstrap without a cached session descriptor', async () => {
+  const saved = seed(101);
+  let resolve: (value: SessionUser | null) => void = () => undefined;
+  snapshot = () => new Promise((done) => { resolve = done; });
+  mountApp();
+  await waitFor(() => expect(screen.getByTestId('actor').textContent).toBe('anonymous:true'));
+  expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+  expect(player.currentTrack).toBeNull();
+  await act(async () => { await new Promise((done) => setTimeout(done, 300)); });
+  expect(localStorage.getItem(KEY)).toBe(saved);
+  await act(async () => { resolve(userA); });
+  await actor(101);
+  await waitFor(() => expect(player.currentTime).toBe(12));
+  expect(player.currentTrack?.id).toBe('public-A');
+  expect(player.status).toBe('paused');
+  expect(player.queue.shuffle).toBe(true);
+  expect(player.queue.repeat).toBe('queue');
+  expect(jest.mocked(HTMLMediaElement.prototype.play)).not.toHaveBeenCalled();
+  await waitFor(() => expect(readSaved().positions).toEqual({ 'public-A': 12 }));
+});
+
+it('preserves a newer public selection when uncached bootstrap resolves', async () => {
+  const saved = seed(101);
+  let resolve: (value: SessionUser | null) => void = () => undefined;
+  snapshot = () => new Promise((done) => { resolve = done; });
+  mountApp();
+  await waitFor(() => expect(screen.getByTestId('actor').textContent).toBe('anonymous:true'));
+  await choose('B', 3);
+  const audio = document.querySelector('audio')!;
+  const plays = jest.mocked(audio.play).mock.calls.length;
+  expect(localStorage.getItem(KEY)).toBe(saved);
+  await act(async () => { resolve(userA); }); await actor(101);
+  expect(player.currentTrack?.id).toBe('public-B');
+  expect(player.currentTime).toBe(3); expect(player.status).toBe('playing');
+  expect(document.querySelector('audio')).toBe(audio);
+  expect(jest.mocked(audio.play).mock.calls.length).toBe(plays);
+  await waitFor(() => expect(readSaved().queue?.tracks[0]?.id).toBe('public-B'));
+});
+
+it('does not expose another saved listener when uncached bootstrap resolves', async () => {
+  const saved = seed(101);
+  let resolve: (value: SessionUser | null) => void = () => undefined;
+  snapshot = () => new Promise((done) => { resolve = done; });
+  mountApp();
+  await waitFor(() => expect(screen.getByTestId('actor').textContent).toBe('anonymous:true'));
+  expect(player.currentTrack).toBeNull();
+  expect(screen.queryByText('SYNTHETIC_LISTENER_A')).toBeNull();
+  expect(localStorage.getItem(KEY)).toBe(saved);
+  await act(async () => { resolve(userB); }); await actor(202);
+  expect(player.currentTrack).toBeNull(); expect(player.queue.tracks).toEqual([]);
+  await waitFor(() => expect(readSaved().ownerPartyId).toBe(202));
+  expect(readSaved().positions).toEqual({});
+});
+
+it('ends initial-owner eligibility after the first anonymous bootstrap resolution', async () => {
+  jest.useFakeTimers(); seed(101);
+  const view = render(<PlayerProvider identity={{ ready: false, partyId: null }}><Probe /></PlayerProvider>);
+  view.rerender(<PlayerProvider identity={{ ready: true, partyId: null }}><Probe /></PlayerProvider>);
+  expect(player.currentTrack).toBeNull();
+  view.rerender(<PlayerProvider identity={{ ready: true, partyId: 101 }}><Probe /></PlayerProvider>);
+  expect(player.currentTrack).toBeNull(); expect(player.queue.tracks).toEqual([]);
+  await act(async () => { jest.advanceTimersByTime(300); });
+  expect(readSaved().ownerPartyId).toBe(101); expect(readSaved().positions).toEqual({});
+});
+
 it('reload as another listener discards previous metadata before GlobalPlayer exposure', async () => {
   seed(101); localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userB)); snapshot = async () => userB;
   mountApp(); await actor(202); expect(player.currentTrack).toBeNull(); expect(screen.queryByText('SYNTHETIC_LISTENER_A')).toBeNull();
