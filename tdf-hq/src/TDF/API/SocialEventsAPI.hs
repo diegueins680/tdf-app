@@ -16,6 +16,7 @@ module TDF.API.SocialEventsAPI (
     RsvpRoutes,
     InvitationsRoutes,
     MomentsRoutes,
+    MemoryInvitationRoutes,
     LiveBroadcastsRoutes,
     TicketsRoutes,
     BudgetRoutes,
@@ -23,11 +24,13 @@ module TDF.API.SocialEventsAPI (
     LogisticsRoutes,
     IdParam,
     EventImageUploadForm (..),
+    EventMemoryMediaUploadForm (..),
+    validateEventMemoryMediaUploadForm,
     EventImageUploadDTO (..),
     validateEventImageUploadForm,
 ) where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, Value)
 import Data.Char (
     GeneralCategory (Format, LineSeparator, ParagraphSeparator, Space),
     generalCategory,
@@ -84,6 +87,7 @@ import TDF.DTO.SocialEventsDTO (
     EventMomentCommentCreateDTO,
     EventMomentCommentDTO,
     EventMomentCreateDTO,
+    EventMomentEditDTO,
     EventMomentDTO,
     EventMomentReactionRequestDTO,
     EventUpdateDTO,
@@ -145,13 +149,45 @@ validateEventImageUploadForm (EventImageUploadForm file rawName) = do
             , eiuName = mName
             }
 
+newtype EventMemoryMediaUploadForm = EventMemoryMediaUploadForm EventImageUploadForm
+
+validateEventMemoryMediaUploadForm :: EventImageUploadForm -> Either Text EventImageUploadForm
+validateEventMemoryMediaUploadForm form@(EventImageUploadForm file rawName) = do
+    mName <- traverse normalizeEventImageUploadName rawName
+    rejectUnnamedUpload mName file
+    validateUploadName "Uploaded media file name" (fdFileName file)
+    let mime = normalizeUploadMimeType (fdFileCType file)
+        extensions = filter (not . T.null) (imageExtension (fdFileName file) : maybe [] (pure . imageExtension) mName)
+        allowed = case mime of
+            "video/mp4" -> Just [".mp4"]
+            "video/quicktime" -> Just [".mov"]
+            "video/webm" -> Just [".webm"]
+            "audio/mpeg" -> Just [".mp3"]
+            "audio/mp4" -> Just [".m4a"]
+            "audio/wav" -> Just [".wav"]
+            "audio/x-wav" -> Just [".wav"]
+            "audio/ogg" -> Just [".ogg"]
+            "audio/flac" -> Just [".flac"]
+            _ -> allowedImageExtensions mime
+    if T.any isUnsafeUploadNameChar (fdFileCType file) || hasUploadContentTypeNameParameter (fdFileCType file)
+        then Left "Media MIME type contains unsafe metadata"
+        else case allowed of
+            Just supported | not (null extensions) && all (`elem` supported) extensions -> pure form
+            _ -> Left "Media extension must match a supported image, video or audio MIME type"
+
+instance FromMultipart Tmp EventMemoryMediaUploadForm where
+    fromMultipart = fmap EventMemoryMediaUploadForm . parseEventUploadForm False
+
 instance FromMultipart Tmp EventImageUploadForm where
-    fromMultipart multipart = do
+    fromMultipart = parseEventUploadForm True
+
+parseEventUploadForm :: Bool -> MultipartData Tmp -> Either String EventImageUploadForm
+parseEventUploadForm imageOnly multipart = do
         rejectUnexpectedParts multipart
         file <- lookupSingleFile "file" multipart
         mName <- lookupOptionalInput "name" multipart
         let uploadForm = EventImageUploadForm{eiuFile = file, eiuName = mName}
-        case validateEventImageUploadForm uploadForm of
+        case (if imageOnly then validateEventImageUploadForm else validateEventMemoryMediaUploadForm) uploadForm of
             Left err -> Left (T.unpack err)
             Right validatedForm -> Right validatedForm
       where
@@ -453,12 +489,24 @@ type InvitationsRoutes =
                 :<|> Capture "invitationId" Text :> ReqBody '[JSON] InvitationUpdateDTO :> Put '[JSON] InvitationDTO
            )
 
+-- Internal service invitations; booleans are explicit opt-in/enable commands.
+type MemoryInvitationResponse = Headers '[Header "Cache-Control" Text] Value
+type MemoryInvitationRoutes =
+    "me" :> "memory-invitations" :> Get '[JSON] MemoryInvitationResponse
+    :<|> "me" :> "memory-invitations" :> ReqBody '[JSON] Bool :> Put '[JSON] MemoryInvitationResponse
+    :<|> "events" :> Capture "eventId" Text :> "memory-invitations" :> Get '[JSON] MemoryInvitationResponse
+    :<|> "events" :> Capture "eventId" Text :> "memory-invitations" :> ReqBody '[JSON] Bool :> Put '[JSON] MemoryInvitationResponse
+    :<|> "events" :> Capture "eventId" Text :> "memory-invitations" :> Capture "deliveryId" UUID :> "open" :> Post '[JSON] MemoryInvitationResponse
+
 type MomentsRoutes =
-    "events" :> Capture "eventId" Text :> "moments" :> Get '[JSON] [EventMomentDTO]
+    "events" :> Capture "eventId" Text :> "moments" :> QueryFlag "extended" :> Get '[JSON] (Headers '[Header "Cache-Control" Text] [EventMomentDTO])
         :<|> "events" :> Capture "eventId" Text :> "moments" :> ReqBody '[JSON] EventMomentCreateDTO :> Post '[JSON] EventMomentDTO
         :<|> "events" :> Capture "eventId" Text :> "moments" :> "image" :> MultipartForm Tmp EventImageUploadForm :> Post '[JSON] EventImageUploadDTO
+        :<|> "events" :> Capture "eventId" Text :> "moments" :> "media" :> MultipartForm Tmp EventMemoryMediaUploadForm :> Post '[JSON] EventImageUploadDTO
         :<|> "events" :> Capture "eventId" Text :> "moments" :> Capture "momentId" Text :> "reactions" :> ReqBody '[JSON] EventMomentReactionRequestDTO :> Post '[JSON] EventMomentDTO
         :<|> "events" :> Capture "eventId" Text :> "moments" :> Capture "momentId" Text :> "comments" :> ReqBody '[JSON] EventMomentCommentCreateDTO :> Post '[JSON] EventMomentCommentDTO
+        :<|> "events" :> Capture "eventId" Text :> "moments" :> Capture "momentId" Text :> ReqBody '[JSON] EventMomentEditDTO :> Put '[JSON] EventMomentDTO
+        :<|> "events" :> Capture "eventId" Text :> "moments" :> Capture "momentId" Text :> DeleteNoContent
 
 type LiveBroadcastsRoutes =
     "events" :> Capture "eventId" Text :> "live-broadcasts" :> Get '[JSON] [EventLiveBroadcastDTO]
@@ -615,3 +663,4 @@ type SocialEventsAPI =
         :<|> BudgetRoutes
         :<|> FinanceRoutes
         :<|> LogisticsRoutes
+        :<|> MemoryInvitationRoutes

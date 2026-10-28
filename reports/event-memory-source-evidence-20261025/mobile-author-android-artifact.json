@@ -1,0 +1,26 @@
+{
+  "run": 40359055946,
+  "branchHead": "41a68b776676e50e38d9de77cfb1dcda598ce7fe",
+  "actualCheckout": "41a68b776676e50e38d9de77cfb1dcda598ce7fe",
+  "actualCheckoutEvidence": "git log -1 --format=%H in checkout log",
+  "artifactId": 12667334575,
+  "artifactName": "interaction-android-41a68b776676e50e38d9de77cfb1dcda598ce7fe",
+  "apkBytes": 76314355,
+  "apkSha256": "cb6858bd714a61f43ccbc61744d17de89837dd3db98c84a5fc2fe2379067c72c",
+  "bundledJavascript": [
+    "assets/index.android.bundle"
+  ],
+  "javascriptSha256": "021e657e3efb8690732f726a79cea14dabc53b04d9add72508ca54a360bc76ba",
+  "javascriptAuthorActionMarkers": {
+    "emeExpectedUpdatedAt": true,
+    "Confirmar eliminación": true,
+    "Cancelar eliminación": true,
+    "Editar recuerdo": true
+  },
+  "nativeDocumentPickerDex": [
+    "classes5.dex"
+  ],
+  "runtimeInCompiledResources": "1.0.1-interactions-audio.1",
+  "checkoutLogSha256": "c56a0cc11c461517d87a37ce80c29efb7829f5b1c80f3d413d3a60b5332fbcd6",
+  "scope": "Isolated x86_64 test APK with repository test signing key and loopback API. Compiled/inspected; no device execution or store distribution."
+}

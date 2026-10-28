@@ -540,6 +540,63 @@
       },
       "scope": "Only AuthErrorCode union and error.code switch extension; every other baseline decision object is unchanged."
     },
+    "eventMemoryCurrentMain20261026": {
+      "sourceParents": [
+        "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+        "1c9c833cc1ba62b47822fca3c20e14e86cf28daa"
+      ],
+      "protectedMainMigrationCount": 221,
+      "combinedMigrationCount": 225,
+      "currentManifestDecisionId": "cff15f30aa13965e5729",
+      "retiredManifestIds": [
+        "79a6def1e91baee6e937",
+        "8229b8202552298c955e"
+      ],
+      "reason": "Preserve the complete221-entry protected main1c9c833 migration prefix and every SQL byte/introduction anchor, then append the four original event-memory invitation, source-moderation, NULL-authorization and permission-lock migrations unchanged. Retain both exact224- and221-entry review graphs, including financial and directory lineage. This225-entry execution-registry review grants no production action, campaign activation, permission, financial transaction or release waiver; fresh combined runtime/CI and independent protected review remain required.",
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9201bfd098de5c87217d90ed3e7e13019fdc38e579dd8197d4501803fc63a34f",
+          "sourceEntry": {
+            "id": "79a6def1e91baee6e937"
+          },
+          "sourceEntryCanonicalSha256": "978e4a28b767ba92ef815fe45ac919ae7550742d9fd9b8cc1007e09e4d0291d9",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "05793bdcb06612ca1a75fc8326ac01a8f0a59defe7c04aef4286889cf7aa6b95",
+          "sourceEntry": {
+            "id": "8229b8202552298c955e"
+          },
+          "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ]
+    },
+    "eventMemoryHeaderMainIntegration": {
+      "sourceMain": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "memoryParent": "ebac187c9b96682c741671ba1dccfb133acc4cb7",
+      "mainPrefixCount": 222,
+      "manifestCount": 226,
+      "mainPrefixCanonicalSha256": "3de55b856b5d3d21671a9449be31f6169c93f004946a0e0752b784b4d5a0922f",
+      "originalMemorySuffixCanonicalSha256": "683f89261ab16dca098411d90b94317800bdeb0aa3508b4eced4985b53c8b22b",
+      "currentDecisionId": "f48c34252ff8930b3d74",
+      "memoryDecisionCanonicalSha256": "9f3858a91f37caf5b4b1916fbc280a6ce891cd34536d0ee8953ce2331b8f3fb5",
+      "headerDecisionCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404"
+    },
+    "eventMemoryProviderMain20261026": {
+      "document": "docs/catalog-persistence/event-memory-provider-main-reconciliation-20261026.json",
+      "mainParent": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+      "memoryParent": "5875e60701465f9512fad1628b64c0d59a53f049",
+      "currentDecisionId": "a2bb0e828d5b94c1cb31",
+      "protectedPrefixCount": 223,
+      "currentManifestCount": 227,
+      "protectedPrefixCanonicalSha256": "3123446d4ae490b41d13beb6ca62f17da39fbc90539791c9b5373709c05b1703",
+      "memorySuffixCanonicalSha256": "683f89261ab16dca098411d90b94317800bdeb0aa3508b4eced4985b53c8b22b"
+    },
     "privacyQueueRestoreSuccessor": {
       "sourceRevision": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
       "sourceImplementationCommit": "a0120daa3493c04e358b50c6d60af1cacfc60a31",
@@ -2183,70 +2240,6 @@
       "reviewed": true
     },
     {
-      "id": "48cbf22770303d844cdc",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing authenticated method dispatch can redirect commands or expose private transfer evidence; server event ownership and authorization remain authoritative.",
-      "justification": "SocialEventsAPI contains 72 typed transport methods after adding getManualPaymentReceipt for the existing event/order-scoped authenticated receipt read. The 71 previously reviewed method names are preserved. These keys dispatch implementation endpoints; they are not editable product choices, payment states or a persisted business catalog.",
-      "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "ticket-receipt-preview-2026-10-24",
-      "evidence": {
-        "file": "tdf-hq-ui/src/api/socialEvents.ts",
-        "line": 580
-      },
-      "mergedDecision": {
-        "id": "c69afb90768a2e78770a",
-        "classification": "genuine-technical-constant",
-        "disposition": "retain-in-code",
-        "specializedModel": "technical_constant_allowlist",
-        "priority": "P3-retain",
-        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-        "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-        "reviewed": true,
-        "reviewMethod": "successor-of-reviewed-decision",
-        "reviewBatch": "ticket-tax-invoices-2026-10-06",
-        "evidence": {
-          "file": "tdf-hq-ui/src/api/socialEvents.ts",
-          "line": 576
-        }
-      },
-      "previousDecision": {
-        "id": "620eb81ffe787eca6636",
-        "classification": "genuine-technical-constant",
-        "disposition": "retain-in-code",
-        "specializedModel": "technical_constant_allowlist",
-        "priority": "P3-retain",
-        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-        "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
-        "reviewed": true,
-        "reviewMethod": "successor-of-reviewed-decision",
-        "reviewBatch": "ticket-credit-notes-2026-10-06",
-        "evidence": {
-          "file": "tdf-hq-ui/src/api/socialEvents.ts",
-          "line": 577
-        },
-        "mergedDecision": {
-          "id": "c69afb90768a2e78770a",
-          "classification": "genuine-technical-constant",
-          "disposition": "retain-in-code",
-          "specializedModel": "technical_constant_allowlist",
-          "priority": "P3-retain",
-          "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-          "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-          "reviewed": true,
-          "reviewMethod": "successor-of-reviewed-decision",
-          "reviewBatch": "ticket-tax-invoices-2026-10-06",
-          "evidence": {
-            "file": "tdf-hq-ui/src/api/socialEvents.ts",
-            "line": 576
-          }
-        }
-      }
-    },
-    {
       "id": "97b39ec2444815e73359",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -2607,85 +2600,6 @@
           "ed073f8ce8952b2d07ec",
           "f3667c0977c71f89548b"
         ]
-      }
-    },
-    {
-      "id": "2a0d6d57a51e35d91376",
-      "classification": "security-system-registry",
-      "disposition": "canonical-contract",
-      "specializedModel": "notification_destination_registry",
-      "priority": "P1-integrity",
-      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Canonical typed notification destination registry; chat_thread uses a validated positive safe thread identity, selects only an authorized existing conversation and never accepts an arbitrary URL. Generated into Mobile.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-        "line": 14
-      },
-      "reviewBatch": "chat-notification-destination-2026-10-13",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "1a20aae8bb74a6df248f",
-        "classification": "security-system-registry",
-        "disposition": "canonical-contract",
-        "specializedModel": "notification_destination_registry",
-        "priority": "P1-integrity",
-        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
-        "reviewed": true,
-        "evidence": {
-          "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-          "line": 14
-        },
-        "reviewBatch": "music-release-platform-sync-2026-10-07",
-        "reviewMethod": "successor-of-reviewed-decision",
-        "previousDecision": {
-          "id": "d8058e9fe53556cbf690",
-          "classification": "security-system-registry",
-          "disposition": "canonical-contract",
-          "specializedModel": "notification_destination_registry",
-          "priority": "P1-integrity",
-          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-          "reviewed": true,
-          "evidence": {
-            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-            "line": 14
-          },
-          "reviewBatch": "universal-interactions-2026-09-28"
-        }
-      },
-      "mergedSourceDecision": {
-        "id": "2a0d6d57a51e35d91376",
-        "classification": "security-system-registry",
-        "disposition": "canonical-contract",
-        "specializedModel": "notification_destination_registry",
-        "priority": "P1-integrity",
-        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
-        "reviewed": true,
-        "evidence": {
-          "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-          "line": 14
-        },
-        "reviewBatch": "music-release-platform-sync-2026-10-07",
-        "reviewMethod": "successor-of-reviewed-decision",
-        "previousDecision": {
-          "id": "d8058e9fe53556cbf690",
-          "classification": "security-system-registry",
-          "disposition": "canonical-contract",
-          "specializedModel": "notification_destination_registry",
-          "priority": "P1-integrity",
-          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-          "reviewed": true,
-          "evidence": {
-            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
-            "line": 14
-          },
-          "reviewBatch": "universal-interactions-2026-09-28"
-        },
-        "previousFingerprint": "1a20aae8bb74a6df248f"
       }
     },
     {
@@ -6838,6 +6752,36 @@
       },
       "reviewBatch": "music-release-platform-sync-2026-10-07",
       "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "5ed33d9cd50e8f195d05",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing or externally governing reducer dispatch tags could break guarded local queue hydration or transport controls. These tags do not authorize media access.",
+      "justification": "Individually reviewed all nine queue reducer tags: restore,replace,enqueue,select,remove,move,clear,shuffle,repeat. The added restore action installs a previously validated matching-owner snapshot through internal guarded hydration; the remaining eight are unchanged client queue operations. These implementation dispatch discriminants are not selectable business catalog values or a privilege registry.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "player-listening-identity-20261026",
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/queue.ts",
+        "line": 34,
+        "kind": "switch-cases",
+        "name": "action.type",
+        "valueCount": 9
+      },
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceEntry": {
+            "id": "dfec3f046ad1157e0f0c"
+          },
+          "sourceEntryCanonicalSha256": "1fd0dae5a96294d8649e2d2c0167cd15b993dd168f587e5445b011ec5e0544fc",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ]
     },
     {
       "id": "d94623ae7e8da8f014f5",
@@ -16866,28 +16810,6 @@
       "reviewed": true
     },
     {
-      "id": "a7561a719beb23884345",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
-      "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
-      "evidence": {
-        "file": "tdf-mobile/src/api/events.ts",
-        "line": 435,
-        "kind": "object-registry",
-        "name": "Events",
-        "valueCount": 30,
-        "consumerCount": 213,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
-      }
-    },
-    {
       "id": "027498d98521acdaf125",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -17836,124 +17758,6 @@
       "reviewed": true
     },
     {
-      "id": "4beaac5c476079656a0a",
-      "classification": "security-system-registry",
-      "disposition": "canonical-contract",
-      "specializedModel": "notification_destination_registry",
-      "priority": "P1-integrity",
-      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Generated Mobile notification destination registry adds chat_thread with the same validated numeric identity and canonical web route as the web resolver; arbitrary URL navigation remains rejected.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-        "line": 15
-      },
-      "reviewBatch": "chat-notifications-2026-10-13",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "previousDecision": {
-        "id": "2c23d0fa2bac40b01a98",
-        "classification": "security-system-registry",
-        "disposition": "canonical-contract",
-        "specializedModel": "notification_destination_registry",
-        "priority": "P1-integrity",
-        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-        "reviewed": true,
-        "evidence": {
-          "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-          "line": 15
-        },
-        "reviewBatch": "universal-interactions-2026-09-28"
-      },
-      "supersededReviews": [
-        {
-          "sourceRevision": "cf723a45e24c7f9a8dd8300d4b7f199b261b5363",
-          "sourceDecisionId": "9de842d0529aa06faf6b",
-          "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
-          "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
-        }
-      ],
-      "mergedSourceDecision": {
-        "id": "4beaac5c476079656a0a",
-        "classification": "security-system-registry",
-        "disposition": "canonical-contract",
-        "specializedModel": "notification_destination_registry",
-        "priority": "P1-integrity",
-        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Pinned Mobile retains the reviewed notification destination allowlist and adds chat_thread with a positive-safe-integer threadId and /chat fallback. These client routes grant no thread access; recipient and thread membership remain backend authorities. Arbitrary URL navigation remains excluded.",
-        "reviewed": true,
-        "evidence": {
-          "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-          "line": 15
-        },
-        "reviewBatch": "booking-mobile-pin-consolidation-2026-10-15",
-        "reviewMethod": "successor-of-reviewed-decision",
-        "previousDecision": {
-          "id": "9de842d0529aa06faf6b",
-          "classification": "security-system-registry",
-          "disposition": "canonical-contract",
-          "specializedModel": "notification_destination_registry",
-          "priority": "P1-integrity",
-          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
-          "reviewed": true,
-          "evidence": {
-            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-            "line": 15
-          },
-          "reviewBatch": "music-release-platform-sync-2026-10-07",
-          "reviewMethod": "successor-of-reviewed-decision",
-          "previousDecision": {
-            "id": "2c23d0fa2bac40b01a98",
-            "classification": "security-system-registry",
-            "disposition": "canonical-contract",
-            "specializedModel": "notification_destination_registry",
-            "priority": "P1-integrity",
-            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-            "reviewed": true,
-            "evidence": {
-              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-              "line": 15
-            },
-            "reviewBatch": "universal-interactions-2026-09-28"
-          }
-        },
-        "mergedSourceDecision": {
-          "id": "4beaac5c476079656a0a",
-          "classification": "security-system-registry",
-          "disposition": "canonical-contract",
-          "specializedModel": "notification_destination_registry",
-          "priority": "P1-integrity",
-          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Mobile main adds chat_thread to the existing notification destination allowlist, resolving to the canonical same-origin thread path. Existing destinations are preserved; the six notification response regressions pass. This is routing authority, not an editable business catalog.",
-          "reviewed": true,
-          "evidence": {
-            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-            "line": 15
-          },
-          "reviewBatch": "music-release-platform-sync-2026-10-07",
-          "reviewMethod": "successor-of-reviewed-decision",
-          "previousDecision": {
-            "id": "2c23d0fa2bac40b01a98",
-            "classification": "security-system-registry",
-            "disposition": "canonical-contract",
-            "specializedModel": "notification_destination_registry",
-            "priority": "P1-integrity",
-            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
-            "reviewed": true,
-            "evidence": {
-              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
-              "line": 15
-            },
-            "reviewBatch": "universal-interactions-2026-09-28"
-          },
-          "previousFingerprint": "9de842d0529aa06faf6b"
-        }
-      }
-    },
-    {
       "id": "5531b94c0e2171c68477",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -18122,121 +17926,6 @@
         "line": 33
       },
       "reviewBatch": "checkout-session-readiness-2026-10-14"
-    },
-    {
-      "id": "2634b239375f2ad309ba",
-      "classification": "security-system-registry",
-      "disposition": "retain-reviewed-deployment-manifest",
-      "specializedModel": "production migration manifest and applied migration ledger",
-      "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "The 223-entry deployment registry preserves the complete 222-entry ledger candidate f3e3217ac12a04be2a221ee6ac8bea67875d46c5 prefix, including all221 protected-main migrations and the original posted-header migration, and appends only the provider/domain admission migration introduced by456be073c944dd3d76eb9e3c2169fe7fbb4041ef. Historical SQL bodies and introduction ancestors are unchanged. Both222-entry and209-entry source reviews are retained by canonical hashes. This technical review grants no provider activation, production execution or waiver of current-head CI, independent review and protected merge admission.",
-      "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "provider-domain-main-technical-review-20261026",
-      "sourceReviewReferences": [
-        {
-          "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
-          "sourceEntry": {
-            "id": "3f336173e03f10fc023c"
-          },
-          "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        },
-        {
-          "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
-          "sourceEntry": {
-            "id": "2b073f20afd2f3798b1e"
-          },
-          "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        },
-        {
-          "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
-          "sourceEntry": {
-            "id": "a1eb1e750e7543b88fe1"
-          },
-          "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        },
-        {
-          "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
-          "sourceEntry": {
-            "id": "b7cc47848f3f9882770f"
-          },
-          "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        },
-        {
-          "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
-          "sourceEntry": {
-            "id": "c94cd70c1272ec9ede1b"
-          },
-          "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        },
-        {
-          "sourceRevision": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "55915aedf0e4e356a5bca766cdc09b7077f9d0d567523b4d496ad9c5bacb09f0",
-          "sourceEntry": {
-            "id": "8229b8202552298c955e"
-          },
-          "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        },
-        {
-          "sourceRevision": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "881e0be06afb973c1200beb4213e72ae4bad53478e3fab280189c650a55d3b75",
-          "sourceEntry": {
-            "id": "9ada14767bee1662f97d"
-          },
-          "sourceEntryCanonicalSha256": "6528ab5a8a23254d2e4ad4222e392f7f8f052b9f2818ef6e9eb8fc3a461a7003",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        },
-        {
-          "sourceRevision": "f3e3217ac12a04be2a221ee6ac8bea67875d46c5",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "529f4972e422295562c0a67e1101346a97b2549ee0544072b69476c80edd0503",
-          "sourceEntry": {
-            "id": "6ff395b6131079017c9d"
-          },
-          "sourceEntryCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        },
-        {
-          "sourceRevision": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "be3b04226bda54e2dd6abdaddd434039ef7b457defe59942ec49dbed98013a73",
-          "sourceEntry": {
-            "id": "a70a9a4dd05ce44e950b"
-          },
-          "sourceEntryCanonicalSha256": "018a1dc08aafe97b3af2257fe2ad24bac9a8f47f724975df0eec07e729ba8058",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        }
-      ],
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 223
-      },
-      "previousDecisionReferences": {
-        "document": "docs/catalog-persistence/provider-domain-main-reconciliation-20261026.json",
-        "ledgerId": "6ff395b6131079017c9d",
-        "providerId": "a70a9a4dd05ce44e950b"
-      }
     },
     {
       "id": "e1630a13682bf0fee90d",
@@ -18630,6 +18319,1334 @@
       "reviewBatch": "legacy-provider-actions-2026-10-26"
     },
     {
+      "id": "da4f880a8da74120e456",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "notification_destination_registry",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+        "line": 14
+      },
+      "reviewBatch": "event-memories-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "2a0d6d57a51e35d91376",
+        "classification": "security-system-registry",
+        "disposition": "canonical-contract",
+        "specializedModel": "notification_destination_registry",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Canonical typed notification destination registry; chat_thread uses a validated positive safe thread identity, selects only an authorized existing conversation and never accepts an arbitrary URL. Generated into Mobile.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+          "line": 14
+        },
+        "reviewBatch": "chat-notification-destination-2026-10-13",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "1a20aae8bb74a6df248f",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+            "line": 14
+          },
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "d8058e9fe53556cbf690",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+              "line": 14
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          }
+        },
+        "mergedSourceDecision": {
+          "id": "2a0d6d57a51e35d91376",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+            "line": 14
+          },
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "d8058e9fe53556cbf690",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+              "line": 14
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          },
+          "previousFingerprint": "1a20aae8bb74a6df248f"
+        }
+      },
+      "mergedSourceDecision": {
+        "id": "2a0d6d57a51e35d91376",
+        "classification": "security-system-registry",
+        "disposition": "canonical-contract",
+        "specializedModel": "notification_destination_registry",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+          "line": 14
+        },
+        "reviewBatch": "music-release-platform-sync-2026-10-07",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "d8058e9fe53556cbf690",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+            "line": 14
+          },
+          "reviewBatch": "universal-interactions-2026-09-28"
+        },
+        "previousFingerprint": "1a20aae8bb74a6df248f"
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "sourceDecisionId": "2a0d6d57a51e35d91376",
+          "sourceDecisionSha256": "ccac20209c66a4957a170eb062eddf65ad6d5999731c45a94cb8d7ee00e2b07f",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+          "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
+        }
+      ]
+    },
+    {
+      "id": "4a5404a4a008a8f296dd",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Typed Mobile API methods add uploadMomentMedia using the existing authenticated API client and canonical event-scoped image/media routes. This is transport dispatch, never a selectable business catalog.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "event-memories-2026-10-25",
+      "evidence": {
+        "file": "tdf-mobile/src/api/events.ts",
+        "line": 436,
+        "kind": "object-registry",
+        "name": "Events",
+        "valueCount": 31
+      },
+      "previousDecision": {
+        "id": "a7561a719beb23884345",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+        "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+        "reviewed": true,
+        "reviewMethod": "deterministic-policy-v3",
+        "reviewBatch": "deterministic-policy-v3",
+        "evidence": {
+          "file": "tdf-mobile/src/api/events.ts",
+          "line": 435,
+          "kind": "object-registry",
+          "name": "Events",
+          "valueCount": 30,
+          "consumerCount": 213,
+          "exactDuplicateIds": [],
+          "similarCandidateIds": []
+        }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "sourceDecisionId": "a7561a719beb23884345",
+          "sourceDecisionSha256": "cfd754599e30a9eb31ad1565cb0b5416fd711f4e348c1021785274cd3f662ffe",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+          "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
+        }
+      ]
+    },
+    {
+      "id": "92f5d2006375f7fb9757",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "notification_destination_registry",
+      "priority": "P1-integrity",
+      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+      "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+        "line": 15
+      },
+      "reviewBatch": "event-memories-2026-10-25",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "4beaac5c476079656a0a",
+        "classification": "security-system-registry",
+        "disposition": "canonical-contract",
+        "specializedModel": "notification_destination_registry",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Generated Mobile notification destination registry adds chat_thread with the same validated numeric identity and canonical web route as the web resolver; arbitrary URL navigation remains rejected.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+          "line": 15
+        },
+        "reviewBatch": "chat-notifications-2026-10-13",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "2c23d0fa2bac40b01a98",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+            "line": 15
+          },
+          "reviewBatch": "universal-interactions-2026-09-28"
+        },
+        "supersededReviews": [
+          {
+            "sourceRevision": "cf723a45e24c7f9a8dd8300d4b7f199b261b5363",
+            "sourceDecisionId": "9de842d0529aa06faf6b",
+            "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
+            "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
+          }
+        ],
+        "mergedSourceDecision": {
+          "id": "4beaac5c476079656a0a",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Pinned Mobile retains the reviewed notification destination allowlist and adds chat_thread with a positive-safe-integer threadId and /chat fallback. These client routes grant no thread access; recipient and thread membership remain backend authorities. Arbitrary URL navigation remains excluded.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+            "line": 15
+          },
+          "reviewBatch": "booking-mobile-pin-consolidation-2026-10-15",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "9de842d0529aa06faf6b",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+              "line": 15
+            },
+            "reviewBatch": "music-release-platform-sync-2026-10-07",
+            "reviewMethod": "successor-of-reviewed-decision",
+            "previousDecision": {
+              "id": "2c23d0fa2bac40b01a98",
+              "classification": "security-system-registry",
+              "disposition": "canonical-contract",
+              "specializedModel": "notification_destination_registry",
+              "priority": "P1-integrity",
+              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+              "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+              "reviewed": true,
+              "evidence": {
+                "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+                "line": 15
+              },
+              "reviewBatch": "universal-interactions-2026-09-28"
+            }
+          },
+          "mergedSourceDecision": {
+            "id": "4beaac5c476079656a0a",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Mobile main adds chat_thread to the existing notification destination allowlist, resolving to the canonical same-origin thread path. Existing destinations are preserved; the six notification response regressions pass. This is routing authority, not an editable business catalog.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+              "line": 15
+            },
+            "reviewBatch": "music-release-platform-sync-2026-10-07",
+            "reviewMethod": "successor-of-reviewed-decision",
+            "previousDecision": {
+              "id": "2c23d0fa2bac40b01a98",
+              "classification": "security-system-registry",
+              "disposition": "canonical-contract",
+              "specializedModel": "notification_destination_registry",
+              "priority": "P1-integrity",
+              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+              "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+              "reviewed": true,
+              "evidence": {
+                "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+                "line": 15
+              },
+              "reviewBatch": "universal-interactions-2026-09-28"
+            },
+            "previousFingerprint": "9de842d0529aa06faf6b"
+          }
+        }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "cf723a45e24c7f9a8dd8300d4b7f199b261b5363",
+          "sourceDecisionId": "9de842d0529aa06faf6b",
+          "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
+          "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
+        },
+        {
+          "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "sourceDecisionId": "4beaac5c476079656a0a",
+          "sourceDecisionSha256": "4b0adcbe4bb243448dcd91fb2fed31264b27d1880b10be20a69610ece91a31ea",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+          "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
+        }
+      ],
+      "mergedSourceDecision": {
+        "id": "4beaac5c476079656a0a",
+        "classification": "security-system-registry",
+        "disposition": "canonical-contract",
+        "specializedModel": "notification_destination_registry",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Pinned Mobile retains the reviewed notification destination allowlist and adds chat_thread with a positive-safe-integer threadId and /chat fallback. These client routes grant no thread access; recipient and thread membership remain backend authorities. Arbitrary URL navigation remains excluded.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+          "line": 15
+        },
+        "reviewBatch": "booking-mobile-pin-consolidation-2026-10-15",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "previousDecision": {
+          "id": "9de842d0529aa06faf6b",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+            "line": 15
+          },
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "2c23d0fa2bac40b01a98",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+              "line": 15
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          }
+        },
+        "mergedSourceDecision": {
+          "id": "4beaac5c476079656a0a",
+          "classification": "security-system-registry",
+          "disposition": "canonical-contract",
+          "specializedModel": "notification_destination_registry",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Mobile main adds chat_thread to the existing notification destination allowlist, resolving to the canonical same-origin thread path. Existing destinations are preserved; the six notification response regressions pass. This is routing authority, not an editable business catalog.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+            "line": 15
+          },
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "2c23d0fa2bac40b01a98",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+              "line": 15
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          },
+          "previousFingerprint": "9de842d0529aa06faf6b"
+        }
+      }
+    },
+    {
+      "id": "c2b1e70be97928cfe257",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Unreviewed changes can alter wire compatibility, identity binding or attendance claims.",
+      "justification": "Typed methods for preferences, campaign aggregates, enable/disable and recipient-bound opening attribution are transport dispatch names, not editable business values.",
+      "reviewed": true,
+      "reviewMethod": "scoped-implementation-review",
+      "reviewBatch": "event-memories-2026-10-25",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
+        "line": 7
+      }
+    },
+    {
+      "id": "800925060279b33a0669",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "artist_profile, social_artist_profile",
+      "priority": "P1-integrity",
+      "risk": "Unreviewed changes can alter wire compatibility, identity binding or attendance claims.",
+      "justification": "Synthetic fixture distinguishes a canonical Party ID from a social Artist ID; unlinked artists must not receive an inferred profile link. No real participant list or production identity is created.",
+      "reviewed": true,
+      "reviewMethod": "scoped-implementation-review",
+      "reviewBatch": "event-memories-2026-10-25",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "line": 143
+      }
+    },
+    {
+      "id": "e97287ce4f5d0bdc892c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Unreviewed changes can alter wire compatibility, identity binding or attendance claims.",
+      "justification": "Composer groups correspond to existing and extended media wire discriminants. Administrator edits cannot extend codecs; these values require a versioned code/contract change.",
+      "reviewed": true,
+      "reviewMethod": "scoped-implementation-review",
+      "reviewBatch": "event-memories-2026-10-25",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "line": 232
+      }
+    },
+    {
+      "id": "6531f2e4e5717a8c713b",
+      "classification": "security-system-registry",
+      "disposition": "canonical-contract",
+      "specializedModel": "event_memory_candidates evidence policy",
+      "priority": "P1-integrity",
+      "risk": "Unreviewed changes can alter wire compatibility, identity binding or attendance claims.",
+      "justification": "Fixed authorization evidence classes govern attendance claims and invitation copy. Audited admission, professional participation and RSVP intent must not be conflated or extended through arbitrary catalog labels.",
+      "reviewed": true,
+      "reviewMethod": "scoped-implementation-review",
+      "reviewBatch": "event-memories-2026-10-25",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-25_event_memory_invitations.sql",
+        "line": 21
+      }
+    },
+    {
+      "id": "34210b76e81fd04cffae",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Incorrect typed method dispatch can redirect authenticated writes or expose private transfer evidence; server scope and ownership remain authoritative.",
+      "justification": "Reviewed the combined 75 transport methods: main adds the event/order-scoped receipt read, while memories add author edit/delete and event media upload. Both parent registries are preserved; method keys are implementation dispatch, not selectable business catalogs.",
+      "reviewed": true,
+      "reviewMethod": "combined-reviewed-parent-successor",
+      "reviewBatch": "event-memories-main-integration-2026-10-25",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/socialEvents.ts",
+        "line": 582,
+        "valueCount": 75
+      },
+      "previousDecisions": [
+        {
+          "id": "561cffe910e93eef6dca",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+          "justification": "Typed API-client methods add author memory edits/deletion and public media upload; method names are transport mechanics and no selectable business catalog.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decision",
+          "reviewBatch": "event-memories-2026-10-25",
+          "evidence": {
+            "file": "tdf-hq-ui/src/api/socialEvents.ts",
+            "line": 581
+          },
+          "mergedDecision": {
+            "id": "c69afb90768a2e78770a",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+            "reviewed": true,
+            "reviewMethod": "successor-of-reviewed-decision",
+            "reviewBatch": "ticket-tax-invoices-2026-10-06",
+            "evidence": {
+              "file": "tdf-hq-ui/src/api/socialEvents.ts",
+              "line": 576
+            }
+          },
+          "previousDecision": {
+            "id": "620eb81ffe787eca6636",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
+            "reviewed": true,
+            "reviewMethod": "successor-of-reviewed-decision",
+            "reviewBatch": "ticket-credit-notes-2026-10-06",
+            "evidence": {
+              "file": "tdf-hq-ui/src/api/socialEvents.ts",
+              "line": 577
+            },
+            "mergedDecision": {
+              "id": "c69afb90768a2e78770a",
+              "classification": "genuine-technical-constant",
+              "disposition": "retain-in-code",
+              "specializedModel": "technical_constant_allowlist",
+              "priority": "P3-retain",
+              "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+              "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+              "reviewed": true,
+              "reviewMethod": "successor-of-reviewed-decision",
+              "reviewBatch": "ticket-tax-invoices-2026-10-06",
+              "evidence": {
+                "file": "tdf-hq-ui/src/api/socialEvents.ts",
+                "line": 576
+              }
+            }
+          }
+        },
+        {
+          "id": "48cbf22770303d844cdc",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Changing authenticated method dispatch can redirect commands or expose private transfer evidence; server event ownership and authorization remain authoritative.",
+          "justification": "SocialEventsAPI contains 72 typed transport methods after adding getManualPaymentReceipt for the existing event/order-scoped authenticated receipt read. The 71 previously reviewed method names are preserved. These keys dispatch implementation endpoints; they are not editable product choices, payment states or a persisted business catalog.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decision",
+          "reviewBatch": "ticket-receipt-preview-2026-10-24",
+          "evidence": {
+            "file": "tdf-hq-ui/src/api/socialEvents.ts",
+            "line": 580
+          },
+          "mergedDecision": {
+            "id": "c69afb90768a2e78770a",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+            "reviewed": true,
+            "reviewMethod": "successor-of-reviewed-decision",
+            "reviewBatch": "ticket-tax-invoices-2026-10-06",
+            "evidence": {
+              "file": "tdf-hq-ui/src/api/socialEvents.ts",
+              "line": 576
+            }
+          },
+          "previousDecision": {
+            "id": "620eb81ffe787eca6636",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
+            "reviewed": true,
+            "reviewMethod": "successor-of-reviewed-decision",
+            "reviewBatch": "ticket-credit-notes-2026-10-06",
+            "evidence": {
+              "file": "tdf-hq-ui/src/api/socialEvents.ts",
+              "line": 577
+            },
+            "mergedDecision": {
+              "id": "c69afb90768a2e78770a",
+              "classification": "genuine-technical-constant",
+              "disposition": "retain-in-code",
+              "specializedModel": "technical_constant_allowlist",
+              "priority": "P3-retain",
+              "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+              "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+              "reviewed": true,
+              "reviewMethod": "successor-of-reviewed-decision",
+              "reviewBatch": "ticket-tax-invoices-2026-10-06",
+              "evidence": {
+                "file": "tdf-hq-ui/src/api/socialEvents.ts",
+                "line": 576
+              }
+            }
+          }
+        }
+      ],
+      "supersededReviews": [
+        {
+          "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+          "sourceDecisionId": "48cbf22770303d844cdc",
+          "sourceDecisionSha256": "d0122e0027c1c7297c180b0448c75e7e36f9624693c402eba70a6e38d5625114",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+          "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
+        }
+      ]
+    },
+    {
+      "id": "46f70e450bd00d37e9c7",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P0-integrity",
+      "risk": "Editing source safety states or command dispatch independently of server authority can expose hidden content or grant unintended enforcement.",
+      "justification": "These three source moderation states form a closed persisted safety protocol enforced by SQL resolver/commands and checked against scoped current server authority; they are not organizer-editable taxonomy. Full-schema and HTTP/browser tests cover hide/remove/restore and current visibility.",
+      "reviewed": true,
+      "reviewMethod": "explicit-source-and-runtime-review",
+      "reviewBatch": "event-memory-source-moderation-20261025",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql",
+        "line": 5,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 3
+      }
+    },
+    {
+      "id": "dc9888a58b548bf36d73",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P0-integrity",
+      "risk": "Editing source safety states or command dispatch independently of server authority can expose hidden content or grant unintended enforcement.",
+      "justification": "These five UI action discriminants dispatch the canonical typed moderation protocol. Server-advertised capabilities and current SQL authorization, source/target revisions and request-ledger checks enforce every decision; UI labels cannot grant roles or create configurable domain categories.",
+      "reviewed": true,
+      "reviewMethod": "explicit-source-and-runtime-review",
+      "reviewBatch": "event-memory-source-moderation-20261025",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx",
+        "line": 9,
+        "kind": "literal-union",
+        "name": "Action",
+        "valueCount": 5
+      }
+    },
+    {
+      "id": "46515447e1de3fdd20c9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Treating a mocked public-event DTO as live lifecycle or permission authority would misrepresent the test; this value is confined to the test module.",
+      "justification": "Synthetic Directory event response fixture fields exercise public entry, private/unavailable metadata fallback and explicit retry. They are a mocked DTO shape, not selectable event types, live workflow state, permission rules or recipient consent. Runtime authority remains the existing server projection and authenticated workspace.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-technical-review",
+      "reviewBatch": "event-memory-public-entry-20261026",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "line": 311,
+        "kind": "object-registry",
+        "name": "event",
+        "valueCount": 9
+      }
+    },
+    {
+      "id": "cc7bc1104dae33fddfde",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Confusing the two mocked hook fields with deployed session authority could imply unverified authentication or privacy. Only this test module supplies them; it cannot create a session or grant server access.",
+      "justification": "The loading/session keys are the synthetic useSession hook fixture for route tests. They exercise waiting for bootstrap, anonymous entry and reuse of the guarded Shell; party7 is a synthetic test value. This object is neither a selectable business catalog, a role registry, nor an authenticated permission decision. Actual authority remains verified SessionContext and server permissions.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-technical-review",
+      "reviewBatch": "event-memory-public-entry-tracked-catalog-20261026",
+      "evidence": {
+        "file": "tdf-hq-ui/src/routes/EventCommunityEntry.test.tsx",
+        "line": 6,
+        "kind": "object-registry",
+        "name": "state",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "a2bb0e828d5b94c1cb31",
+      "classification": "security-system-registry",
+      "disposition": "retain-reviewed-deployment-manifest",
+      "specializedModel": "production migration manifest and applied migration ledger",
+      "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+      "justification": "Preserve the complete223-entry protected main4b81ab4 migration prefix, including posted-ledger-header and provider/domain guards, and append only the four original event-memory migrations with unchanged SQL and introduction ancestors. Preserve both exact223-entry main and226-entry memory review graphs and every distinct historical review variant. This227-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "event-memory-provider-main-technical-reconciliation-20261026",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 227
+      },
+      "previousDecision": {
+        "id": "f48c34252ff8930b3d74",
+        "classification": "security-system-registry",
+        "disposition": "retain-reviewed-deployment-manifest",
+        "specializedModel": "production migration manifest and applied migration ledger",
+        "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+        "justification": "Preserve the exact222-entry protected main78fa351b prefix, including the posted-ledger-header guard, and append only the four original event-memory migrations without changing any historical SQL or introduction anchor. Retain the complete225-entry memory and222-entry header review decisions, including their financial/directory provenance. This226-entry technical execution-registry review grants no production action, campaign consent, financial transaction, permission change or release waiver; combined tests, independent PR review and protected integration remain required.",
+        "reviewed": true,
+        "reviewMethod": "successor-of-reviewed-decisions",
+        "reviewBatch": "event-memory-main-78fa-technical-reconciliation-20261026",
+        "evidence": {
+          "file": "scripts/production-migrations.json",
+          "line": 3,
+          "kind": "json-array",
+          "name": "migrations",
+          "valueCount": 226
+        },
+        "previousDecision": {
+          "id": "cff15f30aa13965e5729",
+          "classification": "security-system-registry",
+          "disposition": "retain-reviewed-deployment-manifest",
+          "specializedModel": "production migration manifest and applied migration ledger",
+          "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+          "justification": "Preserve the complete221-entry protected main1c9c833 migration prefix and every SQL byte/introduction anchor, then append the four original event-memory invitation, source-moderation, NULL-authorization and permission-lock migrations unchanged. Retain both exact224- and221-entry review graphs, including financial and directory lineage. This225-entry execution-registry review grants no production action, campaign activation, permission, financial transaction or release waiver; fresh combined runtime/CI and independent protected review remain required.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decisions",
+          "reviewBatch": "event-memory-current-main-1c9c833-20261026",
+          "sourceReviewReferences": [
+            {
+              "sourceRevision": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "9201bfd098de5c87217d90ed3e7e13019fdc38e579dd8197d4501803fc63a34f",
+              "sourceEntry": {
+                "id": "79a6def1e91baee6e937"
+              },
+              "sourceEntryCanonicalSha256": "978e4a28b767ba92ef815fe45ac919ae7550742d9fd9b8cc1007e09e4d0291d9",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "05793bdcb06612ca1a75fc8326ac01a8f0a59defe7c04aef4286889cf7aa6b95",
+              "sourceEntry": {
+                "id": "8229b8202552298c955e"
+              },
+              "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            }
+          ],
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3,
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 225
+          },
+          "previousDecision": {
+            "id": "79a6def1e91baee6e937",
+            "classification": "genuine-technical-constant",
+            "disposition": "explicit-allowlist",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P0-cutover",
+            "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+            "justification": "Preserve the complete221-entry foundation prefix (protected main917806 all220 entries plus the original invitation migration), then append the three original source moderation, NULL authorization and permission-lock migrations without changing their SQL or introduction SHAs. This224-entry execution registry retains both the217- and221-entry source reviews, including the protected financial220 lineage. Canonical combined schema, runtime, independent review and deployment remain separate obligations; this review authorizes no production action or communication.",
+            "reviewed": true,
+            "reviewMethod": "successor-of-reviewed-decisions",
+            "reviewBatch": "event-memory-source-main-917806-20261026",
+            "evidence": {
+              "file": "scripts/production-migrations.json",
+              "line": 3,
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 224
+            },
+            "previousDecision": {
+              "id": "d55b0d93ab3224fe96ac",
+              "classification": "genuine-technical-constant",
+              "disposition": "explicit-allowlist",
+              "specializedModel": "technical_constant_allowlist",
+              "priority": "P0-cutover",
+              "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+              "justification": "The 217-entry execution registry preserves every object and SQL byte of the immutable 216-entry prefix and appends source permission locking introduced by baab857f085b74f333c9f5d29e31306072fbc496. It reuses the existing canonical permission locks, rejects unknown or unsafe predecessors, and retains function OIDs and all source/report/request/audit data. Eight actual PostgreSQL interleavings and an observed committed predecessor counterexample qualify the scoped regression; current review/CI and production deployment remain separate obligations.",
+              "reviewed": true,
+              "reviewMethod": "successor-of-reviewed-decision",
+              "reviewBatch": "event-memory-source-permission-locks-20261025",
+              "evidence": {
+                "file": "scripts/production-migrations.json",
+                "line": 3,
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 217
+              },
+              "previousDecision": {
+                "id": "38bbe0c3d9b9d4ddaa9d",
+                "classification": "genuine-technical-constant",
+                "disposition": "explicit-allowlist",
+                "specializedModel": "technical_constant_allowlist",
+                "priority": "P0-cutover",
+                "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+                "justification": "The 216-entry execution registry preserves the immutable 215-entry prefix and every historical SQL byte. It appends the NULL-organizer authorization repair introduced by c6ecae133a93b6bab93c84cee4d72290f9e28982. Actual-schema regression reproduces the predecessor unauthorized hide, then verifies denial, allowed moderation, replay revocation and successor guards. No deployment or communication is authorized by this registry classification.",
+                "reviewed": true,
+                "reviewMethod": "successor-of-reviewed-decision",
+                "reviewBatch": "event-memory-source-authorization-20261025",
+                "evidence": {
+                  "file": "scripts/production-migrations.json",
+                  "line": 3,
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 216
+                },
+                "previousDecision": {
+                  "id": "7ca220a96b9b65a0fe15",
+                  "classification": "genuine-technical-constant",
+                  "disposition": "explicit-allowlist",
+                  "specializedModel": "technical_constant_allowlist",
+                  "priority": "P0-cutover",
+                  "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+                  "justification": "The 215-entry registry preserves the full immutable 214-entry prefix and all historical SQL, then appends source moderation introduced by 3bb05ecd7. Installation hides nothing and sends nothing. Actual full-schema replay/rollback and authenticated HTTP verify behavior; committed evidence refuses rollback. This registry review does not authorize production deployment or feature activation.",
+                  "reviewed": true,
+                  "reviewMethod": "successor-of-reviewed-decision",
+                  "reviewBatch": "event-memory-source-moderation-20261025",
+                  "evidence": {
+                    "file": "scripts/production-migrations.json",
+                    "line": 3,
+                    "kind": "json-array",
+                    "name": "migrations",
+                    "valueCount": 215
+                  },
+                  "previousDecision": {
+                    "id": "c28667c70e40dcc18a55",
+                    "classification": "genuine-technical-constant",
+                    "disposition": "explicit-allowlist",
+                    "specializedModel": "technical_constant_allowlist",
+                    "priority": "P0-cutover",
+                    "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+                    "justification": "The 214-entry execution registry preserves all 213 protected-main entry objects/order/introduction commits and historical SQL bytes, then appends one event-memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. The migration installs no campaigns or consent and sends nothing. Full-schema replay, rollback/refusal, concurrent-worker and actual API tests are separate execution evidence; no production activation is authorized by this registry review.",
+                    "reviewed": true,
+                    "reviewMethod": "successor-of-reviewed-decision",
+                    "reviewBatch": "event-memories-2026-10-25",
+                    "evidence": {
+                      "file": "scripts/production-migrations.json",
+                      "line": 3,
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 214
+                    },
+                    "previousDecision": {
+                      "id": "3f336173e03f10fc023c",
+                      "classification": "genuine-technical-constant",
+                      "disposition": "explicit-allowlist",
+                      "specializedModel": "technical_constant_allowlist",
+                      "priority": "P0-cutover",
+                      "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+                      "justification": "The 213-entry deployment execution registry preserves protected main c02e758beb999d3e0fee0baee2b0e49b33e5a05a as its exact 211-entry prefix and appends the two original music payment-outcome and exact-minor-unit migrations. Every shared entry object, introduction commit and historical SQL byte is unchanged. Synthetic apply/replay and actual combined application tests are separate requirements; this review authorizes no production execution, feature activation or recovery-policy decision.",
+                      "reviewed": true,
+                      "reviewMethod": "successor-of-reviewed-decisions",
+                      "reviewBatch": "music-current-main-integration-20261023",
+                      "evidence": {
+                        "file": "scripts/production-migrations.json",
+                        "line": 3,
+                        "kind": "json-array",
+                        "name": "migrations",
+                        "valueCount": 213
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "sourceReviewReferences": [
+              {
+                "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+                "sourceEntry": {
+                  "id": "3f336173e03f10fc023c"
+                },
+                "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+                "sourceEntry": {
+                  "id": "2b073f20afd2f3798b1e"
+                },
+                "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+                "sourceEntry": {
+                  "id": "a1eb1e750e7543b88fe1"
+                },
+                "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "2c3b0017a352e223803eca40de4a500d9902717f",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "ded861bdcbb03b246ff965701f7392265e4aff0a36b86b9e2fd4e50859c70904",
+                "sourceEntry": {
+                  "id": "c28667c70e40dcc18a55"
+                },
+                "sourceEntryCanonicalSha256": "f50f89961486277052c8354582f09684859e64488072dda296b75c43ec07d4d7",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+                "sourceEntry": {
+                  "id": "b7cc47848f3f9882770f"
+                },
+                "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "ddb92379859aa7ac7e1d87aec99bb1be3cc1f941",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "1a193c51384355bf1d57e23e2868b8d4759f2324cb1f74cc78659d919b9b910a",
+                "sourceEntry": {
+                  "id": "d55b0d93ab3224fe96ac"
+                },
+                "sourceEntryCanonicalSha256": "cb3c85d4b0a4ce7c962aec6a67eb2cc3ffbd2714a14c65e5a9721b2ab6dd2fdc",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "534c5631ac79e927c887c5c730e252fe4dad7cc5",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "337adcd09b9d81a0255d8eb61118c6fce8e1d3669fcda9acc04adbd69d6ce92e",
+                "sourceEntry": {
+                  "id": "0ab5d4354ae923d8f2db"
+                },
+                "sourceEntryCanonicalSha256": "4369a49366796704db894cd929e773d333e4994b3338f9d6386f8aa4b12556e6",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              }
+            ]
+          },
+          "concurrentReviewHistory": [
+            {
+              "id": "8229b8202552298c955e",
+              "classification": "security-system-registry",
+              "disposition": "retain-reviewed-deployment-manifest",
+              "specializedModel": "production migration manifest and applied migration ledger",
+              "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+              "justification": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
+              "reviewed": true,
+              "reviewMethod": "successor-of-reviewed-decisions",
+              "reviewBatch": "directory-financial-main-integration-20261026",
+              "sourceReviewReferences": [
+                {
+                  "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+                  "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                  "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+                  "sourceEntry": {
+                    "id": "3f336173e03f10fc023c"
+                  },
+                  "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                },
+                {
+                  "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+                  "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                  "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+                  "sourceEntry": {
+                    "id": "2b073f20afd2f3798b1e"
+                  },
+                  "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                },
+                {
+                  "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+                  "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                  "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+                  "sourceEntry": {
+                    "id": "a1eb1e750e7543b88fe1"
+                  },
+                  "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                },
+                {
+                  "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+                  "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                  "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+                  "sourceEntry": {
+                    "id": "b7cc47848f3f9882770f"
+                  },
+                  "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                },
+                {
+                  "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+                  "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                  "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+                  "sourceEntry": {
+                    "id": "c94cd70c1272ec9ede1b"
+                  },
+                  "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+                  "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+                }
+              ],
+              "evidence": {
+                "file": "scripts/production-migrations.json",
+                "line": 3,
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 221
+              }
+            }
+          ]
+        },
+        "concurrentReviewHistory": [
+          {
+            "id": "6ff395b6131079017c9d",
+            "classification": "security-system-registry",
+            "disposition": "retain-reviewed-deployment-manifest",
+            "specializedModel": "production migration manifest and applied migration ledger",
+            "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+            "justification": "The 222-entry deployment registry preserves the complete 221-entry protected main e938c72ba4b87010214f6838f06bfac45a0f45c0 prefix, including saved-alert migration eb2f71d62740783369a6eb2a6d35fc024484cb71, and appends only the posted-header guard introduced by 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Both independently developed 221-entry predecessor reviews are retained with exact canonical hashes and source references. Historical SQL and introduction SHAs are unchanged. This is a technical source review; current-head CI, independent PR approval and production authorization remain separate requirements.",
+            "reviewed": true,
+            "reviewMethod": "successor-of-reviewed-decisions",
+            "reviewBatch": "ledger-header-main-technical-review-20261025",
+            "sourceReviewReferences": [
+              {
+                "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+                "sourceEntry": {
+                  "id": "3f336173e03f10fc023c"
+                },
+                "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+                "sourceEntry": {
+                  "id": "2b073f20afd2f3798b1e"
+                },
+                "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+                "sourceEntry": {
+                  "id": "a1eb1e750e7543b88fe1"
+                },
+                "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+                "sourceEntry": {
+                  "id": "b7cc47848f3f9882770f"
+                },
+                "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+                "sourceEntry": {
+                  "id": "c94cd70c1272ec9ede1b"
+                },
+                "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "55915aedf0e4e356a5bca766cdc09b7077f9d0d567523b4d496ad9c5bacb09f0",
+                "sourceEntry": {
+                  "id": "8229b8202552298c955e"
+                },
+                "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              },
+              {
+                "sourceRevision": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
+                "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+                "sourceFileSha256": "881e0be06afb973c1200beb4213e72ae4bad53478e3fab280189c650a55d3b75",
+                "sourceEntry": {
+                  "id": "9ada14767bee1662f97d"
+                },
+                "sourceEntryCanonicalSha256": "6528ab5a8a23254d2e4ad4222e392f7f8f052b9f2818ef6e9eb8fc3a461a7003",
+                "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+              }
+            ],
+            "evidence": {
+              "file": "scripts/production-migrations.json",
+              "line": 3,
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 222
+            },
+            "previousDecisionReferences": {
+              "document": "docs/catalog-persistence/ledger-header-main-reconciliation-20261025.json",
+              "mainId": "8229b8202552298c955e",
+              "headerId": "9ada14767bee1662f97d"
+            }
+          }
+        ],
+        "sourceReviewReferences": [
+          {
+            "sourceRevision": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "9201bfd098de5c87217d90ed3e7e13019fdc38e579dd8197d4501803fc63a34f",
+            "sourceEntry": {
+              "id": "79a6def1e91baee6e937"
+            },
+            "sourceEntryCanonicalSha256": "978e4a28b767ba92ef815fe45ac919ae7550742d9fd9b8cc1007e09e4d0291d9",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+          },
+          {
+            "sourceRevision": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "05793bdcb06612ca1a75fc8326ac01a8f0a59defe7c04aef4286889cf7aa6b95",
+            "sourceEntry": {
+              "id": "8229b8202552298c955e"
+            },
+            "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+          },
+          {
+            "sourceRevision": "ebac187c9b96682c741671ba1dccfb133acc4cb7",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "3578a38dd23e995e330c80a6f4577eff2a0cd1f0ce396839416d61f5084f4574",
+            "sourceEntry": {
+              "id": "cff15f30aa13965e5729"
+            },
+            "sourceEntryCanonicalSha256": "9f3858a91f37caf5b4b1916fbc280a6ce891cd34536d0ee8953ce2331b8f3fb5",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+          },
+          {
+            "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+            "sourceEntry": {
+              "id": "6ff395b6131079017c9d"
+            },
+            "sourceEntryCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+          }
+        ]
+      },
+      "concurrentReviewHistory": [
+        {
+          "id": "2634b239375f2ad309ba",
+          "classification": "security-system-registry",
+          "disposition": "retain-reviewed-deployment-manifest",
+          "specializedModel": "production migration manifest and applied migration ledger",
+          "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+          "justification": "The 223-entry deployment registry preserves the complete 222-entry ledger candidate f3e3217ac12a04be2a221ee6ac8bea67875d46c5 prefix, including all221 protected-main migrations and the original posted-header migration, and appends only the provider/domain admission migration introduced by456be073c944dd3d76eb9e3c2169fe7fbb4041ef. Historical SQL bodies and introduction ancestors are unchanged. Both222-entry and209-entry source reviews are retained by canonical hashes. This technical review grants no provider activation, production execution or waiver of current-head CI, independent review and protected merge admission.",
+          "reviewed": true,
+          "reviewMethod": "successor-of-reviewed-decisions",
+          "reviewBatch": "provider-domain-main-technical-review-20261026",
+          "sourceReviewReferences": [
+            {
+              "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+              "sourceEntry": {
+                "id": "3f336173e03f10fc023c"
+              },
+              "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+              "sourceEntry": {
+                "id": "2b073f20afd2f3798b1e"
+              },
+              "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+              "sourceEntry": {
+                "id": "a1eb1e750e7543b88fe1"
+              },
+              "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+              "sourceEntry": {
+                "id": "b7cc47848f3f9882770f"
+              },
+              "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+              "sourceEntry": {
+                "id": "c94cd70c1272ec9ede1b"
+              },
+              "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "55915aedf0e4e356a5bca766cdc09b7077f9d0d567523b4d496ad9c5bacb09f0",
+              "sourceEntry": {
+                "id": "8229b8202552298c955e"
+              },
+              "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "881e0be06afb973c1200beb4213e72ae4bad53478e3fab280189c650a55d3b75",
+              "sourceEntry": {
+                "id": "9ada14767bee1662f97d"
+              },
+              "sourceEntryCanonicalSha256": "6528ab5a8a23254d2e4ad4222e392f7f8f052b9f2818ef6e9eb8fc3a461a7003",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "f3e3217ac12a04be2a221ee6ac8bea67875d46c5",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "529f4972e422295562c0a67e1101346a97b2549ee0544072b69476c80edd0503",
+              "sourceEntry": {
+                "id": "6ff395b6131079017c9d"
+              },
+              "sourceEntryCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "be3b04226bda54e2dd6abdaddd434039ef7b457defe59942ec49dbed98013a73",
+              "sourceEntry": {
+                "id": "a70a9a4dd05ce44e950b"
+              },
+              "sourceEntryCanonicalSha256": "018a1dc08aafe97b3af2257fe2ad24bac9a8f47f724975df0eec07e729ba8058",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            }
+          ],
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3,
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 223
+          },
+          "previousDecisionReferences": {
+            "document": "docs/catalog-persistence/provider-domain-main-reconciliation-20261026.json",
+            "ledgerId": "6ff395b6131079017c9d",
+            "providerId": "a70a9a4dd05ce44e950b"
+          }
+        }
+      ],
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "dfa00521daab7ab21082169feef62f988da149470afb2bf24151bf53674e05ac",
+          "sourceEntry": {
+            "id": "f48c34252ff8930b3d74"
+          },
+          "sourceEntryCanonicalSha256": "d08e3ff9409b47ab035fc67269d79010fd3738333fdc971c305ded3ddfeadf9b",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "816e33527bddc88f717e3a02a1ae1c9b04cbabeba90271e80488579a7d5fa1f9",
+          "sourceEntry": {
+            "id": "2634b239375f2ad309ba"
+          },
+          "sourceEntryCanonicalSha256": "6bcc3d19c2aea1adb0ce6ede68d59ec60b025b953a083bc5be6090f4be90ed1a",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ]
+    },
+    {
       "id": "9e9313f86dcdab1693e5",
       "classification": "genuine-technical-constant",
       "disposition": "retain-source-bound-test-fixture",
@@ -18648,34 +19665,26 @@
       }
     },
     {
-      "id": "5ed33d9cd50e8f195d05",
+      "id": "5a14eed55bff18836c73",
       "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
+      "disposition": "retain-versioned-editorial-asset-manifest",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing or externally governing reducer dispatch tags could break guarded local queue hydration or transport controls. These tags do not authorize media access.",
-      "justification": "Individually reviewed all nine queue reducer tags: restore,replace,enqueue,select,remove,move,clear,shuffle,repeat. The added restore action installs a previously validated matching-owner snapshot through internal guarded hydration; the remaining eight are unchanged client queue operations. These implementation dispatch discriminants are not selectable business catalog values or a privilege registry.",
+      "risk": "Publishing unapproved photos or attributing people/equipment availability from archive content.",
+      "justification": "This six-entry manifest identifies immutable bundled photo files and their accessible descriptions for one owner-approved studio gallery. Each ID resolves to a versioned local WebP with source/hash provenance; labels describe observed scenes rather than selectable rooms, services, inventory, identities or permissions. Persisted booking/service catalogs remain authoritative. Changes require a source change, renewed asset review and normal protected delivery; this does not grant editorial-CMS or provider authority.",
       "reviewed": true,
-      "reviewMethod": "individual-source-review",
-      "reviewBatch": "player-listening-identity-20261026",
+      "reviewMethod": "source-specific-editorial-asset-review",
+      "reviewBatch": "studio-gallery-owner-approved-2026-10-26",
       "evidence": {
-        "file": "tdf-hq-ui/src/player/queue.ts",
-        "line": 34,
-        "kind": "switch-cases",
-        "name": "action.type",
-        "valueCount": 9
-      },
-      "sourceReviewReferences": [
-        {
-          "sourceRevision": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceEntry": {
-            "id": "dfec3f046ad1157e0f0c"
-          },
-          "sourceEntryCanonicalSha256": "1fd0dae5a96294d8649e2d2c0167cd15b993dd168f587e5445b011ec5e0544fc",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
-        }
-      ]
+        "file": "tdf-hq-ui/src/components/StudioGallery.tsx",
+        "line": 6,
+        "kind": "array",
+        "name": "PHOTOS",
+        "valueCount": 6,
+        "consumerCount": 0,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
     }
   ]
 }

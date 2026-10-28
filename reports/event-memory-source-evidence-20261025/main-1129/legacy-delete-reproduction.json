@@ -1,0 +1,48 @@
+{
+  "recordedAt": "2026-10-27T05:16:43.566217+00:00",
+  "reviewThread": "https://github.com/diegueins680/tdf-app/pull/608#discussion_r4385289256",
+  "originalApiVersion": {
+    "buildTime": "2026-10-27T04:56:30Z",
+    "commit": "67f72f8dd6a2b03cbf6e7bfbda1768ea31b376d4",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "originalBinarySha256": "85dac8cbb8f1bc43df9f58446c7d399b24ee23285645919385da707aa315d051",
+  "testRunnerSha256": "4b7ac919b63bbb78d1ced9033b36d7975ebd1e8d2fed21ca408b4c8a8470ff89",
+  "sourceAtReproduction": "c26c7afebc48d740583237f8e4126cf27e2c0681",
+  "testRunnerWorktreeDirty": true,
+  "reproductionPassed": false,
+  "lastObservedRequests": [
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/3/comments",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/919143001/moments/1",
+      "status": 204
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/919143001/moments/2",
+      "status": 404
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/919143002/moments/2",
+      "status": 404
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/919143001/moments/2",
+      "status": 500
+    }
+  ],
+  "failure": "Author DELETE with pre-activation children returns500 after activation; expected204",
+  "runtimesStopped": true,
+  "fixtureDatabaseRemoved": true,
+  "productionAccess": false,
+  "correction": "Use existing parent-source trigger after activated_once; retain direct legacy cleanup before activation",
+  "fixedBinaryVerification": "PENDING"
+}
