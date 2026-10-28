@@ -10983,7 +10983,7 @@
       ],
       "authorization": "The job runs as user 1001 to match GitHub workspace/home ownership; this test infrastructure grants no production or release authority.",
       "privacy": "Preflight reports browser names and versions only; application test artifacts retain existing sanitization and retention.",
-      "concurrency": "Existing browser workers and fixture isolation are unchanged; the container uses the official shared-memory recommendation.",
+      "concurrency": "The global CI limit remains two workers; each WebKit project admits one worker, while Chromium/Firefox scheduling, fixture isolation and simultaneous operations within a test remain unchanged. The container retains the official shared-memory recommendation.",
       "idempotency": "Preflight does not install packages or modify application data.",
       "failure": "Fail closed on missing metadata, version drift, invalid pin, browser-path redirection or any failed launch; there is no installer fallback.",
       "recovery": "Update the lockfile and verified official image together, then require all existing hosted browser stages and protected admission.",
@@ -10995,7 +10995,9 @@
       "implementation": [
         ".github/workflows/ci.yml",
         "scripts/verify-playwright-image.mjs",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        ".github/workflows/social-verification.yml",
+        "playwright.config.mjs"
       ],
       "tests": [
         "scripts/__tests__/playwright-image.test.mjs",
@@ -13226,7 +13228,7 @@
     ".github/workflows/event-raci-browser.yml": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
+    ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/catalog-persistence/catalog-list-decisions.json": "923c00595907746ca88493b79f36af67e08dc20fe308b3b991556183218d5079",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -13586,7 +13588,7 @@
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
     "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
-    "playwright.config.mjs": "016429e964027bd196982efabee711e56df08b51664f51f8e5298e3cdd7b5f93",
+    "playwright.config.mjs": "3b3298f30ef87aaac997a92d3fa0def4bd0a907bb41dff89dc3712210b32a957",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
     "playwright.music-native.config.mjs": "d89a8b06cf0ac2b15c0acd6000325edb73b46a17cb6df8ecaa39c52b0cd772c7",
     "screencast/meta-app-review/review.env.example": "6103b9dd02e37ab7539735007924ca02f31b67e40d2d8efbdf88a69abcd91100",
@@ -13600,7 +13602,7 @@
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
-    "scripts/__tests__/ci-pipeline.test.mjs": "76ec02976468affc43319d2d77b4461ac6304a89065f9fe3ce483ca819b49760",
+    "scripts/__tests__/ci-pipeline.test.mjs": "9a2db7e690c4c5211be36dd7e338d9189cd2ae15fdb1bdc63f09c391caa00722",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
@@ -13646,7 +13648,7 @@
     "scripts/__tests__/operations-worker-tick-postgres.mjs": "105914e3b21f12195ae1efbb543c16909185e9b348f8c275f9da7c8bc91ca4ab",
     "scripts/__tests__/payment-readiness-helper.test.mjs": "bddad0df011362abedc3cb346688ab3beead734f4e3dc787828ffd057f204a03",
     "scripts/__tests__/persistent-uploads.test.mjs": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
-    "scripts/__tests__/playwright-image.test.mjs": "47ff4fe3a759e41e0ea89498cda3aef9f6146e332f6c6d30354717e31c1c870c",
+    "scripts/__tests__/playwright-image.test.mjs": "dff4fdac0f095e6015f7de4565fa49c52de355720dac9608230f442c8fdabc39",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
     "scripts/__tests__/production-entrypoint.test.mjs": "33c168dcb5b4a6b3d9eaccec6683d368a90f1dd9b47c1223f949e5e1d234feac",
     "scripts/__tests__/production-release.test.mjs": "89bcde93815f17e78ec777e1a8f1c2711eacebb00a5a1b1aa99165e23d6d0233",
@@ -13855,7 +13857,7 @@
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
     "scripts/verify-payment-arithmetic.py": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
     "scripts/verify-payment-intent-expiry.py": "7eefe7a53984897caed042f9eff42c2cdd654412239600af4cea4a8f4f1aab09",
-    "scripts/verify-playwright-image.mjs": "2545cf9b5a081a85fae318dd11bb50f96177fe64fa3ad7a9f89b6ce8fbba250c",
+    "scripts/verify-playwright-image.mjs": "88fe2d6257a3c64943b5a29f98a2fde3d296df138c0750bc5d1a71368445584f",
     "scripts/verify-proof-certificates.py": "8f591e51689a84df4ecbc9af0b37adb8fafe771ddcaddf13dc65763024aeeb46",
     "scripts/verify-readiness.py": "c1db0b9d64151547969116233c66a3160c2ab97327b51c679d0a86af8e7acaeb",
     "scripts/verify-recovery-expiry.py": "05aaa2a08d1381939d4f48d9d25dcd0b1076d7f596dee2f07db414c2f1bf96c5",
@@ -20969,6 +20971,10 @@
       {
         "requirement": "PRIV-INTAKE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-CI-BROWSER-001",
+        "relationship": "implementation"
       }
     ],
     "e2e/web/account-deletion.spec.mjs": [
@@ -23751,6 +23757,10 @@
       {
         "requirement": "OPS-CI-REGISTRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-CI-BROWSER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": [
@@ -25951,11 +25961,15 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
+      "sha256": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-CI-BROWSER-001",
           "relationship": "implementation"
         }
       ]
@@ -26953,7 +26967,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "76ec02976468affc43319d2d77b4461ac6304a89065f9fe3ce483ca819b49760",
+      "sha256": "9a2db7e690c4c5211be36dd7e338d9189cd2ae15fdb1bdc63f09c391caa00722",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27787,7 +27801,7 @@
     {
       "id": "SURFACE-68bd93791e9d6d28",
       "path": "scripts/__tests__/playwright-image.test.mjs",
-      "sha256": "47ff4fe3a759e41e0ea89498cda3aef9f6146e332f6c6d30354717e31c1c870c",
+      "sha256": "dff4fdac0f095e6015f7de4565fa49c52de355720dac9608230f442c8fdabc39",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32466,7 +32480,7 @@
     {
       "id": "SURFACE-6074376bf1c8f4b9",
       "path": "scripts/verify-playwright-image.mjs",
-      "sha256": "2545cf9b5a081a85fae318dd11bb50f96177fe64fa3ad7a9f89b6ce8fbba250c",
+      "sha256": "88fe2d6257a3c64943b5a29f98a2fde3d296df138c0750bc5d1a71368445584f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55566,7 +55580,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b0e58ba40662350ba8f3c3fae8b87b2c7fd0f19e2577e989bc7ddd16b9502fa8",
+      "sourceSha256": "f2498dc3199a3dadbe85aa84441612b34822f50251528fe57e4a484da09416d8",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -55594,7 +55608,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b0e58ba40662350ba8f3c3fae8b87b2c7fd0f19e2577e989bc7ddd16b9502fa8",
+      "sourceSha256": "f2498dc3199a3dadbe85aa84441612b34822f50251528fe57e4a484da09416d8",
       "definition": {
         "states": [
           "absent",
@@ -55624,7 +55638,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b0e58ba40662350ba8f3c3fae8b87b2c7fd0f19e2577e989bc7ddd16b9502fa8",
+      "sourceSha256": "f2498dc3199a3dadbe85aa84441612b34822f50251528fe57e4a484da09416d8",
       "definition": {
         "export": [
           "queued",
