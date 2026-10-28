@@ -1,0 +1,161 @@
+{
+  "checkedAt": "2026-10-26T20:52:06.433176+00:00",
+  "status": "ALL_NATIVE_GATES_PASS_FOR_NORMAL_EXPECTED_HEAD_MERGE",
+  "pr": 624,
+  "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+  "base": "9b7aa4648d4158f6da84fbb5e794267cd4953177",
+  "computedMerge": "c79de0ca05c0dc882ef6d5ad4c8af4a6fc071ae6",
+  "requiredContexts": {
+    "quality": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342111/job/121798998751",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "api-contracts": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342111/job/121785863988",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "production-migrations": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342111/job/121785864047",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "specification-contracts": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785040309",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "verify": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785040801",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "postgres-foundation": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785041027",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "postgres-api": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785040815",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "postgres-task-commit": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785041104",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "postgres-task-read": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785040760",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "postgres-task-revision": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785041013",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "postgres-task-revisioned-read": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785040836",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "postgres-raci-reassignment": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785041101",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "postgres-raci-editor-context": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785041179",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "postgres-task-completion": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785041126",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "postgres-complete-schema": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342022/job/121785040971",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "main-integration-admission": {
+      "state": "success",
+      "url": "https://github.com/diegueins680/tdf-app/actions/workflows/merge-admission.yml",
+      "creator": "github-actions[bot]"
+    },
+    "models-and-postgres": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342297/job/121785040174",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "social-client": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342297/job/121785040704",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "postgres-properties": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342007/job/121785039526",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    },
+    "hardcoded-list-audit": {
+      "state": "success",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40383342109/job/121785040014",
+      "head": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "app": "github-actions"
+    }
+  },
+  "approval": [
+    {
+      "reviewer": "tdfrecords",
+      "commit": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+      "submittedAt": "2026-10-26T20:36:33Z",
+      "id": 5658619345
+    }
+  ],
+  "strict": true,
+  "conversationResolutionRequired": true,
+  "threadObservation": "Connected GitHub list_review_threads returned empty; native mergeable_state clean after all reads.",
+  "migrationDependencies": "No new migration;222 manifest preserved. Frontend legacy integration uses existing artist-release surfaces, no backend flag/data change.",
+  "ownership": "Audio root final normal protected merge after ready handoff; no gate waiver or production data mutation."
+}

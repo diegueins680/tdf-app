@@ -58,6 +58,7 @@ module TDF.ServerAuth
   ) where
 
 import Control.Applicative ((<|>))
+import TDF.Auth.AccountName (initialAccountName)
 import Control.Exception.Safe (SomeException, try)
 import TDF.App.FailureBoundary (bestEffortActivity)
 import Control.Monad (forM, forM_, guard, join, unless, void, when)
@@ -2111,7 +2112,7 @@ completeGoogleLogin creationIntent acceptedTermsVersion marketingConsent request
             Left consentError -> pure (Left consentError)
             Right () -> do
               now <- liftIO getCurrentTime
-              let displayName = fromMaybe gpEmail (cleanOptional gpName)
+              let displayName = initialAccountName gpName
                   partyRecord = Party
                     { partyLegalName = Nothing
                     , partyDisplayName = displayName

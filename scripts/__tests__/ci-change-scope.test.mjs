@@ -57,6 +57,12 @@ test('music catalog search runner alone selects real PostgreSQL backend validati
   });
 });
 
+test('music source projection runner alone selects real PostgreSQL backend validation', () => {
+  assert.deepEqual(classifyChangedFiles(['scripts/test-music-source-projection.mjs']), {
+    repo: true, ui: false, mobile: false, backend: true, contracts: false, migrations: false,
+  });
+});
+
 test('OpenAPI changes validate both generated clients', () => {
   assert.deepEqual(classifyChangedFiles(['tdf-hq/docs/openapi/api.yaml']), {
     repo: true,
@@ -149,7 +155,10 @@ test('root dependency changes cover every JavaScript consumer', () => {
 });
 
 test('pipeline changes fail safe across every scope', () => {
-  assert.deepEqual(classifyChangedFiles(['.github/workflows/ci.yml']), allChangeScopes());
+  for (const file of ['.github/workflows/ci.yml', 'scripts/ci-job-admission.mjs',
+    'scripts/__tests__/ci-job-admission.test.mjs']) {
+    assert.deepEqual(classifyChangedFiles([file]), allChangeScopes(), file);
+  }
 });
 
 test('backend artifact builds can force backend validation', () => {

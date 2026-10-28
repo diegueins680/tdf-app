@@ -1,7 +1,8 @@
 import CommunityDiscovery from '../features/discovery/CommunityDiscovery';
 import RecordThumbnail from '../features/records/RecordThumbnail';
 import { primaryRecordsResource } from '../features/records/resolveRecordThumbnail';
-import { buildArtistFollowAuthPath } from '../utils/artistFollowIntent';
+import { buildArtistFollowAuthPath, safeArtistId } from '../utils/artistFollowIntent';
+import { reconcileFollowState, type FollowReadScope } from '../features/fans/reconcileFollowState';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import {
@@ -46,7 +47,7 @@ import type { ArtistProfileUpsert } from '../api/types';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { Fans } from '../api/fans';
 import { Admin } from '../api/admin';
-import { useSession } from '../session/SessionContext';
+import { getActiveSession, useSession } from '../session/SessionContext';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
 import StreamingPlayer from '../components/StreamingPlayer';
@@ -144,6 +145,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const location = useLocation();
   const qc = useQueryClient();
   const viewerId = session?.partyId ?? null;
+  const followActionPending = useRef(false);
+  const [recoveredFollowRequest, setRecoveredFollowRequest] = useState<FollowReadScope | null>(null);
   const activePartyRef = useRef(viewerId);
   activePartyRef.current = viewerId;
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -332,7 +335,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const followsQuery = useQuery({
     queryKey: ['fan-follows', viewerId],
     queryFn: Fans.listFollows,
-    enabled: Boolean(viewerId && isFan && hasAuthToken && !isHomeManagerView),
+    enabled: Boolean(viewerId && isFan && hasAuthToken && !sessionLoading && !isHomeManagerView),
   });
 
   const myClubsQuery = useQuery({
@@ -430,21 +433,45 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     },
   });
 
+  const reconcileFailedFollow = async (request: FollowReadScope, wantedFollowing: boolean) => {
+    const following = await reconcileFollowState(qc, request);
+    if (following === null) return;
+    void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+    if (following === wantedFollowing && request.ownsSession()) setRecoveredFollowRequest(request);
+    if (wantedFollowing && following && request.ownsSession()) {
+      void captureFirstValueOnce(getAnalyticsClient(), request.viewerId, 'artist_followed', undefined, request.ownsSession)
+        .catch(() => undefined);
+    }
+  };
+
   const followMutation = useMutation({
-    mutationFn: (artistId: number) => Fans.follow(artistId),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
-      void qc.invalidateQueries({ queryKey: ['fan-artists'] });
-      void captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed').catch(() => undefined);
+    mutationFn: (request: FollowReadScope) => {
+      if (!request.ownsSession()) throw new Error('Follow context changed');
+      return Fans.follow(request.artistId);
     },
+    onSuccess: (_result, request) => {
+      void qc.invalidateQueries({ queryKey: ['fan-follows', request.viewerId] });
+      void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+      if (request.ownsSession()) {
+        void captureFirstValueOnce(getAnalyticsClient(), request.viewerId, 'artist_followed', undefined, request.ownsSession)
+          .catch(() => undefined);
+      }
+    },
+    onError: (_error, request) => reconcileFailedFollow(request, true),
+    onSettled: () => { followActionPending.current = false; },
   });
 
   const unfollowMutation = useMutation({
-    mutationFn: (artistId: number) => Fans.unfollow(artistId),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
+    mutationFn: (request: FollowReadScope) => {
+      if (!request.ownsSession()) throw new Error('Follow context changed');
+      return Fans.unfollow(request.artistId);
+    },
+    onSuccess: (_result, request) => {
+      void qc.invalidateQueries({ queryKey: ['fan-follows', request.viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
     },
+    onError: (_error, request) => reconcileFailedFollow(request, false),
+    onSettled: () => { followActionPending.current = false; },
   });
 
   const follows = useMemo(() => followsQuery.data ?? [], [followsQuery.data]);
@@ -550,10 +577,17 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       setLoginPromptOpen(true);
       return;
     }
+    if (followActionPending.current || !isFan || !session || getActiveSession() !== session
+      || !safeArtistId(viewerId) || !safeArtistId(artistId)
+      || !followsQuery.isSuccess || followsQuery.isFetching) return;
+    followActionPending.current = true;
+    followMutation.reset();
+    unfollowMutation.reset();
+    const request = { artistId, viewerId, ownsSession: () => getActiveSession() === session };
     if (currentlyFollowing) {
-      unfollowMutation.mutate(artistId);
+      unfollowMutation.mutate(request);
     } else {
-      followMutation.mutate(artistId);
+      followMutation.mutate(request);
     }
   };
 
@@ -1260,7 +1294,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                                   variant="contained"
                                   size="small"
                                   onClick={() => handleFollowToggle(artist.apArtistId, false)}
-                                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                                  disabled={followMutation.isPending || unfollowMutation.isPending || (hasAuthToken && (!isFan || !followsQuery.isSuccess || followsQuery.isFetching))}
                                 >
                                   Seguir
                                 </Button>
@@ -1415,9 +1449,18 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   variant="outlined"
                   onClick={() => {
                     void artistsQuery.refetch();
-                    if (!isHomeManagerView) {
+                    if (isFan && !isHomeManagerView) {
                       void profileQuery.refetch();
-                      void followsQuery.refetch();
+                      const failedFollow = followMutation.isError ? followMutation.variables : undefined;
+                      const failedUnfollow = unfollowMutation.isError ? unfollowMutation.variables : undefined;
+                      const failed = failedFollow ?? failedUnfollow;
+                      if (failed?.ownsSession()) {
+                        if (!followActionPending.current) {
+                          followActionPending.current = true;
+                          void reconcileFailedFollow(failed, Boolean(failedFollow))
+                            .finally(() => { followActionPending.current = false; });
+                        }
+                      } else void followsQuery.refetch();
                     }
                     if (canEditArtist) {
                       void artistProfileQuery.refetch();
@@ -1444,6 +1487,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 ? 'No pudimos cargar el catálogo completo ahora mismo. Mientras vuelve, aún puedes explorar lanzamientos, sesiones y reservas.'
                 : 'Tuvimos un problema cargando tu información. Revisa tu conexión o intenta de nuevo.'}
           </Alert>
+        )}
+
+        {((followMutation.isError && followMutation.variables?.ownsSession() && followMutation.variables !== recoveredFollowRequest)
+          || (unfollowMutation.isError && unfollowMutation.variables?.ownsSession() && unfollowMutation.variables !== recoveredFollowRequest)) && (
+          <Alert severity="warning">{t('artistFollow.changeError')}</Alert>
         )}
 
         {isHomeManagerView && hubShortcutSections}
@@ -2100,7 +2148,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                               e.stopPropagation();
                               handleFollowToggle(artist.apArtistId, isFollowing);
                             }}
-                            disabled={followMutation.isPending || unfollowMutation.isPending}
+                            disabled={followMutation.isPending || unfollowMutation.isPending || (hasAuthToken && (!isFan || !followsQuery.isSuccess || followsQuery.isFetching))}
                           >
                             {isFollowing ? 'Siguiendo' : 'Seguir'}
                           </Button>

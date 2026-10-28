@@ -1,0 +1,27 @@
+{
+  "base": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+  "head": "79027c996a8d7642abf5f3eae29e4a032ac39902",
+  "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+  "mappedChangedSurfaces": [
+    "e2e/web/artist-follow.spec.mjs",
+    "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts",
+    "tdf-hq-ui/src/features/fans/reconcileFollowState.ts",
+    "tdf-hq-ui/src/i18n/locales/en.ts",
+    "tdf-hq-ui/src/i18n/locales/es.ts",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+    "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx",
+    "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+    "tdf-hq-ui/src/pages/LoginPage.tsx",
+    "tdf-hq-ui/src/utils/signupFields.test.ts",
+    "tdf-hq-ui/src/utils/signupFields.ts",
+    "tdf-hq/src/TDF/Auth/AccountName.hs",
+    "tdf-hq/src/TDF/ServerAuth.hs",
+    "tdf-hq/tdf-hq.cabal",
+    "tdf-hq/test/Spec.hs",
+    "tdf-hq/test/TDF/Auth/AccountNameSpec.hs"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}

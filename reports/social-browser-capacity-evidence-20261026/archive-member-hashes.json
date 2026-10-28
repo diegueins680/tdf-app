@@ -1,0 +1,78 @@
+{
+  "hosted/fd5-social-version-rejection.log": {
+    "bytes": 35903,
+    "sha256": "ebc51bc9802c50882f5516e63f840caf1efbbec22e0bf27f48f05e935ccdf884"
+  },
+  "hosted/7bed-social-success.log": {
+    "bytes": 36368,
+    "sha256": "60fcb53eea83b2ef6cf3b7db56cc2402f1bc183ce7b04494423a4399abbba480"
+  },
+  "hosted/7bed-persona-first-contrast-failure.log": {
+    "bytes": 154407,
+    "sha256": "73067438efc44a85b1d7fb295654c064519f5c0b2e52c79cc67c7fe5729a976f"
+  },
+  "hosted/7bed-persona-single-replay-cart-failure.log": {
+    "bytes": 154842,
+    "sha256": "9393bdd54bffe1b7f156d3c6448c14698d9589c93957d07c7f13e6945060d725"
+  },
+  "persona-first/trace.zip": {
+    "bytes": 2071690,
+    "sha256": "b2fee5fcf5bb96525e2b27893b4a18029e1508cfe33a05b1ecc6cc9a98149254"
+  },
+  "persona-first/error-context.md": {
+    "bytes": 27789,
+    "sha256": "14145389fd6e682815740db8d2e1d75a09b3438a1677ed38edb5df12ce0877ea"
+  },
+  "persona-first/test-failed-1.png": {
+    "bytes": 108142,
+    "sha256": "8feb324d68e97ff4972a64e21592a39f35749beb84a2e17ddd0b94a77c083126"
+  },
+  "persona-single-replay/trace.zip": {
+    "bytes": 1292127,
+    "sha256": "1b87a00a5dd486f7707db66ab3eee3d44d1bfb7c64339f486f8d2ce5c5b2e61c"
+  },
+  "persona-single-replay/error-context.md": {
+    "bytes": 20627,
+    "sha256": "4f8e22b91981e0702abced078161d31870585dfb07e4721743f6d94d5de6c631"
+  },
+  "persona-single-replay/test-failed-1.png": {
+    "bytes": 151647,
+    "sha256": "11f4a321d7ae0794f42dea5e0f9fafdd0e8a1d3ad7db55506220b82246260b22"
+  },
+  "local/initial-device-resolution-failure.log": {
+    "bytes": 10629,
+    "sha256": "f2552261163663ee4fc649e497aee3760dab8f0fab8e9e4051dfb7a57880ebd6"
+  },
+  "local/initial-invalid-negative-control.log": {
+    "bytes": 927,
+    "sha256": "2eabb2bc3f2965f8a63a563cc46051400c5dd4c5205f9b3aff346f6a18b9cf77"
+  },
+  "local/original-capacity-policy-rejected.log": {
+    "bytes": 898,
+    "sha256": "13150dae5520cc0180324ce9f905345406519a2247f543186932ad979794579e"
+  },
+  "local/final50-controls-pass.log": {
+    "bytes": 10036,
+    "sha256": "bde60051b284d757bba04bf151ab3843fa2bc0a0509fbaea625dc3a2fe143976"
+  },
+  "local/inventory6-pass.log": {
+    "bytes": 105,
+    "sha256": "688655057d8e8e7d61b998c08dbeda58db2d407e304d6e3b4db70265aeb39d34"
+  },
+  "local/traceability10-pass.log": {
+    "bytes": 110,
+    "sha256": "d11281fde305fa5695c247b9493cb4e0fa1535306da7352db1c9a344d6307c37"
+  },
+  "local/admission11-pass.log": {
+    "bytes": 111,
+    "sha256": "aaafcd2126d30a4c545a2117439ffed2ee29704bd829afce8ed182a9e9f44315"
+  },
+  "local/strict-catalog-json.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "local/strict-catalog-csv.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

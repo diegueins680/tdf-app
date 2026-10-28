@@ -1,0 +1,8 @@
+{
+  "original": "/private/tmp/tdf-integration-20261025/620-published-native-probe.mjs",
+  "originalSha256": "1e82b85ce98141cd5ce257f8c95e959312bcbd752f98f355d1d1dafaaf11370f",
+  "correctedSha256": "638f3a6e58cd67dd2cefd8eb88d61468c7939c5e1eb4e2d7d46d4aed52c539d4",
+  "correction": "Pass the Node baseline time as an explicit browser-evaluate argument; no assertion weakened, no application code changed",
+  "candidate": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+  "scope": "Published client with fully synthetic API/media, not production catalog activation or real upload-to-playback"
+}

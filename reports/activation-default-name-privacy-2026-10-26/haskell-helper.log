@@ -1,0 +1,9 @@
+
+initial account public names
+  uses a neutral name when the provider supplies no name [✔]
+  uses a neutral name for an empty provider name [✔]
+  uses a neutral name for a whitespace-only provider name [✔]
+  preserves an explicitly supplied name while trimming whitespace [✔]
+
+Finished in 0.0058 seconds
+4 examples, 0 failures

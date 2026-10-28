@@ -1,0 +1,448 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-27T03:22:22.177Z",
+  "qualifiedApplicationSource": "286a9e4657f89c22b3f05be3bad93787d8c97304",
+  "sourceParents": [
+    "5875e60701465f9512fad1628b64c0d59a53f049",
+    "4b81ab4ab92416aa31dc816057fb8e6a736596d1"
+  ],
+  "applicationChanges": "Normal integration; preserve149main normative objects and223main migrations exactly; add4originalmemory requirements/migrations; everySQLbyte/introduction unchanged",
+  "requirements": 153,
+  "migrations": 227,
+  "catalog": {
+    "candidates": 1349,
+    "strictJson": "PASS",
+    "strictCsv": "PASS",
+    "historyControls": 8
+  },
+  "specificationPrerequisites": 11,
+  "primary": {
+    "recordedAt": "2026-10-27T03:07:39.442Z",
+    "source": "286a9e4657f89c22b3f05be3bad93787d8c97304",
+    "workflow": 40438624514,
+    "event": "workflow_dispatch",
+    "status": "SUCCESS",
+    "jobs": [
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121973305739",
+        "id": 121973305739,
+        "name": "changes",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121973307026",
+        "id": 121973307026,
+        "name": "payment-staging-inspection",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121973495154",
+        "id": 121973495154,
+        "name": "repo-quality",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121973495172",
+        "id": 121973495172,
+        "name": "mobile-quality",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121973495193",
+        "id": 121973495193,
+        "name": "backend-quality",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121973495215",
+        "id": 121973495215,
+        "name": "native-music-e2e",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121973495238",
+        "id": 121973495238,
+        "name": "api-contract-tests",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121973495286",
+        "id": 121973495286,
+        "name": "migration-tests",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121973495293",
+        "id": 121973495293,
+        "name": "ui-quality",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121973495354",
+        "id": 121973495354,
+        "name": "persona-web-e2e",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121974632109",
+        "id": 121974632109,
+        "name": "api-contracts",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121975811033",
+        "id": 121975811033,
+        "name": "production-migrations",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121983957528",
+        "id": 121983957528,
+        "name": "quality",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/40438624514/job/121983959225",
+        "id": 121983959225,
+        "name": "native-android-e2e",
+        "status": "completed"
+      }
+    ],
+    "counts": {
+      "success": 12,
+      "skipped": 2
+    },
+    "backend": {
+      "job": 121973495193,
+      "logSha256": "4c33727156ce3f2cc531076f32d3c733efbd1e11cef72cb8ee504f3ab5161675",
+      "generalHspec": [
+        4041,
+        0,
+        21
+      ],
+      "executedHspecGroups": 53,
+      "memoryResults": [
+        "2026-10-27T02:56:16.9522818Z 160 bounded states; 3 negative controls detected; SQL refinement remains unproven",
+        "2026-10-27T02:56:16.9561518Z Event memories: full schema, replay, rollback/reapply, concurrent dispatch, retained-delivery refusal and policy assertions passed",
+        "2026-10-27T02:56:25.4580625Z {\"status\": \"PASS\", \"case\": \"assignment/source.remove/action-first\", \"actualPostgres\": true}",
+        "2026-10-27T02:56:25.7998759Z {\"status\": \"PASS\", \"case\": \"assignment/source.remove/revocation-first\", \"actualPostgres\": true}",
+        "2026-10-27T02:56:26.2041791Z {\"status\": \"PASS\", \"case\": \"assignment/source.restore/action-first\", \"actualPostgres\": true}",
+        "2026-10-27T02:56:26.5375128Z {\"status\": \"PASS\", \"case\": \"assignment/source.restore/revocation-first\", \"actualPostgres\": true}",
+        "2026-10-27T02:56:26.9448501Z {\"status\": \"PASS\", \"case\": \"assignment/source.hide/action-first\", \"actualPostgres\": true}",
+        "2026-10-27T02:56:27.2881131Z {\"status\": \"PASS\", \"case\": \"assignment/source.hide/revocation-first\", \"actualPostgres\": true}",
+        "2026-10-27T02:56:27.7322543Z {\"status\": \"PASS\", \"case\": \"assignment/source.report.resolve/action-first\", \"actualPostgres\": true}",
+        "2026-10-27T02:56:28.1055994Z {\"status\": \"PASS\", \"case\": \"assignment/source.report.resolve/revocation-first\", \"actualPostgres\": true}",
+        "2026-10-27T02:56:28.1069503Z {\"status\": \"PASS\", \"interleavings\": 8, \"source\": \"286a9e4657f89c22b3f05be3bad93787d8c97304\"}",
+        "2026-10-27T02:56:28.1130652Z Source moderation: historical rollback, NULL authorization, permission-revocation interleavings and guarded successors passed",
+        "2026-10-27T02:56:39.3330720Z {\"status\": \"PASS\", \"assertions\": 17, \"requests\": 120, \"output\": \"/tmp/tdf-event-memories-http\"}"
+      ]
+    },
+    "binary": {
+      "artifact": 12706292834,
+      "archiveSha256": "c7d185d3ac5fbcedce7fb1640cc9e522faa11af227b0d25ac79ce39e879b3bc7",
+      "archiveBytes": 28365990,
+      "digestVerified": true,
+      "files": [
+        {
+          "path": "tdf-hq-exe",
+          "bytes": 131540912,
+          "sha256": "7b26b944c393dbd899dc457292bfacd01dcf1c3c9c89de3ff85da4683f5a0376",
+          "magic": "7f454c46",
+          "expectedSourceShaPresent": true
+        }
+      ],
+      "scope": "Downloaded and streamed bytes; not execution on Darwin or release image attestation"
+    },
+    "persona": {
+      "job": 121973495354,
+      "logSha256": "d690e026bc785998f26fa48782c6b9237c69d5a58fde0804198aeb965341c36d",
+      "bytes": 166090,
+      "summary": [
+        "2026-10-27T02:34:23.5693843Z Running 616 tests using 2 workers",
+        "2026-10-27T02:49:26.9144033Z \u001b[1A\u001b[2K  22 skipped",
+        "2026-10-27T02:49:26.9144562Z   594 passed (15.3m)",
+        "2026-10-27T02:49:40.8813019Z Running 10 tests using 2 workers",
+        "2026-10-27T02:49:51.6942225Z \u001b[1A\u001b[2K  10 passed (23.8s)",
+        "2026-10-27T02:50:05.4071339Z Running 25 tests using 1 worker",
+        "2026-10-27T02:51:03.2340971Z \u001b[1A\u001b[2K  25 passed (1.2m)"
+      ]
+    },
+    "ui": {
+      "tests": 3602,
+      "suites": 315,
+      "preloads": 5,
+      "initialGzipBytes": 336532
+    },
+    "mobile": {
+      "source": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+      "tests": 653,
+      "suites": 98,
+      "physicalDevice": false
+    },
+    "nativeMusicWeb": {
+      "cases": 40,
+      "projects": 5,
+      "physicalDevice": false
+    },
+    "sourceInputsValidatedSeparately": true,
+    "deployment": false,
+    "productionWrites": 0,
+    "realInvitations": 0
+  },
+  "raci": {
+    "recordedAt": "2026-10-27T03:14:34.534249+00:00",
+    "source": "286a9e4657f89c22b3f05be3bad93787d8c97304",
+    "run": 40438414622,
+    "job": 121972621373,
+    "artifact": 12706996421,
+    "artifactSha256": "ee890b18af1b018e7bd24052505c761f7bdf82ded9fb8db08900bdc74867b360",
+    "archiveBytes": 1369079,
+    "requests": 127,
+    "groups": 20,
+    "runtimeHashes": 277,
+    "browserAssertions": 13,
+    "allCurrentAndCommittedRuntimeHashesExact": true,
+    "actualApiVersion": {
+      "buildTime": "2026-10-27T03:03:27Z",
+      "commit": "286a9e4657f89c22b3f05be3bad93787d8c97304",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "binarySha256": "529585000b8c940a52559046ce034832ef8d12469b72f8b0ac7b6fe6520d228a",
+    "sourceWorktreeDirty": true,
+    "browserRuntime": {
+      "channel": "playwright-chromium",
+      "version": "147.0.7727.15"
+    },
+    "newAccountPersistence": {
+      "partyId": 7,
+      "momentId": "8",
+      "assetSha256": "2c7e2665529fcb52c595dad1b8cc6230d02226df97810386658d4a0e41acf968",
+      "survivesRealApiRestart": true,
+      "fixtureRoleGrants": 0
+    },
+    "recoveryPersistence": {
+      "partyId": 5,
+      "momentId": "9",
+      "survivesRealApiRestart": true,
+      "challengeConsumed": true,
+      "challengeReplayStatus": 400,
+      "oldSessionStatus": 401,
+      "oldPasswordStatus": 401,
+      "newPasswordStatus": 200,
+      "privateEventStatus": 404,
+      "outboundEmail": "disabled; explicit private relay only",
+      "fixtureRoleGrantsDuringRecovery": 0
+    },
+    "cleanup": {
+      "runtimesStopped": true,
+      "ownedDatabaseRemoved": true
+    },
+    "outputCapture": "private PTY; actual server bytes, no synthetic log output",
+    "wholeReleaseAttestation": false,
+    "productionWrites": 0,
+    "realInvitations": 0
+  },
+  "formal": {
+    "head": "286a9e4657f89c22b3f05be3bad93787d8c97304",
+    "sourceFiles": 1400,
+    "scopes": {
+      "root": 1300,
+      "mobile": 100
+    },
+    "allCurrentAndCommittedSourceHashesExact": true,
+    "execution": {
+      "passed": true,
+      "reason": "Fresh solver execution, controls and ten serialized SMT problems replayed successfully",
+      "python": "3.13.5 (v3.13.5:6cb20a219a8, Jun 11 2025, 12:23:45) [Clang 16.0.0 (clang-1600.0.26.6)]"
+    },
+    "metrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 153,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 138,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 153,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 153,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "release": {
+      "decision": "BLOCKED",
+      "executionAllowed": false,
+      "acceptedRisks": [],
+      "reason": "Mandatory implementation/refinement evidence is missing. No authenticated owner risk acceptance or release-artifact correspondence is established."
+    },
+    "provenanceDigest": "050b19c87c0942fae5069f00be8e8e6096e14faca838fb83e9e7b43012d64500"
+  },
+  "publicEvent": {
+    "checkedAt": "2026-10-27T02:12:19.967824+00:00",
+    "scope": "Unauthenticated public GETs only; system curl TLS verification retained; no writes, identities, contacts, consent inspection, cookies or functional publication claim",
+    "previousAttempt": "DefaultPythonTLSfailed missing local issuer; not a product or verification pass; no TLS bypass used",
+    "results": [
+      {
+        "name": "eventPage",
+        "httpStatus": 200,
+        "url": "https://www.tdfrecords.net/social/eventos/141",
+        "bodySha256": "850d84c3498fe309209f8e92b579f6a03666598f6096afb0037ce70eb64694f4"
+      },
+      {
+        "name": "publicEvent",
+        "httpStatus": 200,
+        "url": "https://api.tdfrecords.net/directory/events/141",
+        "bodySha256": "d385b7048ebc35f568c206828bd00c51ee8692b9e0e98939b875d4e2d3baafbe",
+        "publicEventFields": {
+          "id": 141,
+          "title": "PATCH CULTURE Vol. 1",
+          "startTime": "2026-10-24T19:00:00+00:00",
+          "endTime": "2026-10-25T02:00:00+00:00",
+          "timezone": "America/Guayaquil",
+          "isPublic": true,
+          "workflowStateCode": "on_sale",
+          "rsvpEligible": true,
+          "publicShareEligible": true
+        }
+      },
+      {
+        "name": "health",
+        "httpStatus": 200,
+        "url": "https://api.tdfrecords.net/health",
+        "bodySha256": "d996479d94f900ef9b33b173ef75ebe94be72be324576712f15e9d460bb36017",
+        "body": {
+          "db": "ok",
+          "status": "ok"
+        }
+      },
+      {
+        "name": "version",
+        "httpStatus": 200,
+        "url": "https://api.tdfrecords.net/version",
+        "bodySha256": "c847904a3205e0b283456e5bceebbcb62a6a15247bcfae3ff23c158234c046e3",
+        "body": {
+          "buildTime": "2026-10-24T01:24:48Z",
+          "commit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+          "name": "tdf-hq",
+          "version": "0.1.0.0"
+        }
+      }
+    ]
+  },
+  "publicBrowser": {
+    "recordedAt": "2026-10-27T02:40:13.027664+00:00",
+    "publishedFrontendSource": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+    "sourceEmbeddedInActualEntry": true,
+    "entrySha256": "ec3a10b227b178ebcdafd8625de39974c2478e82311a4bcdadce9b743f13bda9",
+    "actualBrowser": "150.0.7871.125",
+    "cases": [
+      {
+        "device": "desktop",
+        "documentHttpStatus": 200,
+        "loginVisible": true,
+        "eventCommunityVisible": false,
+        "redirect": "/social/eventos/141",
+        "blockedNonGet": 1,
+        "blockedExternal": 7,
+        "blockedApiReads": [
+          "/catalogs/batch",
+          "/catalogs/batch",
+          "/catalogs/batch",
+          "/catalogs/batch",
+          "/catalogs/batch",
+          "/catalogs/batch"
+        ]
+      },
+      {
+        "device": "phone",
+        "documentHttpStatus": 200,
+        "loginVisible": true,
+        "eventCommunityVisible": false,
+        "redirect": "/social/eventos/141",
+        "blockedNonGet": 1,
+        "blockedExternal": 7,
+        "blockedApiReads": [
+          "/catalogs/batch",
+          "/catalogs/batch",
+          "/catalogs/batch",
+          "/catalogs/batch"
+        ]
+      }
+    ],
+    "method": "Fresh anonymous desktop and Pixel7 browser contexts; no supplied account/cookies; all nonGET and thirdparty requests blocked, API GET allowlist; no responses fabricated",
+    "limitations": [
+      "Catalog batch GETs intentionally blocked; this is a constrained observation, not full availability/performance acceptance",
+      "No publication, account creation, delivery, native device, or event141 campaign acceptance",
+      "No OpenGraph tags observed on the resulting legacy login page; new public preview acceptance remains unverified"
+    ],
+    "businessWrites": 0,
+    "browserClosed": true
+  },
+  "localBuildAttempts": [
+    {
+      "status": "FAIL",
+      "reason": "Stack ENOSPC; no qualifiedlocalbinary"
+    },
+    {
+      "status": "FAIL_THEN_INTERRUPTED",
+      "reason": "ActualGHC ENOSPC; stoppedownedalreadyfailedgroup; no qualifiedlocalbinary"
+    }
+  ],
+  "communication": {
+    "eligibleConsented": null,
+    "excluded": null,
+    "attempted": 0,
+    "sent": 0,
+    "delivered": 0,
+    "failed": 0
+  },
+  "limitations": [
+    "Source-only reports appended after286; not a new application/backend/native/SQL qualification identity",
+    "No protectedmerge/deployment/productionpublication acceptance; oldrootapproval534 is not finalapproval",
+    "SMTPdisabled/private issuedtoken relay is not delivery; no physicalnative/store acceptance",
+    "Full formal153requirements remainUNPROVEN; releaseBLOCKED/executionAllowedfalse",
+    "Public media URLs remainpublic afterlogicaldelete; mixedgalleries/private-revocablemedia/postpreviews/D7D30 stillpending"
+  ]
+}

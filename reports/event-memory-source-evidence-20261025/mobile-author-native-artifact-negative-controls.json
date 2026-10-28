@@ -1,0 +1,20 @@
+[
+  {
+    "case": "wrong-head-current-apk",
+    "status": "EXPECTED_REJECTION",
+    "exitCode": 1,
+    "message": "ValueError: Android checkout log does not confirm the expected source head"
+  },
+  {
+    "case": "old-apk-with-current-log",
+    "status": "EXPECTED_REJECTION",
+    "exitCode": 1,
+    "message": "ValueError: Missing author-action JavaScript markers: {'emeExpectedUpdatedAt': False, 'Confirmar eliminación': False, 'Cancelar eliminación': False, 'Editar recuerdo': False}"
+  },
+  {
+    "case": "old-ios-source-receipt",
+    "status": "EXPECTED_REJECTION",
+    "exitCode": 1,
+    "message": "ValueError: iOS source receipt does not match the expected source head"
+  }
+]

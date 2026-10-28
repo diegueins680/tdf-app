@@ -1,0 +1,39 @@
+{
+  "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "qualificationScope": "Corrective working tree identified by exact file hashes; complete GitHub orchestration/refinement is unproven.",
+  "sourceSha256": {
+    ".github/workflows/ci.yml": "3d95d55f0d492f9dd2826c39fb7e558354e4825d669a761682371731936f7efd",
+    "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
+    "scripts/ci-change-scope.mjs": "9c537f3f2c105f94dd36acb461f091437d626ecc978e30c1d6935e0a10444419",
+    "scripts/__tests__/ci-job-admission.test.mjs": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
+    "scripts/__tests__/ci-change-scope.test.mjs": "14e7d50b706c76ea2a08ea34bd9322d81f4a0c7dc85d57e801d23b4e619c0be7",
+    "scripts/__tests__/ci-pipeline.test.mjs": "9e27c3ad6452105d493b366fba955cff30cb1991fad7661b0a1ba94b6d6585fe",
+    "scripts/__tests__/fixtures/ci-selected-job-admission-before.json": "26b3c6db0d66d9897de3d8759c0093514dfbac749fc77ef54613c1896f15909e",
+    "formal/system/ci-selected-job-admission.md": "af0eae67852ec12417d34a8d70e41ae4598af4d331954ab373ef4a46642f5a8b",
+    "formal/system/requirements.json": "ebdc96e62d142a55c9880618cf2318c5fe01edc5352ef42b0e5964ab11420f0f",
+    "package.json": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe"
+  },
+  "tools": {
+    "node": "v24.13.1",
+    "yaml": "2.9.1"
+  },
+  "pipelineTests": {
+    "command": "npm run test:ci-pipeline",
+    "tests": 52,
+    "failures": 0,
+    "pending": 0,
+    "qualitySelectionResultVectors": 16384,
+    "contractMigrationVectors": 768,
+    "historicalFalseAcceptsRejected": 3,
+    "guardRemovalExpectedFailedProperties": 3
+  },
+  "repositoryQuality": {
+    "command": "npm run quality:repo",
+    "exitCode": 0,
+    "logSha256": "fef2333540e5996c2b1afc2a0b8103fbe0327be78ba3928aa681f318cbce27f8"
+  },
+  "assurance": "TESTED",
+  "wholeWorkflowEquivalence": "UNPROVEN",
+  "externalSkippedStateReachability": "UNKNOWN",
+  "productionOperations": false
+}
