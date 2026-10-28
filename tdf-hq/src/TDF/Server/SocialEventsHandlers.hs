@@ -15,6 +15,7 @@ module TDF.Server.SocialEventsHandlers (
     ticketTermsAcceptance,
     replaceLogisticsActivityDependencies,
     socialEventsServer,
+    socialEventsServerWithStripeRefund,
     stripeWebhookServer,
     validateRsvpPageLimit,
     decodeRsvpCursor,
@@ -2215,7 +2216,13 @@ venueMatchesEventCity venue (Entity _ city) =
                 | otherwise -> True
 
 socialEventsServer :: AuthedUser -> ServerT SocialEventsAPI AppM
-socialEventsServer user =
+socialEventsServer = socialEventsServerWithStripeRefund Stripe.createRefund
+
+-- Keep provider execution injectable for transaction/failure regressions.
+socialEventsServerWithStripeRefund
+    :: (Stripe.StripeConfig -> T.Text -> Int -> IO (Either T.Text Aeson.Value))
+    -> AuthedUser -> ServerT SocialEventsAPI AppM
+socialEventsServerWithStripeRefund issueStripeRefund user =
     eventsServer
         :<|> eventCitiesServer
         :<|> eventDiscoverySourcesServer
@@ -5711,7 +5718,7 @@ socialEventsServer user =
                 TicketRefunds.approvePaypalTicketRefund user eventKey refundKey
             Nothing -> do
                 when (ticketRefundRequestStatus refund /= "pending") $
-                    throwError err400{errBody = "Refund request is not pending"}
+                    throwError err409{errBody = "Refund request is not pending"}
                 case (eventTicketOrderStripePaymentIntentId order, stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
                     (Just piId, Just secretKey, Just webhookSecret) -> do
                         let stripeCfg =
@@ -5720,7 +5727,23 @@ socialEventsServer user =
                                     , Stripe.stripeWebhookSecret = webhookSecret
                                     , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
                                     }
-                        result <- liftIO $ Stripe.createRefund stripeCfg piId (ticketRefundRequestAmountCents refund)
+                        -- Commit a non-expiring execution fence before provider IO.
+                        -- A lost response or process crash must never grant a second POST.
+                        claimed <- liftIO $ runSqlPool
+                            (updateWhereCount
+                                [ TicketRefundRequestId ==. refundKey
+                                , TicketRefundRequestOrderId ==. orderKey
+                                , TicketRefundRequestAmountCents ==. ticketRefundRequestAmountCents refund
+                                , TicketRefundRequestStatus ==. "pending"
+                                ]
+                                [ TicketRefundRequestStatus =. "processing"
+                                , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
+                                , TicketRefundRequestApprovedAt =. Just now
+                                , TicketRefundRequestUpdatedAt =. now
+                                ]) envPool
+                        unless (claimed == 1) $
+                            throwError err409{errBody = "Refund request was already claimed or changed"}
+                        result <- liftIO $ issueStripeRefund stripeCfg piId (ticketRefundRequestAmountCents refund)
                         case result of
                             Left err -> throwError err500{errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe refund error: " <> err))}
                             Right refundResponse -> do
@@ -5769,22 +5792,29 @@ socialEventsServer user =
         when (eventTicketOrderEventId order /= eventKey) $
             throwError err400{errBody = "Refund does not belong to this event"}
         when (ticketRefundRequestStatus refund /= "pending") $
-            throwError err400{errBody = "Refund request is not pending"}
+            throwError err409{errBody = "Refund request is not pending"}
         when (T.null (T.strip rrReason)) $
             throwError err400{errBody = "Rejection reason is required"}
-        liftIO $
+        rejected <- liftIO $ trySynchronous $
             runSqlPool
                 ( do
                     binding <- TicketRefund.loadTicketRefundReference refundKey
                     forM_ binding $ \ref -> TicketRefund.cancelTicketRefundAs user ref now
-                    update
-                     refundKey
-                     [ TicketRefundRequestStatus =. "rejected"
-                     , TicketRefundRequestRejectionReason =. Just rrReason
-                     , TicketRefundRequestUpdatedAt =. now
-                     ]
+                    -- Recheck after a competing approval's row lock. Raising on
+                    -- loss also rolls back any canonical cancellation above.
+                    changed <- updateWhereCount
+                        [ TicketRefundRequestId ==. refundKey
+                        , TicketRefundRequestOrderId ==. orderKey
+                        , TicketRefundRequestStatus ==. "pending"
+                        ]
+                        [ TicketRefundRequestStatus =. "rejected"
+                        , TicketRefundRequestRejectionReason =. Just rrReason
+                        , TicketRefundRequestUpdatedAt =. now
+                        ]
+                    unless (changed == 1) $ fail "Refund request is no longer pending"
                 )
                 envPool
+        either (const (throwError err409{errBody = "Refund request is no longer pending"})) pure rejected
         mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
         maybe
             (throwError err500{errBody = "Could not reject refund"})
