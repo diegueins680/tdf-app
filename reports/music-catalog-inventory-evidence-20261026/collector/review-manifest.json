@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "status": "PREPARED_NOT_EXECUTED",
+  "networkExecuted": false,
+  "rootReviewRequired": true,
+  "sourceProvenance": {
+    "repository": "/private/tmp/tdf-player-listening-identity-20261026",
+    "sourceRevision": "2dc5c6a8308c8a8eeac1cf08d4d75788f179544b",
+    "canonicalPath": "ops/hetzner/inspect-runtime.py",
+    "canonicalSha256": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
+    "canonicalCopiedBytesEqual": true,
+    "schemaSources": [
+      "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+      "tdf-hq/src/TDF/Models.hs"
+    ],
+    "scope": "Preparation only. Canonical guard functions are copied byte-for-byte,not reimplemented. No SSH execution or production observation.",
+    "priorCanonicalInspector": {
+      "receipt": "/private/tmp/tdf-audio-production-readonly-20261026-v1.json",
+      "receiptSha256": "da5321c6332fb6c40c5be0ae3f7d939644edefe74051b816600829f1887475a0",
+      "sourceRevision": "744e75fcd2d0ec74e988436b2ccbad7c9cea5eaa",
+      "canonicalSourceSha256Matches": true,
+      "scope": "Historical root-executed canonical inspector evidence only; no new catalog aggregate execution."
+    }
+  },
+  "files": {
+    "canonical-inspect-runtime.py": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
+    "collect.py": "3371d1b42b630432647ba7b964101268097c78f53ab34a9203c212914c27c049",
+    "query-spec.json": "b2abda92b0803032ad56aa46bf8153b5c967fca902e2f0f60cb3c182c615ec6c",
+    "fixed-queries.sql": "c2796dc0e498177b2b31983d802c2099317e1d3c690cad765291f6ff83b3a6cd",
+    "source-provenance.json": "97eb23fd851e869e763a9d4e8e9b27ad6052e154a621c6f16d106e334b68d978",
+    "launch.mjs": "c1a8fbc3f2efdc4f1b1c1b1dc084ab22aae3b9bf6238a84849310e2f189af9ee",
+    "remote-payload.py": "24d235a1487f50f333a4ceb49ec200ede3d4d4aa77c3434ac3df00129858cbc8",
+    "test_collect.py": "da379bea133f0eb00cf4d3122bd705b66e2ef330ad4371552ace43becd7c94d5",
+    "self-test.log": "0d5f8346517fbbc9f8c76001a173ca4ace78dc0d43bc08446621d0299d7dcd04",
+    "README.md": "76d818eed7cc695d113ada814487c4cfd60998739d9271f93fb345742b9ddc01",
+    "prepare-spec.py": "86ca617eced7031f9495d9a2c30d629185075d78667b38b55b8ae54c6db8944c",
+    "build-review.py": "3a912bcff8f935acc23ccce350404ce0c403ee8ca9337f928ba514adf87bbfcb"
+  },
+  "fixedAggregateFamilies": 9,
+  "newInventoryRoleSqlStatements": 11,
+  "allNewQueryStatementsHaveReadOnlyRoleAnd2sWrapper": true,
+  "privilegedIdentityException": {
+    "function": "unchanged canonical.verify_storage",
+    "sqlSha256": "0289213686e8bfc6f04d88009c94355bfde458656df14e4f30d1b0672d1f4793",
+    "role": "postgres",
+    "newBusinessQueriesAllowedUnderPostgres": false
+  },
+  "localValidation": {
+    "pythonAstSyntax": "PASS all six Python sources including bundled payload",
+    "nodeSyntax": "PASS launch.mjs",
+    "unitTests": 13,
+    "unitResult": "PASS fake/pure tests only",
+    "postgresSqlExecution": "NOT_RUN",
+    "productionExecution": "NOT_RUN"
+  },
+  "limits": [
+    "Local validation does not establish PostgreSQL grammar or live permissions/data.",
+    "Counts remain UNOBSERVED until an explicitly reviewed execution.",
+    "Do not run role provisioning,DDL,grants or privileged catalog fallback."
+  ]
+}
