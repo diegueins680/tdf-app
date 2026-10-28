@@ -3,7 +3,7 @@
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "reconciliation": {
-    "preservedDecisions": 1205,
+    "preservedDecisions": 1206,
     "reviewedByPolicy": 146,
     "removedStaleDecisions": 0,
     "reviewBatch": "deterministic-policy-v3",
@@ -596,6 +596,12 @@
       "currentManifestCount": 227,
       "protectedPrefixCanonicalSha256": "3123446d4ae490b41d13beb6ca62f17da39fbc90539791c9b5373709c05b1703",
       "memorySuffixCanonicalSha256": "683f89261ab16dca098411d90b94317800bdeb0aa3508b4eced4985b53c8b22b"
+    },
+    "completionEvidenceSourceReview": {
+      "addedDecision": "9abc4f655fdb20e98b03",
+      "method": "source-review-2026-10-28",
+      "preservedParentNormativeDecisions": 1351,
+      "note": "One newly discovered finite verification domain was source-reviewed after canonical policy generation; prior review records and register order are preserved."
     }
   },
   "decisions": [
@@ -12357,7 +12363,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 87,
+        "consumerCount": 88,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -19610,6 +19616,28 @@
         "name": "PHOTOS",
         "valueCount": 6,
         "consumerCount": 0,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "9abc4f655fdb20e98b03",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Removing an outcome or malformed-status control from this finite model can conceal an invalid refund-completion predicate. This does not configure production business states or security grants.",
+      "justification": "The bounded completion-evidence model enumerates five documented Stripe refund outcomes plus unknown and null controls. These values are a fixed verification domain, not an editable production catalog or an authorization registry.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-28",
+      "reviewBatch": "legacy-stripe-refund-completion-2026-10-28",
+      "evidence": {
+        "file": "scripts/__tests__/ticket-admission-model.test.mjs",
+        "line": 277,
+        "kind": "array",
+        "name": "statuses",
+        "valueCount": 7,
+        "consumerCount": 189,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }

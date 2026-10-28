@@ -262,3 +262,131 @@ test('legacy refund control exposes stale rejection after a committed execution 
   t.diagnostic(JSON.stringify({ control: 'stale-rejection', states: result.states,
     transitions: result.transitions, counterexample: trace }));
 });
+
+// Completion boundary after the durable claim and its one provider invocation.
+// The 224 inputs enumerate five independent validation predicates and seven
+// statuses (the five official statuses, one unknown value and null). "id" means
+// syntactically valid observed correlation, not proof of money/intent binding.
+// Amount/currency/intent predicates abstract type and exact stored-value checks.
+// The request does not ask Stripe to expand payment_intent; only its string ID
+// is accepted here, although the provider's general schema permits expansion.
+// This is bounded design verification, not decoder/SQL/Haskell refinement,
+// provider authentication, partial-ticket allocation or eventual recovery proof.
+function exploreLegacyRefundCompletion({ omitGuard = null, releaseWhileHeld = false, retryPostsAgain = false } = {}) {
+  const bindings = ['object', 'id', 'amount', 'currency', 'intent'];
+  const statuses = ['pending', 'requires_action', 'succeeded', 'failed', 'canceled', 'unknown', null];
+  const inputs = [];
+  for (let bits = 0; bits < 32; bits++) {
+    for (const status of statuses) {
+      const evidence = Object.fromEntries(bindings.map((name, index) => [name, Boolean(bits & (1 << index))]));
+      inputs.push({ ...evidence, status });
+    }
+  }
+  const queue = inputs.map(evidence => ({
+    state: { evidence, phase: 'processing', observedId: false, sold: 3, posts: 1 }, trace: [],
+  }));
+  const seen = new Set();
+  const witnesses = {};
+  let transitions = 0;
+  let completed = 0;
+  let held = 0;
+  for (let cursor = 0; cursor < queue.length; cursor++) {
+    const { state, trace } = queue[cursor];
+    const key = JSON.stringify(state);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const exact = bindings.every(name => state.evidence[name]) && state.evidence.status === 'succeeded';
+    const violation = name => { witnesses[name] ??= { evidence: state.evidence, trace }; };
+    if (state.phase === 'completed') {
+      completed++;
+      if (!exact || !state.observedId) violation('CompleteImpliesExactEvidence');
+    }
+    if (state.phase === 'held') {
+      held++;
+      if (state.sold !== 3) violation('HeldPreservesInventory');
+    }
+    if (state.posts > 1) {
+      violation('NoSecondPost');
+      continue;
+    }
+    const push = (label, change) => {
+      const next = structuredClone(state);
+      change(next);
+      transitions++;
+      queue.push({ state: next, trace: [...trace, label] });
+    };
+    const hold = next => {
+      next.phase = 'held';
+      if (releaseWhileHeld) next.sold = 0;
+    };
+    if (state.phase === 'processing') {
+      if (state.evidence.id || omitGuard === 'id') {
+        push('observe-provider-id', next => {
+          next.phase = 'observed';
+          next.observedId = state.evidence.id;
+        });
+      } else push('hold-invalid-id', hold);
+    }
+    if (state.phase === 'observed') {
+      const accepted = bindings.every(name => state.evidence[name] || omitGuard === name)
+        && (state.evidence.status === 'succeeded' || omitGuard === 'status');
+      if (accepted) {
+        push(`complete-${String(state.evidence.status)}`, next => {
+          next.phase = 'completed';
+          next.sold = 0;
+        });
+      } else push('hold-unverified-evidence', hold);
+    }
+    if (retryPostsAgain && state.phase === 'held') {
+      push('retry:POST', next => { next.posts++; });
+    } else push('retry:denied', () => {});
+  }
+  return { inputs: inputs.length, states: seen.size, transitions, completed, held,
+    violations: Object.keys(witnesses).sort(), witnesses };
+}
+
+test('bounded legacy refund completion requires exact succeeded evidence and retains uncertain inventory', t => {
+  const result = exploreLegacyRefundCompletion();
+  assert.equal(result.inputs, 224);
+  assert.equal(result.states, 560);
+  assert.equal(result.transitions, 896);
+  assert.equal(result.completed, 1);
+  assert.equal(result.held, 223);
+  assert.deepEqual(result.violations, []);
+  t.diagnostic(JSON.stringify({ model: 'legacy-refund-completion', inputs: result.inputs,
+    states: result.states, transitions: result.transitions, completed: result.completed, held: result.held }));
+});
+
+test('legacy completion controls reject omission of every response binding, type or status guard', t => {
+  for (const omitGuard of ['object', 'id', 'amount', 'currency', 'intent', 'status']) {
+    const result = exploreLegacyRefundCompletion({ omitGuard });
+    assert.equal(result.states, omitGuard === 'id' ? 672 : 560);
+    assert.equal(result.transitions, omitGuard === 'id' ? 1120 : 896);
+    assert.deepEqual(result.violations, ['CompleteImpliesExactEvidence']);
+    const counterexample = result.witnesses.CompleteImpliesExactEvidence;
+    assert.equal(counterexample.trace.at(-1).startsWith('complete-'), true);
+    assert.equal(omitGuard === 'status' ? counterexample.evidence.status === 'succeeded'
+      : counterexample.evidence[omitGuard], false);
+    t.diagnostic(JSON.stringify({ control: `omit-${omitGuard}`, states: result.states,
+      transitions: result.transitions, counterexample }));
+  }
+});
+
+test('legacy completion control detects inventory release for held evidence', t => {
+  const result = exploreLegacyRefundCompletion({ releaseWhileHeld: true });
+  assert.equal(result.states, 560);
+  assert.equal(result.transitions, 896);
+  assert.deepEqual(result.violations, ['HeldPreservesInventory']);
+  t.diagnostic(JSON.stringify({ control: 'release-held-inventory', states: result.states,
+    transitions: result.transitions, counterexample: result.witnesses.HeldPreservesInventory }));
+});
+
+test('legacy completion control detects a second POST while evidence is held', t => {
+  const result = exploreLegacyRefundCompletion({ retryPostsAgain: true });
+  assert.equal(result.states, 783);
+  assert.equal(result.transitions, 896);
+  assert.deepEqual(result.violations, ['NoSecondPost']);
+  assert.equal(result.witnesses.NoSecondPost.trace.at(-1), 'retry:POST');
+  t.diagnostic(JSON.stringify({ control: 'retry-held-POST', states: result.states,
+    transitions: result.transitions, counterexample: result.witnesses.NoSecondPost }));
+});
