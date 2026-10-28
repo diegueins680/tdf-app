@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "6be0157c2781dfdcddd86632038f5f55f20e8bd2",
+  "sourceTree": "fb9d5e39566822a8cb3b5695d946656d175382ad",
+  "baselineCommit": "3be9e5ec8c3c02064632fb33ec062c480e2cf9f8",
+  "registeredSourceInputs": 1408,
+  "sourceDigest": "52d45cece8409255afdd9ab53e837f5769b5a8f80c67dfc516855906dbb07661",
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "executionHashesMatchCommittedTreeAndMobilePin": true,
+  "newContract": {
+    "path": "formal/system/legacy-refund-request-creation.md",
+    "sha256": "64d2baa61de0b56918d4ff9eda7d61f542831b33dc295014ddb0911dcd9ba801",
+    "discoveryEntryMatches": true
+  },
+  "cleanCommittedReporterPass": true,
+  "immutableSourceAdmissionPass": true,
+  "pullRequest": 657,
+  "parentPullRequest": 654,
+  "mainObserved": "e0cb1a7f3dc9a65260bd0b2fbd67a6316f93f2f7",
+  "mainIntegrationQueue": "Parent651 waitingPR636",
+  "requiredReviewPending": true,
+  "currentMainCompositionPending": true,
+  "release": "BLOCKED",
+  "scope": "Implementation TESTED and design BOUNDED_VERIFIED; source correspondence is not a reproducible build, provider-payment attestation or full workflow proof."
+}

@@ -1,7 +1,9 @@
 {
   "execution-receipts.tar.gz": "8993f7c168a11d65dbf84cbdef9f88edfec9d3e2d0fbf19a76dbaa6a9deb33bb",
+  "committed-source-assurance.tar.gz": "cfe7aa7797916e6425b8b53adad16e4f4a9b4ec75906c726bc87641b5f039878",
   "handler-cases.txt": "5dc41214d8add686f7d31086a931cb2764c608420e207643182ad12aa8b88eb0",
   "execution-sources.json": "6d65ba0ef303369c67041cb86981ff946aa20a5541766266718aaa00e32e151d",
+  "source-seal.json": "9e7856d9c868982642280fae44e38ac860b4f423ead0dc085c6b204d17895046",
   "independent-review.txt": "8eb9328f9268c41509e8e0152e59df733a19e0ed5489b9f8a743f3ae4dcef326",
   "development-diagnostics.tar.gz": "12a539e10a5e3ede390d2fc64bbf6f74f36deda8759d97e07c082fa54705c584",
   "assurance-receipts.tar.gz": "61537ef740a60f1bd1d22b63e4440c0cf6115fa1e31fed639a43a89f5d195cb1"
