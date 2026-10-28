@@ -1,0 +1,71 @@
+[
+  {
+    "type": "before",
+    "callId": "call@804",
+    "startTime": 990226.589,
+    "class": "Page",
+    "method": "setViewportSize",
+    "params": {
+      "viewportSize": {
+        "width": 320,
+        "height": 740
+      }
+    },
+    "stepId": "pw:api@104",
+    "pageId": "page@b6d6f2ffb90baf0df784319bc5b813be",
+    "beforeSnapshot": "before@call@804"
+  },
+  {
+    "type": "after",
+    "callId": "call@804",
+    "endTime": 990313.503,
+    "afterSnapshot": "after@call@804"
+  },
+  {
+    "snapshotName": "after@call@804",
+    "timestamp": 990323.987,
+    "viewport": {
+      "width": 320,
+      "height": 740
+    }
+  },
+  {
+    "type": "before",
+    "callId": "call@806",
+    "startTime": 990326.542,
+    "class": "Frame",
+    "method": "evaluateExpression",
+    "params": {
+      "expression": "() => document.documentElement.scrollWidth > innerWidth",
+      "isFunction": true,
+      "arg": {
+        "value": {
+          "v": "undefined"
+        },
+        "handles": []
+      }
+    },
+    "stepId": "pw:api@105",
+    "pageId": "page@b6d6f2ffb90baf0df784319bc5b813be",
+    "beforeSnapshot": "before@call@806"
+  },
+  {
+    "snapshotName": "before@call@806",
+    "timestamp": 990328.712,
+    "viewport": {
+      "width": 320,
+      "height": 740
+    }
+  },
+  {
+    "type": "after",
+    "callId": "call@806",
+    "endTime": 990330.491,
+    "result": {
+      "value": {
+        "b": true
+      }
+    },
+    "afterSnapshot": "after@call@806"
+  }
+]

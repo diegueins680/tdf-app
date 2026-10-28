@@ -352,6 +352,65 @@ describe('PublicBookingPage', () => {
     ) as unknown as typeof fetch;
   });
 
+  it.each(['error', 'empty'])('retries an %s catalog without losing contact edits or creating a booking', async (failure) => {
+    let finishCatalog!: (services: PublicServiceCatalogItem[]) => void;
+    let failCatalog!: (error: Error) => void;
+    listPublicServicesMock.mockReturnValueOnce(new Promise((resolve, reject) => {
+      finishCatalog = resolve;
+      failCatalog = reject;
+    }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, { route: '/reservar?service=dj-booth-practice' });
+    try {
+      await act(async () => {
+        setInputValue(getInputByLabel(container, 'Nombre completo'), 'Visitante de prueba');
+        setInputValue(getInputByLabel(container, 'Correo'), 'visitante@example.test');
+        if (failure === 'error') failCatalog(new Error('Synthetic catalog outage'));
+        else finishCatalog([]);
+        await flushPromises();
+        await flushPromises();
+      });
+      expect(getInputByLabel(container, 'Nombre completo').disabled).toBe(true);
+      expect(container.textContent).toContain('No pudimos cargar el catálogo');
+
+      listPublicServicesMock.mockReturnValueOnce(new Promise((resolve) => { finishCatalog = resolve; }));
+      await act(async () => {
+        clickButtonByText(container, 'Reintentar catálogo');
+        await flushPromises();
+      });
+      const pendingRetry = container.querySelector<HTMLButtonElement>('button[aria-busy="true"]');
+      expect(pendingRetry?.disabled).toBe(true);
+      expect(getInputByLabel(container, 'Nombre completo').disabled).toBe(true);
+      expect(createPublicMock).not.toHaveBeenCalled();
+      expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+
+      await act(async () => {
+        finishCatalog([]);
+        await flushPromises();
+        await flushPromises();
+      });
+      expect(getInputByLabel(container, 'Nombre completo').disabled).toBe(true);
+      listPublicServicesMock.mockResolvedValueOnce(defaultPublicServices);
+      await act(async () => {
+        clickButtonByText(container, 'Reintentar catálogo');
+        await flushPromises();
+        await flushPromises();
+      });
+      expect(listPublicServicesMock).toHaveBeenCalledTimes(3);
+      expect(getInputByLabel(container, 'Nombre completo').disabled).toBe(false);
+      expect(getInputByLabel(container, 'Nombre completo').value).toBe('Visitante de prueba');
+      expect(getInputByLabel(container, 'Correo').value).toBe('visitante@example.test');
+      expect(container.querySelector<HTMLInputElement>('input[value="' + DJ_PRACTICE_ID + '"]')).not.toBeNull();
+      expect(container.textContent).not.toContain('No pudimos cargar el catálogo');
+      expect(createPublicMock).not.toHaveBeenCalled();
+      expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+    } finally {
+      await cleanup();
+      container.remove();
+    }
+  });
+
   it('stacks the service reviews below the booking card in a column so phones never squeeze the card', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

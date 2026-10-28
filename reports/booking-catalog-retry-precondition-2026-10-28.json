@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "scope": "Test precondition repair; product UI exact to ce5916a502eb9f38eb20efa3132138e2aaba9adc. Working-tree source hashes, not future publication CI.",
+  "originalSource": "ce5916a502eb9f38eb20efa3132138e2aaba9adc",
+  "candidateTestSha256": "f65777a6f8b5f9823e0e66ea4d49900aef1051d00c4e4d4ce8e4c085cbf23dcd",
+  "hostedFailure": {
+    "run": 40723133002,
+    "job": 122940858400,
+    "passed": 635,
+    "skipped": 22,
+    "failed": 1,
+    "artifact": 12834710650,
+    "artifactSha256": "8bf833561dcf34ec635d44c6da09e51bb39578f1da0de2b8a0f47c04a9a6c84b",
+    "trace": "Four503requests at16:28:44.137,45.669,47.819,51.835UTC. The8s UI assertion starts after release, before automatic retries settle. Failure screenshot subsequently shows the expected alert."
+  },
+  "controlledFixture": {
+    "perInitial503DelayMs": 400,
+    "queryRetries": "Existing SessionQueryProvider3retries at1s/2s/4s, unchanged",
+    "caseTimeoutMs": 30000,
+    "assertionTimeoutMs": 8000,
+    "automaticPlaywrightRetries": 0,
+    "negative": {
+      "startTime": "2026-10-28T17:53:08.300Z",
+      "duration": 40342.636,
+      "expected": 1,
+      "skipped": 0,
+      "unexpected": 2,
+      "flaky": 0
+    },
+    "fixed": {
+      "startTime": "2026-10-28T17:56:22.308Z",
+      "duration": 61771.907,
+      "expected": 6,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "profiles": "System Chromium desktop/Pixel7 web and PlaywrightFirefox; synthetic API only, no production/provider/device/SLO claim"
+  },
+  "files": {
+    "REPLAY.txt": "4748061a3576585c53a07a3b804688db14e7b9cf75a83bbeb4f90efbef91189d",
+    "fixed-fixture.spec.mjs": "0521d974f9354929544896c2bbf12c29736053e32c548c87239aaa5b82ca1506",
+    "fixed-results.json": "6c807ea2ce5d98df4d4bcc6eb00889ec48c7ae7ac629bf55ed2d9e6acfd6b443",
+    "red-fixture.spec.mjs": "24b27e9863c0aed6e8072c4c7104d1c266ffd2f04a16f704d99583ff36188a9e",
+    "red-results.json": "e37dbedb962f93cf4b3acb322ca41a70d98714d3f91d815845cf7f9bb1dfcb5d"
+  },
+  "limitations": "The extra response wait uses the existing total case budget; it establishes retry completion rather than asserting an unrequested outage latency SLO. Fresh publication CI and independent approval remain required."
+}
