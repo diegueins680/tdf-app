@@ -1,0 +1,403 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-legacy-published-verification-20261026/playwright.config.mjs",
+    "rootDir": "/private/tmp/tdf-legacy-published-verification-20261026",
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-legacy-published-verification-20261026/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-desktop",
+        "name": "chromium-desktop",
+        "testDir": "/private/tmp/tdf-legacy-published-verification-20261026",
+        "testIgnore": [],
+        "testMatch": [
+          "legacy-provider-playback.spec.mjs"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-legacy-published-verification-20261026/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-phone",
+        "name": "chromium-phone",
+        "testDir": "/private/tmp/tdf-legacy-published-verification-20261026",
+        "testIgnore": [],
+        "testMatch": [
+          "legacy-provider-playback.spec.mjs"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "./results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "legacy-provider-playback.spec.mjs",
+      "file": "legacy-provider-playback.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+          "ok": false,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 4139,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 6\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 6\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at attach (/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:99:37)\n    at /private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:139:3",
+                    "location": {
+                      "file": "/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs",
+                      "column": 37,
+                      "line": 99
+                    },
+                    "snippet": "   97 |   const commands = await observed(page);\n   98 |   expect(commands.commands).toEqual([]);\n>  99 |   expect(state.unexpectedMutations).toEqual([]);\n      |                                     ^\n  100 |   expect(state.loadedEntries.length).toBeGreaterThan(0);\n  101 |   await testInfo.attach('legacy-provider-boundary.json', { body: JSON.stringify({ ...state, observed: commands,\n  102 |     limitation: 'Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence.' }, null, 2), contentType: 'application/json' });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs",
+                        "column": 37,
+                        "line": 99
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 6\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n   97 |   const commands = await observed(page);\n   98 |   expect(commands.commands).toEqual([]);\n>  99 |   expect(state.unexpectedMutations).toEqual([]);\n      |                                     ^\n  100 |   expect(state.loadedEntries.length).toBeGreaterThan(0);\n  101 |   await testInfo.attach('legacy-provider-boundary.json', { body: JSON.stringify({ ...state, observed: commands,\n  102 |     limitation: 'Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence.' }, null, 2), contentType: 'application/json' });\n    at attach (/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:99:37)\n    at /private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:139:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T21:03:33.852Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/private/tmp/tdf-legacy-published-verification-20261026/test-results/legacy-provider-playback---bf7fe-nk-without-native-selection-chromium-desktop/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/private/tmp/tdf-legacy-published-verification-20261026/test-results/legacy-provider-playback---bf7fe-nk-without-native-selection-chromium-desktop/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-legacy-published-verification-20261026/test-results/legacy-provider-playback---bf7fe-nk-without-native-selection-chromium-desktop/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs",
+                    "column": 37,
+                    "line": 99
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "08a8171e58117039e2c8-fd0e1f65fe7b6a121939",
+          "file": "legacy-provider-playback.spec.mjs",
+          "line": 105,
+          "column": 1
+        },
+        {
+          "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+          "ok": false,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 2710,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 10\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 10\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at attach (/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:99:37)\n    at /private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:155:3",
+                    "location": {
+                      "file": "/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs",
+                      "column": 37,
+                      "line": 99
+                    },
+                    "snippet": "   97 |   const commands = await observed(page);\n   98 |   expect(commands.commands).toEqual([]);\n>  99 |   expect(state.unexpectedMutations).toEqual([]);\n      |                                     ^\n  100 |   expect(state.loadedEntries.length).toBeGreaterThan(0);\n  101 |   await testInfo.attach('legacy-provider-boundary.json', { body: JSON.stringify({ ...state, observed: commands,\n  102 |     limitation: 'Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence.' }, null, 2), contentType: 'application/json' });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs",
+                        "column": 37,
+                        "line": 99
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 10\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n   97 |   const commands = await observed(page);\n   98 |   expect(commands.commands).toEqual([]);\n>  99 |   expect(state.unexpectedMutations).toEqual([]);\n      |                                     ^\n  100 |   expect(state.loadedEntries.length).toBeGreaterThan(0);\n  101 |   await testInfo.attach('legacy-provider-boundary.json', { body: JSON.stringify({ ...state, observed: commands,\n  102 |     limitation: 'Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence.' }, null, 2), contentType: 'application/json' });\n    at attach (/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:99:37)\n    at /private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:155:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T21:03:39.535Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/private/tmp/tdf-legacy-published-verification-20261026/test-results/legacy-provider-playback---d9898-its-no-native-media-command-chromium-desktop/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/private/tmp/tdf-legacy-published-verification-20261026/test-results/legacy-provider-playback---d9898-its-no-native-media-command-chromium-desktop/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-legacy-published-verification-20261026/test-results/legacy-provider-playback---d9898-its-no-native-media-command-chromium-desktop/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs",
+                    "column": 37,
+                    "line": 99
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "08a8171e58117039e2c8-0c0e8e4046bf524b3b6c",
+          "file": "legacy-provider-playback.spec.mjs",
+          "line": 142,
+          "column": 1
+        },
+        {
+          "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+          "ok": false,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 3321,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 10\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 10\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at attach (/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:99:37)\n    at /private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:139:3",
+                    "location": {
+                      "file": "/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs",
+                      "column": 37,
+                      "line": 99
+                    },
+                    "snippet": "   97 |   const commands = await observed(page);\n   98 |   expect(commands.commands).toEqual([]);\n>  99 |   expect(state.unexpectedMutations).toEqual([]);\n      |                                     ^\n  100 |   expect(state.loadedEntries.length).toBeGreaterThan(0);\n  101 |   await testInfo.attach('legacy-provider-boundary.json', { body: JSON.stringify({ ...state, observed: commands,\n  102 |     limitation: 'Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence.' }, null, 2), contentType: 'application/json' });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs",
+                        "column": 37,
+                        "line": 99
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 10\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n   97 |   const commands = await observed(page);\n   98 |   expect(commands.commands).toEqual([]);\n>  99 |   expect(state.unexpectedMutations).toEqual([]);\n      |                                     ^\n  100 |   expect(state.loadedEntries.length).toBeGreaterThan(0);\n  101 |   await testInfo.attach('legacy-provider-boundary.json', { body: JSON.stringify({ ...state, observed: commands,\n  102 |     limitation: 'Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence.' }, null, 2), contentType: 'application/json' });\n    at attach (/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:99:37)\n    at /private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:139:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T21:03:43.685Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/private/tmp/tdf-legacy-published-verification-20261026/test-results/legacy-provider-playback---bf7fe-nk-without-native-selection-chromium-phone/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/private/tmp/tdf-legacy-published-verification-20261026/test-results/legacy-provider-playback---bf7fe-nk-without-native-selection-chromium-phone/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-legacy-published-verification-20261026/test-results/legacy-provider-playback---bf7fe-nk-without-native-selection-chromium-phone/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs",
+                    "column": 37,
+                    "line": 99
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "08a8171e58117039e2c8-7fe45a78aa06a5ed1f5d",
+          "file": "legacy-provider-playback.spec.mjs",
+          "line": 105,
+          "column": 1
+        },
+        {
+          "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+          "ok": false,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 2861,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 10\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 10\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at attach (/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:99:37)\n    at /private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:155:3",
+                    "location": {
+                      "file": "/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs",
+                      "column": 37,
+                      "line": 99
+                    },
+                    "snippet": "   97 |   const commands = await observed(page);\n   98 |   expect(commands.commands).toEqual([]);\n>  99 |   expect(state.unexpectedMutations).toEqual([]);\n      |                                     ^\n  100 |   expect(state.loadedEntries.length).toBeGreaterThan(0);\n  101 |   await testInfo.attach('legacy-provider-boundary.json', { body: JSON.stringify({ ...state, observed: commands,\n  102 |     limitation: 'Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence.' }, null, 2), contentType: 'application/json' });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs",
+                        "column": 37,
+                        "line": 99
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 10\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"method\": \"POST\",\u001b[39m\n\u001b[31m+     \"path\": \"/flags/\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n   97 |   const commands = await observed(page);\n   98 |   expect(commands.commands).toEqual([]);\n>  99 |   expect(state.unexpectedMutations).toEqual([]);\n      |                                     ^\n  100 |   expect(state.loadedEntries.length).toBeGreaterThan(0);\n  101 |   await testInfo.attach('legacy-provider-boundary.json', { body: JSON.stringify({ ...state, observed: commands,\n  102 |     limitation: 'Synthetic API/provider-destination responses; no external network, external playback, or native decoder evidence.' }, null, 2), contentType: 'application/json' });\n    at attach (/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:99:37)\n    at /private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs:155:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T21:03:48.580Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/private/tmp/tdf-legacy-published-verification-20261026/test-results/legacy-provider-playback---d9898-its-no-native-media-command-chromium-phone/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/private/tmp/tdf-legacy-published-verification-20261026/test-results/legacy-provider-playback---d9898-its-no-native-media-command-chromium-phone/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-legacy-published-verification-20261026/test-results/legacy-provider-playback---d9898-its-no-native-media-command-chromium-phone/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/private/tmp/tdf-legacy-published-verification-20261026/legacy-provider-playback.spec.mjs",
+                    "column": 37,
+                    "line": 99
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "08a8171e58117039e2c8-7d20c5718ac91791462f",
+          "file": "legacy-provider-playback.spec.mjs",
+          "line": 142,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-26T21:03:32.694Z",
+    "duration": 19177.178,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 4,
+    "flaky": 0
+  }
+}

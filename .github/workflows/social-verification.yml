@@ -130,10 +130,14 @@ jobs:
             /tmp/fan-effects-model-results/*.txt
   social-client:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+      options: --init --ipc=host --user 1001
     timeout-minutes: 15
     env:
       NPM_CONFIG_IGNORE_SCRIPTS: true
       TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -143,8 +147,14 @@ jobs:
       - run: npm ci
       - name: Install the lockfile's missing Linux resolver binding
         # The existing lock includes unrs-resolver 1.11.1 but omits its GNU/x64
-        # optional binding. Do not depend on implicit runtime postinstall.
-        run: npm install --no-save --package-lock=false --ignore-scripts @unrs/resolver-binding-linux-x64-gnu@1.11.1
+        # optional binding. Resolve only this package in an isolated prefix:
+        # an install at the project root can upgrade locked Playwright packages.
+        run: |
+          resolver_dir=$(mktemp -d)
+          trap 'rm -rf "$resolver_dir"' EXIT
+          npm install --prefix "$resolver_dir" --workspaces=false --no-save --package-lock=false --ignore-scripts @unrs/resolver-binding-linux-x64-gnu@1.11.1
+          mkdir -p node_modules/@unrs
+          cp -R "$resolver_dir/node_modules/@unrs/resolver-binding-linux-x64-gnu" node_modules/@unrs/
       - name: Focused social contract and component tests
         env:
           NODE_OPTIONS: --experimental-vm-modules
@@ -153,7 +163,8 @@ jobs:
         run: |
           node_modules/.bin/openapi-typescript tdf-hq/docs/openapi/social-v2.yaml --output /tmp/social-v2.ts
           diff -u tdf-hq-ui/src/api/generated/social-v2.ts /tmp/social-v2.ts
-      - run: node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify bundled Playwright browsers
+        run: node scripts/verify-playwright-image.mjs --workflow .github/workflows/social-verification.yml --job social-client
       - name: Local synthetic component browser journey
         run: |
           node scripts/social/preview.mjs > /tmp/social-preview.txt 2>&1 &

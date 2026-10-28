@@ -1,0 +1,37 @@
+{
+  "attempt1-initialization.log": {
+    "compressed": "attempt1-initialization.log.gz",
+    "rawSha256": "279d213c850de595ecc61f934629c367fc362222139be328cc9ec01c34f1b60e",
+    "gzipSha256": "117fd51f3fed06403d82ac6d4834606836d79e579734ab2e9e76fcc5e5373349"
+  },
+  "attempt2-backend.log": {
+    "compressed": "attempt2-backend.log.gz",
+    "rawSha256": "0bfaa32fac6b4c6c39331b01bc581172fb526c9ab57c09140a760234904593d0",
+    "gzipSha256": "3fb7ce59ede3ab4b3005930ee8534b1cad9462655bd5260e7741b1e1faacc53f"
+  },
+  "attempt2-driver.log": {
+    "compressed": "attempt2-driver.log.gz",
+    "rawSha256": "2cf4cee1a9439120e6fc99a1e0311b87e729fd5fc76ee3c482286ad1b9ad0971",
+    "gzipSha256": "37f91460e455852b01a3eff6337c04f61803ae9205e1e5c7381776860453480e"
+  },
+  "attempt3-driver.log": {
+    "compressed": "attempt3-driver.log.gz",
+    "rawSha256": "93953686280aae1f9a92d96d208dce7cae653f4038415ba58d653185dc665fa0",
+    "gzipSha256": "0391b055c2772a941bf0c4f98f37e45523764e5df97f8bb6e552177ffe49c11d"
+  },
+  "node-version.log": {
+    "compressed": "node-version.log.gz",
+    "rawSha256": "7703fd79909af9b17df6395137bee2b07c3f3b27b6e96e18c909f433cce84f19",
+    "gzipSha256": "1c5f50af71c2ed4d8f4d5a6f555315515e73793feb74c3f5f096b1cd21f99ba6"
+  },
+  "migration-rehearsal.log": {
+    "compressed": "migration-rehearsal.log.gz",
+    "rawSha256": "70397fe5bc79af747f9d1b4aec59082d258ba6e13baf6ebd3dc03ef7770731d2",
+    "gzipSha256": "690eaf181b18959863ca7c205cbd67d72598850edf02be5ca69ffbc61a6d64bc"
+  },
+  "backend.log": {
+    "compressed": "backend.log.gz",
+    "rawSha256": "1f7731826c28662a976778861da9718578a4b7145ad044e87250f560bdea9ac7",
+    "gzipSha256": "6fdab9aa08de712945e6f49f72e0149ff7adda6747ae23fb02d7d3facc1252c9"
+  }
+}

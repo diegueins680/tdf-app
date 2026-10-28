@@ -596,6 +596,67 @@
       "currentManifestCount": 227,
       "protectedPrefixCanonicalSha256": "3123446d4ae490b41d13beb6ca62f17da39fbc90539791c9b5373709c05b1703",
       "memorySuffixCanonicalSha256": "683f89261ab16dca098411d90b94317800bdeb0aa3508b4eced4985b53c8b22b"
+    },
+    "privacyQueueRestoreSuccessor": {
+      "sourceRevision": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+      "sourceImplementationCommit": "a0120daa3493c04e358b50c6d60af1cacfc60a31",
+      "reason": "The internal guarded restore reducer action changes the dispatch-set fingerprint. Preserve exact superseded parent review and all1338 unchanged active decisions; add one individually reviewed technical successor. No business value or permission is introduced.",
+      "preservedUnchangedActiveDecisions": 1338,
+      "supersededDecisions": [
+        {
+          "id": "dfec3f046ad1157e0f0c",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+          "justification": "Client-side audio player mechanics (queue reducer actions, playback status, repeat mode and stream quality selection); local view state, not governed business catalog data.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/player/queue.ts",
+            "line": 33
+          },
+          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewMethod": "manual-source-review"
+        }
+      ],
+      "successorDecisions": [
+        {
+          "id": "5ed33d9cd50e8f195d05",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Changing or externally governing reducer dispatch tags could break guarded local queue hydration or transport controls. These tags do not authorize media access.",
+          "justification": "Individually reviewed all nine queue reducer tags: restore,replace,enqueue,select,remove,move,clear,shuffle,repeat. The added restore action installs a previously validated matching-owner snapshot through internal guarded hydration; the remaining eight are unchanged client queue operations. These implementation dispatch discriminants are not selectable business catalog values or a privilege registry.",
+          "reviewed": true,
+          "reviewMethod": "individual-source-review",
+          "reviewBatch": "player-listening-identity-20261026",
+          "evidence": {
+            "file": "tdf-hq-ui/src/player/queue.ts",
+            "line": 34,
+            "kind": "switch-cases",
+            "name": "action.type",
+            "valueCount": 9
+          },
+          "sourceReviewReferences": [
+            {
+              "sourceRevision": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceEntry": {
+                "id": "dfec3f046ad1157e0f0c"
+              },
+              "sourceEntryCanonicalSha256": "1fd0dae5a96294d8649e2d2c0167cd15b993dd168f587e5445b011ec5e0544fc",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            }
+          ]
+        }
+      ],
+      "preservedDecisionCanonicalSha256": {
+        "dfec3f046ad1157e0f0c": "1fd0dae5a96294d8649e2d2c0167cd15b993dd168f587e5445b011ec5e0544fc"
+      },
+      "supersededDecisionId": "dfec3f046ad1157e0f0c",
+      "successorDecisionId": "5ed33d9cd50e8f195d05"
     }
   },
   "decisions": [
@@ -6693,20 +6754,34 @@
       "reviewMethod": "manual-source-review"
     },
     {
-      "id": "dfec3f046ad1157e0f0c",
+      "id": "5ed33d9cd50e8f195d05",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "Client-side audio player mechanics (queue reducer actions, playback status, repeat mode and stream quality selection); local view state, not governed business catalog data.",
+      "risk": "Changing or externally governing reducer dispatch tags could break guarded local queue hydration or transport controls. These tags do not authorize media access.",
+      "justification": "Individually reviewed all nine queue reducer tags: restore,replace,enqueue,select,remove,move,clear,shuffle,repeat. The added restore action installs a previously validated matching-owner snapshot through internal guarded hydration; the remaining eight are unchanged client queue operations. These implementation dispatch discriminants are not selectable business catalog values or a privilege registry.",
       "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "player-listening-identity-20261026",
       "evidence": {
         "file": "tdf-hq-ui/src/player/queue.ts",
-        "line": 33
+        "line": 34,
+        "kind": "switch-cases",
+        "name": "action.type",
+        "valueCount": 9
       },
-      "reviewBatch": "music-release-platform-sync-2026-10-07",
-      "reviewMethod": "manual-source-review"
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceEntry": {
+            "id": "dfec3f046ad1157e0f0c"
+          },
+          "sourceEntryCanonicalSha256": "1fd0dae5a96294d8649e2d2c0167cd15b993dd168f587e5445b011ec5e0544fc",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ]
     },
     {
       "id": "d94623ae7e8da8f014f5",
