@@ -1,6 +1,95 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+// Two requesters and one eligibility change. The event/order lock covers both
+// the current check and insert, and READ COMMITTED refreshes the existence read
+// after a waiter acquires the lock. This is a design abstraction, not SQL proof.
+function exploreLegacyRequestCreation({ omitLock = false, staleSnapshot = false,
+  staleEligibility = false } = {}) {
+  let inputs = 0, states = 0, transitions = 0;
+  const violations = new Set();
+  let counterexample;
+  for (const initialCount of [0, 1]) {
+    for (const initiallyEligible of [false, true]) {
+      inputs++;
+      const queue = [{ count: initialCount, eligible: initiallyEligible, mutated: false,
+        lock: null, phase: [0, 0], snapshot: [null, null], eligibility: [null, null],
+        readCount: [null, null], readEligibility: [null, null], unauthorized: 0, trace: [] }];
+      const seen = new Set();
+      while (queue.length) {
+        const current = queue.shift();
+        const { trace, ...identity } = current;
+        const key = JSON.stringify(identity);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const invalid = [];
+        if (current.count > Math.max(initialCount, 1)) invalid.push('one-request-per-order');
+        if (current.unauthorized) invalid.push('current-eligibility');
+        for (const failure of invalid) violations.add(failure);
+        if (invalid.length && !counterexample) counterexample = { initialCount, initiallyEligible, ...current };
+        const push = (next, action) => {
+          transitions++;
+          next.trace = [...trace, action];
+          queue.push(next);
+        };
+        if (!current.mutated && current.lock === null) {
+          push({ ...structuredClone(current), eligible: false, mutated: true }, 'eligibility-changed');
+        }
+        for (let actor = 0; actor < 2; actor++) {
+          const next = structuredClone(current);
+          const phase = current.phase[actor];
+          if (phase === 0) {
+            next.snapshot[actor] = current.count;
+            next.eligibility[actor] = current.eligible;
+            next.phase[actor] = current.eligible ? 1 : 4;
+            push(next, `${actor}:initial-read`);
+          } else if (phase === 1 && (omitLock || current.lock === null)) {
+            if (!omitLock) next.lock = actor;
+            next.phase[actor] = 2;
+            push(next, `${actor}:acquire-lock`);
+          } else if (phase === 2) {
+            next.readCount[actor] = staleSnapshot ? current.snapshot[actor] : current.count;
+            next.readEligibility[actor] = staleEligibility ? current.eligibility[actor] : current.eligible;
+            next.phase[actor] = 3;
+            push(next, `${actor}:current-check`);
+          } else if (phase === 3) {
+            if (current.readCount[actor] === 0 && current.readEligibility[actor]) {
+              next.count++;
+              if (!current.eligible) next.unauthorized++;
+            }
+            if (current.lock === actor) next.lock = null;
+            next.phase[actor] = 4;
+            push(next, `${actor}:insert-or-refuse`);
+          }
+        }
+      }
+      states += seen.size;
+    }
+  }
+  return { inputs, states, transitions, violations: [...violations].sort(), counterexample };
+}
+
+test('bounded legacy request creation serializes absence, eligibility and insertion', t => {
+  const result = exploreLegacyRequestCreation();
+  assert.equal(result.inputs, 4);
+  assert.equal(result.states, 168);
+  assert.equal(result.transitions, 203);
+  assert.deepEqual(result.violations, []);
+  t.diagnostic(JSON.stringify({ model: 'legacy-request-creation', ...result }));
+});
+
+test('legacy request controls expose absent locks, stale snapshots and stale eligibility', t => {
+  for (const [control, options, violation] of [
+    ['omit-request-lock', { omitLock: true }, 'one-request-per-order'],
+    ['stale-request-snapshot', { staleSnapshot: true }, 'one-request-per-order'],
+    ['stale-request-eligibility', { staleEligibility: true }, 'current-eligibility'],
+  ]) {
+    const result = exploreLegacyRequestCreation(options);
+    assert.ok(result.violations.includes(violation));
+    t.diagnostic(JSON.stringify({ control, ...result }));
+  }
+});
+
 // Two distinct legacy requests release one shared tier. A deliberate stale
 // precheck models why stock must be tested by the UPDATE that decrements it.
 // This finite design check is not a Haskell/SQL refinement proof.

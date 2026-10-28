@@ -190,6 +190,7 @@ import Database.Persist
 import Database.Persist.Sql
     ( ConnectionPool
     , FilterTablePrefix (PrefixTableName)
+    , IsolationLevel (ReadCommitted)
     , Single (..)
     , SqlBackend
     , SqlPersistT
@@ -199,6 +200,7 @@ import Database.Persist.Sql
     , rawExecute
     , rawSql
     , runSqlPool
+    , runSqlPoolWithIsolation
     , toSqlKey
     , updateWhereCount
     )
@@ -5575,6 +5577,18 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         maybe createLegacyPaymentIntent createMobilePaymentSheetIntent tpwpMobileSdkStripeVersion
 
     -- Refunds
+    refundProvidersForOrder :: EventTicketOrderId -> SqlPersistT IO (Bool, [Single T.Text])
+    refundProvidersForOrder key = do
+        canonical <- rawSql
+            "SELECT order_id FROM event_ticket_checkout_runtime WHERE order_id=?"
+            [toPersistValue key] :: SqlPersistT IO [Single Int64]
+        providers <- if null canonical then pure [] else rawSql
+            "SELECT DISTINCT attempt.provider FROM event_ticket_checkout_runtime runtime\
+            \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id=runtime.checkout_id\
+            \ WHERE runtime.order_id=? AND attempt.status='succeeded'"
+            [toPersistValue key]
+        pure (not (null canonical), providers)
+
     createRefundRequest :: T.Text -> T.Text -> RefundRequestDTO -> AppM RefundDTO
     createRefundRequest eventIdStr orderIdStr RefundRequestDTO{..} = do
         Env{..} <- ask
@@ -5603,15 +5617,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             throwError err400{errBody = "Only paid orders can be refunded"}
         unless (manager || ownsOrder) $
             throwError err403{errBody = "You can only request refunds for your own orders"}
-        canonical <- liftIO $ runSqlPool
-            (rawSql "SELECT order_id FROM event_ticket_checkout_runtime WHERE order_id=?" [toPersistValue orderKey]
-                :: SqlPersistT IO [Single Int64]) envPool
-        providers <- if null canonical then pure [] else liftIO $ runSqlPool
-            (rawSql "SELECT DISTINCT attempt.provider FROM event_ticket_checkout_runtime runtime\
-                \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id=runtime.checkout_id\
-                \ WHERE runtime.order_id=? AND attempt.status='succeeded'"
-                [toPersistValue orderKey] :: SqlPersistT IO [Single T.Text]) envPool
-        when (not (null canonical) && length providers /= 1) $
+        (canonical, providers) <- liftIO $ runSqlPool (refundProvidersForOrder orderKey) envPool
+        when (canonical && length providers /= 1) $
             throwError err409 {errBody = "Refund requires one unambiguous verified payment provider"}
         if providers `elem` [[Single "paypal"], [Single "bank_transfer"]] then do
             result <- liftIO $ try (runSqlPool
@@ -5621,42 +5628,59 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             either (const (throwError err409 {errBody="Refund selection or state is not eligible"}))
                 (pure . refundEntityToDTO (eventTicketOrderCurrency order)) result
         else do
-            mExisting <-
-                liftIO $
-                    runSqlPool
-                        (selectFirst [TicketRefundRequestOrderId ==. orderKey] [])
-                        envPool
-            when (isJust mExisting) $
-                throwError err409{errBody = "Refund request already exists for this order"}
-            let amountCents = fromMaybe (eventTicketOrderAmountCents order) refundRequestAmountCents
-            when (amountCents > eventTicketOrderAmountCents order) $
-                throwError err400{errBody = "Refund amount cannot exceed order amount"}
-            when (amountCents <= 0) $ throwError err400{errBody = "Refund amount must be > 0"}
-            refundKey <-
-                liftIO $
-                    runSqlPool
-                        ( insert
-                            TicketRefundRequest
-                                { ticketRefundRequestOrderId = orderKey
-                                , ticketRefundRequestRequestedByPartyId = Just currentPartyId
-                                , ticketRefundRequestReason = refundRequestReason
-                                , ticketRefundRequestAmountCents = amountCents
-                                , ticketRefundRequestStatus = "pending"
-                                , ticketRefundRequestApprovedByPartyId = Nothing
-                                , ticketRefundRequestApprovedAt = Nothing
-                                , ticketRefundRequestRejectionReason = Nothing
-                                , ticketRefundRequestStripeRefundId = Nothing
-                                , ticketRefundRequestProcessedAt = Nothing
-                                , ticketRefundRequestCreatedAt = now
-                                , ticketRefundRequestUpdatedAt = now
-                                }
-                        )
-                        envPool
-            mRefund <- liftIO $ runSqlPool (getEntity refundKey) envPool
-            maybe
-                (throwError err500{errBody = "Could not create refund request"})
-                (pure . refundEntityToDTO (eventTicketOrderCurrency order))
-                mRefund
+            -- Use the canonical event -> order lock order. The existence read
+            -- must get a fresh snapshot AFTER a competing request commits.
+            result <- liftIO $ runSqlPoolWithIsolation
+                (do
+                    backendName <- T.toCaseFold <$> getRDBMS
+                    let lockSuffix = if "postgres" `T.isInfixOf` backendName then " FOR UPDATE" else ""
+                    events <- rawSql ("SELECT ?? FROM social_event WHERE id=?" <> lockSuffix)
+                        [toPersistValue eventKey]
+                    orders <- rawSql ("SELECT ?? FROM event_ticket_order WHERE id=?" <> lockSuffix)
+                        [toPersistValue orderKey]
+                    case (events, orders) of
+                        ([Entity _ currentEvent], [Entity _ currentOrder])
+                            | eventTicketOrderEventId currentOrder /= eventKey ->
+                                pure (Left err400{errBody = "Ticket order does not belong to this event"})
+                            | eventTicketOrderStatus currentOrder /= "paid" ->
+                                pure (Left err400{errBody = "Only paid orders can be refunded"})
+                            | not (isEventManager currentPartyId currentEvent
+                                || eventTicketOrderBuyerPartyId currentOrder == Just currentPartyId) ->
+                                pure (Left err403{errBody = "You can only request refunds for your own orders"})
+                            | otherwise -> do
+                                currentRoute <- refundProvidersForOrder orderKey
+                                if currentRoute /= (canonical, providers) then
+                                    pure (Left err409{errBody = "Refund payment routing changed; reload the order"})
+                                else do
+                                    existing <- selectFirst [TicketRefundRequestOrderId ==. orderKey] []
+                                    let amountCents = fromMaybe (eventTicketOrderAmountCents currentOrder)
+                                            refundRequestAmountCents
+                                    if isJust existing then
+                                        pure (Left err409{errBody = "Refund request already exists for this order"})
+                                    else if amountCents > eventTicketOrderAmountCents currentOrder then
+                                        pure (Left err400{errBody = "Refund amount cannot exceed order amount"})
+                                    else if amountCents <= 0 then
+                                        pure (Left err400{errBody = "Refund amount must be > 0"})
+                                    else do
+                                        created <- insertEntity TicketRefundRequest
+                                            { ticketRefundRequestOrderId = orderKey
+                                            , ticketRefundRequestRequestedByPartyId = Just currentPartyId
+                                            , ticketRefundRequestReason = refundRequestReason
+                                            , ticketRefundRequestAmountCents = amountCents
+                                            , ticketRefundRequestStatus = "pending"
+                                            , ticketRefundRequestApprovedByPartyId = Nothing
+                                            , ticketRefundRequestApprovedAt = Nothing
+                                            , ticketRefundRequestRejectionReason = Nothing
+                                            , ticketRefundRequestStripeRefundId = Nothing
+                                            , ticketRefundRequestProcessedAt = Nothing
+                                            , ticketRefundRequestCreatedAt = now
+                                            , ticketRefundRequestUpdatedAt = now
+                                            }
+                                        pure (Right (created, eventTicketOrderCurrency currentOrder))
+                        ([], _) -> pure (Left err404{errBody = "Event not found"})
+                        _ -> pure (Left err404{errBody = "Ticket order not found"})
+                ) envPool ReadCommitted
+            either throwError (\(created, currency) -> pure (refundEntityToDTO currency created)) result
 
     listRefunds :: T.Text -> AppM [RefundDTO]
     listRefunds eventIdStr = do
