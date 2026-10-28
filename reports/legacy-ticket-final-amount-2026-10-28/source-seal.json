@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "b7ded03606e8df55dfa5162b0e1db3633baae73e",
+  "sourceTree": "e4a8cfb4c8ccf98d4f4812e9ccef2cfcaa65098c",
+  "baselineCommit": "0a9228b0a00eb93ea0924cfec7c149ec0caacad5",
+  "registeredSourceInputs": 1408,
+  "sourceDigest": "cacbc26b3f72a357d88706eeda06af27528a9a9c566f99731956e073e79bfc0b",
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "executionHashesMatchCommittedTreeAndMobilePin": true,
+  "newContract": {
+    "path": "formal/system/legacy-ticket-final-amount.md",
+    "sha256": "8557565e0d0569ffdacd366aa7e01a5550c9f165c4ff799e2a3ac734a6a5055d",
+    "discoveryEntryMatches": true
+  },
+  "cleanCommittedReporterPass": true,
+  "immutableSourceAdmissionPass": true,
+  "mainObserved": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+  "parentPR": 660,
+  "requiredReviewPending": true,
+  "currentMainCompositionPending": true,
+  "release": "BLOCKED",
+  "scope": "Implementation TESTED; manual bounded-input arithmetic claims PROVEN under stated assumptions. Source correspondence is not reproducible binary build, provider-payment attestation or full workflow proof.",
+  "manualArithmetic": {
+    "sourceSha256": "9747fedb56660d74d12e8aa714f8f64553fb19a9daaf24c7fc5434f3e1d1bd08",
+    "claims": 3,
+    "normalAndOptimizedReceiptsMatch": true,
+    "explicitChecksSurviveOptimization": true,
+    "fault401RejectedInBothModes": true,
+    "checkerSha256": "fd8c7cdd1bc985f63c4aae6d6044f2d0d387b7870e213437ff8fb4cb8a91a197",
+    "refinementClaimed": false
+  },
+  "servingExecutableLocalQualification": "NOT_RUN; current required hosted build pending. Parent source ee77d binary/API receipt remains historical.",
+  "pullRequest": 661
+}

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "observedRevision": "b7ded03606e8df55dfa5162b0e1db3633baae73e",
+  "source": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+  "sourceSha256": "9747fedb56660d74d12e8aa714f8f64553fb19a9daaf24c7fc5434f3e1d1bd08",
+  "formulaSha256": "9cab5a392365bcb29b324a2eb6d09fb21030021b2230dc46438e654fa6231620",
+  "z3Version": "4.13.3",
+  "claims": [
+    {
+      "id": "all_supported_faces_fit",
+      "negation": "unsat",
+      "assurance": "PROVEN",
+      "scope": "Integer arithmetic only under the stated bounds/formula; no implementation refinement."
+    },
+    {
+      "id": "all_larger_faces_exceed",
+      "negation": "unsat",
+      "assurance": "PROVEN",
+      "scope": "Integer arithmetic only under the stated bounds/formula; no implementation refinement."
+    },
+    {
+      "id": "fee_arithmetic_fits_current_int64",
+      "negation": "unsat",
+      "assurance": "PROVEN",
+      "scope": "Integer arithmetic only under the stated bounds/formula; no implementation refinement."
+    }
+  ],
+  "counterexample": {
+    "face": 98039216,
+    "final": 100000000
+  },
+  "assumptions": [
+    "Integer arithmetic, discounted face between0 and99,999,999 inclusive, fee bps400, floor division and buyer rounding from the checked source formula.",
+    "Current64-bit Int; existing base validation plus valid promo keeps face within these bounds.",
+    "The conservative99,999,999 internal admission envelope is the requirement; this is not a universal Stripe maximum."
+  ],
+  "limitations": [
+    "Manual abstraction with exact source/formula hashes and syntax checks, not a Haskell semantics/refinement proof.",
+    "Source can change after this one-shot check; committed source seal and implementation regression tests supply separate evidence.",
+    "No provider contact, PostgreSQL guarantee, account/currency/card validation or financial charge attestation."
+  ]
+}
