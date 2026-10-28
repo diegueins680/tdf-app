@@ -63,10 +63,18 @@ interactionsServer user = discussionReads (Just user) :<|> mutate :<|> destinati
       limit <- checkedSize size
       query (Just user) False "SELECT interaction_block_list(?,?,?)::text"
         [actorValue (Just user),maybe PersistNull (PersistInt64 . fromIntegral) cursor,limit]
-    reportInbox cursor size = do
+    reportInbox cursor size sourceEvent = do
       after <- maybe (pure PersistNull) uuidValue cursor
       limit <- checkedSize size
-      query (Just user) False "SELECT interaction_report_inbox(?,?::uuid,?)::text" [actorValue (Just user),after,limit]
+      case sourceEvent of
+        Nothing -> query (Just user) False "SELECT interaction_report_inbox(?,?::uuid,?)::text"
+          [actorValue (Just user),after,limit]
+        Just event -> do
+          eventKey <- case readsPositive event of
+            Just identifier | event == T.pack (show identifier) -> pure (PersistInt64 identifier)
+            _ -> throwError err400
+          query (Just user) False "SELECT event_memory_source_reports(?,?,?::uuid,?)::text"
+            [actorValue (Just user),eventKey,after,limit]
     preferences = readPreferences :<|> writePreferences
       where
         readPreferences = query (Just user) False "SELECT interaction_preferences(?)::text" [actorValue (Just user)]

@@ -1,0 +1,96 @@
+{
+  "kind": "read-only-controlled-exact-head-persona-attempt2-evidence",
+  "capturedAtUtc": "2026-10-26T18:05:31.208115+00:00",
+  "PR": 622,
+  "run": {
+    "id": 40363971868,
+    "head_sha": "5f45677588bd8494226e00fd51d81c134b84bdd6",
+    "run_attempt": 2,
+    "status": "completed",
+    "conclusion": "success",
+    "updated_at": "2026-10-26T18:02:32Z"
+  },
+  "personaJobId": 121739144348,
+  "personaJobConclusion": "success",
+  "actualCIMergeCommit": "23215675cad7520b99f6208296e3f441914da158",
+  "sourceHead": "5f45677588bd8494226e00fd51d81c134b84bdd6",
+  "results": {
+    "persona": {
+      "startTime": "2026-10-26T17:38:49.832Z",
+      "duration": 1217696.277,
+      "expected": 566,
+      "skipped": 22,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "defaultOff": {
+      "startTime": "2026-10-26T17:59:09.151Z",
+      "duration": 37366.234,
+      "expected": 10,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "discovery": {
+      "startTime": "2026-10-26T17:59:47.550Z",
+      "duration": 100631.917,
+      "expected": 25,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "all588OriginalCaseIdentitiesAndTimeoutsExpectedStatusesUnchanged": true,
+  "introducedSkips": 0,
+  "existingDeclaredPersonaSkips": 22,
+  "previousFailure": {
+    "case": "Marketplace cart stays reachable after adding on a small phone @mobile-flow",
+    "project": "webkit-iphone",
+    "attempt1": "timedOut30798ms",
+    "attempt2": "passed",
+    "attempt2DurationMs": 28912,
+    "unchangedTimeoutMs": 30000,
+    "internalRetry": 0,
+    "interpretation": "Same unchanged test completed within its existing budget. Root renderer/host cause remains UNVERIFIED; narrow remaining timing margin is a test-reliability risk, not a demonstrated product fix."
+  },
+  "newArtifactsByImmutableId": [
+    {
+      "id": 12674246484,
+      "name": "discovery-web-e2e-40363971868",
+      "createdAt": "2026-10-26T18:01:33Z",
+      "sizeBytes": 3050,
+      "zipPath": "/private/tmp/tdf-622-attempt2-discovery-12674246484.zip",
+      "sha256": "3756f6e2a76d04dd97292d87e99b7013c1c695a515f0fed12c1e7683fc4dd424"
+    },
+    {
+      "id": 12673478788,
+      "name": "persona-web-e2e-40363971868",
+      "createdAt": "2026-10-26T18:01:32Z",
+      "sizeBytes": 66488387,
+      "zipPath": "/private/tmp/tdf-622-attempt2-persona-12673478788.zip",
+      "sha256": "1e30508f8dd6a808fcb13c20d09bfb4755bb67a67eb4d23129e36e6bf15e92ca"
+    }
+  ],
+  "firstFailure": {
+    "diagnosisReceipt": "/private/tmp/tdf-discovery-5f-persona-diagnosis-20261026.json",
+    "sha256": "dd743a3ccc5a35e6fc4c57b728cf9fd3c48a180fb0910cc366c0547219128699",
+    "allReferencedLocalOriginalEvidenceStillMatches": true,
+    "originalArtifactId": 12671562371,
+    "originalArtifactStillListedUnexpired": true,
+    "hostedObservation": "Both persona artifacts have the same name and distinct IDs/digests; no original deletion observed."
+  },
+  "evidenceSha256": {
+    "/private/tmp/tdf-622-attempt2-final-api-state-20261026.json": "71b7542574857311be24b7d30fa135304768120cefe511d7b98f09fc3ada81d2",
+    "/private/tmp/tdf-622-attempt2-persona-job-121739144348.log": "c97157726d6ef3a9a2bac70fbc89c534ab217655e240ddf51bdd5603c6b69a3d",
+    "/private/tmp/tdf-622-attempt2-persona-12673478788/results.json": "7647f360b4b2a81f1666f8b17c3542c1f3e4a1045d1bddc95f2948c67a97ef3d",
+    "/private/tmp/tdf-622-attempt2-persona-12673478788/deletion-rollout-off/results.json": "deaa5643f65686b40c13d1c0e374ebf4c59df24baae8c258c189bae8ae1d634e",
+    "/private/tmp/tdf-622-attempt2-discovery-12674246484/results.json": "f71cf8c6f1c6a8ec1db3ffad73b3b362bd0cae9d1309bacff159736e28618c13"
+  },
+  "scope": "Synthetic API/browser CI acceptance on pinned Linux browsers; no new production/media acceptance claim. Controlled rerun was performed by parent/other operator, not this read-only monitor.",
+  "repoEdits": [],
+  "rerunsByThisAgent": 0,
+  "mergeByThisAgent": false,
+  "reviewRequestByThisAgent": false,
+  "deployment": null,
+  "integrationOwnership": "Another integration operator owns final admission and merge."
+}

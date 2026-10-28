@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
@@ -99,6 +100,7 @@ module TDF.Server.SocialEventsHandlers (
     validateTicketCheckoutAmount,
     isImageUpload,
     validateEventImageUploadSize,
+    validMomentMediaSignature,
     validateEventTitleInput,
     validateEventTimeRange,
     validateArtistName,
@@ -144,6 +146,7 @@ import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Aeson.Types (Object, Parser, parseMaybe)
 import qualified Data.ByteString.Char8 as BS8
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Base64.URL as B64URL
 import Data.Char (
@@ -215,7 +218,7 @@ import qualified TDF.Server.TicketTaxDocuments as TaxDocuments
 import qualified TDF.Server.TicketRefunds as TicketRefunds
 import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.EventResearch as EventResearch
-import TDF.Auth (AuthedUser (..), hasStrictAdminAccess, moduleName)
+import TDF.Auth (AuthedUser (..), hasStrictAdminAccess, moduleName, withCurrentAuthSession)
 import qualified TDF.Catalog.Models as Catalog
 import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfiguredAssetsBase)
 import TDF.Internationalization (normalizeCurrencyCode)
@@ -252,6 +255,7 @@ import TDF.DTO.SocialEventsDTO (
     EventMomentCommentCreateDTO (..),
     EventMomentCommentDTO (..),
     EventMomentCreateDTO (..),
+    EventMomentEditDTO (..),
     EventMomentDTO (..),
     EventMomentReactionDTO (..),
     EventMomentReactionRequestDTO (..),
@@ -2226,6 +2230,7 @@ socialEventsServer user =
         :<|> budgetServer
         :<|> financeServer
         :<|> logisticsServer
+        :<|> memoryInvitationsServer
   where
     currentPartyId :: T.Text
     currentPartyId = renderPartyId user
@@ -2246,6 +2251,42 @@ socialEventsServer user =
         eventKey <- parseKeyOr400 "event" rawId
         requireEventVisibleToUser eventKey
         pure eventKey
+
+    memoryInvitationsServer :: ServerT MemoryInvitationRoutes AppM
+    memoryInvitationsServer =
+        memoryPreferences Nothing
+        :<|> (memoryPreferences . Just)
+        :<|> (\eventId -> memoryCampaign eventId Nothing)
+        :<|> (\eventId desired -> memoryCampaign eventId (Just desired))
+        :<|> (\eventId deliveryId -> do
+            eventKey <- (parseKeyOr400 "event" eventId :: AppM SocialEventId)
+            memoryQuery "SELECT event_memory_open(?,?,?::uuid)::text"
+                [toPersistValue eventKey, toPersistValue (auPartyId user), PersistText (UUID.toText deliveryId)])
+      where
+        memoryPreferences desired = memoryQuery "SELECT event_memory_preferences(?,?)::text"
+            [toPersistValue (auPartyId user), maybe PersistNull PersistBool desired]
+        memoryCampaign eventId desired = do
+            eventKey <- (parseKeyOr400 "event" eventId :: AppM SocialEventId)
+            memoryQuery "SELECT event_memory_summary(?,?,?)::text"
+                [toPersistValue eventKey, toPersistValue (auPartyId user), maybe PersistNull PersistBool desired]
+        memoryQuery :: T.Text -> [PersistValue] -> AppM (Headers '[Header "Cache-Control" T.Text] Aeson.Value)
+        memoryQuery statement parameters = do
+            Env{..} <- ask
+            result <- liftIO $ try $ runSqlPool (withCurrentAuthSession user $ do
+                installed <- rawSql "SELECT to_regprocedure('event_memory_dispatch_batch(integer)') IS NOT NULL" [] :: SqlPersistT IO [Single Bool]
+                if installed == [Single True]
+                    then (rawSql statement parameters :: SqlPersistT IO [Single T.Text])
+                    else pure []) envPool
+            rows <- case result of
+                Left (_ :: SqlError) -> throwError err503{errBody="Memory invitations are temporarily unavailable",errHeaders=[("Cache-Control","no-store")]}
+                Right Nothing -> throwError err401
+                Right (Just value) -> pure value
+            case rows of
+                [Single body] -> case Aeson.eitherDecodeStrict' (TE.encodeUtf8 body) of
+                    Right value@(Aeson.Object fields)
+                        | not (AesonKeyMap.member "error" fields) -> pure (addHeader ("no-store" :: T.Text) value)
+                    _ -> throwError err404
+                _ -> throwError err404{errBody="Memory invitations are not installed",errHeaders=[("Cache-Control","no-store")]}
 
     -- Events
     eventsServer :: ServerT EventsRoutes AppM
@@ -3776,8 +3817,11 @@ socialEventsServer user =
         listMoments
             :<|> createMoment
             :<|> uploadMomentImage
+            :<|> (\eventId (EventMemoryMediaUploadForm form) -> uploadMomentFile False eventId form)
             :<|> reactToMoment
             :<|> commentOnMoment
+            :<|> editMoment
+            :<|> deleteMoment
 
     liveBroadcastsServer :: ServerT LiveBroadcastsRoutes AppM
     liveBroadcastsServer =
@@ -3926,27 +3970,47 @@ socialEventsServer user =
             ) envPool
         either throwError pure result
 
+    -- Reuse the existing per-account budget in its own committed transaction,
+    -- so validation/storage failures cannot refund an abusive write attempt.
+    chargeMomentWrite :: AppM ()
+    chargeMomentWrite = do
+        Env{..} <- ask
+        charged <- liftIO $ runSqlPool (withCurrentAuthSession user
+            (rawSql "SELECT interaction_consume_write_budget(?)" [toPersistValue (auPartyId user)] :: SqlPersistT IO [Single Bool])) envPool
+        case charged of
+            Nothing -> throwError err401
+            Just [Single True] -> pure ()
+            _ -> throwError err429{errBody="Too many memory write attempts; wait before retrying",errHeaders=[("Retry-After","60"),("Cache-Control","no-store")]}
+
     -- Moments
-    listMoments :: T.Text -> AppM [EventMomentDTO]
-    listMoments eventIdStr = do
+    listMoments :: T.Text -> Bool -> AppM (Headers '[Header "Cache-Control" T.Text] [EventMomentDTO])
+    listMoments eventIdStr extended = do
         Env{..} <- ask
         eventKey <- parseVisibleEventKey eventIdStr
         allowed <- liftIO $ runSqlPool (Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)) envPool
         unless allowed $ throwError err404{errBody = "Event not found"}
         _ <- requireExistingEvent envPool eventKey
-        liftIO $ loadEventMoments envPool currentPartyId eventKey
+        moments <- liftIO $ loadEventMoments envPool currentPartyId eventKey
+        pure $ addHeader ("private, no-store" :: T.Text) $ if extended then moments else filter (\moment -> emMediaType moment `elem` ["image", "video"]) moments
 
     createMoment :: T.Text -> EventMomentCreateDTO -> AppM EventMomentDTO
     createMoment eventIdStr EventMomentCreateDTO{..} = do
+        chargeMomentWrite
         Env{..} <- ask
         now <- liftIO getCurrentTime
         eventKey <- parseVisibleEventKey eventIdStr
         allowed <- liftIO $ runSqlPool (Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)) envPool
         unless allowed $ throwError err404{errBody = "Event not found"}
         _ <- requireExistingEvent envPool eventKey
-        mediaUrl <- maybe (throwError err400{errBody = "Moment media URL is required"}) pure (cleanMaybeText (Just emCreateMediaUrl))
-        mediaType <- maybe (throwError err400{errBody = "Moment media type must be image or video"}) pure (normalizeMomentMediaType emCreateMediaType)
+        mediaType <- maybe (throwError err400{errBody = "Invalid moment media type"}) pure (normalizeMomentMediaType emCreateMediaType)
         caption <- either throwError pure (normalizeMomentCaption emCreateCaption)
+        mediaUrl <- if mediaType == "text" then do
+            when (isNothing caption || not (T.null (T.strip emCreateMediaUrl))) $
+                throwError err400{errBody="A text memory requires a caption and no media URL"}
+            pure ""
+          else do
+            normalized <- either throwError pure (validateEventMetadataUrlField "Moment media URL" (Just emCreateMediaUrl))
+            maybe (throwError err400{errBody="Moment media URL is required"}) pure normalized
         mediaWidth <-
             either
                 throwError
@@ -3965,11 +4029,14 @@ socialEventsServer user =
         -- Attribution is derived from the authenticated Party, never from a
         -- client-supplied display name.
         authorName <- liftIO $ loadAuthenticatedPartyDisplayName envPool currentPartyId
-        momentKey <-
+        inserted <-
             liftIO $
                 runSqlPool
-                    ( insert
-                        EventMoment
+                    (withCurrentAuthSession user $ do
+                        _ <- lockSocialEventForMutation eventKey
+                        visible <- Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)
+                        if not visible then pure (Left err404{errBody="Event not found"}) else Right <$> insert
+                            EventMoment
                             { eventMomentEventId = eventKey
                             , eventMomentAuthorPartyId = Just currentPartyId
                             , eventMomentAuthorName = authorName
@@ -3984,13 +4051,68 @@ socialEventsServer user =
                             }
                     )
                     envPool
+        momentKey <- maybe (throwError err401) (either throwError pure) inserted
         liftIO $ loadMomentDTO envPool currentPartyId momentKey
 
+    -- Source authorship, parent visibility and the live session are all required.
+    -- Canonical interaction deletion triggers retain conversation tombstones.
+    editMoment :: T.Text -> T.Text -> EventMomentEditDTO -> AppM EventMomentDTO
+    editMoment rawEvent rawMoment EventMomentEditDTO{..} = do
+        caption <- either throwError pure (normalizeMomentCaption (Just emeCaption))
+        momentKey <- changeOwnMoment rawEvent rawMoment $ \key row ->
+          do
+            visible <- Interactions.visible (auPartyId user) "event_moment" (renderKeyText key)
+            if not visible then pure (Left err404{errBody="Memory not found"})
+            else if eventMomentUpdatedAt row /= emeExpectedUpdatedAt then pure (Left err409{errBody="The memory changed; refresh before editing"})
+            else if eventMomentMediaType row == "text" && isNothing caption then pure (Left err400{errBody="A text memory requires a caption"})
+            else do
+                now <- liftIO getCurrentTime
+                update key [EventMomentCaption =. caption, EventMomentUpdatedAt =. now]
+                pure (Right key)
+        Env{..} <- ask
+        liftIO $ loadMomentDTO envPool currentPartyId momentKey
+
+    deleteMoment :: T.Text -> T.Text -> AppM NoContent
+    deleteMoment rawEvent rawMoment = do
+        _ <- changeOwnMoment rawEvent rawMoment $ \key _ -> do
+            canonical <- Interactions.activated
+            -- After cutover, direct writes to frozen children are fenced. The
+            -- parent deletion trigger clears them and retains canonical
+            -- tombstones, including when interaction commands are paused.
+            unless canonical $ do
+                deleteWhere [EventMomentReactionMomentId ==. key]
+                deleteWhere [EventMomentCommentMomentId ==. key]
+            delete key
+            pure (Right key)
+        pure NoContent
+
+    changeOwnMoment :: T.Text -> T.Text -> (EventMomentId -> EventMoment -> SqlPersistT IO (Either ServerError EventMomentId)) -> AppM EventMomentId
+    changeOwnMoment rawEvent rawMoment action = do
+        chargeMomentWrite
+        Env{..} <- ask
+        eventKey <- parseKeyOr400 "event" rawEvent
+        momentKey <- parseKeyOr400 "moment" rawMoment
+        checked <- liftIO $ runSqlPool (withCurrentAuthSession user $ do
+            -- Same parent-first lock order as event deletion and media upload.
+            _ <- lockSocialEventForMutation eventKey
+            allowed <- Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)
+            rows <- rawSql "SELECT ?? FROM event_moment WHERE id=? AND event_id=? FOR UPDATE"
+                [toPersistValue momentKey,toPersistValue eventKey]
+            case rows of
+                [Entity _ row] | allowed && eventMomentAuthorPartyId row == Just currentPartyId -> action momentKey row
+                _ -> pure (Left err404{errBody="Memory not found"})) envPool
+        result <- maybe (throwError err401) pure checked
+        either throwError pure result
+
     uploadMomentImage :: T.Text -> EventImageUploadForm -> AppM EventImageUploadDTO
-    uploadMomentImage rawId rawUploadForm = do
+    uploadMomentImage = uploadMomentFile True
+
+    uploadMomentFile :: Bool -> T.Text -> EventImageUploadForm -> AppM EventImageUploadDTO
+    uploadMomentFile imageOnly rawId rawUploadForm = do
+        chargeMomentWrite
         EventImageUploadForm{..} <-
             either (throwError . eventImageUploadFormServerError) pure $
-                validateEventImageUploadForm rawUploadForm
+                (if imageOnly then validateEventImageUploadForm else validateEventMemoryMediaUploadForm) rawUploadForm
         Env{..} <- ask
         eventKey <- parseVisibleEventKey rawId
         let mimeTypeVal = T.toLower (T.strip (fdFileCType eiuFile))
@@ -3998,10 +4120,11 @@ socialEventsServer user =
             requestedName = eiuName >>= nonEmptyText
             nameWithExt = applyUploadExtension (requestedName <|> fallbackName) fallbackName
             safeName = sanitizeUploadFileName nameWithExt
-        unless (isImageUpload mimeTypeVal safeName) $
-            throwError err400 { errBody = "Only raster image uploads with matching MIME type and extension are allowed" }
         fileSize <- liftIO (getFileSize (fdPayload eiuFile))
-        either throwError pure (validateEventImageUploadSize fileSize)
+        if "image/" `T.isPrefixOf` mimeTypeVal then either throwError pure (validateEventImageUploadSize fileSize)
+          else unless (fileSize > 0 && fileSize <= 25 * 1024 * 1024) $ throwError err400{errBody="Audio and video files must be between 1 byte and 25 MB"}
+        signature <- liftIO $ BS.take 32 <$> BS.readFile (fdPayload eiuFile)
+        unless (validMomentMediaSignature mimeTypeVal signature) $ throwError err400{errBody="File content does not match its declared media type"}
         uuid <- liftIO UUIDV4.nextRandom
         let eventIdTxt = renderKeyText eventKey
             storedName = UUID.toText uuid <> "-" <> safeName
@@ -4011,13 +4134,17 @@ socialEventsServer user =
             publicUrl = buildUploadAssetUrl (resolveConfiguredAssetsBase envConfig) relPath
         uploadResult <- liftIO $
             runSqlPool
-                ( do
+                (withCurrentAuthSession user $ do
                     lockedEvent <- lockSocialEventForMutation eventKey
                     case lockedEvent of
                         Nothing -> pure (Left err404{errBody = "Event not found"})
                         Just _ -> do
+                            visible <- Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)
+                            publicRows <- rawSql "SELECT id FROM directory_public_rsvp_event WHERE id=?" [toPersistValue eventKey] :: SqlPersistT IO [Single Int64]
                             refs <- selectList [ExternalEventRefEventId ==. eventKey] []
-                            if any (externalEventRefIsSuppressed . entityVal) refs
+                            if not visible then pure (Left err404{errBody="Event not found"})
+                            else if null publicRows then pure (Left err403{errBody="This upload produces a public file; private-event uploads are unavailable"})
+                            else if any (externalEventRefIsSuppressed . entityVal) refs
                                 then pure (Left err404{errBody = "Event not found"})
                                 else do
                                     -- Deletion uses the same event lock before removing
@@ -4029,7 +4156,7 @@ socialEventsServer user =
                                     pure (Right ())
                 )
                 envPool
-        either throwError pure uploadResult
+        maybe (throwError err401) (either throwError pure) uploadResult
         pure EventImageUploadDTO
             { eiuEventId = eventIdTxt
             , eiuFileName = storedName
@@ -8084,6 +8211,8 @@ normalizeMomentMediaType raw =
         "picture" -> Just "image"
         "video" -> Just "video"
         "clip" -> Just "video"
+        "audio" -> Just "audio"
+        "text" -> Just "text"
         _ -> Nothing
 
 loadSelectableMomentReactionTypeId :: T.Text -> SqlPersistT IO (Either ServerError UUID.UUID)
@@ -9154,6 +9283,30 @@ isUnsafeUploadMetadataChar :: Char -> Bool
 isUnsafeUploadMetadataChar ch =
     isControl ch
         || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+-- File signatures supplement MIME/extension and byte limits. No untrusted
+-- document/SVG/HTML is accepted. Container validation is not transcoding.
+validMomentMediaSignature :: T.Text -> BS.ByteString -> Bool
+validMomentMediaSignature mime bytes = case normalizeUploadMimeType mime of
+    "image/jpeg" -> BS.pack [255,216,255] `BS.isPrefixOf` bytes
+    "image/png" -> BS.pack [137,80,78,71,13,10,26,10] `BS.isPrefixOf` bytes
+    "image/gif" -> any (`BS.isPrefixOf` bytes) ["GIF87a","GIF89a"]
+    "image/webp" -> riff && BS.take 4 (BS.drop 8 bytes) == "WEBP"
+    "image/bmp" -> "BM" `BS.isPrefixOf` bytes
+    "video/mp4" -> mp4
+    "video/quicktime" -> mp4
+    "audio/mp4" -> mp4
+    "video/webm" -> BS.pack [26,69,223,163] `BS.isPrefixOf` bytes
+    "audio/mpeg" -> "ID3" `BS.isPrefixOf` bytes || (BS.length bytes >= 2 && BS.head bytes == 255 && BS.index bytes 1 >= 224)
+    "audio/wav" -> wav
+    "audio/x-wav" -> wav
+    "audio/ogg" -> "OggS" `BS.isPrefixOf` bytes
+    "audio/flac" -> "fLaC" `BS.isPrefixOf` bytes
+    _ -> False
+  where
+    riff = "RIFF" `BS.isPrefixOf` bytes
+    wav = riff && BS.take 4 (BS.drop 8 bytes) == "WAVE"
+    mp4 = BS.take 4 (BS.drop 4 bytes) == "ftyp"
 
 maxEventImageUploadBytes :: Integer
 maxEventImageUploadBytes = 10 * 1024 * 1024

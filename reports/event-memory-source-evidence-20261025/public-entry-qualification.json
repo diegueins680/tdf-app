@@ -1,0 +1,120 @@
+{
+  "recordedAt": "2026-10-26T18:42:59.925795+00:00",
+  "branch": "fix/event-memory-public-entry-20261026",
+  "qualifiedSource": "87c3ed19473b0f19d03a39f4c592d47e2dd3dcb2",
+  "basePreparation": "069fac6cb99de88e11f78c867a1395c5bb56fe23",
+  "protectedMainIncluded": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "scope": "Canonical public event entry and authentication continuity; this is not protected integration or production acceptance",
+  "ui": {
+    "node": "22.14.0",
+    "tests": 3540,
+    "suites": 311,
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "build": "PASS",
+    "initialJsGzipBytes": 336422,
+    "preloads": 5
+  },
+  "repositoryQuality": "PASS",
+  "catalog": {
+    "decisions": 1346,
+    "strictJson": "PASS",
+    "strictCsv": "PASS",
+    "historyControlsPassed": 8
+  },
+  "sourceAdmission": {
+    "base": "069fac6cb99de88e11f78c867a1395c5bb56fe23",
+    "mappedChangedSurfaces": 12
+  },
+  "requirements": {
+    "protectedMainExact": 145,
+    "total": 149,
+    "semanticFullProgramProof": false
+  },
+  "backendAndMigrations": {
+    "unchangedFromBasePreparation": true,
+    "migrationLedger": {
+      "expectedCount": 226,
+      "appliedCount": 226,
+      "idsSha256": "37fbc984065234d4adfa0af656c9f1432cfeb0ae18a9c5f3b8bb664dd3d787cb",
+      "batchSha256": "4be40505e7b80f95454090352ced456d612984ef8f8850b7584c5cf1c6d864df"
+    },
+    "actualBinaryVersion": {
+      "buildTime": "2026-10-26T05:36:20Z",
+      "commit": "262295679df492dde850333779db431132092993",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "binarySha256": "f01ef34b75f1f1c1da4a41cdbb541de9b620fd4c1f4b24aba64025e7c1b6e17d",
+    "compiledInputsCorrespondence": "Inherited unchanged278 inputs from 78fa-input-correspondence.json; no new backend compilation claimed"
+  },
+  "actualHttp": {
+    "requests": 120,
+    "assertionGroups": 18,
+    "runtimeHashes": 258,
+    "browserAssertions": 8,
+    "publicEntry": {
+      "publicSnapshotStatus": 200,
+      "completed": true,
+      "injectedNetworkFailures": 1,
+      "protectedGuestMomentReads": 0
+    },
+    "sourceWorktreeDirty": true,
+    "runtimeUntrackedAtStart": [
+      "node_modules (owned dependency symlink)",
+      "tdf-hq-ui/node_modules (owned dependency symlink)"
+    ],
+    "cleanReleaseAttestation": false
+  },
+  "cleanup": {
+    "ownedApiStopped": true,
+    "ownedDatabaseRemoved": true,
+    "ownedFrontendStopped": true,
+    "ownedPostgresClusterStopped": true,
+    "sharedChrome18800Untouched": true
+  },
+  "reviewAtRead": {
+    "root615IndependentApprovals": 0,
+    "native174IndependentApprovals": 0,
+    "noRepeatedReviewRequests": true
+  },
+  "production": {
+    "deployedByThisWork": false,
+    "writes": 0,
+    "privateOrRecipientInspectionInThisSlice": false,
+    "realInvitations": {
+      "attempted": 0,
+      "sent": 0,
+      "delivered": 0,
+      "failed": 0,
+      "eligibleWithConsent": null,
+      "excluded": null
+    }
+  },
+  "limits": [
+    "Pixel7 emulation is browser evidence, not a physical mobile device",
+    "Native172–174 artifacts retain separate source identities and pending review; root pin remains7000",
+    "Legacy /eventos/:id redirect sanitizer still strips query/hash; canonical /social/eventos/:id preserves them",
+    "Existing public media are not private/revocable storage",
+    "Prior SQL, native and source qualification receipts were not rerun or relabeled by this slice"
+  ],
+  "earlierAttempts": [
+    "Initial explicit retry override undefined incorrectly replaced test client default; corrected by conditional option spread",
+    "Targetedv3 64pass/1fail was a new test expecting legacy public alias to retain stripped parameters; existing sanitizer preserved, new assertion now enforces its documented safe target",
+    "Earlier incomplete full UI runs were canceled and are not passes; final v3 executed all3540 tests"
+  ],
+  "logs": {
+    "/private/tmp/tdf-event-memory-public-entry-full-ui-v3.log": {
+      "sha256": "8086d8ec53fe677c39be82a6d64bb0dacf63a676dd18c8c8172b377196f2bd2a",
+      "bytes": 1535632
+    },
+    "/private/tmp/tdf-event-memory-public-entry-repo-quality-v1.log": {
+      "sha256": "a5e170654600bf80677455cae8fb1bbedbcc6a3189aba4516fc530bd6ad07bc7",
+      "bytes": 134658
+    },
+    "/private/tmp/tdf-event-memory-public-entry-catalog-controls-v1.log": {
+      "sha256": "8bdb42de86aa87baf28eabbf62aae0965b1725cbd968054090037a19e7180f4b",
+      "bytes": 1955
+    }
+  }
+}

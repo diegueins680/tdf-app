@@ -1,0 +1,32 @@
+{
+  "observedAt": "2026-10-26T06:10:43.543022+00:00",
+  "scope": "Public availability only; feature deployment not established",
+  "pythonAttempt": "TLS certificate trust unavailable in default Python; original failed receipt retained; no certificate validation disabled",
+  "requests": [
+    {
+      "url": "https://api.tdfrecords.net/health",
+      "status": 200,
+      "body": {
+        "db": "ok",
+        "status": "ok"
+      },
+      "source": "Immediately preceding verified system-curl request"
+    },
+    {
+      "url": "https://www.tdfrecords.net/social/eventos/141",
+      "status": 200,
+      "effectiveUrl": "https://www.tdfrecords.net/social/eventos/141"
+    },
+    {
+      "url": "https://api.tdfrecords.net/version",
+      "status": 200,
+      "effectiveUrl": "https://api.tdfrecords.net/version",
+      "version": {
+        "buildTime": "2026-10-24T01:24:48Z",
+        "commit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      }
+    }
+  ]
+}

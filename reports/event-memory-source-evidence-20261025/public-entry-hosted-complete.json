@@ -1,0 +1,50 @@
+{
+  "recordedAt": "2026-10-26T22:00:33.826921+00:00",
+  "candidate": "4d5a460cb2bd8ca0d132effe7382454f6e0b21e7",
+  "actualCheckout": "1e6fd1f19594a0e3a331c7293c1058dd1cecf85f",
+  "tree": "8ca39b053392c5974ba69a307953d92fd885ae35",
+  "wholeCandidateTreeExact": true,
+  "pr": "https://github.com/diegueins680/tdf-app/pull/632",
+  "rollup": {
+    "success": 30,
+    "skipped": 7,
+    "pending": 0,
+    "failed": 0
+  },
+  "ui": {
+    "tests": 3540,
+    "suites": 311,
+    "node": "22.23.3",
+    "preloads": 5,
+    "initialJsGzipBytes": 336416,
+    "job": "https://github.com/diegueins680/tdf-app/actions/runs/40381961233/job/121781238125"
+  },
+  "persona": {
+    "passed": 566,
+    "skipped": 22,
+    "defaultOffPassed": 10,
+    "discoveryPassed": 25,
+    "job": "https://github.com/diegueins680/tdf-app/actions/runs/40381961233/job/121781238148"
+  },
+  "raci": {
+    "passed": 8,
+    "skipped": 0,
+    "flaky": 0,
+    "canonicalBackendBuild": "Stack/GHC9.10.3 executable completed; no production image/deployment assertion",
+    "projects": [
+      "chromium-desktop",
+      "chromium-phone"
+    ],
+    "artifactId": 12681592680,
+    "artifactSha256": "1fb4ca26fa26f46323179c73030c8ccc41b7b95a0024af9fe7133334340fdd4d",
+    "job": "https://github.com/diegueins680/tdf-app/actions/runs/40381961411/job/121780659255"
+  },
+  "newSignupChecksIncluded": false,
+  "independentReviews": 0,
+  "productionDeployment": false,
+  "notes": [
+    "These executions belong to4d/actual1e6; they are not new executions on the signup-test successor",
+    "Skipped tests and skipped jobs are not passes",
+    "Earlier8a cancelled primaryCI and failed catalog/preview receipts remain unchanged"
+  ]
+}
