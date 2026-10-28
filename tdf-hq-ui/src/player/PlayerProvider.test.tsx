@@ -334,8 +334,15 @@ it('cancels scheduled recovery on explicit pause and provider unmount', async ()
     expect(jest.mocked(audio.load).mock.calls.length).toBe(before);
     act(() => { audio.dispatchEvent(new Event('error')); });
     view.unmount();
+    // One deliberate load releases the disposed source; recovery must not load again.
+    expect(audio.getAttribute('src')).toBeNull();
+    expect(jest.mocked(audio.load).mock.calls.length).toBe(before + 1);
+    const playsAfterDisposal = jest.mocked(audio.play).mock.calls.length;
+    const authorizationsAfterDisposal = jest.mocked(authorizePlayerAsset).mock.calls.length;
     await act(async () => { jest.advanceTimersByTime(10000); });
-    expect(jest.mocked(audio.load).mock.calls.length).toBe(before);
+    expect(jest.mocked(audio.load).mock.calls.length).toBe(before + 1);
+    expect(jest.mocked(audio.play).mock.calls.length).toBe(playsAfterDisposal);
+    expect(jest.mocked(authorizePlayerAsset).mock.calls.length).toBe(authorizationsAfterDisposal);
   } finally { jest.useRealTimers(); }
 });
 

@@ -1,0 +1,100 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "logSha256": "745ca3ae152286b3fe436d1f15bce39ef9f709712879ee696e0110ca03a8933b",
+      "browserStatus": "FAIL",
+      "browserError": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'Actualizar revisi\u00f3n' })\n",
+      "browserAssertions": [
+        "Two real isolated sessions sign in and retain event/composer context",
+        "Desktop text publication persists and a phone reader reports it without automatically hiding it",
+        "Organizer closes the actual source report without removing the publication"
+      ],
+      "qualificationStatus": "NOT SUCCESSFUL",
+      "runtimesStopped": true,
+      "ownedDatabaseRemoved": true
+    },
+    {
+      "attempt": 2,
+      "logSha256": "f3c4383d8039a78239b589ce82634ee0031370cd653c272f7004cb4f35301cfb",
+      "browserStatus": "PASS",
+      "browserError": null,
+      "browserAssertions": [
+        "Two real isolated sessions sign in and retain event/composer context",
+        "Desktop text publication persists and a phone reader reports it without automatically hiding it",
+        "Organizer closes the actual source report without removing the publication",
+        "Keyboard hide denies both sessions after reload; scoped restoration restores the persisted source"
+      ],
+      "qualificationStatus": "PASS",
+      "runtimesStopped": true,
+      "ownedDatabaseRemoved": true
+    },
+    {
+      "attempt": 3,
+      "logSha256": "745ca3ae152286b3fe436d1f15bce39ef9f709712879ee696e0110ca03a8933b",
+      "qualificationStatus": "NOT SUCCESSFUL",
+      "runtimesStopped": true,
+      "ownedDatabaseRemoved": true
+    },
+    {
+      "attempt": 4,
+      "logSha256": "745ca3ae152286b3fe436d1f15bce39ef9f709712879ee696e0110ca03a8933b",
+      "browserStatus": "FAIL",
+      "browserError": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('region', { name: /^Publicaci\u00f3n de / }).filter({ hasText: 'Prueba sint\u00e9tica de revisi\u00f3n y restauraci\u00f3n' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByRole('region', { name: /^Publicaci\u00f3n de / }).filter({ hasText: 'Prueba sint\u00e9tica de revisi\u00f3n y restauraci\u00f3n' })\n",
+      "browserAssertions": [
+        "Two real isolated sessions sign in and retain event/composer context",
+        "Desktop text publication persists and a phone reader reports it without automatically hiding it",
+        "Organizer closes the actual source report without removing the publication"
+      ],
+      "qualificationStatus": "NOT SUCCESSFUL",
+      "runtimesStopped": true,
+      "ownedDatabaseRemoved": true
+    },
+    {
+      "attempt": 5,
+      "logSha256": "d331b5850fab434b425d747d0387c4708b24d365ac99d967e379dc57903b2c32",
+      "browserStatus": "PASS",
+      "browserError": null,
+      "browserAssertions": [
+        "Two real isolated sessions sign in and retain event/composer context",
+        "Desktop text publication persists and a phone reader reports it without automatically hiding it",
+        "Organizer closes the actual source report without removing the publication",
+        "One injected mismatched version receives a real 409; explicit cancel/reload/review creates a fresh decision",
+        "Keyboard hide denies both sessions after reload; scoped restoration restores the persisted source"
+      ],
+      "qualificationStatus": "NOT SUCCESSFUL",
+      "runtimesStopped": true,
+      "ownedDatabaseRemoved": true
+    },
+    {
+      "attempt": 6,
+      "logSha256": "745ca3ae152286b3fe436d1f15bce39ef9f709712879ee696e0110ca03a8933b",
+      "browserStatus": "FAIL",
+      "browserError": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+      "browserAssertions": [
+        "Two real isolated sessions sign in and retain event/composer context",
+        "Desktop text publication persists and a phone reader reports it without automatically hiding it",
+        "Organizer closes the actual source report without removing the publication"
+      ],
+      "qualificationStatus": "NOT SUCCESSFUL",
+      "runtimesStopped": true,
+      "ownedDatabaseRemoved": true
+    },
+    {
+      "attempt": 7,
+      "logSha256": "745ca3ae152286b3fe436d1f15bce39ef9f709712879ee696e0110ca03a8933b",
+      "browserStatus": "FAIL",
+      "browserError": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+      "browserAssertions": [
+        "Two real isolated sessions sign in and retain event/composer context",
+        "Desktop text publication persists and a phone reader reports it without automatically hiding it",
+        "Organizer closes the actual source report without removing the publication"
+      ],
+      "qualificationStatus": "NOT SUCCESSFUL",
+      "runtimesStopped": true,
+      "ownedDatabaseRemoved": true
+    }
+  ],
+  "finalQualifiedAttempt": 8,
+  "interpretation": "Earlier failures and the happy-path-only v2 do not establish the final mandatory conflict recovery. v5 was rejected by unchanged-source guard. v6/7 erroneously required a bearer for a valid cookie-only session. v3 left one owned Vite process, verified and stopped before reruns."
+}

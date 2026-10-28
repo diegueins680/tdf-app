@@ -1,0 +1,37 @@
+{
+  "observedAt": "2026-10-25T19:52:41.541518+00:00",
+  "mode": "public-read-only-system-curl-TLS-verification",
+  "results": [
+    {
+      "url": "https://www.tdfrecords.net/social/eventos/141",
+      "exit": 0,
+      "response": "200\ntext/html; charset=utf-8",
+      "bytes": 6646,
+      "sha256": "fdb6bc2d599ed8a4f6d1a5ff8b5d5008f2efa672715b1ddac7bf1f8e1eae37cf"
+    },
+    {
+      "url": "https://api.tdfrecords.net/health",
+      "exit": 0,
+      "response": "200\napplication/json;charset=utf-8",
+      "bytes": 25,
+      "sha256": "d996479d94f900ef9b33b173ef75ebe94be72be324576712f15e9d460bb36017",
+      "json": {
+        "db": "ok",
+        "status": "ok"
+      }
+    },
+    {
+      "url": "https://api.tdfrecords.net/version",
+      "exit": 0,
+      "response": "200\napplication/json;charset=utf-8",
+      "bytes": 124,
+      "sha256": "c847904a3205e0b283456e5bceebbcb62a6a15247bcfae3ff23c158234c046e3",
+      "json": {
+        "buildTime": "2026-10-24T01:24:48Z",
+        "commit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "status": "REVIEWED_AGGREGATE_ALLOWLIST",
+  "observationSha256": "57164d673611d3af3eaadda84384b93319bb953e386c167d0ab6064172e59295",
+  "postHocObservationFieldChanges": false,
+  "businessIdsTitlesOwnersStorageKeysUrlsFailureTextExported": false,
+  "rawBusinessUuidPatternFound": false,
+  "containerIdsExported": false,
+  "operationalSourceCommitAndHashProvenanceRetained": true,
+  "preparationPathsRetainedForOriginalReviewedByteProvenance": true,
+  "scope": "No claim that opaque hashes establish rights or storage existence. Reviewed collector inputs and fixed operational host names/paths are archived as source,not business data."
+}

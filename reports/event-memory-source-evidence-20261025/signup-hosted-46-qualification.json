@@ -1,0 +1,45 @@
+{
+  "recordedAt": "2026-10-26T23:21:41.098246+00:00",
+  "pr": 635,
+  "prHead": "46aca17862ef0e78ea1572b5a363eb2ea2b85f1b",
+  "checkout": "8b9d49139c44e6a81ea04a2e2c058d960d4775c7",
+  "checkoutTree": "3ea650f2f59257296cb0e119098ea047cb2e6707",
+  "wholeTreeExactPrHead": true,
+  "checks": {
+    "SKIPPED": 8,
+    "SUCCESS": 29
+  },
+  "workflow": "https://github.com/diegueins680/tdf-app/actions/runs/40413346224",
+  "artifact": 12694964776,
+  "artifactSha256": "9c5fe6ca35237619c00765b4597d8de2a15fc9ac0321fd386312a5f3c44fccb6",
+  "toolchain": "canonical Stack GHC9.10.3",
+  "database": "owned pgvector/PostgreSQL17 Docker container",
+  "raciBrowserCases": 8,
+  "requests": 122,
+  "httpAssertions": 19,
+  "runtimeHashes": 269,
+  "allRuntimeHashesExactCommittedPrHead": true,
+  "browserAssertions": 11,
+  "actualApiVersion": {
+    "buildTime": "2026-10-26T23:02:10Z",
+    "commit": "8b9d49139c44e6a81ea04a2e2c058d960d4775c7",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "actualBinarySha256": "9b004c3256215d7d13ab24767e561b6935f0cbe0e467dd573789b2fe274088e6",
+  "sourceWorktreeDirty": true,
+  "dirtyScope": "generated build/test metadata; this is not a clean release attestation",
+  "runtimesStopped": true,
+  "ownedDatabaseRemoved": true,
+  "restartPersistence": {
+    "partyId": 7,
+    "momentId": "8",
+    "assetSha256": "2c7e2665529fcb52c595dad1b8cc6230d02226df97810386658d4a0e41acf968",
+    "survivesRealApiRestart": true,
+    "fixtureRoleGrants": 0
+  },
+  "notEvidenceForLaterCredentialFix": true,
+  "independentApproval": false,
+  "productionWrites": 0,
+  "realInvitations": 0
+}

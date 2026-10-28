@@ -33,6 +33,7 @@ module TDF.DTO.SocialEventsDTO (
     InvitationUpdateDTO (..),
     EventMomentDTO (..),
     EventMomentCreateDTO (..),
+    EventMomentEditDTO (..),
     EventMomentReactionDTO (..),
     EventMomentReactionRequestDTO (..),
     EventMomentCommentDTO (..),
@@ -794,12 +795,14 @@ instance FromJSON EventMomentCreateDTO where
             , "emCreateMediaDurationMs"
             ]
             o
-        mediaUrl <-
-            o .: "emCreateMediaUrl"
-                >>= normalizeRequiredText "emCreateMediaUrl"
         mediaType <-
             o .: "emCreateMediaType"
                 >>= normalizeMomentCreateMediaType
+        mediaUrl <- if mediaType == "text"
+            then do
+                url <- o .:? "emCreateMediaUrl" .!= ""
+                if T.null (T.strip url) then pure "" else fail "Text memories cannot contain a media URL"
+            else o .: "emCreateMediaUrl" >>= normalizeRequiredText "emCreateMediaUrl"
         mediaWidth <-
             o .:? "emCreateMediaWidth"
                 >>= validateOptionalPositiveInt "emCreateMediaWidth"
@@ -839,7 +842,9 @@ normalizeMomentCreateMediaType rawValue =
         "picture" -> pure "image"
         "video" -> pure "video"
         "clip" -> pure "video"
-        _ -> fail "emCreateMediaType must be one of: image, video"
+        "audio" -> pure "audio"
+        "text" -> pure "text"
+        _ -> fail "emCreateMediaType must be one of: image, video, audio, text"
 
 validateOptionalPositiveInt :: String -> Maybe Int -> Parser (Maybe Int)
 validateOptionalPositiveInt _ Nothing = pure Nothing
@@ -852,6 +857,16 @@ validateOptionalNonNegativeInt _ Nothing = pure Nothing
 validateOptionalNonNegativeInt fieldName (Just value)
     | value >= 0 = pure (Just value)
     | otherwise = fail (fieldName <> " must be greater than or equal to 0")
+
+data EventMomentEditDTO = EventMomentEditDTO
+    { emeCaption :: Text
+    , emeExpectedUpdatedAt :: UTCTime
+    } deriving (Show, Eq, Generic)
+instance ToJSON EventMomentEditDTO
+instance FromJSON EventMomentEditDTO where
+    parseJSON = withObject "EventMomentEditDTO" $ \o -> do
+        rejectUnknownObjectFields "EventMomentEditDTO" ["emeCaption", "emeExpectedUpdatedAt"] o
+        EventMomentEditDTO <$> o .: "emeCaption" <*> o .: "emeExpectedUpdatedAt"
 
 data EventMomentReactionRequestDTO = EventMomentReactionRequestDTO
     { emrrReactionTypeId :: Text
