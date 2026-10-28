@@ -3026,7 +3026,7 @@
     {
       "id": "SURFACE-056631e61150574f",
       "path": "e2e/web/music-player-native.spec.mjs",
-      "sha256": "07867224cb447a4a34b986eb84a5147f775c9529b5c75188a16d709541556319",
+      "sha256": "fac07b5d9a994ae4335ccd1095426dd2da5383b7ef34d70a4c86216c4e352a78",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10430,7 +10430,7 @@
     {
       "id": "SURFACE-4fcbb0b9c41b6de4",
       "path": "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
-      "sha256": "1194d26ed369572fb3eeace97fb54f925a4b0af6c5e72b2f52064f1dca5e9810",
+      "sha256": "16227bfeb8b8858ead6aa79ecc75f24f24b657dcc63d484a5292ab54f6ab3c8a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10442,7 +10442,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "7ccf9982a287ff7f7f3125f87a2b95aab80a10baa00598f8e4b77180757e997c",
+      "sha256": "5b28707df52612a9376fe2cb5bec1f62d8831065a5df07e5b71a56a07957420e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27696,7 +27696,7 @@
     },
     {
       "path": "formal/system/player-listening-privacy.md",
-      "sha256": "26333258331065697320c5f0cbd6cbee2d11054d1868ae29584d7ff3ebeb29c7",
+      "sha256": "cba10039295f343b5cafab911298d0072d9ae2d874c5f5328892566e4017ec51",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

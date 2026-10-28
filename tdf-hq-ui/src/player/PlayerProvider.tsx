@@ -206,11 +206,20 @@ export function PlayerProvider({ children, identity = ANONYMOUS_IDENTITY }: { ch
     : Number.isSafeInteger(identity.partyId) && (identity.partyId ?? 0) > 0 ? identity.partyId : undefined;
   // Device preferences survive listener changes even before the save debounce.
   const [preferences, setPreferences] = useState<PlayerPreferences>(() => loadPersistedState(undefined, false));
-  const [boundary, setBoundary] = useState({ ownerPartyId, epoch: 0 });
-  if (boundary.ownerPartyId !== ownerPartyId) {
-    // Reset before children commit under a different listener. A same-owner
-    // bootstrap completion must keep a newer explicit selection and decoder.
-    setBoundary({ ownerPartyId, epoch: boundary.epoch + 1 });
+  const [boundary, setBoundary] = useState({
+    ownerPartyId, epoch: 0, awaitingFirstOwner: !identity.ready && ownerPartyId === null,
+  });
+  const ownerChanged = boundary.ownerPartyId !== ownerPartyId;
+  if (ownerChanged || (boundary.awaitingFirstOwner && identity.ready)) {
+    // An uncached cookie session initially has no established listener. Its
+    // first resolution retains hydration eligibility and newer explicit intent.
+    // Resolving anonymous consumes that exception too; subsequent login is a
+    // real owner change and must reset before previous titles can commit.
+    setBoundary({
+      ownerPartyId,
+      epoch: ownerChanged && !boundary.awaitingFirstOwner ? boundary.epoch + 1 : boundary.epoch,
+      awaitingFirstOwner: false,
+    });
     return null;
   }
   return <PlayerSession key={boundary.epoch} ownerPartyId={ownerPartyId} identityReady={identity.ready}

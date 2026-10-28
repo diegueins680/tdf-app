@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-28T05:28:07.990Z",
+  "generatedAt": "2026-10-28T06:27:44.573Z",
   "repositoryRoot": ".",
   "filesScanned": 2444,
   "candidateCount": 1351,
@@ -6449,7 +6449,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 647,
+      "consumerCount": 648,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -17194,7 +17194,7 @@
       "lines": [
         627
       ],
-      "consumerCount": 673,
+      "consumerCount": 674,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -25064,7 +25064,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 703,
+      "consumerCount": 704,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29206,7 +29206,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 679,
+      "consumerCount": 680,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32513,7 +32513,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 679,
+      "consumerCount": 680,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -36541,7 +36541,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 656,
+      "consumerCount": 657,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -55690,7 +55690,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 715,
+      "consumerCount": 716,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -72077,7 +72077,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 679,
+      "consumerCount": 680,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",

@@ -9,20 +9,21 @@ const assetId = (i, q) => `55000000-0000-4000-8000-0000000000${i}${q}`;
 const qualities = ['low', 'high', 'lossless'];
 const previewAssetId = '55000000-0000-4000-8000-000000000099';
 
-async function prepare(page, { previewFallback = false, holdSameOwnerSession = false, resolvedListenerPartyId = 101 } = {}) {
+async function prepare(page, { previewFallback = false, holdSameOwnerSession = false, resolvedListenerPartyId = 101, cacheSessionDescriptor = true } = {}) {
   const fixture = JSON.parse(process.env.TDF_NATIVE_MUSIC_FIXTURE);
   const events = [], deniedNetwork = [], assetRequests = [];
   const cachedListener = { partyId: 101, username: 'synthetic-native-listener', displayName: 'Synthetic listener', roles: ['customer'] };
   let resolveSession = () => undefined;
   const pendingSession = holdSameOwnerSession ? new Promise((resolve) => { resolveSession = resolve; }) : Promise.resolve();
   if (holdSameOwnerSession) {
-    await page.addInitScript(({ listener, source }) => {
-      localStorage.setItem('tdf-hq-ui/session', JSON.stringify(listener));
+    await page.addInitScript(({ listener, source, cacheDescriptor }) => {
+      if (cacheDescriptor) localStorage.setItem('tdf-hq-ui/session', JSON.stringify(listener));
+      else localStorage.removeItem('tdf-hq-ui/session');
       localStorage.setItem('tdf-global-player/v1', JSON.stringify({ ownerPartyId: listener.partyId,
         queue: { tracks: [{ id: 'synthetic-old-selection-A', title: 'Old saved selection A', artist: 'Fixture TDF',
           sources: [{ url: source, quality: 'high', mediaType: 'audio/mp4' }] }], currentIndex: 0, shuffle: false, repeat: 'off' },
         positions: { 'synthetic-old-selection-A': 12 }, volume: 0.8, muted: false, quality: 'auto' }));
-    }, { listener: cachedListener, source: `${fixture.endpoint}/media/second/high` });
+    }, { listener: cachedListener, source: `${fixture.endpoint}/media/second/high`, cacheDescriptor: cacheSessionDescriptor });
   }
   const summary = { id: releaseId, versionId, versionNumber: 1, artistPartyId: 101,
     slug: 'audio-nativo-sintetico', kind: 'album', title: 'Audio nativo sintético',
@@ -194,10 +195,11 @@ test('@critical PW-MUSIC-NATIVE-01 decodes real derivatives and keeps playback a
   expect(events.some((e) => e.eventType === 'play_start')).toBe(true);
 });
 
-test('@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer selection and its real decoder', async ({ page }) => {
+async function verifyInitialBootstrapContinuity(page, cacheSessionDescriptor) {
   // Session, catalogue and access metadata are synthetic. Actual native AAC
   // bytes, media methods and media clocks are unchanged and use loopback HTTP.
-  const { player, audio, finishSession } = await prepare(page, { holdSameOwnerSession: true });
+  const { player, audio, finishSession } = await prepare(page, { holdSameOwnerSession: true, cacheSessionDescriptor });
+  expect(await page.evaluate(() => localStorage.getItem('tdf-hq-ui/session') !== null)).toBe(cacheSessionDescriptor);
   const savedBefore = await page.evaluate(() => JSON.parse(localStorage.getItem('tdf-global-player/v1')));
   expect(savedBefore.queue.tracks[0].id).toBe('synthetic-old-selection-A');
   await expect(player.getByText('Pista nativa 1', { exact: true })).toBeVisible();
@@ -214,6 +216,14 @@ test('@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer s
   await expect.poll(() => audio.evaluate((a) => a.currentSrc)).toMatch(/\/media\/first\//);
   await expect(player.getByText('Pista nativa 1', { exact: true })).toBeVisible();
   await expect(player.getByText('Old saved selection A', { exact: true })).toHaveCount(0);
+}
+
+test('@critical PW-MUSIC-NATIVE-08 same-listener bootstrap preserves the newer selection and its real decoder', async ({ page }) => {
+  await verifyInitialBootstrapContinuity(page, true);
+});
+
+test('@critical PW-MUSIC-NATIVE-08B uncached cookie bootstrap preserves the newer selection and its real decoder', async ({ page }) => {
+  await verifyInitialBootstrapContinuity(page, false);
 });
 
 test('@critical PW-MUSIC-NATIVE-09 listener replacement cancels pending rendition metadata before the new listener plays', async ({ page }, testInfo) => {
