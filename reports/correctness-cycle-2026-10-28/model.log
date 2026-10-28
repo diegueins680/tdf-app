@@ -1,0 +1,20 @@
+✔ all bounded interleavings preserve admission safety (3.169462ms)
+✔ negative controls detect replay, authorization bypass and missing audit (0.605171ms)
+✔ bounded partial refunds conserve inventory and fence uncertain provider outcomes (3.702357ms)
+✔ refund negative controls expose admission race, duplicate release and premature cancellation (10.934874ms)
+✔ capture binding after exhausted refund retries still fences admission (0.605508ms)
+✔ late-refund negative controls detect discarded evidence and missed capture joins (0.335976ms)
+✔ bounded legacy refund claims survive races, response loss and process restarts (12.876905ms)
+ℹ {"model":"legacy-refund-claim","states":208,"transitions":702}
+✔ legacy refund control exposes duplicate POSTs when the durable claim follows the response (17.004392ms)
+ℹ {"control":"deferred-claim","states":303,"transitions":882,"counterexample":["A:read-pending","A:claim-won","A:POST","B:read-pending","B:claim-won","B:POST"]}
+✔ legacy refund control exposes stale rejection after a committed execution intent (14.895348ms)
+ℹ {"control":"stale-rejection","states":266,"transitions":862,"counterexample":["A:read-pending","reject:read-pending","A:claim-won","reject:committed"]}
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 206.287054

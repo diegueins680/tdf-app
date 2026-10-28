@@ -4,7 +4,7 @@
 module TDF.Commerce.ProviderRetrySpec (spec) where
 
 import Data.List (nub)
-import           Control.Concurrent (forkFinally, newEmptyMVar, putMVar, takeMVar, threadDelay)
+import           Control.Concurrent (MVar, ThreadId, forkFinally, killThread, newEmptyMVar, putMVar, readMVar, takeMVar, threadDelay, tryPutMVar)
 import           Control.Exception (AsyncException(..), IOException, bracket, throwIO, toException, try)
 import           Control.Monad (forM, forM_, unless, when)
 import           Control.Monad.Logger (runNoLoggingT)
@@ -45,6 +45,8 @@ import           TDF.Models (RoleEnum(..))
 import qualified TDF.Server.CommerceOperations as Operations
 import           TDF.API.ProviderExecution (PaymentSessionCreateDTO(..), PaymentSessionDTO(..))
 import           TDF.DB (Env(..))
+import qualified TDF.Config as Config
+import qualified TDF.Services.Stripe as Stripe
 import qualified TDF.Commerce.PaymentIntentStore as Intent
 import qualified TDF.Commerce.PaymentRuntimeStore as Runtime
 import           TDF.Commerce.ProviderAdapter (AdapterOperation(..))
@@ -418,6 +420,7 @@ spec = do
         captureReplaySpec
         ticketLedgerSpec
         ticketAllocationSpec
+        legacyStripeRefundSpec
         latePaypalRefundSpec
         manualCaptureReplaySpec
         completionCapabilityIntegrationSpec
@@ -3934,6 +3937,277 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
             (Admission.AdmissionById first) (Checkout.vpOccurredAt payment)) pool
       results <- concurrently [reserve,scan]
       length (filter id results) `shouldBe` 1
+
+-- Exercise the actual legacy HTTP handlers against the same complete schema as
+-- canonical refunds. The injected callback never contacts Stripe; it models an
+-- accepted POST whose response is lost, concurrent approvers and invalid JSON.
+legacyStripeRefundSpec :: SpecWith ConnectionPool
+legacyStripeRefundSpec = describe "legacy Stripe ticket refund execution fence" $ do
+  it "allows only one provider call across eight approvals and later retries" $ \pool -> do
+    fixture@(eventKey,_,refundKey) <- legacyStripeRefundFixture pool 1000
+    env <- legacyStripeRefundEnv pool True
+    calls <- newIORef (0 :: Int)
+    let provider _ _ _ = atomicModifyIORef' calls (\count -> (count+1,()))
+          >> pure (Left "synthetic accepted refund with lost response")
+        (approve,reject) = legacyStripeRefundHandlers provider
+        action = runHandler (runReaderT (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+    results <- concurrently (replicate 8 action)
+    readIORef calls `shouldReturn` 1
+    length [() | Left failure <- results, errHTTPCode failure == 409] `shouldBe` 7
+    results `shouldSatisfy` all isLeft
+    action >>= assertLegacyRefundDenied
+    runHandler (runReaderT (reject (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))
+      (TD.RejectionReasonDTO "Cannot release an uncertain refund")) env)
+      >>= assertLegacyRefundDenied
+    readIORef calls `shouldReturn` 1
+    assertLegacyStripeRefundState pool fixture "processing" "paid" 3 "issued"
+
+  forM_ ["transport exception","invalid JSON"] $ \scenario ->
+    it ("retains the durable claim after " <> T.unpack scenario) $ \pool -> do
+      fixture@(eventKey,_,refundKey) <- legacyStripeRefundFixture pool 1000
+      env <- legacyStripeRefundEnv pool True
+      calls <- newIORef (0 :: Int)
+      let provider _ _ _ = do
+            atomicModifyIORef' calls (\count -> (count+1,()))
+            if scenario == "transport exception"
+              then throwIO (userError "synthetic lost refund response")
+              else pure (Right (A.object []))
+          (approve,_) = legacyStripeRefundHandlers provider
+          action = runHandler (runReaderT (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+      -- Both a translated HTTP refusal and a propagated synchronous I/O failure
+      -- are failures; neither may reset the committed execution claim.
+      first <- try action :: IO (Either IOException (Either ServerError TD.RefundDTO))
+      first `shouldSatisfy` either (const True) isLeft
+      action >>= assertLegacyRefundDenied
+      readIORef calls `shouldReturn` 1
+      assertLegacyStripeRefundState pool fixture "processing" "paid" 3 "issued"
+
+  it "denies rejection and another approval while the provider response is outstanding" $ \pool -> do
+    fixture@(eventKey,_,refundKey) <- legacyStripeRefundFixture pool 1000
+    env <- legacyStripeRefundEnv pool True
+    entered <- newEmptyMVar
+    release <- newEmptyMVar
+    finished <- newEmptyMVar
+    calls <- newIORef (0 :: Int)
+    let provider _ _ _ = do
+          atomicModifyIORef' calls (\count -> (count+1,()))
+          putMVar entered ()
+          takeMVar release
+          pure (Left "synthetic response lost after provider acceptance")
+        (approve,reject) = legacyStripeRefundHandlers provider
+        action = runHandler (runReaderT (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+    -- A broken execution guard must produce a bounded assertion failure, not a
+    -- second callback blocked forever on the first callback's release signal.
+    -- Always release and join our initial worker, even if an assertion fails.
+    bracket (forkFinally action (putMVar finished)) (\worker -> do
+      _ <- tryPutMVar release ()
+      stopped <- Timeout.timeout 5000000 (readMVar finished)
+      case stopped of
+        Just _ -> pure ()
+        Nothing -> do
+          killThread worker
+          joined <- Timeout.timeout 5000000 (readMVar finished)
+          case joined of
+            Just _ -> pure ()
+            Nothing -> expectationFailure "Refund worker did not terminate after cancellation") $ \_ -> do
+      Timeout.timeout 5000000 (takeMVar entered) `shouldReturn` Just ()
+      rejection <- Timeout.timeout 5000000 $ runHandler (runReaderT
+        (reject (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))
+          (TD.RejectionReasonDTO "Concurrent rejection")) env)
+      case rejection of
+        Just denied -> assertLegacyRefundDenied denied
+        Nothing -> expectationFailure "Rejection waited for the outstanding provider response"
+      repeated <- Timeout.timeout 5000000 action
+      case repeated of
+        Just denied -> assertLegacyRefundDenied denied
+        Nothing -> expectationFailure "Repeated approval reached the blocked provider callback"
+      assertLegacyStripeRefundState pool fixture "processing" "paid" 3 "issued"
+    result <- Timeout.timeout 5000000 (takeMVar finished)
+    case result of
+      Just (Right refused) -> refused `shouldSatisfy` isLeft
+      Just (Left failure) -> expectationFailure (show failure)
+      Nothing -> expectationFailure "Refund callback did not finish after release"
+    readIORef calls `shouldReturn` 1
+
+  it "rejects a stale rejection after waiting for the refund execution claim to commit" $ \pool -> do
+    fixture@(eventKey,_,refundKey) <- legacyStripeRefundFixture pool 1000
+    env <- legacyStripeRefundEnv pool True
+    holding <- newEmptyMVar
+    release <- newEmptyMVar
+    claimFinished <- newEmptyMVar
+    rejectFinished <- newEmptyMVar
+    let claim = runSqlPool (do
+          rows <- rawSql
+            "UPDATE ticket_refund_request SET status='processing'\
+            \ WHERE id=? AND status='pending' RETURNING id"
+            [PersistInt64 (fromSqlKey refundKey)] :: SqlPersistT IO [Single Int64]
+          unless (rows == [Single (fromSqlKey refundKey)]) $ fail "Claim fixture must update its one pending request"
+          [Single pid] <- rawSql "SELECT pg_backend_pid()::bigint" []
+          liftIO $ putMVar holding (pid :: Int64)
+          liftIO $ takeMVar release) pool
+        (_,reject) = legacyStripeRefundHandlers (\_ _ _ -> fail "Rejection must never call Stripe")
+        rejectAction = runHandler (runReaderT
+          (reject (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))
+            (TD.RejectionReasonDTO "Stale rejection read pending before claim committed")) env)
+        releaseClaim = do
+          _ <- tryPutMVar release ()
+          pure ()
+    bracket (forkFinally claim (putMVar claimFinished)) (\worker ->
+      releaseClaim >> awaitLegacyRefundWorker worker claimFinished) $ \_ -> do
+      holder <- Timeout.timeout 5000000 (takeMVar holding)
+      holderPid <- maybe (fail "Claim did not reach its uncommitted row lock") pure holder
+      -- The actual handler reads the old committed pending state, then waits on
+      -- its UPDATE. Observe that lock wait before releasing the competing claim;
+      -- merely seeing processing on a later read would not test a stale writer.
+      bracket (forkFinally rejectAction (putMVar rejectFinished)) (\worker ->
+        releaseClaim >> awaitLegacyRefundWorker worker rejectFinished) $ \_ -> do
+        waiting <- Timeout.timeout 5000000 (waitForLegacyRefundLock pool holderPid 100)
+        waiting `shouldBe` Just True
+        releaseClaim
+        claimed <- Timeout.timeout 5000000 (readMVar claimFinished)
+        case claimed of
+          Just (Right ()) -> pure ()
+          Just (Left failure) -> expectationFailure (show failure)
+          Nothing -> expectationFailure "Claim transaction did not commit after release"
+        rejected <- Timeout.timeout 5000000 (readMVar rejectFinished)
+        case rejected of
+          Just (Right result) -> assertLegacyRefundDenied result
+          Just (Left failure) -> expectationFailure (show failure)
+          Nothing -> expectationFailure "Stale rejection did not finish after claim commit"
+        assertLegacyStripeRefundState pool fixture "processing" "paid" 3 "issued"
+
+  it "never calls the provider for a rejected request" $ \pool -> do
+    fixture@(eventKey,_,refundKey) <- legacyStripeRefundFixture pool 1000
+    env <- legacyStripeRefundEnv pool True
+    calls <- newIORef (0 :: Int)
+    let provider _ _ _ = atomicModifyIORef' calls (\count -> (count+1,()))
+          >> pure (Left "Rejected refund must not be submitted")
+        (approve,reject) = legacyStripeRefundHandlers provider
+    rejected <- runHandler (runReaderT (reject (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))
+      (TD.RejectionReasonDTO "Request declined before execution")) env) >>= requireRight
+    TD.refundStatus rejected `shouldBe` "rejected"
+    runHandler (runReaderT (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+      >>= assertLegacyRefundDenied
+    readIORef calls `shouldReturn` 0
+    assertLegacyStripeRefundState pool fixture "rejected" "paid" 3 "issued"
+
+  it "leaves a request pending when Stripe configuration is unavailable" $ \pool -> do
+    fixture@(eventKey,_,refundKey) <- legacyStripeRefundFixture pool 1000
+    env <- legacyStripeRefundEnv pool False
+    calls <- newIORef (0 :: Int)
+    let provider _ _ _ = atomicModifyIORef' calls (\count -> (count+1,()))
+          >> pure (Left "Unconfigured provider must not be called")
+        (approve,_) = legacyStripeRefundHandlers provider
+    result <- runHandler (runReaderT (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+    result `shouldSatisfy` isLeft
+    readIORef calls `shouldReturn` 0
+    assertLegacyStripeRefundState pool fixture "pending" "paid" 3 "issued"
+
+  it "releases inventory once for a successful full refund and denies replay" $ \pool -> do
+    fixture@(eventKey,_,refundKey) <- legacyStripeRefundFixture pool 12515
+    env <- legacyStripeRefundEnv pool True
+    calls <- newIORef (0 :: Int)
+    let provider _ paymentIntent amount = do
+          atomicModifyIORef' calls (\count -> (count+1,()))
+          pure (Right (A.object ["id" A..= ("re_synthetic_legacy" :: Text)
+            ,"status" A..= ("succeeded" :: Text),"amount" A..= amount
+            ,"currency" A..= ("usd" :: Text),"payment_intent" A..= paymentIntent]))
+        (approve,_) = legacyStripeRefundHandlers provider
+        action = runHandler (runReaderT (approve (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey refundKey))) env)
+    first <- action >>= requireRight
+    TD.refundStatus first `shouldBe` "approved"
+    action >>= assertLegacyRefundDenied
+    readIORef calls `shouldReturn` 1
+    assertLegacyStripeRefundState pool fixture "approved" "refunded" 0 "refunded"
+
+type LegacyStripeRefundFixture = (TM.SocialEventId,TM.EventTicketOrderId,TM.TicketRefundRequestId)
+
+legacyStripeRefundFixture :: ConnectionPool -> Int64 -> IO LegacyStripeRefundFixture
+legacyStripeRefundFixture pool amount = runSqlPool (do
+  -- This is a legacy order snapshot: its stored paid total is 12515 even though
+  -- three current tier prices sum to 12516. No canonical runtime is attached,
+  -- and this execution-fence regression does not reprice historical orders.
+  [Single orderKey] <- rawSql "SELECT payment_test.ticket_order(3)" []
+  [(Single eventKey,Single tierKey)] <- rawSql
+    "SELECT event_id,tier_id FROM event_ticket_order WHERE id=?"
+    [PersistInt64 (fromSqlKey orderKey)]
+  rawExecute "UPDATE event_ticket_order SET status='paid',stripe_payment_intent_id=? WHERE id=?"
+    [PersistText ("pi_synthetic_legacy_" <> keyText (fromSqlKey orderKey)),PersistInt64 (fromSqlKey orderKey)]
+  forM_ [1..3 :: Int] $ \index -> rawExecute
+    "INSERT INTO event_ticket(event_id,tier_ref_id,order_ref_id,code,status,current_holder_party_id,original_holder_party_id,created_at,updated_at)\
+    \ VALUES (?,?,?,?,'issued','1','1',now(),now())"
+    [PersistInt64 (fromSqlKey eventKey),PersistInt64 (tierKey :: Int64),PersistInt64 (fromSqlKey orderKey),
+     PersistText ("legacy-stripe-" <> keyText (fromSqlKey orderKey) <> "-" <> T.pack (show index))]
+  [Single refundKey] <- rawSql
+    "INSERT INTO ticket_refund_request(order_id,requested_by_party_id,reason,amount_cents,status)\
+    \ VALUES (?,'1','Synthetic legacy Stripe request',?,'pending') RETURNING id"
+    [PersistInt64 (fromSqlKey orderKey),PersistInt64 amount]
+  pure (eventKey,orderKey,refundKey)) pool
+
+legacyStripeRefundEnv :: ConnectionPool -> Bool -> IO Env
+legacyStripeRefundEnv pool configured = do
+  config <- Config.loadConfig
+  pure (Env pool (config
+    { Config.stripeSecretKey = if configured then Just "sk_test_synthetic_legacy" else Nothing
+    , Config.stripeWebhookSecret = if configured then Just "whsec_synthetic_legacy" else Nothing
+    }))
+
+legacyStripeRefundHandlers
+  :: (Stripe.StripeConfig -> Text -> Int -> IO (Either Text A.Value))
+  -> (Text -> Text -> ReaderT Env Handler TD.RefundDTO,
+      Text -> Text -> TD.RejectionReasonDTO -> ReaderT Env Handler TD.RefundDTO)
+legacyStripeRefundHandlers provider =
+  case Social.socialEventsServerWithStripeRefund provider
+    (AuthedUser (toSqlKey 2) [Admin] mempty Nothing Nothing) of
+    _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> tickets :<|> _ ->
+      case tickets of
+        _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> approve :<|> reject :<|> _ ->
+          (approve,reject)
+
+assertLegacyRefundDenied :: Either ServerError TD.RefundDTO -> Expectation
+assertLegacyRefundDenied result = case result of
+  Left failure -> errHTTPCode failure `shouldBe` 409
+  Right _ -> expectationFailure "A terminal or uncertain refund must not execute again"
+
+awaitLegacyRefundWorker :: ThreadId -> MVar a -> IO ()
+awaitLegacyRefundWorker worker finished = do
+  stopped <- Timeout.timeout 5000000 (readMVar finished)
+  case stopped of
+    Just _ -> pure ()
+    Nothing -> do
+      killThread worker
+      joined <- Timeout.timeout 5000000 (readMVar finished)
+      case joined of
+        Just _ -> pure ()
+        Nothing -> expectationFailure "Refund fixture worker did not terminate after cancellation"
+
+waitForLegacyRefundLock :: ConnectionPool -> Int64 -> Int -> IO Bool
+waitForLegacyRefundLock _ _ 0 = pure False
+waitForLegacyRefundLock pool holderPid remaining = do
+  rows <- runSqlPool (rawSql
+    "SELECT EXISTS (SELECT 1 FROM pg_stat_activity activity\
+    \ WHERE activity.datname=current_database() AND activity.pid<>pg_backend_pid()\
+    \ AND activity.wait_event_type='Lock' AND ?::integer=ANY(pg_blocking_pids(activity.pid))\
+    \ AND lower(activity.query) LIKE '%ticket_refund_request%')"
+    [PersistInt64 holderPid]) pool :: IO [Single Bool]
+  if rows == [Single True] then pure True else do
+    threadDelay 25000
+    waitForLegacyRefundLock pool holderPid (remaining-1)
+
+assertLegacyStripeRefundState
+  :: ConnectionPool -> LegacyStripeRefundFixture -> Text -> Text -> Int64 -> Text -> Expectation
+assertLegacyStripeRefundState pool (_,orderKey,refundKey) refundState orderState sold ticketState = do
+  runSqlPool (rawSql
+    "SELECT request.status,orders.status,tier.quantity_sold\
+    \ FROM ticket_refund_request request JOIN event_ticket_order orders ON orders.id=request.order_id\
+    \ JOIN event_ticket_tier tier ON tier.id=orders.tier_id WHERE request.id=?"
+    [PersistInt64 (fromSqlKey refundKey)]) pool
+    `shouldReturn` [(Single refundState,Single orderState,Single sold)]
+  runSqlPool (rawSql "SELECT status FROM event_ticket WHERE order_ref_id=? ORDER BY id"
+    [PersistInt64 (fromSqlKey orderKey)]) pool `shouldReturn` replicate 3 (Single ticketState)
+
+keyText :: Int64 -> Text
+keyText = T.pack . show
 
 socialRefundHandlers :: AuthedUser
   -> (Text -> Text -> TD.TicketOrderStatusUpdateDTO -> ReaderT Env Handler TD.TicketOrderDTO,

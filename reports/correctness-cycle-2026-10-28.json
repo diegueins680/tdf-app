@@ -1,0 +1,302 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-10-28",
+  "repository": "diegueins680/tdf-app",
+  "baselineCommit": "ff39d5e181764d99d3712b95545e0575f3749837",
+  "sourceCommit": "374eb6188f53cbeee12ada04ccb23f38f6e75304",
+  "scope": "Completed focused source correction with passing regression evidence; awaiting protected integration, not a complete platform audit or release approval",
+  "invariants": [
+    {
+      "id": "PAY-STRIPE-REFUND-EXECUTION-001",
+      "requirement": "EVT-TICKET-001",
+      "statement": "One legacy refund request can grant at most one Stripe POST permit, committed before provider IO. Uncertain outcomes never reopen pending.",
+      "assumptions": [
+        "Stable refund request identity",
+        "Normal writers preserve processing; no manual reset, stale database restore or old serving binary",
+        "The transport does not independently retry POSTs"
+      ],
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "formalSpecification": "formal/system/legacy-stripe-refund.md",
+      "boundedModel": "scripts/__tests__/ticket-admission-model.test.mjs",
+      "assurance": "TESTED",
+      "evidence": [
+        "reports/correctness-cycle-2026-10-28/source-seal.json",
+        "reports/correctness-cycle-2026-10-28/refund-red.log",
+        "reports/correctness-cycle-2026-10-28/refund-green.log"
+      ],
+      "boundedDesignAssurance": "BOUNDED_VERIFIED",
+      "sourceSha256": {
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "6d0987f6d7160af13256a3565a96ef9a32d004df543d4dd72b0f51e59ff950c2",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "4289c75109898e472d85d31daf15da3e01fd93bd486ba37ea86f21b6b8edc5e8",
+        "scripts/__tests__/ticket-admission-model.test.mjs": "92e050d6368ddf333877cf01c0cf32d4c260996da98969460c435de101cd6c6a"
+      }
+    },
+    {
+      "id": "PAY-STRIPE-REFUND-REJECTION-001",
+      "requirement": "EVT-TICKET-001",
+      "statement": "A stale rejection cannot overwrite a committed execution intent; its transaction must roll back.",
+      "assumptions": [
+        "READ COMMITTED PostgreSQL conditional UPDATE rechecks the current row after lock wait"
+      ],
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "boundedModel": "scripts/__tests__/ticket-admission-model.test.mjs",
+      "assurance": "TESTED",
+      "evidence": [
+        "reports/correctness-cycle-2026-10-28/source-seal.json",
+        "reports/correctness-cycle-2026-10-28/refund-red.log",
+        "reports/correctness-cycle-2026-10-28/refund-green.log"
+      ],
+      "boundedDesignAssurance": "BOUNDED_VERIFIED",
+      "sourceSha256": {
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "6d0987f6d7160af13256a3565a96ef9a32d004df543d4dd72b0f51e59ff950c2",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "4289c75109898e472d85d31daf15da3e01fd93bd486ba37ea86f21b6b8edc5e8",
+        "scripts/__tests__/ticket-admission-model.test.mjs": "92e050d6368ddf333877cf01c0cf32d4c260996da98969460c435de101cd6c6a"
+      }
+    }
+  ],
+  "backlog": [
+    {
+      "id": "TDF-CORRECTNESS-20261028-01",
+      "priority": "P0",
+      "finding": "confirmed",
+      "status": "corrected-awaiting-protected-integration",
+      "title": "Legacy Stripe refunds permit duplicate POSTs after concurrent approvals or ambiguous response",
+      "requirement": "EVT-TICKET-001"
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-02",
+      "priority": "P0",
+      "finding": "confirmed-source",
+      "status": "open",
+      "title": "Legacy Stripe partial refunds retire every ticket and release full order inventory",
+      "evidence": "approveRefund accepts a positive amount below the paid total but applies the same whole-order projection for every parsed refund ID",
+      "nextStep": "Reproduce actual-handler partial refund and specify ticket allocation before replacing the historical projection"
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-03",
+      "priority": "P0",
+      "finding": "confirmed-source",
+      "status": "open",
+      "title": "Legacy Stripe approval treats a parsed refund ID as completion evidence",
+      "evidence": "parseStripeRefundResponse checks only id; approveRefund marks approved/refunded without matching status, amount, currency or original PaymentIntent",
+      "nextStep": "Add provider-shape counterexamples and durable bound-ID query/reconciliation; never re-POST a held request"
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-04",
+      "priority": "P0",
+      "finding": "hypothesis",
+      "status": "open",
+      "title": "Concurrent legacy request creation can create distinct requests for one order",
+      "evidence": "Legacy requestRefund uses SELECT followed by INSERT without an identified per-order uniqueness constraint",
+      "nextStep": "Construct full-schema concurrent creation/approval counterexample; inspect all constraints before classifying confirmed"
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-05",
+      "priority": "P1",
+      "finding": "confirmed",
+      "status": "open",
+      "title": "Course and service quotes can round their required deposit to zero",
+      "evidence": "calculateCoursePrice 1 0 CourseDeposit 1 and calculateBookingPrice 1 60 0 1 60 480 60 60 return zero payable; canonical runtime CHECK requires positive due_now_minor/deposit_minor",
+      "nextStep": "Add boundary/property regressions and reject zero after rounding without increasing the agreed monetary amount"
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-06",
+      "priority": "P0",
+      "finding": "confirmed-source",
+      "status": "open",
+      "title": "Legacy Stripe tickets remain issued while a refund outcome is uncertain",
+      "evidence": "The legacy branch has no canonical per-ticket reservation or reconciliation exception",
+      "nextStep": "Model admission and transfer while an outcome is held; preserve credentials and payment evidence through a qualified reconciliation path"
+    }
+  ],
+  "prioritizationMethod": "Prioritize confirmed unauthorized/duplicate financial effects, then fulfillment/evidence integrity, then availability; confidence and feasible regression verification decide among otherwise comparable issues.",
+  "integration": {
+    "state": "awaiting-required-review-and-CI",
+    "pullRequest": "https://github.com/diegueins680/tdf-app/pull/651",
+    "merged": false,
+    "deployed": false,
+    "existingQueuePreserved": true,
+    "requiredReviews": 1,
+    "strictChecks": true,
+    "dismissStaleReviews": true,
+    "enforceAdmins": true,
+    "requiredConversationResolution": true,
+    "protectionSource": "live GitHub branch/protection; branch requires 20 contexts, existing FIFO admission retained",
+    "mergeBlockers": [
+      "Required independent GitHub approval",
+      "Required current-head CI including full package qualification",
+      "Existing main-integration-admission queue"
+    ]
+  },
+  "verification": {
+    "tests": [
+      {
+        "name": "actual legacy refund regressions",
+        "result": "PASS",
+        "examples": 8,
+        "failures": 0
+      },
+      {
+        "name": "complete compiled Hspec, fresh full PostgreSQL schema and canonical working directory",
+        "result": "PASS",
+        "examples": 4370,
+        "failures": 0,
+        "pending": 21
+      },
+      {
+        "name": "repository quality",
+        "result": "PASS",
+        "retainedPlatformSpecificSkips": 11
+      },
+      {
+        "name": "generated API conformance",
+        "result": "PASS",
+        "clients": 2,
+        "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72"
+      },
+      {
+        "name": "verification reporter negative controls",
+        "result": "PASS",
+        "tests": 27
+      },
+      {
+        "name": "specification checker controls",
+        "result": "PASS",
+        "conformanceTests": 10,
+        "inventoryTests": 6
+      }
+    ],
+    "models": [
+      {
+        "name": "legacy refund claim/rejection finite design model",
+        "assurance": "BOUNDED_VERIFIED",
+        "states": 208,
+        "transitions": 702,
+        "violations": 0,
+        "negativeControls": {
+          "deferredClaim": {
+            "states": 303,
+            "transitions": 882,
+            "counterexample": [
+              "A:read-pending",
+              "A:claim-won",
+              "A:POST",
+              "B:read-pending",
+              "B:claim-won",
+              "B:POST"
+            ]
+          },
+          "staleRejection": {
+            "states": 266,
+            "transitions": 862,
+            "counterexample": [
+              "A:read-pending",
+              "reject:read-pending",
+              "A:claim-won",
+              "reject:committed"
+            ]
+          }
+        },
+        "testSuite": {
+          "tests": 9,
+          "failures": 0
+        },
+        "limitation": "Design abstraction only; no SQL/Haskell refinement or liveness proof"
+      }
+    ],
+    "proofs": [
+      {
+        "name": "existing source-derived SMT suites",
+        "executionPassed": true,
+        "conditionalObligationsProven": 11,
+        "fullSystemRequirementsProven": 0,
+        "fullSystemRequirementsUnproven": 154,
+        "fullImplementationAndRefinementObligationsUnproven": 308,
+        "release": "BLOCKED",
+        "sourceFiles": 1408,
+        "currentSourceHashMismatches": 0,
+        "limitation": "Existing arithmetic/authorization/recovery obligations; these do not prove the new legacy Stripe endpoint"
+      }
+    ],
+    "limitations": [
+      "Finite design model is not an implementation refinement proof",
+      "Synthetic provider callback does not prove Stripe API behavior",
+      "No production data, credentials or financial operations used",
+      "Previously ambiguous legacy requests still marked pending cannot be reconstructed by this patch",
+      "This is a compiled test binary. Stack target-only copy/register refused a separately configured but missing API executable; full package/image qualification is deferred to protected CI, not represented as a local pass."
+    ],
+    "counterexamples": [
+      {
+        "kind": "actual PostgreSQL handler",
+        "command": "tdf-hq-test --match 'legacy Stripe ticket refund execution fence' --fail-on=empty --seed=20261028",
+        "examples": 8,
+        "failures": 7,
+        "duplicateProviderCallbacks": 8,
+        "staleRejection": "returned success and overwrote processing",
+        "logSha256": "65c60b25fe618a177de4296411da71e698e3381c67371e7e96506086bcbb69b0"
+      },
+      {
+        "kind": "actual pinned-Stack modules",
+        "finding": "Both course and service quote helpers returned zero due-now/deposit for the one-cent, one-basis-point input",
+        "logSha256": "3739457b01d6d72dfc99cc936d31dc815977f9cdc6658c3dc6b04de88ca24faf"
+      }
+    ],
+    "harnessCorrections": [
+      "Initialized database with required UTF-8 after the first SQL_ASCII fixture refused a Unicode migration; preserved failed fixture",
+      "Used isolated lockfile Node dependencies after the shared checkout dependency version mismatch; supplied checksum-verified official jq 1.8.2",
+      "Ran complete Hspec from tdf-hq with a fresh database after relative fixture-path and reused empty-state failures; retained both failed logs in evidence archive"
+    ],
+    "independentReview": "Independent read-only source review found no blocking scoped issue and confirmed canonical cancellation lock order and rollback preservation; this is not required GitHub approval.",
+    "evidenceArchive": "reports/correctness-cycle-2026-10-28/evidence.tar.gz",
+    "sourceSeal": "reports/correctness-cycle-2026-10-28/source-seal.json",
+    "committedSourceAssurance": {
+      "commit": "374eb6188f53cbeee12ada04ccb23f38f6e75304",
+      "path": "reports/correctness-cycle-2026-10-28/committed-source-assurance.tar.gz",
+      "executionPassed": true,
+      "sourceFiles": 1408,
+      "currentSourceHashMismatches": 0,
+      "release": "BLOCKED"
+    }
+  },
+  "scorecard": {
+    "method": "Counts only invariants and defects investigated in this cycle. Global assurance remains in the canonical source-bound verification report.",
+    "criticalInvariantsInCycle": 2,
+    "confirmedDefectsCorrected": 2,
+    "confirmedDefectsIntegrated": 0,
+    "pullRequestsCreated": 1,
+    "pullRequestsMerged": 0,
+    "criticalCorrectedFailuresWithRegressionCoverage": 2,
+    "criticalCorrectedFailuresTotal": 2,
+    "uniqueCriticalInvariantsTested": 2,
+    "uniqueCriticalInvariantsWithBoundedDesignEvidence": 2,
+    "currentRegisteredSourceFiles": 1408,
+    "staleRegisteredSourceFiles": 0,
+    "unrelatedNormativeRequirementsPreserved": 153,
+    "catalogNormativeDecisionsPreserved": 1351,
+    "crossLayerInconsistenciesEliminated": 0
+  },
+  "executionSource": {
+    "gitBase": "ff39d5e181764d99d3712b95545e0575f3749837",
+    "dirty": true,
+    "committedSourceEquivalence": {
+      "commit": "374eb6188f53cbeee12ada04ccb23f38f6e75304",
+      "implementationAndRegressionSha256": {
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "6d0987f6d7160af13256a3565a96ef9a32d004df543d4dd72b0f51e59ff950c2",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "4289c75109898e472d85d31daf15da3e01fd93bd486ba37ea86f21b6b8edc5e8",
+        "scripts/__tests__/ticket-admission-model.test.mjs": "92e050d6368ddf333877cf01c0cf32d4c260996da98969460c435de101cd6c6a"
+      },
+      "allEqual": true
+    },
+    "note": "Local Hspec tested the pre-commit tree. Source hashes equal the committed implementation/tests/model; no claim that the local binary was rebuilt at the later evidence commit."
+  }
+}

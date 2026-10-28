@@ -1,0 +1,14 @@
+
+provider-retry-runtime PostgreSQL
+  legacy Stripe ticket refund execution fence
+    allows only one provider call across eight approvals and later retries [✔]
+    retains the durable claim after transport exception [✔]
+    retains the durable claim after invalid JSON [✔]
+    denies rejection and another approval while the provider response is outstanding [✔]
+    rejects a stale rejection after waiting for the refund execution claim to commit [✔]
+    never calls the provider for a rejected request [✔]
+    leaves a request pending when Stripe configuration is unavailable [✔]
+    releases inventory once for a successful full refund and denies replay [✔]
+
+Finished in 0.4624 seconds
+8 examples, 0 failures

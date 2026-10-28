@@ -1,0 +1,65 @@
+
+provider-retry-runtime PostgreSQL
+  legacy Stripe ticket refund execution fence
+    allows only one provider call across eight approvals and later retries [✘]
+    retains the durable claim after transport exception [✘]
+    retains the durable claim after invalid JSON [✘]
+    denies rejection and another approval while the provider response is outstanding [✘]
+    rejects a stale rejection after waiting for the refund execution claim to commit [✘]
+    never calls the provider for a rejected request [✘]
+    leaves a request pending when Stripe configuration is unavailable [✔]
+    releases inventory once for a successful full refund and denies replay [✘]
+
+Failures:
+
+  test/TDF/Commerce/ProviderRetrySpec.hs:3955:21: 
+  1) provider-retry-runtime PostgreSQL, legacy Stripe ticket refund execution fence, allows only one provider call across eight approvals and later retries
+       expected: 1
+        but got: 8
+
+  To rerun use: --match "/provider-retry-runtime PostgreSQL/legacy Stripe ticket refund execution fence/allows only one provider call across eight approvals and later retries/" --seed 20261028
+
+  test/TDF/Commerce/ProviderRetrySpec.hs:3966:5: 
+  2) provider-retry-runtime PostgreSQL, legacy Stripe ticket refund execution fence, retains the durable claim after transport exception
+       uncaught exception: IOException of type UserError
+       user error (synthetic lost refund response)
+
+  To rerun use: --match "/provider-retry-runtime PostgreSQL/legacy Stripe ticket refund execution fence/retains the durable claim after transport exception/" --seed 20261028
+
+  test/TDF/Commerce/ProviderRetrySpec.hs:4169:39: 
+  3) provider-retry-runtime PostgreSQL, legacy Stripe ticket refund execution fence, retains the durable claim after invalid JSON
+       expected: 409
+        but got: 500
+
+  To rerun use: --match "/provider-retry-runtime PostgreSQL/legacy Stripe ticket refund execution fence/retains the durable claim after invalid JSON/" --seed 20261028
+
+  test/TDF/Commerce/ProviderRetrySpec.hs:4170:14: 
+  4) provider-retry-runtime PostgreSQL, legacy Stripe ticket refund execution fence, denies rejection and another approval while the provider response is outstanding
+       A terminal or uncertain refund must not execute again
+
+  To rerun use: --match "/provider-retry-runtime PostgreSQL/legacy Stripe ticket refund execution fence/denies rejection and another approval while the provider response is outstanding/" --seed 20261028
+
+  test/TDF/Commerce/ProviderRetrySpec.hs:4170:14: 
+  5) provider-retry-runtime PostgreSQL, legacy Stripe ticket refund execution fence, rejects a stale rejection after waiting for the refund execution claim to commit
+       A terminal or uncertain refund must not execute again
+
+  To rerun use: --match "/provider-retry-runtime PostgreSQL/legacy Stripe ticket refund execution fence/rejects a stale rejection after waiting for the refund execution claim to commit/" --seed 20261028
+
+  test/TDF/Commerce/ProviderRetrySpec.hs:4169:39: 
+  6) provider-retry-runtime PostgreSQL, legacy Stripe ticket refund execution fence, never calls the provider for a rejected request
+       expected: 409
+        but got: 400
+
+  To rerun use: --match "/provider-retry-runtime PostgreSQL/legacy Stripe ticket refund execution fence/never calls the provider for a rejected request/" --seed 20261028
+
+  test/TDF/Commerce/ProviderRetrySpec.hs:4169:39: 
+  7) provider-retry-runtime PostgreSQL, legacy Stripe ticket refund execution fence, releases inventory once for a successful full refund and denies replay
+       expected: 409
+        but got: 400
+
+  To rerun use: --match "/provider-retry-runtime PostgreSQL/legacy Stripe ticket refund execution fence/releases inventory once for a successful full refund and denies replay/" --seed 20261028
+
+Randomized with seed 20261028
+
+Finished in 0.5001 seconds
+8 examples, 7 failures
