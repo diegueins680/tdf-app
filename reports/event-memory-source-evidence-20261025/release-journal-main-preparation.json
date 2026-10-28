@@ -1,0 +1,37 @@
+{
+  "observedAt": "2026-10-26T06:05:34.540669+00:00",
+  "scope": "Local merge preparation, not protected integration or deployment",
+  "protectedMain": "3af768dacd95c1223975c62da3ce8088bed89b47",
+  "priorQualifiedRuntimeSource": "262295679df492dde850333779db431132092993",
+  "qualifiedEvidenceSource": "af8fb0439",
+  "runtimeInputsByteIdentical": [
+    "tdf-hq",
+    "tdf-hq-ui/src",
+    "tdf-mobile",
+    "package.json",
+    "package-lock.json"
+  ],
+  "protectedNormativeObjectsExact": 142,
+  "combinedRequirements": 146,
+  "combinedMigrations": 225,
+  "registryId": "cff15f30aa13965e5729",
+  "repositoryChecks": "PASS",
+  "metadataConflicts": "Only inventory and traceability, regenerated from merged authorities",
+  "opsSqlOrRuntimeRequalification": "Existing runtime262 evidence retains its real build identity; fresh repository checks cover imported release-journal controls",
+  "newerObservedMain": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+  "newerMainIncluded": false,
+  "sourceReviewPr": 615,
+  "sourceHead": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+  "sourceHostedCi": "SUCCESS",
+  "sourceIndependentReview": "PENDING",
+  "parentPr": 608,
+  "parentRemainsDraft": true,
+  "realInvitations": {
+    "attempted": 0,
+    "sent": 0,
+    "delivered": 0,
+    "failed": 0
+  },
+  "productionWritten": false,
+  "repositoryLogSha256": "0f32022d53bd726f39592037665b4c740118d547bddc2b2ff7aa36d53328fc19"
+}

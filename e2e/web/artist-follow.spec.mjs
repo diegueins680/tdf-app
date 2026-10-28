@@ -69,7 +69,7 @@ test('artist follow requires keyboard consent and keeps intent on failure @criti
   expect(state.writes).toEqual([]);
   await confirm.focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('alert').filter({ hasText: 'No pudimos seguir a Artista Sintética' })).toBeVisible();
+  await expect(page.getByRole('alert').filter({ hasText: 'No pudimos confirmar el cambio de seguimiento. Comprueba tu conexión y vuelve a intentarlo.' })).toBeVisible();
   expect(new URL(page.url()).searchParams.get('resume')).toBe('follow');
   await confirm.focus();
   await page.keyboard.press('Enter');

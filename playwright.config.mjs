@@ -73,8 +73,10 @@ export default defineConfig({
         userAgent: 'Mozilla/5.0 (Linux; Android 13; 22111317G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36',
       },
     },
-    { name: 'webkit-iphone', grep: /@mobile-flow/, use: { ...devices['iPhone 13'] } },
+    // Keep the complete WebKit suites and their original assertion budgets,
+    // while bounding per-project browser contention on the hosted CI runner.
+    { name: 'webkit-iphone', workers: 1, grep: /@mobile-flow/, use: { ...devices['iPhone 13'] } },
     { name: 'firefox-critical', grep: /@critical/, use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit-critical', grep: /@critical/, use: { ...devices['Desktop Safari'] } },
+    { name: 'webkit-critical', workers: 1, grep: /@critical/, use: { ...devices['Desktop Safari'] } },
   ],
 });

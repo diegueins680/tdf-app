@@ -5,9 +5,32 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+
+test('WebKit project capacity preserves the global browser test policy', async () => {
+  const { default: config } = await import(pathToFileURL(path.join(root, 'playwright.config.mjs')));
+  assert.equal(config.workers, process.env.CI ? 2 : 1);
+  assert.equal(config.timeout, 30_000);
+  assert.equal(config.expect.timeout, 8_000);
+  assert.equal(config.retries, 0);
+  assert.equal(config.fullyParallel, false);
+  let webkitProjects = 0;
+  for (const project of config.projects) {
+    if ((project.use.browserName ?? project.use.defaultBrowserType) === 'webkit') {
+      webkitProjects++;
+      assert.equal(project.workers, 1, project.name);
+    } else {
+      assert.equal(project.workers, undefined, project.name);
+    }
+  }
+  assert.equal(webkitProjects, 2);
+  assert.equal(config.projects.find(project => project.name === 'webkit-iphone').grep.source, '@mobile-flow');
+  assert.equal(config.projects.find(project => project.name === 'webkit-critical').grep.source, '@critical');
+  assert.equal(config.use.trace, 'retain-on-failure');
+  assert.equal(config.use.screenshot, 'only-on-failure');
+});
 
 test('PostgreSQL runner uses the CI service and deletes only its newly created test database', () => {
   const script = `
@@ -137,6 +160,43 @@ test('persona browser journeys are artifacted and gate aggregate quality', async
   assert.equal(admission.run, 'node scripts/ci-job-admission.mjs quality');
   assert.match(playwrightConfig, /npm run build:e2e --workspace=tdf-hq-ui && npm run preview:e2e --workspace=tdf-hq-ui/);
   assert.doesNotMatch(playwrightConfig, /npm run dev --workspace=tdf-hq-ui/);
+});
+
+test('social browser verification retains its checks and timeout with an independently selected pinned image', async () => {
+  const workflow = parseYaml(await source('.github/workflows/social-verification.yml'));
+  const job = workflow.jobs['social-client'];
+  const persona = parseYaml(await source('.github/workflows/ci.yml')).jobs['persona-web-e2e'];
+  assert.equal(job.container.image, persona.container.image);
+  assert.equal(job.container.options, '--init --ipc=host --user 1001');
+  assert.equal(job['timeout-minutes'], 15);
+  assert.equal(job.env.NPM_CONFIG_IGNORE_SCRIPTS, true);
+  assert.equal(job.env.PLAYWRIGHT_BROWSERS_PATH, '/ms-playwright');
+  assert.equal(job.steps.find(step => step.uses === 'actions/setup-node@v7').with['node-version'], '24');
+  const resolver = job.steps.find(step => step.name === "Install the lockfile's missing Linux resolver binding");
+  assert.match(resolver.run, /resolver_dir=\$\(mktemp -d\)/);
+  assert.match(resolver.run, /npm install --prefix "\$resolver_dir" --workspaces=false --no-save --package-lock=false --ignore-scripts @unrs\/resolver-binding-linux-x64-gnu@1\.11\.1/);
+  assert.match(resolver.run, /cp -R "\$resolver_dir\/node_modules\/@unrs\/resolver-binding-linux-x64-gnu" node_modules\/@unrs\//);
+  assert.match(resolver.run, /trap 'rm -rf "\$resolver_dir"' EXIT/);
+  const commands = job.steps.map(step => step.run).filter(Boolean);
+  assert.ok(!commands.some(command => /playwright install|apt-get/.test(command)));
+  const preflight = 'node scripts/verify-playwright-image.mjs --workflow .github/workflows/social-verification.yml --job social-client';
+  assert.ok(commands.includes(preflight));
+  const journey = commands.find(command => command.includes('node scripts/social/verify-preview.mjs'));
+  assert.ok(journey && commands.indexOf(preflight) < commands.indexOf(journey));
+  assert.match(journey, /trap 'kill "\$preview_pid"' EXIT/);
+  assert.match(journey, /curl --fail --retry 30 --retry-connrefused --retry-delay 1/);
+  const focused = commands.find(command => command.includes('node_modules/.bin/jest'));
+  for (const name of ['SocialWorkspace.test.tsx', 'socialV2.test.ts', 'social.test.ts',
+    'ChatPage.privacy.test.tsx', 'chatReadState.test.ts', 'PartyRelationshipMigration.test.ts']) {
+    assert.ok(focused?.includes(name), 'Retain critical social test: ' + name);
+  }
+  assert.ok(commands.some(command => command.includes('diff -u tdf-hq-ui/src/api/generated/social-v2.ts /tmp/social-v2.ts')));
+  assert.ok(!job['continue-on-error'] && !job.steps.some(step => step['continue-on-error']));
+  const artifact = job.steps.find(step => step.uses === 'actions/upload-artifact@v7');
+  assert.equal(artifact.if, 'always()');
+  assert.equal(artifact.with.name, 'social-client-browser');
+  assert.match(artifact.with.path, /\/tmp\/social-browser-current\/\*/);
+  assert.match(artifact.with.path, /\/tmp\/social-preview.txt/);
 });
 
 test('backend quality compiles, tests and exports the binary in one Stack pass', async () => {

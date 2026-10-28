@@ -167,6 +167,71 @@ test('welcome opens published work as a guest without an account gate @critical 
   expectReadOnly(state);
 });
 
+test('studio photos open with keyboard, fit small screens and restore focus @critical @mobile-flow', async ({ page, baseURL }, testInfo) => {
+  const state = await fixture(page, baseURL);
+  const enlarged = [];
+  page.on('request', request => { if (/\/assets\/tdf-studio\/.*-1280\.webp/.test(request.url())) enlarged.push(request.url()); });
+  await page.goto('/tdf#estudio', { waitUntil: 'domcontentloaded' });
+  const gallery = page.getByRole('group', { name: 'Fotos del estudio TDF' });
+  await gallery.scrollIntoViewIfNeeded();
+  const photos = gallery.getByRole('img');
+  await expect(photos).toHaveCount(6);
+  for (const photo of await photos.all()) {
+    await photo.scrollIntoViewIfNeeded();
+    await expect.poll(() => photo.evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
+  }
+  expect(enlarged).toHaveLength(0);
+  await gallery.screenshot({ path: testInfo.outputPath('studio-gallery.png') });
+  const trigger = gallery.getByRole('button', { name: 'Ampliar foto: Sala de control', exact: true });
+  await trigger.focus();
+  await trigger.press('Enter');
+  const dialog = page.getByRole('dialog', { name: 'Sala de control', exact: true });
+  await expect(dialog).toBeVisible();
+  await expect.poll(() => dialog.getByRole('img').evaluate(image => image.complete && image.naturalWidth === 1280)).toBe(true);
+  await expect(dialog.getByRole('status')).toHaveCount(0);
+  await expectAccessible(page, testInfo, 'studio-photo-dialog');
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await page.setViewportSize({ width: 320, height: 740 });
+  await gallery.scrollIntoViewIfNeeded();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expectAccessible(page, testInfo, 'studio-gallery-320');
+  await trigger.click();
+  await expect(dialog).toBeVisible();
+  expect(await dialog.evaluate(element => { const r = element.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; })).toBe(true);
+  await dialog.screenshot({ path: testInfo.outputPath('studio-photo-320.png') });
+  await dialog.getByRole('button', { name: 'Cerrar foto', exact: true }).click();
+  await expect(trigger).toBeFocused();
+  expectReadOnly(state);
+});
+
+test('failed studio images retain public navigation and recover on retry @critical @mobile-flow', async ({ page, baseURL }) => {
+  const state = await fixture(page, baseURL);
+  let attempts = 0;
+  await page.route('**/assets/tdf-studio/control-room-640.webp', route => route.abort('failed'));
+  await page.route('**/assets/tdf-studio/control-room-1280.webp*', route => {
+    attempts++;
+    return attempts === 1 ? route.abort('failed') : route.continue();
+  });
+  await page.goto('/tdf#estudio', { waitUntil: 'domcontentloaded' });
+  const gallery = page.getByRole('group', { name: 'Fotos del estudio TDF' });
+  const trigger = gallery.getByRole('button', { name: 'Ampliar foto: Sala de control', exact: true });
+  await trigger.scrollIntoViewIfNeeded();
+  await expect(trigger).toContainText('Foto no disponible. Abre para reintentar.');
+  await trigger.click();
+  const dialog = page.getByRole('dialog', { name: 'Sala de control', exact: true });
+  await expect(dialog.getByRole('alert')).toContainText('No se pudo cargar esta foto');
+  await dialog.getByRole('button', { name: 'Reintentar foto', exact: true }).click();
+  await expect.poll(() => dialog.getByRole('img').evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
+  expect(attempts).toBe(2);
+  await dialog.getByRole('button', { name: 'Cerrar foto', exact: true }).click();
+  await expect(trigger).toBeFocused();
+  await expect(gallery.getByRole('img')).toHaveCount(5);
+  await expect(page.locator('#estudio').getByRole('link', { name: 'Reservar experiencia', exact: true })).toBeEnabled();
+  expectReadOnly(state);
+});
+
 test('direct search preserves query and city across changes and browser history @critical @mobile-flow', async ({ page, baseURL }) => {
   const state = await fixture(page, baseURL);
   await page.goto('/buscar?q=bass&cityId=quito-fixture', { waitUntil: 'domcontentloaded' });

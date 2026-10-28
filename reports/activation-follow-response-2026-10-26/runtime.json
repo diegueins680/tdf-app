@@ -1,0 +1,90 @@
+{
+  "plan": {
+    "mode": "rehearsal",
+    "humanParticipants": 0,
+    "productionWrites": false,
+    "providersUsed": false,
+    "fixtureSetup": "One fictional artist and six fictional fans; follow/unfollow committed-response loss, failed confirmation reads, pre-commit failures and cross-context return. No club provisioning.",
+    "ports": {
+      "postgres": 55534,
+      "api": 18714,
+      "web": 4257
+    },
+    "scope": "Optimized candidate web and qualified native fe179 API with disposable221-schema PostgreSQL. Successful POST/DELETE responses are discarded after commit; separate pre-commit aborts and confirmation503s exercise failures. Artist/auth/club backend unchanged; receipt backend and real providers excluded."
+  },
+  "startedAt": "2026-10-26T07:48:18.643968+00:00",
+  "source": "43a41d4f677d83f6b49bf018a88853cf60f1a12c",
+  "sourceTree": "98a12fc4399df66b14972a40bc7bbcacb310513b",
+  "binaryRevision": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+  "steps": [
+    {
+      "step": "compile-test-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "step": "deny-nonloopback-egress",
+      "exitCode": 0
+    },
+    {
+      "step": "init",
+      "exitCode": 0
+    },
+    {
+      "step": "start",
+      "exitCode": 0
+    },
+    {
+      "step": "create",
+      "exitCode": 0
+    },
+    {
+      "step": "full221-schema",
+      "exitCode": 0
+    },
+    {
+      "step": "build-isolated-web",
+      "exitCode": 0
+    },
+    {
+      "step": "actual-api-browser",
+      "exitCode": 0
+    },
+    {
+      "step": "drop",
+      "exitCode": 0
+    },
+    {
+      "step": "stop",
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "status": "VERIFIED-isolated-follow-response-recovery-only",
+  "networkIsolation": {
+    "threeListenersLoopbackOnly": true,
+    "lanRequestsDenied": true,
+    "nonLoopbackEgressDeniedWithPositiveControl": true,
+    "noAddressRetained": true
+  },
+  "actualVersion": {
+    "buildTime": "2026-10-26T02:41:57Z",
+    "commit": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "databaseAssertions": {
+    "syntheticPairs": 6,
+    "followRows": 6,
+    "followEvents": 8,
+    "explicitUnfollowEvents": 2,
+    "serverFirstValues": 6,
+    "clubRows": 0,
+    "artistProfiles": 1,
+    "duplicateRows": 0
+  },
+  "finishedAt": "2026-10-26T07:50:01.946290+00:00"
+}

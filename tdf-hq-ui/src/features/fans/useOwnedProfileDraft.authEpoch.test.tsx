@@ -152,3 +152,14 @@ describe('profile ownership at the synchronous authentication boundary', () => {
     } });
   });
 });
+
+it('revokes the previous editor when the same account moves to a different source scope', () => {
+  const { result, rerender } = renderHook(({ scope }) => useOwnedProfileDraft({ ownerId: 42, scope, baseline: loadedDraft, empty: emptyDraft }), { initialProps: { scope: 'event:141' } });
+  const previousSetter = result.current.setDraft;
+  const previousOwner = result.current.isCurrentOwner;
+  rerender({ scope: 'event:142' });
+  expect(previousOwner()).toBe(false);
+  act(() => { previousSetter({ city: 'Prior event draft' }); });
+  expect(result.current.draft).toEqual(loadedDraft);
+  expect(result.current.ready).toBe(true);
+});
