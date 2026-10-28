@@ -52,6 +52,7 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { toLocalDateInputValue } from '../utils/dateOnly';
@@ -800,25 +801,15 @@ export default function RadioWidget() {
   }, [clampPosition]);
 
   // Drag handlers
-  const isInteractiveTarget = useCallback((target?: HTMLElement | null) => {
-    const tag = target?.tagName?.toLowerCase();
-    return (
-      tag === 'button' ||
-      tag === 'a' ||
-      tag === 'input' ||
-      tag === 'textarea' ||
-      tag === 'select' ||
-      tag === 'option' ||
-      target?.closest('[data-no-drag]')
-    );
-  }, []);
+  const isInteractiveTarget = useCallback((target?: HTMLElement | null) =>
+    Boolean(target?.closest('button, a, input, textarea, select, option, [data-no-drag]')),
+  []);
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       const target = e.target as HTMLElement | null;
-      const dragHandle = target?.closest('[data-drag-handle]');
-      const isInteractive = isInteractiveTarget(target);
-      // Only start drag on the handle or non-interactive areas.
-      if (!dragHandle && isInteractive) {
+      // Header controls take priority over the surrounding drag handle,
+      // including taps on the SVG inside a button.
+      if (isInteractiveTarget(target)) {
         return;
       }
       e.preventDefault();
@@ -1945,7 +1936,7 @@ export default function RadioWidget() {
             {muted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
           </IconButton>
         </Tooltip>
-        <Tooltip title="Ocultar la barra">
+        <Tooltip title="Minimizar radio">
           <IconButton
             sx={{ minWidth: 44, minHeight: 44 }}
             onClick={(e) => {
@@ -1953,9 +1944,9 @@ export default function RadioWidget() {
               setMiniBarDismissed(true);
             }}
             data-no-drag
-            aria-label="Ocultar barra de radio"
+            aria-label="Minimizar radio"
           >
-            <VisibilityOffIcon fontSize="small" />
+            <KeyboardArrowDownIcon fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title="Mostrar radio">
@@ -1999,7 +1990,7 @@ export default function RadioWidget() {
           sx={{
             position: 'fixed',
             right: 16,
-            bottom: 16,
+            bottom: `calc(${ABOVE_GLOBAL_PLAYER} + 16px + env(safe-area-inset-bottom, 0px))`,
             zIndex: (theme) => theme.zIndex.appBar,
             bgcolor: 'background.paper',
             border: '1px solid',
@@ -2014,7 +2005,7 @@ export default function RadioWidget() {
           }}
         >
           <Typography variant="caption" color="text.secondary">
-            Radio oculta
+            Radio minimizada
           </Typography>
           <Button
             size="small"
@@ -2036,6 +2027,7 @@ export default function RadioWidget() {
             top: position.y,
             zIndex: (theme) => theme.zIndex.appBar,
             width: expanded ? sizeOptions[panelSize].width : { xs: 220, sm: 260 },
+            maxWidth: 'calc(100vw - 24px)',
             cursor: pinned ? 'default' : dragging ? 'grabbing' : 'grab',
             touchAction: 'none',
             userSelect: 'none',
@@ -2091,7 +2083,9 @@ export default function RadioWidget() {
           data-drag-handle
           sx={{
             display: 'flex',
+            flexWrap: 'wrap',
             alignItems: 'center',
+            '& .MuiIconButton-root': { minWidth: 44, minHeight: 44, flexShrink: 0 },
             gap: 1,
             px: 1.5,
             py: 0.75,
@@ -2102,14 +2096,15 @@ export default function RadioWidget() {
             userSelect: 'none',
           }}
         >
-          <DragIndicatorIcon fontSize="small" color="action" />
-          <Typography variant="caption" color="text.secondary" fontWeight={600}>
+          <DragIndicatorIcon fontSize="small" color="action" sx={{ display: { xs: 'none', sm: 'block' } }} />
+          <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: { xs: 'none', sm: 'block' } }}>
             {pinned ? 'Fijado' : 'Arrastra para mover'}
           </Typography>
-            <Box sx={{ flex: 1 }} />
+            <Box sx={{ flex: 1, display: { xs: 'none', sm: 'block' } }} />
             <Button
               size="small"
               variant="text"
+              sx={{ flex: { xs: 1, sm: '0 1 auto' }, minWidth: 0 }}
               onClick={() => setShowAdvanced((v) => !v)}
               data-no-drag
               startIcon={showAdvanced ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
@@ -2128,14 +2123,14 @@ export default function RadioWidget() {
               <PushPinIcon fontSize="small" sx={{ transform: pinned ? 'rotate(25deg)' : 'none' }} />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Ocultar radio y mostrar mini barra">
+          <Tooltip title="Minimizar radio a la barra">
             <IconButton
               size="small"
               onClick={() => setMiniBarVisible(true)}
               data-no-drag
-              aria-label="Ocultar radio y mostrar mini barra"
+              aria-label="Minimizar radio a la barra"
             >
-              <VisibilityOffIcon fontSize="small" />
+              <KeyboardArrowDownIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Volver a la esquina">
