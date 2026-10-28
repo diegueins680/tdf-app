@@ -555,3 +555,81 @@ test('legacy completion control detects a second POST while evidence is held', t
   t.diagnostic(JSON.stringify({ control: 'retry-held-POST', states: result.states,
     transitions: result.transitions, counterexample: result.witnesses.NoSecondPost }));
 });
+
+// Historical identities are immutable inputs here. Creation uses the same order
+// lock and refuses existing history; direct writers and canonical allocations
+// are outside this abstraction. Claim commits before an uncertain provider POST.
+function exploreLegacyRefundHistory({ omitHistory = false, pendingOnly = false } = {}) {
+  const statuses = ['pending', 'rejected', 'processing', 'approved'];
+  const inputs = [...statuses.map(status => [status]),
+    ...statuses.flatMap(first => statuses.map(second => [first, second]))];
+  let states = 0, transitions = 0;
+  const coverage = new Set();
+  const witnesses = {};
+  for (const history of inputs) {
+    const queue = [{ rows: history, phase: [0, 0], posts: [0, 0], trace: [] }];
+    const seen = new Set();
+    while (queue.length) {
+      const current = queue.shift();
+      const { trace, ...identity } = current;
+      const key = JSON.stringify(identity);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const posts = current.posts.reduce((sum, count) => sum + count, 0);
+      if (history.length > 1 && posts) witnesses.AmbiguousHistoryNeverPosts ??= { history, trace };
+      if (posts > 1) witnesses.AtMostOnePost ??= { history, trace };
+      for (let actor = 0; actor < 2; actor++) {
+        const target = history.length === 1 ? 0 : actor;
+        const next = structuredClone(current);
+        let action;
+        if (current.phase[actor] === 0) {
+          const visible = pendingOnly ? current.rows.filter(status => status === 'pending').length
+            : current.rows.length;
+          const eligible = current.rows[target] === 'pending' && (omitHistory || visible === 1);
+          next.phase[actor] = eligible ? 1 : 3;
+          if (eligible) next.rows[target] = 'processing';
+          action = eligible ? 'claim' : 'refuse';
+        } else if (current.phase[actor] === 1) {
+          next.posts[actor]++;
+          next.phase[actor] = 2;
+          action = 'POST-response-lost';
+        } else if (current.phase[actor] === 2) {
+          next.phase[actor] = 3;
+          action = 'retry-refused';
+        } else continue;
+        coverage.add(action);
+        transitions++;
+        next.trace = [...trace, `${actor}:${action}`];
+        queue.push(next);
+      }
+    }
+    states += seen.size;
+  }
+  return { inputs: inputs.length, states, transitions, coverage: [...coverage].sort(),
+    violations: Object.keys(witnesses).sort(), witnesses };
+}
+
+test('bounded legacy approval refuses every ambiguous historical identity before POST', t => {
+  const result = exploreLegacyRefundHistory();
+  assert.equal(result.inputs, 20);
+  assert.equal(result.states, 89);
+  assert.equal(result.transitions, 92);
+  assert.deepEqual(result.violations, []);
+  assert.deepEqual(result.coverage, ['POST-response-lost', 'claim', 'refuse', 'retry-refused']);
+  t.diagnostic(JSON.stringify({ model: 'legacy-refund-history', ...result }));
+});
+
+test('legacy history controls detect omitted history and pending-only filtering', t => {
+  const omitted = exploreLegacyRefundHistory({ omitHistory: true });
+  assert.equal(omitted.states, 125);
+  assert.equal(omitted.transitions, 148);
+  assert.deepEqual(omitted.violations, ['AmbiguousHistoryNeverPosts', 'AtMostOnePost']);
+  assert.equal(omitted.witnesses.AtMostOnePost.trace.filter(step => step.endsWith('POST-response-lost')).length, 2);
+  const filtered = exploreLegacyRefundHistory({ pendingOnly: true });
+  assert.equal(filtered.states, 113);
+  assert.equal(filtered.transitions, 128);
+  assert.deepEqual(filtered.violations, ['AmbiguousHistoryNeverPosts']);
+  for (const [control, result] of [['omit-history', omitted], ['pending-only', filtered]]) {
+    t.diagnostic(JSON.stringify({ control, ...result }));
+  }
+});
