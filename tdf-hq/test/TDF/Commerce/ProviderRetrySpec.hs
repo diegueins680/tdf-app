@@ -423,6 +423,7 @@ spec = do
         legacyStripeRefundSpec
         ticketTierCapacitySpec
         ticketPurchaseEligibilitySpec
+        ticketFinalAmountSpec
         latePaypalRefundSpec
         manualCaptureReplaySpec
         completionCapabilityIntegrationSpec
@@ -3939,6 +3940,104 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
             (Admission.AdmissionById first) (Checkout.vpOccurredAt payment)) pool
       results <- concurrently [reserve,scan]
       length (filter id results) `shouldBe` 1
+
+ticketFinalAmountSpec :: SpecWith ConnectionPool
+ticketFinalAmountSpec = describe "legacy-ticket-final-amount-envelope" $ do
+  forM_ [(1,98039215,Nothing,Just (99999999,98039215)),(1,98039216,Nothing,Nothing),
+          (1,99999999,Nothing,Nothing),(1,98039216,Just 1,Just (99999999,98039215)),
+          (1,98039216,Just 0,Nothing),(2,49019607,Nothing,Just (99999998,98039214)),
+          (2,49019608,Nothing,Nothing)] $ \(quantity,price,discount,acceptedTotal) ->
+    it ("checks fee-inclusive new holds: quantity=" <> show quantity <>
+        ", price=" <> show price <> ", discount=" <> show discount) $ \pool -> do
+      (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+      promo <- ticketAmountFixture pool eventKey tierKey price discount
+      env <- ticketInventoryEnv pool
+      let (_,_,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+          request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) quantity Nothing Nothing Nothing
+      result <- runHandler (runReaderT
+        (checkout (TD.TicketPurchaseWithPromoDTO request promo Nothing Nothing Nothing)) env)
+      orders <- runSqlPool (rawSql
+        "SELECT amount_cents,status FROM event_ticket_order WHERE event_id=? ORDER BY id"
+        [PersistInt64 (fromSqlKey eventKey)]) pool :: IO [(Single Int64,Single Text)]
+      counts <- ticketAmountCounts pool eventKey tierKey
+      let expectedStatus = maybe 400 (const 503) acceptedTotal
+          expectedOrders = maybe [] (\(total,_) -> [(Single total,Single "cancelled")]) acceptedTotal
+      -- Missing Stripe credentials stop before provider HTTP. Exact-boundary
+      -- orders reach the existing config rollback, oversized new holds do not.
+      (either errHTTPCode (const 200) result,orders,counts)
+        `shouldBe` (expectedStatus,expectedOrders,[(Single 0,Single 0,Single 0)])
+      forM_ acceptedTotal $ \(_,face) ->
+        runSqlPool (rawSql
+          "SELECT (metadata::jsonb->>'face_value_cents')::bigint,\
+          \(metadata::jsonb->>'buyer_platform_fee_cents')::bigint,\
+          \(metadata::jsonb->>'organizer_platform_fee_cents')::bigint\
+          \ FROM event_ticket_order WHERE event_id=?"
+          [PersistInt64 (fromSqlKey eventKey)]) pool
+          `shouldReturn` [(Single (face :: Int64),Single (1960784 :: Int64),Single (1960784 :: Int64))]
+
+  it "preserves a fully discounted checkout and its idempotent replay" $ \pool -> do
+    (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+    promo <- ticketAmountFixture pool eventKey tierKey 99999999 (Just 99999999)
+    env <- ticketInventoryEnv pool
+    let (_,_,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+        request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 1 Nothing Nothing Nothing
+        action = runHandler (runReaderT (checkout
+          (TD.TicketPurchaseWithPromoDTO request promo Nothing (Just "amount-free-replay") Nothing)) env)
+    first <- action >>= requireRight
+    second <- action >>= requireRight
+    TD.spiAmountCents first `shouldBe` 0
+    TD.spiOrderId second `shouldBe` TD.spiOrderId first
+    ticketAmountCounts pool eventKey tierKey
+      `shouldReturn` [(Single 1,Single 1,Single 1)]
+    runSqlPool (rawSql "SELECT amount_cents,status FROM event_ticket_order WHERE event_id=?"
+      [PersistInt64 (fromSqlKey eventKey)]) pool
+      `shouldReturn` [(Single (0 :: Int64),Single ("paid" :: Text))]
+
+  it "does not apply new-hold validation or rollback to historical pending replay" $ \pool -> do
+    (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+    _ <- ticketAmountFixture pool eventKey tierKey 98039216 Nothing
+    runSqlPool (do
+      rawExecute "UPDATE event_ticket_tier SET quantity_sold=1 WHERE id=?"
+        [PersistInt64 (fromSqlKey tierKey)]
+      rawExecute
+        "INSERT INTO event_ticket_order(event_id,tier_id,buyer_party_id,quantity,amount_cents,currency,status,\
+        \metadata,checkout_idempotency_key,purchased_at,original_amount_cents,created_at,updated_at)\
+        \ VALUES (?,?,'2',1,100000000,'USD','pending',?, 'amount-historical',now(),98039216,now(),now())"
+        [PersistInt64 (fromSqlKey eventKey),PersistInt64 (fromSqlKey tierKey),PersistText
+          "{\"checkout_idempotency_key\":\"amount-historical\",\"face_value_cents\":98039216,\"buyer_platform_fee_cents\":1960784,\"organizer_platform_fee_cents\":1960784}"]) pool
+    env <- ticketInventoryEnv pool
+    let (_,_,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+        request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 1 Nothing Nothing Nothing
+    result <- runHandler (runReaderT (checkout
+      (TD.TicketPurchaseWithPromoDTO request Nothing Nothing (Just "amount-historical") Nothing)) env)
+    either errHTTPCode (const 200) result `shouldBe` 503
+    ticketAmountCounts pool eventKey tierKey
+      `shouldReturn` [(Single 1,Single 0,Single 0)]
+    runSqlPool (rawSql "SELECT amount_cents,status FROM event_ticket_order WHERE event_id=?"
+      [PersistInt64 (fromSqlKey eventKey)]) pool
+      `shouldReturn` [(Single (100000000 :: Int64),Single ("pending" :: Text))]
+
+ticketAmountFixture :: ConnectionPool -> TM.SocialEventId -> TM.EventTicketTierId
+  -> Int64 -> Maybe Int64 -> IO (Maybe Text)
+ticketAmountFixture pool eventKey tierKey price discount = runSqlPool (do
+  rawExecute "UPDATE event_ticket_tier SET price_cents=? WHERE id=?"
+    [PersistInt64 price,PersistInt64 (fromSqlKey tierKey)]
+  forM discount $ \value -> do
+    let code = "AMOUNT-" <> keyText (fromSqlKey eventKey)
+    rawExecute
+      "INSERT INTO promo_code(event_id,code,discount_type,discount_value,currency,current_redemptions,is_active)\
+      \ VALUES (?,?,'fixed_amount',?,'USD',0,true)"
+      [PersistInt64 (fromSqlKey eventKey),PersistText code,PersistInt64 value]
+    pure code) pool
+
+ticketAmountCounts :: ConnectionPool -> TM.SocialEventId -> TM.EventTicketTierId
+  -> IO [(Single Int64,Single Int64,Single Int64)]
+ticketAmountCounts pool eventKey tierKey = runSqlPool (rawSql
+  "SELECT quantity_sold,(SELECT count(*)::bigint FROM event_ticket WHERE event_id=?),\
+  \coalesce((SELECT sum(current_redemptions)::bigint FROM promo_code WHERE event_id=?),0)::bigint\
+  \ FROM event_ticket_tier WHERE id=?"
+  [PersistInt64 (fromSqlKey eventKey),PersistInt64 (fromSqlKey eventKey),PersistInt64 (fromSqlKey tierKey)]) pool
+
 
 ticketPurchaseEligibilitySpec :: SpecWith ConnectionPool
 ticketPurchaseEligibilitySpec = describe "legacy ticket purchase eligibility at admission" $ do
