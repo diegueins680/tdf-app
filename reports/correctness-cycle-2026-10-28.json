@@ -3,7 +3,7 @@
   "cycle": "2026-10-28",
   "repository": "diegueins680/tdf-app",
   "baselineCommit": "ff39d5e181764d99d3712b95545e0575f3749837",
-  "sourceCommit": null,
+  "sourceCommit": "374eb6188f53cbeee12ada04ccb23f38f6e75304",
   "scope": "Completed focused source correction with passing regression evidence; awaiting protected integration, not a complete platform audit or release approval",
   "invariants": [
     {
@@ -121,8 +121,8 @@
   ],
   "prioritizationMethod": "Prioritize confirmed unauthorized/duplicate financial effects, then fulfillment/evidence integrity, then availability; confidence and feasible regression verification decide among otherwise comparable issues.",
   "integration": {
-    "state": "ready-for-protected-review",
-    "pullRequest": null,
+    "state": "awaiting-required-review-and-CI",
+    "pullRequest": "https://github.com/diegueins680/tdf-app/pull/651",
     "merged": false,
     "deployed": false,
     "existingQueuePreserved": true,
@@ -131,7 +131,12 @@
     "dismissStaleReviews": true,
     "enforceAdmins": true,
     "requiredConversationResolution": true,
-    "protectionSource": "live GitHub branch/protection; branch requires 20 contexts, existing FIFO admission retained"
+    "protectionSource": "live GitHub branch/protection; branch requires 20 contexts, existing FIFO admission retained",
+    "mergeBlockers": [
+      "Required independent GitHub approval",
+      "Required current-head CI including full package qualification",
+      "Existing main-integration-admission queue"
+    ]
   },
   "verification": {
     "tests": [
@@ -253,14 +258,22 @@
     ],
     "independentReview": "Independent read-only source review found no blocking scoped issue and confirmed canonical cancellation lock order and rollback preservation; this is not required GitHub approval.",
     "evidenceArchive": "reports/correctness-cycle-2026-10-28/evidence.tar.gz",
-    "sourceSeal": "reports/correctness-cycle-2026-10-28/source-seal.json"
+    "sourceSeal": "reports/correctness-cycle-2026-10-28/source-seal.json",
+    "committedSourceAssurance": {
+      "commit": "374eb6188f53cbeee12ada04ccb23f38f6e75304",
+      "path": "reports/correctness-cycle-2026-10-28/committed-source-assurance.tar.gz",
+      "executionPassed": true,
+      "sourceFiles": 1408,
+      "currentSourceHashMismatches": 0,
+      "release": "BLOCKED"
+    }
   },
   "scorecard": {
     "method": "Counts only invariants and defects investigated in this cycle. Global assurance remains in the canonical source-bound verification report.",
     "criticalInvariantsInCycle": 2,
     "confirmedDefectsCorrected": 2,
     "confirmedDefectsIntegrated": 0,
-    "pullRequestsCreated": 0,
+    "pullRequestsCreated": 1,
     "pullRequestsMerged": 0,
     "criticalCorrectedFailuresWithRegressionCoverage": 2,
     "criticalCorrectedFailuresTotal": 2,
@@ -271,5 +284,19 @@
     "unrelatedNormativeRequirementsPreserved": 153,
     "catalogNormativeDecisionsPreserved": 1351,
     "crossLayerInconsistenciesEliminated": 0
+  },
+  "executionSource": {
+    "gitBase": "ff39d5e181764d99d3712b95545e0575f3749837",
+    "dirty": true,
+    "committedSourceEquivalence": {
+      "commit": "374eb6188f53cbeee12ada04ccb23f38f6e75304",
+      "implementationAndRegressionSha256": {
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "6d0987f6d7160af13256a3565a96ef9a32d004df543d4dd72b0f51e59ff950c2",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "4289c75109898e472d85d31daf15da3e01fd93bd486ba37ea86f21b6b8edc5e8",
+        "scripts/__tests__/ticket-admission-model.test.mjs": "92e050d6368ddf333877cf01c0cf32d4c260996da98969460c435de101cd6c6a"
+      },
+      "allEqual": true
+    },
+    "note": "Local Hspec tested the pre-commit tree. Source hashes equal the committed implementation/tests/model; no claim that the local binary was rebuilt at the later evidence commit."
   }
 }
