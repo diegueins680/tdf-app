@@ -1,0 +1,355 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/fixed.config.mjs",
+    "rootDir": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/fixed",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/fixed-artifacts/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-desktop",
+        "name": "chromium-desktop",
+        "testDir": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/fixed",
+        "testIgnore": [
+          "/music-player-native\\.spec\\.mjs$/",
+          "/music-player-integration\\.spec\\.mjs$/",
+          "/community-discovery\\.spec\\.mjs$/"
+        ],
+        "testMatch": [
+          "booking-catalog-recovery.spec.mjs"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/fixed-artifacts/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-phone",
+        "name": "chromium-phone",
+        "testDir": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/fixed",
+        "testIgnore": [
+          "/music-player-native\\.spec\\.mjs$/",
+          "/music-player-integration\\.spec\\.mjs$/",
+          "/community-discovery\\.spec\\.mjs$/"
+        ],
+        "testMatch": [
+          "booking-catalog-recovery.spec.mjs"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/fixed-artifacts/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox-critical",
+        "name": "firefox-critical",
+        "testDir": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/fixed",
+        "testIgnore": [
+          "/music-player-native\\.spec\\.mjs$/",
+          "/music-player-integration\\.spec\\.mjs$/",
+          "/community-discovery\\.spec\\.mjs$/"
+        ],
+        "testMatch": [
+          "booking-catalog-recovery.spec.mjs"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/tdf-patch-report-636-retry-regression-20261028/fixed-artifacts/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": {
+      "env": {
+        "VITE_ACCOUNT_DELETION_FORM_ENABLED": "true",
+        "VITE_ACCOUNT_DELETION_QUEUE_ENABLED": "true"
+      },
+      "command": "npm exec --workspace=tdf-hq-ui -- vite preview --host 127.0.0.1 --port 4186 --strictPort",
+      "url": "http://127.0.0.1:4186/inicio",
+      "reuseExistingServer": false,
+      "timeout": 300000,
+      "cwd": "/private/tmp/tdf-patch-report-predecessor-636-20261028"
+    }
+  },
+  "suites": [
+    {
+      "title": "booking-catalog-recovery.spec.mjs",
+      "file": "booking-catalog-recovery.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12118,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T17:56:25.796Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d20329362b05903e166e-ede142bd762ca6833aa9",
+          "file": "booking-catalog-recovery.spec.mjs",
+          "line": 7,
+          "column": 3
+        },
+        {
+          "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3024,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T17:56:38.665Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d20329362b05903e166e-cedfc1a5ca3cc10ebd30",
+          "file": "booking-catalog-recovery.spec.mjs",
+          "line": 7,
+          "column": 3
+        },
+        {
+          "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12968,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T17:56:43.855Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d20329362b05903e166e-13325734846b1a83d2d2",
+          "file": "booking-catalog-recovery.spec.mjs",
+          "line": 7,
+          "column": 3
+        },
+        {
+          "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3562,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T17:56:57.465Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d20329362b05903e166e-2500c01f1ae3003ddf75",
+          "file": "booking-catalog-recovery.spec.mjs",
+          "line": 7,
+          "column": 3
+        },
+        {
+          "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-critical",
+              "projectName": "firefox-critical",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 14960,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T17:57:02.821Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d20329362b05903e166e-7a6882261c874e4225ea",
+          "file": "booking-catalog-recovery.spec.mjs",
+          "line": 7,
+          "column": 3
+        },
+        {
+          "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-critical",
+              "projectName": "firefox-critical",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3981,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-28T17:57:19.204Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d20329362b05903e166e-55e390d0428e8b04968b",
+          "file": "booking-catalog-recovery.spec.mjs",
+          "line": 7,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-28T17:56:22.308Z",
+    "duration": 61771.907,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
