@@ -11497,7 +11497,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 53,
+        "consumerCount": 54,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12363,7 +12363,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 88,
+        "consumerCount": 89,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
