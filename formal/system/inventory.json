@@ -3841,7 +3841,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "92e050d6368ddf333877cf01c0cf32d4c260996da98969460c435de101cd6c6a",
+      "sha256": "f515b4b73c95c788ffddc94ab7d0b7a5811a12a014eb1cfafb644b6a0d45f060",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15337,7 +15337,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "6d0987f6d7160af13256a3565a96ef9a32d004df543d4dd72b0f51e59ff950c2",
+      "sha256": "f091c8d3ed6238940adb125e6d08a2c5e30d0f80b4370d88944b6df37d0c9e25",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15799,7 +15799,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "4289c75109898e472d85d31daf15da3e01fd93bd486ba37ea86f21b6b8edc5e8",
+      "sha256": "0d813e7dc9a23a21d9c61ca7af7186120691b0b406b039a22f554349385f25b4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27422,8 +27422,15 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-stripe-refund-completion.md",
+      "sha256": "28fa11ac539b9ca33fa82c6083f4944d0e7b6df9282a8d23252712b6fe2d0fed",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-stripe-refund.md",
-      "sha256": "b446020753cb696c990bfb051fb280e181d8f4ad0e09d52d4498f883c29d376c",
+      "sha256": "dbdec24fc40b1d16d50eff0e4da5cc962aa6a3151f2d6bfae4274692f55d616b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27766,7 +27773,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "cf628876e3c7456bee19fc634f530137a917ccda92b5e489c4cd33bc01678baa",
+      "sha256": "27fc4a1a9d00ed0cd709f362acfbec39859a8250d06a77010e85950691e692d1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

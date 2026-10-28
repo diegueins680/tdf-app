@@ -704,6 +704,31 @@ parseStripeRefundResponse =
         "Could not parse Stripe refund response"
         (Aeson.withObject "refund" (Aeson..: "id"))
 
+-- A returned identifier is correlation evidence, not proof of completion.
+-- This endpoint does not request expanded PaymentIntents from Stripe.
+stripeRefundCompletionMatches :: T.Text -> Int -> T.Text -> Aeson.Value -> Bool
+stripeRefundCompletionMatches expectedIntent expectedAmount expectedCurrency =
+    isJust . parseMaybe (Aeson.withObject "refund" $ \response -> do
+        objectType <- response Aeson..: "object" :: Parser T.Text
+        status <- response Aeson..: "status" :: Parser T.Text
+        amount <- response Aeson..: "amount" :: Parser Int
+        currency <- response Aeson..: "currency" :: Parser T.Text
+        paymentIntent <- response Aeson..: "payment_intent" :: Parser T.Text
+        let storedCurrency = T.toLower expectedCurrency
+        unless
+            ( objectType == "refund" && status == "succeeded"
+                && expectedAmount > 0 && amount == expectedAmount
+                && T.length storedCurrency == 3 && T.all isAsciiLower storedCurrency
+                && currency == storedCurrency
+                && not (T.null expectedIntent) && paymentIntent == expectedIntent
+            )
+            (fail "Refund completion evidence does not match its request"))
+
+validObservedStripeRefundId :: T.Text -> Bool
+validObservedStripeRefundId value =
+    not (T.null value) && T.length value <= 128
+        && T.all (\ch -> isAscii ch && ch >= '!' && ch <= '~') value
+
 parseStripeCustomerId :: Aeson.Value -> Either T.Text T.Text
 parseStripeCustomerId =
     parseStripeRequiredText
@@ -5747,14 +5772,43 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         case result of
                             Left err -> throwError err500{errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe refund error: " <> err))}
                             Right refundResponse -> do
+                                let unverified = err502
+                                        { errBody = "Refund outcome requires reconciliation; request remains processing" }
                                 refundId <-
-                                    eitherStripeServerError $
+                                    either (const (throwError unverified)) pure $
                                         parseStripeRefundResponse refundResponse
-                                liftIO $
+                                unless (validObservedStripeRefundId refundId) $
+                                    throwError unverified
+                                -- Retain an observed ID even when status or money
+                                -- fails validation. It is not verified payment binding.
+                                observed <- liftIO $ runSqlPool
+                                    (updateWhereCount
+                                        ([ TicketRefundRequestId ==. refundKey
+                                         , TicketRefundRequestOrderId ==. orderKey
+                                         , TicketRefundRequestAmountCents
+                                            ==. ticketRefundRequestAmountCents refund
+                                         , TicketRefundRequestStatus ==. "processing"
+                                         ] <>
+                                         ([TicketRefundRequestStripeRefundId ==. Nothing]
+                                            ||. [TicketRefundRequestStripeRefundId ==. Just refundId]))
+                                        [ TicketRefundRequestStripeRefundId =. Just refundId
+                                        , TicketRefundRequestUpdatedAt =. now
+                                        ]) envPool
+                                unless (observed == 1 && stripeRefundCompletionMatches
+                                    piId (ticketRefundRequestAmountCents refund)
+                                    (eventTicketOrderCurrency order) refundResponse) $
+                                    throwError unverified
+                                completed <- liftIO $ trySynchronous $
                                     runSqlPool
                                         ( do
-                                            update
-                                                refundKey
+                                            changed <- updateWhereCount
+                                                [ TicketRefundRequestId ==. refundKey
+                                                , TicketRefundRequestOrderId ==. orderKey
+                                                , TicketRefundRequestAmountCents
+                                                    ==. ticketRefundRequestAmountCents refund
+                                                , TicketRefundRequestStatus ==. "processing"
+                                                , TicketRefundRequestStripeRefundId ==. Just refundId
+                                                ]
                                                 [ TicketRefundRequestStatus =. "approved"
                                                 , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
                                                 , TicketRefundRequestApprovedAt =. Just now
@@ -5762,6 +5816,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                                 , TicketRefundRequestProcessedAt =. Just now
                                                 , TicketRefundRequestUpdatedAt =. now
                                                 ]
+                                            unless (changed == 1) $
+                                                fail "Refund execution state changed before completion"
                                             update orderKey [EventTicketOrderStatus =. "refunded", EventTicketOrderUpdatedAt =. now]
                                             updateWhere
                                                 [EventTicketOrderRefId ==. orderKey]
@@ -5771,6 +5827,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                                 [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
                                         )
                                         envPool
+                                either (const (throwError unverified)) pure completed
                                 mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
                                 maybe
                                     (throwError err500{errBody = "Could not approve refund"})
