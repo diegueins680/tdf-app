@@ -1,0 +1,60 @@
+{
+  "observedAt": "2026-10-27T04:09:55.331011+00:00",
+  "purpose": "Qualify studio gallery628 against protected main112 without changing approved gallery behavior",
+  "qualifiedComposition": "24b8d36596674d4a8138100d5a25cad35e544737",
+  "executionSource": "429f85fc67c07a415074d0867adefe4f91d674ab",
+  "protectedBase": "1129112f89d3c00d33b8c86043a6bd197031dcff",
+  "galleryPreparation": "4afaaf3fb1578c516163a36ee42b7eefc0de2f9f",
+  "originalPublicGallery": "c219279b33ce13337f71ddee8d14171f5adfc069",
+  "composition": "Normal ancestry. Exactly sixteen original gallery UI/E2E/assets are the entire application delta from main112. Backend, Mobile, workflows and dependencies match main112. All149 foreign whole normative objects remain exact; the original UX-WELCOME-001 photo extension is retained. All1342 main catalog decisions and history remain exact plus the original photo record =1343.",
+  "localValidation": {
+    "node": "22.14.0",
+    "wholeUI": {
+      "testsPassed": 3556,
+      "suitesPassed": 311,
+      "failed": 0,
+      "seconds": 668.379,
+      "initialAttempt": "Stopped with ENOSPC writing Jest reporter output. Original failure retained.",
+      "recovery": "Same entire suite with console output suppressed using --silent. No assertions, test filters, budgets, retries or skips changed."
+    },
+    "lint": "Full UI lint passed",
+    "productionBuild": {
+      "source": "429f85fc67c07a415074d0867adefe4f91d674ab",
+      "entry": "/assets/index-CAe1hEyF.js",
+      "sha256": "db7eafc1fbacf4ae34fd1324911f8e2bc1fc8b8dcc17917ba1812bead0e7c044",
+      "initialGzipBytes": 336569,
+      "node": "22.14.0",
+      "builtBeforeCatalogGeneratedReportRefresh": true
+    },
+    "browser": {
+      "original": "29 passed,3 interrupted while saving screenshots or axe attachments with ENOSPC; original failures retained",
+      "recovery": "Same3cases/projects passed19.1s; original budgets/assertions/retry0 unchanged",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone",
+        "android-chrome-small",
+        "firefox-critical"
+      ],
+      "skips": 0,
+      "scope": "Local compiled429 application, all API/session/business responses synthetic and external requests blocked; no production writes/people/provider or WebKit claim"
+    },
+    "catalog": "1343reviewed/0stale strict audit+CSV+8controls passed",
+    "specification": "Inventory/conformance generate+check; four changed material sources mapped",
+    "sourceCorrespondence": "All942 UI/E2E/config/workflow/dependency blobs unchanged between executed429 and catalog-only24b. Report-only final commit does not change those inputs."
+  },
+  "evidenceSha256": {
+    "ui-20261027.log": "4306a0bfafe4f84d221cb09f0f252f587cca519f24bd9129c4bb4b202ca94c0b",
+    "ui-recovery-20261027.log": "31f1dc79bc1c786d18d6ae480977164c478c3c8be996eb30aa3ad08cfb78b8b5",
+    "ui-recovery-20261027.json": "f75edcbf0d9f5c6a4ce032783b560b99df68a63f5ae5a77057e507045331974e",
+    "lint-20261027.log": "7c0027a6dc73b7f5a81fe30322ca312e270ff4c6a75758c9b920debef4aa909e",
+    "build-20261027.log": "eaeb4effc5b35b64b80523526ac864a034dc385a170d8292cdb3af6b585b30c5",
+    "catalog-20261027.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "catalog-csv-20261027.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "catalog-controls-20261027.log": "aa28f443a4ef64fcbc3748e7025145faa6f07d709206285c6154665a2a5cae3c",
+    "browser-20261027.json": "bc6a6808b009d071a276fc114e4ef8f8739ff8158c10c8446e1297a8ae315863",
+    "browser-recovery-20261027.json": "a63ec7481b0fa25d9651e55487c13dde469018da36de3efeba0e8ca24ece6dd1",
+    "source-admission-20261027.json": "7b2eb6c057d973595bb6210afe21eeab42e038ff075506b30b64af56595c6c65",
+    "final-source-admission-20261027.json": "31bb8b5847bef8007659da9268d37740ac98b54bb65a604e38e8135eef675375"
+  },
+  "releaseStatus": "Not yet published at receipt creation. Final report-only commit requires fresh hosted CI, independent approval, native FIFO admission and protected merge before canonical production verification. No backend rollout authority."
+}

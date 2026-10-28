@@ -7,7 +7,7 @@ if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) throw new Error(
 export default defineConfig({
   ...base,
   testIgnore: [],
-  testMatch: /music-player(?:-native)?\.spec\.mjs/,
+  testMatch: /(?:music-player(?:-native)?|music-search-native)\.spec\.mjs/,
   globalSetup: './e2e/web/fixtures/native-music-setup.mjs',
   workers: 1,
   retries: 0,

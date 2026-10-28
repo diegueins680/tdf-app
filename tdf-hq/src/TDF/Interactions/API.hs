@@ -45,7 +45,8 @@ type InteractionsAPI = "interactions" :>
   :<|> "blocks" :> Capture "partyId" Text :>
        (Get '[JSON] InteractionResponse :<|> ReqBody '[JSON] BlockRequest :> Put '[JSON] InteractionResponse)
   :<|> "blocked-accounts" :> QueryParam "cursor" Integer :> QueryParam "limit" Int :> Get '[JSON] InteractionResponse
-  :<|> "reports" :> QueryParam "cursor" Text :> QueryParam "limit" Int :> Get '[JSON] InteractionResponse
+  :<|> "reports" :> QueryParam "cursor" Text :> QueryParam "limit" Int
+       :> QueryParam "sourceEvent" Text :> Get '[JSON] InteractionResponse
   :<|> "preferences" :> (Get '[JSON] InteractionResponse :<|> ReqBody '[JSON] Value :> Put '[JSON] InteractionResponse)
   :<|> "moderation" :> Capture "targetId" Text :> QueryParam "cursor" Text :> QueryParam "limit" Int :> Get '[JSON] InteractionResponse
   )

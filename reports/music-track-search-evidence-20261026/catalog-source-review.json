@@ -1,0 +1,104 @@
+{
+  "recordedAt": "2026-10-26T22:34:30.991273+00:00",
+  "review": {
+    "date": "2026-10-26",
+    "method": "manual-source-review",
+    "classification": "genuine-technical-constant",
+    "reason": "Protocol method dispatch and finite-model event traces are developer mechanics/test controls, not persisted business choices. No runtime catalog allowlist is introduced."
+  },
+  "added": [
+    {
+      "id": "c7ebc0f215501d998ad0",
+      "file": "scripts/__tests__/music-track-search-model.test.mjs",
+      "name": "state",
+      "line": 80,
+      "values": [
+        "{type=edit, text=beta}",
+        "{type=submit}",
+        "{type=navigate, route=other}",
+        "{type=response, generation=2, outcome=ok}",
+        "{type=navigate, route=music}"
+      ]
+    },
+    {
+      "id": "2f954948d7719fb87a37",
+      "file": "scripts/__tests__/music-track-search-model.test.mjs",
+      "name": "state",
+      "line": 106,
+      "values": [
+        "{type=click, asset=B}",
+        "{type=delivery, generation=1, asset=B, outcome=ok}"
+      ]
+    },
+    {
+      "id": "a54bc30988f056e6d713",
+      "file": "tdf-hq-ui/src/api/musicReleases.ts",
+      "name": "musicReleases",
+      "line": 518,
+      "values": [
+        "searchTracks",
+        "listMine",
+        "listPublic",
+        "getPublic",
+        "getAssetAccess",
+        "listFavorites",
+        "favorite",
+        "unfavorite",
+        "listPlaylists",
+        "createPlaylist",
+        "updatePlaylist",
+        "deletePlaylist",
+        "addPlaylistItem",
+        "movePlaylistItem",
+        "removePlaylistItem",
+        "playbackHistory",
+        "reportInfringement",
+        "listInfringementReports",
+        "actionInfringementReport",
+        "freeDownload",
+        "createPurchase",
+        "createPaypalOrder",
+        "capturePaypalOrder",
+        "listEntitlements",
+        "authorizeDownload",
+        "create",
+        "getVersion",
+        "createCorrection",
+        "saveMetadata",
+        "saveContent",
+        "acceptTerms",
+        "validate",
+        "transition",
+        "addComment",
+        "resolveComment",
+        "analytics",
+        "listDdexParties",
+        "registerDdexParty",
+        "listDdexExports",
+        "createDdexExport",
+        "downloadDdexExport",
+        "uploadAsset"
+      ]
+    }
+  ],
+  "retiredExactObject": {
+    "id": "56e2b5d3ce52bde290e8",
+    "classification": "genuine-technical-constant",
+    "disposition": "retain-in-code",
+    "specializedModel": "technical_constant_allowlist",
+    "priority": "P3-retain",
+    "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+    "justification": "Typed API-client method names for the music release endpoints are implementation mechanics; they are not selectable or reportable domain values.",
+    "reviewed": true,
+    "evidence": {
+      "file": "tdf-hq-ui/src/api/musicReleases.ts",
+      "line": 504
+    },
+    "reviewBatch": "music-release-platform-sync-2026-10-07",
+    "reviewMethod": "manual-source-review"
+  },
+  "activeDecisions": 1343,
+  "unchangedInheritedActiveObjects": 1340,
+  "all1341InheritedObjectsRetainedActiveOrHistory": true,
+  "decisionsSha256": "fcadf76243f44ca679e350aafcfe3ce517411301bb5d3b2c8e42f9a458414257"
+}

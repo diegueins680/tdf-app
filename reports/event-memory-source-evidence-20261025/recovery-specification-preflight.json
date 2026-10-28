@@ -1,0 +1,86 @@
+{
+  "startedAt": "2026-10-27T00:40:51.398335+00:00",
+  "mode": "fail-fast per-command check_returncode; unchanged CI prerequisite commands",
+  "commands": [
+    {
+      "command": [
+        "scripts/specification-inventory.py",
+        "--check"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "scripts/test-new-specification-surfaces.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "scripts/test-specification-inventory.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "scripts/test-requirement-declarations.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "scripts/specification-conformance.py",
+        "--check"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "scripts/test-specification-conformance.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "scripts/check-public-routes.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "scripts/test-public-routes.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "scripts/check-state-machines.py",
+        "--static"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "scripts/test-state-machines.py",
+        "--static"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "--test",
+        "scripts/__tests__/verification-evidence.test.mjs",
+        "scripts/__tests__/legacy-escrow-contract.test.mjs"
+      ],
+      "returncode": 0
+    }
+  ],
+  "passed": true,
+  "finishedAt": "2026-10-27T00:41:37.743873+00:00",
+  "headAtExecution": "d1dc0cf4feceff67a359faef3b245ff1f07aa879",
+  "underReviewMetadata": [
+    "formal/system/inventory.json",
+    "formal/system/traceability.json"
+  ],
+  "runtimeCodeUnchanged": true
+}

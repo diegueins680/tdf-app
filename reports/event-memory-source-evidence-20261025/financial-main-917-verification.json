@@ -1,0 +1,268 @@
+{
+  "observedAt": "2026-10-26T03:48:56.182002+00:00",
+  "scope": "Synthetic local checkpoint; not deployment or production acceptance",
+  "sourceRevision": "810d646208215bcc7c99d870b40f90e17f5beb00",
+  "protectedMain": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
+  "parentRevision": "534c5631ac79e927c887c5c730e252fe4dad7cc5",
+  "sourceWorktreeDirty": true,
+  "dirtyScopeAtHttp": "Only two owned dependency symlinks; tracked source was clean",
+  "productionMigrations": {
+    "count": 224,
+    "protectedPrefix": 220,
+    "prefixExact": true,
+    "sqlBytesExact": true
+  },
+  "binary": {
+    "sha256": "4d71101f0c02a2735fafacffe5560fd8a6972a04c2a450b1495588a3e054f487",
+    "actualVersion": {
+      "buildTime": "2026-10-26T03:23:26Z",
+      "commit": "810d646208215bcc7c99d870b40f90e17f5beb00",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "platform": "Darwin x86_64; not Linux deployment image"
+  },
+  "http": {
+    "status": "PASS",
+    "requests": 120,
+    "assertionGroups": 17,
+    "runtimeHashesMatched": 24,
+    "receipt": "http-financial-main-917-results.json",
+    "externalProviderCalls": 0,
+    "runtimesStopped": true,
+    "ownedDatabaseRemoved": true
+  },
+  "browser": {
+    "status": "PASS",
+    "contexts": [
+      "desktop",
+      "Pixel 7 emulation"
+    ],
+    "receipt": "browser-financial-main-917-results.json",
+    "physicalDevice": false
+  },
+  "compiledApi": {
+    "operations": 913,
+    "rawMounts": 2,
+    "undocumented": 396,
+    "documentedWithoutTypedRoute": 25,
+    "competing": 0,
+    "statusDifferences": 8,
+    "status": "observed-not-conformance-approved"
+  },
+  "ledgerSqlSnapshot": {
+    "appliedMigrations": 224,
+    "cases": 33,
+    "claim": "Named finite SQL schedules only; complete refinement remains UNPROVEN",
+    "dirtyWorktree": true,
+    "installedEntryFunctionSha256": "bd4fec1bd429938d75e5122393e438490a53adc97aeb346a16f433b6500aaa1d",
+    "kind": "postgresql-integration-receipt",
+    "server": "PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit",
+    "sourceHashes": {
+      "formal/event-operations/LedgerPosting.tla": "1782b4e7cdcd96e9a38fd99ed17939a88961af26d3f5fec8472f655ff20576eb",
+      "scripts/__tests__/fixtures/catalog-production-source-fixture.sql": "20d601eaf885eedf213e1110da3fa9489d19eed8629cd32f149e690fd947512c",
+      "scripts/__tests__/fixtures/production-schema-20260814.sql": "d8872748af4142954076cdbf587709d0115b4041837302530d273c8372d517cf",
+      "scripts/__tests__/ledger-posting-snapshot.py": "5e7ac570a965b6b9370fd53936851212a2c45108e2a7d670a96494c813360751",
+      "scripts/production-migrations.json": "34938174e5f1d82c5e02d1ef486215d99b87512e3bbef459952b018fbbc0b1ec",
+      "tdf-hq/sql/2026-08-13_unified_checkout_core.sql": "79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0",
+      "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql": "9ccec46d936ceca2c1feb8155b1ef61444fb273898b7f5a3e5b307f4713d4648",
+      "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql": "af468bf34bbfe36bfc6e3321a02ff71875d1ac49d7351a23fb607568de1d643f",
+      "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql": "3f0cf2121f5de8bc3074c0d7d1eddaf1fb8217d3d46895ae5b0e92070da9ec05"
+    },
+    "sourceRevision": "810d646208215bcc7c99d870b40f90e17f5beb00",
+    "timestamp": "2026-10-26T03:08:17.397675+00:00"
+  },
+  "ledgerUpgrade": {
+    "status": "PASS",
+    "scope": "Legacy admission/migration refusal and concurrent reversal at READ COMMITTED/REPEATABLE READ"
+  },
+  "ledgerNamespace": {
+    "status": "PASS",
+    "expectedNegativeCounterexamples": 2,
+    "guardsRestoredExactly": true
+  },
+  "ledgerStartupNamespace": {
+    "status": "PASS",
+    "rejectedMutations": 10,
+    "compatibleSettings": 2,
+    "guardsRestoredExactly": true
+  },
+  "ledgerHspec": {
+    "status": "PASS",
+    "examples": 10,
+    "failures": 0,
+    "nonempty": true
+  },
+  "musicHspec": {
+    "status": "PASS",
+    "nonempty": true,
+    "groups": {
+      "music-unit-domain": 25,
+      "music-unit-content": 10,
+      "music-unit-ddex": 22,
+      "music-unit-storage": 4
+    }
+  },
+  "stackBuild": {
+    "status": "PASS",
+    "ghc": "9.10.3",
+    "resolver": "lts-24.42"
+  },
+  "stackGeneralSuite": {
+    "status": "PASS_WITH_PENDING",
+    "exitCode": 0,
+    "examples": 4041,
+    "failures": 0,
+    "pending": 21,
+    "pendingDescriptions": [
+      "Run scripts/test-event-organizer.sh",
+      "Run scripts/test-ticket-manual-review-concurrency.sh",
+      "Run scripts/test-index-declarations.sh",
+      "Run scripts/test-invoice-worker.sh",
+      "Run scripts/test-artist-self-service.sh",
+      "Run scripts/test-operations-inbound-capture.sh",
+      "Run scripts/test-provider-identity.sh",
+      "Run scripts/test-credential-lifecycle.sh",
+      "Run scripts/test-whatsapp-consent.sh",
+      "Run scripts/test-ledger-posting.sh",
+      "Run scripts/test-music-publication.sh",
+      "Run scripts/test-interaction-write-budget.sh",
+      "Run scripts/test-music-purchase.sh",
+      "Run scripts/test-whatsapp-redelivery.sh",
+      "Run scripts/test-live-intake-identity.sh",
+      "Run scripts/test-meta-redelivery.sh",
+      "Run scripts/test-rag-index-privacy.sh",
+      "Run scripts/test-trial-identity.sh",
+      "Run scripts/test-course-identity.sh",
+      "Run scripts/test-ticket-payment-gate.sh",
+      "Run scripts/test-marketplace-contact-identity.sh"
+    ],
+    "note": "Pending integration sentinels are not passed cases; ledger is exercised separately with its owned PostgreSQL target. Other integrations require their dedicated runners/hosted gates."
+  },
+  "webQuality": {
+    "status": "PASS",
+    "node": "24.13.1",
+    "lint": "PASS",
+    "types": "PASS",
+    "tests": 3440,
+    "suites": 305,
+    "productionBuild": "PASS",
+    "initialJavascriptGzipBytes": 334257,
+    "initialPreloads": 5
+  },
+  "providerRetryRuntime": {
+    "status": "PASS",
+    "examples": 308,
+    "failures": 0,
+    "exitCode": 0,
+    "usedHistoryRollbackRefused": true,
+    "expiryAdmission": {
+      "status": "PASS",
+      "receipt": "financial-main-917-expiry-results.json",
+      "variants": 4,
+      "negativeControls": 3,
+      "sourcesUnchanged": true,
+      "scope": "Owned synthetic PostgreSQL fixture; no provider HTTP or production data"
+    }
+  },
+  "sourceModerationSql": {
+    "status": "PASS",
+    "interleavings": 8,
+    "sourceRevisionAtRun": "ddb92379859aa7ac7e1d87aec99bb1be3cc1f941",
+    "worktreeDirty": true,
+    "scope": "Uncommitted merge composition containing all 224 entries; historical identity retained"
+  },
+  "invitations": {
+    "status": "PASS",
+    "boundedStates": 160,
+    "negativeControls": 3,
+    "scope": "Actual SQL plus finite policy exploration; not complete refinement"
+  },
+  "native": {
+    "commit": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+    "pr": 170,
+    "tests": 653,
+    "suites": 98,
+    "hostedRun": 40248248167,
+    "hostedResult": "SUCCESS",
+    "physicalDevice": false,
+    "note": "Independent native qualification retained; unchanged by the financial main merge"
+  },
+  "event141": {
+    "userConfirmedHeldAndEnded": true,
+    "lastDatabaseReadAt": "2026-10-26T03:22:22Z",
+    "recordedState": "on_sale",
+    "relatedParties": 7,
+    "activeParties": 5,
+    "professionalSignals": 5,
+    "acceptedRsvpIntent": 3,
+    "professionalRsvpOverlap": 1,
+    "archivedAliases": 0,
+    "campaignSchemaInstalled": false,
+    "finalConsentedEligible": null,
+    "finalExcluded": null,
+    "attempted": 0,
+    "sent": 0,
+    "delivered": 0,
+    "failed": 0
+  },
+  "release": {
+    "integrated": false,
+    "deployed": false,
+    "productionVerified": false,
+    "productionWritten": false,
+    "realCommunications": false,
+    "scope": "Protected main and production release; excludes automatic PR previews"
+  },
+  "protectedRequirements": {
+    "count": 140,
+    "exactObjects": true,
+    "composedTotal": 144
+  },
+  "observedSubsequentProtectedMain": {
+    "commit": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+    "pr": 614,
+    "mergedAt": "2026-10-26T03:48:01Z",
+    "includedInThisComposition": false,
+    "consequence": "Final protected delivery requires reconciliation with the then-current main and exact-candidate validation; these receipts retain their 917 base"
+  },
+  "repoQuality": {
+    "initialAttempt": {
+      "status": "FAIL",
+      "reason": "jq not present on subprocess PATH; real artist-import fixture failed before generating requests"
+    },
+    "retry": {
+      "status": "PASS",
+      "environmentRepair": "Existing actual jq-1.8.1 binary added only to invocation PATH"
+    },
+    "assertionsWeakened": false
+  },
+  "metadataChecks": {
+    "inventory": "PASS",
+    "traceabilityInitial": {
+      "status": "FAIL",
+      "reason": "Default Python lacks PyYAML; no assertions changed"
+    },
+    "traceabilityRetry": "PASS",
+    "traceabilityInterpreter": "/private/tmp/tdf-event-memories-venv/bin/python3 (existing PyYAML 6.0.3)"
+  },
+  "completedAt": "2026-10-26T04:29:02.631497+00:00",
+  "localLogSha256": {
+    "tdf-event-memory-main-917-stack-build-v1.log": "2e2a8e776eb184ea05379e77f14eece2a4d729010e62b257d302d255c65b25e7",
+    "tdf-event-memory-main-917-stack-tests-v1.log": "d52d2effb6c219f5798a732bef99554113865df4899b194713abb2539a70fdd0",
+    "tdf-event-memory-main-917-ui-quality-v1.log": "3dcef67791b98b4570acaef598bfaeec389da83ca4fa704b8a577f570d20efef",
+    "tdf-event-memory-main-917-repo-quality-final.log": "945f4add592e3e7a545bcd105d6316587ee1cabf3fa1d7d4c7f5d234909e5167",
+    "tdf-event-memory-main-917-repo-quality-final-v2.log": "c96a59b098c930912c90dcb265d10380fe19b50c35bc25f81d11089445c18797",
+    "tdf-event-memory-main-917-music-tests-v1.log": "8a8a86329c1a7a41a08662fff14eac9c47f59ae8abf6015045c6d069b782a0d3",
+    "tdf-event-memory-main-917-ledger-hspec-v1.log": "06e82ae97993c8e7bde3253214b9c00493e44c9e8d36696f0ae17817e151fd8c",
+    "tdf-event-memory-main-917-ledger-upgrade.log": "7ee8fb6294df5f4e7f3ce764efd3efb719a8b8931ee99f668070d95a8be0551d",
+    "tdf-event-memory-main-917-ledger-snapshot.log": "dad75d03ed6d1e0b7226a6379980330bc5d3273981237c4a8133d1135e3cf7a5",
+    "tdf-event-memory-main-917-ledger-namespace.log": "f3d1029873d61c7be68c6f2f1b611d483637ce82b77f6f8e03cabbba10735c25",
+    "tdf-event-memory-main-917-ledger-startup.log": "67cf88a6f8522461bdf3832c0d15203949e1b627c7ef936ee818dd7521d8e0c7",
+    "tdf-event-memory-main-917-source-sql-v1.log": "ef0de5c93acf76dca37f99a4279bef8d09c6b84f7f4fa7b1cd8d6ae9c5cd7efe",
+    "tdf-event-memory-main-917-invitations-v1.log": "dbd7b4eb4d6a81fc963fda2a7689cdf98541b820470acd9e06f0e0670ef923d9",
+    "tdf-event-memory-main-917-provider-retry-v1.log": "2bfd6572ca1d9903942cd3eece5aa2313afbce960ef6daff0dbe3a8ae2b8c471",
+    "tdf-event-memory-main-917-compiled-api-v1.log": "a0bd09520c67f4cdc53930e940fa48aad6311affbd1f52c7cf1eda29d9436c53",
+    "tdf-event-memory-main-917-http-v1.log": "55b6d63bd03adddceac250ee519a5ccc3a2f90069c45aec6a3fb2e8a361cfe42"
+  }
+}

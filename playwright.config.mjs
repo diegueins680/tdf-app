@@ -6,7 +6,7 @@ export default defineConfig({
   testDir: './e2e/web',
   // These suites require their own synthetic-media or API/S3 lifecycle and
   // run from playwright.music-native/-integration.config.mjs instead.
-  testIgnore: [/music-player-native\.spec\.mjs$/, /music-player-integration\.spec\.mjs$/, /community-discovery\.spec\.mjs$/],
+  testIgnore: [/music-player-native\.spec\.mjs$/, /music-search-native\.spec\.mjs$/, /music-player-integration\.spec\.mjs$/, /community-discovery\.spec\.mjs$/],
   // Playwright's git-info plugin buffers the whole `git diff <prBase> HEAD`
   // into one string before truncating it. This repository's merge commits span
   // tens of thousands of files, which exceeds V8's maximum string length and
@@ -73,8 +73,10 @@ export default defineConfig({
         userAgent: 'Mozilla/5.0 (Linux; Android 13; 22111317G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36',
       },
     },
-    { name: 'webkit-iphone', grep: /@mobile-flow/, use: { ...devices['iPhone 13'] } },
+    // Keep the complete WebKit suites and their original assertion budgets,
+    // while bounding per-project browser contention on the hosted CI runner.
+    { name: 'webkit-iphone', workers: 1, grep: /@mobile-flow/, use: { ...devices['iPhone 13'] } },
     { name: 'firefox-critical', grep: /@critical/, use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit-critical', grep: /@critical/, use: { ...devices['Desktop Safari'] } },
+    { name: 'webkit-critical', workers: 1, grep: /@critical/, use: { ...devices['Desktop Safari'] } },
   ],
 });

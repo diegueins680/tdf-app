@@ -32,6 +32,7 @@ import { Records, type RecordsResourceDTO } from '../api/records';
 import { STUDIO_MAP_URL } from '../config/appConfig';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
 import { formatNumberForUser } from '../utils/formatters';
+import StudioGallery from '../components/StudioGallery';
 
 const GENERAL_SIGNUP_PATH = '/login?signup=1';
 const FAN_SIGNUP_PATH = '/login?signup=1&intent=follow_artists&redirect=/fans';
@@ -812,6 +813,7 @@ export default function TdfPlatformPage() {
             </Grid>
 
           </Grid>
+          <StudioGallery />
         </Container>
       </Box>
 
