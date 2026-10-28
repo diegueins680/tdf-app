@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-28T06:57:41.064Z",
+  "generatedAt": "2026-10-28T07:38:23.879Z",
   "repositoryRoot": ".",
   "filesScanned": 2444,
   "candidateCount": 1351,
@@ -78415,7 +78415,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 408,
+      "consumerCount": 409,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -78470,6 +78470,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.ts",
         "tdf-hq-ui/src/analytics/onboardingProgress.test.ts",
@@ -78517,8 +78518,7 @@
         "tdf-hq-ui/src/features/interactions/AccountControls.tsx",
         "tdf-hq-ui/src/features/interactions/CommentComposer.tsx",
         "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx",
-        "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
-        "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx"
+        "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -162470,7 +162470,7 @@
       "lines": [
         409
       ],
-      "consumerCount": 408,
+      "consumerCount": 409,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -162525,6 +162525,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.ts",
         "tdf-hq-ui/src/analytics/onboardingProgress.test.ts",
@@ -162572,8 +162573,7 @@
         "tdf-hq-ui/src/features/interactions/AccountControls.tsx",
         "tdf-hq-ui/src/features/interactions/CommentComposer.tsx",
         "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx",
-        "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
-        "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx"
+        "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",

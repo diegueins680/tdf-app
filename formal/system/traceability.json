@@ -10436,7 +10436,7 @@
       "title": "Every published service is selectable from the first step of the public booking form",
       "domain": "BOOK",
       "statement": "The public booking form at /reservar shows the service selector on its first step (contact) as well as on the schedule step, listing every active offering returned by the public service catalog (recording, voice, podcast, mixing, mastering, rehearsal, DJ booth practice, classes, event production, ...). DJ booth practice is an ordinary offering: there is no dedicated booking page, header entry, Instagram entry link, platform or commerce card for it. The legacy /dj-booth and /reservar/dj-booth URLs redirect to /reservar with the DJ booth service preselected and tracking parameters preserved; a ?servicio= or ?service= query preselects a service without locking the selector. The legacy DJ booth feature remains addressable for compatibility but is absent from feature search on web and Mobile. Legacy DJ URLs remove conflicting service parameters before selecting DJ booth.",
-      "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link.",
+      "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link. Product owner UX execution mission, continued 2026-10-26: actionable recovery from temporary failures while preserving form data and backend booking authority.",
       "source": "tdf-hq-ui public booking form, public navigation and landing links",
       "contract": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
       "actors": [
@@ -10462,7 +10462,8 @@
       "allowedTransitions": [
         "catalog loading -> first active offering selected",
         "first active offering selected -> visitor-selected offering (any step before confirmation)",
-        "/dj-booth -> /reservar?servicio=dj-booth-practice (replace navigation, query and hash preserved)"
+        "/dj-booth -> /reservar?servicio=dj-booth-practice (replace navigation, query and hash preserved)",
+        "catalog unavailable -> visitor-triggered catalog retry -> available service selection, or another recoverable unavailable state without leaving the page"
       ],
       "forbiddenTransitions": [
         "Service selector hidden until the schedule step",
@@ -10478,8 +10479,8 @@
       "privacy": "No personal data in the redirect beyond the tracking parameters already present in the inbound URL.",
       "concurrency": "Catalog refetches keep the visitor's selection when the offering is still active and fall back to the first active offering otherwise. Changing the service synchronously clears the previous quote and terms acceptance. New availability requests clear stale pricing; aborted responses and cancellations cannot overwrite a newer quote.",
       "idempotency": "Re-selecting the same offering is a no-op; the redirect is replace-navigation.",
-      "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps.",
-      "recovery": "Reloading the page refetches the catalog.",
+      "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps. Retrying does not create a booking, checkout or payment, and the form remains disabled while an unavailable catalog is being refetched.",
+      "recovery": "The catalog-unavailable notice provides an explicit retry of GET /services/catalog/public without reloading the page or clearing contact edits, the service query parameter or the current step. The retry button is disabled while fetching. Another failure or empty response retains the retry action; a nonempty successful response restores normal service selection and form progression. Reloading the page also refetches the catalog.",
       "observability": "Existing booking and API telemetry; no new events.",
       "property": "AllActiveOfferingsSelectableOnContactStep and LegacyDjBoothUrlRedirects",
       "implementation": [
@@ -10500,10 +10501,11 @@
         "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
-        "tdf-mobile/__tests__/featureRegistry.test.ts"
+        "tdf-mobile/__tests__/featureRegistry.test.ts",
+        "e2e/web/booking-catalog-recovery.spec.mjs"
       ],
       "formalModels": [],
-      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression.",
+      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression. Error and empty-catalog component regressions preserve edited contacts across a pending retry and another empty response before success, keep the form gated, retain query-based service selection, and assert no booking/checkout calls. Browser fixtures cover keyboard retry and restored schedule progression with all business writes blocked.",
       "evidence": "Local Jest execution (PublicBookingPage, publicRoutes, PublicBranding suites)",
       "status": "specified and implemented",
       "critical": false,
@@ -13239,6 +13241,7 @@
     "e2e/web/artist-follow.spec.mjs": "540fda97e2d352ce4e8319d85f21f12dd097968b3d7edd0689a7ca419dad5eb8",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "3bed38b4a63187e387f4c971d06f3e7fe3f76516d316ca2b1626d2aa1385412b",
+    "e2e/web/booking-catalog-recovery.spec.mjs": "04cb5ff5442060aaa69077587e4e51d7fcf3b814d387bbb07407fba0d508a595",
     "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
     "e2e/web/community-discovery.spec.mjs": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
     "e2e/web/course-enrollment.spec.mjs": "f64fed981fa69b332499556853637fca938c9b026b90c4aaf1b4f5bb97633311",
@@ -13882,7 +13885,7 @@
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
     "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
-    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "e9b604b8d0c83c918608e020e2c4e8e1ba38658387c3d81fa8fa39650ccbbdb5",
+    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "caef6efc2017f76bfbc27eb6a1dbed146b016ac2d197cd4911e5c3fefd000293",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "72aa8e30a1a14092bcd77ba295d18e7e57810c877d6245df1fd08be839b20272",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
@@ -14097,7 +14100,7 @@
     "tdf-hq-ui/src/pages/PartiesPage.tsx": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
-    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "495911682a5a165839906d23f3ed5581be3b950b961a777ebc6eeec23893653c",
+    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "6abc794d19484430b8e0b53da892826b80a20fefbb30c69f8ea0fccfb632be5b",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "2aa258dc66bffa06a09bc3581cc0d1c1342b512504cbd6f897854c79c0caeece",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
@@ -24545,6 +24548,12 @@
         "relationship": "tests"
       }
     ],
+    "e2e/web/booking-catalog-recovery.spec.mjs": [
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/sql/2026-10-11_operations_failure_replay.sql": [
       {
         "requirement": "OPS-FAILURE-REPLAY-001",
@@ -26078,6 +26087,18 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-9517b2194ab847fb",
+      "path": "e2e/web/booking-catalog-recovery.spec.mjs",
+      "sha256": "04cb5ff5442060aaa69077587e4e51d7fcf3b814d387bbb07407fba0d508a595",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
           "relationship": "tests"
         }
       ]
@@ -32889,7 +32910,7 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "e9b604b8d0c83c918608e020e2c4e8e1ba38658387c3d81fa8fa39650ccbbdb5",
+      "sha256": "caef6efc2017f76bfbc27eb6a1dbed146b016ac2d197cd4911e5c3fefd000293",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38484,7 +38505,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "495911682a5a165839906d23f3ed5581be3b950b961a777ebc6eeec23893653c",
+      "sha256": "6abc794d19484430b8e0b53da892826b80a20fefbb30c69f8ea0fccfb632be5b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55580,7 +55601,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "78a204bfc13239654c832fd0660c965f668378fd00bb7add469ab29c2bb617c7",
+      "sourceSha256": "6b4a0e2232c91a3b9274f8b5f3704dbc0314dfac7715f054a8711cab99705c29",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -55608,7 +55629,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "78a204bfc13239654c832fd0660c965f668378fd00bb7add469ab29c2bb617c7",
+      "sourceSha256": "6b4a0e2232c91a3b9274f8b5f3704dbc0314dfac7715f054a8711cab99705c29",
       "definition": {
         "states": [
           "absent",
@@ -55638,7 +55659,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "78a204bfc13239654c832fd0660c965f668378fd00bb7add469ab29c2bb617c7",
+      "sourceSha256": "6b4a0e2232c91a3b9274f8b5f3704dbc0314dfac7715f054a8711cab99705c29",
       "definition": {
         "export": [
           "queued",
