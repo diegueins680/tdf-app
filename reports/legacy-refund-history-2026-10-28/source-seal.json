@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "7e86448dd9e81cb941fa6d9bef31617383ca13ad",
+  "sourceTree": "6ed9d776e89714130b218b641de62c282c5c383e",
+  "baselineCommit": "4d48e13556f3fb1a2756b30099f09a5992682ad3",
+  "registeredSourceInputs": 1408,
+  "sourceDigest": "887b42de82ab85181fc2454c70ad3b723d1a09fc0e56a4fff9ffd158d58b7610",
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "executionHashesMatchCommittedTreeAndMobilePin": true,
+  "newContract": {
+    "path": "formal/system/legacy-refund-history.md",
+    "sha256": "9957d1dc5550ae031d91978e8ef395f48f1dee027a8dbcefb61f63b934819722",
+    "discoveryEntryMatches": true
+  },
+  "cleanCommittedReporterPass": true,
+  "immutableSourceAdmissionPass": true,
+  "mainObserved": "e0cb1a7f3dc9a65260bd0b2fbd67a6316f93f2f7",
+  "parentPR": 657,
+  "requiredReviewPending": true,
+  "currentMainCompositionPending": true,
+  "release": "BLOCKED",
+  "scope": "Implementation TESTED; design BOUNDED_VERIFIED. Source correspondence is not reproducible binary build, provider-payment attestation or full workflow proof.",
+  "pullRequest": 658
+}
