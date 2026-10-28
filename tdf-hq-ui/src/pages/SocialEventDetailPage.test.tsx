@@ -1,10 +1,16 @@
 import { jest } from '@jest/globals';
 jest.unstable_mockModule('../features/interactions/InteractionPanel', () => ({ InteractionPanel: () => null }));
+jest.unstable_mockModule('../components/events/EventMemoryInvitations', () => ({ default: () => null }));
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { SocialEventDTO, SocialEventMomentDTO, SocialTicketTierDTO } from '../api/socialEvents';
 
+const preferenceMock = jest.fn(async () => ({ inApp: false, supportsExtendedMoments: true }));
+const uploadMomentMediaMock = jest.fn<(eventId: string, file: File) => Promise<{ eiuPublicUrl: string }>>();
+const createMomentMock = jest.fn<(eventId: string, body: unknown) => Promise<SocialEventMomentDTO>>();
+let activeSession: { partyId: number } | null = null;
+jest.unstable_mockModule('../api/eventMemoryInvitations', () => ({ EventMemoryInvitations: { preferences: preferenceMock } }));
 const getEventMock = jest.fn<(eventId: string) => Promise<SocialEventDTO>>();
 const listMomentsMock = jest.fn<(eventId: string) => Promise<SocialEventMomentDTO[]>>();
 const listTicketTiersMock = jest.fn<(eventId: string) => Promise<SocialTicketTierDTO[]>>();
@@ -15,8 +21,9 @@ jest.unstable_mockModule('../api/socialEvents', () => ({
     getEvent: (eventId: string) => getEventMock(eventId),
     listMoments: (eventId: string) => listMomentsMock(eventId),
     listTicketTiers: (eventId: string) => listTicketTiersMock(eventId),
-    createMoment: jest.fn(),
+    createMoment: createMomentMock,
     uploadMomentImage: jest.fn(),
+    uploadMomentMedia: uploadMomentMediaMock,
     createTicketTier: jest.fn(),
   },
 }));
@@ -32,7 +39,8 @@ jest.unstable_mockModule('../api/eventTickets', () => ({
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  useSession: () => ({ session: null }),
+  useSession: () => ({ session: activeSession }),
+  getStoredSessionToken: () => null,
 }));
 
 jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({
@@ -98,12 +106,172 @@ const renderPage = (entry = '/social/eventos/121') => {
 
 describe('SocialEventDetailPage ticket sharing', () => {
   beforeEach(() => {
+    activeSession = null;
+    preferenceMock.mockClear();
+    createMomentMock.mockReset();
+    uploadMomentMediaMock.mockReset();
     getEventMock.mockReset().mockResolvedValue(eventFixture);
     listMomentsMock.mockReset().mockResolvedValue([]);
     listTicketTiersMock.mockReset().mockResolvedValue([tierFixture]);
     getStorefrontMock.mockReset().mockResolvedValue({ checkoutAvailable: true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
+  });
+
+  it('publishes a text memory with its server-supported type and keeps failed text in the editor', async () => {
+    activeSession = { partyId: 9 };
+    createMomentMock.mockRejectedValueOnce(new Error('Connection failed'));
+    const view = renderPage('/social/eventos/121?compose=1');
+    const type = await screen.findByRole('combobox', { name: 'Tipo de recuerdo' });
+    fireEvent.mouseDown(type);
+    fireEvent.click(await screen.findByRole('option', { name: 'Solo texto' }));
+    const caption = screen.getByRole('textbox', { name: 'Describe tu publicación' });
+    fireEvent.change(caption, { target: { value: 'Un recuerdo sin archivo' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar' }));
+    await screen.findByText('Connection failed');
+    expect(createMomentMock).toHaveBeenCalledWith('121', { emCreateCaption: 'Un recuerdo sin archivo', emCreateMediaUrl: '', emCreateMediaType: 'text' });
+    expect((caption as HTMLInputElement).value).toBe('Un recuerdo sin archivo');
+    expect(caption.getAttribute('maxlength')).toBe('280');
+    view.unmount();
+  });
+
+  it('retains the exact event and composer intent through registration or sign-in', async () => {
+    const view = renderPage('/social/eventos/121?compose=1#momentos');
+    const link = await screen.findByRole('link', { name: 'Iniciar sesión o crear una cuenta' });
+    expect(new URL(link.getAttribute('href')!, 'https://example.test').searchParams.get('redirect')).toBe('/social/eventos/121?compose=1#momentos');
+    view.unmount();
+  });
+
+  it('links artists by the existing canonical Party identity without treating a social artist ID as a Party', async () => {
+    getEventMock.mockResolvedValue({ ...eventFixture, eventArtists: [
+      { artistId: '999', artistPartyId: '55', artistName: 'Synthetic Artist' },
+      { artistId: '1000', artistName: 'Unlinked Artist' },
+    ] });
+    const view = renderPage();
+    expect((await screen.findByRole('link', { name: 'Synthetic Artist' })).getAttribute('href')).toBe('/artista/55');
+    expect(screen.queryByRole('link', { name: 'Unlinked Artist' })).toBeNull();
+    view.unmount();
+  });
+
+  it('does not dispatch a draft when credentials change before the session render', async () => {
+    activeSession = { partyId: 9 };
+    createMomentMock.mockResolvedValue({ emId: '999', emAuthorName: 'Synthetic B', emCaption: 'Private draft for A', emMediaType: 'text', emMediaUrl: '' });
+    const view = renderPage();
+    const kind = await screen.findByRole('combobox', { name: 'Tipo de recuerdo' });
+    fireEvent.mouseDown(kind);
+    fireEvent.click(await screen.findByRole('option', { name: 'Solo texto' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Describe tu publicación' }), { target: { value: 'Private draft for A' } });
+    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    advanceAuthSessionEpoch();
+    activeSession = { partyId: 10 };
+    // Credentials change synchronously; the old button can still exist until
+    // React commits the session update. No publication may cross that boundary.
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
+    await waitFor(() => expect(Boolean(screen.queryByText('Tu sesión cambió. Vuelve al evento antes de publicar.')) || createMomentMock.mock.calls.length > 0).toBe(true));
+    expect(createMomentMock).not.toHaveBeenCalled();
+    await screen.findByText('Tu sesión cambió. Vuelve al evento antes de publicar.');
+    expect(uploadMomentMediaMock).not.toHaveBeenCalled();
+    view.unmount();
+  });
+
+  it('does not upload the previous account file when credentials change before render', async () => {
+    activeSession = { partyId: 9 };
+    const view = renderPage();
+    await screen.findByRole('combobox', { name: 'Tipo de recuerdo' });
+    fireEvent.change(view.container.querySelector('input[type="file"]')!, { target: { files: [new File(['synthetic'], 'private-A.png', { type: 'image/png' })] } });
+    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    advanceAuthSessionEpoch(); activeSession = { partyId: 10 };
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
+    await waitFor(() => expect(Boolean(screen.queryByText('Tu sesión cambió. Vuelve al evento antes de publicar.')) || uploadMomentMediaMock.mock.calls.length > 0).toBe(true));
+    expect(uploadMomentMediaMock).not.toHaveBeenCalled();
+    expect(createMomentMock).not.toHaveBeenCalled();
+    view.unmount();
+  });
+
+  it('retains the selected file after a malformed upload reply and permits a confirmed retry', async () => {
+    activeSession = { partyId: 9 };
+    uploadMomentMediaMock.mockResolvedValueOnce({} as { eiuPublicUrl: string }).mockResolvedValueOnce({ eiuPublicUrl: 'https://assets.persona.test/confirmed.png' });
+    createMomentMock.mockResolvedValue({ emId: '993', emAuthorName: 'Synthetic', emMediaUrl: 'https://assets.persona.test/confirmed.png', emMediaType: 'image' });
+    const view = renderPage();
+    await screen.findByRole('combobox', { name: 'Tipo de recuerdo' });
+    fireEvent.change(view.container.querySelector('input[type="file"]')!, { target: { files: [new File(['synthetic'], 'retry.png', { type: 'image/png' })] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
+    await screen.findByText('No se pudo confirmar la carga. Conservamos el archivo para reintentar.');
+    expect(createMomentMock).not.toHaveBeenCalled();
+    expect(screen.getByText('retry.png')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
+    await waitFor(() => expect(createMomentMock).toHaveBeenCalledTimes(1));
+    expect(uploadMomentMediaMock).toHaveBeenCalledTimes(2);
+    view.unmount();
+  });
+
+  it('does not publish an uploaded draft after the authentication epoch changes', async () => {
+    activeSession = { partyId: 9 };
+    let finishUpload!: (value: { eiuPublicUrl: string }) => void;
+    uploadMomentMediaMock.mockImplementation(() => new Promise((resolve) => { finishUpload = resolve; }));
+    const view = renderPage();
+    await screen.findByRole('combobox', { name: 'Tipo de recuerdo' });
+    fireEvent.change(view.container.querySelector('input[type="file"]')!, { target: { files: [new File(['synthetic'], 'memory.png', { type: 'image/png' })] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
+    await waitFor(() => expect(uploadMomentMediaMock).toHaveBeenCalledTimes(1));
+    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    advanceAuthSessionEpoch();
+    finishUpload({ eiuPublicUrl: 'https://assets.persona.test/previous-account.png' });
+    await screen.findByText('Tu sesión cambió. Vuelve al evento antes de publicar.');
+    expect(createMomentMock).not.toHaveBeenCalled();
+    view.unmount();
+  });
+
+  it('removes the previous account memories while the new account feed is pending', async () => {
+    activeSession = { partyId: 9 };
+    listMomentsMock.mockResolvedValueOnce([
+      { emId: '987', emAuthorName: 'Ana', emCaption: 'Recuerdo privado de la cuenta anterior', emMediaUrl: '', emMediaType: 'text' },
+    ]);
+    const view = renderPage();
+    await screen.findByText('Recuerdo privado de la cuenta anterior');
+    let finishFeed!: (moments: SocialEventMomentDTO[]) => void;
+    listMomentsMock.mockImplementation(() => new Promise((resolve) => { finishFeed = resolve; }));
+    activeSession = { partyId: 10 };
+    view.rerender(
+      <QueryClientProvider client={view.queryClient}>
+        <MemoryRouter initialEntries={['/social/eventos/121']}>
+          <Routes><Route path="/social/eventos/:eventId" element={<SocialEventDetailPage />} /></Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    await waitFor(() => expect(listMomentsMock).toHaveBeenCalledTimes(2));
+    expect(screen.queryByText('Recuerdo privado de la cuenta anterior')).toBeNull();
+    finishFeed([]);
+    await screen.findByText('Todavía no hay publicaciones');
+    expect(screen.queryByText('Recuerdo privado de la cuenta anterior')).toBeNull();
+    view.unmount();
+  });
+
+  it('preserves the new account draft when an earlier publication finishes late', async () => {
+    activeSession = { partyId: 9 };
+    let finish!: (value: SocialEventMomentDTO) => void;
+    const pending = new Promise<SocialEventMomentDTO>((resolve) => { finish = resolve; });
+    createMomentMock.mockReturnValueOnce(pending);
+    const view = renderPage();
+    fireEvent.mouseDown(await screen.findByRole('combobox', { name: 'Tipo de recuerdo' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Solo texto' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Describe tu publicación' }), { target: { value: 'Synthetic account A draft' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
+    await waitFor(() => expect(createMomentMock).toHaveBeenCalledTimes(1));
+    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    advanceAuthSessionEpoch(); activeSession = { partyId: 10 };
+    view.rerender(<QueryClientProvider client={view.queryClient}><MemoryRouter initialEntries={['/social/eventos/121']}>
+      <Routes><Route path="/social/eventos/:eventId" element={<SocialEventDetailPage />} /></Routes>
+    </MemoryRouter></QueryClientProvider>);
+    const caption = await screen.findByRole('textbox', { name: 'Describe tu publicación' });
+    await waitFor(() => expect(caption).toHaveProperty('disabled', false));
+    expect(caption).toHaveProperty('value', '');
+    fireEvent.change(caption, { target: { value: 'Synthetic account B draft' } });
+    await act(async () => { finish({ emId: '991', emAuthorName: 'Synthetic A', emMediaType: 'text', emMediaUrl: '', emCaption: 'Synthetic account A draft' }); await pending; });
+    await waitFor(() => expect(view.queryClient.isMutating()).toBe(0));
+    expect(screen.getByRole('textbox', { name: 'Describe tu publicación' })).toHaveProperty('value', 'Synthetic account B draft');
+    expect(createMomentMock).toHaveBeenCalledTimes(1);
+    view.unmount();
   });
 
   it('loads, displays and focuses the exact deep-linked moment after the list arrives', async () => {

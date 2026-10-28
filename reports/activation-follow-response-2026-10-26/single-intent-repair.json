@@ -1,0 +1,162 @@
+{
+  "capturedAt": "2026-10-26T23:44:41.584209+00:00",
+  "status": "PARTIAL",
+  "problem": "The write receipt and settled-membership effect can both queue the same resume URL replacement while the first navigation is pending. A second navigation key can invalidate the next explicit action.",
+  "firstNativeObservation": {
+    "source": "582e2a1d41098547a81adcaf821809a5fafd2c0f",
+    "binarySource": "1dd657aca9186b9c4a1b0116826223b6eca03c86",
+    "receipt": "/private/tmp/tdf-follow-response-runtime-20261026-hsa1sbu4/results.json",
+    "status": "FAILED",
+    "observedDeleteRequests": 0,
+    "scope": "CTA after attempted explicitunfollow missing; noDELETEsent. InitialattemptdidnotcaptureDOM/navigation beforecleanup, so exactcausality remainsincomplete.",
+    "cleanupAllTrue": true
+  },
+  "sameSourceDiagnosticReplay": {
+    "receipt": "/private/tmp/tdf-follow-response-runtime-20261026-40mgphtj/results.json",
+    "status": "VERIFIED-isolated-six-cases-only",
+    "appCodeUnchanged": true,
+    "addedObservationOnly": true,
+    "sameUrlCleanupsObserved": 2,
+    "cleanupSeparationMilliseconds": 7,
+    "scope": "Six originalassertionspassed; passive navigation events showedduplicatecleanup. Thispassdoesnoterasefirstfailureorproveitsrootcause."
+  },
+  "deterministicNegative": {
+    "appSource": "582e2a1d41098547a81adcaf821809a5fafd2c0f",
+    "casesFailed": 2,
+    "expectedReplacements": 1,
+    "observedReplacements": 2,
+    "phases": [
+      "ordinarysuccess",
+      "lost-response recovery"
+    ],
+    "log": "/private/tmp/tdf-follow-response-evidence-20261026/resume-single-navigation-negative.log",
+    "logSha256": "9d1e25153243ca22e642e7429a8ff2181ed2f1bc74bb9d82db710eb531b7ef44"
+  },
+  "fix": "Share idempotentcurrent-location-key consumption between receipt and settled-stateeffect; preserveall existing session/profile/navigationguards andunrelatedquery/hash. No POST/DELETEretry/endpoint/authorizationchange.",
+  "verification": {
+    "newCasesPassed": 2,
+    "allFocusedTestsPassed": 158,
+    "suites": 8,
+    "typescript": "PASS",
+    "eslint": "PASS",
+    "nativeAfterFix": {
+      "status": "VERIFIED-isolated-six-cases-only",
+      "source": "6dc100e55c77c3d6d41fda8352e39f3151c9f1e4",
+      "sourceTree": "af6d9639a1fe63dde1d13d4c7491430a0de49c21",
+      "actualVersion": {
+        "buildTime": "2026-10-26T22:44:06Z",
+        "commit": "1dd657aca9186b9c4a1b0116826223b6eca03c86",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      },
+      "schemaAuthority": "2e01bbe1263e8761fa2692bd951f828c01142449",
+      "migrations": 222,
+      "databaseAssertions": {
+        "syntheticPairs": 6,
+        "followRows": 6,
+        "followEvents": 8,
+        "explicitUnfollowEvents": 2,
+        "serverFirstValues": 6,
+        "clubRows": 0,
+        "artistProfiles": 1,
+        "duplicateRows": 0
+      },
+      "cleanup": {
+        "runtimesStopped": true,
+        "databaseRemoved": true,
+        "clusterStopped": true
+      },
+      "receipt": "/private/tmp/tdf-follow-response-runtime-20261026-ue_m6p2i/results.json",
+      "receiptSha256": "128de1f661368e85e023dcc067fbafc9b03b37c9671a2b2bca08b0be14d16f82",
+      "scope": "Navegador real, API nativa y PostgreSQL desechable; datos ficticios, sin proveedores ni negocio productivo."
+    },
+    "scope": "Actual component/Router/QueryClient with API/firstvalue mocks; delayedroutercommit, thenexactlyoneexplicitunfollow recoveredwithoutwrite replay.",
+    "fullJourneysAfterFix": {
+      "status": "FAILED",
+      "receipt": "/private/tmp/tdf-activation-full-main624-20261026-kwckppdn/results.json",
+      "scope": "Después del registro, el guion no encontró el botón de dejar de seguir. Su clic previo era condicional a count() sin espera; causa por confirmar con captura de fallo. Todas las limpiezas PASS."
+    },
+    "fullJourneysDiagnosticAfterFix": {
+      "status": "VERIFIED-isolated-full-artist-fan-journeys-only",
+      "source": "6dc100e55c77c3d6d41fda8352e39f3151c9f1e4",
+      "sourceTree": "af6d9639a1fe63dde1d13d4c7491430a0de49c21",
+      "actualVersion": {
+        "buildTime": "2026-10-26T22:44:06Z",
+        "commit": "1dd657aca9186b9c4a1b0116826223b6eca03c86",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      },
+      "migrationCount": 222,
+      "databaseAssertions": {
+        "syntheticPairs": 2,
+        "followRows": 2,
+        "followEvents": 2,
+        "serverFirstValues": 2,
+        "artistUiFollowerCount": 2,
+        "clubRows": 0,
+        "artistProfiles": 1,
+        "duplicateRows": 0
+      },
+      "cleanup": {
+        "runtimesStopped": true,
+        "databaseRemoved": true,
+        "clusterStopped": true
+      },
+      "receipt": "/private/tmp/tdf-activation-full-main624-20261026-wj1cb2jt/results.json",
+      "receiptSha256": "78b7a274354903ba15537a4629bd824277eacdd645af1e84289e60b52b48c153",
+      "scope": "Misma aplicación6dc y mismas aserciones/plazos del primer fallo; solo registro del probe y capturas al fallar. Un artista y dos fans ficticios, con API/SQL reales aislados. Este PASS no borra el fallo anterior ni demuestra su causa."
+    },
+    "native223FollowRecovery": {
+      "status": "VERIFIED-isolated-follow-response-recovery-only",
+      "source": "1ebdd79a9c0029f6dad1d32c329286b8995b9738",
+      "sourceTree": "928ee2fd266f4b3a3dce38a23a15b81f435b602f",
+      "actualVersion": {
+        "buildTime": "2026-10-26T23:38:02Z",
+        "commit": "f0ba27468785574fce3a538224c6acf0e5f74b7c",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      },
+      "schemaAuthority": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+      "migrationCount": 223,
+      "networkIsolation": {
+        "threeListenersLoopbackOnly": true,
+        "lanRequestsDenied": true,
+        "nonLoopbackEgressDeniedWithPositiveControl": true,
+        "noAddressRetained": true
+      },
+      "databaseAssertions": {
+        "syntheticPairs": 6,
+        "followRows": 6,
+        "followEvents": 8,
+        "explicitUnfollowEvents": 2,
+        "serverFirstValues": 6,
+        "clubRows": 0,
+        "artistProfiles": 1,
+        "duplicateRows": 0
+      },
+      "cleanup": {
+        "runtimesStopped": true,
+        "databaseRemoved": true,
+        "clusterStopped": true
+      },
+      "receipt": "/private/tmp/tdf-follow-response-runtime-20261026-u1fnd257/results.json",
+      "receiptSha256": "562b70d203a166fa3ef5277e239e8216f6379df4c68599238554f474ec5afee3"
+    },
+    "full223Journeys": {
+      "status": "VERIFIED-isolated-full-artist-fan-journeys-only",
+      "receipt": "full-journeys-runtime-main596.json",
+      "journey": "full-journeys-observation-main596.json",
+      "manualFollowRequired": true,
+      "humanParticipants": 0
+    }
+  },
+  "humanParticipants": 0,
+  "productionBusinessWrites": false,
+  "remote627Updated": false,
+  "deployment": "NOT TESTED/NOTPERFORMED",
+  "next": "CI y revisión independiente sobre el head publicado, integración con los predecesores vigentes y admisión protegida; después verificar la versión canónica. No desplegar backend sin sus gates de recuperación y seguridad.",
+  "fixSource": "6dc100e55c77c3d6d41fda8352e39f3151c9f1e4",
+  "latestProtectedMain": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "currentIntegrationSource": "1ebdd79a9c0029f6dad1d32c329286b8995b9738",
+  "scope": "Los recibos ejecutados conservan su SHA de fuente real. La publicación de evidencia añade solo reports; los inputs web y de backend se comparan byte a byte antes de publicar. No hay participantes humanos ni negocio productivo."
+}

@@ -17,6 +17,7 @@ This contract covers web (`tdf-hq-ui`) behavior only. Backend authorization and 
   2. an explicit onboarding intent;
   3. Comunidad (`/fans`), whose artist discovery precedes promotional cards.
 - External, protocol-relative, backslash and `/login` targets are rejected.
+- A rejected recovery token is explained in the active ES/EN locale and offers a new-link action preserving the safe return path and language. Only the reset-confirmation endpoint's known invalid/expired-token response at HTTP400/401 gets this classification; login credential errors, server failures and other validation retain their own meaning. Reset expiry and single use remain authoritative backend decisions.
 
 ## MKT-CART-001: discoverable Marketplace cart
 - A header cart control with a count badge is visible at every width on Marketplace pages, and on other pages while the cart has items. It opens the cart in one interaction.
@@ -36,3 +37,12 @@ This contract covers web (`tdf-hq-ui`) behavior only. Backend authorization and 
 - Booking, Live Sessions and pages with the docked radio bar do not squeeze sibling columns or overflow horizontally.
 - Fixed bars never cover the page end or submit controls.
 - Controls on dark surfaces keep at least 3:1 icon contrast and 4.5:1 text contrast.
+
+
+## Automatic name privacy — AUTH-ENTRY-002
+
+Email signup still asks only for email and password. A missing account name must use a neutral label rather than the private email or its local part. This also applies to the Google account-creation fallback when the verified provider profile supplies no usable name. A supplied provider name keeps its existing trimming semantics; credential email, role grants, linking, terms and existing accounts are unchanged. People can edit the public name through existing profile forms.
+
+An isolated counterexample registered an artist with a fictional email, activated the profile and performed no profile PUT: an anonymous public-profile GET and directory search returned the email-derived marker before the first edit. The repaired email flow must return no such marker before saving, and must still publish a deliberately chosen artistic name after the ordinary save. Two LoginPage request tests fail on the old behavior and require a neutral name while preserving the actual credential email. The five signup-name cases retain coverage of aliases, punctuation and long private identifiers without publishing them.
+
+The backend pure AccountNameSpec covers absent, empty, whitespace-only and supplied provider names. Actual Google/Apple provider login, historical account-name remediation and human comprehension are not established by these checks. This is a narrow default-name requirement, not a claim that all profile-publication or identity-consent obligations are proved.

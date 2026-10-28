@@ -355,7 +355,7 @@ jobs:
       - name: Install native build dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 pkg-config git curl ca-certificates ffmpeg jq libxml2-utils perl unzip zip lsof
+          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 python3-psycopg2 pkg-config git curl ca-certificates ffmpeg jq libxml2-utils perl unzip zip lsof
 
       - name: Trust the exact container checkout for evidence Git reads
         # Container paths resolve to /__w while checkout may trust the host alias.
@@ -401,6 +401,11 @@ jobs:
         env:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_search_test
         run: node scripts/test-music-catalog-search.mjs
+
+      - name: Verify public and library music rendition availability
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test
+        run: node scripts/test-music-source-projection.mjs
 
       - name: Verify authenticated account deletion and auditable resolution
         env:
@@ -555,6 +560,12 @@ jobs:
           TDF_AUTOMIG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
           TDF_AUTOMIG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-automatic-migrations-production-schema.sh
+
+      - name: Verify event memory consent replay and concurrent inbox delivery
+        run: |
+          bash scripts/test-event-memories.sh
+          bash scripts/test-event-memory-source-moderation.sh
+          python3 scripts/test-event-memories-http.py --source-moderation --binary "$BACKEND_BINARY_OUT" --output /tmp/tdf-event-memories-http
 
       - name: Verify community search ranking and privacy on PostgreSQL
         env:

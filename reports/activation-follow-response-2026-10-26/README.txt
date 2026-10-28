@@ -1,0 +1,19 @@
+Isolated follow response recovery qualification (fixtures only).
+Requires Darwin sandbox-exec/clang, PostgreSQL16 binaries, Node22.14.0, exact npm-lock dependencies and Playwright Chromium.
+Run from a CLEAN committed source with the exact Mobile gitlink initialized:
+python3 reports/activation-follow-response-2026-10-26/run.py --mode rehearsal --source /absolute/checkout --expected-source FULL_GIT_SHA --binary /absolute/qualified/tdf-hq-exe
+The native binary hash and f0ba274 revision are fixed and every declared backend input including SQL must match the candidate. SQL and its ordered223-entry manifest must exactly match protectedc66a65a, whose ancestry is required. /version is checked independently; it is never relabeled as a candidate build.
+The runner creates its own loopback PostgreSQL16 with223migrations/API/web and refuses occupied ports. Only its own services are stopped and its own disposable DB is dropped. Provider and non-loopback API egress are denied. Browser external requests are blocked.
+A successful real POST/DELETE response is discarded only after route.fetch returns success; separate scenarios prevent the write before commit or make the confirmation GET unavailable. This is fault injection, not a production outage or human pilot.
+Output contains source identity, command results, current API state, exact SQL assertions and cleanup evidence. Synthetic pairs/events/first-values are not VAR, conversion, retention or user research. No production changes or provider transactions.
+
+Native build provenance is recorded in backend-build-main624.json; it is build evidence only until runtime receipts pass. The initial1800-second compilation limit was reached and is retained; the same source/options completed using its own incremental objects. No runtime/test deadline changed.
+
+Current223-schema build provenance: backend-build-main596.json. The first Stack invocation reused the prior embedded identity; four owned version-cache objects were backed up and Stack --force-dirty recompiled TDF.Version. No source, external object, runtime deadline or guard changed. Actual /version is asserted independently. Historical222 build receipt remains backend-build-main624.json.
+
+Calificación actual: current-main-qualification.json, runtime-main596.json y full-journeys-runtime-main596.json. Fuente web ejecutada1ebdd79; API real f0ba274. El driver completo reproducible está en full-journeys/ y usa el mismo comando que arriba sustituyendo la ruta del runner. Exige siempre esperar al CTA habilitado y pulsarlo: no puede omitir el follow por un count() previo al render. Se conservan el primer fallo A/B y el primer fallo de navegación; sus causas exactas no se infieren de una repetición exitosa.
+La regresión de navegación tiene dos controles negativos sobre582e2a1 (success/recovery:2reemplazos cuando se exige1), ambos positivos tras6dc100e;158pruebas relacionadas/8suites y tipos/lint pasan. Backend/SQL/dependencias/Mobile son exactos main c66; no hay migración propia. Una nueva compilación exige su propia procedencia/hash revisados, sin desactivar el guard.
+
+PRIVATE dependency coexistence only: current runner pins native source0bb095149b376d1a235bb1accfeca7f2f943d22d with source626 a376 UNMERGED. Schema authority remains protected main63c/223. This is not approval, protected integration or deployment. Historical current-main receipts keep their executed sources. Never publish this dependency as delivered before its independent gates.
+
+Private coexistence runtime acceptance is retained in private626-runtime.json and private626-full-journeys-runtime.json. Executed web4290571/API0bb0951, not protected626. Both isolated protocols and all cleanup pass. No mediaHTTPauthorization or production claim follows from these relationship tests.
