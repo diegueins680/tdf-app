@@ -2145,7 +2145,7 @@
         "kind": "literal-union",
         "name": "SocialRsvpStatus",
         "valueCount": 3,
-        "consumerCount": 74,
+        "consumerCount": 75,
         "exactDuplicateIds": [
           "a36272e80e7d7145a46b",
           "d2df22e8c9f29c516d07"
@@ -7824,7 +7824,7 @@
         "kind": "openapi-enum",
         "name": "EventRsvpStatus",
         "valueCount": 3,
-        "consumerCount": 75,
+        "consumerCount": 76,
         "exactDuplicateIds": [
           "91952765f2d528c2a6c6",
           "d2df22e8c9f29c516d07"
@@ -10908,7 +10908,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 83,
+        "consumerCount": 84,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "daa37fcffc0e8bd8a2ed"
@@ -10967,7 +10967,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 129,
+        "consumerCount": 130,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "e2c7b685298f05265cb9"
@@ -11498,7 +11498,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 54,
+        "consumerCount": 55,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11827,7 +11827,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 82,
+        "consumerCount": 83,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -11936,7 +11936,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 75,
+        "consumerCount": 76,
         "exactDuplicateIds": [
           "91952765f2d528c2a6c6",
           "a36272e80e7d7145a46b"
@@ -12659,7 +12659,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 87,
+        "consumerCount": 88,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12730,7 +12730,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 89,
+        "consumerCount": 90,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -12774,7 +12774,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 86,
+        "consumerCount": 87,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -13447,7 +13447,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 146,
+        "consumerCount": 147,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -15485,7 +15485,7 @@
         "kind": "haskell-list",
         "name": "eventUpdateAllowedKeys",
         "valueCount": 26,
-        "consumerCount": 38,
+        "consumerCount": 39,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }

@@ -422,6 +422,7 @@ spec = do
         ticketAllocationSpec
         legacyStripeRefundSpec
         ticketTierCapacitySpec
+        ticketPurchaseEligibilitySpec
         latePaypalRefundSpec
         manualCaptureReplaySpec
         completionCapabilityIntegrationSpec
@@ -3938,6 +3939,103 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
             (Admission.AdmissionById first) (Checkout.vpOccurredAt payment)) pool
       results <- concurrently [reserve,scan]
       length (filter id results) `shouldBe` 1
+
+ticketPurchaseEligibilitySpec :: SpecWith ConnectionPool
+ticketPurchaseEligibilitySpec = describe "legacy ticket purchase eligibility at admission" $ do
+  forM_ [False,True] $ \viaCheckout -> forM_ ["postponed","cancelled","private"] $ \change ->
+    forM_ [False,True] $ \purchaseFirst ->
+    it ("orders purchase admission against organizer changes: checkout=" <> show viaCheckout <>
+        ", change=" <> T.unpack change <> ", purchaseFirst=" <> show purchaseFirst) $ \pool -> do
+      (eventKey,tierKey) <- runSqlPool freeTicketTierFixture pool
+      env <- ticketInventoryEnv pool
+      updateDTO <- ticketEligibilityUpdate pool eventKey change
+      let (_,buy,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+          updateEvent = ticketEligibilityEventUpdate (AuthedUser (toSqlKey 1) [] mempty Nothing Nothing)
+          request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
+          purchase = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT
+            (checkout (TD.TicketPurchaseWithPromoDTO request Nothing Nothing Nothing Nothing)) env)
+            else fmap (fmap (const ())) $ runHandler (runReaderT
+              (buy (keyText (fromSqlKey eventKey)) request) env)
+          changeEvent = runHandler (runReaderT
+            (updateEvent (keyText (fromSqlKey eventKey)) updateDTO) env)
+      locked <- newEmptyMVar
+      release <- newEmptyMVar
+      holderFinished <- newEmptyMVar
+      updateFinished <- newEmptyMVar
+      purchaseFinished <- newEmptyMVar
+      let holdEvent = runSqlPool (do
+            _ <- rawSql "SELECT id FROM social_event WHERE id=? FOR UPDATE"
+              [PersistInt64 (fromSqlKey eventKey)] :: SqlPersistT IO [Single Int64]
+            liftIO $ putMVar locked ()
+            liftIO $ takeMVar release) pool
+          releaseEvent = do
+            _ <- tryPutMVar release ()
+            pure ()
+      let startFirst = if purchaseFirst then forkFinally purchase (putMVar purchaseFinished)
+            else forkFinally changeEvent (putMVar updateFinished)
+          startSecond = if purchaseFirst then forkFinally changeEvent (putMVar updateFinished)
+            else forkFinally purchase (putMVar purchaseFinished)
+          awaitFirst worker = if purchaseFirst then awaitLegacyRefundWorker worker purchaseFinished
+            else awaitLegacyRefundWorker worker updateFinished
+          awaitSecond worker = if purchaseFirst then awaitLegacyRefundWorker worker updateFinished
+            else awaitLegacyRefundWorker worker purchaseFinished
+      bracket (forkFinally holdEvent (putMVar holderFinished)) (\worker ->
+        releaseEvent >> awaitLegacyRefundWorker worker holderFinished) $ \_ -> do
+        Timeout.timeout 5000000 (readMVar locked) `shouldReturn` Just ()
+        bracket startFirst (\worker ->
+          releaseEvent >> awaitFirst worker) $ \_ -> do
+          Timeout.timeout 5000000 (waitForTicketInventoryWaiters pool 1 100) `shouldReturn` Just True
+          bracket startSecond (\worker ->
+            releaseEvent >> awaitSecond worker) $ \_ -> do
+            Timeout.timeout 5000000 (waitForTicketInventoryWaiters pool 2 100) `shouldReturn` Just True
+            releaseEvent
+            updated <- Timeout.timeout 5000000 (readMVar updateFinished)
+            case updated of
+              Just (Right (Right response)) ->
+                if change == "private" then TD.eventIsPublic response `shouldBe` Just False
+                else TD.eventWorkflowStateCode response `shouldBe` Just change
+              other -> expectationFailure ("Organizer update failed: " <> show other)
+            result <- Timeout.timeout 5000000 (readMVar purchaseFinished)
+            -- The Event barrier changes no data. Both business mutations are
+            -- real handlers; their lock order decides whether the sale is admitted.
+            let expectedSold = if purchaseFirst then 3 else 0 :: Int64
+                expectedOrders = if purchaseFirst then 1 else 0 :: Int64
+            runSqlPool (rawSql
+              "SELECT tier.quantity_sold,\
+              \(SELECT count(*)::bigint FROM event_ticket_order WHERE event_id=tier.event_id),\
+              \(SELECT count(*)::bigint FROM event_ticket WHERE event_id=tier.event_id)\
+              \ FROM event_ticket_tier tier WHERE id=?"
+              [PersistInt64 (fromSqlKey tierKey)]) pool
+              `shouldReturn` [(Single expectedSold,Single expectedOrders,Single expectedSold)]
+            case result of
+              Just (Right (Right ())) | purchaseFirst -> pure ()
+              Just (Right (Left failure)) | not purchaseFirst ->
+                errHTTPCode failure `shouldBe` (if change == "private" then 403 else 409)
+              other -> expectationFailure ("Purchase admitted after closure/privacy change: " <> show other)
+
+ticketEligibilityUpdate :: ConnectionPool -> TM.SocialEventId -> Text -> IO TD.EventUpdateDTO
+ticketEligibilityUpdate pool eventKey change = do
+  [(Single starts,Single ends,Single typeId)] <- runSqlPool (rawSql
+    "SELECT start_time,end_time,event_type_id::text FROM social_event WHERE id=?"
+    [PersistInt64 (fromSqlKey eventKey)]) pool
+      :: IO [(Single UTCTime,Single (Maybe UTCTime),Single Text)]
+  [Single stateId] <- runSqlPool (rawSql
+    "SELECT state.id::text FROM workflow_state state JOIN workflow_definition workflow ON workflow.id=state.workflow_id\
+    \ WHERE workflow.code='social-event-lifecycle' AND state.code=?"
+    [PersistText (if change == "private" then "on_sale" else change)]) pool :: IO [Single Text]
+  let fields = ["eventTitle" A..= ("Synthetic purchase eligibility" :: Text),
+        "eventStart" A..= starts,"eventEnd" A..= ends,"eventCapacity" A..= (20 :: Int),
+        "eventTypeId" A..= typeId,"eventArtists" A..= ([] :: [TD.ArtistDTO])]
+      mutation = if change == "private" then ["eventIsPublic" A..= False]
+        else ["eventWorkflowStateId" A..= stateId]
+  case A.fromJSON (A.object (fields <> mutation)) of
+    A.Error message -> fail message
+    A.Success dto -> pure dto
+
+ticketEligibilityEventUpdate :: AuthedUser -> Text -> TD.EventUpdateDTO -> ReaderT Env Handler TD.EventDTO
+ticketEligibilityEventUpdate user = case Social.socialEventsServer user of
+  events :<|> _ -> case events of
+    _ :<|> _ :<|> _ :<|> updateEvent :<|> _ -> updateEvent
 
 ticketTierCapacitySpec :: SpecWith ConnectionPool
 ticketTierCapacitySpec = describe "legacy ticket inventory mutation concurrency" $ do
