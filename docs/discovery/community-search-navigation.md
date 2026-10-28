@@ -319,3 +319,13 @@ browser regression waits for the real search field before checking touch/click
 dismissal, warm reopen, Escape and focus restoration. The previous mobile layout
 fails the close-control viewport check; a loading-placeholder-only check is not
 accepted as evidence that the loaded menu can be dismissed.
+
+
+## Artist fan profile navigation
+
+Product authority: explicit owner request of October 28, 2026. On artist pages,
+each fan photo and display name link to `/perfil/{afFanId}` using the fan Party ID
+returned by the artist fans endpoint. The row is one native link with an accessible
+name and visible keyboard focus. Fans without a photo retain their initials inside
+the same link. The existing profile route retains its session and visibility checks.
+Pagination continues to select fan pages without opening a profile.

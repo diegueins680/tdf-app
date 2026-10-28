@@ -10747,7 +10747,8 @@
         "tdf-hq-ui/src/components/PublicBranding.tsx",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "tdf-hq-ui/src/components/ArtistFansList.tsx"
       ],
       "tests": [
         "scripts/test-community-search.py",
