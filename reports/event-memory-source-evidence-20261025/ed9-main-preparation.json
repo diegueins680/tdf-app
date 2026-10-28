@@ -1,0 +1,80 @@
+{
+  "observedAt": "2026-10-26T06:52:04.964832+00:00",
+  "scope": "Qualified merge preparation, not protected-main integration or production delivery",
+  "source": "eb619822a07526afc815285c030fd7525a0d1466",
+  "mergedProtectedMain": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+  "mergedPr": 613,
+  "newerObservedProtectedMain": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "newerPr": 619,
+  "newerMainIncluded": false,
+  "requirements": {
+    "protectedExact": 143,
+    "combined": 147
+  },
+  "catalogCandidates": 1336,
+  "migrations": 225,
+  "backendSqlContractAndDependencyInputsByteIdenticalTo": "262295679df492dde850333779db431132092993",
+  "ui": {
+    "node": "22.14.0",
+    "jestSuites": 309,
+    "jestTests": 3496,
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "build": "PASS",
+    "initialGzipBytes": 335236,
+    "preloads": 5
+  },
+  "repositoryQuality": "PASS",
+  "actualApi": {
+    "requests": 120,
+    "assertionGroups": 17,
+    "sourceHashes": 24,
+    "binarySha256": "f01ef34b75f1f1c1da4a41cdbb541de9b620fd4c1f4b24aba64025e7c1b6e17d",
+    "actualVersion": {
+      "buildTime": "2026-10-26T05:36:20Z",
+      "commit": "262295679df492dde850333779db431132092993",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "sourceWorktreeDirty": true,
+    "dirtyEntries": "Only two temporary dependency symlinks; tracked application sources committed",
+    "browser": "Desktop and Pixel 7, synthetic users",
+    "externalProviderCalls": 0,
+    "runtimesStopped": true,
+    "ownedDatabaseRemoved": true
+  },
+  "logsSha256": {
+    "tdf-event-memory-ed9-ui-quality-v1.log": "228ab99642fb79e57a672d862e0cdfb9dd758996ecf1069a6b2933d08d7f5c51",
+    "tdf-event-memory-ed9-repo-quality-v1.log": "c8812248b9304bbf20852a1247530d5baaa9e98cbe2d3ff85b156406e624ee0a",
+    "tdf-event-memory-ed9-formal-v2.log": "f54add72199d8fb282f4791db10240b9c11ca05dd48b25b57aa1dbf8c4538732"
+  },
+  "mobileNewPr": 172,
+  "mobileNewHead": "f5197c69ca1eeddbb7664b1c6b87f9c192548e6d",
+  "mobileNewValidation": {
+    "localTests": 684,
+    "localSuites": 98,
+    "hostedRun": 40282201755,
+    "hostedStatus": "IN_PROGRESS at receipt creation",
+    "deviceOrStore": "NOT VERIFIED"
+  },
+  "rootPr": 608,
+  "rootDraft": true,
+  "sourcePr": 615,
+  "sourceHead": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+  "sourceIndependentReview": "PENDING",
+  "productionWritten": false,
+  "realInvitations": {
+    "attempted": 0,
+    "sent": 0,
+    "delivered": 0,
+    "failed": 0,
+    "consentedEligible": null,
+    "excluded": null
+  },
+  "nextIntegrationGates": [
+    "Independent current-head review of source #615 and native parents/new #172",
+    "Reconcile latest protected main #619 and run affected qualification before promoting #608",
+    "Fresh review and protected CI on final root; authorized deployment procedure, recovery and production checks",
+    "Only then correct completed event status and establish actual communication preferences/eligibility before any invitation"
+  ]
+}

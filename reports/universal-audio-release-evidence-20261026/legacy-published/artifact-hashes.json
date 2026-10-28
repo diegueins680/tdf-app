@@ -1,0 +1,14 @@
+{
+  "attempt1-legacy-provider-playback.spec.mjs": "ce9ad540a66d52d995db15ad7f7f07228d590810f7fdb2b0a0bccacd4f796fa1",
+  "attempt1-playwright.config.mjs": "1edfb6c34cf0d0458c2c33d41816ce35158ac3e192cd860a7b1d4c1fb33559d1",
+  "attempt1-provenance.json": "0e65afcdd3f49f87000a5bba6e0c641b81ecb7c8bd261cd6b4bf5833900c1045",
+  "attempt1-results.json": "93d6348f68bba1266a646e423ffb295130e2d8b979ea0d5ff88a38e9f297fbeb",
+  "attempt2-legacy-provider-playback.spec.mjs": "fab22e991746a624cb4c91be9f6973d69633277bf8a94469a0fa8993d6e7692c",
+  "attempt2-playwright.config.mjs": "f9a1dcaf84e5e798c2ab91a25629730270dd2bf275dec2303c70a5dd55e76b75",
+  "attempt2-provenance.json": "27317cdfce295dbd22153c3bbbdf8cb616f76c2181ff8bae075be70700fab5c1",
+  "attempt2-results.json": "28ccae8493f81ea59167d0e92edbcfb8d380cc650e2f594781cacfdcbe88dd78",
+  "final-native-guard.json": "eeb4af4be560a57a8b32514179aa528c580d4cdf916d03ddfa0b2c942830c184",
+  "hosted-qualification.json": "7e530bafb0f86f8fcfb147118455f6544eea2fb90828c5e32e2d19c6730bf5bd",
+  "protected-merge.json": "97ecbb1b5e9fc8b8f2122d5e5aa300183ad0b3a6a5d26ef7de3ba479de6356cd",
+  "qualification-summary.json": "e81e4fea0c83de0e0280f9893fd818aad33ea721c270ffafd8df45f150af1be7"
+}

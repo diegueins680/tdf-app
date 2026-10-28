@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Alert,
+  AlertTitle,
   Box,
   Button,
   Card,
@@ -27,6 +28,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import PageShell, { EmptyState } from '../components/PageShell';
+import { artistLinkIssues } from '../utils/artistEnrichmentReview';
 import {
   ArtistEnrichment,
   type ArtistEnrichmentDecision,
@@ -50,7 +52,7 @@ const formatDate = (value?: string | null) =>
 
 const statusColor = (status: string): 'default' | 'warning' | 'success' | 'error' | 'info' => {
   if (status === 'pending' || status === 'unverified') return 'warning';
-  if (status === 'approved' || status === 'auto_applied' || status === 'completed') return 'success';
+  if (status === 'approved' || status === 'auto_applied' || status === 'completed' || status === 'verified') return 'success';
   if (status === 'rejected' || status === 'failed') return 'error';
   return 'info';
 };
@@ -132,8 +134,21 @@ export default function ArtistEnrichmentReviewPage() {
   });
 
   const profiles = useMemo(() => overview?.aeoProfiles ?? [], [overview?.aeoProfiles]);
+  const profileLinkIssues = useMemo(() => new Map(profiles.map(profile => [
+    profile.apeArtistId,
+    artistLinkIssues(profile.apeArtistId, profile.apeBrokenFields, overview?.aeoSources ?? []),
+  ])), [profiles, overview?.aeoSources]);
   const suggestions = useMemo(() => overview?.aeoSuggestions ?? [], [overview?.aeoSuggestions]);
-  const identities = useMemo(() => overview?.aeoIdentityCandidates ?? [], [overview?.aeoIdentityCandidates]);
+  const identities = useMemo(() => {
+    const candidates = overview?.aeoIdentityCandidates ?? [];
+    if (artistId === null) return candidates;
+    // Older backends return platform-wide candidates even for a scoped overview.
+    // Keep competing matches for this artist's references, including unlinked ones.
+    const references = new Set((overview?.aeoInventory ?? [])
+      .filter(reference => reference.airArtistId === artistId).map(reference => reference.airId));
+    return candidates.filter(candidate => candidate.aicArtistId === artistId
+      || references.has(candidate.aicInventoryReferenceId));
+  }, [artistId, overview?.aeoIdentityCandidates, overview?.aeoInventory]);
   const pendingSuggestions = suggestions.filter((item) => item.aesStatus === 'pending' && item.aesConfidence >= minimumConfidence);
   const pendingIdentities = identities.filter((item) => item.aicStatus === 'pending' && item.aicConfidence >= minimumConfidence);
   const incompleteProfiles = profiles.filter((item) => item.apeMissingFields.length > 0);
@@ -141,7 +156,7 @@ export default function ArtistEnrichmentReviewPage() {
   const filteredProfiles = useMemo(() => profiles.filter((profile) => {
     if ((profile.apeConfidence ?? 0) < minimumConfidence) return false;
     if (missingField && !profile.apeMissingFields.includes(missingField)) return false;
-    if (brokenOnly && profile.apeBrokenFields.length === 0) return false;
+    if (brokenOnly && !profileLinkIssues.get(profile.apeArtistId)?.brokenFields.length) return false;
     if (verificationFilter === 'never' && profile.apeLastVerifiedAt != null) return false;
     if (verificationFilter === 'stale') {
       if (!profile.apeLastVerifiedAt) return false;
@@ -149,7 +164,7 @@ export default function ArtistEnrichmentReviewPage() {
       if (new Date(profile.apeLastVerifiedAt).getTime() >= cutoff) return false;
     }
     return true;
-  }), [brokenOnly, minimumConfidence, missingField, profiles, verificationFilter]);
+  }), [brokenOnly, minimumConfidence, missingField, profiles, profileLinkIssues, verificationFilter]);
   const groupedPending = useMemo(() => {
     const groups = new Map<number, ArtistEnrichmentSuggestion[]>();
     pendingSuggestions.forEach((suggestion) => {
@@ -193,6 +208,14 @@ export default function ArtistEnrichmentReviewPage() {
         {overviewQuery.error && <Alert severity="error">No se pudo cargar la cola de enriquecimiento.</Alert>}
         {mutationError && <Alert severity="error">{mutationError instanceof Error ? mutationError.message : 'La operación falló.'}</Alert>}
         {notice && <Alert severity="success" onClose={() => setNotice(null)}>{notice}</Alert>}
+        <Alert severity="info">
+          <AlertTitle>Cómo verificar un artista</AlertTitle>
+          Revisa las coincidencias en Identidades y contrasta los datos con fuentes oficiales independientes.
+          En Sugerencias, revisa la evidencia y aprueba los datos corroborados, la confianza y la fecha
+          de verificación. Por último, aprueba el estado Verificado.
+          Reauditar solo prepara la revisión; no publica cambios.
+          Los campos faltantes indican un perfil incompleto, no que todos sean obligatorios para verificarlo.
+        </Alert>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} flexWrap="wrap" useFlexGap>
           <FormControl size="small" sx={{ minWidth: 220 }}>
@@ -305,7 +328,7 @@ export default function ArtistEnrichmentReviewPage() {
                     <Stack spacing={1} sx={{ minWidth: 0 }}>
                       <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                         <Typography variant="h6">{profile.apeArtistName}</Typography>
-                        <Chip size="small" label={profile.apeReviewStatus} color={statusColor(profile.apeReviewStatus)} />
+                        <Chip size="small" label={profile.apeReviewStatus === 'verified' ? 'Verificado' : profile.apeReviewStatus === 'unverified' ? 'Sin verificar' : profile.apeReviewStatus} color={statusColor(profile.apeReviewStatus)} />
                         <Chip size="small" variant="outlined" label={`Confianza ${formatConfidence(profile.apeConfidence)}`} />
                       </Stack>
                       <Typography variant="body2" color="text.secondary">
@@ -318,12 +341,17 @@ export default function ArtistEnrichmentReviewPage() {
                             <Chip key={field} size="small" color="warning" variant="outlined" label={field} />
                           ))}
                       </Stack>
-                      {profile.apeBrokenFields.length > 0 && (
+                      {(profileLinkIssues.get(profile.apeArtistId)?.brokenFields.length ?? 0) > 0 && (
                         <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-                          {profile.apeBrokenFields.map((field) => (
+                          {profileLinkIssues.get(profile.apeArtistId)?.brokenFields.map((field) => (
                             <Chip key={field} size="small" color="error" label={`Link roto: ${field}`} />
                           ))}
                         </Stack>
+                      )}
+                      {(profileLinkIssues.get(profile.apeArtistId)?.rightsReviewFields.length ?? 0) > 0 && (
+                        <Chip size="small" color="warning" variant="outlined"
+                          label="Imagen externa: revisar autorización de uso"
+                          sx={{ alignSelf: 'flex-start', maxWidth: '100%' }} />
                       )}
                     </Stack>
                     <Button

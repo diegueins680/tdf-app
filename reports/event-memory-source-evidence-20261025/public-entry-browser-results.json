@@ -1,0 +1,120 @@
+{
+  "status": "PASS",
+  "api": "http://127.0.0.1:18886",
+  "sourceRevision": "recorded by the owning HTTP runner",
+  "sourceApiResponses": [
+    {
+      "method": "POST",
+      "path": "/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/dc9e66b8-2115-4b88-9821-44a727841ab2/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/dc9e66b8-2115-4b88-9821-44a727841ab2/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/dc9e66b8-2115-4b88-9821-44a727841ab2/commands",
+      "status": 409
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/dc9e66b8-2115-4b88-9821-44a727841ab2/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/dc9e66b8-2115-4b88-9821-44a727841ab2/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    }
+  ],
+  "blockedExternalRequests": 33,
+  "assertions": [
+    "Unavailable public metadata retains private-event authentication and the exact original target",
+    "Anonymous desktop/phone render completed-event metadata without private moment reads; explicit publication retains attribution through login",
+    "One injected metadata network failure remains on the public event; explicit retry receives real metadata",
+    "Two real isolated sessions sign in and retain event/composer context",
+    "Desktop text publication persists and a phone reader reports it without automatically hiding it",
+    "Organizer closes the actual source report without removing the publication",
+    "One injected mismatched version receives a real 409; explicit cancel/reload/review creates a fresh decision",
+    "Keyboard hide denies both sessions after reload; scoped restoration restores the persisted source"
+  ],
+  "publicEntry": {
+    "publicSnapshotStatus": 200,
+    "completed": true,
+    "injectedNetworkFailures": 1,
+    "protectedGuestMomentReads": 0
+  },
+  "frontendStopped": true
+}

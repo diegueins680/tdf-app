@@ -1,0 +1,343 @@
+{
+  "source": "5f45677588bd8494226e00fd51d81c134b84bdd6",
+  "sourceTree": "dabd64ad893e2959fd21226206488121eaad8a24",
+  "binarySha256": "e68a97c3496ee8d0e3b8ad1689e299f410c089a5c15f128dbc677e80da189332",
+  "sourceSha256": {
+    "tdf-hq/src/TDF/Server/MusicRelease.hs": "fb6257e60b9c506e856ef7827946fbeb166ba9b4f0d5227fa9c0fa91c0bb17fc",
+    "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
+    "tdf-hq/tdf-hq.cabal": "1427f603a60bed8c4d0a9bd70d51e9e65bddb7785f50ba798e24d87bc012fafb",
+    "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+    "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
+    "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+    "scripts/test-music-catalog-search.mjs": "070bc9f4770b80966328b164bbbd29a7ecc623eb0f4f2c0612e9c24542abd6a2"
+  },
+  "startedAt": "2026-10-26T18:33:31.618410+00:00",
+  "status": "PASS-real-compiled-http-synthetic-metadata-only",
+  "steps": [
+    {
+      "label": "node-version",
+      "exitCode": 0
+    },
+    {
+      "label": "compile-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "label": "egress-denied-positive-control",
+      "exitCode": 0
+    },
+    {
+      "label": "initdb",
+      "exitCode": 0
+    },
+    {
+      "label": "start-pg",
+      "exitCode": 0
+    },
+    {
+      "label": "create-owned-db",
+      "exitCode": 0
+    },
+    {
+      "label": "full222-production-schema",
+      "exitCode": 0
+    },
+    {
+      "label": "generate-authoritative-fixture",
+      "exitCode": 0
+    },
+    {
+      "label": "GET /health",
+      "status": 200,
+      "durationMs": 28.54
+    },
+    {
+      "label": "GET /version",
+      "status": 200,
+      "durationMs": 1.57
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 38.28
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 34.11
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 30.64
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 31.66
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 29.35
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 31.02
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 22.72
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 47.09
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 31.2
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 30.03
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 32.98
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 4.6
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 29.89
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 400,
+      "durationMs": 1.38
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 30.04
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 30.66
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 29.91
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 31.34
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 30.86
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 30.71
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 30.43
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 28.98
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 29.15
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 34.07
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 28.48
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 28.63
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 33.34
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 32.59
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 29.83
+    },
+    {
+      "label": "POST /signup",
+      "status": 200,
+      "durationMs": 1199.05
+    },
+    {
+      "label": "GET /session",
+      "status": 200,
+      "durationMs": 12.32
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 30.34
+    },
+    {
+      "label": "GET /music/assets/cccc7cb9-6d59-478f-8b64-3727e1ecefc8/access",
+      "status": 200,
+      "durationMs": 5.89
+    },
+    {
+      "label": "GET /music/assets/7adae760-3e4f-4730-9e04-224e9c1fd0cf/access",
+      "status": 404,
+      "durationMs": 5.01
+    },
+    {
+      "label": "GET /music/assets/ffa84d33-dbb6-4cfc-8e73-62df9a207feb/access",
+      "status": 404,
+      "durationMs": 5.93
+    },
+    {
+      "label": "GET /music/assets/b101cbd5-93e5-408d-8363-11c6ff2e0bae/access",
+      "status": 404,
+      "durationMs": 5.68
+    },
+    {
+      "label": "GET /music/assets/8b2e2719-0c98-4eae-9b1e-8ff46fb4847c/access",
+      "status": 404,
+      "durationMs": 5.06
+    },
+    {
+      "label": "POST /session/logout",
+      "status": 200,
+      "durationMs": 2.41
+    },
+    {
+      "label": "GET /session",
+      "status": 200,
+      "durationMs": 0.79
+    },
+    {
+      "label": "POST /login",
+      "status": 200,
+      "durationMs": 1151.03
+    },
+    {
+      "label": "GET /music/releases",
+      "status": 200,
+      "durationMs": 28.3
+    },
+    {
+      "label": "GET /music/assets/cccc7cb9-6d59-478f-8b64-3727e1ecefc8/access",
+      "status": 404,
+      "durationMs": 4.65
+    },
+    {
+      "label": "drop-owned-db",
+      "exitCode": 0
+    },
+    {
+      "label": "stop-owned-pg",
+      "exitCode": 0
+    }
+  ],
+  "assertions": [
+    "Full222 ledger verified",
+    "Fresh compiled API version exact5f",
+    "Track-title search yields each published context once",
+    "Accent/case/partial query cancion",
+    "Accent/case/partial query CANCION",
+    "Accent/case/partial query   canción   sólo ",
+    "Accent/case/partial query sólo de",
+    "Existing release-title search",
+    "Existing display-artist search",
+    "Actual HTTP limit offset preserves stable order",
+    "Actual artist binding positive and negative",
+    "Actual server pagination clamps",
+    "Invalid HTTP pagination rejected",
+    "US authorized positive control",
+    "Unknown territory excludes US-only release",
+    "Invalid territory fails closed XX",
+    "Invalid territory fails closed T1",
+    "Invalid territory fails closed invalid",
+    "Mixed release per-track territory preserved",
+    "Mixed release authorized companion positive",
+    "Non-Latin matching and empty normalization",
+    "Parameter and punctuation safety",
+    "Private withdrawn territory exclusion",
+    "Real signup issues session cookie",
+    "Real cookie session authenticated",
+    "Authenticated listener retains public isolation",
+    "Real authorized source signing bounded300seconds",
+    "Actual private withdrawn territory signing denied",
+    "Original master not publicly signed",
+    "Real session logout invalidation",
+    "Real fresh login succeeds",
+    "Withdrawal removed release from actual HTTP search",
+    "Withdrawal immediately prevents fresh signed source access",
+    "Binary unchanged during HTTP qualification"
+  ],
+  "cleanup": {
+    "backendStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "scope": "Real Stack-compiled HTTP/catalog SQL bindings, session and signing handlers with owned PostgreSQL222 and synthetic publishable asset metadata. No actual object delivery, browser playback, upload processing, production environment or performance SLO claim.",
+  "nodeVersion": "v22.14.0",
+  "postgresVersion": "pg_ctl (PostgreSQL) 16.13 (Homebrew)",
+  "bindAdapterSha256": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101",
+  "networkIsolation": {
+    "listenersLoopback": true,
+    "lanDenied": true,
+    "nonLoopbackEgressDeniedPositiveControl": true,
+    "credentialsInherited": false
+  },
+  "actualVersion": {
+    "buildTime": "2026-10-26T18:24:44Z",
+    "commit": "5f45677588bd8494226e00fd51d81c134b84bdd6",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "signing": {
+    "host": "loopback-test-only",
+    "expirySeconds": 300,
+    "urlNotFetched": true,
+    "cacheControl": null,
+    "deliveryBytesVerified": false
+  },
+  "finishedAt": "2026-10-26T18:33:55.064832+00:00"
+}

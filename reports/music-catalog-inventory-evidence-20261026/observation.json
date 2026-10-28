@@ -1,0 +1,333 @@
+{
+  "startedAt": "2026-10-26T17:47:19.310Z",
+  "observedAt": "2026-10-26T17:47:23.742Z",
+  "reviewedManifestSha256": "cf359cf1f9a704b052e17cf5c2e423e66aa346a440a6de094dff751bd38fb046",
+  "sourceProvenance": {
+    "repository": "/private/tmp/tdf-player-listening-identity-20261026",
+    "sourceRevision": "2dc5c6a8308c8a8eeac1cf08d4d75788f179544b",
+    "canonicalPath": "ops/hetzner/inspect-runtime.py",
+    "canonicalSha256": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
+    "canonicalCopiedBytesEqual": true,
+    "schemaSources": [
+      "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+      "tdf-hq/src/TDF/Models.hs"
+    ],
+    "scope": "Preparation only. Canonical guard functions are copied byte-for-byte,not reimplemented. No SSH execution or production observation.",
+    "priorCanonicalInspector": {
+      "receipt": "/private/tmp/tdf-audio-production-readonly-20261026-v1.json",
+      "receiptSha256": "da5321c6332fb6c40c5be0ae3f7d939644edefe74051b816600829f1887475a0",
+      "sourceRevision": "744e75fcd2d0ec74e988436b2ccbad7c9cea5eaa",
+      "canonicalSourceSha256Matches": true,
+      "scope": "Historical root-executed canonical inspector evidence only; no new catalog aggregate execution."
+    }
+  },
+  "remotePayloadSha256": "24d235a1487f50f333a4ceb49ec200ede3d4d4aa77c3434ac3df00129858cbc8",
+  "snapshot": {
+    "aggregateFamiliesObserved": 9,
+    "aggregateFamiliesUnobserved": 0,
+    "aggregates": {
+      "assets_by_role_and_processing_state": {
+        "counts": {
+          "__other__": {
+            "__other__": 0,
+            "deleted": 0,
+            "failed": 0,
+            "inspecting": 0,
+            "invalid": 0,
+            "processing": 0,
+            "quarantined": 0,
+            "ready": 0,
+            "uploaded": 0,
+            "valid": 0
+          },
+          "cover_display": {
+            "__other__": 0,
+            "deleted": 0,
+            "failed": 0,
+            "inspecting": 0,
+            "invalid": 0,
+            "processing": 0,
+            "quarantined": 0,
+            "ready": 0,
+            "uploaded": 0,
+            "valid": 0
+          },
+          "cover_original": {
+            "__other__": 0,
+            "deleted": 0,
+            "failed": 0,
+            "inspecting": 0,
+            "invalid": 0,
+            "processing": 0,
+            "quarantined": 0,
+            "ready": 0,
+            "uploaded": 0,
+            "valid": 0
+          },
+          "ddex_manifest": {
+            "__other__": 0,
+            "deleted": 0,
+            "failed": 0,
+            "inspecting": 0,
+            "invalid": 0,
+            "processing": 0,
+            "quarantined": 0,
+            "ready": 0,
+            "uploaded": 0,
+            "valid": 0
+          },
+          "ddex_package": {
+            "__other__": 0,
+            "deleted": 0,
+            "failed": 0,
+            "inspecting": 0,
+            "invalid": 0,
+            "processing": 0,
+            "quarantined": 0,
+            "ready": 0,
+            "uploaded": 0,
+            "valid": 0
+          },
+          "ddex_xml": {
+            "__other__": 0,
+            "deleted": 0,
+            "failed": 0,
+            "inspecting": 0,
+            "invalid": 0,
+            "processing": 0,
+            "quarantined": 0,
+            "ready": 0,
+            "uploaded": 0,
+            "valid": 0
+          },
+          "master_audio": {
+            "__other__": 0,
+            "deleted": 0,
+            "failed": 0,
+            "inspecting": 0,
+            "invalid": 0,
+            "processing": 0,
+            "quarantined": 0,
+            "ready": 0,
+            "uploaded": 0,
+            "valid": 0
+          },
+          "preview_audio": {
+            "__other__": 0,
+            "deleted": 0,
+            "failed": 0,
+            "inspecting": 0,
+            "invalid": 0,
+            "processing": 0,
+            "quarantined": 0,
+            "ready": 0,
+            "uploaded": 0,
+            "valid": 0
+          },
+          "rights_evidence": {
+            "__other__": 0,
+            "deleted": 0,
+            "failed": 0,
+            "inspecting": 0,
+            "invalid": 0,
+            "processing": 0,
+            "quarantined": 0,
+            "ready": 0,
+            "uploaded": 0,
+            "valid": 0
+          },
+          "stream_audio": {
+            "__other__": 0,
+            "deleted": 0,
+            "failed": 0,
+            "inspecting": 0,
+            "invalid": 0,
+            "processing": 0,
+            "quarantined": 0,
+            "ready": 0,
+            "uploaded": 0,
+            "valid": 0
+          },
+          "thumbnail": {
+            "__other__": 0,
+            "deleted": 0,
+            "failed": 0,
+            "inspecting": 0,
+            "invalid": 0,
+            "processing": 0,
+            "quarantined": 0,
+            "ready": 0,
+            "uploaded": 0,
+            "valid": 0
+          }
+        },
+        "durationMs": 82,
+        "status": "OBSERVED"
+      },
+      "legacy_artist_release_reference_totals": {
+        "counts": {
+          "spotifyReferencePresent": 8,
+          "total": 65,
+          "youtubeReferencePresent": 0
+        },
+        "durationMs": 83,
+        "status": "OBSERVED"
+      },
+      "processing_jobs_by_state": {
+        "counts": {
+          "__other__": 0,
+          "cancelled": 0,
+          "dead_letter": 0,
+          "failed": 0,
+          "queued": 0,
+          "retry": 0,
+          "running": 0,
+          "succeeded": 0
+        },
+        "durationMs": 82,
+        "status": "OBSERVED"
+      },
+      "published_reference_gaps": {
+        "counts": {
+          "publishedTracksMissingRecording": 0,
+          "publishedTracksWithoutReadyStream": 0,
+          "publishedTracksWithoutValidatedImmutableMaster": 0,
+          "publishedVersionsMissingRelease": 0,
+          "publishedVersionsWithoutReadyCoverDisplay": 0,
+          "publishedVersionsWithoutTracks": 0,
+          "publishedVersionsWithoutValidatedImmutableCoverOriginal": 0,
+          "releasePointersMissingOrWrongVersion": 0
+        },
+        "durationMs": 87,
+        "status": "OBSERVED"
+      },
+      "ready_asset_reference_gaps": {
+        "counts": {
+          "readyAssetsMissingVersion": 0,
+          "readyAssetsWithBlankObjectReference": 0,
+          "readyAssetsWithoutReadyTimestamp": 0,
+          "readyAudioMissingRecording": 0,
+          "readyDerivedAudioCrossContextParent": 0,
+          "readyDerivedAudioMissingParent": 0
+        },
+        "durationMs": 100,
+        "status": "OBSERVED"
+      },
+      "release_totals": {
+        "counts": {
+          "publishedPointerPresent": 0,
+          "total": 0,
+          "withdrawnTimestampPresent": 0
+        },
+        "durationMs": 90,
+        "status": "OBSERVED"
+      },
+      "release_versions_by_state": {
+        "counts": {
+          "__other__": 0,
+          "approved": 0,
+          "cancelled": 0,
+          "changes_requested": 0,
+          "draft": 0,
+          "in_review": 0,
+          "processing": 0,
+          "published": 0,
+          "ready_for_review": 0,
+          "replacement_pending": 0,
+          "scheduled": 0,
+          "suspended": 0,
+          "takedown_scheduled": 0,
+          "uploading": 0,
+          "validation_failed": 0,
+          "withdrawn": 0
+        },
+        "durationMs": 94,
+        "status": "OBSERVED"
+      },
+      "structural_orphan_references": {
+        "counts": {
+          "assetsMissingVersion": 0,
+          "assetsWithDanglingParent": 0,
+          "assetsWithDanglingRecording": 0,
+          "audioAssetsWithoutTrackContext": 0,
+          "completedUploadsMissingAsset": 0,
+          "jobsMissingVersion": 0,
+          "jobsWithDanglingSourceAsset": 0,
+          "recordingsWithoutTrackReference": 0,
+          "tracksMissingRecording": 0,
+          "tracksMissingVersion": 0,
+          "versionsMissingRelease": 0
+        },
+        "durationMs": 88,
+        "status": "OBSERVED"
+      },
+      "upload_sessions_by_state": {
+        "counts": {
+          "__other__": 0,
+          "cancelled": 0,
+          "completed": 0,
+          "completing": 0,
+          "expired": 0,
+          "failed": 0,
+          "initiated": 0,
+          "uploading": 0
+        },
+        "durationMs": 83,
+        "status": "OBSERVED"
+      }
+    },
+    "canonicalContainerSetSha256": "e2f9eae8dcaef3ab983946d27ab7e98ce1ce195dc9163c3cdfbf22a20a6af10c",
+    "canonicalSourceSha256": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
+    "database": "tdf_hq",
+    "directory": "/opt/tdf/production",
+    "finishedAt": "2026-10-26T17:47:23.697549+00:00",
+    "inventoryRole": "tdf_catalog_inventory",
+    "inventorySessionIdentity": {
+      "counts": {
+        "databaseMatches": true,
+        "localSocket": true,
+        "portMatches": true,
+        "readOnly": true,
+        "restrictedRole": true,
+        "roleMatches": true,
+        "serverMajorMatches": true,
+        "sessionRoleMatches": true
+      },
+      "durationMs": 94,
+      "status": "OBSERVED"
+    },
+    "limits": [
+      "Sequential read-only transactions,not an atomic catalog snapshot.",
+      "All new queries explicitly use inventory role and2s statement timeout; timeouts/permissions/RLS/schema gaps remain UNOBSERVED,not zeros.",
+      "DB references only: no storage HEAD,byte/MIME validity,rights,authorization,search completeness or end-to-end playback claim.",
+      "Structural unreferenced rows can be legitimate drafts; no deletion/repair action is authorized.",
+      "Only fixed counters/buckets and sanitized operational facts leave the host; business IDs,titles,owners,URLs,storage keys and failure text are never selected for output.",
+      "Canonical music tables and legacy artist_release references only; other social/podcast/file-upload sources remain outside this collection."
+    ],
+    "privilegedIdentityProbe": {
+      "exception": "unchanged canonical.verify_storage only",
+      "fixedSqlSha256": "0289213686e8bfc6f04d88009c94355bfde458656df14e4f30d1b0672d1f4793",
+      "role": "postgres",
+      "scope": "Fixed canonical database/user/local socket/port/read-only/data_directory boolean; no business SELECT,permission fallback,grants or DDL.",
+      "validated": true
+    },
+    "project": "tdf-production",
+    "relationCapabilities": {
+      "counts": {
+        "artist_release": "select_available",
+        "music_asset": "select_available",
+        "music_processing_job": "select_available",
+        "music_recording": "select_available",
+        "music_release": "select_available",
+        "music_release_track": "select_available",
+        "music_release_version": "select_available",
+        "music_upload_session": "select_available"
+      },
+      "durationMs": 93,
+      "status": "OBSERVED"
+    },
+    "schemaVersion": 1,
+    "startedAt": "2026-10-26T17:47:22.382109+00:00",
+    "status": "OBSERVED"
+  }
+}

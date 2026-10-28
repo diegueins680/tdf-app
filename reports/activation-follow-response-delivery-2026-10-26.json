@@ -1,0 +1,151 @@
+{
+  "status": "PARTIAL",
+  "updatedAt": "2026-10-26T16:46:12.040197+00:00",
+  "pr": "https://github.com/diegueins680/tdf-app/pull/627",
+  "priority": "P1",
+  "userImpact": "El servidor guarda la relación, pero una respuesta perdida dejaba el botón en Seguir y mostraba error. El usuario no podía confirmar su primer valor.",
+  "acceptance": "Tras una respuesta ambigua, mostrar la relación leída del servidor con la misma sesión; no repetir la escritura. Si el estado no puede leerse, indicar incertidumbre y reintentar solo la lectura. Conservar la relación tras logout/login.",
+  "journeyMap": {
+    "artist": [
+      "A8: recibir seguimiento persistido (fixtures verificadas)",
+      "A9: recuento de relaciones conserva el endpoint existente; ensayo completoA/B previo sigue calificado a5eb/ed9, no se atribuye a este incremento."
+    ],
+    "fan": [
+      "B5: confirmar follow actual una vez sin replay automático",
+      "B6: mismo estado confirmado en Comunidad",
+      "B8: logout real, cookie ausente y nueva sesión en otro contexto/formato web conservan la relación"
+    ]
+  },
+  "implementation": {
+    "status": "VERIFIED",
+    "scope": "Ocho superficies web; helper compartido, sesión capturada, caché actualizada por GET, acciones bloqueadas mientras el estado es desconocido y textoES/EN honesto.",
+    "preservedMainRequirements": 144,
+    "addedRequirement": "COMM-FOLLOW-RECOVERY-001",
+    "unchanged": [
+      "backend",
+      "OpenAPI/generated clients",
+      "SQL221/history",
+      "dependencies",
+      "Mobile pin",
+      "feature flags",
+      "payments"
+    ]
+  },
+  "verification": {
+    "negativeControl": "activation-follow-response-2026-10-26/baseline-counterexample.json",
+    "focusedTests": {
+      "passed": 98,
+      "suites": 5,
+      "scope": "Actual helper and page components, including pre-commit failure, follow/unfollow response loss, unknown read/retry, repeated clicks, malformed evidence and account switches."
+    },
+    "fullWebTests": {
+      "passed": 3458,
+      "suites": 305,
+      "seconds": 593.542,
+      "scope": "Local suite began before source freeze; changed FanHub tests executed after the final code edit and passed. Exact frozen-head hosted CI is still a separate required gate."
+    },
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "generatedClients": "PASS (exact Mobile d832)",
+    "specificationInventoryAndTraceability": "PASS",
+    "changedSurfaceAdmission": "Nine surfaces: eight web plus existing keyboard-consent E2E; requirement mapping regenerated.",
+    "catalog": "PASS:1339 unchanged currentmain decisions,0unreviewed",
+    "formalRepositoryGate": "PASS; existing warnings retained; no universal refinement claim",
+    "actualRuntime": "activation-follow-response-2026-10-26/runtime-main3c.json",
+    "sourceQualification": "activation-follow-response-2026-10-26/source-main3c.json",
+    "browserCases": 6,
+    "database": {
+      "syntheticPairs": 6,
+      "followRows": 6,
+      "followEvents": 8,
+      "explicitUnfollowEvents": 2,
+      "serverFirstValues": 6,
+      "clubRows": 0,
+      "artistProfiles": 1,
+      "duplicateRows": 0
+    },
+    "firstAttempt": "FAILED: adapter expected204 for DELETE but existing contract returns200; corrected adapter only. Full first receipt retained.",
+    "sourceAdmissionPreflight": "A mistyped expected source SHA was rejected before resources were created; rerun used exact git rev-parse identity.",
+    "cleanup": "Owned API/web stopped, disposable DB removed and PG cluster stopped.",
+    "previousRuntime43a": "activation-follow-response-2026-10-26/runtime.json",
+    "combinedFullWebTests": {
+      "status": "VERIFIED",
+      "passed": 3479,
+      "suites": 306,
+      "seconds": 560.405,
+      "uiSource": "25e9943e1ac4cbfd0214267735c9d95f3d82c9d8",
+      "webTree": "97ad2d0d8b44e2ea50739256866d8a9fbbcda2e2",
+      "allWebInputsUnchangedDuringRun": true,
+      "inputCount": 860,
+      "inputDigest": "63b4ac5c2dd0ce0879d7fdbe3418f456f84a49afc168e7df402a6611e13d1fbe",
+      "note": "Exact final-head hostedCI remains a separate protected gate."
+    },
+    "combinedTypecheck": "PASS",
+    "combinedLint": "PASS",
+    "inheritedPlayerModel": "PASS:5controls",
+    "combinedFormalRepositoryGate": "PASS; inherited warning debt unchanged; no universal proof claim.",
+    "hostedWebTests": {
+      "head": "d17946ac9f72bfd9b826ec21814dc855feab2385",
+      "tests": 3479,
+      "suites": 306,
+      "jobId": 121464285084,
+      "conclusion": "success",
+      "checkout": "3cb465df2ffe8a8e879229225a97970980ce72e3",
+      "tree": "bf34a73d6f99ea0482bee333fb30e50b5d1d77b4"
+    },
+    "hostedPersonaRepair": "activation-follow-response-2026-10-26/ci-persona-repair.json",
+    "reviewNavigationRepair": "activation-follow-response-2026-10-26/review-navigation-repair.json",
+    "currentFocusedTests": {
+      "passed": 107,
+      "suites": 5,
+      "scope": "Navigation, roles, retry denial and all prior current-account follow/profile/onboarding controls."
+    },
+    "reviewRoleAccessRepair": "activation-follow-response-2026-10-26/review-role-access-repair.json"
+  },
+  "measurement": {
+    "firstValueAuthority": "Only the existing server-evidence completion endpoint; six newlyCompleted:true receipts for six fictional fans, later refollow receipts:false. No direct analytics from GET.",
+    "fixturesExcludedFromVAR": true,
+    "productionBaselineConversion": "No new observation or causal attribution",
+    "VAR": null,
+    "retentionD1D7D30": null,
+    "posthog": "BLOCKED: production read connection/project qualification remains unavailable.",
+    "fixtureScopeClarification": "The harness excludes commerce/payment receipt providers; the existing onboarding completion endpoint and its actual receipts are explicitly tested."
+  },
+  "integration": {
+    "status": "PARTIAL",
+    "state": "4be navigation finding resolved; a second valid role-access finding is repaired locally with107focused tests. New final head must reconcile protectedmain78fa/222schema and obtain CI/review/admission; no merge/deploy627.",
+    "rollback": "Revert web change through protected workflow; no migrations.",
+    "base": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+    "qualifiedCombinedSource": "25e9943e1ac4cbfd0214267735c9d95f3d82c9d8",
+    "scope": "Eight own material web surfaces unchanged from d179; one existing E2E expectation corrected. Current144 main requirement objects and1339 catalog decisions preserved."
+  },
+  "deployment": {
+    "status": "NOT TESTED",
+    "sourceObserved": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+    "scope": "Current production baseline identity read-only. PR627 is not deployed; no actual production account/follow write."
+  },
+  "pilot": {
+    "status": "BLOCKED",
+    "participants": 0,
+    "reason": "Consented adults and observer not confirmed. No outreach or fabricated results."
+  },
+  "remainingBarriers": [
+    {
+      "priority": "P0",
+      "task": "Existing financial/release dependencies and native171 independent approval; owned by their current protected workflows."
+    },
+    {
+      "priority": "P1",
+      "task": "Finish exact-head CI/review/admission, then verify the precise published web bundle; keep backend deployment separate."
+    },
+    {
+      "priority": "P1",
+      "task": "Two-adult consented isolated usability pilot before recruiting5creators; targets remain hypotheses."
+    },
+    {
+      "priority": "P2",
+      "task": "Qualify VAR population, history, PostHog and D1/D7/D30; complete available-content return loop without claiming empty clubs as content."
+    }
+  ],
+  "highestValueNextAction": "Obtener evidencia de CI/revisión/admisión del commit final de627 y verificar su publicación; luego ejecutar el piloto consentido disponible."
+}
