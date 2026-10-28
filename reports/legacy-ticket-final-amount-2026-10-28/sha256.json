@@ -1,0 +1,13 @@
+{
+  "arithmetic-committed-optimized.json": "7f5c85fec096ab8db4a2b306ca00f229aadb5dbbbb9771bb08dad5b86e0423d1",
+  "arithmetic-committed.json": "7f5c85fec096ab8db4a2b306ca00f229aadb5dbbbb9771bb08dad5b86e0423d1",
+  "assurance-receipts.tar.gz": "cfeca787525bc8fe779b33871d43d811c17481611424c4739ecd9434292d4952",
+  "baseline-order-states.csv": "689d33faa78a06e2aab99945b8d7b60e4cba470c41b4f88dfd883ab064acc0e5",
+  "catalog-preservation.json": "85e0be2e0eee0eecc40aa2f00eaf6d2d0052e6af30e39e8dfedfa040cff5af56",
+  "check-arithmetic.py": "fd8c7cdd1bc985f63c4aae6d6044f2d0d387b7870e213437ff8fb4cb8a91a197",
+  "development-diagnostics.tar.gz": "88b7a0b186cbceff028e635ddeae6a6dae48e0899cb01e9177ec6cb22035c956",
+  "execution-receipts.tar.gz": "c33a190f91818954969508fb4627bcfa65bc345e838b30b2976d8c2520e0ef5e",
+  "execution-sources.json": "334105a98a22783239d4118be485067aab905d7c3ac723714575b255f8c5481d",
+  "independent-review.txt": "0efad3bb3e4be3e3ca3c7e3335cbab3d1f2f643e3ab1d983cb132af89df2da5b",
+  "source-seal.json": "3cbd4aab05c608a3614ebe706447d33a3a922cd0e18b7990a52eaed67f276c57"
+}

@@ -1,0 +1,304 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-10-28-legacy-ticket-final-amount",
+  "repository": "diegueins680/tdf-app",
+  "baselineCommit": "0a9228b0a00eb93ea0924cfec7c149ec0caacad5",
+  "sourceCommit": "b7ded03606e8df55dfa5162b0e1db3633baae73e",
+  "mainObserved": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+  "confirmedDefect": {
+    "id": "TDF-CORRECTNESS-20261028-08",
+    "priority": "P2",
+    "category": "financial admission / cross-layer validation",
+    "status": "corrected-tested-awaiting-protected-integration",
+    "consequence": "Fee-inclusive totals can exceed the established internal checkout envelope after face-only validation. Three actual-handler cases create unnecessary cancelled order history and return503 through missing-configuration rollback instead of refusing400 before a hold. No incorrect charge or universal provider rejection is claimed."
+  },
+  "invariants": [
+    {
+      "id": "EVT-LEGACY-FINAL-AMOUNT-001",
+      "parentRequirement": "EVT-TICKET-001",
+      "statement": "Validate the fee-inclusive computed total of a new legacy checkout against the existing0..99,999,999 internal envelope before hold effects; preserve zero-total checkout and stored historical replay behavior.",
+      "assurance": "TESTED"
+    }
+  ],
+  "contract": "formal/system/legacy-ticket-final-amount.md",
+  "implementation": [
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+  ],
+  "regressionTests": [
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+  ],
+  "authority": [
+    "Existing validateTicketCheckoutAmount and its amount-limit regressions.",
+    "Existing conservative Stripe service amount validator and unchanged400bps fee policy.",
+    "Stripe documentation differs by API/payment-method context; this change retains the repository envelope rather than selecting a new provider limit."
+  ],
+  "externalContext": [
+    {
+      "url": "https://docs.stripe.com/api/payment_intents/create?api-version=2026-04-22.dahlia",
+      "observation": "Pinned reference describes eight digits."
+    },
+    {
+      "url": "https://docs.stripe.com/currencies#maximum-charge-amounts",
+      "observation": "Current currency guide allows wider limits for some methods; provider rejection is not universal."
+    }
+  ],
+  "correction": [
+    "Three production lines invoke the existing validator with1 times the already computed total only in the Nothing/new-order branch.",
+    "Check precedes the hold transaction, stock, order, ticket and promo writes.",
+    "Retain existing face/base checks, discounts, fee rounding, terms, currency, locks, provider initialization and zero-total handling.",
+    "Historical retries keep their stored amount and existing uncertain recovery/rollback rules; no production data rewrite."
+  ],
+  "counterexamples": {
+    "baselineExamples": 7,
+    "confirmedFailures": 3,
+    "baselineCompatibilityPasses": 4,
+    "invalidFinalAmounts": [
+      100000000,
+      101999999,
+      100000000
+    ],
+    "eachInvalidOutcome": "503 and one cancelled order instead of400 and no order; no net stock/ticket/promo effects after existing rollback.",
+    "providerCalls": 0,
+    "smtpCalls": 0
+  },
+  "verification": {
+    "qualifiedScoped": {
+      "examples": 9,
+      "failures": 0,
+      "originalCounterexamplesCovered": 3,
+      "additionalCases": 6,
+      "oversizedNewCases": 4,
+      "positiveAmountCases": 3,
+      "freeAndHistoricalCases": 2,
+      "freshCompleteSchema": true,
+      "coverage": [
+        "Exact fee-inclusive limit99,999,999",
+        "Adjacent unsupported100,000,000 and face-limit final101,999,999",
+        "Fixed discount1 rescues the boundary; discount0 does not",
+        "Quantity2 supported99,999,998 and unsupported100,000,000",
+        "Fully discounted paid-zero checkout and idempotent replay",
+        "Synthetic historical pending100,000,000 replay preserves its amount/status/stock on existing503"
+      ],
+      "positiveAmountResult": "Existing missing-config503 with one cancelled order and exact fee metadata, net-zero stock/promo; not payment success."
+    },
+    "qualifiedFullStack": {
+      "examples": 4485,
+      "failures": 0,
+      "pending": 21,
+      "schemaMigrations": 227,
+      "localPostgreSQLVersion": "16.13 (Homebrew)",
+      "appliedAndReplayed": true,
+      "freshUTF8Template0Database": true,
+      "seed": 20261028,
+      "pendingIsNotPassed": true,
+      "method": "Explicit full schema loader, provider-domain fixtures and pinned Stack test component.",
+      "fullRuntimeShellWrapperClaimed": false
+    },
+    "arithmetic": {
+      "assurance": "PROVEN",
+      "claimCount": 3,
+      "claims": [
+        {
+          "id": "all_supported_faces_fit",
+          "negation": "unsat",
+          "assurance": "PROVEN",
+          "scope": "Integer arithmetic only under the stated bounds/formula; no implementation refinement."
+        },
+        {
+          "id": "all_larger_faces_exceed",
+          "negation": "unsat",
+          "assurance": "PROVEN",
+          "scope": "Integer arithmetic only under the stated bounds/formula; no implementation refinement."
+        },
+        {
+          "id": "fee_arithmetic_fits_current_int64",
+          "negation": "unsat",
+          "assurance": "PROVEN",
+          "scope": "Integer arithmetic only under the stated bounds/formula; no implementation refinement."
+        }
+      ],
+      "scope": "Manual Integer abstraction under stated face/formula/current64-bit assumptions; source/formula hashes and syntax checks are binding evidence, not semantic extraction or Haskell/SQL refinement.",
+      "counterexample": {
+        "face": 98039216,
+        "final": 100000000
+      },
+      "ciEnforcedStandaloneProof": false,
+      "verifierControls": {
+        "correctModelUnderNormalAndOptimizedPython": "PASS",
+        "wrong401bpsModelUnderNormalAndOptimizedPython": "rejected with SAT negation; explicit checks survive -O"
+      },
+      "regressionCoupling": "Actual-handler fee boundaries run in the existing backend lane and detect policy/placement drift."
+    },
+    "existingModelSuite": {
+      "tests": 23,
+      "failures": 0,
+      "skipped": 0,
+      "newModelClaimed": false
+    },
+    "repositoryQuality": {
+      "passed": true,
+      "platformSkips": 11,
+      "assertionsWeakened": false
+    },
+    "strictCatalog": {
+      "passed": true,
+      "normativeParentDecisionsPreserved": 1353,
+      "parentOrderPreserved": true,
+      "newDecisions": 0,
+      "evidenceOnlyRowsRefreshed": 0,
+      "entireDecisionFileByteIdentical": true
+    },
+    "specification": {
+      "sequentialInventoryThenConformance": true,
+      "finalChecksPassed": true,
+      "otherRequirementsPreserved": 153,
+      "immutableChangedSurfaces": 2
+    },
+    "sourceCorrespondence": {
+      "registeredInputs": 1408,
+      "digest": "cacbc26b3f72a357d88706eeda06af27528a9a9c566f99731956e073e79bfc0b",
+      "mobilePin": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+      "committedGitBlobHashesVerified": true,
+      "newContractIndependentlyHashBound": true,
+      "cleanCommittedReporterPass": true
+    },
+    "servingExecutable": {
+      "localQualification": "NOT_RUN",
+      "currentRequiredHostedBuild": "pending",
+      "parentQualifiedSource": "ee77d824c6d02c3150b966439461d7de26e8ec90",
+      "parentReceipt": "reports/legacy-ticket-eligibility-2026-10-28/source-seal.json",
+      "scope": "Test component compiles current production code; route/type declarations are unchanged by this three-line correction. The parent binary/API receipt remains historical; no inspection of an older binary is promoted to current qualification."
+    },
+    "independentReview": {
+      "blockingFindings": 0,
+      "scope": "Read-only production/test/contract/manual arithmetic review; not required GitHub approval."
+    },
+    "developmentLimitations": [
+      "Bare Stack test initially selected unrelated serving compilation before running cases; interrupted only the verified owned Stack process. No behavioral result is claimed for that diagnostic.",
+      "Expanded q2 expected face required an explicit Int64 annotation. Compile failure retained separately; assertions unchanged.",
+      "A run against the used baseline database hit existing fixture idempotency keys:409 mismatch and23505 duplicate. Preserved used database, created a fresh full schema, reran unchanged tests. This is an environment/precondition diagnostic, not another product defect.",
+      "A relative-path annotation edit stopped before a file write and was corrected to the absolute owned path.",
+      "Catalog builder changed only aggregate historical review bookkeeping and ordering; every decision matched the parent. Restored the exact parent file bytes before strict catalog/freshness qualification."
+    ],
+    "assurance": {
+      "candidateRegistryRequirementsUnproven": 154,
+      "candidateImplementationAndRefinementObligationsUnproven": 308,
+      "existingConditionalSMTClaimsProven": 11,
+      "newWholeHandlerProofs": 0,
+      "release": "BLOCKED"
+    }
+  },
+  "regressionProtection": {
+    "handlers": "Existing backend provider-retry CI invokes the registered actual-handler cases against a fresh complete migration schema.",
+    "models": "Existing backend CI retains all23 ticket-admission model tests; no new workflow model for this arithmetic guard.",
+    "source": "Existing immutable surface admission and catalog/specification freshness controls retained."
+  },
+  "integration": {
+    "pullRequest": 661,
+    "url": "https://github.com/diegueins680/tdf-app/pull/661",
+    "draft": true,
+    "parentPullRequest": 660,
+    "merged": false,
+    "deployed": false,
+    "autoMergeEnabled": false,
+    "requiredGitHubApproval": "pending",
+    "hostedQualification": "pending",
+    "currentMainComposition": "pending",
+    "queue": {
+      "context": "main-integration-admission",
+      "base": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+      "admittedPR": 637,
+      "admittedHead": "3450e6033ad132c0457794c4a82bab8dbab74558",
+      "waitingPRs": [
+        495,
+        573,
+        592,
+        593,
+        599,
+        601,
+        630,
+        633,
+        638,
+        639,
+        640,
+        642,
+        643,
+        646,
+        648,
+        649,
+        650,
+        651,
+        653,
+        655,
+        656
+      ],
+      "duplicateHeads": [],
+      "applied": false
+    },
+    "protections": "20 required contexts, strict base, one independent approval, stale-review dismissal, conversation resolution and admin enforcement retained.",
+    "historicalBrowserFailure": "Parent659 run40747351910 failed the gallery contrast test. Latest parent660 persona job123127623404 is SUCCESS; that pass does not prove the original cause. Preserve prior failures and approved648; no duplicate fix, waiver or weakened assertion.",
+    "parent660HostedObservation": [
+      {
+        "link": "https://github.com/diegueins680/tdf-app/actions/runs/40776496341/job/123127623257",
+        "name": "repo-quality",
+        "state": "SUCCESS"
+      },
+      {
+        "link": "https://github.com/diegueins680/tdf-app/actions/runs/40776496341/job/123127623404",
+        "name": "persona-web-e2e",
+        "state": "SUCCESS"
+      },
+      {
+        "link": "https://github.com/diegueins680/tdf-app/actions/runs/40776496341/job/123127623167",
+        "name": "backend-quality",
+        "state": "IN_PROGRESS"
+      }
+    ],
+    "additionalIntegrationEarlierThisTurn": {
+      "PR": 636,
+      "merge": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+      "receipt": "reports/legacy-ticket-eligibility-2026-10-28/execution-receipts.tar.gz"
+    }
+  },
+  "scorecard": {
+    "scope": "This correction only; no arbitrary platform percentage.",
+    "confirmedDefectsCorrected": 1,
+    "defectsIntegrated": 0,
+    "invariantsTested": 1,
+    "originalFailuresRegressionProtected": 3,
+    "scopedCases": 9,
+    "arithmeticClaimsProvenUnderAssumptions": 3,
+    "newWholeHandlerProofs": 0,
+    "currentSourceEvidence": "b7ded03606e8df55dfa5162b0e1db3633baae73e",
+    "productionLinesAdded": 3
+  },
+  "remainingRisks": [
+    "Current fee/discount bounds and64-bit arithmetic are assumptions; future fee policy requires requalification.",
+    "Historical and uncertain financial attempts are not revalidated or rewritten; existing initial checks can still refuse a retry for other reasons.",
+    "Payment-method/currency/account-specific maximum/minimum rules and real provider completion remain unverified.",
+    "Current-main composition, hosted CI, required reviews and protected FIFO integration remain outstanding.",
+    "No real provider, SMTP or production financial records were touched."
+  ],
+  "prioritizedBacklog": [
+    {
+      "id": "PROTECTED-INTEGRATION",
+      "priority": "P0",
+      "status": "PARTIAL",
+      "next": "Qualified current-main composition at the selected slot, required hosted checks and exact-head independent approvals; preserve source PRs until verified merge."
+    },
+    {
+      "id": "LEGACY-PARTIAL-ALLOCATION",
+      "priority": "P0",
+      "status": "UNKNOWN",
+      "blocker": "Material product allocation decision remains unresolved; continue is not a selection."
+    },
+    {
+      "id": "LEGACY-OWNER-PRICE-SNAPSHOT",
+      "priority": "P1",
+      "status": "UNKNOWN",
+      "next": "Investigate established semantics and ordinary writers before any correction; no actual counterexample or spec decision claimed."
+    }
+  ],
+  "nextHighestValueTask": "Advance protected integration when its FIFO slot and current-main qualification permit; otherwise investigate current authority/price snapshots with authoritative requirements and actual-handler evidence.",
+  "evidenceDirectory": "reports/legacy-ticket-final-amount-2026-10-28"
+}

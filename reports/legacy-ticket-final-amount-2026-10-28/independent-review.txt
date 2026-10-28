@@ -1,0 +1,30 @@
+Independent read-only production, test, contract and arithmetic review: no
+blocking finding. The reviewer did not edit files or run builds/tests.
+
+The guard is confined to Nothing/new-order creation, validates one times the
+already computed total before hold/promo/order writes, permits zero and leaves
+stored historical reuse/recovery unchanged. Quantity-two cases detect accidental
+double multiplication. Exact boundary, promo rescue/insufficiency, free replay
+and synthetic historical pending assertions preserve their established meaning.
+Missing Stripe credentials and disabled email prevent provider/SMTP IO.
+The document's wording was corrected from positive paid to positive-amount
+cases: these fixtures end cancelled after the existing configuration503.
+
+Baseline seven cases/three product failures were inspected by the primary agent.
+Final nine cases pass against a fresh complete227 schema. An intervening run on
+the used baseline database collided with retained fixed fixture keys (409/23505);
+that database/log was preserved and the unchanged tests were rerun fresh, as the
+runtime harness requires. An expanded result needed explicit Int64 annotation;
+its compile diagnostic is distinct from the behavioral counterexamples.
+
+The final arithmetic checker uses explicit require/ValueError checks rather
+than Python assertions. Normal and optimized Python receipts match and bind
+source SHA9747fedb56660d74d12e8aa714f8f64553fb19a9daaf24c7fc5434f3e1d1bd08.
+The controlled script differs solely by manual fee400 ->401; both modes fail
+on all_supported_faces_fit with expected unsat, got sat, not an import failure.
+Three unsat claims establish only the stated manual Integer threshold/upper
+bounds. Omission of max0 is valid on the nonnegative domain. Syntax checks and
+source/formula hashes are binding evidence, not semantic extraction/refinement.
+No Haskell/SQL/provider proof or universal provider maximum is claimed.
+
+This agent review does not satisfy required independent GitHub approval.

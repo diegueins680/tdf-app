@@ -5211,6 +5211,9 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     , True
                     )
             Nothing -> do
+                -- Admission bounds the actual fee-inclusive provider amount.
+                -- Existing checkouts keep their stored amount/recovery contract.
+                _ <- either throwError pure (validateTicketCheckoutAmount 1 finalAmountCents)
                 let createReservedOrder = do
                         promoClaimed <- case mPromoCodeEnt of
                             Nothing -> pure True
