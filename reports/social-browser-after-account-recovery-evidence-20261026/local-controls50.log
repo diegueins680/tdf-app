@@ -1,0 +1,260 @@
+TAP version 13
+# Subtest: WebKit project capacity preserves the global browser test policy
+ok 1 - WebKit project capacity preserves the global browser test policy
+  ---
+  duration_ms: 696.235711
+  ...
+# Subtest: PostgreSQL runner uses the CI service and deletes only its newly created test database
+ok 2 - PostgreSQL runner uses the CI service and deletes only its newly created test database
+  ---
+  duration_ms: 25.588423
+  ...
+# Subtest: API drift gate inspects the pinned Mobile repository rather than a root pathspec
+ok 3 - API drift gate inspects the pinned Mobile repository rather than a root pathspec
+  ---
+  duration_ms: 5.392966
+  ...
+# Subtest: UI quality keeps the lazy-validation regression and production artifact gate
+ok 4 - UI quality keeps the lazy-validation regression and production artifact gate
+  ---
+  duration_ms: 3.112646
+  ...
+# Subtest: backend CI retains event operations HTTP and runner-safety checks
+ok 5 - backend CI retains event operations HTTP and runner-safety checks
+  ---
+  duration_ms: 1.922008
+  ...
+# Subtest: CI splits component checks and preserves Stack build caches
+ok 6 - CI splits component checks and preserves Stack build caches
+  ---
+  duration_ms: 2.361189
+  ...
+# Subtest: safe-install CI permits missing scripts without masking script failures
+ok 7 - safe-install CI permits missing scripts without masking script failures
+  ---
+  duration_ms: 1.875885
+  ...
+# Subtest: configured Datadog checks fail when tests or results are missing
+ok 8 - configured Datadog checks fail when tests or results are missing
+  ---
+  duration_ms: 1.702311
+  ...
+# Subtest: Datadog synthetic web test follows the Pages canonical redirect
+ok 9 - Datadog synthetic web test follows the Pages canonical redirect
+  ---
+  duration_ms: 3.687085
+  ...
+# Subtest: migration CI runs the owning merch checkout expiry assertions without waiving failures
+ok 10 - migration CI runs the owning merch checkout expiry assertions without waiving failures
+  ---
+  duration_ms: 3.253006
+  ...
+# Subtest: persona browser journeys are artifacted and gate aggregate quality
+ok 11 - persona browser journeys are artifacted and gate aggregate quality
+  ---
+  duration_ms: 93.239215
+  ...
+# Subtest: social browser verification retains its checks and timeout with an independently selected pinned image
+ok 12 - social browser verification retains its checks and timeout with an independently selected pinned image
+  ---
+  duration_ms: 85.014691
+  ...
+# Subtest: backend quality compiles, tests and exports the binary in one Stack pass
+ok 13 - backend quality compiles, tests and exports the binary in one Stack pass
+  ---
+  duration_ms: 52.027378
+  ...
+# Subtest: backend quality requires the canonical payment PostgreSQL regressions
+ok 14 - backend quality requires the canonical payment PostgreSQL regressions
+  ---
+  duration_ms: 2.253898
+  ...
+# Subtest: backend quality requires real invitation and dependency PostgreSQL regressions
+ok 15 - backend quality requires real invitation and dependency PostgreSQL regressions
+  ---
+  duration_ms: 2.584386
+  ...
+# Subtest: backend quality exercises public booking concurrency with its tested binary
+ok 16 - backend quality exercises public booking concurrency with its tested binary
+  ---
+  duration_ms: 2.900144
+  ...
+# Subtest: change detection includes deleted paths
+ok 17 - change detection includes deleted paths
+  ---
+  duration_ms: 1.405848
+  ...
+# Subtest: backend image packages the tested artifact instead of recompiling Haskell
+ok 18 - backend image packages the tested artifact instead of recompiling Haskell
+  ---
+  duration_ms: 1.968104
+  ...
+# Subtest: image workflow grants the reusable native artifact job its required read permissions
+ok 19 - image workflow grants the reusable native artifact job its required read permissions
+  ---
+  duration_ms: 3.180374
+  ...
+# Subtest: automatic migration integration matches the persisted production locale
+ok 20 - automatic migration integration matches the persisted production locale
+  ---
+  duration_ms: 1.596878
+  ...
+# Subtest: backend image receives deterministic, non-empty release metadata
+ok 21 - backend image receives deterministic, non-empty release metadata
+  ---
+  duration_ms: 2.141272
+  ...
+# Subtest: source Dockerfile introduces changing release metadata after compilation
+ok 22 - source Dockerfile introduces changing release metadata after compilation
+  ---
+  duration_ms: 1.239059
+  ...
+# Subtest: affected active workflow actions use Node 24 majors
+ok 23 - affected active workflow actions use Node 24 majors
+  ---
+  duration_ms: 8.104938
+  ...
+# Subtest: native artifact admission rejects application drift while allowing only Maestro fixture changes
+ok 24 - native artifact admission rejects application drift while allowing only Maestro fixture changes
+  ---
+  duration_ms: 2374.254546
+  ...
+# Subtest: backend runtime checks install declared parser dependencies on Node 22
+ok 25 - backend runtime checks install declared parser dependencies on Node 22
+  ---
+  duration_ms: 2.562184
+  ...
+# Subtest: native PostgreSQL opt-in owns only successfully created loopback databases
+ok 26 - native PostgreSQL opt-in owns only successfully created loopback databases
+  ---
+  duration_ms: 65.034523
+  ...
+# Subtest: every PR reaches specification admission, including previously omitted material roots
+ok 27 - every PR reaches specification admission, including previously omitted material roots
+  ---
+  duration_ms: 39.494416
+  ...
+# Subtest: repository lane checks actual API availability policy without a backend build
+ok 28 - repository lane checks actual API availability policy without a backend build
+  ---
+  duration_ms: 2.128771
+  ...
+# Subtest: repository image conformance installs and probes FFmpeg before running actual codecs
+ok 29 - repository image conformance installs and probes FFmpeg before running actual codecs
+  ---
+  duration_ms: 30.527258
+  ...
+# Subtest: pinned Mobile main and release validation and configured synthetics fail closed
+ok 30 - pinned Mobile main and release validation and configured synthetics fail closed
+  ---
+  duration_ms: 9.634023
+  ...
+# Subtest: the existing persona command retains its default workflow and job
+ok 31 - the existing persona command retains its default workflow and job
+  ---
+  duration_ms: 4.312992
+  ...
+# Subtest: social preflight selects its own actual workflow and job
+ok 32 - social preflight selects its own actual workflow and job
+  ---
+  duration_ms: 1.153279
+  ...
+# Subtest: invalid workflow paths, unknown options, missing values and empty jobs fail closed
+ok 33 - invalid workflow paths, unknown options, missing values and empty jobs fail closed
+  ---
+  duration_ms: 2.393847
+  ...
+# Subtest: a valid persona image cannot mask the selected social job missing its image
+ok 34 - a valid persona image cannot mask the selected social job missing its image
+  ---
+  duration_ms: 2.122113
+  ...
+# Subtest: a mutable selected social image is rejected even when the persona image is pinned
+ok 35 - a mutable selected social image is rejected even when the persona image is pinned
+  ---
+  duration_ms: 0.933784
+  ...
+# Subtest: accepts the CI browser user owning its mounted home
+ok 36 - accepts the CI browser user owning its mounted home
+  ---
+  duration_ms: 0.456171
+  ...
+# Subtest: rejects the root process and regular-user home mismatch observed in Linux CI
+ok 37 - rejects the root process and regular-user home mismatch observed in Linux CI
+  ---
+  duration_ms: 0.596384
+  ...
+# Subtest: rejects missing or invalid user/home ownership
+ok 38 - rejects missing or invalid user/home ownership
+  ---
+  duration_ms: 0.828716
+  ...
+# Subtest: accepts aligned immutable image, lockfile, installed packages and bundled metadata
+ok 39 - accepts aligned immutable image, lockfile, installed packages and bundled metadata
+  ---
+  duration_ms: 0.846838
+  ...
+# Subtest: rejects a lockfile upgrade without a matching image: @playwright/test
+ok 40 - rejects a lockfile upgrade without a matching image: @playwright/test
+  ---
+  duration_ms: 1.228257
+  ...
+# Subtest: rejects a stale installed dependency: @playwright/test
+ok 41 - rejects a stale installed dependency: @playwright/test
+  ---
+  duration_ms: 0.657983
+  ...
+# Subtest: rejects a lockfile upgrade without a matching image: playwright
+ok 42 - rejects a lockfile upgrade without a matching image: playwright
+  ---
+  duration_ms: 0.476005
+  ...
+# Subtest: rejects a stale installed dependency: playwright
+ok 43 - rejects a stale installed dependency: playwright
+  ---
+  duration_ms: 0.35749
+  ...
+# Subtest: rejects a lockfile upgrade without a matching image: playwright-core
+ok 44 - rejects a lockfile upgrade without a matching image: playwright-core
+  ---
+  duration_ms: 0.358881
+  ...
+# Subtest: rejects a stale installed dependency: playwright-core
+ok 45 - rejects a stale installed dependency: playwright-core
+  ---
+  duration_ms: 0.410217
+  ...
+# Subtest: rejects mutable tags, foreign registries, malformed digests and image-version drift
+ok 46 - rejects mutable tags, foreign registries, malformed digests and image-version drift
+  ---
+  duration_ms: 0.831325
+  ...
+# Subtest: rejects stale or absent bundled metadata and redirected browser directories
+ok 47 - rejects stale or absent bundled metadata and redirected browser directories
+  ---
+  duration_ms: 0.948255
+  ...
+# Subtest: launches and closes every required browser before returning a complete result
+ok 48 - launches and closes every required browser before returning a complete result
+  ---
+  duration_ms: 0.861475
+  ...
+# Subtest: a browser launch failure rejects instead of emitting a partial success
+ok 49 - a browser launch failure rejects instead of emitting a partial success
+  ---
+  duration_ms: 0.825736
+  ...
+# Subtest: closes a launched browser when reading its runtime version fails
+ok 50 - closes a launched browser when reading its runtime version fails
+  ---
+  duration_ms: 1.440419
+  ...
+1..50
+# tests 50
+# suites 0
+# pass 50
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3786.311186

@@ -1,0 +1,26 @@
+{
+  "reports/social-browser-capacity-2026-10-26.json": {
+    "bytes": 4699,
+    "sha256": "39d45ec1317893227324bacf7eb7a98af94b53a71a8dabf84077b3daef942a13"
+  },
+  "reports/social-browser-capacity-evidence-20261026/README.md": {
+    "bytes": 2333,
+    "sha256": "79cf44b4d4e11a11457c405118a0b61e44c9e5754ece4d41997572235d96e43b"
+  },
+  "reports/social-browser-capacity-evidence-20261026/archive-member-hashes.json": {
+    "bytes": 2812,
+    "sha256": "6507720794269e4a07b5f1b4d5352bfdd4b42210e851397ce90525ff691ea5af"
+  },
+  "reports/social-browser-capacity-evidence-20261026/execution-artifacts.tar.gz": {
+    "bytes": 3631672,
+    "sha256": "4f2a6304967cb6d8baf676854247710383062a8483dbe8af291b05ef6f7623e0"
+  },
+  "reports/social-browser-capacity-evidence-20261026/source-correspondence.json": {
+    "bytes": 1856,
+    "sha256": "26abc977f6289fb5a02abe9f39333980f9302e3f3d8698a9d742dc006301e944"
+  },
+  "reports/social-browser-capacity-evidence-20261026/unchanged-case-identities.json": {
+    "bytes": 125395,
+    "sha256": "342d84fc60d939b4eeac0a6aa8250a00141e1e3a8a4378c55cc9fa6a09fb3a2c"
+  }
+}

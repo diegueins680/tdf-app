@@ -10982,7 +10982,7 @@
       ],
       "authorization": "The job runs as user 1001 to match GitHub workspace/home ownership; this test infrastructure grants no production or release authority.",
       "privacy": "Preflight reports browser names and versions only; application test artifacts retain existing sanitization and retention.",
-      "concurrency": "Existing browser workers and fixture isolation are unchanged; the container uses the official shared-memory recommendation.",
+      "concurrency": "The global CI limit remains two workers; each WebKit project admits one worker, while Chromium/Firefox scheduling, fixture isolation and simultaneous operations within a test remain unchanged. The container retains the official shared-memory recommendation.",
       "idempotency": "Preflight does not install packages or modify application data.",
       "failure": "Fail closed on missing metadata, version drift, invalid pin, browser-path redirection or any failed launch; there is no installer fallback.",
       "recovery": "Update the lockfile and verified official image together, then require all existing hosted browser stages and protected admission.",
@@ -10994,7 +10994,9 @@
       "implementation": [
         ".github/workflows/ci.yml",
         "scripts/verify-playwright-image.mjs",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        ".github/workflows/social-verification.yml",
+        "playwright.config.mjs"
       ],
       "tests": [
         "scripts/__tests__/playwright-image.test.mjs",
