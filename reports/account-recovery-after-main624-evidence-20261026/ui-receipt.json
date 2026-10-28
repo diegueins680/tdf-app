@@ -1,0 +1,12 @@
+{
+  "source": "553e0562135072b556f49f31b04a2d568ad5dfe3",
+  "entry": "/assets/index-DMf-7Dv1.js",
+  "sha256": "013ced97f662b7a7cca1702e630ff04a6839c161d05b0bcd18f25109e7be401e",
+  "tests": 3520,
+  "suites": 309,
+  "lint": "PASS",
+  "typecheck": "PASS",
+  "build": "PASS",
+  "bundleGzip": 336531,
+  "preloads": 5
+}

@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-10-26T07:50:28.254Z",
+  "page": "https://www.tdfrecords.net",
+  "expectedCommit": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "headers": {
+    "server": "cloudflare",
+    "cache-control": "public, max-age=0, must-revalidate",
+    "age": null,
+    "cf-cache-status": null
+  },
+  "assets": [
+    {
+      "url": "https://www.tdfrecords.net/assets/index-DCYgWaC1.js",
+      "sha256": "0be21b67aaf8f83e0450ba1fef4b27b6abee935b2b2b53fc77fd65ba4c18347c",
+      "expectedCommitObserved": true,
+      "commits": [
+        "a1238fbf6d98062904a4bd80d2f9df35ebc40706"
+      ]
+    }
+  ],
+  "scope": "Read-only static publication identity. PR627 is not deployed or tested against actual production business state."
+}

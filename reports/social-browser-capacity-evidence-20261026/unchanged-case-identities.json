@@ -1,0 +1,3620 @@
+{
+  "beforeSource": "de96bed0c42f4470964b3f85c3f28d39f220b80d",
+  "candidateCode": "9e6f0c5d8942b54a80343d708584115ade2f3660",
+  "cases": [
+    {
+      "file": "account-deletion-rollout.spec.mjs",
+      "line": 7,
+      "title": "Disabled deletion rollout retains accessible contact without intake requests @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion-rollout.spec.mjs",
+      "line": 7,
+      "title": "Disabled deletion rollout retains accessible contact without intake requests @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion-rollout.spec.mjs",
+      "line": 7,
+      "title": "Disabled deletion rollout retains accessible contact without intake requests @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion-rollout.spec.mjs",
+      "line": 7,
+      "title": "Disabled deletion rollout retains accessible contact without intake requests @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion-rollout.spec.mjs",
+      "line": 7,
+      "title": "Disabled deletion rollout retains accessible contact without intake requests @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion-rollout.spec.mjs",
+      "line": 33,
+      "title": "Pausing intake preserves the operator queue and recorded owner @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion-rollout.spec.mjs",
+      "line": 33,
+      "title": "Pausing intake preserves the operator queue and recorded owner @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion-rollout.spec.mjs",
+      "line": 33,
+      "title": "Pausing intake preserves the operator queue and recorded owner @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion-rollout.spec.mjs",
+      "line": 33,
+      "title": "Pausing intake preserves the operator queue and recorded owner @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion-rollout.spec.mjs",
+      "line": 33,
+      "title": "Pausing intake preserves the operator queue and recorded owner @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 1280px @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 1280px @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 1280px @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 1280px @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 1280px @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 390px @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 390px @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 390px @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 390px @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 390px @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 412px @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 412px @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 412px @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 412px @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 412px @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 834px @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 834px @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 834px @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 834px @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 36,
+      "title": "Account deletion initiation 834px @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible dark no-preference @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible dark no-preference @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible dark no-preference @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible dark no-preference @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible dark no-preference @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible dark reduce @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible dark reduce @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible dark reduce @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible dark reduce @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible dark reduce @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible light no-preference @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible light no-preference @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible light no-preference @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible light no-preference @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible light no-preference @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible light reduce @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible light reduce @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible light reduce @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible light reduce @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 73,
+      "title": "Deletion confirmation remains legible light reduce @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 103,
+      "title": "Account deletion requires authentication @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 103,
+      "title": "Account deletion requires authentication @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 103,
+      "title": "Account deletion requires authentication @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 103,
+      "title": "Account deletion requires authentication @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 103,
+      "title": "Account deletion requires authentication @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 111,
+      "title": "Account deletion refuses an expired session before submission @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 111,
+      "title": "Account deletion refuses an expired session before submission @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 111,
+      "title": "Account deletion refuses an expired session before submission @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 111,
+      "title": "Account deletion refuses an expired session before submission @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 111,
+      "title": "Account deletion refuses an expired session before submission @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 124,
+      "title": "Account deletion refuses authentication lost between session read and POST @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 124,
+      "title": "Account deletion refuses authentication lost between session read and POST @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 124,
+      "title": "Account deletion refuses authentication lost between session read and POST @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 124,
+      "title": "Account deletion refuses authentication lost between session read and POST @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 124,
+      "title": "Account deletion refuses authentication lost between session read and POST @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 136,
+      "title": "Administrator records an auditable deletion outcome @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 136,
+      "title": "Administrator records an auditable deletion outcome @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 136,
+      "title": "Administrator records an auditable deletion outcome @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 136,
+      "title": "Administrator records an auditable deletion outcome @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "account-deletion.spec.mjs",
+      "line": 136,
+      "title": "Administrator records an auditable deletion outcome @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 50,
+      "title": "artist follow guest return stays local and never mutates @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 50,
+      "title": "artist follow guest return stays local and never mutates @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 50,
+      "title": "artist follow guest return stays local and never mutates @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 50,
+      "title": "artist follow guest return stays local and never mutates @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 50,
+      "title": "artist follow guest return stays local and never mutates @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 63,
+      "title": "artist follow requires keyboard consent and keeps intent on failure @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 63,
+      "title": "artist follow requires keyboard consent and keeps intent on failure @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 63,
+      "title": "artist follow requires keyboard consent and keeps intent on failure @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 63,
+      "title": "artist follow requires keyboard consent and keeps intent on failure @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 63,
+      "title": "artist follow requires keyboard consent and keeps intent on failure @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 88,
+      "title": "artist follow already-confirmed state consumes only the resume keys",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 88,
+      "title": "artist follow already-confirmed state consumes only the resume keys",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 88,
+      "title": "artist follow already-confirmed state consumes only the resume keys",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 97,
+      "title": "artist follow guest CTA supports the English locale",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 97,
+      "title": "artist follow guest CTA supports the English locale",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "artist-follow.spec.mjs",
+      "line": 97,
+      "title": "artist follow guest CTA supports the English locale",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "artist-merch.spec.mjs",
+      "line": 125,
+      "title": "PW-MERCH-01 keeps the closed pilot honest and actionable",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "artist-merch.spec.mjs",
+      "line": 125,
+      "title": "PW-MERCH-01 keeps the closed pilot honest and actionable",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "artist-merch.spec.mjs",
+      "line": 125,
+      "title": "PW-MERCH-01 keeps the closed pilot honest and actionable",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "artist-merch.spec.mjs",
+      "line": 137,
+      "title": "PW-MERCH-02 discovers a store and product responsively without promising checkout",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "artist-merch.spec.mjs",
+      "line": 137,
+      "title": "PW-MERCH-02 discovers a store and product responsively without promising checkout",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "artist-merch.spec.mjs",
+      "line": 137,
+      "title": "PW-MERCH-02 discovers a store and product responsively without promising checkout",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 58,
+      "title": "email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 58,
+      "title": "email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 58,
+      "title": "email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 58,
+      "title": "email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 58,
+      "title": "email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 58,
+      "title": "email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 58,
+      "title": "email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 91,
+      "title": "login returns to the interrupted action @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 91,
+      "title": "login returns to the interrupted action @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 91,
+      "title": "login returns to the interrupted action @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 91,
+      "title": "login returns to the interrupted action @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 91,
+      "title": "login returns to the interrupted action @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 104,
+      "title": "login rejects external redirects @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 104,
+      "title": "login rejects external redirects @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 104,
+      "title": "login rejects external redirects @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 104,
+      "title": "login rejects external redirects @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 104,
+      "title": "login rejects external redirects @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 114,
+      "title": "a returning session opening the site root lands on Comunidad @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 114,
+      "title": "a returning session opening the site root lands on Comunidad @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 114,
+      "title": "a returning session opening the site root lands on Comunidad @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 114,
+      "title": "a returning session opening the site root lands on Comunidad @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 114,
+      "title": "a returning session opening the site root lands on Comunidad @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 125,
+      "title": "the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 125,
+      "title": "the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 125,
+      "title": "the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 125,
+      "title": "the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 125,
+      "title": "the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 125,
+      "title": "the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 125,
+      "title": "the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 141,
+      "title": "a healthy page never shows the blank-screen recovery @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 141,
+      "title": "a healthy page never shows the blank-screen recovery @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 141,
+      "title": "a healthy page never shows the blank-screen recovery @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 141,
+      "title": "a healthy page never shows the blank-screen recovery @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "auth-landing.spec.mjs",
+      "line": 141,
+      "title": "a healthy page never shows the blank-screen recovery @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "campaign-accessibility.spec.mjs",
+      "line": 7,
+      "title": "Campaign controls expose row and column names at 1280px @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "campaign-accessibility.spec.mjs",
+      "line": 7,
+      "title": "Campaign controls expose row and column names at 1280px @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "campaign-accessibility.spec.mjs",
+      "line": 7,
+      "title": "Campaign controls expose row and column names at 1280px @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "campaign-accessibility.spec.mjs",
+      "line": 7,
+      "title": "Campaign controls expose row and column names at 1280px @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "campaign-accessibility.spec.mjs",
+      "line": 7,
+      "title": "Campaign controls expose row and column names at 1280px @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "campaign-accessibility.spec.mjs",
+      "line": 7,
+      "title": "Campaign controls expose row and column names at 320px @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "campaign-accessibility.spec.mjs",
+      "line": 7,
+      "title": "Campaign controls expose row and column names at 320px @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "campaign-accessibility.spec.mjs",
+      "line": 7,
+      "title": "Campaign controls expose row and column names at 320px @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "campaign-accessibility.spec.mjs",
+      "line": 7,
+      "title": "Campaign controls expose row and column names at 320px @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "campaign-accessibility.spec.mjs",
+      "line": 7,
+      "title": "Campaign controls expose row and column names at 320px @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "chat-notification-navigation.spec.mjs",
+      "line": 10,
+      "title": "chat notification reauthorizes same-route allowed access and preserves drafts @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "chat-notification-navigation.spec.mjs",
+      "line": 10,
+      "title": "chat notification reauthorizes same-route allowed access and preserves drafts @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "chat-notification-navigation.spec.mjs",
+      "line": 10,
+      "title": "chat notification reauthorizes same-route allowed access and preserves drafts @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "chat-notification-navigation.spec.mjs",
+      "line": 10,
+      "title": "chat notification reauthorizes same-route allowed access and preserves drafts @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "chat-notification-navigation.spec.mjs",
+      "line": 10,
+      "title": "chat notification reauthorizes same-route allowed access and preserves drafts @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "chat-notification-navigation.spec.mjs",
+      "line": 10,
+      "title": "chat notification reauthorizes same-route revoked access and preserves drafts @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "chat-notification-navigation.spec.mjs",
+      "line": 10,
+      "title": "chat notification reauthorizes same-route revoked access and preserves drafts @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "chat-notification-navigation.spec.mjs",
+      "line": 10,
+      "title": "chat notification reauthorizes same-route revoked access and preserves drafts @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "chat-notification-navigation.spec.mjs",
+      "line": 10,
+      "title": "chat notification reauthorizes same-route revoked access and preserves drafts @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "chat-notification-navigation.spec.mjs",
+      "line": 10,
+      "title": "chat notification reauthorizes same-route revoked access and preserves drafts @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "checkout-readiness.spec.mjs",
+      "line": 5,
+      "title": "Checkout preserves input and permits retry/cancel without payment readiness (en) @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "checkout-readiness.spec.mjs",
+      "line": 5,
+      "title": "Checkout preserves input and permits retry/cancel without payment readiness (en) @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "checkout-readiness.spec.mjs",
+      "line": 5,
+      "title": "Checkout preserves input and permits retry/cancel without payment readiness (en) @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "checkout-readiness.spec.mjs",
+      "line": 5,
+      "title": "Checkout preserves input and permits retry/cancel without payment readiness (en) @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "checkout-readiness.spec.mjs",
+      "line": 5,
+      "title": "Checkout preserves input and permits retry/cancel without payment readiness (en) @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "checkout-readiness.spec.mjs",
+      "line": 5,
+      "title": "Checkout preserves input and permits retry/cancel without payment readiness (es) @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "checkout-readiness.spec.mjs",
+      "line": 5,
+      "title": "Checkout preserves input and permits retry/cancel without payment readiness (es) @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "checkout-readiness.spec.mjs",
+      "line": 5,
+      "title": "Checkout preserves input and permits retry/cancel without payment readiness (es) @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "checkout-readiness.spec.mjs",
+      "line": 5,
+      "title": "Checkout preserves input and permits retry/cancel without payment readiness (es) @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "checkout-readiness.spec.mjs",
+      "line": 5,
+      "title": "Checkout preserves input and permits retry/cancel without payment readiness (es) @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 132,
+      "title": "Inscribirme opens the form in view and accepts an Ecuador local mobile @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 132,
+      "title": "Inscribirme opens the form in view and accepts an Ecuador local mobile @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 132,
+      "title": "Inscribirme opens the form in view and accepts an Ecuador local mobile @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 132,
+      "title": "Inscribirme opens the form in view and accepts an Ecuador local mobile @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 132,
+      "title": "Inscribirme opens the form in view and accepts an Ecuador local mobile @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 162,
+      "title": "successful checkout leaves no dialog and focuses the order @mobile-flow @critical",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 162,
+      "title": "successful checkout leaves no dialog and focuses the order @mobile-flow @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 162,
+      "title": "successful checkout leaves no dialog and focuses the order @mobile-flow @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 162,
+      "title": "successful checkout leaves no dialog and focuses the order @mobile-flow @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 162,
+      "title": "successful checkout leaves no dialog and focuses the order @mobile-flow @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 162,
+      "title": "successful checkout leaves no dialog and focuses the order @mobile-flow @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 162,
+      "title": "successful checkout leaves no dialog and focuses the order @mobile-flow @critical",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 178,
+      "title": "Server phone rejection is shown next to the field and a corrected retry succeeds @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 178,
+      "title": "Server phone rejection is shown next to the field and a corrected retry succeeds @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 178,
+      "title": "Server phone rejection is shown next to the field and a corrected retry succeeds @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 178,
+      "title": "Server phone rejection is shown next to the field and a corrected retry succeeds @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 178,
+      "title": "Server phone rejection is shown next to the field and a corrected retry succeeds @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 212,
+      "title": "Sticky CTA appears after the hero, opens the form and never covers the page end @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 212,
+      "title": "Sticky CTA appears after the hero, opens the form and never covers the page end @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 212,
+      "title": "Sticky CTA appears after the hero, opens the form and never covers the page end @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 212,
+      "title": "Sticky CTA appears after the hero, opens the form and never covers the page end @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 212,
+      "title": "Sticky CTA appears after the hero, opens the form and never covers the page end @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 238,
+      "title": "Signed-in visitors see the sticky CTA above the docked radio bar @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 238,
+      "title": "Signed-in visitors see the sticky CTA above the docked radio bar @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 238,
+      "title": "Signed-in visitors see the sticky CTA above the docked radio bar @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 238,
+      "title": "Signed-in visitors see the sticky CTA above the docked radio bar @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 238,
+      "title": "Signed-in visitors see the sticky CTA above the docked radio bar @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 261,
+      "title": "Deep link ?inscribirme=1 opens the form and closing removes the param @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 261,
+      "title": "Deep link ?inscribirme=1 opens the form and closing removes the param @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 261,
+      "title": "Deep link ?inscribirme=1 opens the form and closing removes the param @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 261,
+      "title": "Deep link ?inscribirme=1 opens the form and closing removes the param @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "course-enrollment.spec.mjs",
+      "line": 261,
+      "title": "Deep link ?inscribirme=1 opens the form and closing removes the param @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies getItem @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies getItem @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies getItem @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies getItem @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies getItem @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies getter @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies getter @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies getter @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies getter @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies getter @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies setItem @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies setItem @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies setItem @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies setItem @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "directory-entry.spec.mjs",
+      "line": 7,
+      "title": "Directory remains searchable when city storage denies setItem @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "directory-favorite-recovery.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "directory-favorite-recovery.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "directory-favorite-recovery.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "directory-favorite-recovery.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "directory-favorite-recovery.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "directory-language.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use en @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "directory-language.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use en @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "directory-language.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use en @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "directory-language.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use en @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "directory-language.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use en @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "directory-language.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "directory-language.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "directory-language.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "directory-language.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "directory-language.spec.mjs",
+      "line": 6,
+      "title": "Directory complete search and favorite recovery use es @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 8,
+      "title": "RACI dark review, keyboard confirmation and exact uncertain retry @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 8,
+      "title": "RACI dark review, keyboard confirmation and exact uncertain retry @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 8,
+      "title": "RACI dark review, keyboard confirmation and exact uncertain retry @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 8,
+      "title": "RACI dark review, keyboard confirmation and exact uncertain retry @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 8,
+      "title": "RACI dark review, keyboard confirmation and exact uncertain retry @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 8,
+      "title": "RACI light review, keyboard confirmation and exact uncertain retry @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 8,
+      "title": "RACI light review, keyboard confirmation and exact uncertain retry @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 8,
+      "title": "RACI light review, keyboard confirmation and exact uncertain retry @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 8,
+      "title": "RACI light review, keyboard confirmation and exact uncertain retry @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 8,
+      "title": "RACI light review, keyboard confirmation and exact uncertain retry @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 91,
+      "title": "RACI accessibility guard detects a known low-contrast fixture @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 91,
+      "title": "RACI accessibility guard detects a known low-contrast fixture @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 91,
+      "title": "RACI accessibility guard detects a known low-contrast fixture @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 91,
+      "title": "RACI accessibility guard detects a known low-contrast fixture @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 91,
+      "title": "RACI accessibility guard detects a known low-contrast fixture @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 107,
+      "title": "RACI paint guard rejects intermediate or stuck opacity without hiding contrast defects @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 107,
+      "title": "RACI paint guard rejects intermediate or stuck opacity without hiding contrast defects @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 107,
+      "title": "RACI paint guard rejects intermediate or stuck opacity without hiding contrast defects @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 107,
+      "title": "RACI paint guard rejects intermediate or stuck opacity without hiding contrast defects @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "event-raci-editor.spec.mjs",
+      "line": 107,
+      "title": "RACI paint guard rejects intermediate or stuck opacity without hiding contrast defects @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "event-rsvp-sharing.spec.mjs",
+      "line": 171,
+      "title": "@critical anonymous RSVP survives signup, appears once in the profile, shares publicly, and is withdrawn",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "event-rsvp-sharing.spec.mjs",
+      "line": 171,
+      "title": "@critical anonymous RSVP survives signup, appears once in the profile, shares publicly, and is withdrawn",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "event-rsvp-sharing.spec.mjs",
+      "line": 171,
+      "title": "@critical anonymous RSVP survives signup, appears once in the profile, shares publicly, and is withdrawn",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "event-rsvp-sharing.spec.mjs",
+      "line": 171,
+      "title": "@critical anonymous RSVP survives signup, appears once in the profile, shares publicly, and is withdrawn",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "event-rsvp-sharing.spec.mjs",
+      "line": 171,
+      "title": "@critical anonymous RSVP survives signup, appears once in the profile, shares publicly, and is withdrawn",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "event-rsvp-sharing.spec.mjs",
+      "line": 219,
+      "title": "private events do not enumerate and cancelled public events disable RSVP and sharing",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "event-rsvp-sharing.spec.mjs",
+      "line": 219,
+      "title": "private events do not enumerate and cancelled public events disable RSVP and sharing",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "event-rsvp-sharing.spec.mjs",
+      "line": 219,
+      "title": "private events do not enumerate and cancelled public events disable RSVP and sharing",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "event-rsvp-sharing.spec.mjs",
+      "line": 239,
+      "title": "RSVP fixtures block unconfigured APIs and foreign module-shaped requests",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "event-rsvp-sharing.spec.mjs",
+      "line": 239,
+      "title": "RSVP fixtures block unconfigured APIs and foreign module-shaped requests",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "event-rsvp-sharing.spec.mjs",
+      "line": 239,
+      "title": "RSVP fixtures block unconfigured APIs and foreign module-shaped requests",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 38,
+      "title": "task-only route renders RACI and recovers keyboard refresh without parent reads @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 38,
+      "title": "task-only route renders RACI and recovers keyboard refresh without parent reads @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 38,
+      "title": "task-only route renders RACI and recovers keyboard refresh without parent reads @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 38,
+      "title": "task-only route renders RACI and recovers keyboard refresh without parent reads @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 38,
+      "title": "task-only route renders RACI and recovers keyboard refresh without parent reads @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 68,
+      "title": "malformed successful task cannot produce a RACI view",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 68,
+      "title": "malformed successful task cannot produce a RACI view",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 68,
+      "title": "malformed successful task cannot produce a RACI view",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 76,
+      "title": "invalid or repeated task selectors never fall back to loading the event",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 76,
+      "title": "invalid or repeated task selectors never fall back to loading the event",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 76,
+      "title": "invalid or repeated task selectors never fall back to loading the event",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 85,
+      "title": "English task view honestly reports unconfigured responsibility",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 85,
+      "title": "English task view honestly reports unconfigured responsibility",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 85,
+      "title": "English task view honestly reports unconfigured responsibility",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 94,
+      "title": "fixture keeps foreign module-shaped URLs and unknown API commands isolated",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 94,
+      "title": "fixture keeps foreign module-shaped URLs and unknown API commands isolated",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "event-task-view.spec.mjs",
+      "line": 94,
+      "title": "fixture keeps foreign module-shaped URLs and unknown API commands isolated",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 52,
+      "title": "FanHub recovers reads and explicit keyboard exit without fake first value @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 52,
+      "title": "FanHub recovers reads and explicit keyboard exit without fake first value @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 52,
+      "title": "FanHub recovers reads and explicit keyboard exit without fake first value @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 52,
+      "title": "FanHub recovers reads and explicit keyboard exit without fake first value @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 52,
+      "title": "FanHub recovers reads and explicit keyboard exit without fake first value @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 94,
+      "title": "FanHub does not show already-completed onboarding or submit another exit",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 94,
+      "title": "FanHub does not show already-completed onboarding or submit another exit",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 94,
+      "title": "FanHub does not show already-completed onboarding or submit another exit",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 104,
+      "title": "FanHub rejects a successful HTTP response with no authoritative progress",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 104,
+      "title": "FanHub rejects a successful HTTP response with no authoritative progress",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 104,
+      "title": "FanHub rejects a successful HTTP response with no authoritative progress",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 114,
+      "title": "FanHub guest English tips are local presentation, never account completion",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 114,
+      "title": "FanHub guest English tips are local presentation, never account completion",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "fanhub-onboarding.spec.mjs",
+      "line": 114,
+      "title": "FanHub guest English tips are local presentation, never account completion",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 93,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 93,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 93,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 93,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 93,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 93,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 93,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 130,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 130,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 130,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 130,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 130,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 130,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "legacy-provider-playback.spec.mjs",
+      "line": 130,
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "marketplace-cart.spec.mjs",
+      "line": 116,
+      "title": "Marketplace cart stays reachable after adding on a small phone @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "marketplace-cart.spec.mjs",
+      "line": 116,
+      "title": "Marketplace cart stays reachable after adding on a small phone @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "marketplace-cart.spec.mjs",
+      "line": 116,
+      "title": "Marketplace cart stays reachable after adding on a small phone @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "marketplace-cart.spec.mjs",
+      "line": 116,
+      "title": "Marketplace cart stays reachable after adding on a small phone @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "marketplace-cart.spec.mjs",
+      "line": 116,
+      "title": "Marketplace cart stays reachable after adding on a small phone @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "marketplace-cart.spec.mjs",
+      "line": 181,
+      "title": "Saved cart failure stays recoverable without creating a replacement @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "marketplace-cart.spec.mjs",
+      "line": 181,
+      "title": "Saved cart failure stays recoverable without creating a replacement @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "marketplace-cart.spec.mjs",
+      "line": 181,
+      "title": "Saved cart failure stays recoverable without creating a replacement @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "marketplace-cart.spec.mjs",
+      "line": 181,
+      "title": "Saved cart failure stays recoverable without creating a replacement @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "marketplace-cart.spec.mjs",
+      "line": 181,
+      "title": "Saved cart failure stays recoverable without creating a replacement @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 111,
+      "title": "Booking keeps the card full width and stacks service reviews below it at 360px @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 111,
+      "title": "Booking keeps the card full width and stacks service reviews below it at 360px @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 111,
+      "title": "Booking keeps the card full width and stacks service reviews below it at 360px @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 111,
+      "title": "Booking keeps the card full width and stacks service reviews below it at 360px @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 111,
+      "title": "Booking keeps the card full width and stacks service reviews below it at 360px @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 146,
+      "title": "Live session registration fits 360px and keeps the access-code toggle legible on navy @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 146,
+      "title": "Live session registration fits 360px and keeps the access-code toggle legible on navy @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 146,
+      "title": "Live session registration fits 360px and keeps the access-code toggle legible on navy @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 146,
+      "title": "Live session registration fits 360px and keeps the access-code toggle legible on navy @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 146,
+      "title": "Live session registration fits 360px and keeps the access-code toggle legible on navy @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 200,
+      "title": "Docked radio bar fits 360px and never hides the bottom of the page @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 200,
+      "title": "Docked radio bar fits 360px and never hides the bottom of the page @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 200,
+      "title": "Docked radio bar fits 360px and never hides the bottom of the page @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 200,
+      "title": "Docked radio bar fits 360px and never hides the bottom of the page @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "mobile-layout-regressions.spec.mjs",
+      "line": 200,
+      "title": "Docked radio bar fits 360px and never hides the bottom of the page @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 1280px @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 1280px @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 1280px @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 1280px @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 1280px @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 390px @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 390px @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 390px @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 390px @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 390px @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 834px @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 834px @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 834px @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 834px @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 22,
+      "title": "Mobile tester funnel 834px @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 64,
+      "title": "Dismissed mobile promotion stays dismissed @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 64,
+      "title": "Dismissed mobile promotion stays dismissed @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 64,
+      "title": "Dismissed mobile promotion stays dismissed @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 64,
+      "title": "Dismissed mobile promotion stays dismissed @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 64,
+      "title": "Dismissed mobile promotion stays dismissed @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 73,
+      "title": "Admitted Android testers can reach Play without submitting another form @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 73,
+      "title": "Admitted Android testers can reach Play without submitting another form @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 73,
+      "title": "Admitted Android testers can reach Play without submitting another form @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 73,
+      "title": "Admitted Android testers can reach Play without submitting another form @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "mobile-program.spec.mjs",
+      "line": 73,
+      "title": "Admitted Android testers can reach Play without submitting another form @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 79,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 79,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 79,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 79,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 79,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 79,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 79,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 125,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 125,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 125,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 125,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 125,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 125,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "music-catalog-discovery.spec.mjs",
+      "line": 125,
+      "title": "@critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "music-player.spec.mjs",
+      "line": 200,
+      "title": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "music-player.spec.mjs",
+      "line": 200,
+      "title": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "music-player.spec.mjs",
+      "line": 200,
+      "title": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "music-player.spec.mjs",
+      "line": 200,
+      "title": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "music-player.spec.mjs",
+      "line": 200,
+      "title": "@critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 45,
+      "title": "notification follower keyboard/touch navigation and failed read persistence @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 45,
+      "title": "notification follower keyboard/touch navigation and failed read persistence @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 45,
+      "title": "notification follower keyboard/touch navigation and failed read persistence @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 45,
+      "title": "notification follower keyboard/touch navigation and failed read persistence @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 45,
+      "title": "notification follower keyboard/touch navigation and failed read persistence @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 58,
+      "title": "specific request navigation shows current state and never decides it @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 58,
+      "title": "specific request navigation shows current state and never decides it @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 58,
+      "title": "specific request navigation shows current state and never decides it @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 58,
+      "title": "specific request navigation shows current state and never decides it @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 58,
+      "title": "specific request navigation shows current state and never decides it @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 71,
+      "title": "expired session retains notification destination and denied target stays private @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 71,
+      "title": "expired session retains notification destination and denied target stays private @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 71,
+      "title": "expired session retains notification destination and denied target stays private @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 71,
+      "title": "expired session retains notification destination and denied target stays private @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 71,
+      "title": "expired session retains notification destination and denied target stays private @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 85,
+      "title": "standard new-tab activation resolves the owned notification and preserves the original page @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 85,
+      "title": "standard new-tab activation resolves the owned notification and preserves the original page @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 85,
+      "title": "standard new-tab activation resolves the owned notification and preserves the original page @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 85,
+      "title": "standard new-tab activation resolves the owned notification and preserves the original page @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "notification-navigation.spec.mjs",
+      "line": 85,
+      "title": "standard new-tab activation resolves the owned notification and preserves the original page @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 217,
+      "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies access",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 217,
+      "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies access",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 217,
+      "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies access",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 217,
+      "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies access",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 217,
+      "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies access",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 217,
+      "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies operations",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 217,
+      "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies operations",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 217,
+      "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies operations",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 217,
+      "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies operations",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 217,
+      "title": "@critical PW-PER-STORAGE keeps login available when browser storage denies operations",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 248,
+      "title": "@critical PW-PER-01-AUTH redirects protected URLs and explains rejected login",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 248,
+      "title": "@critical PW-PER-01-AUTH redirects protected URLs and explains rejected login",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 248,
+      "title": "@critical PW-PER-01-AUTH redirects protected URLs and explains rejected login",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 248,
+      "title": "@critical PW-PER-01-AUTH redirects protected URLs and explains rejected login",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 248,
+      "title": "@critical PW-PER-01-AUTH redirects protected URLs and explains rejected login",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 270,
+      "title": "PW-PER-01-AUTH registers a fictional user through the UI",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 270,
+      "title": "PW-PER-01-AUTH registers a fictional user through the UI",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 270,
+      "title": "PW-PER-01-AUTH registers a fictional user through the UI",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 306,
+      "title": "PW-PER-01-AUTH keeps signup labels readable in light theme",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 306,
+      "title": "PW-PER-01-AUTH keeps signup labels readable in light theme",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 306,
+      "title": "PW-PER-01-AUTH keeps signup labels readable in light theme",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 315,
+      "title": "PW-PER-01-AUTH reports a reset transport failure instead of false success",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 315,
+      "title": "PW-PER-01-AUTH reports a reset transport failure instead of false success",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 315,
+      "title": "PW-PER-01-AUTH reports a reset transport failure instead of false success",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 327,
+      "title": "PW-PER-01-DISCOVERY completes public city discovery and preserves search state",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 327,
+      "title": "PW-PER-01-DISCOVERY completes public city discovery and preserves search state",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 327,
+      "title": "PW-PER-01-DISCOVERY completes public city discovery and preserves search state",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 348,
+      "title": "PW-PER-01-DISCOVERY reflows at an effective 320 CSS pixel viewport",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 348,
+      "title": "PW-PER-01-DISCOVERY reflows at an effective 320 CSS pixel viewport",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 348,
+      "title": "PW-PER-01-DISCOVERY reflows at an effective 320 CSS pixel viewport",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 360,
+      "title": "PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuance",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 360,
+      "title": "PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuance",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 360,
+      "title": "PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuance",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 401,
+      "title": "PW-PER-01-DOMO retries one truthful manual request in Ecuador time",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 401,
+      "title": "PW-PER-01-DOMO retries one truthful manual request in Ecuador time",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 401,
+      "title": "PW-PER-01-DOMO retries one truthful manual request in Ecuador time",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 560,
+      "title": "PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 560,
+      "title": "PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 560,
+      "title": "PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 663,
+      "title": "PW-PER-01-MARKETPLACE removes fake notification capture and persistent contact data",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 663,
+      "title": "PW-PER-01-MARKETPLACE removes fake notification capture and persistent contact data",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 663,
+      "title": "PW-PER-01-MARKETPLACE removes fake notification capture and persistent contact data",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 693,
+      "title": "@critical PW-PER-RESET-OFFLINE en reset confirmation retains language",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 693,
+      "title": "@critical PW-PER-RESET-OFFLINE en reset confirmation retains language",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 693,
+      "title": "@critical PW-PER-RESET-OFFLINE en reset confirmation retains language",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 693,
+      "title": "@critical PW-PER-RESET-OFFLINE en reset confirmation retains language",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 693,
+      "title": "@critical PW-PER-RESET-OFFLINE en reset confirmation retains language",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 693,
+      "title": "@critical PW-PER-RESET-OFFLINE es reset confirmation retains language",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 693,
+      "title": "@critical PW-PER-RESET-OFFLINE es reset confirmation retains language",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 693,
+      "title": "@critical PW-PER-RESET-OFFLINE es reset confirmation retains language",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 693,
+      "title": "@critical PW-PER-RESET-OFFLINE es reset confirmation retains language",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 693,
+      "title": "@critical PW-PER-RESET-OFFLINE es reset confirmation retains language",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 704,
+      "title": "@critical PW-PER-LOCALE en signup and recovery retain language and destination",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 704,
+      "title": "@critical PW-PER-LOCALE en signup and recovery retain language and destination",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 704,
+      "title": "@critical PW-PER-LOCALE en signup and recovery retain language and destination",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 704,
+      "title": "@critical PW-PER-LOCALE en signup and recovery retain language and destination",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 704,
+      "title": "@critical PW-PER-LOCALE en signup and recovery retain language and destination",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 704,
+      "title": "@critical PW-PER-LOCALE es signup and recovery retain language and destination",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 704,
+      "title": "@critical PW-PER-LOCALE es signup and recovery retain language and destination",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 704,
+      "title": "@critical PW-PER-LOCALE es signup and recovery retain language and destination",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 704,
+      "title": "@critical PW-PER-LOCALE es signup and recovery retain language and destination",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 704,
+      "title": "@critical PW-PER-LOCALE es signup and recovery retain language and destination",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 764,
+      "title": "@critical PW-PER-POLICY en policy documents retain language and version",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 764,
+      "title": "@critical PW-PER-POLICY en policy documents retain language and version",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 764,
+      "title": "@critical PW-PER-POLICY en policy documents retain language and version",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 764,
+      "title": "@critical PW-PER-POLICY en policy documents retain language and version",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 764,
+      "title": "@critical PW-PER-POLICY en policy documents retain language and version",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 764,
+      "title": "@critical PW-PER-POLICY es policy documents retain language and version",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 764,
+      "title": "@critical PW-PER-POLICY es policy documents retain language and version",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 764,
+      "title": "@critical PW-PER-POLICY es policy documents retain language and version",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 764,
+      "title": "@critical PW-PER-POLICY es policy documents retain language and version",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 764,
+      "title": "@critical PW-PER-POLICY es policy documents retain language and version",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN en network preserves the selected language",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN en network preserves the selected language",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN en network preserves the selected language",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN en network preserves the selected language",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN en network preserves the selected language",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN en unauthorized preserves the selected language",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN en unauthorized preserves the selected language",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN en unauthorized preserves the selected language",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN en unauthorized preserves the selected language",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN en unauthorized preserves the selected language",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN es network preserves the selected language",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN es network preserves the selected language",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN es network preserves the selected language",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN es network preserves the selected language",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN es network preserves the selected language",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN es unauthorized preserves the selected language",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN es unauthorized preserves the selected language",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN es unauthorized preserves the selected language",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN es unauthorized preserves the selected language",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "persona-public.spec.mjs",
+      "line": 782,
+      "title": "@critical PW-PER-LOCALE-LOGIN es unauthorized preserves the selected language",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en / @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en / @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en / @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en / @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en / @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /comercio @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /comercio @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /comercio @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /comercio @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /comercio @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /distribucion @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /distribucion @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /distribucion @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /distribucion @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /distribucion @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /marketplace @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /marketplace @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /marketplace @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /marketplace @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content en /marketplace @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es / @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es / @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es / @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es / @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es / @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /comercio @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /comercio @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /comercio @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /comercio @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /comercio @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /distribucion @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /distribucion @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /distribucion @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /distribucion @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /distribucion @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /marketplace @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /marketplace @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /marketplace @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /marketplace @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-text-reflow.spec.mjs",
+      "line": 8,
+      "title": "Public text resize preserves header and content es /marketplace @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 101,
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 101,
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 101,
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 101,
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 101,
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 101,
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 101,
+      "title": "anonymous root welcomes before search without registration or location access @critical @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 123,
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 123,
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 123,
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 123,
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 123,
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 123,
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 123,
+      "title": "welcome leads to public studio and services before account choices @critical @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 157,
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 157,
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 157,
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 157,
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 157,
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 157,
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 157,
+      "title": "welcome opens published work as a guest without an account gate @critical @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 170,
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 170,
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 170,
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 170,
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 170,
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 170,
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 170,
+      "title": "direct search preserves query and city across changes and browser history @critical @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 191,
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 191,
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 191,
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 191,
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 191,
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 191,
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 191,
+      "title": "a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 207,
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "android-chrome-small"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 207,
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 207,
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 207,
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 207,
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 207,
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "public-welcome.spec.mjs",
+      "line": 207,
+      "title": "welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow",
+      "project": "webkit-iphone"
+    },
+    {
+      "file": "records-thumbnails.spec.mjs",
+      "line": 45,
+      "title": "Records handles failed images and decoded placeholders with bounded requests @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "records-thumbnails.spec.mjs",
+      "line": 45,
+      "title": "Records handles failed images and decoded placeholders with bounded requests @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "records-thumbnails.spec.mjs",
+      "line": 45,
+      "title": "Records handles failed images and decoded placeholders with bounded requests @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "records-thumbnails.spec.mjs",
+      "line": 45,
+      "title": "Records handles failed images and decoded placeholders with bounded requests @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "records-thumbnails.spec.mjs",
+      "line": 45,
+      "title": "Records handles failed images and decoded placeholders with bounded requests @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "records-thumbnails.spec.mjs",
+      "line": 64,
+      "title": "Records preserves source identities, keyboard links and responsive unavailable states @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "records-thumbnails.spec.mjs",
+      "line": 64,
+      "title": "Records preserves source identities, keyboard links and responsive unavailable states @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "records-thumbnails.spec.mjs",
+      "line": 64,
+      "title": "Records preserves source identities, keyboard links and responsive unavailable states @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "records-thumbnails.spec.mjs",
+      "line": 64,
+      "title": "Records preserves source identities, keyboard links and responsive unavailable states @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "records-thumbnails.spec.mjs",
+      "line": 64,
+      "title": "Records preserves source identities, keyboard links and responsive unavailable states @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service return remains recoverable without optional storage getItem @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service return remains recoverable without optional storage getItem @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service return remains recoverable without optional storage getItem @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service return remains recoverable without optional storage getItem @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service return remains recoverable without optional storage getItem @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service return remains recoverable without optional storage getter @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service return remains recoverable without optional storage getter @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service return remains recoverable without optional storage getter @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service return remains recoverable without optional storage getter @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service return remains recoverable without optional storage getter @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service tracking remains recoverable without optional storage getItem @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service tracking remains recoverable without optional storage getItem @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service tracking remains recoverable without optional storage getItem @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service tracking remains recoverable without optional storage getItem @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service tracking remains recoverable without optional storage getItem @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service tracking remains recoverable without optional storage getter @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service tracking remains recoverable without optional storage getter @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service tracking remains recoverable without optional storage getter @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service tracking remains recoverable without optional storage getter @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "service-storage-recovery.spec.mjs",
+      "line": 5,
+      "title": "Private service tracking remains recoverable without optional storage getter @critical",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "studio-internship-audit.spec.mjs",
+      "line": 95,
+      "title": "@critical synthetic intern records a failed case and reaches a trace-linked report draft",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "studio-internship-audit.spec.mjs",
+      "line": 95,
+      "title": "@critical synthetic intern records a failed case and reaches a trace-linked report draft",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "studio-internship-audit.spec.mjs",
+      "line": 95,
+      "title": "@critical synthetic intern records a failed case and reaches a trace-linked report draft",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "studio-internship-audit.spec.mjs",
+      "line": 95,
+      "title": "@critical synthetic intern records a failed case and reaches a trace-linked report draft",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "studio-internship-audit.spec.mjs",
+      "line": 95,
+      "title": "@critical synthetic intern records a failed case and reaches a trace-linked report draft",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "studio-internship-audit.spec.mjs",
+      "line": 139,
+      "title": "@critical synthetic administrator can see all-report controls and prepare triage without activation",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "studio-internship-audit.spec.mjs",
+      "line": 139,
+      "title": "@critical synthetic administrator can see all-report controls and prepare triage without activation",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "studio-internship-audit.spec.mjs",
+      "line": 139,
+      "title": "@critical synthetic administrator can see all-report controls and prepare triage without activation",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "studio-internship-audit.spec.mjs",
+      "line": 139,
+      "title": "@critical synthetic administrator can see all-report controls and prepare triage without activation",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "studio-internship-audit.spec.mjs",
+      "line": 139,
+      "title": "@critical synthetic administrator can see all-report controls and prepare triage without activation",
+      "project": "webkit-critical"
+    },
+    {
+      "file": "ticket-credential.spec.mjs",
+      "line": 6,
+      "title": "Guest issued QR downloads on a narrow screen without installing the app @critical",
+      "project": "chromium-desktop"
+    },
+    {
+      "file": "ticket-credential.spec.mjs",
+      "line": 6,
+      "title": "Guest issued QR downloads on a narrow screen without installing the app @critical",
+      "project": "chromium-phone"
+    },
+    {
+      "file": "ticket-credential.spec.mjs",
+      "line": 6,
+      "title": "Guest issued QR downloads on a narrow screen without installing the app @critical",
+      "project": "chromium-tablet"
+    },
+    {
+      "file": "ticket-credential.spec.mjs",
+      "line": 6,
+      "title": "Guest issued QR downloads on a narrow screen without installing the app @critical",
+      "project": "firefox-critical"
+    },
+    {
+      "file": "ticket-credential.spec.mjs",
+      "line": 6,
+      "title": "Guest issued QR downloads on a narrow screen without installing the app @critical",
+      "project": "webkit-critical"
+    }
+  ],
+  "identitiesExactBeforeAndAfter": true,
+  "scope": "Real pinned Playwright CLI listing, not browser execution. Author metadata from raw runner reports is excluded."
+}

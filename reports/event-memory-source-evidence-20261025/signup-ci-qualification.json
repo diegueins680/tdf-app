@@ -1,0 +1,169 @@
+{
+  "recordedAt": "2026-10-26T22:28:26.827373+00:00",
+  "qualifiedSource": "733288f9625e2bcdd466b72d6eb6c5f7d961e3c7",
+  "firstSignupProofSource": "f03478ba9f831efb29cd2e86573e428cab10a29e",
+  "parentCandidate": "4d5a460cb2bd8ca0d132effe7382454f6e0b21e7",
+  "applicationBackendNativeSubtreesUnchanged": true,
+  "scope": "Signup/publication regression and existing CI runner integration; no application or API-contract changes",
+  "cases": {
+    "nativeCiSelection": {
+      "directRequests": 122,
+      "httpGroups": 19,
+      "runtimeHashes": 269,
+      "browserAssertions": 11,
+      "browserRuntime": {
+        "channel": "playwright-chromium",
+        "version": "147.0.7727.15"
+      },
+      "newAccount": {
+        "partyId": 7,
+        "momentId": "8",
+        "assetPath": "/assets/serve/social-events/events/919143001/moments/d6ed0500-cace-4119-b02a-835d436e1d04-newcomer-memory.png",
+        "assetSha256": "2c7e2665529fcb52c595dad1b8cc6230d02226df97810386658d4a0e41acf968",
+        "signupStatus": 200,
+        "uploadStatus": 200,
+        "publicationStatus": 200,
+        "marketingRequested": false,
+        "invitationPreferenceBefore": false,
+        "invitationPreferenceAfter": false,
+        "privateReadStatus": 404,
+        "organizerCampaignStatus": 404,
+        "fixtureRoleGrants": 0
+      },
+      "restartPersistence": {
+        "partyId": 7,
+        "momentId": "8",
+        "assetSha256": "2c7e2665529fcb52c595dad1b8cc6230d02226df97810386658d4a0e41acf968",
+        "survivesRealApiRestart": true,
+        "fixtureRoleGrants": 0
+      },
+      "migrationLedger": {
+        "expectedCount": 226,
+        "appliedCount": 226,
+        "idsSha256": "37fbc984065234d4adfa0af656c9f1432cfeb0ae18a9c5f3b8bb664dd3d787cb",
+        "batchSha256": "4be40505e7b80f95454090352ced456d612984ef8f8850b7584c5cf1c6d864df"
+      },
+      "all269RuntimeFilesMatchCommittedSource": true,
+      "ownedApiStopped": true,
+      "ownedDatabaseRemoved": true,
+      "frontendStopped": true,
+      "hostedCi": false,
+      "platform": "Darwin, owned native PostgreSQL16"
+    },
+    "nativeChrome": {
+      "directRequests": 122,
+      "httpGroups": 19,
+      "runtimeHashes": 269,
+      "browserAssertions": 11,
+      "browserRuntime": {
+        "channel": "chrome",
+        "version": "150.0.7871.125"
+      },
+      "newAccount": {
+        "partyId": 7,
+        "momentId": "8",
+        "assetPath": "/assets/serve/social-events/events/919143001/moments/3811b45f-0cd5-4312-a5a1-0b73e2c12b3a-newcomer-memory.png",
+        "assetSha256": "2c7e2665529fcb52c595dad1b8cc6230d02226df97810386658d4a0e41acf968",
+        "signupStatus": 200,
+        "uploadStatus": 200,
+        "publicationStatus": 200,
+        "marketingRequested": false,
+        "invitationPreferenceBefore": false,
+        "invitationPreferenceAfter": false,
+        "privateReadStatus": 404,
+        "organizerCampaignStatus": 404,
+        "fixtureRoleGrants": 0
+      },
+      "restartPersistence": {
+        "partyId": 7,
+        "momentId": "8",
+        "assetSha256": "2c7e2665529fcb52c595dad1b8cc6230d02226df97810386658d4a0e41acf968",
+        "survivesRealApiRestart": true,
+        "fixtureRoleGrants": 0
+      },
+      "migrationLedger": {
+        "expectedCount": 226,
+        "appliedCount": 226,
+        "idsSha256": "37fbc984065234d4adfa0af656c9f1432cfeb0ae18a9c5f3b8bb664dd3d787cb",
+        "batchSha256": "4be40505e7b80f95454090352ced456d612984ef8f8850b7584c5cf1c6d864df"
+      },
+      "all269RuntimeFilesMatchCommittedSource": true,
+      "ownedApiStopped": true,
+      "ownedDatabaseRemoved": true,
+      "frontendStopped": true,
+      "hostedCi": false,
+      "platform": "Darwin, owned native PostgreSQL16"
+    }
+  },
+  "repositoryQuality": "PASS",
+  "catalog": {
+    "candidateCount": 1347,
+    "strictJson": "PASS",
+    "strictCsv": "PASS",
+    "allParentDecisionObjectsUnchanged": true
+  },
+  "controls": {
+    "runner": 7,
+    "catalogHistory": 8,
+    "combined": 15,
+    "failed": 0,
+    "skipped": 0
+  },
+  "traceability": "149 requirements retained, only own test associations extended; not semantic full-program proof",
+  "dirtyExecutionScope": "Owned dependency symlinks plus generated catalog/report files; every bound runtime file matches733 before/after. This is not a clean release attestation.",
+  "ciAdapter": {
+    "workflow": ".github/workflows/event-raci-browser.yml",
+    "mode": "--event-memories reuses the exact owned local Docker container and canonical Stack binary after ordinary RACI tests",
+    "databaseImage": "Existing backend-CI pgvector/pgvector:pg17 only in memory mode; ordinary RACI mode remains16",
+    "credentialsAndRawBackendLogsExcludedFromArtifacts": true,
+    "hostedExecution": "PENDING; local CI-selection run is not the hosted Docker adapter"
+  },
+  "priorFullCi": "Parent4d/actual1e6 results remain separately recorded in public-entry-hosted-complete.json",
+  "actualLocalApi": {
+    "commit": "262295679df492dde850333779db431132092993",
+    "buildTime": "2026-10-26T05:36:20Z",
+    "binarySha256": "f01ef34b75f1f1c1da4a41cdbb541de9b620fd4c1f4b24aba64025e7c1b6e17d",
+    "compiledInputsUnchanged": 278,
+    "newBuildClaimed": false
+  },
+  "cleanup": {
+    "ownedPgStopped": true,
+    "apiAndFrontendsStopped": true,
+    "databasesRemoved": true,
+    "sharedChrome18800Untouched": true
+  },
+  "production": {
+    "writes": 0,
+    "realUsers": 0,
+    "attemptedInvitations": 0,
+    "sentInvitations": 0,
+    "deliveredInvitations": 0,
+    "failedInvitations": 0,
+    "eligibleWithConsent": null,
+    "excluded": null
+  },
+  "pending": [
+    "Hosted CI adapter execution",
+    "Independent review of source615/632/native chain and this successor",
+    "Protected current-main integration, deployment and canonical production verification",
+    "Real141eligibility/consent before any invitation"
+  ],
+  "logs": {
+    "/private/tmp/tdf-event-memory-signup-ci-repo-quality-v1.log": {
+      "sha256": "30491930cdafe087de3b9be65ee01bb3893afdbf0f7b53ea82ea706569c29909",
+      "bytes": 134788
+    },
+    "/private/tmp/tdf-event-memory-signup-ci-runner-catalog-controls-v1.log": {
+      "sha256": "4631fcefcff6835f9711243e561353cbefd00e42705d7274c570ffb7973310d4",
+      "bytes": 3417
+    },
+    "/private/tmp/tdf-event-memory-signup-ci-catalog-json-v1.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/private/tmp/tdf-event-memory-signup-ci-catalog-csv-v1.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  }
+}

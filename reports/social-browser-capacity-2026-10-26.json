@@ -1,0 +1,86 @@
+{
+  "recordedAt": "2026-10-26T23:30:04.616270+00:00",
+  "codeCommit": "9e6f0c5d8942b54a80343d708584115ade2f3660",
+  "base": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "sourceCorrespondence": {
+    "codeCommit": "9e6f0c5d8942b54a80343d708584115ade2f3660",
+    "protectedBase": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+    "wholeTree": "2ea05a5ca78f1290f57afab6fa8018b9480a8f1d",
+    "materialSha256": {
+      ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
+      "scripts/verify-playwright-image.mjs": "88fe2d6257a3c64943b5a29f98a2fde3d296df138c0750bc5d1a71368445584f",
+      "scripts/__tests__/playwright-image.test.mjs": "dff4fdac0f095e6015f7de4565fa49c52de355720dac9608230f442c8fdabc39",
+      "scripts/__tests__/ci-pipeline.test.mjs": "9a2db7e690c4c5211be36dd7e338d9189cd2ae15fdb1bdc63f09c391caa00722",
+      "playwright.config.mjs": "3b3298f30ef87aaac997a92d3fa0def4bd0a907bb41dff89dc3712210b32a957"
+    },
+    "requirements": 148,
+    "other147WholeObjectsExact": true,
+    "explicitChangedCiFields": [
+      "concurrency",
+      "implementation"
+    ],
+    "previousConcurrencyClause": "Existing browser workers and fixture isolation are unchanged; the container uses the official shared-memory recommendation.",
+    "proposedConcurrencyClause": "The global CI limit remains two workers; each WebKit project admits one worker, while Chromium/Firefox scheduling, fixture isolation and simultaneous operations within a test remain unchanged. The container retains the official shared-memory recommendation.",
+    "inferredCiRequirementAuthority": "inferred",
+    "allProductBackendSqlApiOperationsDependenciesAndMobileExactToProtectedBase": true,
+    "allBrowserTestAndFixtureBytesExactToProtectedBase": true,
+    "gatedMaterialSurfaces": 4,
+    "explicitlyMappedRootConfig": "playwright.config.mjs",
+    "admissionScopeLimit": "Existing surface admission lists four changed paths; root Playwright config is explicitly mapped in the CI requirement and checked by actual configuration loading and full602-case discovery."
+  },
+  "preservedPriorResults": {
+    "fd5SocialJob": 121876132007,
+    "fd5Outcome": "FAILED version1.64.1/lock1.59.1; browser skipped",
+    "7bedSocialJob": 121883877356,
+    "7bedSocialOutcome": "PASS63tests+generatedcontract+threeactualbrowserlaunches+unchangedsocial/axe; not new-code assurance",
+    "7bedFirstPersonaJob": 121884420075,
+    "7bedSingleReplayJob": 121896578822,
+    "bothPersonaOutcomes": "579PASS/22SKIP/1FAIL",
+    "firstFailure": "WebKit critical campaign320px color-contrast",
+    "singleReplayFailure": "WebKit iPhone cart30second aggregate deadline, final close action waiting",
+    "rootCause": "UNPROVEN; the first failure did not recur in the single replay. Capacity is a contention hypothesis requiring fresh hosted acceptance.",
+    "noSecondOldHeadReplay": true
+  },
+  "localValidation": {
+    "node": "22.14.0",
+    "playwright": "1.59.1",
+    "actualListedCaseIdentities": 602,
+    "listedIdentitiesExact": true,
+    "fullImagePipelineControls": 50,
+    "failures": 0,
+    "skipped": 0,
+    "metadataControls": 27,
+    "strictJsonAndCsvCandidates": 1341,
+    "allCandidateIdsValuesClassificationsAndDecisionsPreserved": true,
+    "unreviewed": 0,
+    "stale": 0,
+    "negativeControl": "Original config is rejected by the new policy; selected negative control is not a full-suite passing result. Corrected config passes all50controls with0skips.",
+    "initialControlFailureRetained": "First policy control read browserName only, misclassifying device descriptors whose pinned SDK uses defaultBrowserType; that49/1failure and its invalid negative control are retained. Final control resolves both forms and enforces the same policy."
+  },
+  "budgets": {
+    "globalCiWorkers": 2,
+    "eachWebKitProjectWorkers": 1,
+    "chromiumAndFirefoxCapacityUnchanged": true,
+    "testTimeoutMs": 30000,
+    "expectTimeoutMs": 8000,
+    "configuredRetries": 0,
+    "testFiltersAssertionsFixturesScreenshotsTracesAndRolloutDiscoveryUnchanged": true
+  },
+  "archive": {
+    "path": "reports/social-browser-capacity-evidence-20261026/execution-artifacts.tar.gz",
+    "bytes": 3631672,
+    "sha256": "4f2a6304967cb6d8baf676854247710383062a8483dbe8af291b05ef6f7623e0",
+    "memberCount": 19,
+    "strongPrivateCredentialFormatsFound": 0
+  },
+  "freshCurrentHeadLinuxCi": "PENDING; no inherited result or local listing substitutes for execution",
+  "independentReview": "PENDING",
+  "draftMustRemain": true,
+  "publicationAndDeployment": {
+    "protectedMainMerge": false,
+    "backendRollout": false,
+    "storeRelease": false,
+    "productionWrites": 0,
+    "delivered": false
+  }
+}

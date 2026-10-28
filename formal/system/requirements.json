@@ -5773,7 +5773,8 @@
         "Explicit event/identify/page properties",
         "SDK-generated event.properties, $set and $set_once",
         "Current/referrer URLs",
-        "Project configuration"
+        "Project configuration",
+        "SDK initial-person properties used by feature flag and remote configuration requests"
       ],
       "state": {
         "client": [
@@ -5791,7 +5792,8 @@
         "uninitialized + missing key/window -> disabled no-op",
         "uninitialized + configured browser -> ready with before_send sanitization",
         "raw named payload -> sanitized SDK event",
-        "SDK failure -> fixed operation-class warning"
+        "SDK failure -> fixed operation-class warning",
+        "Configured web SDK -> flags and remote configuration disabled; sanitized event capture and session-owned application flags remain available"
       ],
       "forbiddenTransitions": [
         "Transmit a named sensitive field in nested event or person-property envelopes",
@@ -5799,7 +5801,8 @@
         "Log arbitrary SDK exception payloads",
         "Treat an unconfigured client as provider receipt evidence",
         "Private code, buyer details, URL credential or SDK exception payload -> telemetry/log",
-        "Unknown URL query key -> unredacted value"
+        "Unknown URL query key -> unredacted value",
+        "Initial-person URL -> unsanitized SDK flags request outside before_send"
       ],
       "effects": [
         "Sanitized optional telemetry; core user action remains separate",
@@ -5819,7 +5822,8 @@
       ],
       "tests": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
-        "tdf-hq-ui/src/analytics/errorReporting.test.ts"
+        "tdf-hq-ui/src/analytics/errorReporting.test.ts",
+        "e2e/web/analytics-privacy.spec.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -5830,10 +5834,10 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Incoming reviewed main implementation has mapped deterministic examples; fresh combined-candidate execution and deployed analytics configuration/consent correspondence remain required."
+        "reason": "A published-client synthetic counterexample demonstrates initial reset URL disclosure through SDK flags outside before_send. The event-only SDK repair requires exact-source browser/CI qualification and production deployment; complete consent and provider retention remain open."
       },
       "property": "Named sensitive payloads do not survive recognized serializer boundaries; public attribution and configured project token remain usable.",
-      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof. Synthetic client-error and actual route-boundary tests cover raw-error exclusion, embedded URL sentinels, selected context, throwing getters and console failure; scope and exclusions are in formal/system/client-error-privacy.md.",
+      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof. Synthetic client-error and actual route-boundary tests cover raw-error exclusion, embedded URL sentinels, selected context, throwing getters and console failure; scope and exclusions are in formal/system/client-error-privacy.md. Bundled-SDK browser regression requires decoded anonymous pageview and identified events, retains public attribution, and denies flags/configuration requests with all provider and business traffic intercepted.",
       "evidence": "Exact-candidate UI gate; original main PR487 validation is historical for subsequent merged trees."
     },
     {
@@ -8651,7 +8655,8 @@
         "tdf-mobile/src/navigation/notificationTarget.ts",
         "playwright.music-native.config.mjs",
         ".github/workflows/ci.yml",
-        "scripts/run-native-audio-tests.sh"
+        "scripts/run-native-audio-tests.sh",
+        "tdf-hq-ui/src/session/SessionProviders.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -8988,7 +8993,7 @@
       "id": "AUTH-ENTRY-002",
       "title": "Low-friction account entry that lands on Comunidad or the interrupted intent",
       "statement": "Email signup requires only email and password with clickwrap terms; first-time Google users create an account without another form or popup; successful entry lands on Comunidad unless a validated same-origin return path or explicit intent applies.",
-      "authority": "product owner request after real-user mobile test (2026-10-07)",
+      "authority": "product owner request after real-user mobile test (2026-10-07); product owner User Value Activation Sprint privacy/public-information review requirement (2026-10-26), following an isolated before-save disclosure counterexample",
       "domain": "AUTH",
       "actors": [
         "Visitor",
@@ -9022,19 +9027,20 @@
       "forbiddenTransitions": [
         "required name/phone/profile at signup",
         "external, protocol-relative or backslash redirect target",
-        "account linking by email alone"
+        "account linking by email alone",
+        "private email or its local part -> automatic public account name before explicit profile editing"
       ],
       "effects": [
-        "Server records accepted terms version; display name starts from the email local part and is editable later."
+        "Server records the accepted terms version. Email signup and Google signup without a supplied profile name start with a neutral account label, independent of the private email, and people can choose their public name later."
       ],
       "authorization": "Return paths are honored only when same-origin and accessible to the returned roles; Google linking still requires existing credentials.",
-      "privacy": "No marketing consent implied; no credentials in URLs or telemetry.",
+      "privacy": "No implied marketing consent or credentials in URLs/telemetry. Automatic account display-name defaults must not use a private email or its local part. Explicitly supplied names, credential email and existing account names remain unchanged.",
       "concurrency": "Late Google callbacks reuse the stored handler; creation reuses the single credential.",
       "idempotency": "Signup submit is disabled while pending.",
       "failure": "Inline field errors and friendly server messages; no raw errors.",
       "recovery": "Retry, switch to email/password, or link an existing account.",
       "observability": "signup_completed/login_completed/signup_failed analytics and auth_flow client errors.",
-      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
+      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation; User Value Activation Sprint (2026-10-26): preserve minimal registration while preventing private contact data becoming an automatic public name.",
       "implementation": [
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/utils/signupFields.ts",
@@ -9042,7 +9048,13 @@
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/utils/authErrorMessage.ts",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Auth/AccountName.hs",
+        "tdf-hq/tdf-hq.cabal"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
@@ -9051,7 +9063,11 @@
         "e2e/web/auth-landing.spec.mjs",
         "e2e/web/persona-public.spec.mjs",
         "e2e/web/event-rsvp-sharing.spec.mjs",
-        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx"
+        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
+        "tdf-hq-ui/src/api/auth.test.ts",
+        "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+        "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+        "tdf-hq/test/TDF/Auth/AccountNameSpec.hs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -10968,7 +10984,7 @@
       ],
       "authorization": "The job runs as user 1001 to match GitHub workspace/home ownership; this test infrastructure grants no production or release authority.",
       "privacy": "Preflight reports browser names and versions only; application test artifacts retain existing sanitization and retention.",
-      "concurrency": "Existing browser workers and fixture isolation are unchanged; the container uses the official shared-memory recommendation.",
+      "concurrency": "The global CI limit remains two workers; each WebKit project admits one worker, while Chromium/Firefox scheduling, fixture isolation and simultaneous operations within a test remain unchanged. The container retains the official shared-memory recommendation.",
       "idempotency": "Preflight does not install packages or modify application data.",
       "failure": "Fail closed on missing metadata, version drift, invalid pin, browser-path redirection or any failed launch; there is no installer fallback.",
       "recovery": "Update the lockfile and verified official image together, then require all existing hosted browser stages and protected admission.",
@@ -10980,7 +10996,9 @@
       "implementation": [
         ".github/workflows/ci.yml",
         "scripts/verify-playwright-image.mjs",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        ".github/workflows/social-verification.yml",
+        "playwright.config.mjs"
       ],
       "tests": [
         "scripts/__tests__/playwright-image.test.mjs",
@@ -12126,8 +12144,8 @@
     {
       "id": "UX-WELCOME-001",
       "title": "Public discovery shows value before personal profiling",
-      "statement": "The public start page /inicio explains TDF and offers anonymous exploration before the existing directory form. /buscar keeps direct URL-backed search; search controls describe the requested result rather than visitor identity. /tdf exposes studio, services and published work before contextual signup. Exploration does not require registration, geolocation or role selection and remains usable when directory data fails.",
-      "authority": "Explicit product owner execution request 2026-10-25 incorporating eight supplied visitor voice comments.",
+      "statement": "The public start page /inicio explains TDF and offers anonymous exploration before the existing directory form. /buscar keeps direct URL-backed search; search controls describe the requested result rather than visitor identity. /tdf exposes studio, services and published work before contextual signup. Exploration does not require registration, geolocation or role selection and remains usable when directory data fails. The studio section includes six owner-approved archive photographs, local lazy-loaded thumbnails and a keyboard-accessible complete-photo dialog with truthful failure and retry states.",
+      "authority": "Explicit product owner execution request 2026-10-25 incorporating eight supplied visitor voice comments. Owner supplied three approved Drive folders on 2026-10-26 and instructed selection of photos.",
       "domain": "UX",
       "source": "docs/engineering/welcome-first-discovery-2026-10-25.md",
       "contract": "docs/engineering/welcome-first-discovery-2026-10-25.md",
@@ -12173,8 +12191,8 @@
       "privacy": "New welcome CTA events contain only fixed route and destination labels; no search query, identity, coordinates or user-entered data. Existing consent controls remain authoritative.",
       "concurrency": "Welcome is independent of asynchronous directory data; existing account-scoped search cache and mutation guards are unchanged.",
       "idempotency": "Exploration is read-only navigation; existing directory write contracts unchanged.",
-      "failure": "Directory failures preserve the welcome and independent exploration links. Analytics failure must not interrupt welcome navigation.",
-      "recovery": "Existing directory retry and URL-backed search remain available.",
+      "failure": "Directory failures preserve the welcome and independent exploration links. Analytics failure must not interrupt welcome navigation. Individual photograph failure leaves other photographs and public navigation available.",
+      "recovery": "Existing directory retry and URL-backed search remain available. Full-photo retry makes a new local asset request; closing restores focus to the originating thumbnail.",
       "observability": "public_discovery_cta_clicked is exploratory intent, never successful activation. No measured conversion uplift is claimed.",
       "property": "WelcomeBeforeProfiling; DirectSearchPreserved; PublicExplorationWithoutSignup",
       "implementation": [
@@ -12182,7 +12200,8 @@
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts"
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        "tdf-hq-ui/src/components/StudioGallery.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
@@ -12192,7 +12211,8 @@
         "e2e/web/directory-entry.spec.mjs",
         "e2e/web/directory-favorite-recovery.spec.mjs",
         "e2e/web/directory-language.spec.mjs",
-        "e2e/web/public-welcome.spec.mjs"
+        "e2e/web/public-welcome.spec.mjs",
+        "tdf-hq-ui/src/components/StudioGallery.test.tsx"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
@@ -12200,7 +12220,7 @@
       "status": "specified and implemented",
       "critical": false,
       "openQuestions": [
-        "Unidentified host portrait from voice feedback; authoritative studio gallery and teaching clips; interior plan/VR; human comprehension and production outcomes."
+        "Unidentified host portrait, teaching clips, interior plan/VR, human comprehension and production outcomes remain unverified."
       ],
       "confidence": "Qualitative visitor feedback and scoped source/browser evidence; frequency and causal activation impact unknown.",
       "ambiguity": [],
@@ -12533,6 +12553,668 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Scoped implementation and full-schema tests exist; current-head hosted evidence, independent review and production correspondence remain separate."
+      }
+    },
+    {
+      "id": "COMM-FOLLOW-RECOVERY-001",
+      "title": "Recover uncertain follow responses through current server membership",
+      "statement": "After a follow or unfollow has an ambiguous response, the current authenticated occurrence reads server membership before confirming the requested state. Recovery never repeats the write. Unknown membership remains unknown, offers a read retry, and prevents blind toggles. A late result cannot confirm another account or profile lifetime. Only the existing evidence-checked onboarding completion receipt can emit first-value analytics.",
+      "domain": "COMM",
+      "actors": [
+        "Authenticated fan",
+        "Artist following another artist"
+      ],
+      "preconditions": [
+        "Existing follow/unfollow and membership APIs retain backend ownership, authorization and transactional event rules."
+      ],
+      "inputs": [
+        "Captured account occurrence and artist identifier",
+        "Follow or unfollow result",
+        "Fresh membership response",
+        "Explicit read retry"
+      ],
+      "state": {
+        "confirmation": [
+          "pending-write",
+          "pending-read",
+          "confirmed-current-state",
+          "unknown"
+        ]
+      },
+      "allowedTransitions": [
+        "Ambiguous write -> one fresh membership GET for the captured current account.",
+        "Successful read -> display current server membership, including unchanged state after a write failed before commit.",
+        "Failed read -> unknown -> explicit read retry.",
+        "Confirmed newly followed state -> existing server-evidence onboarding completion handshake."
+      ],
+      "forbiddenTransitions": [
+        "Ambiguous response -> automatic follow/unfollow replay.",
+        "Unknown or in-flight membership -> blind toggle.",
+        "Account change during read -> cache or confirm old response.",
+        "Unconfirmed read or stale local membership -> assert desired relationship exists.",
+        "Membership GET -> emit first-value analytics without server completion evidence."
+      ],
+      "effects": [
+        "Refresh existing account-scoped membership cache and related artist reads; clear only confirmed current-profile follow intent."
+      ],
+      "authorization": "Capture the exact SessionUser occurrence; guard before and after the fresh read and before write/first-value handoff. Backend authorization remains authoritative. Comunidad retains the existing Fan/Customer capability for membership reads, actions and explicit retries; cached data cannot enable unsupported actions. Public catalog retry never refetches denied fan resources.",
+      "privacy": "No tokens or raw diagnostics in UI or receipts. Existing SessionProviders client isolation remains in force; this change adds no credentials or persisted personal data.",
+      "concurrency": "Coalesce repeated clicks while the write and confirmation read settle. Cancel superseded account-key queries, explicitly invalidate without a refetch, then fetch fresh once with no automatic retry. Guard queryFn before returning data so a retired occurrence cannot cache its response. Delayed URL cleanup requires the captured navigation lifetime to remain current; same-artist navigation preserves its latest search/hash and only the current valid resume intent may be consumed.",
+      "idempotency": "Never replay POST/DELETE in response recovery. Existing server onboarding completion newlyCompleted receipt controls analytics emission.",
+      "failure": "An unavailable read returns unknown, preserves the unconfirmed state and exposes a read retry; a fresh unchanged state never fabricates success.",
+      "recovery": "Public profile and Comunidad reuse the same read helper. Explicit retry repeats the GET only; preserve unrelated URL search and hash.",
+      "observability": "Pre-change component and real API/PostgreSQL counterexamples; actual-component success, failure, account-switch and repeated-click controls; exact-source isolated browser receipts.",
+      "source": "User-authorized activation journeys A8/A9 and B5/B6/B8; response-loss counterexample after actual API200 and PostgreSQL commit.",
+      "implementation": [
+        "tdf-hq-ui/src/features/fans/reconcileFollowState.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "e2e/web/artist-follow.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped component transitions only; exact-source browser/API/database qualification, protected integration and production delivery are separate gates.",
+      "ambiguity": [
+        "Membership reads establish current state, not that this request created a new relationship. Pre-existing and synthetic relationships are excluded from VAR.",
+        "Cross-device concurrency can change state after a read. Durable exactly-once analytics and backend session revocation are outside this change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Executable component invariants and isolated response-loss evidence do not establish universal refinement, production delivery, human comprehension or real-user value."
+      },
+      "critical": false,
+      "authority": "Activation sprint graceful network failure recovery and authoritative first-value measurement.",
+      "property": "An uncertain response is resolved only by a fresh authorized server read under the captured occurrence, with zero recovery writes.",
+      "contract": "formal/system/follow-response-recovery.md",
+      "verification": "Shared-helper and actual-page regression controls, pre-change negative controls, isolated real HTTP/PostgreSQL response-loss tests.",
+      "evidence": "Source-bound receipts retain actual web/API/SQL identity and exclude fixtures from activation metrics."
+    },
+    {
+      "id": "MEDIA-MUSIC-SOURCES-001",
+      "domain": "MEDIA",
+      "title": "Authorized public-listening source projection in release detail and personal music collections",
+      "critical": true,
+      "authority": "Explicit user universal audio implementation directive2026-10-25, sections4,9,13,14,17 and P0/P1; focused continuation2026-10-26. Release review and deployment remain separately gated.",
+      "source": "docs/music-releases/authorized-source-projection.md",
+      "contract": "formal/system/music-source-projection.md",
+      "statement": "Public release detail and authenticated favorites,playlists and listening-history source arrays emit only ready current stream/preview assets satisfying the existing public delivery-policy predicate for the trusted requesting territory. Existing identities,metadata,personal row ownership and available-flag semantics remain unchanged; later playback still requires fresh authorization.",
+      "property": "At a projection database snapshot, every returned source asset satisfies music_public_asset_accessible(assetId, trustedTerritory)=true using that handlers actual positional territory binding. The projection issues no delivery credential and does not imply future delivery success or rights.",
+      "actors": [
+        "Public listener viewing a release",
+        "Authenticated listener viewing own saved music",
+        "Backend public source projection and existing delivery-policy predicate"
+      ],
+      "preconditions": [
+        "Existing public feature gates and authenticated principal/account predicates apply.",
+        "Trusted edge territory is derived by the existing handler boundary and bound consistently to source and visibility checks.",
+        "Existing public-release,availability,preview-policy functions and schema are deployed; their correctness is a trusted dependency of this focused contract."
+      ],
+      "inputs": [
+        "Public release slug or authenticated saved-collection principal",
+        "Trusted edge territory or unknown territory",
+        "Existing release/track/recording links,rendition readiness and preview metadata,availability policy and personal saved rows"
+      ],
+      "state": {
+        "boundary": "Read-only sources projection in getPublicRelease,listFavorites,listPlaylists,listPlaybackHistory",
+        "snapshot": "Current database/public-release/availability policy at query execution",
+        "output": "Existing assetId/role/mediaType/technicalMetadata source objects; no newly issued URL"
+      },
+      "allowedTransitions": [
+        "Query authorized public detail or own saved rows -> filter each source with the existing public asset predicate",
+        "Preview-only policy -> current authorized preview references without denied full renditions",
+        "Territory exclusion or withdrawn public version -> empty authorized sources or unavailable detail while preserving existing personal saved-row semantics",
+        "Select a returned source later -> independent current delivery authorization; projection metadata grants no access"
+      ],
+      "forbiddenTransitions": [
+        "A returned source reference fails the existing public delivery predicate for the same trusted territory at the projection snapshot.",
+        "A denied full rendition is advertised to a preview-only listener through an affected source array.",
+        "The source filter changes personal account ownership,row identity,metadata fields or available-flag meaning.",
+        "Manual fixture parameters are treated as proof of the actual handler binding or compiled HTTP behavior."
+      ],
+      "effects": [
+        "Read-only filtered rendition references on four existing response surfaces",
+        "No mutation of masters,publication,rights or saved collection data"
+      ],
+      "authorization": "Retain requirePublicFeature,authenticated handlers,currentPartyId and trusted edge territory. Reuse the same public asset predicate as getPublicMusicAssetAccess; owner/editor access and paid download entitlements remain separate. Delivery rechecks policy independently.",
+      "privacy": "Withhold denied rendition references/technical metadata from affected source arrays and issue no credentials. Existing other public metadata,personal saved titles,artwork and availability fields remain unchanged and are not proven private by this filter.",
+      "concurrency": "Projection agreement is relative to one database snapshot; policy may change before playback. No cross-request snapshot,global transaction or immediate revocation of previously issued URLs is added.",
+      "idempotency": "Read-only projection; repeated requests against unchanged authorized inputs preserve existing row/source identities and ordering.",
+      "failure": "Unavailable rendition policy produces an empty source array; existing detail/collection errors and unavailable saved rows retain their semantics. available means a resolved public version,not assured playable bytes.",
+      "recovery": "Existing player may authorize another valid source or report unavailability. Application-source rollback needs no schema/data reversal but restores the known broader source metadata exposure.",
+      "observability": "Source-bound PostgreSQL controls,policy-removal mutants and actual binding-list correspondence checks with explicit limits; final execution receipt and exact-candidate CI remain required.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs"
+      ],
+      "tests": [
+        "scripts/test-music-source-projection.mjs",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Finite PostgreSQL checks execute actual source SQL with authoritative policy functions; actual adjacent Haskell binding lists are extracted, whitelisted and used for fixture parameters. Four policy-removal controls and eight omitted/reordered binding controls detect regressions. Lexical translation does not execute compiled Haskell HTTP routing or prove actual authorized bytes; no theorem is claimed.",
+      "evidence": "reports/music-source-projection-2026-10-26.json binds sourceade78b5ab11ba297cf419a96012032ebf289820d, four SQL surfaces, four policy mutants, eight binding controls and17CIselection tests; final exact-candidate hosted checks and target release remain separate.",
+      "status": "specified and implemented",
+      "confidence": "TESTED finite real PostgreSQL, lexical binding and CI-scope controls on recorded source identities; compiled Stack/HTTP, actual media and production acceptance remain unverified.",
+      "ambiguity": [
+        "The public delivery predicate and trusted territory origin are dependencies,not proved by projection agreement.",
+        "available retains existing resolved-public-version semantics and can coexist with no sources.",
+        "All other public/private metadata boundaries,storage existence,media quality/decoding and target-environment HTTP behavior require separate evidence.",
+        "Previously issued delivery credentials retain existing expiry/cache bounds; immediate byte revocation is not established.",
+        "Representative query-plan/performance impact and production deployment remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Four source projections agree with the authoritative delivery predicate under finite PostgreSQL fixtures; gate-removal, actual lexical argument binding and CI-selection controls pass. Full compiled handler/HTTP behavior, media/storage bytes, target performance and production acceptance require separate evidence; no whole-system authorization proof."
+      }
+    },
+    {
+      "domain": "SOCIAL",
+      "authority": "Explicit product owner request 2026-10-25: Event Memories, Community Engagement & Post-Event Activation",
+      "source": "formal/system/event-memories.md",
+      "contract": "formal/system/event-memories.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded policy and executable regressions do not establish complete refinement, device behavior or production qualification."
+      },
+      "confidence": "Scoped evidence only; deployment and broader product gaps remain explicit.",
+      "ambiguity": [],
+      "historicalStatus": "new",
+      "evidence": "reports/event-memories-2026-10-25.md; execution identities are recorded separately from implementation.",
+      "id": "SOCIAL-EVENT-MEMORY-001",
+      "title": "Persisted event memories and truthful remote publication",
+      "statement": "Reuse EventMoment for authorized image, video, audio and text publication; current authors alone edit/delete, legacy clients keep a compatible feed, and failed remote media never becomes a purported publication.",
+      "property": "Current parent visibility and source authorship govern writes; a local draft never proves synchronized publication.",
+      "actors": [
+        "Authenticated participant",
+        "Source author",
+        "Visitor"
+      ],
+      "preconditions": [
+        "Current event visibility and session; public parent required for public file uploads."
+      ],
+      "inputs": [
+        "Moment payload",
+        "Multipart file",
+        "Expected update timestamp"
+      ],
+      "state": {
+        "content": [
+          "image",
+          "video",
+          "audio",
+          "text"
+        ],
+        "publication": [
+          "draft",
+          "uploading",
+          "committed",
+          "failed",
+          "deleted"
+        ]
+      },
+      "allowedTransitions": [
+        "draft -> upload -> committed",
+        "failed -> retained draft",
+        "current author -> versioned edit/delete"
+      ],
+      "forbiddenTransitions": [
+        "failed upload -> local fallback presented as publication",
+        "social artist ID -> inferred Party identity",
+        "private parent -> public file upload"
+      ],
+      "effects": [
+        "Existing source and canonical interactions are retained; no parallel content authority."
+      ],
+      "authorization": "Current authenticated source author and readable parent; no logistics/admin bypass for source editing.",
+      "privacy": "Public media cannot be presented as participant-only. Restricted file delivery and public-asset erasure remain unavailable.",
+      "concurrency": "Parent-first/source-row locks for author mutations; optimistic timestamp for edits. General publication request idempotency is not implemented.",
+      "idempotency": "No automatic mutation retries added. Local drafts are separate from remote publications; general create replay remains a gap.",
+      "failure": "HTTP validation/permission failures retain the editor; legacy clients receive image/video only.",
+      "recovery": "Retry UI retains captions and successful upload references; a timeout does not prove server rollback.",
+      "observability": "No caption/media/private content is emitted as analytics.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-mobile/app/eventDetail.tsx",
+        "tdf-mobile/src/api/events.ts",
+        "tdf-hq-ui/src/routes/EventCommunityEntry.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
+        "tdf-mobile/__tests__/eventMomentWirePayload.test.ts",
+        "tdf-mobile/__tests__/eventMomentsRepository.test.ts",
+        "e2e/web/event-memories.spec.mjs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+        "scripts/test-event-memories-http.py",
+        "tdf-hq-ui/src/routes/EventCommunityEntry.test.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
+        "scripts/test-event-memory-signup-browser.mjs",
+        "scripts/test-event-memory-source-browser.mjs",
+        "scripts/test-event-raci-browser.sh",
+        "scripts/__tests__/event-raci-browser-runner.test.mjs",
+        ".github/workflows/event-raci-browser.yml",
+        "scripts/__tests__/event-memory-http-password.test.mjs",
+        "scripts/test-event-memory-recovery-browser.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Parser/signature/author-boundary tests, HTTP and browser journeys must be independently executed; no blanket completion claim."
+    },
+    {
+      "domain": "SOCIAL",
+      "authority": "Explicit product owner request 2026-10-25: Event Memories, Community Engagement & Post-Event Activation",
+      "source": "formal/system/event-memories.md",
+      "contract": "formal/system/event-memories.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded policy and executable regressions do not establish complete refinement, device behavior or production qualification."
+      },
+      "confidence": "Scoped evidence only; deployment and broader product gaps remain explicit.",
+      "ambiguity": [],
+      "historicalStatus": "new",
+      "evidence": "reports/event-memories-2026-10-25.md; execution identities are recorded separately from implementation.",
+      "id": "SOCIAL-EVENT-INVITATION-001",
+      "title": "Consented and deduplicated post-event inbox invitations",
+      "statement": "An explicitly enabled organizer campaign delivers internal invitations only after confirmed completion to eligible active accounts with explicit in-app consent; at most one reminder is allowed and publication suppresses it.",
+      "property": "At most two inbox deliveries per event/account, seven-day frequency cap, no delivery before completion/consent, and live notification privacy.",
+      "actors": [
+        "Current organizer",
+        "Eligible active account",
+        "Background dispatcher"
+      ],
+      "preconditions": [
+        "Installed reviewed migration",
+        "Completed active social-event lifecycle with confirmed elapsed end",
+        "Explicit campaign and recipient opt-in"
+      ],
+      "inputs": [
+        "Authoritative participation signals",
+        "Recipient preference",
+        "Campaign setting",
+        "Worker tick",
+        "Publication",
+        "Opening attribution"
+      ],
+      "state": {
+        "campaign": [
+          "disabled",
+          "enabled"
+        ],
+        "recipient": [
+          "excluded",
+          "eligible",
+          "invited",
+          "reminded",
+          "published",
+          "opted_out"
+        ]
+      },
+      "allowedTransitions": [
+        "eligible + finished + consent -> one invitation",
+        "unpublished + current consent + seven days -> one reminder",
+        "publish -> persistent reminder suppression",
+        "opt-out -> no new delivery and historical notice hidden"
+      ],
+      "forbiddenTransitions": [
+        "RSVP -> verified attendance",
+        "identity alias -> transferred consent",
+        "logistics member -> campaign manager",
+        "installation -> automatic campaign activation",
+        "third delivery",
+        "event consent -> marketing/email/push consent"
+      ],
+      "effects": [
+        "Existing notification and delivery receipt commit atomically; aggregate metrics only."
+      ],
+      "authorization": "Current session plus organizer ownership for settings/metrics; recipient/event/UUID binding for attribution.",
+      "privacy": "No contact lists or message content in metrics; live event/account/block/preference authority filters inbox count/list/detail including recovery binaries.",
+      "concurrency": "One transaction dispatcher lock plus event/campaign and recipient locks. Overlapping source writes follow the documented PostgreSQL visibility boundary; universal ordering remains unproven.",
+      "idempotency": "UNIQUE(event_id,party_id,step), atomic inbox insert and retained publication suppression. Separate notification workers keep domain failures isolated.",
+      "failure": "Failed batches roll back and retry on a later bounded tick; missing migration exposes no capability.",
+      "recovery": "Before delivery, rollback restores recorded authorities, disables added catalog capability and preserves tables/content; after delivery or authority successors rollback refuses.",
+      "observability": "Persisted internal deliveries, attributed openings and publication after invitation; no inferred retention or external-provider delivery.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-25_event_memory_invitations.sql",
+        "tdf-hq/sql/2026-10-25_event_memory_invitations_rollback.sql",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Interactions/Notifications.hs",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts",
+        "tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-mobile/src/navigation/notificationTarget.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/integration/event_memory_invitations.sql",
+        "tdf-hq/test/integration/event_memory_invitation_concurrency.sql",
+        "scripts/test-event-memories.sh",
+        "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-mobile/src/navigation/notificationResponses.test.ts",
+        "scripts/test-event-memories-http.py",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [
+        "formal/event-memories/check.py"
+      ],
+      "verification": "160 bounded policy states and three negative controls; actual full-schema SQL, replay/rollback, HTTP and concurrent-worker checks retain separate receipts."
+    },
+    {
+      "domain": "SOCIAL",
+      "authority": "Explicit product owner request 2026-10-25: Event Memories, Community Engagement & Post-Event Activation",
+      "source": "formal/system/event-memory-moderation.md",
+      "contract": "formal/system/event-memory-moderation.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded policy and executable regressions do not establish complete refinement, device behavior or production qualification."
+      },
+      "confidence": "Scoped evidence only; deployment and broader product gaps remain explicit.",
+      "ambiguity": [],
+      "historicalStatus": "new",
+      "evidence": "reports/event-memory-source-moderation-2026-10-25.md",
+      "id": "SOCIAL-EVENT-MODERATION-001",
+      "title": "Current scoped source moderation for event memories",
+      "statement": "Reuse canonical reports, commands, request ledger and audit for event-moment reporting, organizer hiding/restoration and scoped platform removal; every source and discussion read applies the current source state.",
+      "property": "Hidden and removed sources remain unavailable across legacy and extended reads, discussion, destinations and notifications; current authority and both revisions precede every effect.",
+      "actors": [
+        "Authenticated reader",
+        "Current organizer",
+        "Scoped platform moderator"
+      ],
+      "preconditions": [
+        "Current live account",
+        "Existing parent-event access",
+        "Installed reviewed source moderation migration"
+      ],
+      "inputs": [
+        "Canonical source target",
+        "Source revision",
+        "Target version",
+        "Request key",
+        "Reason and review decision"
+      ],
+      "state": {
+        "source": [
+          "visible",
+          "hidden",
+          "removed"
+        ],
+        "report": [
+          "open",
+          "resolved",
+          "dismissed"
+        ]
+      },
+      "allowedTransitions": [
+        "reader -> source report",
+        "current organizer -> hide/restore hidden",
+        "scoped platform moderator -> remove/restore",
+        "reviewer -> close report without hiding"
+      ],
+      "forbiddenTransitions": [
+        "logistics/RSVP/authorship -> enforcement",
+        "private parent -> invented moderator membership",
+        "stale revision -> successful decision",
+        "old hide replay after restoration -> hide again",
+        "hidden source -> visible legacy preview"
+      ],
+      "effects": [
+        "Existing source state, canonical report/audit and actor request ledger commit atomically."
+      ],
+      "authorization": "Current active reader for reports; current organizer for event-scoped hiding/restoration; existing platform capability and parent access for removal. No reporter identity disclosure.",
+      "privacy": "Private/no-store reports; bounded event-scoped inbox; account-scoped web caches. Existing public files are not revoked or erased by source hiding.",
+      "concurrency": "Actor/owner, parent/source/target locks plus expected source and target revisions; distinct competing HTTP decisions produce one effect and one conflict.",
+      "idempotency": "Canonical actor request ledger binds payload, current role, content version and resulting source state; exact valid retries preserve a single effect.",
+      "failure": "Current role revocation, stale content/target, cross-event cursor and malformed response fail closed; UI retains exact payload/key for a transient retry.",
+      "recovery": "Reapply guards captured/public authorities. Evidence-free rollback restores exact functions and retains data; committed report/action evidence refuses rollback.",
+      "observability": "Canonical audit and aggregate report counts; no reporter IDs in review UI and no private content analytics.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql",
+        "tdf-hq/sql/2026-10-25_event_memory_source_moderation_rollback.sql",
+        "tdf-hq/src/TDF/Interactions/API.hs",
+        "tdf-hq/src/TDF/Interactions/Server.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq-ui/src/api/eventMemoryModeration.ts",
+        "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx",
+        "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq/docs/openapi/interactions.yaml",
+        "tdf-hq/sql/2026-10-25_event_memory_source_authorization.sql",
+        "tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/integration/event_memory_source_moderation.sql",
+        "scripts/test-event-memory-source-moderation.sh",
+        "scripts/test-event-memories-http.py",
+        "scripts/test-event-memory-source-browser.mjs",
+        "tdf-hq-ui/src/api/eventMemoryModeration.test.ts",
+        "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        ".github/workflows/ci.yml",
+        "tdf-hq/test/integration/event_memory_source_null_organizer.sql",
+        "scripts/test-event-memory-source-permissions.py"
+      ],
+      "formalModels": [],
+      "verification": "Executed full-schema SQL with replay, rollback and negative control; actual authenticated HTTP including simultaneous decisions, committed-evidence rollback refusal, desktop/phone browser persistence; no complete refinement, physical-device or production claim."
+    },
+    {
+      "domain": "SOCIAL",
+      "authority": "Explicit product owner request 2026-10-25: Event Memories, Community Engagement & Post-Event Activation",
+      "source": "formal/system/event-memory-session.md",
+      "contract": "formal/system/event-memory-session.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded policy and executable regressions do not establish complete refinement, device behavior or production qualification."
+      },
+      "confidence": "Scoped evidence only; deployment and broader product gaps remain explicit.",
+      "ambiguity": [],
+      "historicalStatus": "new",
+      "evidence": "reports/event-memory-source-moderation-2026-10-25.md; retain negative and corrected execution identities separately.",
+      "id": "SOCIAL-EVENT-SESSION-001",
+      "title": "Session-owned web memory drafts, consent and decisions",
+      "statement": "A captured web memory publication, preference or moderation decision cannot adopt replacement credentials before React renders; old completion cannot clear or consent the new account.",
+      "property": "Current owner, credential epoch and editor scope gate dispatch and acknowledgement; consent remains an explicit action of the current account.",
+      "actors": [
+        "Authenticated web participant",
+        "Organizer",
+        "Scoped moderator"
+      ],
+      "preconditions": [
+        "Known current session Party",
+        "Existing source access",
+        "Explicit action in the current editor scope"
+      ],
+      "inputs": [
+        "Credential epoch",
+        "Owner Party",
+        "Event/editor scope",
+        "Draft or decision",
+        "Late acknowledgement"
+      ],
+      "state": {
+        "editor": [
+          "current",
+          "revoked"
+        ],
+        "attempt": [
+          "prepared",
+          "dispatched",
+          "acknowledged",
+          "ignored"
+        ]
+      },
+      "allowedTransitions": [
+        "current explicit action -> scoped attempt",
+        "credential/scope change -> revoked prior callback",
+        "current acknowledgement -> current draft/cache update"
+      ],
+      "forbiddenTransitions": [
+        "old callback -> replacement credentials",
+        "old opt-in -> new-account consent",
+        "old success -> clear new-account draft"
+      ],
+      "effects": [
+        "Shared client ownership guard; existing server APIs and defaults retained."
+      ],
+      "authorization": "Client intent guard supplements current server permissions; never grants or replaces server authorization.",
+      "privacy": "No draft or reason content in telemetry; current rendered draft is empty across ownership changes.",
+      "concurrency": "Captured mutation variables retain the original owner guard across React Query callback updates and async responses.",
+      "idempotency": "Existing source ledger and mutation retry policy retained; this change does not add general create replay.",
+      "failure": "Before dispatch, revoked callbacks produce an actionable session-change error; post-dispatch old responses are ignored for current UI/cache.",
+      "recovery": "Reopen the action in the current session; original persisted publications remain authored by their original account.",
+      "observability": "Synthetic request counts and retained negative controls; no claims about production incidents.",
+      "implementation": [
+        "tdf-hq-ui/src/session/useSessionOwner.ts",
+        "tdf-hq-ui/src/session/useOwnedSessionDraft.ts",
+        "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx",
+        "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
+        "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx",
+        "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
+        "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts",
+        "scripts/test-event-memory-recovery-browser.mjs",
+        "scripts/test-event-memories-http.py"
+      ],
+      "formalModels": [],
+      "verification": "Three observed pre-render counterexamples followed by corrected zero-dispatch regressions, late response and existing real session-provider/profile tests. Browser/API integration is qualified separately."
+    },
+    {
+      "id": "MEDIA-MUSIC-PRIVACY-001",
+      "domain": "MEDIA",
+      "title": "Client listener ownership and latest-intent precedence for local playback state",
+      "critical": true,
+      "authority": "User universal audio privacy/selection/continuity directive2026-10-25; root-selected client ownership policy and hydration-precedence correction2026-10-26. Independent release review remains required.",
+      "source": "docs/music-releases/listener-scoped-player-state.md",
+      "contract": "formal/system/player-listening-privacy.md",
+      "statement": "Listening queue,selected track metadata,positions,shuffle and repeat belong to an explicit current client owner; device volume,mute and quality remain separate. Restore only a resolved valid matching own-property owner tag; legacy/mismatched/invalid owners restore no listening state. Same-owner readiness must not overwrite newer user queue edits,including an intentionally empty queue,or replace its decoder. Actual owner changes clear listening state and stop obsolete work.",
+      "property": "RestoreListening implies identityReady and valid explicit owner and own-property tag strictly equal to that owner and no intervening user queue edit. Persistence requires resolved valid owner. A same-owner readiness/query-scope change preserves current user intent and engine; an actual owner change resets listening state while retaining device preferences. Owner tags grant no server authorization.",
+      "actors": [
+        "Current client listener",
+        "Explicit anonymous device listener",
+        "Session/player composition and local storage"
+      ],
+      "preconditions": [
+        "Existing SessionProvider supplies current client descriptor and readiness; that readiness is not server authentication proof.",
+        "Runtime owner composition keeps one identity-aware player inside SessionProvider and above keyed query scopes.",
+        "Backend media permissions and browser storage integrity remain independent boundaries.",
+        "Initial matching-owner reload/first-ready hydration is distinct from an in-app actual owner transition; the latter starts empty even when its tag matches stale storage."
+      ],
+      "inputs": [
+        "Client identity readiness and partyId or explicit anonymous null",
+        "Saved owner-tagged or legacy local player envelope",
+        "User selection,queue changes,seek/play/pause and device preference changes",
+        "Initial bootstrap success/failure,account transitions,query-scope changes and supported route navigation"
+      ],
+      "state": {
+        "owner": "Positive safe-integer partyId,explicit anonymous null,or invalid/unresolved undefined",
+        "devicePreferences": [
+          "volume",
+          "muted",
+          "quality"
+        ],
+        "listening": [
+          "queue",
+          "selected title/identity",
+          "positions",
+          "shuffle",
+          "repeat"
+        ],
+        "hydration": "Initial readiness plus user queue-edit precedence; no retained per-historical-account envelope"
+      },
+      "allowedTransitions": [
+        "Initial pending identity -> suppress listening restore/write while retaining current permitted user gestures",
+        "First ready,same owner,no queue edit -> restore valid matching queue paused",
+        "First ready,same owner,user queue edit -> preserve current selection/decoder or intentional empty queue; do not revive old saved listening state",
+        "A/B/anonymous owner change -> invalidate old session work and clear listening state,retain device preferences",
+        "Same-owner loading/query-scope/navigation -> retain engine and listening intent",
+        "Legacy or mismatched owner envelope -> preserve only safe device preferences; do not restore prior listening state"
+      ],
+      "forbiddenTransitions": [
+        "Prior owner title,queue or positions commit under a new explicit client owner.",
+        "Invalid authenticated identity is treated as anonymous ownership.",
+        "Unresolved bootstrap overwrites saved listening state with an unowned empty envelope.",
+        "Readiness restores oldA after the same owner selectedB,cleared or reordered the queue.",
+        "A delayed prior-owner save repopulates or relabels another listener state.",
+        "A supported same-owner route/query-scope transition unnecessarily replaces the playback engine.",
+        "Rapid A/B/A or anonymous/account/anonymous owner transitions revive an old matching envelope before an intermediate debounced save."
+      ],
+      "effects": [
+        "Guarded owner-tagged local restoration and persistence",
+        "Intentional listening-state reset on actual owner changes",
+        "Device preference retention and no implicit autoplay from hydration"
+      ],
+      "authorization": "Client owner equality is a local restoration boundary only. Existing session,server media access,credential expiry and browser policies remain authoritative; cached client identity after bootstrap failure is not successful server verification.",
+      "privacy": "Keep only one owned listening envelope; no owner credentials/display names are added. Untagged/mismatched listening state is discarded,not securely erased. Anonymous context cannot distinguish anonymous humans; other tabs,older clients,storage tampering and disk/history backups are outside this guarantee.",
+      "concurrency": "Actual owner changes invalidate old session effects/timers. Same-owner readiness/query-scope changes must preserve latest queue edits and decoder; empty-after-edit is intentional. No cross-tab linearizability or distributed session claim.",
+      "idempotency": "Repeated same-owner ready notifications must not repeat hydration over user edits. Existing bounded save timer cleanup remains; no per-historical-account state accumulation is introduced.",
+      "failure": "Invalid JSON or unavailable storage uses the exercised empty/default path. Empty or partly invalid source arrays are rejected as whole tracks; actual-App matched-owner valid-plus-null storage regression preserves app controls and subsequent valid playback. This is not exhaustive malformed-field validation. Invalid owner suppresses listening restore/write; cached client descriptor policy does not establish server verification.",
+      "recovery": "A resolved matching client owner may restore paused state if no newer queue intent exists; otherwise keep the current state or start empty. Existing audio authorization/recovery stays separately required.",
+      "observability": "Source-bound actual App/session/player regressions and local native browser observations; no production identity/listening payload logging introduced.",
+      "implementation": [
+        "tdf-hq-ui/src/App.tsx",
+        "tdf-hq-ui/src/session/SessionProviders.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx",
+        "tdf-hq-ui/src/player/queue.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "tdf-hq-ui/src/player/queue.test.ts",
+        "e2e/web/music-player-native.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "TESTED locally at b6259692c11c7b502b974cf6bee7d4ca189925f7:86/86 tests in8suites (23identity,39engine,3queue,21session),scoped lint,Node22 build;27/27 installed browser cases (24real native+3declared mocked) across Chromium desktop/phone emulation and Firefox. New held-session same-owner/freshB case preserves SAMEdecoder in all3. APIs/session/authorization remain synthetic; no theorem,server/private-byte proof or whole-system verification. Existing bounded player model excludes identity/preferences. Matched-owner saved [validSource,null] baseline fails with App render crash; corrected nonempty/every-valid source guard discards the whole corrupt track and a subsequent explicit validB plays.",
+      "evidence": "reports/player-listening-privacy-2026-10-26.json retains baseline3af audit,7de expected failure,final six-source hashes and qualification/commit/log/bundle hashes; exact integrated-candidate CI,review and release remain pending.",
+      "status": "specified and implemented",
+      "confidence": "Medium: actual App/identity regressions and local real-native decoder continuity pass; client-owned state only,not independently released or production verified.",
+      "ambiguity": [
+        "Current client readiness/owner label may rely on cached identity after bootstrap failure; no server authentication or private-byte access proof.",
+        "Anonymous null is a device-anonymous identity,not isolation between different anonymous humans.",
+        "Older clients,concurrent tabs,storage tampering and secure erasure remain outside the boundary.",
+        "WebKit,physical-device,fullWCAG,target rollback and production acceptance remain unverified.",
+        "Invalid JSON/storage failures and matched-owner valid-plus-null sources are exercised; arbitrary malformed saved fields are not comprehensively validated."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Named client ownership/latest-intent and matched-owner corrupt-source rejection behaviors TESTED locally at b625969 with86tests and27browser cases (24real+3mock). No extracted identity model or mathematical proof. Exact integrated-candidate hosted checks,independent review and deployed acceptance remain pending."
       }
     }
   ]
