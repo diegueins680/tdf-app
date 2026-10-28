@@ -1,0 +1,25 @@
+Independent read-only exact source/test/model review; no blocking issue found.
+The helper uses the existing backend-aware Event lock, current metadata and
+workflow capability predicate. Direct creation checks before all stock/order/
+ticket effects and maps the returned ServerError outside the transaction. Stripe
+checks only in its new-hold branch, before terms/promo/stock; its existing
+tryAny/fromException maps ServerError and preserves asynchronous exceptions.
+Lock order remains Event -> terms when needed -> Tier. No provider/email IO under
+locks. Initial route checks, existing reuse, settlement, canonical checkout and
+Inventory authority remain unchanged. Existing closed-event retries are not
+newly successful; no universal capability-catalog freeze is claimed.
+The six original actual-handler failures persist stock3/order1/tickets3 after
+normal organizer closure/privacy commit; barrier changes no data. Final twelve
+cases add the reverse ordering and exact403private/409closed zero-effect outcomes.
+Parsed EventUpdateDTO preserves dates/type/capacity, owner1/buyer2 are ordinary
+principals, price0/absent Stripe+email config prevent provider/email network.
+Bounded model sixinputs/56states/58transitions has accept/deny/outer-refuse and
+both mutations, plus two retained earlier-admission states. Fault controls count
+only durable accept/deny effects. Prepared effects committed despite returned
+refusal represent a direct Either placement fault, not rolled-back Stripe writes.
+The initial model diagnostic counted a transient phase as a violation witness;
+it was refined before final qualification to require a commit-ending witness.
+No SQL/Haskell refinement, full workflow graph or mutable capability governance
+proof. Documentation correction public->legacy entry points was applied: routes
+are authenticated; canonical public guest checkout is unchanged.
+This agent review does not fulfill required independent GitHub approval.

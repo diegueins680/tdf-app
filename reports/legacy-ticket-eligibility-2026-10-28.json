@@ -1,0 +1,333 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-10-28-legacy-ticket-eligibility",
+  "repository": "diegueins680/tdf-app",
+  "baselineCommit": "93589a5f31426c8542d8c36fe1da37dabad4fd22",
+  "sourceCommit": "ee77d824c6d02c3150b966439461d7de26e8ec90",
+  "mainObserved": "e0cb1a7f3dc9a65260bd0b2fbd67a6316f93f2f7",
+  "confirmedDefect": {
+    "id": "TDF-CORRECTNESS-20261028-07",
+    "priority": "P1",
+    "category": "admission / concurrency / core ticket journeys",
+    "status": "corrected-tested-awaiting-protected-integration",
+    "consequence": "Both legacy new-hold routes can persist a paid free order and three issued tickets after an ordinary organizer lifecycle/private update has committed. Eligibility was checked only before waiting for the Event lock."
+  },
+  "invariants": [
+    {
+      "id": "EVT-LEGACY-HOLD-ELIGIBILITY-001",
+      "parentRequirement": "EVT-TICKET-001",
+      "statement": "A new legacy hold must satisfy the existing current event workflow/privacy purchase predicate under the Event lock before any committed stock/order/ticket effects. Earlier admitted purchases survive subsequent ordinary event edits.",
+      "implementationAssurance": "TESTED",
+      "designAssurance": "BOUNDED_VERIFIED"
+    }
+  ],
+  "contract": "formal/system/legacy-ticket-eligibility.md",
+  "authority": [
+    "Existing validateTicketPurchaseEventEligibility: private403 and missing purchase capability409.",
+    "Ordinary organizer updateEvent uses the same Event row lock.",
+    "Canonical new checkout already revalidates current locked eligibility."
+  ],
+  "implementation": [
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+  ],
+  "regressionTests": [
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+  ],
+  "formalModels": [
+    "scripts/__tests__/ticket-admission-model.test.mjs"
+  ],
+  "correction": [
+    "Use the current locked Event with the existing metadata/capability predicate before reservation in each new-hold route.",
+    "Direct path returns refusal from the transaction before writes and maps it outside; Stripe throws the refusal through its existing rollback/catch mapping.",
+    "Retain Event -> terms when needed -> Tier lock order, existing reuse/settlement/recovery behavior and the shared Inventory authority.",
+    "No provider or email IO occurs under the admission locks."
+  ],
+  "counterexamples": {
+    "examples": 6,
+    "failures": 6,
+    "routes": [
+      "direct purchase",
+      "zero-total legacy Stripe checkout"
+    ],
+    "organizerChanges": [
+      "postponed",
+      "cancelled",
+      "private"
+    ],
+    "ordering": "ordinary organizer update commits before waiting buyer proceeds",
+    "eachFinalState": {
+      "sold": 3,
+      "orders": 1,
+      "tickets": 3
+    },
+    "barrier": "Unchanged Event row lock only; actual buyer and organizer handlers perform all business mutations.",
+    "realProviderCalls": 0,
+    "smtpCalls": 0
+  },
+  "verification": {
+    "qualifiedScoped": {
+      "examples": 12,
+      "failures": 0,
+      "originalRaceCases": 6,
+      "purchaseFirstCompatibilityCases": 6,
+      "closureFirst": "403 private or409 closed; stock0/orders0/tickets0",
+      "purchaseFirst": "stock3/order1/tickets3 retained after normal edit",
+      "ordinaryPrincipals": true,
+      "emailConfigured": false,
+      "stripeConfigured": false
+    },
+    "qualifiedFullStack": {
+      "examples": 4476,
+      "failures": 0,
+      "pending": 21,
+      "freshUTF8Template0Database": true,
+      "schemaMigrations": 227,
+      "appliedAndReplayed": true,
+      "seed": 20261028,
+      "pendingIsNotPassed": true,
+      "fullRuntimeShellWrapperClaimed": false,
+      "method": "Explicit full schema loader and provider-domain fixtures followed by pinned Stack full test suite."
+    },
+    "servingExecutable": {
+      "explicitCommittedStackTarget": "tdf-hq:exe:tdf-hq-exe",
+      "buildPassed": true,
+      "qualifiedCommit": "ee77d824c6d02c3150b966439461d7de26e8ec90",
+      "binarySha256": "d40830cd10b61e47cbb40004888fe805966c20e83aa3b8195ac99a06f2cd1f25",
+      "headStableThroughBuild": true,
+      "reproducibleBuildClaimed": false
+    },
+    "modelSuite": {
+      "tests": 23,
+      "failures": 0,
+      "skipped": 0
+    },
+    "eligibilityModel": {
+      "assurance": "BOUNDED_VERIFIED",
+      "inputs": 6,
+      "states": 56,
+      "transitions": 58,
+      "retainedEarlierAdmissionStates": 2,
+      "violations": [],
+      "properties": [
+        "NoNewHoldAfterClosure",
+        "RefusalHasNoEffects"
+      ],
+      "bounds": "One buyer and one editor; initial eligibility open/closed/private; update closed/private. Eligibility abstracts lifecycle plus private metadata, not the complete mutable capability graph.",
+      "negativeControls": [
+        {
+          "fault": "staleEligibility",
+          "states": 56,
+          "transitions": 58
+        },
+        {
+          "fault": "omitEventLock",
+          "states": 64,
+          "transitions": 74
+        },
+        {
+          "fault": "effectsBeforeCheck",
+          "states": 56,
+          "transitions": 58
+        }
+      ],
+      "controlBoundary": "Only durable accept/deny effects count. Effects-before-check models a returned refusal committing prepared effects, not transient writes rolled back by an exception.",
+      "sqlHaskellRefinementProven": false
+    },
+    "repositoryQuality": {
+      "passed": true,
+      "platformSkips": 11,
+      "assertionsWeakened": false
+    },
+    "strictCatalog": {
+      "passed": true,
+      "normativeDecisionsPreserved": 1353,
+      "parentOrderPreserved": true,
+      "newDecisions": 0,
+      "evidenceOnlyConsumerCountIncrements": 12,
+      "entireDecisionFileByteIdentical": false
+    },
+    "specification": {
+      "sequentialInventoryThenConformance": true,
+      "bothFinalChecksPassed": true,
+      "otherRequirementsPreserved": 153,
+      "immutableChangedSurfaces": 3
+    },
+    "compiledAPI": {
+      "queriedAfterExplicitCommittedExecutableBuild": true,
+      "snapshotMatches": true,
+      "typedOperations": 913,
+      "rawMounts": 2,
+      "undocumented": 396,
+      "documentedWithoutTypedRoute": 25,
+      "statusDifferences": 8,
+      "existingGapsRemainOpen": true
+    },
+    "sourceCorrespondence": {
+      "registeredInputs": 1408,
+      "mobilePin": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+      "digest": "7b0d4d735a1b376480ce0f29ba76ddefa426ee0bc7c0998d3d1c2af841c5f185",
+      "committedGitBlobHashesVerified": true,
+      "newContractIndependentlyHashBound": true,
+      "cleanCommittedReporterPass": true
+    },
+    "independentReview": {
+      "blockingFindings": 0,
+      "scope": "Read-only exact production/test/model review; does not satisfy required GitHub approval."
+    },
+    "developmentLimitations": [
+      "Initial owned PostgreSQL restart omitted explicit port; connection to55728 failed before any schema write. Corrected only the owned cluster and applied full schema successfully.",
+      "Initial model diagnostic treated a transient phase as a durable violation; final model requires a commit-ending witness.",
+      "Catalog refresh changed evidence counts and ordering. Preserved all normative rows and original order, retaining only twelve independently checked consumerCount+1 evidence changes.",
+      "An initial index/conformance command was started without waiting for its dependency to complete. Those outputs are diagnostic only. Final inventory then conformance and both checks completed sequentially under set-e."
+    ],
+    "assurance": {
+      "existingConditionalSMTClaimsProven": 11,
+      "fullSystemRequirementsUnproven": 154,
+      "implementationAndRefinementObligationsUnproven": 308,
+      "release": "BLOCKED",
+      "newWholeHandlerProof": false
+    }
+  },
+  "regressionProtection": {
+    "handlers": "Existing backend provider-retry lane executes registered ProviderRetrySpec against the complete migration schema.",
+    "model": "Existing backend CI explicitly runs ticket-admission-model.test.mjs; root quality alone is not that run.",
+    "source": "Existing immutable specification-surface and inventory/conformance gates retained."
+  },
+  "integration": {
+    "pullRequest": 660,
+    "url": "https://github.com/diegueins680/tdf-app/pull/660",
+    "draft": true,
+    "parentPullRequest": 659,
+    "merged": false,
+    "deployed": false,
+    "autoMergeEnabled": false,
+    "initialHostedRun": 40774782221,
+    "requiredGitHubApproval": "pending",
+    "hostedQualification": "pending",
+    "currentMainComposition": "pending",
+    "protectedQueue": "Existing636 was protected-merged as002343fc5301b87d01e6c9ebe046242fb8031d7f; read-only queue now selects637. Root651 requires latest-main composition; approved source heads are preserved.",
+    "protections": "20 required contexts, strict base, stale-review dismissal, one independent review, conversation resolution and admin enforcement retained.",
+    "parent659HostedFailure": {
+      "run": 40747351910,
+      "personaJob": 123025424959,
+      "passed": 621,
+      "skipped": 22,
+      "failed": 1,
+      "failure": "WebKit gallery contrast; title1.44/actions1.30 versus4.5",
+      "rootCauseProven": false,
+      "artifactReported": {
+        "id": 12843790839,
+        "bytes": 103536557,
+        "sha256": "8b1b1a8d58bdb1b3d0ed656be1a725d0c819ddca87369f9543107b23356ff853",
+        "downloadHashVerified": false
+      }
+    },
+    "existingGalleryPR": {
+      "number": 648,
+      "head": "b0d192f38b4aa33b5359722c2c999e7d0cd745a3",
+      "exactApproval": 5677696997,
+      "currentMainQualification": false,
+      "preserveHeadAndAssertions": true
+    }
+  },
+  "scorecard": {
+    "scope": "This correction only; no arbitrary platform percentage. Existing separately approved booking PR636 was also integrated, recorded under additionalIntegration.",
+    "confirmedDefectsCorrected": 1,
+    "defectsIntegrated": 0,
+    "criticalInvariantsTested": 1,
+    "originalRaceRegressionsCovered": 6,
+    "additionalCompatibilityCases": 6,
+    "boundedDesignInputs": 6,
+    "negativeControls": 3,
+    "newWholeHandlerProofs": 0,
+    "currentSourceEvidence": "ee77d824c6d02c3150b966439461d7de26e8ec90"
+  },
+  "remainingRisks": [
+    "Participating Event writers and stable capability definitions through admission are assumptions. Out-of-protocol SQL, mixed old binaries and capability catalog governance are outside this fix.",
+    "Default READ COMMITTED is qualified; alternate isolation availability is not established.",
+    "Canonical guest checkout, price/owner snapshots, database-time sale cutoffs, later provider recovery and financial allocation are separate obligations.",
+    "Existing initial route validation can still refuse closed-event checkout retries; no new success guarantee for that case.",
+    "Pinned WebKit cannot run on this local Mac12 environment. Hosted gallery failure remains visible; no browser substitution or assertion waiver.",
+    "No production financial records changed, no provider contacted and no merge/deployment occurred."
+  ],
+  "prioritizedBacklog": [
+    {
+      "id": "LEGACY-FINAL-AMOUNT-ENVELOPE",
+      "priority": "P2",
+      "status": "PARTIAL",
+      "evidence": "Source validates face amount before adding buyer fee. Face98,039,216 produces final100,000,000 above the existing99,999,999 internal Stripe envelope. No actual-handler counterexample or incorrect charge claimed.",
+      "next": "Establish final-amount invariant; reproduce without provider credentials; preserve valid boundary, discounted checkouts and existing reuse/recovery."
+    },
+    {
+      "id": "LEGACY-PARTIAL-ALLOCATION",
+      "priority": "P0",
+      "status": "UNKNOWN",
+      "blocker": "Material product allocation rule unresolved; continue does not select a pending business option."
+    },
+    {
+      "id": "PROTECTED-INTEGRATION",
+      "priority": "P0",
+      "status": "PARTIAL",
+      "blocker": "FIFO637, root/main composition, hosted checks and required approvals."
+    }
+  ],
+  "additionalIntegration": {
+    "schemaVersion": 1,
+    "pr": 636,
+    "beforeMain": "e0cb1a7f3dc9a65260bd0b2fbd67a6316f93f2f7",
+    "head": "db0e004de4a9fd6cbb8ff4826a33ad17bf692186",
+    "merge": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+    "merged": true,
+    "mergedAt": "2026-10-28T21:54:18Z",
+    "review": {
+      "id": 5689239277,
+      "commit": "db0e004de4a9fd6cbb8ff4826a33ad17bf692186",
+      "author": "tdfrecords",
+      "state": "APPROVED",
+      "submittedAt": "2026-10-28T20:27:22Z"
+    },
+    "allRequiredChecks": "SUCCESS",
+    "unresolvedReviewThreads": 0,
+    "mainIntegrationAdmission": "SUCCESS",
+    "strictBaseAndAdminEnforcement": true,
+    "expectedHeadGuard": true,
+    "method": "merge",
+    "normalProtectionPath": true,
+    "sourceHeadChanged": false,
+    "scope": "Existing separately approved booking catalog recovery; no claim that ticket financial/eligibility changes reached main."
+  },
+  "mainAfterAdditionalIntegration": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+  "queueAfterAdditionalIntegration": {
+    "context": "main-integration-admission",
+    "base": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+    "admittedPR": 637,
+    "admittedHead": "3450e6033ad132c0457794c4a82bab8dbab74558",
+    "waitingPRs": [
+      495,
+      573,
+      592,
+      593,
+      599,
+      601,
+      630,
+      633,
+      638,
+      639,
+      640,
+      642,
+      643,
+      646,
+      648,
+      649,
+      650,
+      651,
+      653,
+      655,
+      656
+    ],
+    "duplicateHeads": [],
+    "applied": false
+  },
+  "nextHighestValueTask": "Reproduce the source-supported final fee-inclusive Stripe amount envelope gap without external provider IO while protected integration remains queued.",
+  "evidenceDirectory": "reports/legacy-ticket-eligibility-2026-10-28"
+}
