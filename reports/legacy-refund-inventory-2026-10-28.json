@@ -3,7 +3,7 @@
   "cycle": "2026-10-28-legacy-refund-inventory",
   "repository": "diegueins680/tdf-app",
   "baselineCommit": "d0301b96e2dfc2106758013b33b60058ea98856b",
-  "sourceCommit": null,
+  "sourceCommit": "b14320e815cbbba82fa1af8e924ea2bcd98e2496",
   "parentPullRequest": 652,
   "confirmedDefect": {
     "id": "TDF-CORRECTNESS-20261028-07-LEGACY",
@@ -118,6 +118,13 @@
         "competing": 0,
         "statusDifferences": 8,
         "scope": "Current declaration snapshot only; known API conformance gaps remain."
+      },
+      {
+        "name": "immutable new-source admission",
+        "base": "d0301b96e2dfc2106758013b33b60058ea98856b",
+        "head": "b14320e815cbbba82fa1af8e924ea2bcd98e2496",
+        "mappedChangedMaterialSurfaces": 3,
+        "result": "PASS"
       }
     ],
     "sourceHashes": {
@@ -150,8 +157,10 @@
     "completeSourceManifest": "reports/legacy-refund-inventory-2026-10-28/execution-sources.json",
     "evidenceArchives": {
       "execution-receipts.tar.gz": "2f8b48793e9537e050bb6875bbd7e74fed34ab5117e47ea2c89c59d9e451a240",
+      "committed-source-assurance.tar.gz": "8103af7de1784deeb91c8ef88b7f69129f91ac4c11b1be5d51790683d3a6dbbf",
       "handler-cases.txt": "f65c15977489fbc49ceecda25fd71f1a55ba6f10c94d21ed0491814443dfc0f4",
       "execution-sources.json": "8a4253160775678210b99b05f661fe03c2597e554e15b66447e0d817b145e0ec",
+      "source-seal.json": "80be2780ad84f9d0d3ce8bae74a8c5e82427ca13a79e383d856444c563279fe2",
       "independent-review.txt": "ce9b947ff5f6cccf71a28b8d3091d2f04a2f2a177512ad3946e62fc4b3cc66ab",
       "development-diagnostics.tar.gz": "44192d2aa106272d0cd1ae25fc19aac2d9acc6c306c6a4c366eee65b1197a1d9",
       "assurance-receipts.tar.gz": "1e4139e7fb8fa86a1e055d13a37c87c97983069d254017c590735046a58c7e74"
@@ -177,7 +186,9 @@
       "unchangedOtherRequirements": 153,
       "unchangedNormativeCatalogRows": 1352,
       "verificationWeakened": false
-    }
+    },
+    "committedSourceSeal": "reports/legacy-refund-inventory-2026-10-28/source-seal.json",
+    "sourceBinding": "All1408 registered source input hashes match immutable sourceb143 and its pinned Mobile tree; the new contract hash independently matches its committed discovery entry. Clean committed-source assurance and immutable admission passed. Binary build Git metadata may name the execution parent; source correspondence is not reproducible-build attestation."
   },
   "assumptions": [
     "PostgreSQL runSqlPool transaction semantics and atomic conditional UPDATE",
@@ -218,21 +229,22 @@
     }
   ],
   "integration": {
-    "state": "verified-local-child-awaiting-source-commit-and-stacked-draft",
+    "state": "stacked-draft-awaiting-parent-integration-current-main-composition-hosted-CI-and-required-review",
     "baseBranch": "fix/legacy-stripe-refund-evidence-20261028",
-    "pullRequest": null,
+    "pullRequest": 654,
     "parentPullRequest": 652,
     "draftPlanned": true,
     "merged": false,
     "deployed": false,
-    "queuePreserved": true
+    "queuePreserved": true,
+    "observedMain": "1c625d652b2a26a46199f13dd27c9bddd5a86339"
   },
   "scorecard": {
     "method": "Counts scoped failure modes and their assurance; no arbitrary score",
     "confirmedDefectsCorrected": 1,
     "confirmedDefectsIntegrated": 0,
     "criticalInvariantsSpecified": 1,
-    "pullRequestsCreated": 0,
+    "pullRequestsCreated": 1,
     "pullRequestsMerged": 0,
     "criticalInvariantsByAssurance": {
       "TESTED": 1
