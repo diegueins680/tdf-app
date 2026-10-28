@@ -7550,7 +7550,7 @@
     {
       "id": "SURFACE-a818c30f700a63d1",
       "path": "tdf-hq-ui/src/components/ArtistFansList.tsx",
-      "sha256": "85d8eb6d7ff877e17d0a3b00ba7313cf8b2dbf5fc9992e12d0e477c90b82a5a0",
+      "sha256": "274c061bf5429a1a2e292f63a172d6ab237a214ea967afebe4f53620f6acd9d0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19898,7 +19898,7 @@
     },
     {
       "path": "docs/discovery/community-search-navigation.md",
-      "sha256": "eb0eaa096b2e75f0d5fa7c5c2fc4d748d3e173113a031d17dbe802b23246011d",
+      "sha256": "bd99063484a437b92fa6ad1d42f53dd2f9ad3118a09095cc18796017577030e2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27801,7 +27801,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "78a204bfc13239654c832fd0660c965f668378fd00bb7add469ab29c2bb617c7",
+      "sha256": "7d3e095ad6ece0157f241334b2c594c6cadff55086923255e8da0a8aed00c433",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

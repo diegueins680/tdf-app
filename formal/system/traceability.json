@@ -10748,7 +10748,8 @@
         "tdf-hq-ui/src/components/PublicBranding.tsx",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "tdf-hq-ui/src/components/ArtistFansList.tsx"
       ],
       "tests": [
         "scripts/test-community-search.py",
@@ -13940,6 +13941,7 @@
     "tdf-hq-ui/src/bootSafety.tsx": "d86542845ea039c65a5135d5d94e1c2331cadb6f4866ba309a4973c9cc10cbdc",
     "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
     "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": "e44b0092e64730479c4742b9d1e0ba8719d6dd9d835e628f31ac6de1362436f3",
+    "tdf-hq-ui/src/components/ArtistFansList.tsx": "274c061bf5429a1a2e292f63a172d6ab237a214ea967afebe4f53620f6acd9d0",
     "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx": "ff19281d3869bde4c70c51cdbcc5f75d260a06e190963429cca242d03dea6ec7",
     "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx": "bbb0a57dccd78aa63d5380426e0aab0304d7735cfec9758b44c3d873d7f7128d",
     "tdf-hq-ui/src/components/InstagramEntryLinks.tsx": "b0f7c70bc37e4178d5a33e4104ad4083402da01262505a13d424f3299664fbfa",
@@ -24623,6 +24625,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/components/ArtistFansList.tsx": [
+      {
+        "requirement": "DISCOVERY-NAV-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-community-search.py": [
       {
         "requirement": "DISCOVERY-NAV-001",
@@ -34484,9 +34492,14 @@
     {
       "id": "SURFACE-a818c30f700a63d1",
       "path": "tdf-hq-ui/src/components/ArtistFansList.tsx",
-      "sha256": "85d8eb6d7ff877e17d0a3b00ba7313cf8b2dbf5fc9992e12d0e477c90b82a5a0",
+      "sha256": "274c061bf5429a1a2e292f63a172d6ab237a214ea967afebe4f53620f6acd9d0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-fe47678f5e1d55b6",
@@ -53163,7 +53176,6 @@
     "SURFACE-ffcbf987e3b5d62d",
     "SURFACE-96f776df257d1b86",
     "SURFACE-6747970068ce24aa",
-    "SURFACE-a818c30f700a63d1",
     "SURFACE-a37d1951f47fee63",
     "SURFACE-6f2233927f043ef3",
     "SURFACE-1531c9c36f482a7e",
@@ -55580,7 +55592,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "78a204bfc13239654c832fd0660c965f668378fd00bb7add469ab29c2bb617c7",
+      "sourceSha256": "7d3e095ad6ece0157f241334b2c594c6cadff55086923255e8da0a8aed00c433",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -55608,7 +55620,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "78a204bfc13239654c832fd0660c965f668378fd00bb7add469ab29c2bb617c7",
+      "sourceSha256": "7d3e095ad6ece0157f241334b2c594c6cadff55086923255e8da0a8aed00c433",
       "definition": {
         "states": [
           "absent",
@@ -55638,7 +55650,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "78a204bfc13239654c832fd0660c965f668378fd00bb7add469ab29c2bb617c7",
+      "sourceSha256": "7d3e095ad6ece0157f241334b2c594c6cadff55086923255e8da0a8aed00c433",
       "definition": {
         "export": [
           "queued",
