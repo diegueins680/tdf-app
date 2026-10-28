@@ -195,7 +195,7 @@
     },
     "regressionProtection": {
       "backend": ".github/workflows/ci.yml backend lane creates a fresh provider-retry DB and executes scripts/test-provider-retry-runtime.sh, whose match includes these actual-handler cases",
-      "model": "scripts/__tests__/ticket-admission-model.test.mjs runs under repository quality",
+      "model": ".github/workflows/ci.yml backend lane explicitly runs node --test scripts/__tests__/ticket-admission-model.test.mjs. The local model receipt was executed directly; repository quality is a separate check.",
       "noVerificationWeakening": true,
       "unchangedOtherRequirements": 153,
       "unchangedParentCatalogNormativeRows": 1351

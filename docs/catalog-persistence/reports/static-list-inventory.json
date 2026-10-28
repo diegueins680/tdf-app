@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-28T07:45:12.183Z",
+  "generatedAt": "2026-10-28T15:40:14.341Z",
   "repositoryRoot": ".",
   "filesScanned": 2443,
   "candidateCount": 1352,
@@ -4162,7 +4162,7 @@
       "lines": [
         126
       ],
-      "consumerCount": 312,
+      "consumerCount": 313,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -4319,6 +4319,7 @@
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
@@ -4343,8 +4344,7 @@
         "scripts/production-release.mjs",
         "scripts/refresh-instagram-token.mjs",
         "scripts/run-music-release-worker-once.sh",
-        "scripts/set-loop-github-polling.mjs",
-        "scripts/specification-conformance.py"
+        "scripts/set-loop-github-polling.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -6707,14 +6707,14 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "refunds",
-      "line": 46,
+      "line": 122,
       "values": [
         "none"
       ],
       "valueCount": 1,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        46
+        122
       ],
       "consumerCount": 70,
       "backendConsumers": [
@@ -6829,7 +6829,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "statuses",
-      "line": 277,
+      "line": 353,
       "values": [
         "pending",
         "requires_action",
@@ -6842,7 +6842,7 @@
       "valueCount": 7,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        277
+        353
       ],
       "consumerCount": 189,
       "backendConsumers": [
@@ -7400,7 +7400,7 @@
       "lines": [
         167
       ],
-      "consumerCount": 241,
+      "consumerCount": 242,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -7548,6 +7548,7 @@
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/playwright-image.test.mjs",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/archive/change-venue-to-domo.py",
         "scripts/archive/create-manual-shows.py",
@@ -7575,8 +7576,7 @@
         "scripts/lib/sri-invoice.mjs",
         "scripts/operations-load-test.mjs",
         "scripts/production-catalog-inventory.mjs",
-        "scripts/production-release.mjs",
-        "scripts/refresh-instagram-token.mjs"
+        "scripts/production-release.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -7929,7 +7929,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 239,
+      "consumerCount": 240,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -8053,6 +8053,7 @@
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/playwright-image.test.mjs",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
@@ -8080,8 +8081,7 @@
         "scripts/specification-conformance.py",
         "scripts/sync-artist-drive.js",
         "scripts/sync-country-reference.mjs",
-        "scripts/test-account-deletion-api.mjs",
-        "scripts/test-artist-merch-storefronts-migration.sh"
+        "scripts/test-account-deletion-api.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -13792,7 +13792,7 @@
       "lines": [
         140
       ],
-      "consumerCount": 209,
+      "consumerCount": 210,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -13918,6 +13918,7 @@
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/playwright-image.test.mjs",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
@@ -13947,8 +13948,7 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
-        "scripts/test-checkout-terms-upgrade-concurrency.py",
-        "scripts/test-course-identity.sh"
+        "scripts/test-checkout-terms-upgrade-concurrency.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -14351,7 +14351,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 202,
+      "consumerCount": 203,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -14473,6 +14473,7 @@
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/playwright-image.test.mjs",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
@@ -14502,8 +14503,7 @@
         "scripts/set-loop-github-polling.mjs",
         "scripts/specification-conformance.py",
         "scripts/sync-artist-drive.js",
-        "scripts/sync-country-reference.mjs",
-        "scripts/test-account-deletion-api.mjs"
+        "scripts/sync-country-reference.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -14569,7 +14569,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 243,
+      "consumerCount": 244,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -14695,6 +14695,7 @@
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/playwright-image.test.mjs",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
@@ -14720,8 +14721,7 @@
         "scripts/production-release.mjs",
         "scripts/refresh-instagram-token.mjs",
         "scripts/run-music-release-worker-once.sh",
-        "scripts/set-loop-github-polling.mjs",
-        "scripts/specification-conformance.py"
+        "scripts/set-loop-github-polling.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -20882,7 +20882,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 206,
+      "consumerCount": 207,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -21014,6 +21014,7 @@
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/playwright-image.test.mjs",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
@@ -21044,8 +21045,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/sync-country-reference.mjs",
         "scripts/test-account-deletion-api.mjs",
-        "scripts/test-artist-merch-storefronts-migration.sh",
-        "scripts/test-checkout-terms-upgrade-concurrency.py"
+        "scripts/test-artist-merch-storefronts-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -39552,7 +39552,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 379,
+      "consumerCount": 380,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -40119,7 +40119,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 385,
+      "consumerCount": 386,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -63449,7 +63449,7 @@
       "lines": [
         120
       ],
-      "consumerCount": 97,
+      "consumerCount": 98,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -63544,6 +63544,7 @@
         "scripts/__tests__/fixtures/production-ticketing-base.sql",
         "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
         "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/lib/discovery.mjs",
         "scripts/lib/production-release.mjs",
@@ -64090,7 +64091,7 @@
       "lines": [
         17
       ],
-      "consumerCount": 449,
+      "consumerCount": 450,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -79336,7 +79337,7 @@
       "lines": [
         61
       ],
-      "consumerCount": 195,
+      "consumerCount": 196,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -79458,6 +79459,7 @@
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/playwright-image.test.mjs",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-formal-methods.mjs",
@@ -79488,8 +79490,7 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
-        "scripts/test-checkout-terms-upgrade-concurrency.py",
-        "scripts/test-course-identity.sh"
+        "scripts/test-checkout-terms-upgrade-concurrency.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",

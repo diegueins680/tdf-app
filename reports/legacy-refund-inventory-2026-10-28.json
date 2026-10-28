@@ -1,0 +1,244 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-10-28-legacy-refund-inventory",
+  "repository": "diegueins680/tdf-app",
+  "baselineCommit": "d0301b96e2dfc2106758013b33b60058ea98856b",
+  "sourceCommit": null,
+  "parentPullRequest": 652,
+  "confirmedDefect": {
+    "id": "TDF-CORRECTNESS-20261028-07-LEGACY",
+    "priority": "P0",
+    "category": "implementation / data integrity",
+    "consequence": "Legacy refund completion can commit negative sold inventory, increase stock on negative order quantity, or decrement a tier belonging to another event; competing refunds can consume the same remaining sold count.",
+    "status": "corrected-tested-awaiting-protected-integration"
+  },
+  "invariants": [
+    {
+      "id": "EVT-LEGACY-REFUND-INVENTORY-001",
+      "requirement": "EVT-TICKET-001",
+      "statement": "A legacy completion releases exactly one positive quantity from its event/tier only if the atomic update has sufficient current sold stock; release failure rolls back completion while the processing fence and observed provider ID remain.",
+      "assurance": "TESTED",
+      "evidence": "reports/legacy-refund-inventory-2026-10-28/handler-cases.txt"
+    }
+  ],
+  "contract": "formal/system/legacy-refund-inventory.md",
+  "authority": [
+    "tdf-hq/src/TDF/Ticketing/Refund.hs completeTicketRefund",
+    "formal/ticket-admission/README.md"
+  ],
+  "implementation": [
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+  ],
+  "regressionTests": [
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+  ],
+  "formalModels": [
+    "scripts/__tests__/ticket-admission-model.test.mjs"
+  ],
+  "verification": {
+    "baseline": {
+      "examples": 67,
+      "failures": 9,
+      "source": "d0301b96e2dfc2106758013b33b60058ea98856b",
+      "allFailuresConfirmed": true,
+      "harnessCorrection": "Earlier run had eight genuine failures plus a foreign-tier fixture unique-code collision. Fixture now changes its own code while moving the tier; the final run has nine genuine failures. Compile/CLI setup errors are not counterexamples.",
+      "testSourceSha256": "b74b80f13eaff3011d934e2293657d3d37fe382bd1496399c86091fecd1f3989",
+      "limitation": "Baseline precedes review-only boundary cleanup and empty-tier fixture relocation cleanup. No assertions were removed; final67 cases were recompiled and run on a new fresh full database."
+    },
+    "boundedModel": {
+      "assurance": "BOUNDED_VERIFIED",
+      "inputs": 800,
+      "states": 3214,
+      "transitions": 3200,
+      "violations": 0,
+      "actors": 2,
+      "soldRange": [
+        -1,
+        6
+      ],
+      "quantityRange": [
+        -1,
+        3
+      ],
+      "eventBindings": 4,
+      "unsafeControls": {
+        "stalePrecheck": {
+          "states": 3869,
+          "transitions": 4182,
+          "violation": "nonnegative"
+        },
+        "omitEvent": {
+          "states": 3256,
+          "transitions": 3200,
+          "violation": "event-scoped"
+        },
+        "omitPositiveQuantity": {
+          "states": 3222,
+          "transitions": 3200,
+          "violation": "positive-release"
+        }
+      },
+      "nodeSuiteTests": 15,
+      "failures": 0,
+      "scope": "Finite design abstraction; not Haskell/SQL refinement, provider authenticity or complete refund workflow proof"
+    },
+    "tests": [
+      {
+        "name": "final15-test design model and unsafe controls",
+        "result": "PASS"
+      },
+      {
+        "name": "repository quality",
+        "result": "PASS",
+        "retainedPlatformSkips": 11,
+        "note": "Production correction was unchanged; final review changes affect only Haskell fixture cleanup and model nonvacuity assertions, verified by the final Stack/model runs."
+      },
+      {
+        "name": "catalog JSON and CSV auditors",
+        "result": "PASS",
+        "preservedNormativeDecisions": 1352,
+        "newDecisions": 0
+      },
+      {
+        "name": "specification inventory --check",
+        "result": "PASS"
+      },
+      {
+        "name": "specification traceability --check",
+        "result": "PASS",
+        "diagnostic": "First concurrent generator invocation produced a stale inventory reference; --check detected it. Regenerated sequentially after inventory completion, checked successfully, then reran assurance/API inspection on fresh inputs."
+      },
+      {
+        "name": "compiled API declaration snapshot",
+        "result": "PASS",
+        "operations": 913,
+        "rawMounts": 2,
+        "undocumented": 396,
+        "documentedWithoutTypedRoute": 25,
+        "competing": 0,
+        "statusDifferences": 8,
+        "scope": "Current declaration snapshot only; known API conformance gaps remain."
+      }
+    ],
+    "sourceHashes": {
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "c60f6ea957129152b4102c2077e4d071488f3547376158bb110b7f21be56929d",
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "f655267e5f30c9b0c9e31e6fce03965610c0f3ebee93d4cdc958029cbff832b9",
+      "scripts/__tests__/ticket-admission-model.test.mjs": "feebc6a2fd08487f8fd5e8d87b4a2020cd74faec4e39b9867bd7e369860843b5"
+    },
+    "independentReview": "reports/legacy-refund-inventory-2026-10-28/independent-review.txt",
+    "traceabilityCorrection": {
+      "path": "reports/refund-completion-2026-10-28.json",
+      "field": "verification.regressionProtection.model",
+      "problem": "Prior text attributed the model to repository quality; code inspection establishes an explicit backend CI command instead.",
+      "correction": "Link the explicit .github/workflows/ci.yml model command; historical direct model run and all sealed source/evidence hashes remain unchanged."
+    },
+    "fullBackend": {
+      "toolchain": "Stack lts-24.42 / GHC9.10.3",
+      "command": "TDF_PROVIDER_RETRY_DATABASE_URL=<owned-fresh-local-db> stack test tdf-hq --jobs 2 --test-arguments='--seed=20261028 +RTS -N2 -RTS'",
+      "cwd": "tdf-hq",
+      "migrationsAppliedAndReplayed": 227,
+      "freshUtf8Database": true,
+      "examples": 4429,
+      "failures": 0,
+      "pending": 21,
+      "legacyHandlerCases": 67,
+      "stackExitCode": 0,
+      "pendingNotPostgresPass": true
+    },
+    "sourceDigest": "6d8ee167734ce72a703b303ce4765a6505d6dcb7384091c0246e62f69c5c1757",
+    "registeredSourceFiles": 1408,
+    "completeSourceManifest": "reports/legacy-refund-inventory-2026-10-28/execution-sources.json",
+    "evidenceArchives": {
+      "execution-receipts.tar.gz": "2f8b48793e9537e050bb6875bbd7e74fed34ab5117e47ea2c89c59d9e451a240",
+      "handler-cases.txt": "f65c15977489fbc49ceecda25fd71f1a55ba6f10c94d21ed0491814443dfc0f4",
+      "execution-sources.json": "8a4253160775678210b99b05f661fe03c2597e554e15b66447e0d817b145e0ec",
+      "independent-review.txt": "ce9b947ff5f6cccf71a28b8d3091d2f04a2f2a177512ad3946e62fc4b3cc66ab",
+      "development-diagnostics.tar.gz": "44192d2aa106272d0cd1ae25fc19aac2d9acc6c306c6a4c366eee65b1197a1d9",
+      "assurance-receipts.tar.gz": "1e4139e7fb8fa86a1e055d13a37c87c97983069d254017c590735046a58c7e74"
+    },
+    "proofs": {
+      "newWholeHandlerProofs": 0,
+      "existingConditionalSmtObligations": {
+        "PROVEN": 11,
+        "scope": "Existing trusted translators; arithmetic4/authorization3/recovery4, not this handler"
+      },
+      "fullRequirements": {
+        "UNPROVEN": 154
+      },
+      "fullImplementationAndRefinement": {
+        "UNPROVEN": 308
+      },
+      "release": "BLOCKED"
+    },
+    "regressionProtection": {
+      "actualHandlers": ".github/workflows/ci.yml creates a fresh provider retry database and runs scripts/test-provider-retry-runtime.sh; its provider-retry-runtime match includes these67 cases.",
+      "model": ".github/workflows/ci.yml backend lane explicitly executes node --test scripts/__tests__/ticket-admission-model.test.mjs",
+      "sourceAdmission": "Canonical EVT-TICKET-001 maps implementation/test/model; immutable new-source gate runs on source commit.",
+      "unchangedOtherRequirements": 153,
+      "unchangedNormativeCatalogRows": 1352,
+      "verificationWeakened": false
+    }
+  },
+  "assumptions": [
+    "PostgreSQL runSqlPool transaction semantics and atomic conditional UPDATE",
+    "The existing request/response execution boundary and captured order snapshot are stable for this narrow property",
+    "If sold starts nonnegative, these decrements preserve it; old negative counters are held, not repaired",
+    "Provider callback is synthetic; no real money or authenticated Stripe completion is exercised"
+  ],
+  "remainingRisks": [
+    {
+      "id": "TDF-CORRECTNESS-20261028-02",
+      "priority": "P0",
+      "finding": "confirmed behavior / unresolved Stripe allocation specification",
+      "statement": "Legacy Stripe partial amounts still retire the whole order. Canonical PayPal whole-ticket allocation does not establish which Stripe tickets arbitrary money should retire. Do not invent an allocation or remove partial support without authoritative requirements."
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-06",
+      "priority": "P0",
+      "finding": "confirmed source",
+      "statement": "Legacy issued tickets remain usable while refund processing is uncertain."
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-07-SCHEMA",
+      "priority": "P0",
+      "finding": "confirmed schema scope limitation",
+      "statement": "The complete migration schema still has no nonnegative quantity_sold CHECK. This correction guards only the legacy completion writer, not every writer or existing bad stock."
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-08",
+      "priority": "P0",
+      "finding": "scope limitation",
+      "statement": "Current actor authority, captured order snapshot immutability across provider IO and global event capacity remain separate."
+    },
+    {
+      "id": "TDF-CORRECTNESS-20261028-04",
+      "priority": "P0",
+      "finding": "hypothesis",
+      "statement": "Concurrent distinct legacy request creation may allocate more than one request to an order; needs independent current-schema reproduction."
+    }
+  ],
+  "integration": {
+    "state": "verified-local-child-awaiting-source-commit-and-stacked-draft",
+    "baseBranch": "fix/legacy-stripe-refund-evidence-20261028",
+    "pullRequest": null,
+    "parentPullRequest": 652,
+    "draftPlanned": true,
+    "merged": false,
+    "deployed": false,
+    "queuePreserved": true
+  },
+  "scorecard": {
+    "method": "Counts scoped failure modes and their assurance; no arbitrary score",
+    "confirmedDefectsCorrected": 1,
+    "confirmedDefectsIntegrated": 0,
+    "criticalInvariantsSpecified": 1,
+    "pullRequestsCreated": 0,
+    "pullRequestsMerged": 0,
+    "criticalInvariantsByAssurance": {
+      "TESTED": 1
+    },
+    "boundedDesignProperties": 3,
+    "newWholeWorkflowProofs": 0
+  },
+  "nextTask": "Verify legacy admission/transfer fencing while refund processing is uncertain, without inventing partial-ticket allocation."
+}

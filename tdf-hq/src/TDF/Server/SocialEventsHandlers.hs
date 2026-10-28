@@ -5822,9 +5822,19 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                             updateWhere
                                                 [EventTicketOrderRefId ==. orderKey]
                                                 [EventTicketStatus =. "refunded", EventTicketUpdatedAt =. now]
-                                            update
-                                                (eventTicketOrderTierId order)
-                                                [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
+                                            let quantity = eventTicketOrderQuantity order
+                                            unless (quantity > 0) $
+                                                fail "Refund inventory release requires a positive quantity"
+                                            released <- updateWhereCount
+                                                [ EventTicketTierId ==. eventTicketOrderTierId order
+                                                , EventTicketTierEventId ==. eventTicketOrderEventId order
+                                                , EventTicketTierQuantitySold >=. quantity
+                                                ]
+                                                [ EventTicketTierQuantitySold +=. negate quantity
+                                                , EventTicketTierUpdatedAt =. now
+                                                ]
+                                            unless (released == 1) $
+                                                fail "Refund inventory release requires reconciliation"
                                         )
                                         envPool
                                 either (const (throwError unverified)) pure completed
