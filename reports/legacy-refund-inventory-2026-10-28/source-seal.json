@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "b14320e815cbbba82fa1af8e924ea2bcd98e2496",
+  "sourceTree": "2940d09b5f2d04b575ad614536773e2cf87faed9",
+  "baselineCommit": "d0301b96e2dfc2106758013b33b60058ea98856b",
+  "sourceDigest": "6d8ee167734ce72a703b303ce4765a6505d6dcb7384091c0246e62f69c5c1757",
+  "registeredSourceInputs": 1408,
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "executionHashesMatchCommittedTreeAndMobilePin": true,
+  "newContract": {
+    "path": "formal/system/legacy-refund-inventory.md",
+    "sha256": "881d3d000ab900d0efce5bbecc67d0757350e27a4604cedb64f775c07d909922",
+    "discoveryArtifactMatches": true
+  },
+  "cleanCommittedReporterPass": true,
+  "sourceAdmissionPass": true,
+  "mappedChangedMaterialSurfaces": 3,
+  "pullRequest": 654,
+  "parentPullRequest": 652,
+  "mainObserved": "1c625d652b2a26a46199f13dd27c9bddd5a86339",
+  "requiredReviewPending": true,
+  "currentMainCompositionPending": true,
+  "release": "BLOCKED",
+  "assuranceScope": "Implementation TESTED; finite model BOUNDED_VERIFIED; no new whole-handler proof. This is source-hash correspondence, not a reproducible-build or production-payment attestation."
+}

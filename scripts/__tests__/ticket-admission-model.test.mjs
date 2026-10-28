@@ -1,6 +1,82 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+// Two distinct legacy requests release one shared tier. A deliberate stale
+// precheck models why stock must be tested by the UPDATE that decrements it.
+// This finite design check is not a Haskell/SQL refinement proof.
+function exploreLegacyInventory({ stalePrecheck = false, omitEvent = false,
+  omitPositiveQuantity = false } = {}) {
+  let inputs = 0, states = 0, transitions = 0;
+  const violations = new Set();
+  let counterexample;
+  for (let initial = -1; initial <= 6; initial++) {
+    for (let first = -1; first <= 3; first++) {
+      for (let second = -1; second <= 3; second++) {
+        for (let mask = 0; mask < 4; mask++) {
+          inputs++;
+          const quantities = [first, second];
+          const matches = [Boolean(mask & 1), Boolean(mask & 2)];
+          const queue = [{ sold: initial, phase: [0, 0], trace: [] }];
+          const seen = new Set();
+          while (queue.length) {
+            const current = queue.shift();
+            const key = JSON.stringify([current.sold, current.phase]);
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const invalid = [];
+            if (initial >= 0 && current.sold < 0) invalid.push('nonnegative');
+            if (current.phase.some((phase, index) => phase === 2 && !matches[index])) invalid.push('event-scoped');
+            if (current.phase.some((phase, index) => phase === 2 && quantities[index] <= 0)) invalid.push('positive-release');
+            const released = quantities.reduce((sum, quantity, index) =>
+              sum + (current.phase[index] === 2 ? quantity : 0), 0);
+            assert.equal(current.sold, initial - released);
+            for (const failure of invalid) violations.add(failure);
+            if (invalid.length && !counterexample) counterexample = { initial, quantities, matches, ...current };
+            for (let actor = 0; actor < 2; actor++) {
+              const phase = current.phase[actor];
+              if (phase >= 2) continue;
+              const quantity = quantities[actor];
+              const allowed = (omitPositiveQuantity || quantity > 0)
+                && (omitEvent || matches[actor]) && current.sold >= quantity;
+              const next = { sold: current.sold, phase: [...current.phase],
+                trace: [...current.trace, `${actor}:${phase === 1 ? 'release-after-precheck' : 'conditional-release'}`] };
+              if (phase === 1 || allowed) {
+                next.phase[actor] = stalePrecheck && phase === 0 ? 1 : 2;
+                if (next.phase[actor] === 2) next.sold -= quantity;
+              } else next.phase[actor] = 3;
+              transitions++;
+              queue.push(next);
+            }
+          }
+          states += seen.size;
+        }
+      }
+    }
+  }
+  return { inputs, states, transitions, violations: [...violations].sort(), counterexample };
+}
+
+test('bounded atomic legacy inventory releases remain positive, event-scoped and nonnegative', t => {
+  const result = exploreLegacyInventory();
+  assert.equal(result.inputs, 800);
+  assert.equal(result.states, 3214);
+  assert.equal(result.transitions, 3200);
+  assert.deepEqual(result.violations, []);
+  t.diagnostic(JSON.stringify({ model: 'legacy-inventory-release', ...result }));
+});
+
+test('legacy inventory controls expose stale stock reads, foreign tiers and nonpositive quantities', t => {
+  for (const [control, options, violation] of [
+    ['stale-precheck', { stalePrecheck: true }, 'nonnegative'],
+    ['omit-event', { omitEvent: true }, 'event-scoped'],
+    ['omit-positive-quantity', { omitPositiveQuantity: true }, 'positive-release'],
+  ]) {
+    const result = exploreLegacyInventory(options);
+    assert.ok(result.violations.includes(violation));
+    t.diagnostic(JSON.stringify({ control, ...result }));
+  }
+});
+
 // Finite abstraction of one ticket, two scanners and a cancellation/refund.
 // This checks design invariants, not refinement of Haskell or PostgreSQL.
 function explore({ allowReplay = false, allowOutsider = false, omitAudit = false } = {}) {
