@@ -4,7 +4,7 @@
   "repository": "diegueins680/tdf-app",
   "baselineCommit": "7b987d99ea39a03448fdaf7d3c01e5ced3fa23f6",
   "baselinePullRequest": 651,
-  "sourceCommit": null,
+  "sourceCommit": "14ec243c7e7e220e516f2ab48f4f94fa76281aab",
   "scope": "Legacy Stripe completion evidence follow-up, stacked on the unmerged execution-fence correction; not a production release or full workflow proof",
   "confirmedDefect": {
     "id": "TDF-CORRECTNESS-20261028-03",
@@ -132,6 +132,13 @@
         "result": "PASS",
         "preservedParentNormativeDecisions": 1351,
         "newSourceReviewedModelConstant": 1
+      },
+      {
+        "name": "immutable new-source admission",
+        "base": "7b987d99ea39a03448fdaf7d3c01e5ced3fa23f6",
+        "head": "14ec243c7e7e220e516f2ab48f4f94fa76281aab",
+        "mappedChangedSurfaces": 3,
+        "result": "PASS"
       }
     ],
     "proofs": [
@@ -176,11 +183,13 @@
     },
     "sourceDigest": "49a0ef73a047f2a68bbed3a9e43fdfc3c938220e9f2cedc9853f1c211414fa85",
     "sourceCount": 1408,
-    "sourceBinding": "Executed with parent HEAD and frozen dirty source; evidence-only commit binds these exact bytes to the correction commit. Do not mistake embedded parent Git metadata for a clean correction-commit build.",
+    "sourceBinding": "Execution manifest matches all1408 files in committed source14ec243c7 and its pinned Mobile tree; clean committed-source reporter and source-admission replay passed. Embedded build Git metadata may name the execution parent; this is source-hash correspondence, not a reproducible-build attestation.",
     "evidenceArchives": {
       "execution-receipts.tar.gz": "98d05742b87c84d2b1398c16655654217303d8b8438d34dbb21b1482c5688781",
+      "committed-source-assurance.tar.gz": "2b93d1eef2863adfdaf4900fab73a9ceffec9445409cb7a7e21c341ac9fd28e3",
       "handler-cases.txt": "9c9aac62ece7ef6fa9f2166004f950bdf7d199b80c6c841fb72ddeccb1b554ae",
       "execution-sources.json": "d6cf5e4f2b6f18ffc7c05c5d57baebce44de9823b5b36ed842f05a741a8d6507",
+      "source-seal.json": "d902975b5231b71880ca038d1e15cc562e384bb3cf25be3bbaf8e6abde047b7e",
       "assurance-receipts.tar.gz": "cc4ddacc10547c3199b137d70fd089bd99bcaf2dbbb19ff93d356c1db949b748",
       "used-database-diagnostic.tar.gz": "c06919e5301a1dff9997f06c6b306fa316e63208062811e1b2593ca8dcb5f812"
     },
@@ -205,7 +214,8 @@
       "canonicalPreconditionSource": "scripts/test-provider-retry-runtime.sh",
       "receipt": "reports/refund-completion-2026-10-28/used-database-diagnostic.tar.gz"
     },
-    "completeSourceManifest": "reports/refund-completion-2026-10-28/execution-sources.json"
+    "completeSourceManifest": "reports/refund-completion-2026-10-28/execution-sources.json",
+    "committedSourceSeal": "reports/refund-completion-2026-10-28/source-seal.json"
   },
   "remainingRisks": [
     {
@@ -254,9 +264,9 @@
     "A held observed ID remains investigative evidence; future reconciliation must re-establish original payment/account/environment/money bindings"
   ],
   "integration": {
-    "state": "verified-local-follow-up-awaiting-source-commit-and-stacked-draft",
+    "state": "stacked-draft-awaiting-parent-current-main-composition-hosted-CI-and-required-review",
     "baseBranch": "fix/correctness-cycle-20261028",
-    "pullRequest": null,
+    "pullRequest": 652,
     "parentPullRequest": 651,
     "parentUnmerged": true,
     "merged": false,
@@ -270,7 +280,7 @@
     "confirmedDefectsCorrected": 1,
     "confirmedDefectsIntegrated": 0,
     "criticalInvariantsSpecified": 3,
-    "pullRequestsCreated": 0,
+    "pullRequestsCreated": 1,
     "pullRequestsMerged": 0,
     "criticalInvariantsByAssurance": {
       "TESTED": 3
