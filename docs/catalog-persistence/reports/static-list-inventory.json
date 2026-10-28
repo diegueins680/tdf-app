@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-28T15:08:56.895Z",
+  "generatedAt": "2026-10-28T16:02:28.708Z",
   "repositoryRoot": ".",
   "filesScanned": 2446,
   "candidateCount": 1351,
@@ -4160,7 +4160,7 @@
       "lines": [
         126
       ],
-      "consumerCount": 312,
+      "consumerCount": 314,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -4299,6 +4299,7 @@
         ".github/workflows/datadog-synthetics.yml",
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/refresh-instagram-token.yml",
+        ".github/workflows/social-verification.yml",
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
@@ -4341,8 +4342,7 @@
         "scripts/production-release.mjs",
         "scripts/refresh-instagram-token.mjs",
         "scripts/run-music-release-worker-once.sh",
-        "scripts/set-loop-github-polling.mjs",
-        "scripts/specification-conformance.py"
+        "scripts/set-loop-github-polling.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -5573,7 +5573,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "object-registry",
       "name": "types",
-      "line": 84,
+      "line": 119,
       "values": [
         "chromium",
         "firefox",
@@ -5582,9 +5582,9 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        84
+        119
       ],
-      "consumerCount": 333,
+      "consumerCount": 334,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -5746,6 +5746,7 @@
         ".github/workflows/social-verification.yml",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/artist-import-idempotency.test.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/formal-methods-audit.test.mjs",
         "scripts/__tests__/generated-api-conformance.test.mjs",
@@ -7176,7 +7177,7 @@
       "lines": [
         167
       ],
-      "consumerCount": 241,
+      "consumerCount": 243,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -7309,6 +7310,7 @@
         ".github/workflows/datadog-synthetics.yml",
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/refresh-instagram-token.yml",
+        ".github/workflows/social-verification.yml",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
@@ -7351,8 +7353,7 @@
         "scripts/lib/sri-invoice.mjs",
         "scripts/operations-load-test.mjs",
         "scripts/production-catalog-inventory.mjs",
-        "scripts/production-release.mjs",
-        "scripts/refresh-instagram-token.mjs"
+        "scripts/production-release.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -7705,7 +7706,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 239,
+      "consumerCount": 241,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -7814,6 +7815,7 @@
         ".github/workflows/datadog-synthetics.yml",
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/refresh-instagram-token.yml",
+        ".github/workflows/social-verification.yml",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
@@ -7856,8 +7858,7 @@
         "scripts/specification-conformance.py",
         "scripts/sync-artist-drive.js",
         "scripts/sync-country-reference.mjs",
-        "scripts/test-account-deletion-api.mjs",
-        "scripts/test-artist-merch-storefronts-migration.sh"
+        "scripts/test-account-deletion-api.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -13568,7 +13569,7 @@
       "lines": [
         140
       ],
-      "consumerCount": 209,
+      "consumerCount": 211,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -13681,6 +13682,7 @@
         ".github/workflows/datadog-synthetics.yml",
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/refresh-instagram-token.yml",
+        ".github/workflows/social-verification.yml",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
@@ -13723,8 +13725,7 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
-        "scripts/test-checkout-terms-upgrade-concurrency.py",
-        "scripts/test-course-identity.sh"
+        "scripts/test-checkout-terms-upgrade-concurrency.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -14127,7 +14128,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 202,
+      "consumerCount": 204,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -14236,6 +14237,7 @@
         ".github/workflows/datadog-synthetics.yml",
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/refresh-instagram-token.yml",
+        ".github/workflows/social-verification.yml",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
@@ -14278,8 +14280,7 @@
         "scripts/set-loop-github-polling.mjs",
         "scripts/specification-conformance.py",
         "scripts/sync-artist-drive.js",
-        "scripts/sync-country-reference.mjs",
-        "scripts/test-account-deletion-api.mjs"
+        "scripts/sync-country-reference.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -14345,7 +14346,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 243,
+      "consumerCount": 245,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -14454,6 +14455,7 @@
         ".github/workflows/datadog-synthetics.yml",
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/refresh-instagram-token.yml",
+        ".github/workflows/social-verification.yml",
         "scripts/__tests__/alloy-controls.test.mjs",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
@@ -14496,8 +14498,7 @@
         "scripts/production-release.mjs",
         "scripts/refresh-instagram-token.mjs",
         "scripts/run-music-release-worker-once.sh",
-        "scripts/set-loop-github-polling.mjs",
-        "scripts/specification-conformance.py"
+        "scripts/set-loop-github-polling.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -16395,7 +16396,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "packages",
-      "line": 8,
+      "line": 9,
       "values": [
         "@playwright/test",
         "playwright",
@@ -16404,9 +16405,9 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8
+        9
       ],
-      "consumerCount": 42,
+      "consumerCount": 43,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -16442,6 +16443,7 @@
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "automationConsumers": [
+        ".github/workflows/social-verification.yml",
         "scripts/__tests__/build-trust.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/dependency-security.test.mjs",
@@ -20661,7 +20663,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 206,
+      "consumerCount": 208,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -20781,6 +20783,7 @@
         ".github/workflows/datadog-synthetics.yml",
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/refresh-instagram-token.yml",
+        ".github/workflows/social-verification.yml",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
@@ -20823,8 +20826,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/sync-country-reference.mjs",
         "scripts/test-account-deletion-api.mjs",
-        "scripts/test-artist-merch-storefronts-migration.sh",
-        "scripts/test-checkout-terms-upgrade-concurrency.py"
+        "scripts/test-artist-merch-storefronts-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -59899,7 +59901,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 36,
+      "consumerCount": 37,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -59934,6 +59936,7 @@
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "automationConsumers": [
+        ".github/workflows/social-verification.yml",
         "scripts/__tests__/build-trust.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/dependency-security.test.mjs",
@@ -79131,7 +79134,7 @@
       "lines": [
         61
       ],
-      "consumerCount": 195,
+      "consumerCount": 197,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -79241,6 +79244,7 @@
         ".github/workflows/datadog-synthetics.yml",
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/refresh-instagram-token.yml",
+        ".github/workflows/social-verification.yml",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
@@ -79283,8 +79287,7 @@
         "scripts/sync-country-reference.mjs",
         "scripts/test-account-deletion-api.mjs",
         "scripts/test-artist-merch-storefronts-migration.sh",
-        "scripts/test-checkout-terms-upgrade-concurrency.py",
-        "scripts/test-course-identity.sh"
+        "scripts/test-checkout-terms-upgrade-concurrency.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -131162,7 +131165,7 @@
       "lines": [
         36
       ],
-      "consumerCount": 107,
+      "consumerCount": 108,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_dry_run.sql",
@@ -131245,6 +131248,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
+        "scripts/__tests__/playwright-image.test.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/check-messaging-token.mjs",

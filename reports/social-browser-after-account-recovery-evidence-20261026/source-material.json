@@ -1,0 +1,24 @@
+{
+  "observedAt": "2026-10-27T00:27:40.063882+00:00",
+  "previousHead": "3206faad3999f85d610360175e05389e0a7addf2",
+  "targetMain": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+  "status": "MATERIAL_COMPOSITION_VERIFIED_UNCOMMITTED",
+  "expectedAuthChangedPaths": [
+    "tdf-hq-ui/src/api/auth.test.ts",
+    "tdf-hq-ui/src/api/auth.ts",
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+    "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+    "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+    "tdf-hq-ui/src/utils/authErrorMessage.ts"
+  ],
+  "allSevenMainAuthChangesExact": true,
+  "allFiveOwnCiMaterialSurfacesExactPreviousHead": true,
+  "requirements": 148,
+  "protected147WholeObjectsExactIncludingAuth": true,
+  "ownCiRequirementExact3206": true,
+  "allProductBackendSqlApiE2eOpsDependenciesMobileExactMain63": true,
+  "catalogDecisionsByteExactMain63": true,
+  "sqlManifestCount": 223,
+  "scope": "Git material and requirement comparison, not new source execution or protected approval."
+}
