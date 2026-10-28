@@ -11,6 +11,24 @@ SQL/API/UI requieren despliegue coordinado con ingesta pausada; rollback
 restaura el comportamiento vulnerable y exige mantenerla pausada. Ver
 [procedimiento, atomicidad y límites](playback-identity.md).
 
+## Inventario antes de activar (observación 2026-10-26)
+
+El [inventario agregado de sólo lectura](live-catalog-inventory-2026-10-26.md)
+observó cero assets/lanzamientos/versiones/jobs/uploads canónicos y 65 filas
+legadas, con ocho referencias primarias no vacías. Esas referencias no prueban
+que sean Spotify, audio nativo, archivos disponibles ni contenido autorizado.
+Los ceros de integridad son vacuos con el catálogo vacío. No se inspeccionó
+storage ni se publicaron/importaron archivos.
+
+La captura de runtime separada conserva API `4dac175`, 213 migraciones y las cinco
+banderas musicales apagadas; el manifiesto de main tiene 222 entradas y no se
+aplicó como parte del inventario. Antes de activar una cohorte, conservar revisión
+privada de propietario/derechos, vínculos legados estables, importación privada
+por defecto, compatibilidad de despliegue y una prueba autorizada real de carga a
+reproducción. No ejecutar grants, jobs, copias de originales o publicación para
+convertir un contador desconocido en cero. Ver la evidencia y los pendientes en
+la guía enlazada; la captura no sustituye las puertas operativas de abajo.
+
 ## Preparación
 
 1. Aplicar la migración aditiva en staging y comprobar `music_%`/triggers/flags.

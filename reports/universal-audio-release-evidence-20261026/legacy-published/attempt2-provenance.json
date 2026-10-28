@@ -1,0 +1,29 @@
+{
+  "recordedAt": "2026-10-26T21:04:30.747210+00:00",
+  "expectedCommit": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "htmlFile": "/private/tmp/tdf-legacy-published-html-20261026.html",
+  "bundleUrl": "https://www.tdfrecords.net/assets/index-DZRmmD0l.js",
+  "bundleSha256": "12becefdc380f08afdd3ea4f503bb4fc2f0028272209857877c76d01a854bbf6",
+  "commitPresent": true,
+  "originalSpecSha256": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
+  "executedSpecSha256": "fab22e991746a624cb4c91be9f6973d69633277bf8a94469a0fa8993d6e7692c",
+  "changes": [
+    "Import resolves exact existing Playwright dependency",
+    "Public production baseURL; no local build/server",
+    "Every loaded entry must contain exact merge commit",
+    "Only same-origin GET/HEAD static requests pass through; all fetch/xhr/provider/external requests synthetic or blocked"
+  ],
+  "limitations": [
+    "Synthetic session/account/catalog/provider destination",
+    "No external playback or real audio decoder",
+    "No physical device, real production media/CDN/rights, accessibility certification or SLO claim"
+  ],
+  "revision": 2,
+  "priorAttempt": {
+    "packet": "/private/tmp/tdf-legacy-published-verification-20261026",
+    "result": "4 failures after all functional assertions, blocked external POST /flags/ incorrectly counted as business write",
+    "observedOrigin": "https://eu.i.posthog.com",
+    "externalRequestsTransmitted": false
+  },
+  "fixtureCorrection": "Block and record all non-TDF fetch/xhr before business API dispatch. Original assertions/timeouts unchanged; all first-party writes remain blocked/intercepted."
+}
