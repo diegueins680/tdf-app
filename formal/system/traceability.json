@@ -13297,6 +13297,77 @@
         "Historical skipped-state reachability under GitHub orchestration is not established."
       ],
       "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
+    },
+    {
+      "id": "ART-ENRICH-REVIEW-001",
+      "title": "Separate artist verification, profile completeness and image-rights review",
+      "statement": "Artist review distinguishes supported identity verification from optional missing profile data, and distinguishes actual link availability failures from permission to ingest externally hosted images. Legacy hotlink-rights observations must not hide real network failures or label working images as broken.",
+      "authority": "Explicit product owner request, 2026-10-26: explain artist verification and repair Verde70 issues.",
+      "domain": "Artist enrichment",
+      "source": "docs/artist-enrichment-runbook.md",
+      "contract": "docs/artist-enrichment-runbook.md",
+      "actors": [
+        "Strict administrator",
+        "Artist enrichment worker"
+      ],
+      "preconditions": [
+        "Existing enrichment API and source observations",
+        "Existing strict-admin review authorization"
+      ],
+      "inputs": [
+        "Profile completeness and verification metadata",
+        "Artist-scoped timestamped source observations and URLs"
+      ],
+      "state": {
+        "boundary": "Artist review presentation and worker source classification",
+        "authority": "Source observations, existing field-decision API and audit history"
+      },
+      "allowedTransitions": [
+        "Working external image -> rights review without broken-link classification",
+        "Actual HTTP failure -> broken-link result, independently of media rights",
+        "New image URL -> supersede stale warnings about the previous URL",
+        "Evidence review -> approve supported fields, confidence and date before verified status"
+      ],
+      "forbiddenTransitions": [
+        "Infer image reuse rights from HTTP200 or identity verification",
+        "Hide a genuine HTTP failure behind media-rights review",
+        "Use another artist source observation",
+        "Require invented awards or optional metadata to remove an incomplete-profile chip",
+        "Audit action automatically verifies identity"
+      ],
+      "effects": [
+        "Record media-rights observations separately from availability",
+        "Render accurate review guidance, status and link filters"
+      ],
+      "authorization": "Existing strict-admin field-decision and identity-review boundaries are unchanged; no new approval bypass.",
+      "privacy": "Profile and source review retains current authorization. No automatic image copying or account-ownership grants.",
+      "concurrency": "Resolve latest evidence by observation timestamp and source ID; existing server stale-value guards remain authoritative.",
+      "idempotency": "Existing source and suggestion idempotency remains; rendering and filtering perform no decisions.",
+      "failure": "Malformed legacy attribution remains a network failure; missing detailed evidence retains server-reported failures.",
+      "recovery": "Retain all historical observations; rerun availability checks or obtain authorized media without deleting earlier evidence.",
+      "observability": "Source type, decision history and deterministic worker/UI regression coverage.",
+      "property": "Working legacy hotlinks retain permission review but are excluded from broken-only results. Real failures remain visible; URL replacements and actor scope isolate evidence. Artist-specific views include only matching artists or their references, retaining legitimate competing candidates.",
+      "implementation": [
+        "scripts/artist-enrichment.mjs",
+        "tdf-hq-ui/src/utils/artistEnrichmentReview.ts",
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx"
+      ],
+      "tests": [
+        "scripts/__tests__/artist-enrichment.test.mjs",
+        "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts",
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Worker and rendered-review regressions with injected network observations; no formal proof claimed.",
+      "evidence": "Source-bound test logs and separate production data-repair receipt.",
+      "status": "specified and implemented",
+      "openQuestions": [],
+      "confidence": "Deterministic local checks; actual source publication and production data corrections are recorded separately.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded worker/UI correction; approval policy, external image rights and source publication remain separate obligations."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -13678,7 +13749,7 @@
     "screencast/meta-app-review/run.mjs": "0b93f134c01aca678981255a0a6e25bb139c183361bb621c67a95f255e1dbaaa",
     "scripts/__tests__/alloy-controls.test.mjs": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
     "scripts/__tests__/app-smart-link.test.mjs": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
-    "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
+    "scripts/__tests__/artist-enrichment.test.mjs": "1279298dc4cd6c11107577ac67d85df7931d67497060338948aaf82c8363df01",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/catalog-list-audit.test.mjs": "63b371bcbcf9338de2e4d022515bc9438cfd45f2b884411e913abcde5e713268",
@@ -13744,7 +13815,7 @@
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
-    "scripts/artist-enrichment.mjs": "df64d9cdd92fb41e66f1ac33dcc137eab5245a1e0e9a834065a4f363707c383d",
+    "scripts/artist-enrichment.mjs": "40fa05c40650b4fbdc94ab06533481e93391a402cf8f40332d3a598aa7cd9e7d",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
     "scripts/build-catalog-decisions.mjs": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
     "scripts/build-ddex-ern432-package.sh": "8cd6f2ccc3881d3715499144e1513dfe2fd61ac9f1577b53d18eda9c5c5c26bc",
@@ -14131,6 +14202,8 @@
     "tdf-hq-ui/src/pages/AccessRequestsPage.tsx": "e91af15d7cab50fb347441fb220f365c694a43b888624582ff2314667506432c",
     "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": "e8128e5d24e1540cfd8e2accbb17d74941f2867957feb3cc8edb6723dab2b541",
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
+    "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx": "33b3ffcac89df7788cd7888c6bc63a41e3fd708615f5b46af9f174dc808d8224",
+    "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx": "d4c78364465efb2470458c71eabb7e90ce7943aa6005852aae064c352e6b0005",
     "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx": "70b99414c406650748af71ecad6998afe4821ef5beaab6f6f46e7f11c9d9f821",
     "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx": "041214548bf3ebf562aae5c17fa5d90008469e1c13dc8fd88c0e3d1ee609bfd5",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "ace8b67c3391736605ace8d1a41410228923a104396fbc8bdc0c46474c81abd3",
@@ -14242,6 +14315,8 @@
     "tdf-hq-ui/src/utils/__tests__/roles.test.ts": "f5aa3c92f8f8f71fc7690ef46a1be60b768c4d0ea40a714da39b04c817d272fd",
     "tdf-hq-ui/src/utils/accessControl.test.ts": "633c8a7d0f6e20eb90fdd06a18eb198731096e5b2bcbc040d78bb452311e463c",
     "tdf-hq-ui/src/utils/accessControl.ts": "4550fd019b3553b00074186bf7e1614e9209c97cb4c94c5a485cb1ea102536c2",
+    "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts": "b7a7422e67a3b5b9c8e6576adb0cd6b85499d2f5411b74cec1b0b658394d2777",
+    "tdf-hq-ui/src/utils/artistEnrichmentReview.ts": "f4b507724bc41be6f64d46f10b2f775316f7bc9ea139e7f0c8261a79fe926aae",
     "tdf-hq-ui/src/utils/authErrorMessage.test.ts": "9c5762f7ecc5a28095746ce56460955fc98de234efbf7fa185eb9d4ec6c6eb6e",
     "tdf-hq-ui/src/utils/authErrorMessage.ts": "1983475914b88d680127ff4e2beb785d5e550d84821895b912e97496739890f8",
     "tdf-hq-ui/src/utils/bottomDock.test.tsx": "cd6a5f4017090e3d6073f7cb0b097a7d0ee8c03c393446eb3b50d973076b1a44",
@@ -18333,6 +18408,10 @@
       {
         "requirement": "OPS-ENRICH-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "ART-ENRICH-REVIEW-001",
+        "relationship": "implementation"
       }
     ],
     ".github/workflows/artist-enrichment-daily.yml": [
@@ -18344,6 +18423,10 @@
     "scripts/__tests__/artist-enrichment.test.mjs": [
       {
         "requirement": "OPS-ENRICH-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "ART-ENRICH-REVIEW-001",
         "relationship": "tests"
       }
     ],
@@ -25852,6 +25935,30 @@
         "requirement": "SYS-CI-SELECTED-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq-ui/src/utils/artistEnrichmentReview.ts": [
+      {
+        "requirement": "ART-ENRICH-REVIEW-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx": [
+      {
+        "requirement": "ART-ENRICH-REVIEW-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts": [
+      {
+        "requirement": "ART-ENRICH-REVIEW-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx": [
+      {
+        "requirement": "ART-ENRICH-REVIEW-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -27006,11 +27113,15 @@
     {
       "id": "SURFACE-f6500b8addb3b248",
       "path": "scripts/__tests__/artist-enrichment.test.mjs",
-      "sha256": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
+      "sha256": "1279298dc4cd6c11107577ac67d85df7931d67497060338948aaf82c8363df01",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "OPS-ENRICH-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "ART-ENRICH-REVIEW-001",
           "relationship": "tests"
         }
       ]
@@ -28258,11 +28369,15 @@
     {
       "id": "SURFACE-ae1fc3f773e478bd",
       "path": "scripts/artist-enrichment.mjs",
-      "sha256": "df64d9cdd92fb41e66f1ac33dcc137eab5245a1e0e9a834065a4f363707c383d",
+      "sha256": "40fa05c40650b4fbdc94ab06533481e93391a402cf8f40332d3a598aa7cd9e7d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "OPS-ENRICH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "ART-ENRICH-REVIEW-001",
           "relationship": "implementation"
         }
       ]
@@ -37172,11 +37287,28 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-667d36e152a1aba4",
+      "path": "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
+      "sha256": "33b3ffcac89df7788cd7888c6bc63a41e3fd708615f5b46af9f174dc808d8224",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ART-ENRICH-REVIEW-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7d1cdc171a244d93",
       "path": "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
-      "sha256": "923f72c77a82ef34dc9b94b7d42fa9084b3c9ff2ab82dbf2c0d7905d1d3fcd70",
+      "sha256": "d4c78364465efb2470458c71eabb7e90ce7943aa6005852aae064c352e6b0005",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ART-ENRICH-REVIEW-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-211c2d4c89fbcb63",
@@ -40043,6 +40175,30 @@
       "requirements": [
         {
           "requirement": "NAV-MENU-COVERAGE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6b4c28fb8a720e4d",
+      "path": "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts",
+      "sha256": "b7a7422e67a3b5b9c8e6576adb0cd6b85499d2f5411b74cec1b0b658394d2777",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ART-ENRICH-REVIEW-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-25dc9d897d7829c5",
+      "path": "tdf-hq-ui/src/utils/artistEnrichmentReview.ts",
+      "sha256": "f4b507724bc41be6f64d46f10b2f775316f7bc9ea139e7f0c8261a79fe926aae",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ART-ENRICH-REVIEW-001",
           "relationship": "implementation"
         }
       ]
@@ -53501,7 +53657,6 @@
     "SURFACE-a43637de6a57ae59",
     "SURFACE-34d2f5e2182b0188",
     "SURFACE-441e024eb370fe5d",
-    "SURFACE-7d1cdc171a244d93",
     "SURFACE-67734f5e4107b4c6",
     "SURFACE-fffcbad1b08fd3bd",
     "SURFACE-e7e38d2c86b603f3",
@@ -55779,7 +55934,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "370509c5fcdbb712c771ee57749cc8dd2967899b474e582da30e93411788c359",
+      "sourceSha256": "a259fe2d7bc4860f088d63fc3767826083e8f61a92e6ee0825a11a1386550816",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -55807,7 +55962,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "370509c5fcdbb712c771ee57749cc8dd2967899b474e582da30e93411788c359",
+      "sourceSha256": "a259fe2d7bc4860f088d63fc3767826083e8f61a92e6ee0825a11a1386550816",
       "definition": {
         "states": [
           "absent",
@@ -55837,7 +55992,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "370509c5fcdbb712c771ee57749cc8dd2967899b474e582da30e93411788c359",
+      "sourceSha256": "a259fe2d7bc4860f088d63fc3767826083e8f61a92e6ee0825a11a1386550816",
       "definition": {
         "export": [
           "queued",
@@ -78311,7 +78466,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 156,
+    "PARTIAL": 157,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
