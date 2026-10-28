@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "59539a16e8352cdec469538b7cb62eacd169ff3a",
+  "sourceTree": "95ddf725ba121af5131fe0314ed3f77d7cedd7b8",
+  "baselineCommit": "1667d586b3901f9470baaedb6024a34e6e388118",
+  "registeredSourceInputs": 1408,
+  "sourceDigest": "bcfe85c85974e6c43aaa2b53056893eac12647fa233092096782eb790ad74c29",
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "executionHashesMatchCommittedTreeAndMobilePin": true,
+  "newContract": {
+    "path": "formal/system/legacy-ticket-inventory.md",
+    "sha256": "abcf11f48af8acafaf29e3feebf3fd323fe0ebcca20322b8099bef12f590b122",
+    "discoveryEntryMatches": true
+  },
+  "cleanCommittedReporterPass": true,
+  "immutableSourceAdmissionPass": true,
+  "mainObserved": "e0cb1a7f3dc9a65260bd0b2fbd67a6316f93f2f7",
+  "parentPR": 658,
+  "requiredReviewPending": true,
+  "currentMainCompositionPending": true,
+  "release": "BLOCKED",
+  "scope": "Implementation TESTED; design BOUNDED_VERIFIED. Source correspondence is not reproducible binary build, provider-payment attestation or full workflow proof.",
+  "servingExecutable": {
+    "explicitCommittedStackBuildPassed": true,
+    "sourceCommit": "59539a16e8352cdec469538b7cb62eacd169ff3a",
+    "sourceTree": "95ddf725ba121af5131fe0314ed3f77d7cedd7b8",
+    "sourceWorktreeDirty": false,
+    "binarySha256": "544b0f81b19071788236e7192da4f23d21c864db30ee4a9f7549e8335082df9e",
+    "apiSourceDigest": "f0cd84df07395d2d54eb717fdf5e2971640242988a3915648508bbdeb8bb4d26",
+    "compiledDeclarationSnapshotPass": true
+  },
+  "pullRequest": 659
+}
