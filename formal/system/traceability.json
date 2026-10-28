@@ -9255,7 +9255,7 @@
     {
       "id": "SYS-WEB-LAYOUT-001",
       "title": "Public mobile layouts stay usable at 360px",
-      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping. Radio minimization and restoration stay reachable at 320-390 CSS px with 44px touch targets; header controls never initiate panel dragging, and the minimized restore control stays above the global player.",
+      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping. Radio minimization and restoration stay reachable at 320-430 CSS px with 44px touch targets; header controls never initiate panel dragging, and the minimized restore control stays above the global player.",
       "authority": "product owner request after real-user mobile test (2026-10-07)",
       "domain": "SYS",
       "actors": [
@@ -9327,7 +9327,7 @@
       "critical": false,
       "property": "NoSqueezeNoOverflow and LegibleControls",
       "contract": "formal/system/mobile-entry-ux.md",
-      "verification": "Layout jest tests and browser geometry/contrast assertions at 360px. Radio dock/panel minimization and restoration at 320, 360 and 390px, pointer-event isolation and persisted visibility.",
+      "verification": "Layout jest tests and browser geometry/contrast assertions at 360px. Radio dock/panel minimization and restoration at 320, 360, 390 and 430px, pointer-event isolation and persisted visibility.",
       "evidence": "PublicBookingPage, RadioWidget layout and LiveSessionPublicPage tests; e2e mobile-layout-regressions.",
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
@@ -13250,7 +13250,7 @@
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
     "e2e/web/legacy-provider-playback.spec.mjs": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
     "e2e/web/marketplace-cart.spec.mjs": "7c8f46e68a92b158c491fe4866d3f477d67d774e7b99e8f85302f0507ba31385",
-    "e2e/web/mobile-layout-regressions.spec.mjs": "a52e17ccadc14c889cfde395b478395b560d031fafee9d81c1f8a6cca5d5e768",
+    "e2e/web/mobile-layout-regressions.spec.mjs": "fafee37b1a00333948c7974c3fc29f353d8b84dd2a15a763f948d761e56a416f",
     "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
     "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
@@ -13953,7 +13953,7 @@
     "tdf-hq-ui/src/components/PublicBranding.tsx": "9ce84c4ecc6b7f3e427f814310d7e2baf2817c4237e10a980cadb89fa5661970",
     "tdf-hq-ui/src/components/PublicWelcome.tsx": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "af1a92cb76cf700c5d2e1e2a7b46b80757c4e342ae2cb929d75bc64c3abb4c0a",
-    "tdf-hq-ui/src/components/RadioWidget.tsx": "350ce9151502118e8feda55c45378eb58ad47c2eff4a3a102e228912d7a074af",
+    "tdf-hq-ui/src/components/RadioWidget.tsx": "dbb4dc408c53fc9b6dbaea0187d05c9e1b23c1292e04afe0a62df06aa9689e0a",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts": "f2f2e641146ac3a31efdd826db24fcbb6dc490796ea6c975afdf2be56775c5b0",
     "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
@@ -26274,7 +26274,7 @@
     {
       "id": "SURFACE-0ff897863a04e3f4",
       "path": "e2e/web/mobile-layout-regressions.spec.mjs",
-      "sha256": "a52e17ccadc14c889cfde395b478395b560d031fafee9d81c1f8a6cca5d5e768",
+      "sha256": "fafee37b1a00333948c7974c3fc29f353d8b84dd2a15a763f948d761e56a416f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34845,7 +34845,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "350ce9151502118e8feda55c45378eb58ad47c2eff4a3a102e228912d7a074af",
+      "sha256": "dbb4dc408c53fc9b6dbaea0187d05c9e1b23c1292e04afe0a62df06aa9689e0a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55580,7 +55580,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f2498dc3199a3dadbe85aa84441612b34822f50251528fe57e4a484da09416d8",
+      "sourceSha256": "14fb01ee7b0d228f71692e54d54bd22ff98f4b9612946736cee7a5c21cf17eb8",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -55608,7 +55608,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f2498dc3199a3dadbe85aa84441612b34822f50251528fe57e4a484da09416d8",
+      "sourceSha256": "14fb01ee7b0d228f71692e54d54bd22ff98f4b9612946736cee7a5c21cf17eb8",
       "definition": {
         "states": [
           "absent",
@@ -55638,7 +55638,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f2498dc3199a3dadbe85aa84441612b34822f50251528fe57e4a484da09416d8",
+      "sourceSha256": "14fb01ee7b0d228f71692e54d54bd22ff98f4b9612946736cee7a5c21cf17eb8",
       "definition": {
         "export": [
           "queued",

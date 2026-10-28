@@ -36,7 +36,7 @@ This contract covers web (`tdf-hq-ui`) behavior only. Backend authorization and 
 ## SYS-WEB-LAYOUT-001: usable public layouts at 360px
 - Booking, Live Sessions and pages with the docked radio bar do not squeeze sibling columns or overflow horizontally.
 - Fixed bars never cover the page end or submit controls.
-- At 320-390 CSS px, the radio bar exposes a 44px minimize control and a reachable restore action. The open panel exposes a 44px minimize control without horizontal clipping. Taps on header buttons or their icons do not initiate dragging or cancel native activation.
+- At 320-430 CSS px, the radio bar exposes a 44px minimize control and a reachable restore action. The open panel exposes a 44px minimize control without horizontal clipping. Taps on header buttons or their icons do not initiate dragging or cancel native activation.
 - Minimizing/restoring changes presentation only; the selected station and playback state survive. The visibility choice persists across reloads. The restore control sits above any docked global player and the device safe area.
 - Controls on dark surfaces keep at least 3:1 icon contrast and 4.5:1 text contrast.
 

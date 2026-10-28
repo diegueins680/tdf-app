@@ -241,10 +241,11 @@ test('Docked radio bar fits 360px and never hides the bottom of the page @mobile
   )).toBe('');
 });
 
-for (const width of [320, 360, 390]) {
+for (const width of [320, 360, 390, 430]) {
   test(`Radio minimizes and restores with reachable controls at ${width}px @mobile-flow`, async ({ page, baseURL }) => {
     await page.setViewportSize({ width, height: 760 });
     await fixture(page, baseURL, { authenticated: true });
+    await page.addInitScript(() => localStorage.setItem('radio-position', JSON.stringify({ x: 900, y: 900 })));
     await page.goto('/live-sessions/registro');
     const bar = page.getByTestId('radio-docked-bar');
     await expect(bar).toBeVisible({ timeout: 15_000 });
@@ -267,6 +268,7 @@ for (const width of [320, 360, 390]) {
     expect(box.height).toBeGreaterThanOrEqual(44);
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(width);
+    await expect.poll(() => fitsViewport(page)).toBe(true);
     const header = minimize.locator('xpath=..');
     const before = await header.boundingBox();
     const defaultAllowed = await minimize.evaluate((button) => button.querySelector('svg').dispatchEvent(

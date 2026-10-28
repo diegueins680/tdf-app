@@ -777,6 +777,13 @@ export default function RadioWidget() {
     const initial = clampPosition(width - 320, height - 320);
     setPosition(initial);
   }, [clampPosition]);
+  // Stored coordinates may come from a wider screen. Once the panel is
+  // mounted, clamp against its actual dimensions so its controls stay in view.
+  useEffect(() => {
+    if (hideRadioForRoute || miniBarDismissed || miniBarVisible) return;
+    setPosition((current) => clampPosition(current.x, current.y));
+  }, [clampPosition, expanded, hideRadioForRoute, miniBarDismissed, miniBarVisible, panelSize]);
+
   const resetPosition = useCallback(() => {
     if (typeof window === 'undefined') return;
     const width = window.innerWidth;

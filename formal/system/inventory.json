@@ -3002,7 +3002,7 @@
     {
       "id": "SURFACE-0ff897863a04e3f4",
       "path": "e2e/web/mobile-layout-regressions.spec.mjs",
-      "sha256": "a52e17ccadc14c889cfde395b478395b560d031fafee9d81c1f8a6cca5d5e768",
+      "sha256": "fafee37b1a00333948c7974c3fc29f353d8b84dd2a15a763f948d761e56a416f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7766,7 +7766,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "350ce9151502118e8feda55c45378eb58ad47c2eff4a3a102e228912d7a074af",
+      "sha256": "dbb4dc408c53fc9b6dbaea0187d05c9e1b23c1292e04afe0a62df06aa9689e0a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27521,7 +27521,7 @@
     },
     {
       "path": "formal/system/mobile-entry-ux.md",
-      "sha256": "0aee0fc6b1baeb0d53e5b84e94950a1a340874808bde20cd25c665404ee9c4b7",
+      "sha256": "0544a1857d939537e4a092f6fb5a03f9f770801f6ce20ca5188d74b9a876bc90",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27801,7 +27801,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f2498dc3199a3dadbe85aa84441612b34822f50251528fe57e4a484da09416d8",
+      "sha256": "14fb01ee7b0d228f71692e54d54bd22ff98f4b9612946736cee7a5c21cf17eb8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
