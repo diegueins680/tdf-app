@@ -3841,7 +3841,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "15f35c2886244d7bb30173c950a909768699b1845c78f843edabed1ee7f7be3b",
+      "sha256": "be9d037455a0e8c249e025aa5e7a8786b95f444458d05db06dfff6079d5195d2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15337,7 +15337,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "ef0b6635c345a9b2c4518b09f000bbadd96886906fba1d3f35a3d58cdd27d33b",
+      "sha256": "b141a6e2099134c89c0c0ce3d6ebfecaef4345b6cc8f577c9e99fa125716459c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15799,7 +15799,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "d5e6206932b71d56365af00d5d35d3402f195f6e2a1725bb8fe9eec4dc464300",
+      "sha256": "6d930a53f56f19830529780161cab596958feda2004bd93b36fbba4a1c1f0e46",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27415,6 +27415,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/legacy-refund-history.md",
+      "sha256": "9957d1dc5550ae031d91978e8ef395f48f1dee027a8dbcefb61f63b934819722",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-refund-inventory.md",
       "sha256": "881d3d000ab900d0efce5bbecc67d0757350e27a4604cedb64f775c07d909922",
       "authority": "inferred",
@@ -27787,7 +27794,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b2b2a89b8dcbfe09f3edd558b4d1f19912a4efbda28fbfe0ef550cac4545390f",
+      "sha256": "c847090767ffccfc42f76a26de7b5c71b587427f55aeb2824f5fe58d88327c16",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

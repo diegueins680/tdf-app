@@ -5778,18 +5778,37 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                     }
                         -- Commit a non-expiring execution fence before provider IO.
                         -- A lost response or process crash must never grant a second POST.
-                        claimed <- liftIO $ runSqlPool
-                            (updateWhereCount
-                                [ TicketRefundRequestId ==. refundKey
-                                , TicketRefundRequestOrderId ==. orderKey
-                                , TicketRefundRequestAmountCents ==. ticketRefundRequestAmountCents refund
-                                , TicketRefundRequestStatus ==. "pending"
-                                ]
-                                [ TicketRefundRequestStatus =. "processing"
-                                , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
-                                , TicketRefundRequestApprovedAt =. Just now
-                                , TicketRefundRequestUpdatedAt =. now
-                                ]) envPool
+                        claim <- liftIO $ runSqlPoolWithIsolation
+                            (do
+                                -- Creation uses the same event -> order locks.
+                                -- Count ALL history after waiting, including rejected
+                                -- or completed identities; ambiguity needs reconciliation.
+                                lockedEvent <- lockSocialEventForMutation eventKey
+                                backendName <- T.toCaseFold <$> getRDBMS
+                                let lockSuffix = if "postgres" `T.isInfixOf` backendName then " FOR UPDATE" else ""
+                                lockedOrders <- rawSql
+                                    ("SELECT ?? FROM event_ticket_order WHERE id=?" <> lockSuffix)
+                                    [toPersistValue orderKey] :: SqlPersistT IO [Entity EventTicketOrder]
+                                history <- selectKeysList [TicketRefundRequestOrderId ==. orderKey] []
+                                currentBinding <- TicketRefund.loadTicketRefundReference refundKey
+                                if history /= [refundKey] || isJust currentBinding then
+                                    pure (Left err409{errBody = "Refund history requires reconciliation"})
+                                else case (lockedEvent, lockedOrders) of
+                                    (Just _, [Entity _ lockedOrder])
+                                        | eventTicketOrderEventId lockedOrder == eventKey -> Right <$> updateWhereCount
+                                            [ TicketRefundRequestId ==. refundKey
+                                            , TicketRefundRequestOrderId ==. orderKey
+                                            , TicketRefundRequestAmountCents ==. ticketRefundRequestAmountCents refund
+                                            , TicketRefundRequestStatus ==. "pending"
+                                            ]
+                                            [ TicketRefundRequestStatus =. "processing"
+                                            , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
+                                            , TicketRefundRequestApprovedAt =. Just now
+                                            , TicketRefundRequestUpdatedAt =. now
+                                            ]
+                                    _ -> pure (Left err409{errBody = "Refund order changed; reload the request"})
+                            ) envPool ReadCommitted
+                        claimed <- either throwError pure claim
                         unless (claimed == 1) $
                             throwError err409{errBody = "Refund request was already claimed or changed"}
                         result <- liftIO $ issueStripeRefund stripeCfg piId (ticketRefundRequestAmountCents refund)

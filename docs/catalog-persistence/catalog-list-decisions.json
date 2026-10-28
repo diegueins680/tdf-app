@@ -3,10 +3,10 @@
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "reconciliation": {
-    "preservedDecisions": 1206,
-    "reviewedByPolicy": 146,
+    "preservedDecisions": 1352,
+    "reviewedByPolicy": 0,
     "removedStaleDecisions": 0,
-    "reviewBatch": "deterministic-policy-v3",
+    "reviewBatch": "legacy-refund-history-20261028",
     "consolidatedMainRetirements": {
       "sourceMain": "fdac8e76523befee1603f49f6c7cf7d00762931b",
       "reason": "These fingerprints have no current candidate after combining the reviewed parents. Preserve full decisions and source locators as history; active Mobile/manifest successor decisions retain both parent decisions. No catalog values are deleted by this classification reconciliation.",
@@ -602,7 +602,8 @@
       "method": "source-review-2026-10-28",
       "preservedParentNormativeDecisions": 1351,
       "note": "One newly discovered finite verification domain was source-reviewed after canonical policy generation; prior review records and register order are preserved."
-    }
+    },
+    "manuallyReviewedNewFixtures": 1
   },
   "decisions": [
     {
@@ -19640,6 +19641,32 @@
         "consumerCount": 189,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "edc4bc7cc2815c51a093",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Finite verification inputs mirror existing ticket_refund_request status history; test-only consumer, with no new selectable values or runtime authority. The history guard counts all identities independent of status.",
+      "reviewed": true,
+      "reviewMethod": "manual-bounded-fixture-review",
+      "reviewBatch": "legacy-refund-history-20261028",
+      "evidence": {
+        "file": "scripts/__tests__/ticket-admission-model.test.mjs",
+        "line": 563,
+        "kind": "array",
+        "name": "statuses",
+        "valueCount": 4,
+        "consumerCount": 309,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": [
+          "67a832e9fad8b0ede0bb",
+          "dc3e03a3731e9ec343bb",
+          "1925bc5bf3a9d578b16b"
+        ]
       }
     }
   ]
