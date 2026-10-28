@@ -633,3 +633,95 @@ test('legacy history controls detect omitted history and pending-only filtering'
     t.diagnostic(JSON.stringify({ control, ...result }));
   }
 });
+
+// Tier editing uses an atomic current-sold predicate; reservation reads the tier
+// under its row lock. Event capacity is fixed per input here. This model does
+// not refine SQL or prove fresh workflow, pricing, identity or provider behavior.
+function exploreTierEdits({ staleEditSold = false, staleTierTotal = false, omitTierLock = false } = {}) {
+  let inputs = 0, states = 0, transitions = 0;
+  const witnesses = {};
+  const coverage = new Set();
+  for (const sold of [0, 1]) for (const total of [2, 4]) {
+    for (const requested of [0, 1, 4]) for (const quantity of [1, 3]) for (const capacity of [null, 4]) {
+      inputs++;
+      const initial = { sold, total, requested, quantity, capacity };
+      const queue = [{ sold, total, phase: [0, 0], editSold: null, outerTotal: null,
+        bound: null, tierLocked: false, trace: [] }];
+      const seen = new Set();
+      while (queue.length) {
+        const current = queue.shift();
+        const { trace, ...identity } = current;
+        const key = JSON.stringify(identity);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (current.sold > current.total) witnesses.SoldNeverExceedsTierTotal ??= { initial, trace };
+        const push = (next, label) => {
+          transitions++;
+          coverage.add(label);
+          next.trace = [...trace, label];
+          queue.push(next);
+        };
+        if (current.phase[0] === 0) {
+          const next = structuredClone(current);
+          next.editSold = current.sold;
+          next.phase[0] = requested >= current.sold ? 1 : 3;
+          push(next, 'edit:outer-read');
+        } else if (current.phase[0] === 1 && !current.tierLocked) {
+          const next = structuredClone(current);
+          const allowed = requested >= (staleEditSold ? current.editSold : current.sold);
+          if (allowed) next.total = requested;
+          next.phase[0] = 3;
+          push(next, allowed ? 'edit:commit' : 'edit:conflict');
+        }
+        if (current.phase[1] === 0) {
+          const next = structuredClone(current);
+          next.outerTotal = current.total;
+          next.phase[1] = quantity <= current.total - current.sold ? 1 : 3;
+          push(next, 'purchase:outer-read');
+        } else if (current.phase[1] === 1) {
+          const next = structuredClone(current);
+          next.tierLocked = !omitTierLock;
+          next.bound = staleTierTotal ? current.outerTotal : current.total;
+          next.phase[1] = 2;
+          push(next, 'purchase:locked-read');
+        } else if (current.phase[1] === 2) {
+          const next = structuredClone(current);
+          const allowed = quantity <= current.bound - current.sold
+            && (capacity === null || current.sold + quantity <= capacity);
+          if (allowed) next.sold += quantity;
+          next.phase[1] = 3;
+          next.tierLocked = false;
+          push(next, allowed ? 'purchase:commit' : 'purchase:conflict');
+        }
+      }
+      states += seen.size;
+    }
+  }
+  return { inputs, states, transitions, coverage: [...coverage].sort(),
+    violations: Object.keys(witnesses), witnesses };
+}
+
+test('bounded tier editing and reservation preserve current sold bounds in either order', t => {
+  const result = exploreTierEdits();
+  assert.equal(result.inputs, 48);
+  assert.equal(result.states, 606);
+  assert.equal(result.transitions, 658);
+  assert.deepEqual(result.violations, []);
+  for (const label of ['edit:commit', 'edit:conflict', 'purchase:commit', 'purchase:conflict']) {
+    assert.ok(result.coverage.includes(label), `Missing tier scenario: ${label}`);
+  }
+  t.diagnostic(JSON.stringify({ model: 'tier-edit-reservation', ...result }));
+});
+
+test('tier controls detect stale sold, stale total and omitted tier locking', t => {
+  for (const control of ['staleEditSold', 'staleTierTotal', 'omitTierLock']) {
+    const result = exploreTierEdits({ [control]: true });
+    const bounds = { staleEditSold: [606, 658], staleTierTotal: [598, 658], omitTierLock: [642, 710] };
+    assert.equal(result.states, bounds[control][0]);
+    assert.equal(result.transitions, bounds[control][1]);
+    assert.deepEqual(result.violations, ['SoldNeverExceedsTierTotal']);
+    const trace = result.witnesses.SoldNeverExceedsTierTotal.trace;
+    assert.ok(trace.includes('edit:commit') && trace.includes('purchase:commit'));
+    t.diagnostic(JSON.stringify({ control, ...result }));
+  }
+});

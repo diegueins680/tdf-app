@@ -214,6 +214,7 @@ import Database.PostgreSQL.Simple (SqlError (..))
 import Data.Time.Clock (addUTCTime)
 import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
+import qualified TDF.Ticketing.Inventory as TicketInventory
 import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Server.TicketManualPayments as ManualPayments
 import qualified TDF.Server.TicketPaymentReceipt as Receipt
@@ -4506,10 +4507,14 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 | existingKey /= tierKey ->
                     throwError err409{errBody = "ticket tier code already exists for this event"}
             _ -> pure ()
-        liftIO $
+        mUpdated <- liftIO $
             runSqlPool
-                ( update
-                    tierKey
+                ( do
+                  changed <- updateWhereCount
+                    [ EventTicketTierId ==. tierKey
+                    , EventTicketTierEventId ==. eventKey
+                    , EventTicketTierQuantitySold <=. ticketTierQuantityTotal dto
+                    ]
                     [ EventTicketTierCode =. tierCode
                     , EventTicketTierName =. tierName
                     , EventTicketTierDescription =. cleanMaybeText (ticketTierDescription dto)
@@ -4522,11 +4527,11 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     , EventTicketTierPosition =. ticketTierPosition dto
                     , EventTicketTierUpdatedAt =. now
                     ]
+                  if changed == 1 then getEntity tierKey else pure Nothing
                 )
                 envPool
-        mUpdated <- liftIO $ runSqlPool (getEntity tierKey) envPool
         maybe
-            (throwError err500{errBody = "Could not update ticket tier"})
+            (throwError err409{errBody = "Ticket tier changed; quantity cannot be below sold quantity"})
             (pure . ticketTierEntityToDTO eventKey)
             mUpdated
 
@@ -4675,50 +4680,25 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             liftIO $
                 runSqlPool
                     ( do
-                        lockedEvents <-
-                            rawSql
-                                "SELECT ?? FROM social_event WHERE id = ? FOR UPDATE"
-                                [toPersistValue eventKey]
-                        when (null (lockedEvents :: [Entity SocialEvent])) $
-                            fail "Event not found while reserving tickets"
-                        soldAcross <- selectList [EventTicketTierEventId ==. eventKey] []
-                        let soldCount =
-                                sum (map (eventTicketTierQuantitySold . entityVal) soldAcross)
-                            capacityAvailable =
-                                maybe
-                                    True
-                                    (\cap -> soldCount + ticketPurchaseQuantity <= cap)
-                                    (socialEventCapacity eventVal)
-                        if not capacityAvailable
+                        reserved <- TicketInventory.reserveTicketInventory
+                            eventKey tierKey ticketPurchaseQuantity now
+                        if not reserved
                             then pure Nothing
                             else do
-                                reservedCount <-
-                                    updateWhereCount
-                                        [ EventTicketTierId ==. tierKey
-                                        , EventTicketTierIsActive ==. True
-                                        , EventTicketTierQuantitySold
-                                            <=. eventTicketTierQuantityTotal tier - ticketPurchaseQuantity
-                                        ]
-                                        [ EventTicketTierQuantitySold +=. ticketPurchaseQuantity
-                                        , EventTicketTierUpdatedAt =. now
-                                        ]
-                                if reservedCount == 0
-                                    then pure Nothing
-                                    else do
-                                        orderKey <- insert orderRecord
-                                        codes <-
-                                            issueMissingTicketsForOrder now orderKey orderRecord
-                                        tickets <-
-                                            selectList
-                                                [EventTicketOrderRefId ==. orderKey]
-                                                [Asc EventTicketId]
-                                        pure . Just $
-                                            ( ticketOrderEntityToDTO
-                                                (Entity orderKey orderRecord)
-                                                tickets
-                                            , orderRecord
-                                            , codes
-                                            )
+                                orderKey <- insert orderRecord
+                                codes <-
+                                    issueMissingTicketsForOrder now orderKey orderRecord
+                                tickets <-
+                                    selectList
+                                        [EventTicketOrderRefId ==. orderKey]
+                                        [Asc EventTicketId]
+                                pure . Just $
+                                    ( ticketOrderEntityToDTO
+                                        (Entity orderKey orderRecord)
+                                        tickets
+                                    , orderRecord
+                                    , codes
+                                    )
                     )
                     envPool
         (orderDto, orderRecord, ticketCodes) <-
@@ -5294,32 +5274,9 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                 termsVersionAtHold <- lockActiveTicketTermsVersion now eventKey
                                 when (termsVersionAtHold /= mTermsVersion) $
                                     liftIO (throwIO ticketTermsChangedError)
-                                soldAcross <-
-                                    selectList [EventTicketTierEventId ==. eventKey] []
-                                let soldCount =
-                                        sum
-                                            (map (eventTicketTierQuantitySold . entityVal) soldAcross)
-                                    capacityAvailable =
-                                        maybe
-                                            True
-                                            (\cap -> soldCount + ticketPurchaseQuantity <= cap)
-                                            (socialEventCapacity eventVal)
-                                if not capacityAvailable
-                                    then pure Nothing
-                                    else do
-                                        reservedCount <-
-                                            updateWhereCount
-                                                [ EventTicketTierId ==. tierKey
-                                                , EventTicketTierIsActive ==. True
-                                                , EventTicketTierQuantitySold
-                                                    <=. eventTicketTierQuantityTotal tier - ticketPurchaseQuantity
-                                                ]
-                                                [ EventTicketTierQuantitySold +=. ticketPurchaseQuantity
-                                                , EventTicketTierUpdatedAt =. now
-                                                ]
-                                        if reservedCount == 0
-                                            then pure Nothing
-                                            else createReservedOrder
+                                reserved <- TicketInventory.reserveTicketInventory
+                                    eventKey tierKey ticketPurchaseQuantity now
+                                if reserved then createReservedOrder else pure Nothing
                             )
                             envPool
                 createResult <- liftIO (tryAny createOrder)

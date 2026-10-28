@@ -1,0 +1,13 @@
+  legacy ticket inventory mutation concurrency
+    serializes a tier reduction against a valid purchase: checkout=False, purchaseFirst=False [✔]
+    serializes a tier reduction against a valid purchase: checkout=False, purchaseFirst=True [✔]
+    serializes a tier reduction against a valid purchase: checkout=True, purchaseFirst=False [✔]
+    serializes a tier reduction against a valid purchase: checkout=True, purchaseFirst=True [✔]
+    preserves empty, exact-sold and increased tier capacity: checkout=False [✔]
+    preserves empty, exact-sold and increased tier capacity: checkout=True [✔]
+    preserves event capacity boundaries: checkout=False, capacity=Nothing [✔]
+    preserves event capacity boundaries: checkout=False, capacity=Just 2 [✔]
+    preserves event capacity boundaries: checkout=False, capacity=Just 3 [✔]
+    preserves event capacity boundaries: checkout=True, capacity=Nothing [✔]
+    preserves event capacity boundaries: checkout=True, capacity=Just 2 [✔]
+    preserves event capacity boundaries: checkout=True, capacity=Just 3 [✔]
