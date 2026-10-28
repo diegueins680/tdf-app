@@ -725,3 +725,109 @@ test('tier controls detect stale sold, stale total and omitted tier locking', t 
     t.diagnostic(JSON.stringify({ control, ...result }));
   }
 });
+
+// Event modes abstract the existing eligibility predicate, not the complete
+// workflow graph or mutable capability catalog. One ordinary event mutation
+// and one new hold serialize on Event. Previously admitted orders may remain.
+function explorePurchaseEligibility({ staleEligibility = false, omitEventLock = false, effectsBeforeCheck = false } = {}) {
+  let inputs = 0, states = 0, transitions = 0, retainedAfterClosureStates = 0;
+  const witnesses = {};
+  const coverage = new Set();
+  for (const initial of ['open', 'closed', 'private']) for (const target of ['closed', 'private']) {
+    inputs++;
+    const queue = [{ mode: initial, lock: null, phase: [0, 0], snapshot: null,
+      observed: null, holds: 0, unauthorized: 0, result: null, trace: [] }];
+    const seen = new Set();
+    while (queue.length) {
+      const current = queue.shift();
+      const { trace, ...identity } = current;
+      const key = JSON.stringify(identity);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (current.unauthorized) witnesses.NoNewHoldAfterClosure ??= { initial, target, trace };
+      if (current.result && current.result !== 'accepted' && current.holds) {
+        witnesses.RefusalHasNoEffects ??= { initial, target, trace };
+      }
+      if (current.mode !== 'open' && current.result === 'accepted' && !current.unauthorized) {
+        retainedAfterClosureStates++;
+      }
+      const push = (next, label) => {
+        transitions++;
+        coverage.add(label);
+        next.trace = [...trace, label];
+        queue.push(next);
+      };
+      if (current.phase[0] === 0 && current.lock === null) {
+        const next = structuredClone(current);
+        next.lock = 'editor';
+        next.phase[0] = 1;
+        push(next, 'editor:lock');
+      } else if (current.phase[0] === 1) {
+        const next = structuredClone(current);
+        next.mode = target;
+        next.phase[0] = 2;
+        next.lock = null;
+        push(next, `editor:${target}`);
+      }
+      if (current.phase[1] === 0) {
+        const next = structuredClone(current);
+        next.snapshot = current.mode;
+        next.phase[1] = current.mode === 'open' ? 1 : 4;
+        if (current.mode !== 'open') next.result = current.mode;
+        push(next, current.mode === 'open' ? 'purchase:outer-read' : 'purchase:outer-refuse');
+      } else if (current.phase[1] === 1 && (omitEventLock || current.lock === null)) {
+        const next = structuredClone(current);
+        if (!omitEventLock) next.lock = 'buyer';
+        next.phase[1] = 2;
+        push(next, 'purchase:lock');
+      } else if (current.phase[1] === 2) {
+        const next = structuredClone(current);
+        next.observed = staleEligibility ? current.snapshot : current.mode;
+        next.phase[1] = 3;
+        push(next, effectsBeforeCheck ? 'purchase:prepare-effects-before-check' : 'purchase:current-check');
+      } else if (current.phase[1] === 3) {
+        const next = structuredClone(current);
+        const accepted = current.observed === 'open';
+        // The mutant commits prepared effects despite a returned refusal;
+        // temporary writes that later roll back are not durable violations.
+        if (accepted || effectsBeforeCheck) {
+          next.holds++;
+          if (current.mode !== 'open') next.unauthorized++;
+        }
+        next.result = accepted ? 'accepted' : current.observed;
+        next.phase[1] = 4;
+        if (current.lock === 'buyer') next.lock = null;
+        push(next, accepted ? 'purchase:accept' : 'purchase:deny');
+      }
+    }
+    states += seen.size;
+  }
+  return { inputs, states, transitions, retainedAfterClosureStates,
+    coverage: [...coverage].sort(), violations: Object.keys(witnesses).sort(), witnesses };
+}
+
+test('bounded new-hold admission checks current locked event eligibility before effects', t => {
+  const result = explorePurchaseEligibility();
+  assert.equal(result.inputs, 6);
+  assert.equal(result.states, 56);
+  assert.equal(result.transitions, 58);
+  assert.equal(result.retainedAfterClosureStates, 2);
+  assert.deepEqual(result.violations, []);
+  assert.ok(result.retainedAfterClosureStates > 0);
+  for (const label of ['editor:closed', 'editor:private', 'purchase:accept', 'purchase:deny', 'purchase:outer-refuse']) {
+    assert.ok(result.coverage.includes(label), `Missing eligibility scenario: ${label}`);
+  }
+  t.diagnostic(JSON.stringify({ model: 'new-hold-eligibility', ...result }));
+});
+
+test('eligibility controls detect cached predicates, omitted locking and effects before refusal', t => {
+  for (const control of ['staleEligibility', 'omitEventLock', 'effectsBeforeCheck']) {
+    const result = explorePurchaseEligibility({ [control]: true });
+    assert.equal(result.states, control === 'omitEventLock' ? 64 : 56);
+    assert.equal(result.transitions, control === 'omitEventLock' ? 74 : 58);
+    assert.match(result.witnesses.NoNewHoldAfterClosure.trace.at(-1), /purchase:(accept|deny)$/);
+    assert.ok(result.violations.includes('NoNewHoldAfterClosure'));
+    assert.equal(result.violations.includes('RefusalHasNoEffects'), control === 'effectsBeforeCheck');
+    t.diagnostic(JSON.stringify({ control, ...result }));
+  }
+});
