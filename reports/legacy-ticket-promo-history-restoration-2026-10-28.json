@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "repository": "diegueins680/tdf-app",
+  "pullRequest": 663,
+  "cycle": "2026-10-28-promo-review-history-restoration",
+  "baselineCommit": "84d684745ff558debc2051faccbce53ba8a20bca",
+  "sourceCommit": "92e0f5d4246e180cf11b79b55d0527f9dd3c9b96",
+  "originalQualifiedImplementationSource": "0702ba67f901bdc3ba62eaf278dba6ca4804b232",
+  "stackBaseline": "0d66f3d7a1a81d4ecc02d84ae5c95f184df75e9d",
+  "problem": "My earlier count refresh changed a complete historical review object whose canonical hash is immutable. The dedicated CI catalog regression correctly rejected that candidate. This was a qualification mistake, not a new platform product defect.",
+  "authority": "docs/catalog-persistence/music-main-reconciliation.json preservedReviewCanonicalSha256 and unchanged scripts/__tests__/catalog-list-audit.test.mjs:70.",
+  "confirmedCounterexample": {
+    "job": 123205145652,
+    "run": 40799875006,
+    "historicalReviewId": "c7c992c00a1accaa7929",
+    "expectedCanonicalHash": "b40e606883c7d13e8a4a52fbf491a82b9b26bee959cba45f353f8a307b8fa44b",
+    "incorrectCandidateCanonicalHash": "bb4f18cc31622aeb8cfb200ecfc4f2875fc7e3eef8d7fe6daf970babd1e25ccc",
+    "CIResult": {
+      "passed": 7,
+      "failed": 1
+    },
+    "cause": "Changed historical evidence.consumerCount12 to current derived13."
+  },
+  "correction": "Restore the entire decision file exactly to the parent baseline. Keep current consumer13 in generated inventory; retain historical12 in the immutable review. Only the corresponding derived traceability hash changes.",
+  "properties": {
+    "HistoricalReviewSnapshotImmutable": {
+      "assurance": "TESTED",
+      "evidence": "Full decision-file byte equality, expected canonical hash and existing eight-test regression lane."
+    },
+    "CurrentConsumerDerivationRetained": {
+      "assurance": "TESTED",
+      "evidence": "Fresh strict JSON/CSV match current generated inventory, independently of historical count."
+    },
+    "QualifiedDomainCodeUnchanged": {
+      "assurance": "TESTED source identity",
+      "evidence": {
+        "tdf-hq": "863d082a59a501b09934ebf77ed5d8dcb5e73773",
+        "tdf-hq-ui": "f72cb9b7a4aa4cdbeece28fbcac6e83587eb406f",
+        "tdf-mobile": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+        "ops": "86c3e0e7dc70ea510968977e87df094da5d07639",
+        "scripts": "2472c9fcc81d7a34b73d0ee3c7c25728193b4438",
+        ".github": "990da43da532350640631b6c1ab60979835b688e",
+        "package.json": "1fe98c96e11c3c2431dd09bb9d68ba82a232501b",
+        "package-lock.json": "7800d461b89474b779b0ed8753b7b128d3cc2db3",
+        "formal/system/requirements.json": "f49a43e57a73a9bb10cd5298e52687aef64603e6",
+        "formal/system/legacy-ticket-promo-limit.md": "91434326a44b6e0594606aa67a7b5f34f5f54579"
+      }
+    },
+    "NewRuntimeExecutionOrBinaryIdentity": "NOT_RUN; prior domain-code evidence is reused with its original identity."
+  },
+  "verification": {
+    "actualCICatalogCommand": "node --test scripts/__tests__/catalog-list-audit.test.mjs",
+    "catalogTests": 8,
+    "catalogFailures": 0,
+    "catalogSkips": 0,
+    "strictJSONAndCSV": "PASS",
+    "normativeDecisionObjectsExactBaseline": 1353,
+    "sequentialInventoryThenConformance": "PASS",
+    "repositoryQuality": "PASS",
+    "existingPlatformSkips": 11,
+    "cleanCommittedAssurance": "PASS",
+    "registeredInputs": 1408,
+    "sourceDigest": "3fd11462c018788a3bd9fa3ab2de012702ec3acd7b2543df82d7e47806bf305a",
+    "allGitBlobAndMobileHashesVerified": true,
+    "parentContractIndependentlyBound": true,
+    "immutableOverallPRMaterialSurfaces": 3,
+    "metadataOnlyDeltaMaterialSurfaces": 0,
+    "independentReadOnlyReviewBlockers": 0,
+    "unchangedQualifiedDomainEvidence": {
+      "actualOriginalFailures": 2,
+      "targeted": 8,
+      "fullExamples": 4504,
+      "fullFailures": 0,
+      "pending": 21,
+      "migrations": 227,
+      "modelTests": 27,
+      "modelHistories": 60,
+      "source": "0702ba67f901bdc3ba62eaf278dba6ca4804b232",
+      "scope": "Code-behavior evidence with identical implementation/dependency/contract objects. No rerun or current executable claim."
+    },
+    "completeRequirementsUnproven": 154,
+    "implementationAndRefinementUnproven": 308,
+    "existingConditionalSMTClaims": 11,
+    "release": "BLOCKED"
+  },
+  "regressionProtection": "The existing dedicated catalog CI lane already enforces the immutable review and caught this mistake. No failing tests, ledger expectations, source hashes or approvals were weakened. Local qualification now executes that actual lane separately from quality:repo and strict audit.",
+  "supersededCandidateEvidence": {
+    "head": "84d684745ff558debc2051faccbce53ba8a20bca",
+    "source": "0702ba67f901bdc3ba62eaf278dba6ca4804b232",
+    "report": "reports/legacy-ticket-promo-limit-2026-10-28.json",
+    "status": "Original domain executions retain their value and source identity; the historical review refresh and overall hosted qualification failed. This report supplies the corrected current metadata seal."
+  },
+  "integration": {
+    "pullRequest": 663,
+    "draft": true,
+    "autoMergeEnabled": false,
+    "merged": false,
+    "deployed": false,
+    "parentPR": 662,
+    "freshCurrentHeadHostedCI": "pending",
+    "requiredCurrentHeadIndependentReview": "pending",
+    "currentMainComposition": "pending",
+    "protectedFIFO": "Unchanged; selected638 viewport correction source24c/evidence535 is undergoing new hostedCI/review.",
+    "all20RequiredContextsAndStrictReviewAdminConversationControls": "preserved"
+  },
+  "scorecard": {
+    "selfIntroducedMetadataMistakeCorrected": 1,
+    "newProductDefectsClaimed": 0,
+    "originalPromoCorrectionImplementationChanged": false,
+    "immutableCatalogReviewRestored": 1,
+    "historicalDecisionsPreserved": 1353,
+    "existingRegressionLaneCasesPassed": 8,
+    "newWholeProgramProofs": 0
+  },
+  "limitations": [
+    "Reused domain-code execution does not establish a current-head Haskell run, serving executable identity or provider payment.",
+    "Canonical hashes include historical evidence fields; current derived observations belong in generated inventory and cannot overwrite a preserved historical review.",
+    "Repository quality and strict audit do not substitute for every separate CI unit lane. The omitted local historical-review unit lane was a process gap corrected here.",
+    "Fresh hosted CI, current-head review, parent integration/current-main composition and protected FIFO remain outstanding.",
+    "No production records or real provider/SMTP operations were performed."
+  ],
+  "nextHighestValueTask": "Publish the exact corrected current metadata/evidence to663; obtain new-head CI/review and continue selected638 WebKit diagnosis using its numeric geometry attachments.",
+  "evidenceDirectory": "reports/legacy-ticket-promo-history-restoration-2026-10-28"
+}
