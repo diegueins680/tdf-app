@@ -11,6 +11,9 @@ jest.unstable_mockModule('../api/radio', () => ({ RadioAPI: { search, clearPrese
 jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: { listItems: jest.fn(async () => ({ items: [], total: 0 })) } }));
 jest.unstable_mockModule('../utils/tidalAgent', () => ({ generateTidalCode: jest.fn() }));
 const { default: RadioWidget } = await import('./RadioWidget');
+const { PlayerProvider, usePlayer } = await import('../player/PlayerProvider');
+let engine: ReturnType<typeof usePlayer>;
+function EngineProbe() { engine = usePlayer(); return null; }
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const VAR = '--tdf-radio-bar-height';
@@ -67,7 +70,7 @@ const renderWidget = async () => {
     root.render(
       <QueryClientProvider client={client}>
         <MemoryRouter initialEntries={['/live-sessions/registro']}>
-          <RadioWidget />
+          <PlayerProvider><EngineProbe /><RadioWidget /></PlayerProvider>
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -143,4 +146,29 @@ it('removes the CSS variable when the widget unmounts', async () => {
   await unmount();
   expect(document.documentElement.style.getPropertyValue(VAR)).toBe('');
   expect(document.body.style.paddingBottom).toBe('');
+});
+
+
+it('loads radio into the single global engine and cannot reclaim an artist selection on rerender', async () => {
+  jest.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+  const { container, unmount } = await renderWidget();
+  try {
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('tdf-radio-load-stream', { detail: {
+        streamUrl: 'https://media.invalid/radio.mp3', stationName: 'Synthetic radio', stationId: 'synthetic',
+      } }));
+    });
+    expect(container.querySelectorAll('audio')).toHaveLength(1);
+    expect(engine.currentTrack?.id).toBe('radio:synthetic');
+    await act(async () => { engine.pause(); });
+    act(() => engine.beginArtist('artist'));
+    await act(async () => engine.loadArtist('artist', [{ id: 'artist-track', title: 'Artist', artist: 'Artist',
+      sources: [{ url: 'https://media.invalid/artist.mp3', quality: 'high', mediaType: 'audio/mpeg' }] }]));
+    expect(engine.currentTrack?.id).toBe('artist-track');
+    expect(container.querySelectorAll('audio')).toHaveLength(1);
+    expect(engine.status).not.toBe('playing');
+  } finally {
+    await unmount();
+    jest.mocked(HTMLMediaElement.prototype.play).mockRestore();
+  }
 });

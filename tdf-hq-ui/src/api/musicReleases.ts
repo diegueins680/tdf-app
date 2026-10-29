@@ -518,7 +518,7 @@ export const musicReleases = {
     const path = apiPath(`/releases${suffix ? `?${suffix}` : ''}`);
     return page?.signal ? get<MusicPublicReleaseSummary[]>(path, { signal: page.signal }) : get<MusicPublicReleaseSummary[]>(path);
   },
-  getPublic: (slug: string) => get<MusicPublicRelease>(apiPath(`/releases/${encodeURIComponent(slug)}`)),
+  getPublic: (slug: string, signal?: AbortSignal) => get<MusicPublicRelease>(apiPath(`/releases/${encodeURIComponent(slug)}`), { signal }),
   getAssetAccess: (assetId: string) => get<MusicAssetAccess>(apiPath(`/assets/${assetId}/access`)),
   listFavorites: () => get<MusicFavorite[]>(apiPath('/favorites')),
   favorite: (recordingId: string) => put(apiPath('/favorites'), { recordingId }),

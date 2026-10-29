@@ -485,7 +485,7 @@ test('@critical PW-MUSIC-NATIVE-06 an expired delivery URL reauthorizes real med
     authorizations, deniedDeliveries, limitation: 'Controlled HTTP403 during a playing quality change; not a live CDN/network-switch measurement.' }), contentType: 'application/json' });
 });
 
-test('@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two automatic retries', async ({ page }) => {
+test('@critical PW-MUSIC-NATIVE-07 permanently expired delivery skips after two automatic retries', async ({ page }) => {
   const { player, audio, fixture } = await prepare(page);
   let authorizations = 0;
   await page.route(`**/music/assets/${assetId(1, 0)}/access`, (route) => {
@@ -501,7 +501,8 @@ test('@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two 
   await page.getByRole('option', { name: 'Baja', exact: true }).click();
   await expect.poll(() => authorizations, { timeout: 15000 }).toBe(3);
   await options.getByRole('button', { name: 'Cerrar opciones' }).click();
-  await expect(player.getByRole('status')).toContainText('La fuente dejó de estar disponible.');
+  await expect(player.getByText('Pista nativa 2', { exact: true })).toBeVisible();
+  await expect.poll(() => audio.evaluate((a) => !a.paused && a.currentTime > 0)).toBe(true);
   // An observation window longer than the next exponential-backoff interval
   // detects an unintended fourth attempt without replacing browser timers.
   const terminalAt = Date.now();
@@ -510,6 +511,6 @@ test('@critical PW-MUSIC-NATIVE-07 permanently expired delivery stops after two 
     return Date.now() - terminalAt;
   }, { timeout: 7000, intervals: [250, 500, 1000] }).toBeGreaterThan(4500);
   expect(authorizations).toBe(3);
-  await expect(player.getByText('Pista nativa 1', { exact: true })).toBeVisible();
-  expect(await audio.evaluate((a) => a === globalThis.__originalNativeAudio && a.paused)).toBe(true);
+  await expect(player.getByText('Pista nativa 2', { exact: true })).toBeVisible();
+  expect(await audio.evaluate((a) => a === globalThis.__originalNativeAudio && !a.paused)).toBe(true);
 });

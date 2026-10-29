@@ -2,6 +2,8 @@ export type PlayerQuality = 'low' | 'medium' | 'high' | 'lossless';
 
 export interface PlayerSource {
   url: string;
+  /** Session-only torrent source, resolved by the single global engine. */
+  torrentSource?: string | File;
   assetId?: string;
   expiresAt?: string;
   quality: PlayerQuality;

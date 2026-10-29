@@ -46,7 +46,6 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import Slider from '@mui/material/Slider';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
-import BoltIcon from '@mui/icons-material/Bolt';
 import ShareIcon from '@mui/icons-material/Share';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import PushPinIcon from '@mui/icons-material/PushPin';
@@ -57,16 +56,14 @@ import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { toLocalDateInputValue } from '../utils/dateOnly';
 import { shouldHideRadioForRoute } from '../utils/radioRouteVisibility';
 import {
-  createTorrentAudioSession,
   isMagnetLink,
   isTorrentFile,
   magnetDisplayName,
   MAX_TORRENT_FILE_BYTES,
-  type TorrentAudioSession,
-  type TorrentPlaybackProgress,
 } from '../utils/torrentAudio';
 import LazyPaginatedList from './LazyPaginatedList';
-import { PLAYER_TAKEOVER_EVENT, RADIO_TAKEOVER_EVENT } from '../player/types';
+import { PLAYER_TAKEOVER_EVENT, type PlayerTrack } from '../player/types';
+import { usePlayer } from '../player/PlayerProvider';
 
 interface Prompt {
   text: string;
@@ -216,7 +213,6 @@ export default function RadioWidget() {
   const [editCountryId, setEditCountryId] = useState('');
   const [editGenreId, setEditGenreId] = useState('');
   const [lastUpdatedTs, setLastUpdatedTs] = useState<number | null>(null);
-  const [autoSkipOnError, setAutoSkipOnError] = useState(false);
   // Start minimized by default; respect previous user choice if stored.
   const [miniBarVisible, setMiniBarVisible] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
@@ -247,11 +243,9 @@ export default function RadioWidget() {
   const [inputLevel, setInputLevel] = useState(0);
   const meterRafRef = useRef<number | null>(null);
   const meterContextRef = useRef<AudioContext | null>(null);
-  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewStatus, setPreviewStatus] = useState<'idle' | 'connecting' | 'live' | 'error'>('idle');
-  const customPreviewAudioRef = useRef<HTMLAudioElement | null>(null);
   const [customPreviewStatus, setCustomPreviewStatus] = useState<'idle' | 'loading' | 'playing' | 'error'>('idle');
   const [customPreviewError, setCustomPreviewError] = useState<string | null>(null);
   const [liveStartedAt, setLiveStartedAt] = useState<number | null>(null);
@@ -311,31 +305,34 @@ export default function RadioWidget() {
       // ignore
     }
   }, [panelSize]);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const torrentSessionRef = useRef<TorrentAudioSession | null>(null);
-  const torrentAbortRef = useRef<AbortController | null>(null);
-  const torrentLoadRequestRef = useRef(0);
+  const player = usePlayer();
+  const playerRef = useRef(player);
+  playerRef.current = player;
+  const [radioCommand, setRadioCommand] = useState({ play: false, sequence: 0 });
+  const setIsPlaying = useCallback((play: boolean) => {
+    if (!play) playerRef.current.pause();
+    setRadioCommand((current) => ({ play, sequence: current.sequence + 1 }));
+  }, []);
   const [expanded, setExpanded] = useState(false);
   const [activeId, setActiveId] = useState<string>(() => {
     if (typeof window === 'undefined') return EMPTY_STATION.id;
     const stored = readOptionalBrowserStorage('local', 'radio-active-id');
     return stored ?? EMPTY_STATION.id;
   });
-  const [isPlaying, setIsPlaying] = useState(false);
+  const radioOwnsPlayer = player.currentTrack?.id.startsWith('radio:') === true;
+  const isPlaying = radioOwnsPlayer && (player.status === 'playing' || player.status === 'buffering' || player.status === 'loading');
   const isPlayingRef = useRef(false);
-  const [muted, setMuted] = useState(false);
+  const muted = player.muted;
+  const volume = player.volume;
+  const setMuted = useCallback((value: boolean | ((current: boolean) => boolean)) => {
+    playerRef.current.setMuted(typeof value === 'function' ? value(playerRef.current.muted) : value);
+  }, []);
+  const setVolume = useCallback((value: number) => playerRef.current.setVolume(value), []);
   const [nowPlayingTitle, setNowPlayingTitle] = useState<string | null>(null);
-  const [volume, setVolume] = useState<number>(() => {
-    if (typeof window === 'undefined') return 0.8;
-    const raw = readOptionalBrowserStorage('local', 'radio-volume');
-    const parsed = raw ? Number(raw) : NaN;
-    if (Number.isFinite(parsed) && parsed >= 0 && parsed <= 1) return parsed;
-    return 0.8;
-  });
   const [playbackWarning, setPlaybackWarning] = useState<string | null>(null);
-  const [torrentLoadAttempt, setTorrentLoadAttempt] = useState(0);
-  const [torrentStatus, setTorrentStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
-  const [torrentProgress, setTorrentProgress] = useState<TorrentPlaybackProgress | null>(null);
+  const torrentProgress = player.torrentProgress;
+  const torrentStatus = !radioOwnsPlayer ? 'idle' : player.status === 'loading' ? 'loading'
+    : player.status === 'error' || player.status === 'unavailable' ? 'error' : 'ready';
   const [promptDraft, setPromptDraft] = useState('');
   const promptInputRef = useRef<HTMLInputElement | null>(null);
   const [promptState, setPromptState] = useState<Record<string, Prompt[]>>({});
@@ -421,9 +418,6 @@ export default function RadioWidget() {
   }, [muteOnLoad]);
   const meterLevel = inputTestActive && inputTestLevel !== null ? inputTestLevel : inputLevel;
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = muted ? 0 : volume;
-    }
     if (typeof window !== 'undefined') {
       try {
         writeOptionalBrowserPreference('radio-volume', volume.toString());
@@ -602,11 +596,12 @@ export default function RadioWidget() {
     () =>
       allStations.filter((s) => {
         const key = keyFor(s);
+        if (player.unavailableTrackIds.includes(`radio:${s.id}`)) return false;
         if (!showHidden && hiddenSet.has(key)) return false;
         if (showFavoritesOnly && !favoriteSet.has(key)) return false;
         return true;
       }),
-    [allStations, favoriteSet, hiddenSet, showHidden, showFavoritesOnly, keyFor],
+    [allStations, favoriteSet, hiddenSet, showHidden, showFavoritesOnly, keyFor, player.unavailableTrackIds],
   );
   const sortedVisibleStations = useMemo(() => {
     const arr = [...visibleStations];
@@ -706,7 +701,7 @@ export default function RadioWidget() {
     setPlaybackWarning(null);
     setMuted(false);
     setIsPlaying(true);
-  }, [activeStation.id, sortedVisibleStations]);
+  }, [activeStation.id, sortedVisibleStations, setIsPlaying, setMuted]);
   const jumpToPreviousStation = useCallback(() => {
     if (sortedVisibleStations.length === 0) return;
     const idx = sortedVisibleStations.findIndex((s) => s.id === activeStation.id);
@@ -718,7 +713,7 @@ export default function RadioWidget() {
     setPlaybackWarning(null);
     setMuted(false);
     setIsPlaying(true);
-  }, [activeStation.id, sortedVisibleStations]);
+  }, [activeStation.id, sortedVisibleStations, setIsPlaying, setMuted]);
   const isFavoriteActive = useMemo(() => favoriteSet.has(keyFor(activeStation)), [favoriteSet, activeStation, keyFor]);
   const favoriteToggleLabel = isFavoriteActive
     ? `Quitar ${activeStation.name || 'esta estación'} de favoritos`
@@ -883,8 +878,7 @@ export default function RadioWidget() {
       if (rawSettings) {
         const parsed = JSON.parse(rawSettings) as { stationId?: string; playOnLoad?: boolean; muted?: boolean };
         if (parsed.stationId) setActiveId(parsed.stationId);
-        if (parsed.muted !== undefined) setMuted(parsed.muted);
-        if (parsed.playOnLoad) setIsPlaying(true);
+        // Legacy playback intent and mute must not override the shared engine.
       }
     } catch {
       // ignore parse errors
@@ -917,159 +911,43 @@ export default function RadioWidget() {
     }
   }, [activeStation.id, isPlaying, muted, customStations]);
 
+  const stationToTrack = (station: Station): PlayerTrack => ({
+    id: `radio:${station.id}`, title: station.name, artist: station.genre ?? 'Radio TDF',
+    sources: [{ url: station.streamUrl, quality: 'high', mediaType: 'audio/mpeg',
+      torrentSource: station.torrentFile ?? (isMagnetLink(station.streamUrl) ? station.streamUrl : undefined) }],
+  });
+  const stationRef = useRef(activeStation);
+  stationRef.current = activeStation;
+  const stationsRef = useRef(sortedVisibleStations);
+  stationsRef.current = sortedVisibleStations;
+  const lastCommandRef = useRef(-1);
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return undefined;
-
-    const requestId = torrentLoadRequestRef.current + 1;
-    torrentLoadRequestRef.current = requestId;
-    torrentAbortRef.current?.abort();
-    torrentAbortRef.current = null;
-    torrentSessionRef.current?.destroy();
-    torrentSessionRef.current = null;
-    audio.pause();
-    audio.removeAttribute('src');
-    audio.load();
-    setTorrentProgress(null);
-
-    if (!activeStation.streamUrl) {
-      setTorrentStatus('idle');
-      setIsPlaying(false);
-      setPlaybackWarning('La emisora no tiene un stream disponible. Elige otra estación.');
-      return undefined;
-    }
-
-    if (!activeTorrentSource) {
-      setTorrentStatus('idle');
-      audio.src = activeStation.streamUrl;
-      audio.load();
-      return undefined;
-    }
-
-    setTorrentStatus('loading');
-    setPlaybackWarning('Buscando peers y metadata del torrent…');
-    const torrentAbort = new AbortController();
-    torrentAbortRef.current = torrentAbort;
-    void createTorrentAudioSession({
-      source: activeTorrentSource,
-      audio,
-      signal: torrentAbort.signal,
-      onProgress: (progress) => {
-        if (torrentLoadRequestRef.current !== requestId) return;
-        setTorrentProgress(progress);
-      },
-      onWarning: (message) => {
-        if (torrentLoadRequestRef.current !== requestId) return;
-        logger.warn('Aviso de WebTorrent', message);
-      },
-    })
-      .then((session) => {
-        if (torrentLoadRequestRef.current !== requestId) {
-          session.destroy();
-          return;
-        }
-        torrentSessionRef.current = session;
-        setTorrentStatus('ready');
-        setPlaybackWarning(null);
-        if (audioRef.current && isPlayingRef.current) {
-          void audioRef.current.play().catch(() => {
-            setIsPlaying(false);
-            setPlaybackWarning('El torrent está listo. Pulsa reproducir para iniciar el audio.');
-          });
-        }
-      })
-      .catch((error: unknown) => {
-        if (torrentLoadRequestRef.current !== requestId) return;
-        const message = error instanceof Error ? error.message : 'No pudimos abrir este torrent.';
-        setTorrentStatus('error');
-        setIsPlaying(false);
-        setPlaybackWarning(message);
-      });
-
-    return () => {
-      if (torrentLoadRequestRef.current === requestId) {
-        torrentLoadRequestRef.current += 1;
-      }
-      torrentAbort.abort();
-      if (torrentAbortRef.current === torrentAbort) {
-        torrentAbortRef.current = null;
-      }
-      torrentSessionRef.current?.destroy();
-      torrentSessionRef.current = null;
-    };
-  }, [
-    activeStation.id,
-    activeStation.streamUrl,
-    activeTorrentSource,
-    torrentLoadAttempt,
-  ]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.muted = muted;
-    if (!isPlaying) {
-      audio.pause();
+    const engine = playerRef.current;
+    const station = stationRef.current;
+    const requested = lastCommandRef.current !== radioCommand.sequence;
+    lastCommandRef.current = radioCommand.sequence;
+    if (!station.streamUrl || !radioCommand.play) return;
+    // Only an explicit radio command can take music away from another context.
+    if (!requested && !engine.currentTrack?.id.startsWith('radio:')) return;
+    const track = stationToTrack(station);
+    if (engine.currentTrack?.id === track.id) {
+      if (requested) void engine.play();
       return;
     }
-    if (isActiveTorrent && torrentStatus !== 'ready') return;
-    window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT));
-    void audio.play().catch(() => {
-      setIsPlaying(false);
-      setPlaybackWarning(
-        isActiveTorrent
-          ? 'El torrent está listo. Pulsa reproducir otra vez para iniciar el audio.'
-          : 'No se pudo reproducir este stream. Intenta con otra estación o revisa la URL.',
-      );
-    });
-  }, [activeStation.streamUrl, isActiveTorrent, isPlaying, muted, torrentStatus]);
+    const queue = [station, ...stationsRef.current.filter((item) => item.id !== station.id)].map(stationToTrack);
+    engine.playTrack(track, queue, true);
+  }, [activeStation.id, radioCommand]);
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    let clearTimer: number | undefined;
-    const handleError = () => {
-      setIsPlaying(false);
-      const fallbackToDefault = !isActiveTorrent && activeStation.id !== defaultStation.id;
-      setPlaybackWarning(
-        isActiveTorrent
-          ? `No pudimos reproducir ${torrentProgress?.fileName ?? 'el audio de este torrent'}.`
-          : fallbackToDefault
-          ? `No pudimos reproducir ${activeStation.name || 'esta emisora'}. Cambiamos a ${defaultStation.name}.`
-          : 'No pudimos reproducir esta emisora. Revisa el stream o prueba con otra.',
-      );
-      if (fallbackToDefault) {
-        setActiveId(defaultStation.id);
-        setTimeout(() => setIsPlaying(true), 160);
-      }
-    };
-    const handleCanPlay = () => {
-      if (clearTimer) {
-        window.clearTimeout(clearTimer);
-      }
-      if (!playbackWarning) return;
-      clearTimer = window.setTimeout(() => setPlaybackWarning(null), 2400);
-    };
-    audio.addEventListener('error', handleError);
-    audio.addEventListener('canplay', handleCanPlay);
-    return () => {
-      if (clearTimer) {
-        window.clearTimeout(clearTimer);
-      }
-      audio.removeEventListener('error', handleError);
-      audio.removeEventListener('canplay', handleCanPlay);
-    };
-  }, [
-    activeStation.id,
-    activeStation.name,
-    defaultStation.id,
-    defaultStation.name,
-    isActiveTorrent,
-    playbackWarning,
-    torrentProgress?.fileName,
-  ]);
+    if (!player.currentTrack?.id.startsWith('radio:')) return;
+    const id = player.currentTrack.id.slice('radio:'.length);
+    if (allStations.some((station) => station.id === id)) setActiveId(id);
+  }, [allStations, player.currentTrack?.id]);
 
-  // Publish presence so other perfiles can see current stream.
+  useEffect(() => {
+    if (radioOwnsPlayer) setPlaybackWarning(player.error);
+  }, [player.error, radioOwnsPlayer]);
+
   useEffect(() => {
     if (!radioEnabled) return undefined;
     if (!isPlaying || !activeStation.streamUrl || isActiveTorrent) {
@@ -1155,46 +1033,10 @@ export default function RadioWidget() {
     };
     window.addEventListener('tdf-radio-load-stream', handleLoadStream as EventListener);
     return () => window.removeEventListener('tdf-radio-load-stream', handleLoadStream as EventListener);
-  }, [availableStations, muteOnLoad]);
+  }, [availableStations, muteOnLoad, setIsPlaying, setMuted]);
 
   const togglePlay = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (isPlaying) {
-      audio.pause();
-      setIsPlaying(false);
-      setPlaybackWarning(null);
-    } else {
-      if (muted) setMuted(false);
-      if (
-        isActiveTorrent
-        && (torrentStatus === 'error' || torrentStatus === 'idle' || !torrentSessionRef.current)
-      ) {
-        setPlaybackWarning('Reintentando conexión con el torrent…');
-        setIsPlaying(true);
-        setTorrentLoadAttempt((attempt) => attempt + 1);
-        return;
-      }
-      if (isActiveTorrent && torrentStatus !== 'ready') {
-        setPlaybackWarning('Buscando peers y preparando el audio del torrent…');
-        setIsPlaying(true);
-        return;
-      }
-      window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT));
-      void audio
-        .play()
-        .then(() => {
-          setPlaybackWarning(null);
-          setIsPlaying(true);
-        })
-        .catch(() => {
-          setIsPlaying(false);
-          setPlaybackWarning('No se pudo reproducir este stream. Intenta con otra estación o revisa la URL.');
-          if (autoSkipOnError) {
-            setTimeout(() => jumpToNextStation(), 200);
-          }
-        });
-    }
+    setIsPlaying(!isPlaying);
   };
 
   const promptsWithCode = useMemo(() => {
@@ -1351,24 +1193,7 @@ export default function RadioWidget() {
   }, [stopLevelMonitor]);
 
   const stopAllAudio = useCallback(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-    if (previewAudioRef.current) {
-      previewAudioRef.current.pause();
-    }
-    if (customPreviewAudioRef.current) {
-      customPreviewAudioRef.current.pause();
-    }
-    torrentSessionRef.current?.destroy();
-    torrentSessionRef.current = null;
-    torrentLoadRequestRef.current += 1;
-    torrentAbortRef.current?.abort();
-    torrentAbortRef.current = null;
-    setTorrentStatus('idle');
-    setTorrentProgress(null);
+    playerRef.current.pause();
     void RadioAPI.clearPresence().catch(() => undefined);
     stopInputTest();
     stopBrowserBroadcast();
@@ -1376,12 +1201,13 @@ export default function RadioWidget() {
     setCustomPreviewError(null);
     setIsPlaying(false);
     setPlaybackWarning(null);
-  }, [stopBrowserBroadcast, stopInputTest]);
+  }, [setIsPlaying, stopBrowserBroadcast, stopInputTest]);
 
   useEffect(() => {
-    window.addEventListener(PLAYER_TAKEOVER_EVENT, stopAllAudio);
-    return () => window.removeEventListener(PLAYER_TAKEOVER_EVENT, stopAllAudio);
-  }, [stopAllAudio]);
+    const stopMonitor = () => { stopInputTest(); };
+    window.addEventListener(PLAYER_TAKEOVER_EVENT, stopMonitor);
+    return () => window.removeEventListener(PLAYER_TAKEOVER_EVENT, stopMonitor);
+  }, [stopInputTest]);
 
   const startInputTest = useCallback(async () => {
     if (!mediaDevicesSupported || !navigator.mediaDevices?.getUserMedia) {
@@ -1561,34 +1387,26 @@ export default function RadioWidget() {
     waitForIceGathering,
   ]);
 
-  const handlePreviewPlay = useCallback(async () => {
+  const handlePreviewPlay = useCallback(() => {
     if (!broadcastInfo?.rtiStreamUrl) return;
     setPreviewError(null);
-    setPreviewLoading(true);
+    setPreviewLoading(false);
     setPreviewStatus('connecting');
-    try {
-      const audio = previewAudioRef.current ?? new Audio();
-      audio.crossOrigin = 'anonymous';
-      audio.pause();
-      audio.currentTime = 0;
-      audio.src = broadcastInfo.rtiStreamUrl;
-      previewAudioRef.current = audio;
-      audio.onplaying = () => setPreviewStatus('live');
-      audio.onerror = () => {
-        setPreviewStatus('error');
-        setPreviewError('No pudimos reproducir el stream.');
-      };
-      window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT));
-      await audio.play();
-      setPreviewStatus('live');
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'No pudimos reproducir el stream.';
-      setPreviewError(msg);
-      setPreviewStatus('error');
-    } finally {
-      setPreviewLoading(false);
-    }
+    playerRef.current.playTrack({ id: 'radio:preview-broadcast', title: 'Monitor de transmisión', artist: 'Radio TDF',
+      sources: [{ url: broadcastInfo.rtiStreamUrl, quality: 'high', mediaType: 'audio/mpeg' }] });
   }, [broadcastInfo?.rtiStreamUrl]);
+
+  useEffect(() => {
+    if (player.currentTrack?.id === 'radio:preview-broadcast') {
+      setPreviewStatus(player.status === 'playing' ? 'live'
+        : player.status === 'error' || player.status === 'unavailable' ? 'error' : 'connecting');
+    }
+    if (player.currentTrack?.id === 'radio:preview-custom') {
+      setCustomPreviewStatus(player.status === 'playing' ? 'playing'
+        : player.status === 'error' || player.status === 'unavailable' ? 'error' : 'loading');
+      setCustomPreviewError(player.error);
+    }
+  }, [player.currentTrack?.id, player.error, player.status]);
 
   const liveElapsedLabel = useMemo(() => {
     const totalSeconds = Math.max(0, Math.floor(liveElapsedMs / 1000));
@@ -1748,11 +1566,9 @@ export default function RadioWidget() {
     }
   };
 
-  const previewCustomStream = async () => {
+  const previewCustomStream = () => {
     if (customPreviewStatus === 'playing') {
-      if (customPreviewAudioRef.current) {
-        customPreviewAudioRef.current.pause();
-      }
+      playerRef.current.pause();
       setCustomPreviewStatus('idle');
       setCustomPreviewError(null);
       return;
@@ -1771,15 +1587,8 @@ export default function RadioWidget() {
     setCustomPreviewError(null);
     setCustomPreviewStatus('loading');
     try {
-      const audio = customPreviewAudioRef.current ?? new Audio();
-      audio.pause();
-      audio.currentTime = 0;
-      audio.crossOrigin = 'anonymous';
-      audio.src = url;
-      customPreviewAudioRef.current = audio;
-      window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT));
-      await audio.play();
-      setCustomPreviewStatus('playing');
+      playerRef.current.playTrack({ id: 'radio:preview-custom', title: newStationName.trim() || 'Previsualización', artist: 'Radio TDF',
+        sources: [{ url, quality: 'high', mediaType: 'audio/mpeg' }] });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'No pudimos reproducir el stream.';
       setCustomPreviewError(msg);
@@ -2312,18 +2121,6 @@ export default function RadioWidget() {
                 sx={controlFadeSx}
               >
                 {showAdvanced ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={autoSkipOnError ? 'Desactivar auto-skip al fallar' : 'Saltar al siguiente si falla'}>
-              <IconButton
-                onClick={() => setAutoSkipOnError((v) => !v)}
-                color={autoSkipOnError ? 'success' : 'inherit'}
-                data-no-drag
-                aria-label={autoSkipOnError ? 'Desactivar auto-skip al fallar' : 'Saltar al siguiente si falla'}
-                aria-pressed={autoSkipOnError}
-                sx={controlFadeSx}
-              >
-                <BoltIcon />
               </IconButton>
             </Tooltip>
             <IconButton
@@ -3248,9 +3045,6 @@ export default function RadioWidget() {
       </Card>
     </Box>
       )}
-      {/* Audio is programmatically controlled; captions are not available for live streams. */}
-      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-      <audio ref={audioRef} preload="none" aria-hidden="true" />
       {!miniBarDismissed && miniBarVisible && miniBarContent}
     </>
   );
