@@ -928,3 +928,69 @@ test('pricing controls detect omitted fields, omitted Tier locking and committed
     t.diagnostic(JSON.stringify({ control, ...result }));
   }
 });
+
+// A new legacy claim is atomic with respect to the promo editor. Later edits
+// may legitimately lower the cap below historical usage; check at claim time.
+function explorePromoLimit({ cachedLimit = false, effectsOnRefusal = false } = {}) {
+  const limits = [null, 0, 1, 2];
+  const allowed = (count, limit) => limit === null || count < limit;
+  const schedules = [['quote', 'edit', 'claim'], ['quote', 'claim', 'edit'], ['edit', 'quote', 'claim']];
+  const witnesses = {}, coverage = new Set();
+  let inputs = 0, histories = 0, retainedHistoricalStates = 0, accepts = 0, refusals = 0;
+  for (const count of [0, 1]) for (const initial of limits) {
+    if (!allowed(count, initial)) continue;
+    for (const target of limits) {
+      inputs++;
+      for (const trace of schedules) {
+        histories++;
+        let current = count, limit = initial, quote = undefined, result = null, effects = 0;
+        for (const action of trace) {
+          if (action === 'edit') limit = target;
+          else if (action === 'quote') {
+            quote = limit;
+            if (!allowed(current, quote)) result = 'refused';
+          } else if (result === null) {
+            const admitted = allowed(current, cachedLimit ? quote : limit);
+            result = admitted ? 'accepted' : 'refused';
+            if (admitted) {
+              if (!allowed(current, limit)) witnesses.CurrentLimitAtClaim ??= { count, initial, target, trace };
+              current++; effects++;
+            } else if (effectsOnRefusal) effects++;
+          }
+          coverage.add(`${action}:${result ?? 'pending'}`);
+          if (result === 'refused' && effects) witnesses.RefusalHasNoEffects ??= { count, initial, target, trace };
+        }
+        if (result === 'accepted') {
+          accepts++;
+          if (limit !== null && current > limit) retainedHistoricalStates++;
+        } else refusals++;
+      }
+    }
+  }
+  return { inputs, histories, accepts, refusals, retainedHistoricalStates,
+    coverage: [...coverage].sort(), violations: Object.keys(witnesses).sort(), witnesses };
+}
+
+test('bounded promo claims enforce the current cap without revoking historical redemptions', t => {
+  const result = explorePromoLimit();
+  assert.equal(result.inputs, 20);
+  assert.equal(result.histories, 60);
+  assert.equal(result.accepts, 46);
+  assert.equal(result.refusals, 14);
+  assert.equal(result.retainedHistoricalStates, 7);
+  assert.ok(result.accepts > 0 && result.refusals > 0 && result.retainedHistoricalStates > 0);
+  assert.deepEqual(result.violations, []);
+  t.diagnostic(JSON.stringify({ model: 'current-promo-limit', ...result }));
+});
+
+test('promo controls reject cached limits and committed effects on a refused claim', t => {
+  for (const control of ['cachedLimit', 'effectsOnRefusal']) {
+    const result = explorePromoLimit({ [control]: true });
+    assert.equal(result.inputs, 20);
+    assert.equal(result.histories, 60);
+    const property = control === 'cachedLimit' ? 'CurrentLimitAtClaim' : 'RefusalHasNoEffects';
+    assert.deepEqual(result.violations, [property]);
+    assert.deepEqual(result.witnesses[property].trace, ['quote', 'edit', 'claim']);
+    t.diagnostic(JSON.stringify({ control, ...result }));
+  }
+});

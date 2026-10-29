@@ -198,6 +198,7 @@ import Database.Persist.Sql
     , fromSqlKey
     , orderClause
     , rawExecute
+    , rawExecuteCount
     , rawSql
     , runSqlPool
     , runSqlPoolWithIsolation
@@ -5242,19 +5243,15 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 let createReservedOrder = do
                         promoClaimed <- case mPromoCodeEnt of
                             Nothing -> pure True
-                            Just (Entity promoKey promo) -> do
-                                let redemptionFilters =
-                                        [ PromoCodeId ==. promoKey
-                                        , PromoCodeIsActive ==. True
-                                        ]
-                                            ++ maybe
-                                                []
-                                                (\limit -> [PromoCodeCurrentRedemptions <. limit])
-                                                (SM.promoCodeMaxRedemptions promo)
-                                (> 0)
-                                    <$> updateWhereCount
-                                        redemptionFilters
-                                        [PromoCodeCurrentRedemptions +=. 1]
+                            Just (Entity promoKey _) ->
+                                -- The organizer can change the cap while this
+                                -- checkout waits. Bind the claim to the current
+                                -- row, including NULL/unlimited, atomically.
+                                (> 0) <$> rawExecuteCount
+                                    "UPDATE promo_code SET current_redemptions=current_redemptions+1 \
+                                    \WHERE id=? AND is_active=TRUE AND \
+                                    \(max_redemptions IS NULL OR current_redemptions<max_redemptions)"
+                                    [toPersistValue promoKey]
                         if not promoClaimed
                             then do
                                 update
