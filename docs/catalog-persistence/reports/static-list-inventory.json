@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-28T23:28:10.342Z",
+  "generatedAt": "2026-10-29T00:46:54.621Z",
   "repositoryRoot": ".",
   "filesScanned": 2443,
   "candidateCount": 1353,
@@ -103817,7 +103817,7 @@
       "lines": [
         14
       ],
-      "consumerCount": 19,
+      "consumerCount": 20,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
@@ -103842,6 +103842,7 @@
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/studio-audit-safety.mjs"
       ],
@@ -133085,7 +133086,7 @@
       "lines": [
         197
       ],
-      "consumerCount": 12,
+      "consumerCount": 13,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
@@ -133104,6 +133105,7 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/catalog-list-audit.mjs"
       ],
       "apiAndIntegrationConsumers": [
@@ -150133,7 +150135,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "storedEventMetadataAllowedKeys",
-      "line": 1744,
+      "line": 1745,
       "values": [
         "ticketUrl",
         "imageUrl",
@@ -150144,7 +150146,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1744
+        1745
       ],
       "consumerCount": 86,
       "backendConsumers": [

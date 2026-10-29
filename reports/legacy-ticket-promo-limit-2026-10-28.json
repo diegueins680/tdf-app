@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-10-28-legacy-ticket-promo-limit",
+  "observedAt": "2026-10-29T01:19:48.106326+00:00",
+  "repository": "diegueins680/tdf-app",
+  "baselineCommit": "0d66f3d7a1a81d4ecc02d84ae5c95f184df75e9d",
+  "sourceCommit": "0702ba67f901bdc3ba62eaf278dba6ca4804b232",
+  "mainObserved": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "confirmedDefect": {
+    "id": "TDF-CORRECTNESS-20261028-10",
+    "priority": "P1",
+    "category": "financial admission / concurrency / cross-layer consistency",
+    "status": "corrected-tested-awaiting-protected-integration",
+    "consequence": "A new legacy checkout can consume a discount and issue free tickets beyond the current promo cap after a normal organizer lowers or installs that cap. Previously limited and unlimited codes both bypass current cap0. No unauthorized charge or real provider operation is claimed."
+  },
+  "invariants": [
+    {
+      "id": "EVT-LEGACY-PROMO-LIMIT-001",
+      "parentRequirement": "EVT-TICKET-001",
+      "statement": "A new legacy promo claim requires current active and either NULL/unlimited cap or current pre-claim count below current cap; claim increments once in the existing order transaction. Refusal leaves no stock/order/ticket/redemption effects. Later cap edits do not revoke historical orders or reclaim on replay.",
+      "implementationAssurance": "TESTED",
+      "designAssurance": "BOUNDED_VERIFIED"
+    }
+  ],
+  "contract": "formal/system/legacy-ticket-promo-limit.md",
+  "authority": [
+    "Existing validatePromoCodeRedemptionLimit and absent/below/equal regressions.",
+    "Canonical EventTicketCheckout locks current promo and validates current maximum.",
+    "Ordinary organizer updatePromoCode changes maximum while retaining actual current usage.",
+    "Current full227-migration schema and actual organizer handler accept max0."
+  ],
+  "correction": [
+    "Replace cached-limit filter with one parameterized atomic UPDATE comparing current count and current max columns, preserving current active/NULL semantics.",
+    "Preserve the increment and existing stock compensation/409 in the enclosing Event -> optional terms -> Tier -> Promo/order transaction. No extra unlocked read or inverse lock edge.",
+    "Existing historical orders/replay, discount arithmetic, initialization/recovery, canonical checkout and other validation authorities remain unchanged. No migration, API or dependency change."
+  ],
+  "counterexamples": {
+    "baselineExamples": 6,
+    "confirmedFailures": 2,
+    "compatibilityPasses": 4,
+    "normalEdits": [
+      "limited10->0",
+      "unlimitedNULL->0"
+    ],
+    "bothActual": "200; one paid0 order, sold3, three tickets and one redemption after organizer committed cap0.",
+    "construction": "Only unchanged Event lock barrier; paid tier100 and10000bps promo created and edited through normal owner handlers; ordinary buyer2.",
+    "realProviderOrEmailCalls": 0
+  },
+  "verification": {
+    "qualifiedScoped": {
+      "examples": 8,
+      "failures": 0,
+      "originalFailuresCovered": 2,
+      "coverage": [
+        "Limited and unlimited cap0 reductions refuse409 with no stock/order/ticket/redemption effects.",
+        "Current cap1, unlimited, increased and unchanged limits admit correctly.",
+        "Promo-row FIFO queues editor then buyer and validates an UPDATE that itself waits behind the edit.",
+        "Earlier completed redemption survives later cap0; same-key replay retains order ID/amount/currency and usage1; distinct new buy400."
+      ]
+    },
+    "qualifiedFullStack": {
+      "examples": 4504,
+      "failures": 0,
+      "pending": 21,
+      "pendingIsNotPassed": true,
+      "migrationsAppliedAndReplayed": 227,
+      "freshUTF8Template0Database": true,
+      "seed": 20261028,
+      "postgres": "PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit",
+      "compiler": "/Users/macpro/.ghcup/ghc/9.10.3/bin/ghc",
+      "method": "Pinned Stack explicit test component, full schema loader and provider fixtures; no entire runtime-wrapper qualification claim."
+    },
+    "model": {
+      "suiteTests": 27,
+      "failures": 0,
+      "newTests": 2,
+      "assurance": "BOUNDED_VERIFIED",
+      "claimants": 1,
+      "editors": 1,
+      "initialCounts": [
+        0,
+        1
+      ],
+      "caps": [
+        null,
+        0,
+        1,
+        2
+      ],
+      "initiallyAdmissibleInputTargetPairs": 20,
+      "allQuoteBeforeClaimInterleavings": 3,
+      "histories": 60,
+      "acceptedHistories": 46,
+      "refusedHistories": 14,
+      "validHistoricalOverCapStates": 7,
+      "properties": [
+        "CurrentLimitAtClaim",
+        "RefusalHasNoEffects"
+      ],
+      "controls": [
+        "cachedLimit",
+        "effectsOnRefusal"
+      ],
+      "bothControlsDetected": true,
+      "scope": "Atomic-claim design abstraction only; historical count may exceed a later cap. No SQL/Haskell refinement or whole-provider proof."
+    },
+    "repositoryQuality": {
+      "passed": true,
+      "existingPlatformSkips": 11,
+      "assertionsWeakened": false
+    },
+    "catalog": {
+      "strictJSONAndCSV": "PASS",
+      "normativeParentDecisionObjectsPreserved": 1353,
+      "parentOrderPreserved": true,
+      "newDecisions": 0,
+      "evidenceOnlyConsumerCountChanges": [
+        {
+          "id": "c7c992c00a1accaa7929",
+          "before": 12,
+          "after": 13
+        }
+      ],
+      "otherDecisionFieldsUnchanged": true,
+      "generatedAutomationConsumerCandidatesRefreshed": 2,
+      "sourceLineOnlyReferenceRefreshed": 1,
+      "finalTrackedJSONAndCSVMatchFreshAudit": true
+    },
+    "sourceCorrespondence": {
+      "registeredInputs": 1408,
+      "sourceDigest": "2296829821f09bb8afb9d50bb0cbbd188f4d115c5fc523556a923b8577a6852d",
+      "mobilePin": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+      "allGitBlobHashesVerified": true,
+      "newContractIndependentlyHashBound": true,
+      "cleanCommittedReporterPass": true,
+      "sequentialInventoryThenConformance": "PASS",
+      "otherRequirementObjectsPreserved": 153,
+      "immutableChangedMaterialSurfaces": 3
+    },
+    "independentReadOnlyReview": {
+      "blockingFindings": 0,
+      "scope": "Production/contract/model/eight-test source review; no independent test/database execution; required GitHub approval is separate."
+    },
+    "servingExecutable": {
+      "currentLocalQualification": "NOT_RUN",
+      "currentRequiredHostedBuild": "pending",
+      "olderParentBinaryPromoted": false
+    },
+    "assurance": {
+      "candidateRegistryRequirementsUnproven": 154,
+      "candidateImplementationAndRefinementObligationsUnproven": 308,
+      "existingConditionalSMTClaims": 11,
+      "newWholeProgramProofs": 0,
+      "release": "BLOCKED"
+    }
+  },
+  "regressionProtection": {
+    "actualHandlers": "Registered in existing ProviderRetrySpec; current backend CI executes this group against complete PostgreSQL schema.",
+    "design": "Existing backend CI explicitly runs ticket-admission-model.test.mjs, including both new controls.",
+    "sourceFreshness": "Existing immutable admission, catalog and specification checks retained."
+  },
+  "integration": {
+    "pullRequest": 663,
+    "url": "https://github.com/diegueins680/tdf-app/pull/663",
+    "parentPullRequest": 662,
+    "draft": true,
+    "autoMergeEnabled": false,
+    "merged": false,
+    "deployed": false,
+    "freshHostedQualification": "pending",
+    "requiredCurrentHeadGitHubReview": "pending",
+    "currentMainComposition": "pending",
+    "queue": {
+      "context": "main-integration-admission",
+      "base": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+      "admittedPR": 638,
+      "admittedHead": "84d7ed562ef54f759d061dce7a71337b047871a6",
+      "waitingPRs": [
+        495,
+        573,
+        592,
+        593,
+        599,
+        601,
+        630,
+        633,
+        639,
+        640,
+        642,
+        643,
+        646,
+        648,
+        649,
+        650,
+        651,
+        653,
+        655,
+        656
+      ],
+      "duplicateHeads": [],
+      "applied": false
+    },
+    "protections": "All20 contexts, strict base, independent approval/stale dismissal, conversation resolution and admin enforcement retained. No FIFO bypass.",
+    "additionalProtectedMerge": {
+      "PR": 637,
+      "baseline": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+      "merge": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+      "all20PlusOtherJobs": "SUCCESS",
+      "exactHeadApproval": 5691234560,
+      "threads": 0,
+      "GitHubMergeAndMainReadbacksVerified": true
+    },
+    "nextSelected638": "Current84d7 head independently approved; persona job123194166119/run40796438713 FAILS booking-catalog-recovery WebKit iPhone320px overflow:635passed/1failed/22skipped. Preserve failure and diagnose; no merge/waiver or root-cause claim. Historical archives do not qualify application behavior.",
+    "approvedLaterHeads": "648 and651 preserved until their integration slots."
+  },
+  "scorecard": {
+    "scope": "This correction only; no arbitrary platform score.",
+    "confirmedDefectsCorrected": 1,
+    "defectsIntegrated": 0,
+    "criticalInvariantsTested": 1,
+    "originalFailingCasesRegressionProtected": 2,
+    "newActualRowWaitSchedule": 1,
+    "boundedDesignInputs": 20,
+    "boundedDesignHistories": 60,
+    "designFaultControlsDetected": 2,
+    "newWholeProgramProofs": 0,
+    "currentSourceEvidence": "0702ba67f901bdc3ba62eaf278dba6ca4804b232"
+  },
+  "remainingRisks": [
+    "Valid initial counters, participating writers and PostgreSQL READ COMMITTED semantics are assumptions. Mixed old binaries, out-of-protocol writes and alternate-isolation availability remain separate.",
+    "Historical usage above a later reduced cap is valid; no historical orders/counters are rewritten or retroactively revoked.",
+    "Promo financial/date/tier/event/policy snapshot races remain separate; this correction establishes only current redemption maximum at a new claim.",
+    "Overflow aborts the transaction rather than wrapping; no availability guarantee at machine bounds.",
+    "Current serving executable, hosted CI, required independent review, main composition and protected FIFO integration remain outstanding.",
+    "No production records, real provider or SMTP operations were performed."
+  ],
+  "developmentLimitations": [
+    "Initial restricted PATH hid ghcup and disabled the existing Stack compiler hook, triggering an unnecessary download. Interrupted only exact owned Stack PID130 before tests; retained log. Qualified runs preserve inherited PATH and use --no-install-ghc with existing9.10.3.",
+    "First fix compile lacked explicit rawExecuteCount import. Compile failed before tests; import added, diagnostic retained, then8/0 and4504/0 full qualified.",
+    "Catalog guards rejected unrelated historical evidence-counter rewrites and a missing optional evidence object before writes. Only current affected c7c counter12->13 was refreshed. Final audit caught an import-induced source line1744->1745 and regenerated canonical metadata, preserving all1353 normative decision objects."
+  ],
+  "prioritizedBacklog": [
+    {
+      "id": "PROTECTED-INTEGRATION",
+      "priority": "P0",
+      "status": "PARTIAL",
+      "next": "Diagnose638 hosted booking overflow before fresh qualification; retain exact-head approval unless a source correction changes it, then obtain new review. Preserve all20/currentmain/FIFO/conversations and later approved heads."
+    },
+    {
+      "id": "LEGACY-PARTIAL-ALLOCATION",
+      "priority": "P0",
+      "status": "UNKNOWN",
+      "blocker": "Material product allocation decision unresolved; continue is not a policy selection."
+    },
+    {
+      "id": "LEGACY-PROMO-AND-TIME-SNAPSHOTS",
+      "priority": "P1",
+      "status": "UNKNOWN",
+      "next": "Investigate ordinary promo financial/date/tier edits and time-cutoff authority using actual counterexamples before corrections."
+    }
+  ],
+  "nextHighestValueTask": "Advance protected FIFO integration where eligible, otherwise investigate remaining current promo/time snapshots with authoritative semantics and actual-handler evidence.",
+  "environmentCleanup": {
+    "ownedSyntheticPostgreSQLStopped": true,
+    "statusExitCode": 3,
+    "allDatabasesPreserved": true,
+    "productionTouched": false
+  },
+  "evidenceDirectory": "reports/legacy-ticket-promo-limit-2026-10-28"
+}
