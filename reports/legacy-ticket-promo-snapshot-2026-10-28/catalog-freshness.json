@@ -1,0 +1,16 @@
+{
+  "baseline": "7cd6d8a3a811027b0a4880af4e1c4c500a27ac9a",
+  "qualifiedSource": "3145981fdbfbde707badcdb766e1598bb6d9e9ad",
+  "freshStrictJSONMatchesTrackedExceptGeneratedAt": true,
+  "trackedGeneratedAt": "2026-10-29T03:01:29.252Z",
+  "freshGeneratedAt": "2026-10-29T03:12:15.431Z",
+  "candidateCount": 1353,
+  "freshStrictCSVGeneratedFromCorrectRestoredSource": true,
+  "historicalDecisionFileUnchanged": true,
+  "catalogUnitCases": 8,
+  "catalogUnitFailures": 0,
+  "indexChecks": "Sequential discovery then conformance checks PASS",
+  "jsonSha256": "4de9f699389909cd071a54283d48ccdeefde936b11d06edcc41a60d1f4c42ca6",
+  "csvSha256": "53fb92f1ef3cb96250f574e4db53842b5fa37fe5af94ba12372a9d7d353aceac",
+  "limitation": "Strict catalog audit and rootquality do not substitute for the separately executed immutable historical-review unit lane."
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "7cd6d8a3a811027b0a4880af4e1c4c500a27ac9a",
+  "sourceCommit": "3145981fdbfbde707badcdb766e1598bb6d9e9ad",
+  "sourceTree": "744ed5e77a07b1551ae6279f466ee19f9e927bf3",
+  "registeredSourceInputs": 1408,
+  "sourceDigest": "611bab0e8aea04f7d8151cb4a13b8b36c968d82ff68e54e2cfa711f574c8f73d",
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "allRegisteredGitBlobAndMobileHashesVerified": true,
+  "workingAndCleanCommittedSourceHashesEqual": true,
+  "newContract": {
+    "path": "formal/system/legacy-ticket-promo-snapshot.md",
+    "sha256": "39beedf194ec499f8881e47aedfac7e993a1201b6f24d6be094f9b86429ac4ff",
+    "discoveryEntryMatches": true,
+    "authority": "Inferred from established legacy validators and canonical locked promo snapshot; required reviewer approval pending"
+  },
+  "otherRequirementObjectsUnchanged": 153,
+  "normativeCatalogDecisionObjectsPreserved": 1353,
+  "wholeCatalogDecisionFileExactBaseline": true,
+  "cleanCommittedReporterPass": true,
+  "immutableSourceAdmissionMaterialSurfaces": 3,
+  "currentServingExecutableQualification": "NOT_RUN for new3145 source; parent663 compiled3667 qualification remains historical",
+  "release": "BLOCKED",
+  "scope": "Actual implementation TESTED, finite one-field-at-a-time design BOUNDED_VERIFIED. No full SQL/Haskell refinement, current wall-clock expiry, HTTP authentication, real provider completion or deployment proof."
+}

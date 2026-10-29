@@ -1,0 +1,12 @@
+{
+  "assurance-receipts.tar.gz": "e56803c43eec1c19f96631762b584daea216285d9bec4040538990dac881dd09",
+  "baseline-counterexamples.json": "b1d4929b0d1efe9b91629073ea51ede3772f2694a42e2a64e068f8f51a3d6b2d",
+  "catalog-freshness.json": "02760dd4b41d96395f54090328d0854aa8f3a19fb473ca9070ecf23d9dccc979",
+  "catalog-preservation.json": "e419b683ae63f38a3034fab3cfa48df300e03a288e9e5df4edbeee7d27650393",
+  "development-diagnostics.tar.gz": "f52926c68f8d907fb48676af139c98fed25a917e24579694eaa9e8a31990f3a6",
+  "execution-receipts.tar.gz": "427fd3a3090cb6c29b20c44c9c998784965dee111956999e37377a26a60d316c",
+  "execution-sources.json": "11b3bd7764678bec942b8d0d55bef3229a0e5df64af94abce8b4314684f81c5a",
+  "independent-review.txt": "033327711731281d445bfb091b109446afc2d5bdf24b3c05c5fe4d577d25d06a",
+  "lock-mutation.json": "9f2633e0db2abcead55584807699708ce0ca01854410493dde0c62206751b786",
+  "source-seal.json": "4cfe431a4d47835bdc33407c3601e64a52f4ee782475e10184b45fad091312b8"
+}

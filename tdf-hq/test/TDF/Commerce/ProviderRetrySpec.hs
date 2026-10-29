@@ -426,6 +426,7 @@ spec = do
         ticketPriceSnapshotSpec
         ticketFinalAmountSpec
         ticketPromoLimitSpec
+        ticketPromoSnapshotSpec
         latePaypalRefundSpec
         manualCaptureReplaySpec
         completionCapabilityIntegrationSpec
@@ -4318,6 +4319,130 @@ ticketPromoLimitSpec = describe "legacy-ticket-current-promo-limit" $ do
     TD.spiCurrency replay `shouldBe` "USD"
     denied <- purchase Nothing
     either errHTTPCode (const 200) denied `shouldBe` 400
+    ticketAmountCounts pool eventKey tierKey `shouldReturn` [(Single 3,Single 3,Single 1)]
+    runSqlPool (rawSql "SELECT count(*)::bigint FROM event_ticket_order WHERE event_id=? AND status='paid'"
+      [PersistInt64 (fromSqlKey eventKey)]) pool `shouldReturn` [Single (1 :: Int64)]
+
+ticketPromoSnapshotSpec :: SpecWith ConnectionPool
+ticketPromoSnapshotSpec = describe "legacy-ticket-promo-snapshot" $ do
+  forM_
+    [ ("discount value", \_ p -> p {TD.promoCodeDiscountValue=0}, False)
+    , ("discount type", \_ p -> p {TD.promoCodeDiscountType="fixed_amount", TD.promoCodeDiscountValue=0}, False)
+    , ("currency", \_ p -> p {TD.promoCodeCurrency="EUR"}, False)
+    , ("future start", \now p -> p {TD.promoCodeValidFrom=Just (addUTCTime 3600 now)}, False)
+    , ("past end", \now p -> p {TD.promoCodeValidUntil=Just (addUTCTime (-3600) now)}, False)
+    , ("tier restriction", \_ p -> p {TD.promoCodeTierIds=Just []}, False)
+    , ("minimum purchase", \_ p -> p {TD.promoCodeMinPurchaseAmountCents=Just 301}, False)
+    , ("inactive", \_ p -> p {TD.promoCodeIsActive=False}, False)
+    , ("description only", \_ p -> p {TD.promoCodeDescription=Just "Updated description"}, True)
+    , ("currency case only", \_ p -> p {TD.promoCodeCurrency="usd"}, True)
+    ] $ \(label,change,accepted) ->
+    it ("binds new checkout to committed promo terms: " <> label) $ \pool -> do
+      (eventKey,tierKey,env,created) <- ticketPromoLimitFixture pool (Just 10)
+      now <- getCurrentTime
+      codeId <- maybe (fail "Created promo must have an ID") pure (TD.promoCodeId created)
+      let (_,editPromo) = ticketPromoHandlers (AuthedUser (toSqlKey 1) [] mempty Nothing Nothing)
+          (_,_,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+          request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
+          purchase = runHandler (runReaderT (checkout (TD.TicketPurchaseWithPromoDTO request
+            (Just (TD.promoCodeCode created)) Nothing Nothing Nothing)) env)
+      locked <- newEmptyMVar
+      release <- newEmptyMVar
+      holderFinished <- newEmptyMVar
+      purchaseFinished <- newEmptyMVar
+      let holdEvent = runSqlPool (do
+            _ <- rawSql "SELECT id FROM social_event WHERE id=? FOR UPDATE"
+              [PersistInt64 (fromSqlKey eventKey)] :: SqlPersistT IO [Single Int64]
+            liftIO $ putMVar locked ()
+            liftIO $ takeMVar release) pool
+          releaseEvent = tryPutMVar release () >> pure ()
+      bracket (forkFinally holdEvent (putMVar holderFinished)) (\worker ->
+        releaseEvent >> awaitLegacyRefundWorker worker holderFinished) $ \_ -> do
+        Timeout.timeout 5000000 (readMVar locked) `shouldReturn` Just ()
+        bracket (forkFinally purchase (putMVar purchaseFinished)) (\worker ->
+          releaseEvent >> awaitLegacyRefundWorker worker purchaseFinished) $ \_ -> do
+          Timeout.timeout 5000000 (waitForTicketInventoryWaiters pool 1 100) `shouldReturn` Just True
+          -- Only the normal organizer handler edits the promo; the unchanged
+          -- Event barrier proves the buyer quoted before this committed edit.
+          _ <- runHandler (runReaderT (editPromo (keyText (fromSqlKey eventKey)) codeId
+            (change now created)) env) >>= requireRight
+          releaseEvent
+          completed <- Timeout.timeout 5000000 (readMVar purchaseFinished)
+          result <- case completed of
+            Just (Right value) -> pure value
+            Just (Left failure) -> throwIO failure
+            Nothing -> fail "Checkout worker did not complete after releasing Event"
+          snapshots <- runSqlPool (rawSql
+            "SELECT amount_cents,status FROM event_ticket_order WHERE event_id=? ORDER BY id"
+            [PersistInt64 (fromSqlKey eventKey)]) pool :: IO [(Single Int64,Single Text)]
+          effects <- ticketAmountCounts pool eventKey tierKey
+          let n = if accepted then 3 else 0 :: Int64
+              r = if accepted then 1 else 0 :: Int64
+          (either errHTTPCode (const 200) result,snapshots,effects)
+            `shouldBe` (if accepted then 200 else 409,
+              if accepted then [(Single 0,Single "paid")] else [],
+              [(Single n,Single n,Single r)])
+
+  it "locks the financial snapshot behind a queued promo editor" $ \pool -> do
+    (eventKey,tierKey,env,created) <- ticketPromoLimitFixture pool (Just 10)
+    codeId <- maybe (fail "Created promo must have an ID") pure (TD.promoCodeId created)
+    let (_,editPromo) = ticketPromoHandlers (AuthedUser (toSqlKey 1) [] mempty Nothing Nothing)
+        (_,_,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+        request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
+        purchase = runHandler (runReaderT (checkout (TD.TicketPurchaseWithPromoDTO request
+          (Just (TD.promoCodeCode created)) Nothing Nothing Nothing)) env)
+        edit = runHandler (runReaderT (editPromo (keyText (fromSqlKey eventKey)) codeId
+          (created {TD.promoCodeDiscountValue=0})) env)
+    locked <- newEmptyMVar
+    release <- newEmptyMVar
+    holderFinished <- newEmptyMVar
+    editorFinished <- newEmptyMVar
+    purchaseFinished <- newEmptyMVar
+    let holdPromo = runSqlPool (do
+          _ <- rawSql "SELECT id FROM promo_code WHERE id::text=? FOR UPDATE"
+            [PersistText codeId] :: SqlPersistT IO [Single Int64]
+          liftIO $ putMVar locked ()
+          liftIO $ takeMVar release) pool
+        releasePromo = tryPutMVar release () >> pure ()
+    bracket (forkFinally holdPromo (putMVar holderFinished)) (\worker ->
+      releasePromo >> awaitLegacyRefundWorker worker holderFinished) $ \_ -> do
+      Timeout.timeout 5000000 (readMVar locked) `shouldReturn` Just ()
+      bracket (forkFinally edit (putMVar editorFinished)) (\worker ->
+        releasePromo >> awaitLegacyRefundWorker worker editorFinished) $ \_ -> do
+        Timeout.timeout 5000000 (waitForTicketPromoWaiters pool 1 100) `shouldReturn` Just True
+        bracket (forkFinally purchase (putMVar purchaseFinished)) (\worker ->
+          releasePromo >> awaitLegacyRefundWorker worker purchaseFinished) $ \_ -> do
+          Timeout.timeout 5000000 (waitForTicketPromoWaiters pool 2 100) `shouldReturn` Just True
+          releasePromo
+          edited <- Timeout.timeout 5000000 (readMVar editorFinished)
+          case edited of
+            Just (Right (Right response)) -> TD.promoCodeDiscountValue response `shouldBe` 0
+            other -> expectationFailure ("Promo editor did not commit: " <> show other)
+          completed <- Timeout.timeout 5000000 (readMVar purchaseFinished)
+          case completed of
+            Just (Right (Left failure)) -> errHTTPCode failure `shouldBe` 409
+            other -> expectationFailure ("Claim ignored committed promo terms: " <> show other)
+          ticketAmountCounts pool eventKey tierKey `shouldReturn` [(Single 0,Single 0,Single 0)]
+          runSqlPool (rawSql "SELECT count(*)::bigint FROM event_ticket_order WHERE event_id=?"
+            [PersistInt64 (fromSqlKey eventKey)]) pool `shouldReturn` [Single (0 :: Int64)]
+
+  it "retains an earlier order and replay after promo financial terms change" $ \pool -> do
+    (eventKey,tierKey,env,created) <- ticketPromoLimitFixture pool (Just 1)
+    codeId <- maybe (fail "Created promo must have an ID") pure (TD.promoCodeId created)
+    let (_,editPromo) = ticketPromoHandlers (AuthedUser (toSqlKey 1) [] mempty Nothing Nothing)
+        (_,_,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
+        eventId = keyText (fromSqlKey eventKey)
+        request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
+        purchase key = runHandler (runReaderT (checkout (TD.TicketPurchaseWithPromoDTO request
+          (Just (TD.promoCodeCode created)) Nothing key Nothing)) env)
+        key = Just ("promo-snapshot-history-" <> eventId)
+    first <- purchase key >>= requireRight
+    _ <- runHandler (runReaderT (editPromo eventId codeId
+      (created {TD.promoCodeDiscountValue=0, TD.promoCodeCurrency="EUR"})) env) >>= requireRight
+    replay <- purchase key >>= requireRight
+    TD.spiOrderId replay `shouldBe` TD.spiOrderId first
+    TD.spiAmountCents replay `shouldBe` 0
+    TD.spiCurrency replay `shouldBe` "USD"
     ticketAmountCounts pool eventKey tierKey `shouldReturn` [(Single 3,Single 3,Single 1)]
     runSqlPool (rawSql "SELECT count(*)::bigint FROM event_ticket_order WHERE event_id=? AND status='paid'"
       [PersistInt64 (fromSqlKey eventKey)]) pool `shouldReturn` [Single (1 :: Int64)]
