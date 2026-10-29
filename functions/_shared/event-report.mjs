@@ -1,4 +1,6 @@
-import { patchCultureReport } from './event-report-data.mjs';
+import { sealedEventReport } from './event-report-data.mjs';
+import { openEventReport, tokenDigest } from './event-report-crypto.mjs';
+export { tokenDigest } from './event-report-crypto.mjs';
 
 const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 const DIGEST = /^[a-f0-9]{64}$/;
@@ -14,20 +16,16 @@ export const reportHeaders = Object.freeze({
   'Content-Security-Policy': "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
 });
 
-export async function tokenDigest(token) {
-  const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
-  return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
 // The complete capability is checked at the edge before any report content is
 // rendered. No event-id/name lookup, listing, cookie or login grants access.
-export async function resolveEventReport(token, env = {}) {
+export async function resolveEventReport(token, env = {}, envelope = sealedEventReport) {
   if (typeof token !== 'string' || !TOKEN.test(token)) return null;
   if (env.EVENT_REPORT_LINKS_ENABLED !== undefined && env.EVENT_REPORT_LINKS_ENABLED !== 'true') return null;
   const expected = env.PATCH_CULTURE_REPORT_TOKEN_SHA256 === undefined
-    ? patchCultureReport.tokenSha256 : env.PATCH_CULTURE_REPORT_TOKEN_SHA256;
+    ? envelope.tokenSha256 : env.PATCH_CULTURE_REPORT_TOKEN_SHA256;
   if (typeof expected !== 'string' || !DIGEST.test(expected)) return null;
-  return await tokenDigest(token) === expected ? patchCultureReport : null;
+  if (await tokenDigest(token) !== expected) return null;
+  return openEventReport(envelope, token);
 }
 
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
@@ -41,7 +39,7 @@ export function renderEventReport(report) {
   const e = escapeHtml;
   const metrics = [
     ['Ingresos reportados', report.reportedGrossCents],
-    ['Adeudado a Andes', report.owedToVenueCents],
+    [report.venueAmountLabel, report.owedToVenueCents],
     ['Utilidad provisional', report.provisionalProfitCents],
   ];
   return `<!doctype html>
@@ -67,12 +65,12 @@ table{width:100%;border-collapse:collapse;text-align:left}th,td{padding:12px 8px
 <p>Acceso: cualquier persona con este enlace puede ver el reporte. Solo lectura.</p>
 <dl class="metrics">${metrics.map(([label, cents]) => `<div class="metric"><dt>${e(label)}</dt><dd>${money(cents)}</dd></div>`).join('')}</dl>
 <section class="notice" aria-labelledby="estado"><h2 id="estado">Balance pendiente de conciliación</h2>
-<p>Los ${money(report.provisionalProfitCents)} de utilidad son provisionales y no incluyen la comisión de Meet2Go. El reparto propuesto es 50/50: ${money(report.provisionalShareCents)} por parte, antes de conciliar comisiones y fondos.</p></section>
+<p>${e(report.profitExplanation)}</p></section>
 <section aria-labelledby="cervezas"><h2 id="cervezas">Consumo de cerveza</h2>
-<table><caption>Siete pintas a USD5 de costo unitario</caption><thead><tr><th scope="col">Destino</th><th scope="col">Pintas</th><th scope="col">Costo USD</th></tr></thead>
+<table><caption>${e(report.beerCaption)}</caption><thead><tr><th scope="col">Destino</th><th scope="col">Pintas</th><th scope="col">Costo ${e(report.currency)}</th></tr></thead>
 <tbody>${report.beer.map((row) => `<tr><th scope="row">${e(row.label)}</th><td>${e(row.pints)}</td><td>${money(row.costCents)}</td></tr>`).join('')}</tbody>
-<tfoot><tr><th scope="row">Total</th><td>7</td><td>${money(report.owedToVenueCents)}</td></tr></tfoot></table>
-<p>Las dos ventas de cerveza representan USD10. La pinta personal es consumo, sin ingreso de venta. Los USD20 de las pintas incluidas ya forman parte de los USD35; no deben descontarse nuevamente.</p></section>
+<tfoot><tr><th scope="row">Total</th><td>${e(report.beer.reduce((sum, row) => sum + row.pints, 0))}</td><td>${money(report.owedToVenueCents)}</td></tr></tfoot></table>
+<p>${e(report.beerExplanation)}</p></section>
 <section aria-labelledby="diferencia"><h2 id="diferencia">Diferencia por conciliar</h2><p>${e(report.reconciliation)}</p></section>
 <section aria-labelledby="pendientes"><h2 id="pendientes">Movimientos pendientes</h2><ul>${report.pending.map((item) => `<li>${e(item)}</li>`).join('')}</ul></section>
 <section aria-labelledby="registro"><h2 id="registro">Registro en TDF</h2><p>${e(report.accounting)}</p></section>
@@ -81,14 +79,19 @@ table{width:100%;border-collapse:collapse;text-align:left}th,td{padding:12px 8px
 </main></body></html>`;
 }
 
-export async function eventReportResponse(context) {
-  const { request, params, env } = context;
-  const headers = { ...reportHeaders };
-  if (request.method !== 'GET' && request.method !== 'HEAD') {
-    return new Response('Method not allowed', { status: 405, headers: { ...headers, Allow: 'GET, HEAD' } });
-  }
-  const report = await resolveEventReport(params.token, env);
-  const status = report ? 200 : 404;
-  const body = request.method === 'HEAD' ? null : report ? renderEventReport(report) : 'Not found';
-  return new Response(body, { status, headers });
+// The deployment binds its sealed payload here, never from request input.
+export function createEventReportHandler(envelope) {
+  return async function eventReportResponse(context) {
+    const { request, params, env } = context;
+    const headers = { ...reportHeaders };
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      return new Response('Method not allowed', { status: 405, headers: { ...headers, Allow: 'GET, HEAD' } });
+    }
+    const report = await resolveEventReport(params.token, env, envelope);
+    const status = report ? 200 : 404;
+    const body = request.method === 'HEAD' ? null : report ? renderEventReport(report) : 'Not found';
+    return new Response(body, { status, headers });
+  };
 }
+
+export const eventReportResponse = createEventReportHandler(sealedEventReport);

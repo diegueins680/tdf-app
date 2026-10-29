@@ -13125,7 +13125,7 @@
         "Unauthenticated visitor"
       ],
       "preconditions": [
-        "The approved snapshot is deployed as server-only Pages Function code",
+        "The approved snapshot is deployed as authenticated ciphertext, with its key kept outside the public repository",
         "A cryptographically random 32-byte capability is delivered separately to the organizer"
       ],
       "inputs": [
@@ -13136,11 +13136,11 @@
       ],
       "state": {
         "enabled": "Absent or exact true binding",
-        "capability": "SHA-256 digest; raw token is not persisted in source",
-        "content": "Provisional snapshot, not a live ledger"
+        "capability": "SHA-256 digest and AES-256-GCM ciphertext; separately delivered 32-byte raw capability is the key",
+        "content": "Authenticated encrypted provisional snapshot, not a live ledger"
       },
       "allowedTransitions": [
-        "Matching capability and enabled configuration -> GET HTML or empty successful HEAD",
+        "Matching canonical capability, successful authenticated decryption and enabled configuration -> GET HTML or empty successful HEAD",
         "Disable or rotate -> former link denied on next request in that deployment",
         "Malformed or missing capability -> generic 404"
       ],
@@ -13148,26 +13148,31 @@
         "Publish snapshot in static assets or React bundles",
         "Admit by predictable event ID, name, query string or session alone",
         "Mutate ledger, payment, event or attendee data",
-        "Render snapshot for a revoked or incorrect capability"
+        "Render snapshot for a revoked or incorrect capability",
+        "Publish plaintext snapshot or private editorial values in current public source, tests or documentation"
       ],
       "effects": [
         "Read-only HTML response and protective HTTP headers"
       ],
-      "authorization": "The full 256-bit random bearer capability is required at the edge; only its SHA-256 digest is in source. No credential or role is inferred from page content.",
-      "privacy": "No client analytics, index/listing, third-party resource, frame, script or referrer. Responses and redirects are no-store. Recipients may retain copies; provider URL logging and historical deployments remain operational boundaries.",
+      "authorization": "The canonical 256-bit random bearer capability is required at the edge for digest matching and AES-256-GCM authentication/decryption. Digest overrides cannot substitute a new key for resealing.",
+      "privacy": "No client analytics, index/listing, third-party resource, frame, script or referrer. Responses and redirects are no-store. Recipients may retain copies; provider URL logging and historical deployments remain operational boundaries. Earlier public PR revisions disclosed plaintext; this forward correction cannot erase public Git history or recipient copies.",
       "concurrency": "Each request checks the current deployment configuration; no writes or mutable shared state.",
       "idempotency": "Repeated reads have no business side effects.",
-      "failure": "Invalid capability/configuration -> empty generic 404; unsupported methods -> 405. Malformed report paths do not fall through to the SPA.",
-      "recovery": "Disable the binding or rotate its digest and redeploy all serving environments; retire previously distributed preview deployments separately.",
+      "failure": "Invalid capability/configuration, failed authentication, malformed or corrupted payload -> generic 404; unsupported methods -> 405. Malformed report paths do not fall through to the SPA.",
+      "recovery": "Disable or reseal with a fresh capability and redeploy every serving environment; update any digest override and retire old previews separately.",
       "observability": "Node Request/Response tests, installed local Pages worker and browser inspection; never log a real token in test output.",
       "implementation": [
         "functions/_shared/event-report-data.mjs",
         "functions/_shared/event-report.mjs",
         "functions/reportes/eventos/[token].js",
-        "functions/_middleware.js"
+        "functions/_middleware.js",
+        "functions/_shared/event-report-crypto.mjs",
+        "scripts/seal-event-report.mjs"
       ],
       "tests": [
-        "scripts/__tests__/event-preview.test.mjs"
+        "scripts/__tests__/event-preview.test.mjs",
+        "scripts/__tests__/event-report-crypto.test.mjs",
+        "scripts/__tests__/fixtures/event-report.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -13179,8 +13184,8 @@
         "reason": "Handler implementation and explicit negative access tests exist; canonical hosted deployment and provider cache/log behavior require release verification."
       },
       "property": "No report content is returned without an enabled matching capability; a valid link confers read-only access to the authorized provisional snapshot only.",
-      "verification": "Actual handler tests for match/deny, rotation, revocation, method refusal, escaping and cache/referrer/robot policy; local Pages routing and browser smoke before release.",
-      "evidence": "17 local event/transaction tests pass including seven new report tests; source-bound deployment evidence remains pending."
+      "verification": "Independent Node/OpenSSL ciphertext fixtures, Worker WebCrypto authentication and malformed-input controls, CLI disclosure checks, actual Request/Response access tests and hosted Pages verification before release.",
+      "evidence": "23 focused local crypto/event/transaction tests pass with fictional fixtures; current encrypted source-bound hosted deployment evidence remains pending."
     }
   ]
 }

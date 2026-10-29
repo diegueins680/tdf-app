@@ -3,9 +3,9 @@ import test from 'node:test';
 import { injectEventPreview, isSafeEventId, renderEventMetadata, safeAbsoluteImage } from '../../functions/_shared/event-preview.mjs';
 import { onRequest } from '../../functions/eventos/[eventId].js';
 import { canonicalRedirectLocation, onRequest as middleware } from '../../functions/_middleware.js';
-import { onRequest as reportRequest } from '../../functions/reportes/eventos/[token].js';
-import { patchCultureReport } from '../../functions/_shared/event-report-data.mjs';
-import { renderEventReport, reportHeaders, resolveEventReport, tokenDigest } from '../../functions/_shared/event-report.mjs';
+import { onRequest as deployedReportRequest } from '../../functions/reportes/eventos/[token].js';
+import { independentEnvelope, reportToken, syntheticReport } from './fixtures/event-report.mjs';
+import { createEventReportHandler, renderEventReport, reportHeaders, resolveEventReport, tokenDigest } from '../../functions/_shared/event-report.mjs';
 
 const publicEvent = {
   id: '42',
@@ -22,7 +22,7 @@ const publicEvent = {
 };
 
 // Test-only capability: the actual report link is never stored in source or logs.
-const reportToken = 'test_capability_'.padEnd(43, 'x');
+const reportRequest = createEventReportHandler(independentEnvelope());
 const reportUrl = `https://www.tdfrecords.net/reportes/eventos/${reportToken}`;
 const reportContext = async (overrides = {}) => ({
   params: { token: reportToken },
@@ -37,15 +37,19 @@ test('the report is readable without login only with the complete capability', a
   assert.equal(response.status, 200);
   for (const [name, value] of Object.entries(reportHeaders)) assert.equal(response.headers.get(name), value);
   const html = await response.text();
-  assert.match(html, /PATCH CULTURE Vol\. 1/);
-  assert.match(html, /80[,.]00/);
-  assert.match(html, /35[,.]00/);
-  assert.match(html, /45[,.]00/);
-  assert.match(html, /22[,.]50/);
-  assert.match(html, /diferencia de USD10 por conciliar/);
+  assert.match(html, /Synthetic report fixture/);
+  assert.match(html, /120[,.]00/);
+  assert.match(html, /24[,.]00/);
+  assert.match(html, /96[,.]00/);
+  assert.match(html, /USD48/);
+  assert.match(html, /Diferencia ficticia pendiente de conciliar/);
   assert.match(html, /Solo lectura/);
   assert.doesNotMatch(html, /<script|https:\/\/chatgpt|posthog|<form|og:|test_capability_|a7fd4151/);
-  assert.match(html, /href="\/eventos\/141"/);
+  assert.match(html, /href="\/eventos\/999"/);
+});
+
+test('deployed route cannot accept a public synthetic key through a digest override', async () => {
+  assert.equal((await deployedReportRequest(await reportContext())).status, 404);
 });
 
 test('wrong, partial and named report identifiers return indistinguishable empty 404s', async () => {
@@ -65,10 +69,13 @@ test('revoking or rotating the capability takes effect on the very next request'
     assert.equal(response.status, 404);
     assert.equal(await response.text(), 'Not found');
   }
-  const rotated = 'new_capability_'.padEnd(43, 'y');
+  const rotated = Buffer.alloc(32, 9).toString('base64url');
   const env = { PATCH_CULTURE_REPORT_TOKEN_SHA256: await tokenDigest(rotated), EVENT_REPORT_LINKS_ENABLED: 'true' };
   assert.equal((await reportRequest({ ...context, env })).status, 404);
-  assert.equal((await reportRequest({ ...context, env, params: { token: rotated } })).status, 200);
+  assert.equal((await reportRequest({ ...context, env, params: { token: rotated } })).status, 404);
+  const rotatedRequest = createEventReportHandler(independentEnvelope(syntheticReport, rotated));
+  assert.equal((await rotatedRequest({ ...context, env, params: { token: rotated } })).status, 200);
+  assert.equal((await rotatedRequest(context)).status, 404);
 });
 
 test('invalid configuration fails closed and query strings or sessions cannot confer report access', async () => {
@@ -101,14 +108,15 @@ test('HEAD verifies access with no body and write methods are refused', async ()
 });
 
 test('snapshot rendering escapes every editorial value and preserves provisional arithmetic', () => {
-  const html = renderEventReport({ ...patchCultureReport, title: '<script>bad()</script>', pending: ['<img src=x onerror=bad()>'] });
+  const editorial = Object.fromEntries(['title', 'date', 'venue', 'snapshotDate', 'venueAmountLabel', 'profitExplanation', 'beerCaption', 'beerExplanation', 'reconciliation', 'accounting', 'source'].map(field => [field, `<script>${field}</script>`]));
+  const html = renderEventReport({ ...syntheticReport, ...editorial, beer: [{ label: '<img src=x onerror=bad()>', pints: 2, costCents: 2400 }], pending: ['<img src=x onerror=bad()>'] });
   assert.doesNotMatch(html, /<script>|<img src=x/);
   assert.match(html, /&lt;script&gt;/);
   assert.match(html, /&lt;img src=x/);
-  assert.equal(patchCultureReport.beer.reduce((sum, row) => sum + row.costCents, 0), 3500);
-  assert.equal(patchCultureReport.beer.reduce((sum, row) => sum + row.pints, 0), 7);
-  assert.equal(patchCultureReport.reportedGrossCents - patchCultureReport.owedToVenueCents, 4500);
-  assert.equal(patchCultureReport.provisionalShareCents * 2, 4500);
+  assert.equal(syntheticReport.beer.reduce((sum, row) => sum + row.costCents, 0), 2400);
+  assert.equal(syntheticReport.beer.reduce((sum, row) => sum + row.pints, 0), 2);
+  assert.equal(syntheticReport.reportedGrossCents - syntheticReport.owedToVenueCents, 9600);
+  assert.equal(syntheticReport.provisionalShareCents * 2, 9600);
 });
 
 test('report middleware keeps legacy redirects private and does not invoke downstream readers for malformed paths', async () => {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-27T13:33:57.421Z",
+  "generatedAt": "2026-10-29T01:08:22.768Z",
   "repositoryRoot": ".",
   "filesScanned": 2443,
   "candidateCount": 1351,
@@ -4983,7 +4983,7 @@
       "domain": "events-ticketing",
       "kind": "object-registry",
       "name": "publicEvent",
-      "line": 7,
+      "line": 10,
       "values": [
         "id",
         "title",
@@ -5000,7 +5000,7 @@
       "valueCount": 11,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        7
+        10
       ],
       "consumerCount": 140,
       "backendConsumers": [
@@ -6449,7 +6449,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 646,
+      "consumerCount": 647,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -6591,6 +6591,7 @@
         ".github/workflows/social-verification.yml",
         "scripts/__pycache__/sync-artist-shows-to-social-events.cpython-313.pyc",
         "scripts/__tests__/checkout-amount-postgres.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
@@ -6633,8 +6634,7 @@
         "scripts/lib/public_routes_conformance.py",
         "scripts/lib/readiness_conformance.py",
         "scripts/meta-app-review-packet.mjs",
-        "scripts/mobile-publishing-admin-audit.sh",
-        "scripts/order-catalog-foundation-seed.mjs"
+        "scripts/mobile-publishing-admin-audit.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -14965,7 +14965,7 @@
       "lines": [
         236
       ],
-      "consumerCount": 93,
+      "consumerCount": 94,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -15047,6 +15047,7 @@
         "tdf-mobile/src/lib/serviceCatalogSnapshot.test.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/persona-test-program.test.mjs",
         "scripts/__tests__/provider-rollback.test.mjs",
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
@@ -16224,7 +16225,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 122,
+      "consumerCount": 123,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -16336,6 +16337,7 @@
       ],
       "automationConsumers": [
         ".github/workflows/ci.yml",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
@@ -17191,7 +17193,7 @@
       "lines": [
         627
       ],
-      "consumerCount": 672,
+      "consumerCount": 673,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -17333,6 +17335,7 @@
         ".github/workflows/social-verification.yml",
         "scripts/__pycache__/sync-artist-shows-to-social-events.cpython-313.pyc",
         "scripts/__tests__/checkout-amount-postgres.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
@@ -17375,8 +17378,7 @@
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
         "scripts/lib/public_routes_conformance.py",
-        "scripts/lib/readiness_conformance.py",
-        "scripts/meta-app-review-packet.mjs"
+        "scripts/lib/readiness_conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -25059,7 +25061,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 702,
+      "consumerCount": 703,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -25205,6 +25207,7 @@
         "scripts/__pycache__/sync-artist-shows-to-social-events.cpython-313.pyc",
         "scripts/__tests__/artist-import-idempotency.test.mjs",
         "scripts/__tests__/checkout-amount-postgres.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
@@ -25246,8 +25249,7 @@
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
         "scripts/lib/public_routes_conformance.py",
-        "scripts/lib/readiness_conformance.py",
-        "scripts/meta-app-review-packet.mjs"
+        "scripts/lib/readiness_conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -29200,7 +29202,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 678,
+      "consumerCount": 679,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29344,6 +29346,7 @@
         ".github/workflows/social-verification.yml",
         "scripts/__pycache__/sync-artist-shows-to-social-events.cpython-313.pyc",
         "scripts/__tests__/checkout-amount-postgres.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
@@ -29386,8 +29389,7 @@
         "scripts/lib/music_money_conformance.py",
         "scripts/lib/music_payment_conformance.py",
         "scripts/lib/openclaw-cdp.mjs",
-        "scripts/lib/operations_conformance.py",
-        "scripts/lib/production-release.mjs"
+        "scripts/lib/operations_conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -32507,7 +32509,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 678,
+      "consumerCount": 679,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32651,6 +32653,7 @@
         ".github/workflows/social-verification.yml",
         "scripts/__pycache__/sync-artist-shows-to-social-events.cpython-313.pyc",
         "scripts/__tests__/checkout-amount-postgres.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
@@ -32693,8 +32696,7 @@
         "scripts/lib/music_money_conformance.py",
         "scripts/lib/music_payment_conformance.py",
         "scripts/lib/openclaw-cdp.mjs",
-        "scripts/lib/operations_conformance.py",
-        "scripts/lib/production-release.mjs"
+        "scripts/lib/operations_conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -36535,7 +36537,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 655,
+      "consumerCount": 656,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -36678,6 +36680,7 @@
         ".github/workflows/social-verification.yml",
         "scripts/__pycache__/sync-artist-shows-to-social-events.cpython-313.pyc",
         "scripts/__tests__/checkout-amount-postgres.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
@@ -36720,8 +36723,7 @@
         "scripts/lib/openclaw-cdp.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/lib/production-release.mjs",
-        "scripts/lib/public_routes_conformance.py",
-        "scripts/lib/readiness_conformance.py"
+        "scripts/lib/public_routes_conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -55679,7 +55681,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 714,
+      "consumerCount": 715,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -55826,6 +55828,7 @@
         "scripts/__pycache__/sync-artist-shows-to-social-events.cpython-313.pyc",
         "scripts/__tests__/artist-import-idempotency.test.mjs",
         "scripts/__tests__/checkout-amount-postgres.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
@@ -55867,8 +55870,7 @@
         "scripts/lib/music_money_conformance.py",
         "scripts/lib/music_payment_conformance.py",
         "scripts/lib/openclaw-cdp.mjs",
-        "scripts/lib/operations_conformance.py",
-        "scripts/lib/production-release.mjs"
+        "scripts/lib/operations_conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -61356,7 +61358,7 @@
         198,
         213
       ],
-      "consumerCount": 304,
+      "consumerCount": 305,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -61481,6 +61483,7 @@
         "scripts/__tests__/compiled-api-surface.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/directory-saved-search-http.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
@@ -61523,8 +61526,7 @@
         "scripts/lib/music-worker-s3-probe.mjs",
         "scripts/lib/music_money_conformance.py",
         "scripts/lib/music_payment_conformance.py",
-        "scripts/lib/openclaw-cdp.mjs",
-        "scripts/lib/operations_conformance.py"
+        "scripts/lib/openclaw-cdp.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -72054,7 +72056,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 678,
+      "consumerCount": 679,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -72198,6 +72200,7 @@
         ".github/workflows/social-verification.yml",
         "scripts/__pycache__/sync-artist-shows-to-social-events.cpython-313.pyc",
         "scripts/__tests__/checkout-amount-postgres.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
@@ -72240,8 +72243,7 @@
         "scripts/lib/music_money_conformance.py",
         "scripts/lib/music_payment_conformance.py",
         "scripts/lib/openclaw-cdp.mjs",
-        "scripts/lib/operations_conformance.py",
-        "scripts/lib/production-release.mjs"
+        "scripts/lib/operations_conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",

@@ -13126,7 +13126,7 @@
         "Unauthenticated visitor"
       ],
       "preconditions": [
-        "The approved snapshot is deployed as server-only Pages Function code",
+        "The approved snapshot is deployed as authenticated ciphertext, with its key kept outside the public repository",
         "A cryptographically random 32-byte capability is delivered separately to the organizer"
       ],
       "inputs": [
@@ -13137,11 +13137,11 @@
       ],
       "state": {
         "enabled": "Absent or exact true binding",
-        "capability": "SHA-256 digest; raw token is not persisted in source",
-        "content": "Provisional snapshot, not a live ledger"
+        "capability": "SHA-256 digest and AES-256-GCM ciphertext; separately delivered 32-byte raw capability is the key",
+        "content": "Authenticated encrypted provisional snapshot, not a live ledger"
       },
       "allowedTransitions": [
-        "Matching capability and enabled configuration -> GET HTML or empty successful HEAD",
+        "Matching canonical capability, successful authenticated decryption and enabled configuration -> GET HTML or empty successful HEAD",
         "Disable or rotate -> former link denied on next request in that deployment",
         "Malformed or missing capability -> generic 404"
       ],
@@ -13149,26 +13149,31 @@
         "Publish snapshot in static assets or React bundles",
         "Admit by predictable event ID, name, query string or session alone",
         "Mutate ledger, payment, event or attendee data",
-        "Render snapshot for a revoked or incorrect capability"
+        "Render snapshot for a revoked or incorrect capability",
+        "Publish plaintext snapshot or private editorial values in current public source, tests or documentation"
       ],
       "effects": [
         "Read-only HTML response and protective HTTP headers"
       ],
-      "authorization": "The full 256-bit random bearer capability is required at the edge; only its SHA-256 digest is in source. No credential or role is inferred from page content.",
-      "privacy": "No client analytics, index/listing, third-party resource, frame, script or referrer. Responses and redirects are no-store. Recipients may retain copies; provider URL logging and historical deployments remain operational boundaries.",
+      "authorization": "The canonical 256-bit random bearer capability is required at the edge for digest matching and AES-256-GCM authentication/decryption. Digest overrides cannot substitute a new key for resealing.",
+      "privacy": "No client analytics, index/listing, third-party resource, frame, script or referrer. Responses and redirects are no-store. Recipients may retain copies; provider URL logging and historical deployments remain operational boundaries. Earlier public PR revisions disclosed plaintext; this forward correction cannot erase public Git history or recipient copies.",
       "concurrency": "Each request checks the current deployment configuration; no writes or mutable shared state.",
       "idempotency": "Repeated reads have no business side effects.",
-      "failure": "Invalid capability/configuration -> empty generic 404; unsupported methods -> 405. Malformed report paths do not fall through to the SPA.",
-      "recovery": "Disable the binding or rotate its digest and redeploy all serving environments; retire previously distributed preview deployments separately.",
+      "failure": "Invalid capability/configuration, failed authentication, malformed or corrupted payload -> generic 404; unsupported methods -> 405. Malformed report paths do not fall through to the SPA.",
+      "recovery": "Disable or reseal with a fresh capability and redeploy every serving environment; update any digest override and retire old previews separately.",
       "observability": "Node Request/Response tests, installed local Pages worker and browser inspection; never log a real token in test output.",
       "implementation": [
         "functions/_shared/event-report-data.mjs",
         "functions/_shared/event-report.mjs",
         "functions/reportes/eventos/[token].js",
-        "functions/_middleware.js"
+        "functions/_middleware.js",
+        "functions/_shared/event-report-crypto.mjs",
+        "scripts/seal-event-report.mjs"
       ],
       "tests": [
-        "scripts/__tests__/event-preview.test.mjs"
+        "scripts/__tests__/event-preview.test.mjs",
+        "scripts/__tests__/event-report-crypto.test.mjs",
+        "scripts/__tests__/fixtures/event-report.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -13180,8 +13185,8 @@
         "reason": "Handler implementation and explicit negative access tests exist; canonical hosted deployment and provider cache/log behavior require release verification."
       },
       "property": "No report content is returned without an enabled matching capability; a valid link confers read-only access to the authorized provisional snapshot only.",
-      "verification": "Actual handler tests for match/deny, rotation, revocation, method refusal, escaping and cache/referrer/robot policy; local Pages routing and browser smoke before release.",
-      "evidence": "17 local event/transaction tests pass including seven new report tests; source-bound deployment evidence remains pending."
+      "verification": "Independent Node/OpenSSL ciphertext fixtures, Worker WebCrypto authentication and malformed-input controls, CLI disclosure checks, actual Request/Response access tests and hosted Pages verification before release.",
+      "evidence": "23 focused local crypto/event/transaction tests pass with fictional fixtures; current encrypted source-bound hosted deployment evidence remains pending."
     }
   ],
   "sourceFingerprints": {
@@ -13532,8 +13537,9 @@
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
     "functions/_shared/event-preview.mjs": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
-    "functions/_shared/event-report-data.mjs": "07f246130dd4e0ad99c931320ef1699c556ab561fc80c9532796ddbeed149e86",
-    "functions/_shared/event-report.mjs": "0366c2cc7dd5e13ee80a49040dbb8dff4f07951205cf1c2fb0aac303cdd76e93",
+    "functions/_shared/event-report-crypto.mjs": "8dd9954c2296bb3079c736528458a35bd421bfbf073fe067c4afa4957731638c",
+    "functions/_shared/event-report-data.mjs": "ee7e242ebd1b14c26f46041f4e8dd5338c845652b7c5066a4414a890dfd922ca",
+    "functions/_shared/event-report.mjs": "c586bdc4d476e4e994b8419b82aa6c8e0ceb2287ab88dabd8006d7fd06db175d",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
     "functions/descargar.js": "30b8a78e97f7a164b9804c11e2cc48e2c1c543bfe3a233a6a10bd8316ec7fdb5",
     "functions/download.js": "30b8a78e97f7a164b9804c11e2cc48e2c1c543bfe3a233a6a10bd8316ec7fdb5",
@@ -13582,9 +13588,11 @@
     "scripts/__tests__/disposable-postgres-url.test.mjs": "76cf3c7aaeed689164a94da6d79b6297b5bf84b95ef05782436c46c84e93e636",
     "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
-    "scripts/__tests__/event-preview.test.mjs": "a967dc17aa7e09a856e79ed1d84bec3b84364924984e62fe5aa81cf2224fe404",
+    "scripts/__tests__/event-preview.test.mjs": "19f89fa87840e1b47c72d201bcb63eafbd803a1cae047d5d9da9ed6a091debfc",
     "scripts/__tests__/event-raci-browser-runner.test.mjs": "0a036a388afece87cf55c150dfac92e411ffcc4c82e76301f502b8c288d9c657",
     "scripts/__tests__/event-raci-editor-context-runner.test.mjs": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
+    "scripts/__tests__/event-report-crypto.test.mjs": "92363873ec7bf9f0567239f2687f790657eaa2801c19e2e5617baefb40642a81",
+    "scripts/__tests__/fixtures/event-report.mjs": "3a289551a7c9f95d1811bd50ec60d292be48097a881e61a2895d30dc3043d7b8",
     "scripts/__tests__/fixtures/provider-domain-fixtures.sql": "17d645e924bd5d6533523dcfb1e3a4522a403ac420de7dde45f94a44eca9e14d",
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": "186495b321cdc2ac067af786a72dffa740b289eb1ac22429c1d6e5c14ce85a9c",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
@@ -13697,7 +13705,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "8e167b6a04ebeeef2d6a3b4a8782f08bea04baf96448f62f17c007bf66091d15",
+    "scripts/quality-repo.sh": "d05677da2c244b2ac3a942f7fc4b521d49da767b2f7e98f16f0fb0c688569632",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -13706,6 +13714,7 @@
     "scripts/run-music-release-worker.sh": "521e52bb3b059c86c17765100957bacbfcf66d1575978b710bc6dc22e916cc5b",
     "scripts/run-native-audio-tests.sh": "89be3522a4c6fb7e4352bc8799edb2aee64de19dac7a95d67efe144395ed48aa",
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
+    "scripts/seal-event-report.mjs": "2c7087ccb785b9a725a5c1e9e23582236d76a40be28f62e08b0f2124d4fa4764",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
     "scripts/social/chat-notifications.sql": "1bb1b293aabacbeede286dba05911f20f8a85b59faf18f12d1b399288a32a734",
@@ -25671,6 +25680,30 @@
         "requirement": "EVT-REPORT-LINK-001",
         "relationship": "implementation"
       }
+    ],
+    "functions/_shared/event-report-crypto.mjs": [
+      {
+        "requirement": "EVT-REPORT-LINK-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/seal-event-report.mjs": [
+      {
+        "requirement": "EVT-REPORT-LINK-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/event-report-crypto.test.mjs": [
+      {
+        "requirement": "EVT-REPORT-LINK-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/fixtures/event-report.mjs": [
+      {
+        "requirement": "EVT-REPORT-LINK-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -26460,9 +26493,21 @@
       ]
     },
     {
+      "id": "SURFACE-3f0b18976213b333",
+      "path": "functions/_shared/event-report-crypto.mjs",
+      "sha256": "8dd9954c2296bb3079c736528458a35bd421bfbf073fe067c4afa4957731638c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-REPORT-LINK-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-fad664812f6bd2b4",
       "path": "functions/_shared/event-report-data.mjs",
-      "sha256": "07f246130dd4e0ad99c931320ef1699c556ab561fc80c9532796ddbeed149e86",
+      "sha256": "ee7e242ebd1b14c26f46041f4e8dd5338c845652b7c5066a4414a890dfd922ca",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26474,7 +26519,7 @@
     {
       "id": "SURFACE-93bd665a68aee2b9",
       "path": "functions/_shared/event-report.mjs",
-      "sha256": "0366c2cc7dd5e13ee80a49040dbb8dff4f07951205cf1c2fb0aac303cdd76e93",
+      "sha256": "c586bdc4d476e4e994b8419b82aa6c8e0ceb2287ab88dabd8006d7fd06db175d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27128,7 +27173,7 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "a967dc17aa7e09a856e79ed1d84bec3b84364924984e62fe5aa81cf2224fe404",
+      "sha256": "19f89fa87840e1b47c72d201bcb63eafbd803a1cae047d5d9da9ed6a091debfc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27184,6 +27229,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-bef1909d5eaebc81",
+      "path": "scripts/__tests__/event-report-crypto.test.mjs",
+      "sha256": "92363873ec7bf9f0567239f2687f790657eaa2801c19e2e5617baefb40642a81",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-REPORT-LINK-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-eb025c512ef7ddad",
       "path": "scripts/__tests__/event-task-completion-client.test.mjs",
       "sha256": "77dc685f04158e45c3f0989078e5feccfd87a1dea8730f851f48a3f1369b9aa6",
@@ -27231,6 +27288,18 @@
       "sha256": "20d601eaf885eedf213e1110da3fa9489d19eed8629cd32f149e690fd947512c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-a745a4fac5f5c864",
+      "path": "scripts/__tests__/fixtures/event-report.mjs",
+      "sha256": "3a289551a7c9f95d1811bd50ec60d292be48097a881e61a2895d30dc3043d7b8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-REPORT-LINK-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-ee1bb502b120babb",
@@ -29540,7 +29609,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "8e167b6a04ebeeef2d6a3b4a8782f08bea04baf96448f62f17c007bf66091d15",
+      "sha256": "d05677da2c244b2ac3a942f7fc4b521d49da767b2f7e98f16f0fb0c688569632",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29749,6 +29818,18 @@
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-RELEASE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e0cc51e9db9362ef",
+      "path": "scripts/seal-event-report.mjs",
+      "sha256": "2c7087ccb785b9a725a5c1e9e23582236d76a40be28f62e08b0f2124d4fa4764",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-REPORT-LINK-001",
           "relationship": "implementation"
         }
       ]
@@ -55525,7 +55606,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7fa6d95b44d3e097aa07fb64e341c5f9f605865819539edc67879dc4ec3b3dbb",
+      "sourceSha256": "2a2b13d66c3bd251f5169d1629b9d809852bae3ad3de0d76184558d9681c7a8e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -55553,7 +55634,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7fa6d95b44d3e097aa07fb64e341c5f9f605865819539edc67879dc4ec3b3dbb",
+      "sourceSha256": "2a2b13d66c3bd251f5169d1629b9d809852bae3ad3de0d76184558d9681c7a8e",
       "definition": {
         "states": [
           "absent",
@@ -55583,7 +55664,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7fa6d95b44d3e097aa07fb64e341c5f9f605865819539edc67879dc4ec3b3dbb",
+      "sourceSha256": "2a2b13d66c3bd251f5169d1629b9d809852bae3ad3de0d76184558d9681c7a8e",
       "definition": {
         "export": [
           "queued",

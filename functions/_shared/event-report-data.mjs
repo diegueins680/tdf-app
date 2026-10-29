@@ -1,29 +1,7 @@
-// Server-only, organizer-authorized snapshot. Never import this module into the
-// React app or copy it to public/. Reported amounts are not ledger postings.
-export const patchCultureReport = Object.freeze({
-  tokenSha256: 'a7fd41516bb89166f44ff4ce0a8de538db445eb55b25f653a491a9f2e008e13a',
-  eventId: '141',
-  title: 'PATCH CULTURE Vol. 1',
-  date: '24 de octubre de 2026',
-  venue: 'Andes Brewing · La Pradera, Quito',
-  snapshotDate: '26 de octubre de 2026',
-  currency: 'USD',
-  reportedGrossCents: 8000,
-  owedToVenueCents: 3500,
-  provisionalProfitCents: 4500,
-  provisionalShareCents: 2250,
-  beer: [
-    { label: 'Incluidas en cuatro entradas', pints: 4, costCents: 2000 },
-    { label: 'Vendidas por separado a USD5', pints: 2, costCents: 1000 },
-    { label: 'Consumo personal de Diego', pints: 1, costCents: 500 },
-  ],
-  reconciliation: 'Cuatro entradas al precio registrado de USD20 más dos cervezas vendidas a USD5 darían USD90. El resumen compartido reporta USD80 brutos: hay una diferencia de USD10 por conciliar. Falta confirmar los importes cobrados por las entradas y si el total incluye las ventas de cerveza. USD90 es un cálculo condicionado, no un ingreso confirmado.',
-  pending: [
-    'Identificar quién recibió la transferencia de USD20.',
-    'Confirmar la comisión de Meet2Go, el importe neto y su acreditación.',
-    'Identificar quién pagará los USD35 a Andes y comprobar el pago.',
-    'Identificar las dos partes del reparto y calcular la transferencia final después de conciliar los fondos.',
-  ],
-  accounting: 'La consulta del 26 de octubre de 2026 a las 21:35, hora de Ecuador, mostró una orden de ticket pendiente por USD20, con ingresos y gastos contabilizados en cero. Esa orden no acredita cobro ni se identifica automáticamente con la transferencia de USD20 mencionada. El cierre se conservó como nota; estos importes no son cobros ni pagos verificados.',
-  source: 'Resumen financiero compartido por el organizador. Los comprobantes y el Excel mencionado no estaban incluidos. El nombre y la fecha del evento se contrastaron con la ficha de TDF. Esta es una copia del cierre provisional al 26 de octubre, no un saldo actualizado en tiempo real.',
+// Ciphertext only. The separately delivered capability is the decryption key.
+export const sealedEventReport = Object.freeze({
+  "version": 1,
+  "tokenSha256": "a7fd41516bb89166f44ff4ce0a8de538db445eb55b25f653a491a9f2e008e13a",
+  "nonce": "OrPWNv9SJpX6hjTT",
+  "ciphertext": "xcKk_fa6urM7JqyQQ6LqgSa8-AWfNTn6jenDn_FZtEI_iZZpPXooBCLSmOuQMJ7d_dX53eOF7DlkBGwuF2sJ-68CbAOVhQ1ai3AKj1QeYXfQejDpvo_gH-rrrQGqsPTSJx2EhHezxJamyyGCabhyTDVr3puI-xa-xClhs9KU1DzmjLANz6Ts3n5WxmvqOnw3aUSmwtaBqUb7EO4-2nhMeYV7p1o609sMoB0qtIDnaaIg1ZzdOx_5BzPjPGVKZj8458R2Gf_c2EAeoJwxwO0WS-8QpQyjneED8UUxFFjl4PK09J8xLTFj6s1l8OQ6sL5vil-5n63Zbpwj1EqzXmE4sdKJX79EleeaEpUIFJNaTSFDkFPVe1T0gBN2zywIYW92HvHYZd_qC0WUUGugEpUt7oEY2ubTenilDYoQf1YaI6C_dzGu4XIqVqli3bn9vaFylUPQmaZ22Cu9IMe7LIOeSodg3ajmP17HwPCfYuyrtmtt0NDsiYhil1WCoVF19H7J-PVo4EBHH6ANTIq0pE8DN92SF9-1eQupUagAaYlaI-mFe3fx33bBQDtXtj5wz37Xfx7lfIzAramy00WceabnglLFklcWcfmg-8ZNYyfLXwKLtXbdMlJoyqGejnr8b8BQ1GVqDgZvbb6jn9jBE9O5DRr4M6zl637ekJwbtxh4M32bPiAc0-pwV43yNpdkwFf4wVPwefdeTZRcWixMtjspEgQYapGrQqt59heLOQOPhqHAVPhEuNhffYr7893KHN3CUGaaIDxV8NJT21gTMRfsD8jxsb67LGKj4z0TQRHzOD3M2Zz_Ys8gxfgS5hV1DBwZFW-U-mMEfPexnbFDw5guV93hn1IQtniDGfV3zRdny2LB2co-COBQ2F_8IfWIa6qUgWaKjP1InlM7UCZS8xoWW_iUTZgcilGe1MCRhLXYfq_er_3r6na95DaybnXZxjugp3Tr9i_--QV1_Poxn3PtahS8BUEN_JKEBtY4b4AIKtOH2d3P9wZ9ofOlJcwFxxAvqBp1t_ZI2a3WN01hhwUFjTWkq3AyngjlLNi8nGJD4nBD_A9LE7ZINlD2npkc2hrbsG-hpf5-akWg9WAgiaeP_kwCNhTOXi-kEqO_yEK1MrbI1Ahotmk-nhe4Gsarsm8joMa-xmOWnNGRn295iGl6-HGfwLK1bHAu0dQ5xMaSAf5WGlxCEWG4S-mpYY9Kc9XUz2iYmxS_J8xsYnP9aAeV5AmYCZnvyIrx48lEFpefxrscPxrhnVop0bhCt89yxNZ1WT_TgAhnjgw-VeCLjizdB0qadME0RzW-QgnmmrzQprDvfZhaWy-IlD7eenZSlo-a22TawsuIi1XzBXe-URoATzOcp97KFE5FpGeExn8yRD4as4cvG54948iVk2Go08MBIYZrGqnOFQSoJSA9LJw7gr_XM9kCgBsFiOjeJPd08Fpcz7_9IlF_vHW3hnnrsiHkpYaJ62ChLtrdFlQpkTRX9wPasjL0t4KmAf7jgprWwObeRw2MDhy8n9dCxMAP4v9rE2DXeV0M2iDFePx-CgFv5OE1McaDC-DPyyB59rD6UIt0lDkCIq28M4fFhfFPH3WsS4qJPgJ-NSm4172njlXJLWKNGozGWJJ4k5E-pn6eNiFiVKxOHhK0v1Bl_e07KVPivu6rpuPJWcC514CeWLTz6bm0uNLW0EVGMWZm3M3QYtPMoy6Oj_JL9TyGrM1UclV171C-hhSebkGE1hHWEjn6HJel5955gB0FNCG17Ar7xg5AANehvo5Ze3-y3WYOlvHmf26PSRM5C1GKfaA_ewHGUazxbL-A9vRc4OuOGKKt4DTW4Sok06Z_QP2KxAZQBE7VAgJXcpcvs10p-CnweCMQ3UCCo4D0nqHxnWecD_rSxpulebgsJVPxgEtAq5qYzu6BrBVw2XaoGVTxC_sa55rniljT1v7iHIkZi665VK7D1S4ciez7alG2413_UE4d3lr7obtb_4X0xj5IFAgu5ilIGwxll0w-GtHAMy2WGBazSR1XCZHh90A_XYfPivqui3oDYI1yuY8t0yaA2XM839vMBMgJtKGUmyxNU_AW-cAlSyheBasumPZh2l0ajlocEVUQrPtkQ1Vm-pyj7wUx_SK1ISAspimB9Pcp6wujlVfQWi5ifYbg3PVVxFEay_udhd88NoZ_HZZQu-WWsbtQk9AXxPt_yDX6W_VAKn-DxSvYttkIRbi3Ba0RJzmmFPIztf4xnOlB7eqaB62YKUXm3_MsCYblE1qR9i5nnM896SxeY2LwAfRPjTi37hn62veeB2lotYZoKbpyosRKyE_TanIiMZsJO31i7kuePq1pkJGthEJu9paoLvEqVSW1pvR5xxe0jW3veFiehp3VGcSWkvR4NUyURudOsG8FbJfh_Dxh_5uQHQSIEW4MLXF8zZf_TT10dN26niY_43VwvygUREt5XHxUDUBZBZyMGI8NUKW-C4l6wbxeUQCgSM6QdpocwdVzYrnvYCj80-OEDenbp4uQims3SGTiQSl2lIlRVCZSbqmdLuOmRH66Ryy7md12fvqoUiCAV5yWbF-jQ2BZtRnb_0jg-wnSahrxp8rLiNc59mpRFe8bJK-g5ULzYu2H3POCKYBEKWKErby21TKtciLIgQ6Y4I_Lqb43Xpl2Z_MYj7gws5VufDpAIH2U9A9Bx5gf-Qb1vUrREjDZhWJz7TOBNBDGsvZv01QY8LcE4bqAfKJP2NDc7DN5LZumHk74yLTTUFsxctEvK_k38afPxAElTdnlcRNeiVSDs2Jf7FyaQCoaFX9ZCUYWC7r_eCn3G9SolptJOArHNRkypDqjOVLlGY1VwDCDyFnPPnMeCfdkvgX1BB948IJ3v-07Y5zaLQiHjKHf4mW_iGGBLDOgTM-hHl0VpphgTyfFxkUf4Zr3dZ9hNCcufJDRNu3NG0Nho9liy3j1sLvSxzHL9Yty09jvcAWoJKhup3mkNQEOoXoC7zNO9U-uNrkVKAkT7pTP9NtuAhsVYFt2BJR1gRjqR7V8P__itF_RIaiMAW0x_2QEt5FsGbMo_JNWgwl-o411s2BHYKbplGSMVJBUcSygxyhA4oZ0nBQU4VexHVOtqvxNDD0MyVHkSrR1jH3Hmf5l"
 });
