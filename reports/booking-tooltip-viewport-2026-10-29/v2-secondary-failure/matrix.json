@@ -1,0 +1,79 @@
+{
+  "inputs": {
+    "UICompilationCommit": "a5d8b29987acfeb460a86e662fd5ead53ab379e8",
+    "UIFileSha256": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
+    "workingFinalTestSha256": "7aaf96d63d6db669e9e30f9666b1053dce2d29fb4283c34b1d920c52ffc32553",
+    "executedTestSha256": "4256921b7476a06b8c53a379592916e75804536e4ed0871a176e1b8ff91c8f86",
+    "testTransform": "Only package import locations; complete test body matches workingV2.",
+    "change": "After immutable original first assertion, center focused anchor and establish visibility before secondaryscroll check.",
+    "allUISourceAndDependenciesEqualCompiledC1": true,
+    "scope": "Code-behavior validation against identical UI inputs; not a claim of a newly stamped C2 build."
+  },
+  "results": [
+    {
+      "project": "chromium-desktop",
+      "port": 41051,
+      "passed": 3,
+      "failures": 0,
+      "skipped": 0,
+      "retries": 0,
+      "driverExit": 0,
+      "browserExit": 0,
+      "actualStats": {
+        "startTime": "2026-10-29T05:10:54.631Z",
+        "duration": 22844.561999999998,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cleanup": {
+        "executionContext": "main session normal tools; no permission override",
+        "startedAt": 1793250652.231663,
+        "ownedAliases": [
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/node_modules",
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/node_modules"
+        ],
+        "browserExit": 0,
+        "previewPid": 99365,
+        "browserPid": 99368,
+        "finishedAt": 1793250677.549422,
+        "previewStopped": true,
+        "ownedAliasesRemoved": true
+      }
+    },
+    {
+      "project": "chromium-phone",
+      "port": 41052,
+      "passed": 3,
+      "failures": 0,
+      "skipped": 0,
+      "retries": 0,
+      "driverExit": 0,
+      "browserExit": 0,
+      "actualStats": {
+        "startTime": "2026-10-29T05:11:19.808Z",
+        "duration": 24257.211,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cleanup": {
+        "executionContext": "main session normal tools; no permission override",
+        "startedAt": 1793250677.703171,
+        "ownedAliases": [
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/node_modules",
+          "/private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui/node_modules"
+        ],
+        "browserExit": 0,
+        "previewPid": 99500,
+        "browserPid": 99506,
+        "finishedAt": 1793250704.1415,
+        "previewStopped": true,
+        "ownedAliasesRemoved": true
+      }
+    }
+  ],
+  "status": "PARTIAL"
+}

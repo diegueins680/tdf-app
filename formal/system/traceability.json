@@ -10437,7 +10437,7 @@
       "domain": "BOOK",
       "statement": "The public booking form at /reservar shows the service selector on its first step (contact) as well as on the schedule step, listing every active offering returned by the public service catalog (recording, voice, podcast, mixing, mastering, rehearsal, DJ booth practice, classes, event production, ...). DJ booth practice is an ordinary offering: there is no dedicated booking page, header entry, Instagram entry link, platform or commerce card for it. The legacy /dj-booth and /reservar/dj-booth URLs redirect to /reservar with the DJ booth service preselected and tracking parameters preserved; a ?servicio= or ?service= query preselects a service without locking the selector. The legacy DJ booth feature remains addressable for compatibility but is absent from feature search on web and Mobile. Legacy DJ URLs remove conflicting service parameters before selecting DJ booth.",
       "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link. Product owner UX execution mission, continued 2026-10-26: actionable recovery from temporary failures while preserving form data and backend booking authority.",
-      "source": "tdf-hq-ui public booking form, public navigation and landing links",
+      "source": "tdf-hq-ui public booking form, public navigation and landing links; formal/system/booking-viewport-bounds.md (BOOK-VIEWPORT-BOUNDS-001); formal/system/booking-tooltip-viewport.md (BOOK-TOOLTIP-VIEWPORT-001)",
       "contract": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
       "actors": [
         "Visitor",
@@ -10505,7 +10505,7 @@
         "e2e/web/booking-catalog-recovery.spec.mjs"
       ],
       "formalModels": [],
-      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression. Error and empty-catalog component regressions preserve edited contacts across a pending retry and another empty response before success, keep the form gated, retain query-based service selection, and assert no booking/checkout calls. Browser fixtures cover keyboard retry and restored schedule progression with all business writes blocked.",
+      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression. Error and empty-catalog component regressions preserve edited contacts across a pending retry and another empty response before success, keep the form gated, retain query-based service selection, and assert no booking/checkout calls. Browser fixtures cover keyboard retry and restored schedule progression with all business writes blocked. Viewport verification uses a shared client-width bound instead of expandable mobile innerWidth. A permanent visible-width fault fixture must be detected and recover after removal; comparator mutation must fail the mobile regression. Initial numeric widths/result remain authoritative while bounded failure-only geometry observes later layout; local controls do not establish the original hosted WebKit cause. See formal/system/booking-viewport-bounds.md (BOOK-VIEWPORT-BOUNDS-001). Suggested-time helper viewport repair: actual open-before/closed-before/open-after resize controls isolate local mobile document expansion and zoom. A fixed-position overlay must preserve the immutable first client-bound result, helper text/accessibility name, scale1, real keyboard reachability and scroll tracking. Deterministic Date leaves timers running. Removing only the positioning option must fail the permanent keyboard case on actual persistent362/320 overflow; correct source restored. Local evidence does not establish the original hosted WebKit cause, all browsers or complete CSSOM refinement.",
       "evidence": "Local Jest execution (PublicBookingPage, publicRoutes, PublicBranding suites)",
       "status": "specified and implemented",
       "critical": false,
@@ -13392,7 +13392,7 @@
     "e2e/web/artist-follow.spec.mjs": "540fda97e2d352ce4e8319d85f21f12dd097968b3d7edd0689a7ca419dad5eb8",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "3bed38b4a63187e387f4c971d06f3e7fe3f76516d316ca2b1626d2aa1385412b",
-    "e2e/web/booking-catalog-recovery.spec.mjs": "f65777a6f8b5f9823e0e66ea4d49900aef1051d00c4e4d4ce8e4c085cbf23dcd",
+    "e2e/web/booking-catalog-recovery.spec.mjs": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
     "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
     "e2e/web/community-discovery.spec.mjs": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
     "e2e/web/course-enrollment.spec.mjs": "f64fed981fa69b332499556853637fca938c9b026b90c4aaf1b4f5bb97633311",
@@ -14256,7 +14256,7 @@
     "tdf-hq-ui/src/pages/PartiesPage.tsx": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
-    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "6abc794d19484430b8e0b53da892826b80a20fefbb30c69f8ea0fccfb632be5b",
+    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "2aa258dc66bffa06a09bc3581cc0d1c1342b512504cbd6f897854c79c0caeece",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
@@ -26326,7 +26326,7 @@
     {
       "id": "SURFACE-9517b2194ab847fb",
       "path": "e2e/web/booking-catalog-recovery.spec.mjs",
-      "sha256": "f65777a6f8b5f9823e0e66ea4d49900aef1051d00c4e4d4ce8e4c085cbf23dcd",
+      "sha256": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38814,7 +38814,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "6abc794d19484430b8e0b53da892826b80a20fefbb30c69f8ea0fccfb632be5b",
+      "sha256": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55934,7 +55934,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a259fe2d7bc4860f088d63fc3767826083e8f61a92e6ee0825a11a1386550816",
+      "sourceSha256": "f0ee80840381d409069da47e8e9428e721bfca27141b3349f2cb4dfbe900de7d",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -55962,7 +55962,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a259fe2d7bc4860f088d63fc3767826083e8f61a92e6ee0825a11a1386550816",
+      "sourceSha256": "f0ee80840381d409069da47e8e9428e721bfca27141b3349f2cb4dfbe900de7d",
       "definition": {
         "states": [
           "absent",
@@ -55992,7 +55992,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a259fe2d7bc4860f088d63fc3767826083e8f61a92e6ee0825a11a1386550816",
+      "sourceSha256": "f0ee80840381d409069da47e8e9428e721bfca27141b3349f2cb4dfbe900de7d",
       "definition": {
         "export": [
           "queued",

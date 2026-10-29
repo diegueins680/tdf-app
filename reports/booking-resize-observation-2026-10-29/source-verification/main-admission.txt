@@ -1,0 +1,11 @@
+{
+  "base": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "head": "6252d712c54aeb9561ea2116b7662d5c3fe36c19",
+  "mobileBase": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mobileHead": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mappedChangedSurfaces": [
+    "e2e/web/booking-catalog-recovery.spec.mjs",
+    "tdf-hq-ui/src/pages/PublicBookingPage.tsx"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}

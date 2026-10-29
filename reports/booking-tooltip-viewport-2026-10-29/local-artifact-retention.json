@@ -1,0 +1,3533 @@
+{
+  "scope": "All original local diagnostic artifacts are hash-indexed; selected traces, all raw numeric results and execution logs have committed copies. Omitted traces are local retention only, not externally archived or guaranteed available on another machine.",
+  "artifacts": [
+    {
+      "group": "hosted-535",
+      "relativePath": "booking-viewport-geometry.json",
+      "localDirectory": "/private/tmp/tdf-pr638-535-booking-failure-20261028",
+      "sha256": "5375dc6acee7aea2752822c023622ff61c855fceefcf5f6af2c63527fb3295e7",
+      "bytes": 9647,
+      "committedCopy": true
+    },
+    {
+      "group": "hosted-535",
+      "relativePath": "error-context.md",
+      "localDirectory": "/private/tmp/tdf-pr638-535-booking-failure-20261028",
+      "sha256": "094be355860c364c1b58e930c1861142282935b835a6a8460e3d21a2c8a8678f",
+      "bytes": 24735,
+      "committedCopy": true
+    },
+    {
+      "group": "hosted-535",
+      "relativePath": "test-failed-1.png",
+      "localDirectory": "/private/tmp/tdf-pr638-535-booking-failure-20261028",
+      "sha256": "aeab18582110a70aa3846358b31960e618f427cab7e9dfff2d804b5274e3ff0a",
+      "bytes": 255489,
+      "committedCopy": false
+    },
+    {
+      "group": "hosted-535",
+      "relativePath": "trace.zip",
+      "localDirectory": "/private/tmp/tdf-pr638-535-booking-failure-20261028",
+      "sha256": "dd3ff3dee0c67f2784a8ea6ea3be07f53a2c9a2945aef1914f391873a7a34bc5",
+      "bytes": 1400380,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "chromium-desktop-A-open-before-resize-geometry.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "14feadd4123b4a5b38dde7fcb5b28e2e19ee90909e86e9c85421db7740e0ea86",
+      "bytes": 13746,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "chromium-desktop-B-closed-before-resize-geometry.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "73ffc4b75ba5822f062283bef0117878430e42e6344f7c87f85947dfc4b3b2a1",
+      "bytes": 10774,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "chromium-desktop-C-open-after-resize-geometry.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "92c22667591ae0604c718fa877eba99f0b1621b6d2f630d913387e3374f41488",
+      "bytes": 14208,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "chromium-phone-A-open-before-resize-geometry.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "b6a7e4d9fc3207c01c9637f57212a44bcf0c10f7e40d418a5e25fb9fd2fd7f6e",
+      "bytes": 16632,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "chromium-phone-B-closed-before-resize-geometry.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "70d45161490a8978e478ea4bbc213e04d46f9c05279766e0f6e1880ffd5f32bf",
+      "bytes": 10752,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "chromium-phone-C-open-after-resize-geometry.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "aed4d8b54e0b6e4fc5e97eba18f3901203d6582bd07faebbf5c9c9537b8224f5",
+      "bytes": 14318,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "execution-root.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "8db3f511f8c3e8eb2a7018dfa54b8ea19ec77e050e403056979ff33a8455f20b",
+      "bytes": 454,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "execution-sandbox-refusal.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "ebd53a17083c4f7e9e1992cded92923ee5db20d49dbbd55539ff3bd51e48b328",
+      "bytes": 175,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "execution.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "ebd53a17083c4f7e9e1992cded92923ee5db20d49dbbd55539ff3bd51e48b328",
+      "bytes": 175,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "firefox-A-open-before-resize-geometry.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "23200b5a47abe6f087c260a07d4ca365e94cd631e545b1fbc247c4f53bda4bd9",
+      "bytes": 14116,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "firefox-B-closed-before-resize-geometry.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "5b7346aebd691a5bce853537f77eb6cb1cc38f2c7812225a719eb63fae38711f",
+      "bytes": 10988,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "firefox-C-open-after-resize-geometry.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "86440c67c9ad73acb5dba2f31f8c9c298eafb400ee53ceaff411a6fdd839d039",
+      "bytes": 14575,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "inputs.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "de37d3a2b23c06186f6c16482a78ce6be8aafb2d07b701a79e60871a3506e574",
+      "bytes": 44920,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "intervention.spec.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "17129ee8c1cea40f059e4b96fa33345fd629117c79ada30e8e8ea734fffb8c30",
+      "bytes": 12389,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "5e91445bffbbd18c40f117cb61a586a93820e48174c60af3063d9bfc11a0887d",
+      "bytes": 96,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "f0ef5a0cd39084c3f9bc9141a6e54fc1a8fd736d41c06b8738bd8649a8f63cbb",
+      "bytes": 301027,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-desktop/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "68077277eecd5fc2d94ee9a64cda1cb5f4038e2b17de9e385efda889b529b74a",
+      "bytes": 301073,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "92d56aad82cdb61a573388dfa1e3df58a99281c21cd8085234d588191bc82c03",
+      "bytes": 2417865,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "9bc1c06fc8161168f360db346e3e27e75e21c420e19ad86c1279993b801c5292",
+      "bytes": 1589592,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-phone/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "9fb48482270a8c66059c4ae13e423267184d63eca370cb30cc409241798de6a9",
+      "bytes": 1595801,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "621a0cb8c125b327bd7c89609ed7bd0bd1bd08a160d47a5b0197a084ef953ef6",
+      "bytes": 3772099,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-firefox/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "9c78d5442b21ecf9cd09816395dd215c45db14da1c69fa548f36cf8854ff2fb8",
+      "bytes": 283418,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-firefox/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "60f5de460ba80350ed802155307e34477aab0c4617f337d890228fe3f682ccad",
+      "bytes": 284015,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "9a88bb2982ebaee585b7968ffb1f14304007113c86147b24ae8a85325f32480a",
+      "bytes": 3679256,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "2fc7ff73eadfeabe78616d38f508018ddf4645d359c0186e32599e1f6f490938",
+      "bytes": 299720,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-desktop/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "25393661d4119ed1dd6e6e7ad522aa899d6b646cb514b9204ab3d36e323bbf13",
+      "bytes": 299438,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "60ded08af5c763eef8bce8cdf4a5d7eea6e1f569b93a8e0f27abbbadbc127048",
+      "bytes": 2225879,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "b8333ca0906449c87ee8946094331a8b235feb4bcdfe88b0fe612f8e5450be94",
+      "bytes": 1588169,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-phone/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "2fe1877e4b2babd0465a59ecc2ab90ccd6c15658fa2aaa6c30b008456a6b21d2",
+      "bytes": 1587629,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "ac78d6c73c9ccb33fa943c19f5ebfb56fb0f33d63aa64adc369632bc7daf80f4",
+      "bytes": 3323740,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-64632-resize-critical-mobile-flow-firefox/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "d63dc0df998da9a8dcd4251fcd6de57a4ae79ffcaf5174ff699a36bade930a40",
+      "bytes": 280722,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-64632-resize-critical-mobile-flow-firefox/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "c9ec9edd21d51fdacb0ed16cacfd14cf40e200d7873d3552cf0e419c17a1c89e",
+      "bytes": 280162,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-64632-resize-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "f82ab213c3dccd017095201396443392e79f886402c48edfc3e8b44edc930360",
+      "bytes": 3400967,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "4af9fd05246e24e3f25f39ec6e78911b0981c515ec372bea0eedab849814cd00",
+      "bytes": 299428,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-desktop/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "22d82a2a03bcb079f180e070adab36824a73b92e016267e5657c7374a8652ea1",
+      "bytes": 299531,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "4de28deae61aba34bf4ff833f90f16f816bf2b23e8dcf39979292eec7fd5b35f",
+      "bytes": 2696793,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-phone/error-context.md",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "d102b9c6113fb452eaf76eabb96ea50dc86a5b422c0aa6caaf1906a9ea529c5c",
+      "bytes": 24669,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-phone/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "14f710b87dbee78146b30c3a864d8b6a62c299798acb25cc4bcd96d61d412e90",
+      "bytes": 1588260,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-phone/test-failed-1.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "647a44195cad6451661c53b6924c12dc8ca9f4f1ae16d09ff41311644aeccdc9",
+      "bytes": 469783,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "14d7b3fb508fa7a3df1f0e32e698377fb7e6242c194cb5c82cbef7e67f477158",
+      "bytes": 4829802,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-firefox/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "3565b80c5ab59a7a80d90ad4423ee565e5bb4722ceadc8a854744dda737e9ae8",
+      "bytes": 280473,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-firefox/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "fb761fde61bf86ce7f8ed38f4b6eda5cea7c1ffbf61457d82bcaed2d0368d6a7",
+      "bytes": 280710,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "2be3882501c7faa90fc174c69251fd7f6ca247421dc564dbcea7be0501d7c918",
+      "bytes": 3619495,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "playwright.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "5c21303e272a6e2eb6cddc7b5252da01d1a1336aaa979e5e195bdd3726fa52fd",
+      "bytes": 1139,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "prepared-fixture-duplicate-binding.txt",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "53bb5d1c2b058d7adb7278c6d0fc14688e9ebaf0e05215ee9ebe305c3e94b807",
+      "bytes": 12381,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "preview.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "4b3e570e871c643cc4622ec459a98711893dd1090ec9897b9fdc99c7a92a0c60",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "results.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "de37ca94d79a97575c76f95500afab3a31f15ce6f3775435bf8d434ef3fc6f9d",
+      "bytes": 177926,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "root-preflight.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "3ecf9c081a1e145f65f0a4eebf6677ebb91932d43f3d96488bcdaf0dd7190c30",
+      "bytes": 980,
+      "committedCopy": true
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "run-root.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "5792b488b85d1187cd87b39d28e2ade74b4f3908cea46c23d8560c33a5369d71",
+      "bytes": 3181,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "run.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "c81206da62e79fcdbdc84b00f5f57a66ef1edb8a6925af17674429c877045923",
+      "bytes": 5117,
+      "committedCopy": false
+    },
+    {
+      "group": "baseline-abc",
+      "relativePath": "run.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-intervention-20261028",
+      "sha256": "7bab12153d4311dd74d11bfd96e0d7fd31080f9af9c6f5fb5e7e886b2b3fe09b",
+      "bytes": 3105,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "build-inputs.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "f63779d1fc409952effa75b4a29ebb39ceb3d9fa8d8b78ec30779c86d491dd62",
+      "bytes": 44067,
+      "committedCopy": true
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "execution-desktop.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "8a3eccabbb4a0c72d12216cfd32cf932890550a99c38326e4bf8c566e01e427b",
+      "bytes": 455,
+      "committedCopy": true
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "execution-firefox.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "590fbef9cb87a63dc895de722ce8c3a904a96c10b4ff2be447a2418fddafca2b",
+      "bytes": 454,
+      "committedCopy": true
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "execution-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "038b715b8fb9c2afb837fb1b5a6c39e1176532e5eb4c4f8c2d665d074a99fbc2",
+      "bytes": 454,
+      "committedCopy": true
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "execution-root.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "2cd1c0a25d3a074940636e01568ce3ab564c7c8b900233a9c94fc26850c01870",
+      "bytes": 475,
+      "committedCopy": true
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "intervention.spec.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "551e6f67af5af4b2a50f5879392f4a8a54fdf013336ee33948fce51b2d8ecb00",
+      "bytes": 14872,
+      "committedCopy": true
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/188e83da6131da2268962e5e3a1222ef.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "daff595b41b293186cc1c0846df8997c101cd15d9d82a2cd43c2623892b30288",
+      "bytes": 253175,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/536bf935b891eaee3cefcc2ff8a5f2a6.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "a2becc21ae5a104e5401fb06bb0ba4ca02b2758981525535db95650936fa9a5c",
+      "bytes": 334682,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/c6a5111142cf946893a5-4e4cc79eeca4e7b21053-pwnetcopy-1.network",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "8a3e50c9d1d28d3397e37dec4e2e123ac90c4af705c4c168754f7762c45258b0",
+      "bytes": 97920,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/c6a5111142cf946893a5-4e4cc79eeca4e7b21053.network",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "8a3e50c9d1d28d3397e37dec4e2e123ac90c4af705c4c168754f7762c45258b0",
+      "bytes": 97920,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/c6a5111142cf946893a5-4e4cc79eeca4e7b21053.trace",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "f3793de05f15fed5c0a0302e3f7036b2cf325fe979a5f55c44e723a087971b18",
+      "bytes": 2092399,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/0229b2e53067616ed60331e944ba1290cc660b56.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "631f4d836f9d199ee9721cc528112d8b61d2b90455bb214dd364596b487fe6b6",
+      "bytes": 18,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/17a172d7fda95db705ab3184266c90c9b675d54f.css",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "62dd938cbe66cd438b7c741d7a72006a7339f814c6fb6221f0cd07b680321207",
+      "bytes": 865,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/2be88ca4242c76e8253ac62474851065032d6833.dat",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "bytes": 4,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/31a36146351dd1457bb0cf6c3caf5ecfab148140.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "da62766456e56b3eab7d6a7ab2a4d72211e6d2bd5c71dba43b01134bbf94b7f4",
+      "bytes": 1070,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/680771e026926700b057fc3a34425623748d6325.svg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "12e3ed3dd9aac37b07b96411e24a4d1438808556f8397efe26e7754fe4895fc4",
+      "bytes": 10537,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/72f979cc1c1826d19102aa1ca25a29b269754695.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "56cfae419491a995b8509a909281a1c76a842f556963712eba5c92c7e48c13cf",
+      "bytes": 25,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/8b28f20e647ad2319c82697dce5bf30f3b235430.css",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "42871364d8c3cd583a9a3a0d040288abec1137253be989d9c998be4e28ab8f13",
+      "bytes": 1152,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/97d170e1550eee4afc0af065b78cda302a97674c.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/9cc47e393606e61bfe1a8e3ad0759cb82e2a4a52.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "02fa596dfa2455cc9c3f730c137bbabc176b90ccaa112943281ba067e92a253a",
+      "bytes": 36,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/a87d6a9ed16560aa26bae296d92e13698cda9ab6.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "d7fe054e558b5da7e227895b9236c7070b41b0b93d8332fdc19460c3ebcba987",
+      "bytes": 64,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/b74ef945dcd3706cec9f019cf56925e5cd09ef50.html",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "7b605d382aa4bdbd722629994df51ea13371a586b4186eea9090957661456d9f",
+      "bytes": 6646,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/bdbb2cbc158e4fc4aa3c98af736aeffd20317e97.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "5028be8529670637dec4294ea1cec22903a588a776e599f0ab93c10f7b9831e4",
+      "bytes": 35,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/e56ddced77fba7bf29f462ebd01da1ca7436255d.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "180c8737b1cccf5a37c8cb853334668736de4fdb86be716eaa0e572bb4d8b615",
+      "bytes": 627,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245530771.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "3b9ef990d4506f0c41b9c850d2719a8c323dc03f298705b3a9fac17514731df6",
+      "bytes": 1859,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245530871.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "7e7475635d38814bf8d2085bc5d028b418896000b27808d3a76f30b316b1826c",
+      "bytes": 1670,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245530996.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "07de2d398cd86c72441f800f314256839a0ee9ff9b906101eea139abf704b1ea",
+      "bytes": 1670,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245531355.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "ccb0196dc6db56c9febcffecc9875af50e1a05adbcb7ae0749f4feed057d6f47",
+      "bytes": 5471,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245531356.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "ccb0196dc6db56c9febcffecc9875af50e1a05adbcb7ae0749f4feed057d6f47",
+      "bytes": 5471,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245531408.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "ccb0196dc6db56c9febcffecc9875af50e1a05adbcb7ae0749f4feed057d6f47",
+      "bytes": 5471,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245531930.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "ccb0196dc6db56c9febcffecc9875af50e1a05adbcb7ae0749f4feed057d6f47",
+      "bytes": 5471,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245531935.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "ccb0196dc6db56c9febcffecc9875af50e1a05adbcb7ae0749f4feed057d6f47",
+      "bytes": 5471,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245531953.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "ccb0196dc6db56c9febcffecc9875af50e1a05adbcb7ae0749f4feed057d6f47",
+      "bytes": 5471,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532073.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "f59b0c6091ed14ad6e5613bd1ee46883cd28b6f2a0fe776e44a5bf70df5b7c2c",
+      "bytes": 42060,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532091.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "69f2ac3c37a78617d7c96d085e6233cab9534815908d4c2ad698795782b52e6a",
+      "bytes": 41901,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532095.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "7a1021c3d178dcc70ebaf15f7ec1ff5c69592a23664b866de0230f4e8c226bef",
+      "bytes": 39293,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532099.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "6946ab99ca4d7a3ca1ebd143c2b47550f4c99747f3053ad3eee4693d28427a4e",
+      "bytes": 39691,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532108.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "6b8868cb1c813797db5b2ed86a6ce5ca9d3a98633a0cc5dfa00ec53c289419a8",
+      "bytes": 39811,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532124.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "7af60e8a4bf8f3877aa27fb1c5b4776391900341106d149a64c240270ef79c03",
+      "bytes": 39924,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532142.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "17d4622f3666cf4040d756b7c6ee3de3de51ccd2f9dcd4502e098fb7d3d5f946",
+      "bytes": 39970,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532170.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "634639df9b149866f35454abca3a2e2aa9f5ebe8a8ab111f64aeff4fd3a6142d",
+      "bytes": 37888,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532174.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "2d7c388c5160bbc7ddda7b32f8788a96b18d05056c8b8d9a2a126be494a80b10",
+      "bytes": 38056,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532195.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "83e7b02ef663eb9e047fecb7efb96d924f1c625945af3dddf8e157f7087268e0",
+      "bytes": 38028,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532206.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "b759dbb4335c4c9ccb805342a89d1b69bd8816c93bb668f62af92d294d11e358",
+      "bytes": 38084,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532228.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "fa0f388a345b6ab7b73c8e65a76be2ee832716295b8faf3b7f2158140efdf450",
+      "bytes": 37859,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532240.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "3cdba4a732440cda64ea661604051c78ef79228ea25b374cc15eecac78e541ef",
+      "bytes": 37741,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532260.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "bfe70ac0e89a62ace94f74e0db18775036f0035e8d05a8c43670da4a43cb2c90",
+      "bytes": 37693,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532272.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "d89e5395928dd4a979806132966825b11c5d232ae6c18ad8a62f52685bca77b0",
+      "bytes": 37803,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532296.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "98e3a77872a470c7c6302766e1429ee8e49048b85d3d6cc6fdb0c6051ca16827",
+      "bytes": 37817,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532306.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "fb1afee03176069502562e34de665c2f717d96c8a7962262a96fd1c59cc21ab1",
+      "bytes": 37841,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532322.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "d4b30ef0ffbb6298cd3ca21e5633e805eb89fa9d3122d06a3284d8c5f87cc6da",
+      "bytes": 37835,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532338.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "3a01fb0ae9e049fd0aaf0cc35cae20c1862a26f46335a747d446c6f6b357594f",
+      "bytes": 37827,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532358.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "1af4c4ed2e7bb14eb859b8c6816fb8cabd42810be7963f20026f88df5954b167",
+      "bytes": 37819,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532371.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "01d03c8559ab7c1140604dc132dc15e64974cada6df20ebce656a3f005230888",
+      "bytes": 37845,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245532662.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "456ecd0aa241862dc800d81fdbf5db161e362cc754f4413ae95cf02b85c6813b",
+      "bytes": 37852,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245533161.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "01d03c8559ab7c1140604dc132dc15e64974cada6df20ebce656a3f005230888",
+      "bytes": 37845,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245533663.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "456ecd0aa241862dc800d81fdbf5db161e362cc754f4413ae95cf02b85c6813b",
+      "bytes": 37852,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245534160.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "01d03c8559ab7c1140604dc132dc15e64974cada6df20ebce656a3f005230888",
+      "bytes": 37845,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245534662.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "456ecd0aa241862dc800d81fdbf5db161e362cc754f4413ae95cf02b85c6813b",
+      "bytes": 37852,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245535182.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "01d03c8559ab7c1140604dc132dc15e64974cada6df20ebce656a3f005230888",
+      "bytes": 37845,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245535657.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "456ecd0aa241862dc800d81fdbf5db161e362cc754f4413ae95cf02b85c6813b",
+      "bytes": 37852,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245536157.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "01d03c8559ab7c1140604dc132dc15e64974cada6df20ebce656a3f005230888",
+      "bytes": 37845,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245536658.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "456ecd0aa241862dc800d81fdbf5db161e362cc754f4413ae95cf02b85c6813b",
+      "bytes": 37852,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245537175.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "01d03c8559ab7c1140604dc132dc15e64974cada6df20ebce656a3f005230888",
+      "bytes": 37845,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245537658.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "456ecd0aa241862dc800d81fdbf5db161e362cc754f4413ae95cf02b85c6813b",
+      "bytes": 37852,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245538159.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "01d03c8559ab7c1140604dc132dc15e64974cada6df20ebce656a3f005230888",
+      "bytes": 37845,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245538657.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "456ecd0aa241862dc800d81fdbf5db161e362cc754f4413ae95cf02b85c6813b",
+      "bytes": 37852,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539160.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "01d03c8559ab7c1140604dc132dc15e64974cada6df20ebce656a3f005230888",
+      "bytes": 37845,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539295.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "efe8c55d92b817fb96a19c97e712c352b8e0124b633f15031cb9b7eaa0040b7d",
+      "bytes": 36983,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539312.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "702a5306513237904116174e94c6d168c9dfede1b8ec4fe351366069a6f84236",
+      "bytes": 36917,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539333.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "2618fe5c543bf5fa76ef4978d2d3ba6b3db87c26630899a56686aeb191a05597",
+      "bytes": 36896,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539343.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "d797d080afeee55f4fa77c5f3c465fcbd92bac38f3347490ef86787a232b1431",
+      "bytes": 36874,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539376.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "50a221d3f42736e7af28a5c04c4f849c78b4c0ee949bfe075e2eb5bc28c8283d",
+      "bytes": 36859,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539379.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "5f0c894ef074fbc7cf635d1b2106085defa63799f5fedf00733770810f248db0",
+      "bytes": 36846,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539391.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "65868953754661e784d97716cadcc884e24f40b4dbfab5d34009bd31be93bc68",
+      "bytes": 36851,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539642.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "1e37eaf763890720f2c723156304805eb1d8fd477aed84ea57e5a37a67cf33ae",
+      "bytes": 36836,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539924.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "964248e7da9ecb5f8472a1c917825940c84910623f31159face7004b14d73814",
+      "bytes": 51730,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539950.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "964248e7da9ecb5f8472a1c917825940c84910623f31159face7004b14d73814",
+      "bytes": 51730,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539958.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "68d94befcf16d5e5a9ce1ed66dd278c5a63d3e5d498fdcdef1d4e4280c9efd27",
+      "bytes": 51732,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539973.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "cefc53376973696da4d27c4468a6b3b28aa2ef287659e89e1b60d93549cc3f60",
+      "bytes": 51757,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245539992.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "dc56a210daa2220bd80c465acaecc65f836afb56afeeafb57fbd9800e5d48fa8",
+      "bytes": 51840,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540048.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "cba95f018b137ff00bf5c1433acc9a2b63d261b8232563371b845d43561899ee",
+      "bytes": 51725,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540050.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "77ee46c8a779d2b297e715669c9e61b62c8b33fd7c61be4c5c9c0be7962de06e",
+      "bytes": 51681,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540052.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "93e4769f5b2079dfbd470f8bb58775c9998f060936a12bd4f668df2684288ca1",
+      "bytes": 51528,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540077.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "895e9b3509f0d5c0444c86bd25185ecff12fe66c9186d165e68c9362f648f94a",
+      "bytes": 51376,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540081.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "44b68914a9af847ad643433e6997773df217b1cfaef487397452b10069156bdd",
+      "bytes": 51272,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540096.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "ae2aee885273b68e42a57c6aa5c3abeca5582505d378091e485b3df3f40f892f",
+      "bytes": 51205,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540131.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "e48d48189592004377572d18988162f79f454f46cf4011e4bf356ff2fccd6072",
+      "bytes": 47709,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540239.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "6c0b8ec55217dfa07248c38c14115e0bbc0d68902f87e375742a75793d372b09",
+      "bytes": 51023,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540467.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "ebe99ad770b7dc81d92d547e2a7ca728fce694b0a5368353714ee65d3b1de34f",
+      "bytes": 25944,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540487.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "9236163cbcbcf11cae1ef47944c90db1a8e54618efaea0dfeb737cdabd4fe211",
+      "bytes": 25931,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540505.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "884d4e1f3612b14a879d550f83d9a17a5a6bb94d5dbe5b94b28a31639240d722",
+      "bytes": 25948,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540524.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "96446a61fdc6e453791842e78f396790383ef38ca16271dcd9d1abc2d435e9e8",
+      "bytes": 25949,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540536.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "d15db503333bed2f51edef1a0950d36fcd0a4356cccfe3499d8053fd9cfef9d3",
+      "bytes": 25947,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540554.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "680a8cc746264734332eeceeca062834d93e50ecd5b0f230e4853a7dc6e0c4de",
+      "bytes": 25957,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540569.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "c3aa83b44cc6de0d62982791e5d65138074dd26bcf90f1847d6e6913037d1ee0",
+      "bytes": 25946,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540587.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "78cb8d826253b983fcd7b8fc4113ac536fcbdd07ae72fd6385901548b3ed1d94",
+      "bytes": 25932,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540622.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "8b224bee47e8113af6861b335fd2481e49edc0f3993df29555284b579bfdef49",
+      "bytes": 25942,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540624.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "044811792d69bd997499fe8d8859d3f5bdf21549c30cbe1cdedacd36a5ac0dd3",
+      "bytes": 25958,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540636.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "cd61b32053dae601a37656dd2212ede589f48afef7389cb612ecbb5f8c18bf0c",
+      "bytes": 37438,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/.playwright-artifacts-1/traces/resources/page@bad6b69ff2b3e0f499883eca1c598202-1793245540671.jpeg",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "85b76bf23aa1c63b267687bc81f6ff632759e5364a6ab111f812345e2c435e10",
+      "bytes": 37432,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "9f5ec568da1fd095ca421a2e073f6f18678d3df7e91f808072f6a5ed11e1ad33",
+      "bytes": 301163,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-desktop/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "dde915e880c2ab2f268e4b0a260fc9cc670a2eadb82e493012bcfb16a56a6ed0",
+      "bytes": 301298,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "b9b9a7b88a68315e824a5e524df42027291859c6714b0c135e4c2ca1591a6554",
+      "bytes": 3223117,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "ac5ced77a6a8d0793d0288ca5e7525f3ab51beff2f05ebf8574a2183ae027645",
+      "bytes": 300122,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-desktop/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "40f905951aa6ea719edd027592b883d799e953bedad091431e62812f975100a0",
+      "bytes": 299593,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "7071f3b3cbc2cea422b7c3eb1b0241eb7380e88dbbb42d5a5c3f4110a77358cf",
+      "bytes": 2533864,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "4b81a3b54eb2525e4afc6d90acb9fbe44971a22ad00af309c882c0f616ee881b",
+      "bytes": 300291,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-desktop/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "67cf552086102655efde5a6e167d3f33c45a8924f1a32ff7a18ef2ee9037b57a",
+      "bytes": 299934,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "aec826e4008567379f6a98cc236ea8a60ca78c5574f06f3bfa4bb85a51cd5ae1",
+      "bytes": 3051188,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-phone/error-context.md",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "f05876efd992889e91eab8dd036bc741499a122fb45ecf516cc3b808ab6eed36",
+      "bytes": 447,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-desktop/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-desktop/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "3703105e14f091e3166b601d9f7b46870270de90fcf68f4c08208e545952fb05",
+      "bytes": 301519,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-desktop/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-desktop/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "0e0a6b6ddae6842442bf447701012689dbdbf067a039182bc28cf17111ad3dfd",
+      "bytes": 301113,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-desktop/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "3ea4850e3e5114ccc2c9b9b1ab7046707073b3d15e7c6e85abf6fd4e5692f74e",
+      "bytes": 3138118,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-desktop/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "6daa6bd0d40d221439c56b0cd24ff46a207208288a4eaffd55d4f248ffbe16cb",
+      "bytes": 299566,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-desktop/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-desktop/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "1656a032e745888fac3ee12ac2ef8ca14774dc4991595720404c48364679811b",
+      "bytes": 300016,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-desktop/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "ea2ecddc20ac4927e52395e8221df3d6c0d2c86c2e5e4c3026d4a09a77d05cc1",
+      "bytes": 2014831,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-desktop/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "d32591bb5839a3dddc8ffd6a2690153935e13f39fad64393a7a409b6f4385204",
+      "bytes": 300036,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-desktop/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-desktop/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "512ac0a8a90603c5cfdb995939c5f3c392ae8e0587d991898940dd1a6e9aa8db",
+      "bytes": 299514,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-desktop/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "cf5d413bfaba7cab2f4880f57d1ee31b9e21b131c84be9b67d4ee8bdecd8a475",
+      "bytes": 2345053,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-firefox/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-firefox/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-firefox/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "c49530e725e8cee9019950f3f9f59cb64c83923467f02878d84a8c365f30b007",
+      "bytes": 284794,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-firefox/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-firefox/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "b9d5b5f84ed74f14413c8778b50f34d49cf906e429179cf749f0aaefcf96aad1",
+      "bytes": 283741,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-firefox/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "3d29d7c3d13de05cbb38ec2492710a70447e3d0c5ba0ac96e4be3202c332c595",
+      "bytes": 3761690,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-firefox/intervention-tooltip-inter-64632-resize-critical-mobile-flow-firefox/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "133864e90de223d4f9098fe348f3f6691bb426711d9ae4aacf3dbb190068c198",
+      "bytes": 280757,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-firefox/intervention-tooltip-inter-64632-resize-critical-mobile-flow-firefox/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "a951428557154f80c7aa46c2b8bfb7821cca2354ad66b0893ee51a6b0c077d40",
+      "bytes": 280150,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-firefox/intervention-tooltip-inter-64632-resize-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "a9ed40cfd6eff8f86e956fc2ec91a292a0c15d328ac2a13964e6afa0e6c7521d",
+      "bytes": 3387932,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-firefox/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-firefox/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "e3579e2e4dba5cee699af8f0071411af1330de9c370ab29c12457e4655f64d59",
+      "bytes": 280445,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-firefox/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-firefox/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "dc5f58421633b28fb3a4945b229c66a2805c58092a2b3e33bde7b5039cb875f6",
+      "bytes": 280672,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-firefox/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "15121f3b91584c8dbfbfdf3c9d58967965b82fb926edb0573f39a84d60e46111",
+      "bytes": 3547157,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-phone/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-phone/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "8bf3411ab44472331b706e4d00b7d4195eee55d7da26e865fc1efc673bc605dc",
+      "bytes": 1591433,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-phone/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-phone/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "9fb48482270a8c66059c4ae13e423267184d63eca370cb30cc409241798de6a9",
+      "bytes": 1595801,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-phone/intervention-tooltip-inter-0f837-resize-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "75fcdb570b630f256469e4e9635b8869ec455e154cac418f894028ef46e5b002",
+      "bytes": 4256740,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-phone/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "22a09fdfece028d0391d2ab74761f4b556ac02e469c03a8e7eea3992f9e011d1",
+      "bytes": 1590829,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-phone/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-phone/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "124ececdaf1ab00fbb25f1663cff9cd2f7940cf3ef4b883f3ba99fac0aa14951",
+      "bytes": 1589258,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-phone/intervention-tooltip-inter-64632-resize-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "da941eb90b1ed364d01e390ba7532defa052d0235260961bed653b5c2a39f8d3",
+      "bytes": 3092927,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-phone/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "8b4b9d99a1d9e61bc5e9eb2167e4d07a2ce0af50f36e8585563225a161873d13",
+      "bytes": 1588463,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-phone/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-phone/intervention.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "8cee6caa60a88c560659ebe5e86c2f0b9dda2f81645ffcd9d518e766de5d9177",
+      "bytes": 1589594,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "output-phone/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "9b27cd9dfc048a6642fe2665a4ff81f98d914797ba0fa18d33a11245833e73ca",
+      "bytes": 4183616,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "playwright.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "b771bf139986a396854cc34dc06bc3bd7538df9db92eaa6b74dc2ee82346cceb",
+      "bytes": 1125,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "playwright.desktop.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "ed544ac16b8b317bc0c3e88c4c10041d40d3a6a1b2dc447ff514950717fbd357",
+      "bytes": 467,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "playwright.firefox.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "f625128f906a602387391c4910f209e46429b5cf9fd02d8a569ee4b5403e64d3",
+      "bytes": 458,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "playwright.phone.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "e60694c13580c6cadcb6cff244a523c0dd09fb2694df228125965064fb070f54",
+      "bytes": 461,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "preview-desktop.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "4b3e570e871c643cc4622ec459a98711893dd1090ec9897b9fdc99c7a92a0c60",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "preview-firefox.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "4b3e570e871c643cc4622ec459a98711893dd1090ec9897b9fdc99c7a92a0c60",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "preview-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "4b3e570e871c643cc4622ec459a98711893dd1090ec9897b9fdc99c7a92a0c60",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "preview.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "4b3e570e871c643cc4622ec459a98711893dd1090ec9897b9fdc99c7a92a0c60",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "results-desktop.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "4adb5d0531f408831c73fa12837a85b554e0ddbd3235d697027e87d803f9e984",
+      "bytes": 65049,
+      "committedCopy": true
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "results-firefox.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "fa30406450a51410f9af400a1008e286ee264bb7d9668468a570194a87b107ff",
+      "bytes": 66349,
+      "committedCopy": true
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "results-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "4e2b50595c21c4001d73aa8ed241b218de09480988bc5ead3249cb32dfde148a",
+      "bytes": 65403,
+      "committedCopy": true
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "run-desktop.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "28e9d6543a4bb723fbc83319537214afab0850a9a409bb965258c45c9718cbd0",
+      "bytes": 808,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "run-desktop.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "d0937cab5c766b8e3d6db05f07bf0b030559dd001439f56d18ff3d88accaefff",
+      "bytes": 3277,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "run-firefox.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "581d7f24e221177c7d885a3d0dd186e5dfb0098d14385f482192d9382f4c8a12",
+      "bytes": 781,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "run-firefox.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "f8bc6271b8e9bbc98fb62ccca867ceaeeabffed05b1af611e3e81fa70e3fb9e6",
+      "bytes": 3222,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "run-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "b8488f9d878a54242e22f4a72ed4e90ae550bc139e774c280c93a39a52a8d680",
+      "bytes": 801,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "run-phone.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "53a50f39d939849822e8cbb877c4ec6fee0444b006a3bd114213bb04a8e96757",
+      "bytes": 3212,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "run-root.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "fcbe0a7bfb451b9b3284e72f5bc0814838d51e907946f299240b7ab0ea3e41bd",
+      "bytes": 3174,
+      "committedCopy": false
+    },
+    {
+      "group": "fixed-abc",
+      "relativePath": "run.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-fixed-20261028",
+      "sha256": "dbe458bfbff17bc976ebec95648faa9e235b340f6e738fa8a45ecb0f1c6469f6",
+      "bytes": 1260,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "booking.initial-positive.txt",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "9d952ed2080419ba8de6f537a82f5807b78ce906cb49c848c25aa7ea2ba3e577",
+      "bytes": 15135,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "booking.spec.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "42746d24127bb0cd64f35dd6af60cdcfbfbeeb58f96eb2020b7bbec4ddafb7fa",
+      "bytes": 15496,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "correct-C-build-inputs.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "ff2daf89591f7b5558685b7d190dfa59358b0527c9e860b013727806b2b2c9e4",
+      "bytes": 44012,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "execution-final-chromium-desktop-startup-busy.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "a6ed929ef5db4341d230ff9fd73b0b56e44180cd4cf8f02c6b61946c227c5592",
+      "bytes": 249,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "execution-final-chromium-desktop.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "34bd4960ba6587083ca59bf3d5d5c8c108fc81395a9646c954ec4bf2d6ec90b1",
+      "bytes": 455,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "execution-final-chromium-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "ec23352e1ce822f00a9f582213b2ceeb1399e68275811027cd8127ca0ec9bfb7",
+      "bytes": 453,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "execution-negative-final-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "bc6403dc06b3d4f36cfe34c29ed6270503d06f7f736c11facd3ba5744e54a100",
+      "bytes": 455,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "execution-negative-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "73e471ed45bef339252e654d878af5146ec2da3d6a0d5c9b3368a80b5fde0b65",
+      "bytes": 454,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "execution-positive-initial-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "ea5b060bb4c9e977d9527d0e0e6b5f3c9c14155e349771c505ce1708d5c2d9fc",
+      "bytes": 455,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-desktop/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "9afddc00ea3d474c9102f954a50d78b15ad0be6916540f89a53f086e5db383f9",
+      "bytes": 145,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-desktop/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "2b087f345332b8e61d9f53efa58a340e219d6c691e085d66a88415d502b0b2d9",
+      "bytes": 13307,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/error-context.md",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "bd70a78d6916784cb2fd9825879e55e8f4dba741d22032d59b8453f22eb4b40a",
+      "bytes": 25411,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/test-failed-1.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "e6760791c5b6d0ef206120863c7bb3d624689b76d76427d6638cc1724ac9d0d8",
+      "bytes": 87709,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "1d7fa9d53ce2b38ccb9d2251c13a732ad222ee0bc2b7676e20bda72124251810",
+      "bytes": 4945243,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/error-context.md",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "8e1556eed1508a3df8266e147bf80d19fd52b27a7df1412b1153cd236c9ab692",
+      "bytes": 25411,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/test-failed-1.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "e6760791c5b6d0ef206120863c7bb3d624689b76d76427d6638cc1724ac9d0d8",
+      "bytes": 87709,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "c203fda093350cc29e499d48e68b3bfdb59fc1b62e178257420229036e4d3d13",
+      "bytes": 3801936,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-desktop.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "6883d1ee0d504dfb9cf068b311a425156eb68706ed25ac5e5ed4739b8d37bd4e",
+      "bytes": 17664,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-phone/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-phone/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "8fd7110a4309e63571f28cab4b2defb286c8359cb9ff493e49b9d45fad9fb4db",
+      "bytes": 13899,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "530d2396b12302c9b226a88376bbedcb03bb005c18cb90343d5116efcd696d24",
+      "bytes": 1591423,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "bd07393e2372979c6acb1928905a89f32333c9afc895f04beb527d92d6bf8649",
+      "bytes": 4903028,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "78e8d3288780787c469cc1be5e7fdbe51acce5019c29de062c33d7fca5f3d9b2",
+      "bytes": 1591396,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "1f10aabe05807ecec1cc4a37d44a2c25319e12fc765bbd20fa99da45556c97b8",
+      "bytes": 4061243,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-chromium-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "79a57f8214483d25142a1bce42431f41ce6806ed14fbfffda2d5740400b8cdec",
+      "bytes": 10579,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-control-and-build.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "2ed06b5a67d182b088b9a1157661ef8e748361dc73c893353abec1520f226f10",
+      "bytes": 7734,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-matrix-remaining.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "1d6b58462e00e57bdf1bb7d2638b7ff7b78dfa42805de1df5f56bc46f0958630",
+      "bytes": 4226,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-matrix.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "e48f3119e63437112df5a9f603dbe60d31330e8b7d121aa0caf23c5b66ad6dca",
+      "bytes": 759,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-matrix.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "f596653706177d863d93e9317d65746e19a03a0822d5b0bbaf2f9bef7c5e0724",
+      "bytes": 3895,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "final-sole-strategy-removal.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "ddd730ebeecfded50181b39ed651e6c38cab45dce5a35f07ecf23e0295a83977",
+      "bytes": 45787,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "negative-final-geometry.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "7a4eac742d758b3bc6c4659b8c8fb06db3ff452c4e82624d5c9710a5f25682a2",
+      "bytes": 14742,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "negative-final-phone/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "c47acb785214129259597e5890913adccbcb7bcacca8abb3ad052589f8ac1b00",
+      "bytes": 96,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/error-context.md",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "6259b517b630f959038c5e17742ba29aef6ede6142193ee1167d2d96128fe4d3",
+      "bytes": 27384,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/test-failed-1.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "7b3fee5403739c68cf508190c9a1aea0340c24916abf7f513477192194fe9821",
+      "bytes": 359838,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "f6c96bcd0d75545d48a5c698627ea390aa81f9ad12062b797deba1e600d72aca",
+      "bytes": 5079026,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "negative-final-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "47b2083cebe9113e5d2b21d3a89c94d9ed5aabd98224bd07a18d5df623e5fec5",
+      "bytes": 26508,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "negative-geometry.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "99d07bf4a399c09063e2062eda8f056a3eb07f173efca8ebda7946b7d3f7d39e",
+      "bytes": 14742,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "negative-phone/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "c47acb785214129259597e5890913adccbcb7bcacca8abb3ad052589f8ac1b00",
+      "bytes": 96,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "negative-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/error-context.md",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "9601e74e2fa334b30fe6cb07c402634e38aad660a46ae78921c4b62058fa3bf0",
+      "bytes": 27300,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "negative-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/test-failed-1.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "7b3fee5403739c68cf508190c9a1aea0340c24916abf7f513477192194fe9821",
+      "bytes": 359838,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "negative-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "eb04f6fbd5dab248dd800d0d3637ade9d1b3b0fd61fdf90e8ac3b00823dcedb4",
+      "bytes": 5631827,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "negative-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "5e75023d48b6456eefd731574ce3a74e681714260d39520f98a11a3b840faf24",
+      "bytes": 26471,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "playwright.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "3192c586943b5a5036856bee5d99824d3894d91512ff92a99d32cda302d90438",
+      "bytes": 1135,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "playwright.final-chromium-desktop.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "255114a40df620d088de6248b2f9206d703ac227bba636d4619eaed52035c82c",
+      "bytes": 524,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "playwright.final-chromium-phone.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "a42c81cca0628e215c351ceca1168dc3225e32eb519310a8d72dd851db31b61d",
+      "bytes": 467,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "playwright.negative-final-phone.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "0a7e43d8483f16b9e1dba0339a27ee1482a00cd2b2e56e13c93919b0f4cc2e2b",
+      "bytes": 467,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "playwright.negative-phone.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "ae8da1c173b5576ce349b7e35531fa99bc6c1cab434e3c7c74dd4719901fe63e",
+      "bytes": 455,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "playwright.phone.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "f6b793e04d37146960a0d03b7b2de1fd2f8030a3ea5a36ba2c533992c034eba7",
+      "bytes": 471,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "positive-initial-phone/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "positive-initial-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "e234462a8bd3f51f23c89ed121d81f61eaec00ea2403760a3faad958d91c4f81",
+      "bytes": 1595669,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "positive-initial-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "5e9af18e55e71a69515f3657f39fe136e02972c378d2395e13a59a21ad0801fa",
+      "bytes": 5582471,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "positive-initial-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "af8b8c5679df976406ccbb6b49015ec8afa7fd289cba3bf8bec1da69aa1898ee",
+      "bytes": 5466,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "preview-final-chromium-desktop.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "bef7fa1cfa5a30bbebcefc9083c245361f5e4b005bd860924f8b867576faab92",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "preview-final-chromium-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "4b3e570e871c643cc4622ec459a98711893dd1090ec9897b9fdc99c7a92a0c60",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "preview-negative-final-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "4b3e570e871c643cc4622ec459a98711893dd1090ec9897b9fdc99c7a92a0c60",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "preview-negative-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "4b3e570e871c643cc4622ec459a98711893dd1090ec9897b9fdc99c7a92a0c60",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "preview-positive-initial-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "4b3e570e871c643cc4622ec459a98711893dd1090ec9897b9fdc99c7a92a0c60",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "run-final-chromium-desktop.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "78af950b31908f90fa657684edf29709a2ce5bf3537998dee4f2e177bcee5af3",
+      "bytes": 6566,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "run-final-chromium-desktop.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "29d37701f697b4c52f7fdef3e1e6174d3789b36b519fcec7eabae1e2e332b313",
+      "bytes": 3378,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "run-final-chromium-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "a47f0b20ba0810f13af7cbd6f0d4863b9756f17b6dae5365741556263b732daa",
+      "bytes": 863,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "run-final-chromium-phone.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "beff856f2bc2a0fca921319da8bd1b72edc88a29d1a4429f52a25ee021f81008",
+      "bytes": 3368,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "run-negative-final-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "0599eeb726d83dd57e497f3bc130f61a7c2c21da72f6b4e59aff7b1a94bed91e",
+      "bytes": 3143,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "run-negative-final-phone.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "a5e8ff46dcf62b2f81661b2faf18c7e9ebccf61100b9a5267cde832bed11d190",
+      "bytes": 3391,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "run-negative-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "a4874ac683e113098f2916a13588cc7bba71d8b131e5605df2c7a840be2d695d",
+      "bytes": 3119,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "run-negative-phone.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "5de5cbd1b91bde75e8e30af44c74db122d03e96ee853e9ff094514eb0959798b",
+      "bytes": 3274,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "run-positive-initial-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "79462fc1b0ee4c2c83d882c6b53164659b65bed6b37d10b83607d4ce1ebad21b",
+      "bytes": 563,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "run-positive-initial-phone.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "2e06408dd74429fad6c4914036e934317ad086acf3e1e868623c1dea8deb3c15",
+      "bytes": 3292,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "sequential-port-startup-diagnostic.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "7ebbb334bc7d2b2a705f2545b01dad1cb078ac05bfac3fc69543c9b869d170bc",
+      "bytes": 619,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "sole-strategy-removal.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "78f3a8c72117a9225dce5ae3459217e9e82b669c4625493ea4a4b38657e73032",
+      "bytes": 46106,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "source-inputs.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "89850ad4a2c02d59dc6debb9cfb11450992afafe90bed3ec497cc19b01c8df11",
+      "bytes": 587,
+      "committedCopy": true
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "validate-final-c2-matrix.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "c155cd5e92513b3607c4da1431bbdc31d5eede81ad91f978a83e87c46642a3b5",
+      "bytes": 5245,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "validate-v2-matrix.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "2a193ae17e4566f97947396ed3925c32fe63101d6564d47b0a28db1e228066eb",
+      "bytes": 4714,
+      "committedCopy": false
+    },
+    {
+      "group": "early-permanent",
+      "relativePath": "validate-v3-matrix.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+      "sha256": "f0f6a5e2b7ba660cc361288040007eb6a844823902122b3032148e3d5da0c81c",
+      "bytes": 4722,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "booking.spec.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "4256921b7476a06b8c53a379592916e75804536e4ed0871a176e1b8ff91c8f86",
+      "bytes": 16039,
+      "committedCopy": true
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "execution-final-chromium-desktop.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "d5cb52261f9db2a1dee168d8f76928d8bc70b106d498df538d8ba0e31eb065e1",
+      "bytes": 454,
+      "committedCopy": true
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "execution-final-chromium-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "7818a8e874001a64d2b5b721d223a63ee27f9affd91b45a594a7e83df016cbae",
+      "bytes": 452,
+      "committedCopy": true
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "execution-final-firefox.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "7e37e390730e05c6d450362483f44e9ae372e82b98ef31d9a195171c98d47761",
+      "bytes": 450,
+      "committedCopy": true
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-desktop/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-desktop/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "9b41112677f4ca95bac98c80c1d1af86cc88aa88399ec826751e59bc98dac65a",
+      "bytes": 13504,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "75311976a46733806ff51a091a3c3671f93ad62d91f73223fef129815fa11bb9",
+      "bytes": 300071,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "01c25ee6f122c3bb3d14788266e9bd758a46c4aae7c63247d26eb6fb0f1620d3",
+      "bytes": 4875777,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "2995ad953691800969ae151b10a334b94d423c37fa599896b6127a8e215633bc",
+      "bytes": 300079,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "1c7a63ee8653e31b822ff3c0362b73d517332ee43b77b59d4d04d0bdb3fea35e",
+      "bytes": 3745998,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-desktop.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "f19af6d424ee128f0e4fb50f217f232836d68f34b947d1dcc5259f3391cdad05",
+      "bytes": 10527,
+      "committedCopy": true
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-phone/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-phone/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "26eaaab67590fd61f024a7c74fde58da3dc09cd0d146249f009814995d2d859b",
+      "bytes": 14030,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "70c2da96115541d502f02b9400a1429aa1efc7779a665f2bbc620ffc63f5ccbc",
+      "bytes": 1595192,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "a6385179c9ec881cc0651324f6f156419a3dd430eb1cf26e0a5de651676459dd",
+      "bytes": 4762659,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "922d37e137a3e49e00f42071f8f4966ceb8acccb2cdc758d078c9721bd376686",
+      "bytes": 1595086,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "d62c5afca9db0df651da10a6a79909c0c55c0596d14819ca70de842ffa21d297",
+      "bytes": 4093485,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-chromium-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "205bbf0d9e00e977c9021dab7221798dab49bdb6c4109606376882de44188e66",
+      "bytes": 10604,
+      "committedCopy": true
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-firefox/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "51c1b54a7b85d24c77b765a973f5b6e352df7f94dbfe0b613e79476b327ed13f",
+      "bytes": 96,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-firefox/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "b2bf914b93c91ac526c8e4062d186d86b172e2b8586fe7c3f0ebb8dc0bd19e75",
+      "bytes": 24958,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-firefox/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-firefox/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "0cb59f8932ae4680e32c4cd8f70c85c6a38f94558b578d800b86a7f4255505d4",
+      "bytes": 283467,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-firefox/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "19b96fa0935728c7d0ea35b2f47677374598e43bb03a98e2236f78bbbefcda74",
+      "bytes": 5433026,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-firefox/booking-public-booking-rec-a439f-etails-critical-mobile-flow-firefox/error-context.md",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "36c6fe5991b576df54fc1dbb187b2f3c4eed342195d0d51d2fdb87eae35cfbf1",
+      "bytes": 24934,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-firefox/booking-public-booking-rec-a439f-etails-critical-mobile-flow-firefox/test-failed-1.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "845ab8aed8b8f11192151928f02bc292f8abde222ebb7985bd0fd22f1f385b69",
+      "bytes": 64833,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-firefox/booking-public-booking-rec-a439f-etails-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "7cdc22c9203027b20c9b0785eb6c455a665a95c8e03c95408adbffc085cfc2fb",
+      "bytes": 2994131,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "final-firefox.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "5ab01b18da868dd178f6add3bd86e7fd9ead06cd3f9cf6ea2406784e3fd760c7",
+      "bytes": 14106,
+      "committedCopy": true
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "inputs.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "38c1bdc8091f512287df71959d2d1cece3537833f1a2559e4f10d0a25fbb2064",
+      "bytes": 733,
+      "committedCopy": true
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "matrix.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "603805454bf4cf6a72b050d7b00943396bd625d46f37cddbbd5e9a1a91ded229",
+      "bytes": 2710,
+      "committedCopy": true
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "playwright.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "81963f11ad46009295c1bfc287fb3c644406343297cae3ae763944f8e4247141",
+      "bytes": 1141,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "playwright.final-chromium-desktop.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "e87068001b23d400f3c22b33f96e43abdef0dc2e98a84f59ae5fac0912bdff02",
+      "bytes": 530,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "playwright.final-chromium-phone.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "c3a85a8bd975e5a559890052adbaa995f6586dc8a0a2c1055cae1db8a592ffc4",
+      "bytes": 524,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "playwright.final-firefox.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "ad5b96ce1286b95e858a92b488c666e70caa822ad700cd4dd6dbcbe4cfd67aec",
+      "bytes": 503,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "preview-final-chromium-desktop.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "cf6ed96cbed950c5213e3e4f8d4b2f6ce26e52efbf70e8c70349fc0b1b220b0c",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "preview-final-chromium-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "e16b0b5bf8af6e7b80f933676af579f929fbd653658e56a3a1fa5d399ee18486",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "preview-final-firefox.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "4a91ec882bc20fe716c7952d09ec694d21378bf3d3e0b839c47f0807bd36ec3f",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "run-final-chromium-desktop.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "0021b8d5908a0d170ae1a81f0c10ced3c6d70e2585f2fac3173d841740c2cfc7",
+      "bytes": 869,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "run-final-chromium-desktop.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "83e31b63c9ba52c27316ce3e0109d8e0311f083dd9b34e4b20edac51691e630e",
+      "bytes": 3361,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "run-final-chromium-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "c0245c23ceef6dcfb99fb270d4db8bcf0cbfefae90db8f506af29bc41adcd782",
+      "bytes": 863,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "run-final-chromium-phone.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "cb0088436a8b7f0694b3c957dc349d10b8dd2505c3c3f7b282d1ae7b46adde9f",
+      "bytes": 3351,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "run-final-firefox.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "a8e6d2180bd21463d7fed2b5fa23e08b4a73a3ff237fb53ca9643deae57fb4ff",
+      "bytes": 3380,
+      "committedCopy": false
+    },
+    {
+      "group": "v2-secondary-failure",
+      "relativePath": "run-final-firefox.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v2-20261028",
+      "sha256": "aba55234a3818ea78e444a476641f8cb179aff8e603b5168a4628ada81731bd9",
+      "bytes": 3316,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "booking.spec.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "46d8b4492545b9a1e77f74f570d04a438ae84d2216fb76d60edda3524d3a3d76",
+      "bytes": 16450,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "execution-final-chromium-desktop.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "84e7d5061e4a267f4321032127741747713c67246b136c663da0d5f5b68d92c0",
+      "bytes": 453,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "execution-final-chromium-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "85d618cb6a8373cf76d6a7485d99b761764b6bb55da92d5d27178d3e4424b216",
+      "bytes": 452,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "execution-final-firefox.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "1dcd6ef393aa01b4ceaf681973d31480d7aee002be5ea0d3431f303a62d203bd",
+      "bytes": 452,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-desktop/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-desktop/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "d8de64c795e6db39eb9a8cba9f7f7d46a7e5ff1cee307de2b0b8ae8f9ff1410b",
+      "bytes": 14093,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "2abef267b5917bb776a9645657149735833e0e45370e107e2e71ba061869c40f",
+      "bytes": 300179,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "4fd1a09a713b727bdda9275cf6aff9279643c5ba77053383a6de32413f9de3db",
+      "bytes": 4983938,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "2abef267b5917bb776a9645657149735833e0e45370e107e2e71ba061869c40f",
+      "bytes": 300179,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "8f4365354e012d1c6b2c889029d9946d9ea0d5b08793de0fe23791b4bf9b7ea9",
+      "bytes": 3638547,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-desktop.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "6537b1316405b95abffec331726e5183f79723cd0393cda5155b4602527fcedd",
+      "bytes": 10518,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-phone/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-phone/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "d6c45b8941671ef097bb558d1ea5241fca9c40f541e3876a55206921c5f4eb37",
+      "bytes": 14228,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "ae262174d5a6ea60166516ad16b0c4d2c26227bf15a2b77585545505d5635ee7",
+      "bytes": 1595541,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "7114378b6c0aa12ae55075bcbac5abc011549de782c272629e810b00e7b68383",
+      "bytes": 4995494,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "89723f19e173f4321aca9385dfcce8866f55e976066dad70fec1439e0c1130a8",
+      "bytes": 1595296,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "8d43d0cefa301182be03f2140b78836c086cb28c2b5a2ad5a4e3d7b0ab531257",
+      "bytes": 4281207,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-chromium-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "40430a5567ae142d10afbe66959b455c860fce6d36899dcf66e7aa3e2e1abcbd",
+      "bytes": 10604,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-firefox/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-firefox/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "6fb09ec42e6f7cb9e88567a2bc56fc4c870bd74517c88e8381901d8dc5c352f3",
+      "bytes": 25880,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-firefox/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-firefox/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "7830a2fb0b3dfb469e5f7fd45c0159472082a5cbe67a55ef9d421460e2f76791",
+      "bytes": 283322,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-firefox/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "da42381d627493cc992fd10a2fe4122c08652810397f437c583d801d9bc29507",
+      "bytes": 5516315,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-firefox/booking-public-booking-rec-a439f-etails-critical-mobile-flow-firefox/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "e4e9eae668b4416e487328fbf0137c03ee4182622fe63afbf00d2ecbcd51fafe",
+      "bytes": 283600,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-firefox/booking-public-booking-rec-a439f-etails-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "a87aa67a66bbf7b4806c909e20933715588ecb45a38c909973ba417a37add550",
+      "bytes": 3084395,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "final-firefox.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "7a44ce62a87c2f6a7717347e5b8bb7f98ab7c86edfa867c73e7388b20a8baa6e",
+      "bytes": 10626,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "inputs.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "224595689eea10621e60b5e0d111e3a5f697d12150b74fbdf8911980cd03fcdb",
+      "bytes": 741,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "matrix.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "8c23809be0feeab54272ce43b580205beae1c8758000441d8e674c90a90c5421",
+      "bytes": 3642,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "playwright.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "2e509ca27db58dff418e3f82f1f0a5609c13dd13830c7649768631ec07122fc9",
+      "bytes": 1141,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "playwright.final-chromium-desktop.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "098827c35a6d927a672f7e3f952b408eadd5f808034239d0aff6dc2394dfd98f",
+      "bytes": 530,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "playwright.final-chromium-phone.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "5f8ea917298ce1789a770ff9876abf4ddd6c6e6885d2aff406a2834e993e367b",
+      "bytes": 524,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "playwright.final-firefox.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "a6626a2cda4fc8801c718ab18b0f118eba6ec472d702e8b9b3ef4dbf57c17133",
+      "bytes": 503,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "preview-final-chromium-desktop.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "320f5bdb1deca0f8c5cee935001f9c48a7dbb5fca4b3a29994f5504f69a1ba7e",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "preview-final-chromium-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "8f8f2ddc1a1091814a19cb7f942da57c2865324e13aa96895b885900f1d24315",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "preview-final-firefox.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "87d42524ac4c6ce4e887b38ef318f51cb136c81f44e007520712fd448a8a454a",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "run-final-chromium-desktop.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "cd775590620d4ddfaedb1ae87894520ef355035cd6c01cc9d29bc10fe877962a",
+      "bytes": 867,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "run-final-chromium-desktop.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "1a6f48d5975f3afb3abbc299d124f50836de2de43c00a5634129310a1957ed81",
+      "bytes": 3361,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "run-final-chromium-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "44ace229391924818e9ad5f6dfd0710cc17a05481d4d09436a8f9e6cff2afce3",
+      "bytes": 861,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "run-final-chromium-phone.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "1da7a9e60a46d3394fee490db912d205fbd7ea08b06f01f488faedfb57127c37",
+      "bytes": 3351,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "run-final-firefox.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "dca0094b81edf76fc3c631ab4bcd051dd1443407d13670bbc8975447d4cc0784",
+      "bytes": 840,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-working",
+      "relativePath": "run-final-firefox.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+      "sha256": "45d2917a7d8467fa282e260f64f6128c912e26cc5fdce173a02ae2c3c88bb9c5",
+      "bytes": 3316,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "booking.spec.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "46d8b4492545b9a1e77f74f570d04a438ae84d2216fb76d60edda3524d3a3d76",
+      "bytes": 16450,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "correct-C-build-inputs.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "7288143c61011df6ab5d568d84a67231aebc6774655176398ca66300692e33c2",
+      "bytes": 44012,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "execution-negative-final-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "e7138c61bd61ea35aa58d5fa14d7aa08c4b5693537608c538633d40ee5f2207f",
+      "bytes": 455,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "final-control-and-build.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "b204deb0a4ed73546f0661514b7af61c7f021dfbe5f825ffd78eaf5dd6603f63",
+      "bytes": 7828,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "final-sole-strategy-removal.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "c3b9fdb86b32019e87dbc0202f94c1523a53ce545bb2adfaf42450f753853f86",
+      "bytes": 45787,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "negative-final-geometry.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "6c377b8339fc3f6e6555903f427d46f2567e890989801e809649e3609c066ece",
+      "bytes": 14742,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "negative-final-phone/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "c47acb785214129259597e5890913adccbcb7bcacca8abb3ad052589f8ac1b00",
+      "bytes": 96,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/error-context.md",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "552803009c9a62efb00211c5f93deb250b2e8616e576aeb7cd1437258c2e30ca",
+      "bytes": 28482,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/test-failed-1.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "7b3fee5403739c68cf508190c9a1aea0340c24916abf7f513477192194fe9821",
+      "bytes": 359838,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "a660402500f21b9722281a2a5a52078de5303964e5400dafd186186713f6322b",
+      "bytes": 5099619,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "negative-final-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "bbecbd0c321598c07214bcb7a496de514a43056933a0dbeb638567e02e0d7ecc",
+      "bytes": 26677,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "playwright.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "154b6292150e2b5c846226f05e3564d6133657fa7ad207163dc0b5040f3848e3",
+      "bytes": 1161,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "playwright.negative-final-phone.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "d95b60613c1823ad8e4cb7b21b625ccb4a7d8b59a3c2399d688526a64ba9052f",
+      "bytes": 493,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "playwright.phone.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "1f9e73651faf992411ce0971336e74c092bc766d006a01971390dcbaf3bf6477",
+      "bytes": 497,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "preview-negative-final-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "2c6358a89c19d19c9afd554dd39e165126e1724d0aea6aaf4c5137770d447b0b",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "resume-after-config-setup.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "e0fc277d3960453c0ec1d8b933aca360a1e1cf126634c214772689704697e636",
+      "bytes": 7518,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "run-negative-final-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "e60c47985c62d4041f948d7a5e1d7687cfbcd01c75031de01349a5cc6da32fc1",
+      "bytes": 3156,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "run-negative-final-phone.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "74c9c41389ae18ade57ee788ed2eef7eb889652de5a5e6acece6f06a00dbaafd",
+      "bytes": 3404,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "run-positive-initial-phone.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "2403f565272f60d2707911bfb79ae50f28fa9165ec611bff7d6f2de522fea56e",
+      "bytes": 3305,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "setup-port-mismatch-execution-negative-final-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "8094242c69ff1f3e7976ba3a4d277e509e0ebbd93fc36e50e0454b03d1178d6f",
+      "bytes": 454,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "setup-port-mismatch-negative-final-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "8c8f5943f8e5c68a6eccc055bceec6b0bd44eb876b7e35c83b67358a3de690af",
+      "bytes": 7047,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "setup-port-mismatch-output/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "c47acb785214129259597e5890913adccbcb7bcacca8abb3ad052589f8ac1b00",
+      "bytes": 96,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "setup-port-mismatch-output/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/error-context.md",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "e39df22364f923ec99b728b74074eaea3cc7e4e5dd74a1a2252b6cee147d595e",
+      "bytes": 15488,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "setup-port-mismatch-output/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/test-failed-1.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "26a41de6e6e00593a01677b1b30d1147e83e50e8aff8efa078b992b90976b218",
+      "bytes": 38669,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "setup-port-mismatch-output/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "ab6a3af5a34f294f06ae8035bbde170fc35f562c714ed6bdbe57a95b3c6a4349",
+      "bytes": 51269,
+      "committedCopy": false
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "setup-port-mismatch-preview-negative-final-phone.txt",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "86fec895a3b73fbf2c31ae432a291bdf6153ddc7e884b98a6f6461e035c621df",
+      "bytes": 40,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "setup-port-mismatch-run-negative-final-phone.txt",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "955acab21eba06e16e641c1fc3634bda94a56982c696b31c5181e762de31d1d3",
+      "bytes": 3253,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "setup-port-mismatch.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "3c1a20f3535f677d12531e74d9eb1809508d034ab6aed01fbf6953f7004a6e09",
+      "bytes": 298,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "startup-not-run-execution-negative-final-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "7ebe6701262dfc6cfbefa6d1a7e42582e3537b8414c19d2a66dc08761e2f0c52",
+      "bytes": 454,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "startup-not-run-preview-negative-final-phone.txt",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "86fec895a3b73fbf2c31ae432a291bdf6153ddc7e884b98a6f6461e035c621df",
+      "bytes": 40,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "startup-not-run-run-negative-final-phone.txt",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "b2c82a8d255389b4999e486f63d1e28b7b9c31d48d59b2de0efaff40820e00d2",
+      "bytes": 1158,
+      "committedCopy": true
+    },
+    {
+      "group": "v3-final-control",
+      "relativePath": "startup-not-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+      "sha256": "6b6fd38d735a4fbafcb2d677c3c6338c27be2e55bd7f443108de46bcccdb922c",
+      "bytes": 253,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "booking.spec.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "46d8b4492545b9a1e77f74f570d04a438ae84d2216fb76d60edda3524d3a3d76",
+      "bytes": 16450,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "execution-final-chromium-desktop.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "b1ef619386ff120de2e6f7deec5cc52d564f3317dc65f326f4337ddb98f8de7d",
+      "bytes": 453,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "execution-final-chromium-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "8dd72e18b53e92a155de76272e2f65538fcf659df74164c69e564e40b2d40908",
+      "bytes": 455,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "execution-final-firefox.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "bef10330c1f36a3e5bccc288899cb797af909bd7736d5e5485b4621f3aa6597e",
+      "bytes": 455,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-desktop/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-desktop/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "529d38cecfd8dd6d7b838cf6de2814347947491401488157588d815e552b57c6",
+      "bytes": 13695,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "d43bdbcbb853564ab346ddc843787a0fd9d96e96638a415a401d51585cdb91b6",
+      "bytes": 300081,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "ee9da10be9c4b9999bcbc1ce506974c15f31716db288568288efbe75e4dc60e3",
+      "bytes": 4740103,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "a0e5f35306ee77bc5ce29e111425bbe5c43353a14a2f7879640030d20242ce66",
+      "bytes": 300114,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "79f1d914815ee33a85022b0a88c9471c4bea969e518c76a9fcc711a7edfcfec8",
+      "bytes": 3733232,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-desktop.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "1393ac298bcf9fb0f95bab81b84c5551679d54a91e817fc4f344766a5762017b",
+      "bytes": 10566,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-phone/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-phone/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "fdbbb97fdd69e7b010e64cb9780a257dc1e31a45e72058d0df4669f942c65c04",
+      "bytes": 14636,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "8e84731ca1cfecdaab0cf7a2273e758ce4abec2382ec196997dd1f684716c592",
+      "bytes": 1595712,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "21b7bff6c60833fdea8998eaf3d823d53a47b54a38bf0d5cc1ff24128805ee01",
+      "bytes": 5127066,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "f9e4f0fee577da141676b4c631166a01282fef0c23fc8dad9333a0bf50eac8c5",
+      "bytes": 1595997,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "dfd341cc0a4cfa1e44e10fcf62be3cbbd4172f9e5d7fbe99cca30ae7a55d9d9e",
+      "bytes": 4338199,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-chromium-phone.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "8cf8100ad05cfc51f8e921034749b5162559f7cd472be148650dece11dd384c7",
+      "bytes": 10653,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-firefox/.last-run.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "bytes": 45,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-firefox/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "5390317a8fd7cfc17aab283b05aa12d96c1e598cc991c3eca6fa42ab34fd6686",
+      "bytes": 25523,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-firefox/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-firefox/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "2c2bf2c610df089651c1974593ae85fbe4281a3b9d9919c13660d00db237f332",
+      "bytes": 282977,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-firefox/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "06f5da8c2fb2f42007163fa443710637b7af2601b4ea9e1ef839731be8a94264",
+      "bytes": 6103103,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-firefox/booking-public-booking-rec-a439f-etails-critical-mobile-flow-firefox/booking-catalog-recovered.png",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "4b5a293907ba8cf7a70389b2c53cead4c9b92b79b0f20b5276c3257dfffbda38",
+      "bytes": 283159,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-firefox/booking-public-booking-rec-a439f-etails-critical-mobile-flow-firefox/trace.zip",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "40305a8cd37472a427d35ffea165927bc8f147fa210b3b29ff6b0ba04a8f5edf",
+      "bytes": 3400364,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "final-firefox.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "fc344b80d051842fcd92b71a49fd37655a3375ab10f6d2a17444e7f7dc77f5af",
+      "bytes": 10674,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "inputs.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "50459c53b88975718ffdd3c9d5d0fc4abeae132f49d026ba5c8f9125e3454a85",
+      "bytes": 761,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "matrix.json",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "d3e55c36d0de04a5c770467296da4e38aad5e654b9e269c9d8bd8e024a255834",
+      "bytes": 3668,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "playwright.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "9f73ce09501e7956c3b7005184180883fa12234d00db33c0cf16dfc14d058af1",
+      "bytes": 1153,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "playwright.final-chromium-desktop.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "4ce22c49272e6ca6f681b36bfe39ecfb55cca7179c501bc4e683d7ffeb96fad8",
+      "bytes": 542,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "playwright.final-chromium-phone.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "7fcb2dc64d87b51d264db2a665ad0d33ecd5d10d8df76ca1f592fd7761a41418",
+      "bytes": 536,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "playwright.final-firefox.config.mjs",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "89c5a9360ea1713d729d9c696d180c2c885380fa583ebfa6b837952518134474",
+      "bytes": 515,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "preview-final-chromium-desktop.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "98f46c6137e15b61593acc8d46001162eb2fcb9d8edacbd8e04de40a81c961ce",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "preview-final-chromium-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "07095727fa4c993d34e157a4772a3bc8e62829589fb40cb4d087f288ee57cfce",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "preview-final-firefox.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "c34fd4ca51ad6de6521ca6ed3a652a3b8c1daad8522b9649e6c72e2c4f3e0a82",
+      "bytes": 40,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "run-final-chromium-desktop.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "4327df8deeed473f73d03348a3be729a03c2132858cb47029b85882a5ffd591d",
+      "bytes": 869,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "run-final-chromium-desktop.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "65204dc186b17d71ad762a9ee79202d43b07967294357550eb81742f9d053acd",
+      "bytes": 3367,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "run-final-chromium-phone.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "70dfdd551ea638af98fd1bf30b9fdc482aaef67f58faab7e326306732cd8d811",
+      "bytes": 863,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "run-final-chromium-phone.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "32db749d2c2dc8a98b7e2152aa40019c882ee37989f8eb9a5ccd2b1d43641bc2",
+      "bytes": 3357,
+      "committedCopy": true
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "run-final-firefox.log",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "c1439493b1f163de854b709378c9b261b83184ee0fa973aa9f43edc36a43ec5b",
+      "bytes": 842,
+      "committedCopy": false
+    },
+    {
+      "group": "c2-final-matrix",
+      "relativePath": "run-final-firefox.py",
+      "localDirectory": "/private/tmp/tdf-booking-tooltip-regression-final-c2-20261028",
+      "sha256": "aec731abd34a4edf375f03717fa6655f6350322702668609a81e0956729b0d1a",
+      "bytes": 3322,
+      "committedCopy": true
+    }
+  ]
+}
