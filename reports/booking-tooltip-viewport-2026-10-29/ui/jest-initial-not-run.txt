@@ -1,0 +1,19 @@
+
+> tdf-hq-ui@0.1.0 test
+> NODE_OPTIONS=--experimental-vm-modules jest --runInBand --watch=false
+
+[napi-postinstall@0.3.4] Trying to install package "@unrs/resolver-binding-darwin-x64" using npm
+● Validation Error:
+
+  Preset ts-jest/presets/default-esm not found relative to rootDir /private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui.
+
+  Configuration Documentation:
+  https://jestjs.io/docs/configuration
+
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui
+npm error workspace tdf-hq-ui@0.1.0
+npm error location /private/tmp/tdf-provider-evidence-actualmain-20261028/tdf-hq-ui
+npm error command failed
+npm error command sh -c NODE_OPTIONS=--experimental-vm-modules jest --runInBand --watch=false

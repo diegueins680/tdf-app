@@ -1,0 +1,123 @@
+1) [webkit-iphone] › e2e/web/booking-catalog-recovery.spec.mjs:90:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow 
+2026-10-29T05:54:39.8976330Z 
+2026-10-29T05:54:39.8977929Z     Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThanOrEqual[2m([22m[32mexpected[39m[2m)[22m
+2026-10-29T05:54:39.8979063Z 
+2026-10-29T05:54:39.8979665Z     Expected: <= [32m320.3333333333333[39m
+2026-10-29T05:54:39.8980535Z     Received:    [31m339.640625[39m
+2026-10-29T05:54:39.8981056Z 
+2026-10-29T05:54:39.8981705Z       218 |     expect(viewportMeasurement.tooltip.text).toBe(helperText);
+2026-10-29T05:54:39.8983014Z       219 |     expect(viewportMeasurement.tooltip.x).toBeGreaterThanOrEqual(-epsilon);
+2026-10-29T05:54:39.8984951Z     > 220 |     expect(viewportMeasurement.tooltip.right).toBeLessThanOrEqual(viewportMeasurement.clientWidth + epsilon);
+2026-10-29T05:54:39.8986390Z           |                                               ^
+2026-10-29T05:54:39.8987289Z       221 |     await expect(slot).toBeFocused();
+2026-10-29T05:54:39.8988326Z       222 |     await expect(slot).toHaveAccessibleName(helperText);
+2026-10-29T05:54:39.8989593Z       223 |     // Additional scroll verification follows the immutable initial assertion.
+2026-10-29T05:54:39.8990962Z         at /__w/tdf-app/tdf-app/e2e/web/booking-catalog-recovery.spec.mjs:220:47
+2026-10-29T05:54:39.8992139Z 
+2026-10-29T05:54:39.8993232Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+2026-10-29T05:54:39.8995513Z     artifacts/persona-playwright/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/test-failed-1.png
+2026-10-29T05:54:39.8997663Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-10-29T05:54:39.8998504Z 
+2026-10-29T05:54:39.8999469Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+2026-10-29T05:54:39.9001396Z     artifacts/persona-playwright/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/video.webm
+2026-10-29T05:54:39.9003626Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-10-29T05:54:39.9004421Z 
+2026-10-29T05:54:39.9005828Z     Error Context: artifacts/persona-playwright/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/error-context.md
+2026-10-29T05:54:39.9007527Z 
+2026-10-29T05:54:39.9008594Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+2026-10-29T05:54:39.9010457Z     artifacts/persona-playwright/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/trace.zip
+2026-10-29T05:54:39.9012266Z     Usage:
+2026-10-29T05:54:39.9012653Z 
+2026-10-29T05:54:39.9014520Z         npx playwright show-trace artifacts/persona-playwright/test-results/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/trace.zip
+2026-10-29T05:54:39.9015970Z 
+2026-10-29T05:54:39.9016851Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-10-29T05:54:39.9017606Z 
+2026-10-29T05:54:39.9025984Z 
+2026-10-29T05:54:40.7177941Z [1A[2K[466/665] [webkit-iphone] › e2e/web/booking-catalog-recovery.spec.mjs:90:3 › public booking recovers an empty catalog without losing c
+
+2) [webkit-iphone] › e2e/web/booking-catalog-recovery.spec.mjs:90:3 › public booking recovers an empty catalog without losing contact details @critical @mobile-flow 
+2026-10-29T05:54:46.8345865Z 
+2026-10-29T05:54:46.8346821Z     Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThanOrEqual[2m([22m[32mexpected[39m[2m)[22m
+2026-10-29T05:54:46.8347617Z 
+2026-10-29T05:54:46.8348026Z     Expected: <= [32m320.3333333333333[39m
+2026-10-29T05:54:46.8348743Z     Received:    [31m339.640625[39m
+2026-10-29T05:54:46.8349093Z 
+2026-10-29T05:54:46.8349545Z       218 |     expect(viewportMeasurement.tooltip.text).toBe(helperText);
+2026-10-29T05:54:46.8350629Z       219 |     expect(viewportMeasurement.tooltip.x).toBeGreaterThanOrEqual(-epsilon);
+2026-10-29T05:54:46.8352037Z     > 220 |     expect(viewportMeasurement.tooltip.right).toBeLessThanOrEqual(viewportMeasurement.clientWidth + epsilon);
+2026-10-29T05:54:46.8353892Z           |                                               ^
+2026-10-29T05:54:46.8354651Z       221 |     await expect(slot).toBeFocused();
+2026-10-29T05:54:46.8355470Z       222 |     await expect(slot).toHaveAccessibleName(helperText);
+2026-10-29T05:54:46.8356448Z       223 |     // Additional scroll verification follows the immutable initial assertion.
+2026-10-29T05:54:46.8357122Z         at /__w/tdf-app/tdf-app/e2e/web/booking-catalog-recovery.spec.mjs:220:47
+2026-10-29T05:54:46.8357457Z 
+2026-10-29T05:54:46.8357954Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+2026-10-29T05:54:46.8358932Z     artifacts/persona-playwright/test-results/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/test-failed-1.png
+2026-10-29T05:54:46.8359954Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-10-29T05:54:46.8360292Z 
+2026-10-29T05:54:46.8360739Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+2026-10-29T05:54:46.8361703Z     artifacts/persona-playwright/test-results/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/video.webm
+2026-10-29T05:54:46.8362686Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-10-29T05:54:46.8363271Z 
+2026-10-29T05:54:46.8364318Z     Error Context: artifacts/persona-playwright/test-results/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/error-context.md
+2026-10-29T05:54:46.8365046Z 
+2026-10-29T05:54:46.8365513Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+2026-10-29T05:54:46.8366480Z     artifacts/persona-playwright/test-results/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/trace.zip
+2026-10-29T05:54:46.8367203Z     Usage:
+2026-10-29T05:54:46.8367322Z 
+2026-10-29T05:54:46.8368049Z         npx playwright show-trace artifacts/persona-playwright/test-results/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/trace.zip
+2026-10-29T05:54:46.8369171Z 
+2026-10-29T05:54:46.8369849Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-10-29T05:54:46.8370475Z 
+2026-10-29T05:54:46.8370484Z 
+2026-10-29T05:54:47.4937322Z [1A[2K[467/665] [webkit-iphone] › e2e/web/course-enrollment.spec.mjs:132:3 › Course enrollment on a small Android phone › Inscribirme opens 
+
+3) [webkit-iphone] › e2e/web/public-welcome.spec.mjs:170:1 › studio photos open with keyboard, fit small screens and restore focus @critical @mobile-flow 
+2026-10-29T05:57:36.0318145Z 
+2026-10-29T05:57:36.0319314Z     Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoEqual[2m([22m[32mexpected[39m[2m) // deep equality[22m
+2026-10-29T05:57:36.0320103Z 
+2026-10-29T05:57:36.0320676Z     [32m- Expected  -  1[39m
+2026-10-29T05:57:36.0321464Z     [31m+ Received  + 22[39m
+2026-10-29T05:57:36.0321907Z 
+2026-10-29T05:57:36.0324118Z     [32m- Array [][39m
+2026-10-29T05:57:36.0324664Z     [31m+ Array [[39m
+2026-10-29T05:57:36.0325235Z     [31m+   Object {[39m
+2026-10-29T05:57:36.0325890Z     [31m+     "id": "color-contrast",[39m
+2026-10-29T05:57:36.0326584Z     [31m+     "impact": "serious",[39m
+2026-10-29T05:57:36.0327217Z     [31m+     "nodes": Array [[39m
+2026-10-29T05:57:36.0327833Z     [31m+       Object {[39m
+2026-10-29T05:57:36.0328697Z     [31m+         "failureSummary": "Fix any of the following:[39m
+2026-10-29T05:57:36.0330790Z     [31m+   Element has insufficient color contrast of 1.03 (foreground color: #141e27, background color: #111b24, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1",[39m
+2026-10-29T05:57:36.0332538Z     [31m+         "target": Array [[39m
+2026-10-29T05:57:36.0333545Z     [31m+           "#studio-photo-title",[39m
+2026-10-29T05:57:36.0334311Z     [31m+         ],[39m
+2026-10-29T05:57:36.0334882Z     [31m+       },[39m
+2026-10-29T05:57:36.0335486Z     [31m+       Object {[39m
+2026-10-29T05:57:36.0336382Z     [31m+         "failureSummary": "Fix any of the following:[39m
+2026-10-29T05:57:36.0338535Z     [31m+   Element has insufficient color contrast of 1.02 (foreground color: #131d27, background color: #111b24, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1",[39m
+2026-10-29T05:57:36.0340212Z     [31m+         "target": Array [[39m
+2026-10-29T05:57:36.0341066Z     [31m+           ".MuiDialogActions-root > .css-17txg6r",[39m
+2026-10-29T05:57:36.0341849Z     [31m+         ],[39m
+2026-10-29T05:57:36.0342645Z     [31m+       },[39m
+2026-10-29T05:57:36.0343285Z     [31m+     ],[39m
+2026-10-29T05:57:36.0356558Z     [31m+   },[39m
+2026-10-29T05:57:36.0357287Z     [31m+ ][39m
+2026-10-29T05:57:36.0357717Z 
+2026-10-29T05:57:36.0359138Z        96 |     .map(({ id, impact, nodes }) => ({ id, impact, nodes: nodes.map(({ target, failureSummary }) => ({ target, failureSummary })) })));
+2026-10-29T05:57:36.0361305Z        97 |   await testInfo.attach(`${name}-axe.json`, { body: JSON.stringify(violations), contentType: 'application/json' });
+2026-10-29T05:57:36.0363594Z     >  98 |   expect(violations).toEqual([]);
+2026-10-29T05:57:36.0375201Z           |                      ^
+2026-10-29T05:57:36.0375707Z        99 | }
+2026-10-29T05:57:36.0376047Z       100 |
+2026-10-29T05:57:36.0377221Z       101 | test('anonymous root welcomes before search without registration or location access @critical @mobile-flow', async ({ page, baseURL }, testInfo) => {
+2026-10-29T05:57:36.0378780Z         at expectAccessible (/__w/tdf-app/tdf-app/e2e/web/public-welcome.spec.mjs:98:22)
+2026-10-29T05:57:36.0379891Z         at /__w/tdf-app/tdf-app/e2e/web/public-welcome.spec.mjs:192:3
+2026-10-29T05:57:36.0380434Z 
+2026-10-29T05:57:36.0381258Z     attachment #2: screenshot (image/png) ────────────────────────────────────────────────────
+
+2026-10-29T06:07:14.4994372Z [1A[2K  3 failed
+2026-10-29T06:07:14.5003815Z   22 skipped
+2026-10-29T06:07:14.5004237Z   640 passed (25.6m)
+2026-10-29T06:07:19.8854854Z SHA256 digest of uploaded artifact is 141e00d191127a8676342b0212c6f1d6539e372d9e84f2758af5c6909cc9c0d2
+2026-10-29T06:07:20.3690402Z Artifact persona-web-e2e-40824696334 successfully finalized. Artifact ID 12877535620
+2026-10-29T06:07:20.3692334Z Artifact persona-web-e2e-40824696334 has been successfully uploaded! Final size is 118630708 bytes. Artifact ID is 12877535620

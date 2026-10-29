@@ -1,0 +1,45 @@
+
+Running 1 test using 1 worker
+
+[1A[2K(node:26160) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:26160) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[1/1] [chromium-phone] › root-option-removal.spec.mjs:173:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow
+[1A[2K  1) [chromium-phone] › root-option-removal.spec.mjs:173:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32mfalse[39m
+    Received: [31mtrue[39m
+
+      303 |       });
+      304 |       expect(viewportMeasurement.compatMode).toBe('CSS1Compat');
+    > 305 |       expect(viewportMeasurement.overflow).toBe(false);
+          |                                            ^
+      306 |       expect(viewportMeasurement.visualViewport.scale).toBeCloseTo(1, 3);
+      307 |       const resizeAcknowledgement = await page.evaluate(() => window.__bookingResizeAcknowledgement);
+      308 |       await testInfo.attach('booking-resize-acknowledgement', {
+        at /private/tmp/tdf-booking-resize-phase-controls-20261029/root-option-removal.spec.mjs:305:44
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    root-option-removal/root-option-removal-public-048bf-etails-critical-mobile-flow-chromium-phone/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: root-option-removal/root-option-removal-public-048bf-etails-critical-mobile-flow-chromium-phone/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    root-option-removal/root-option-removal-public-048bf-etails-critical-mobile-flow-chromium-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace root-option-removal/root-option-removal-public-048bf-etails-critical-mobile-flow-chromium-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K  1 failed
+    [chromium-phone] › root-option-removal.spec.mjs:173:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow 

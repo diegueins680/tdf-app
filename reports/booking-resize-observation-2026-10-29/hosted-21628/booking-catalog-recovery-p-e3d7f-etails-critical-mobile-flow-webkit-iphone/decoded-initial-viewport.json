@@ -1,0 +1,40 @@
+{
+  "sourceHead": "21628cdc8523bfd5ff4bd3259648400c0d1ed34d",
+  "sourceTrace": "trace.zip/0-trace.trace",
+  "callId": "call@1631",
+  "startTime": 780463.954,
+  "endTime": 780478.539,
+  "initial": {
+    "at": 13889,
+    "compatMode": "CSS1Compat",
+    "innerWidth": 320,
+    "clientWidth": 320,
+    "scrollWidth": 320,
+    "visualViewport": {
+      "width": 320,
+      "scale": 1
+    },
+    "overflow": false,
+    "devicePixelRatio": 3,
+    "scrollY": 1153,
+    "anchor": {
+      "x": 193.78125,
+      "y": 588.890625,
+      "right": 250.171875,
+      "width": 56.390625,
+      "height": 32,
+      "text": "04:00",
+      "placement": null
+    },
+    "tooltip": {
+      "x": 104,
+      "y": 390.6666259765625,
+      "right": 339.640625,
+      "width": 235.640625,
+      "height": 40.5,
+      "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+      "placement": "bottom"
+    }
+  },
+  "interpretation": "Original root/scale guards pass; current initial helper-edge contractfails. No resize-delivery or Popper-update milestone, so causeUNKNOWN."
+}

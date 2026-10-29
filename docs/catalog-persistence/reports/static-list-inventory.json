@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-29T15:35:30.829Z",
+  "generatedAt": "2026-10-29T18:06:50.458Z",
   "repositoryRoot": ".",
-  "filesScanned": 2447,
+  "filesScanned": 2449,
   "candidateCount": 1352,
   "byClassification": {
     "dynamic-business-catalog": 872,
@@ -5368,7 +5368,7 @@
       "lines": [
         193
       ],
-      "consumerCount": 121,
+      "consumerCount": 122,
       "backendConsumers": [
         "tdf-hq/.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -5453,6 +5453,7 @@
       "automationConsumers": [
         ".github/workflows/artist-enrichment-daily.yml",
         ".github/workflows/build.yml",
+        ".github/workflows/campaign-platform.yml",
         ".github/workflows/catalog-list-audit.yml",
         ".github/workflows/check-messaging-token.yml",
         ".github/workflows/check-mobile-distribution.yml",
@@ -9847,7 +9848,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 355,
+      "consumerCount": 356,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -10000,6 +10001,7 @@
       "automationConsumers": [
         ".github/workflows/artist-enrichment-daily.yml",
         ".github/workflows/build.yml",
+        ".github/workflows/campaign-platform.yml",
         ".github/workflows/catalog-list-audit.yml",
         ".github/workflows/check-messaging-token.yml",
         ".github/workflows/check-mobile-distribution.yml",
@@ -10046,8 +10048,7 @@
         "scripts/lib/music-worker-s3-probe.mjs",
         "scripts/lib/ux-quality-audit.mjs",
         "scripts/merge-admission.py",
-        "scripts/mobile-publishing-admin-audit.sh",
-        "scripts/patchOpenApi"
+        "scripts/mobile-publishing-admin-audit.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -37803,7 +37804,7 @@
       "lines": [
         296
       ],
-      "consumerCount": 245,
+      "consumerCount": 246,
       "backendConsumers": [],
       "webConsumers": [
         "tdf-hq-ui/src/bootSafety.tsx",
@@ -38279,7 +38280,7 @@
       "lines": [
         346
       ],
-      "consumerCount": 245,
+      "consumerCount": 246,
       "backendConsumers": [],
       "webConsumers": [
         "tdf-hq-ui/src/bootSafety.tsx",
@@ -51074,7 +51075,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 316,
+      "consumerCount": 317,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -51219,6 +51220,7 @@
       "automationConsumers": [
         ".github/workflows/artist-enrichment-daily.yml",
         ".github/workflows/build.yml",
+        ".github/workflows/campaign-platform.yml",
         ".github/workflows/catalog-list-audit.yml",
         ".github/workflows/check-messaging-token.yml",
         ".github/workflows/check-mobile-distribution.yml",
@@ -51265,8 +51267,7 @@
         "scripts/production-migrations.json",
         "scripts/social/generate-model-cases.py",
         "scripts/test-artist-merch-storefronts-migration.sh",
-        "scripts/test-chat-notifications.sh",
-        "scripts/test-event-memories-http.py"
+        "scripts/test-chat-notifications.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -51322,7 +51323,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 316,
+      "consumerCount": 317,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -51467,6 +51468,7 @@
       "automationConsumers": [
         ".github/workflows/artist-enrichment-daily.yml",
         ".github/workflows/build.yml",
+        ".github/workflows/campaign-platform.yml",
         ".github/workflows/catalog-list-audit.yml",
         ".github/workflows/check-messaging-token.yml",
         ".github/workflows/check-mobile-distribution.yml",
@@ -51513,8 +51515,7 @@
         "scripts/patchOpenApi",
         "scripts/persona-test-program.mjs",
         "scripts/production-migrations.json",
-        "scripts/social/generate-model-cases.py",
-        "scripts/test-chat-notifications.sh"
+        "scripts/social/generate-model-cases.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -51569,7 +51570,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 378,
+      "consumerCount": 379,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -51719,6 +51720,7 @@
       "automationConsumers": [
         ".github/workflows/artist-enrichment-daily.yml",
         ".github/workflows/build.yml",
+        ".github/workflows/campaign-platform.yml",
         ".github/workflows/catalog-list-audit.yml",
         ".github/workflows/check-messaging-token.yml",
         ".github/workflows/check-mobile-distribution.yml",
@@ -51765,8 +51767,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/patchOpenApi",
         "scripts/persona-test-program.mjs",
-        "scripts/privacy-request-ledger.py",
-        "scripts/production-migrations.json"
+        "scripts/privacy-request-ledger.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -51826,7 +51827,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 301,
+      "consumerCount": 302,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -51975,6 +51976,7 @@
       "automationConsumers": [
         ".github/workflows/artist-enrichment-daily.yml",
         ".github/workflows/build.yml",
+        ".github/workflows/campaign-platform.yml",
         ".github/workflows/catalog-list-audit.yml",
         ".github/workflows/check-messaging-token.yml",
         ".github/workflows/check-mobile-distribution.yml",
@@ -52021,8 +52023,7 @@
         "scripts/social/generate-model-cases.py",
         "scripts/social/read-model-tests.sql",
         "scripts/social/test-postgres.sh",
-        "scripts/test-chat-notifications.sh",
-        "scripts/test-event-memories-http.py"
+        "scripts/test-chat-notifications.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -52078,7 +52079,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 287,
+      "consumerCount": 288,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -52223,6 +52224,7 @@
       "automationConsumers": [
         ".github/workflows/artist-enrichment-daily.yml",
         ".github/workflows/build.yml",
+        ".github/workflows/campaign-platform.yml",
         ".github/workflows/catalog-list-audit.yml",
         ".github/workflows/check-messaging-token.yml",
         ".github/workflows/check-mobile-distribution.yml",
@@ -52269,8 +52271,7 @@
         "scripts/social/generate-model-cases.py",
         "scripts/test-chat-notifications.sh",
         "scripts/test-event-memories-http.py",
-        "scripts/test-event-memory-source-browser.mjs",
-        "scripts/test-identity-reconciliation.sh"
+        "scripts/test-event-memory-source-browser.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -52324,7 +52325,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 301,
+      "consumerCount": 302,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -52469,6 +52470,7 @@
       "automationConsumers": [
         ".github/workflows/artist-enrichment-daily.yml",
         ".github/workflows/build.yml",
+        ".github/workflows/campaign-platform.yml",
         ".github/workflows/catalog-list-audit.yml",
         ".github/workflows/check-messaging-token.yml",
         ".github/workflows/check-mobile-distribution.yml",
@@ -52515,8 +52517,7 @@
         "scripts/production-migrations.json",
         "scripts/social/generate-model-cases.py",
         "scripts/social/test-postgres.sh",
-        "scripts/test-chat-notifications.sh",
-        "scripts/test-event-memories-http.py"
+        "scripts/test-chat-notifications.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -52570,7 +52571,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 294,
+      "consumerCount": 295,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -52715,6 +52716,7 @@
       "automationConsumers": [
         ".github/workflows/artist-enrichment-daily.yml",
         ".github/workflows/build.yml",
+        ".github/workflows/campaign-platform.yml",
         ".github/workflows/catalog-list-audit.yml",
         ".github/workflows/check-messaging-token.yml",
         ".github/workflows/check-mobile-distribution.yml",
@@ -52761,8 +52763,7 @@
         "scripts/social/LegacyWriteModelCases.hs",
         "scripts/social/LegacyWriteSpec.hs",
         "scripts/social/generate-model-cases.py",
-        "scripts/social/mutation-tests.sql",
-        "scripts/test-chat-notifications.sh"
+        "scripts/social/mutation-tests.sql"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -52816,7 +52817,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 289,
+      "consumerCount": 290,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -52961,6 +52962,7 @@
       "automationConsumers": [
         ".github/workflows/artist-enrichment-daily.yml",
         ".github/workflows/build.yml",
+        ".github/workflows/campaign-platform.yml",
         ".github/workflows/catalog-list-audit.yml",
         ".github/workflows/check-messaging-token.yml",
         ".github/workflows/check-mobile-distribution.yml",
@@ -53007,8 +53009,7 @@
         "scripts/social/generate-model-cases.py",
         "scripts/test-chat-notifications.sh",
         "scripts/test-event-memories-http.py",
-        "scripts/test-event-memory-source-browser.mjs",
-        "scripts/test-identity-reconciliation.sh"
+        "scripts/test-event-memory-source-browser.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -79890,7 +79891,7 @@
       "lines": [
         3221
       ],
-      "consumerCount": 238,
+      "consumerCount": 240,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/user-roles.yaml",
@@ -79984,6 +79985,7 @@
         "tdf-hq-ui/src/pages/InstagramConnectPage.test.tsx",
         "tdf-hq-ui/src/pages/InstagramConnectPage.tsx",
         "tdf-hq-ui/src/pages/MobileAppPage.tsx",
+        "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx",
         "tdf-hq-ui/src/pages/PartiesPage.tsx",
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
@@ -79992,8 +79994,7 @@
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/pages/courseRegistrationFirstRunLabel.test.ts",
         "tdf-hq-ui/src/routes/AppShell.tsx",
-        "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
-        "tdf-hq-ui/src/services/instagramAuth.test.ts"
+        "tdf-hq-ui/src/routes/publicRoutes.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -80034,6 +80035,7 @@
       ],
       "automationConsumers": [
         ".github/workflows/artist-enrichment-daily.yml",
+        ".github/workflows/campaign-platform.yml",
         "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
@@ -80081,8 +80083,7 @@
         "scripts/test-recovery-envelope.py",
         "scripts/test-recovery-tools.py",
         "scripts/test-specification-inventory.py",
-        "scripts/test-state-machines.py",
-        "scripts/test-studio-internship-audit-migration.sh"
+        "scripts/test-state-machines.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
