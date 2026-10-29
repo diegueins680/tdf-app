@@ -3106,6 +3106,34 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     == T.toUpper (eventTicketTierCurrency quotedTier) -> Right ()
             _ -> Left err409{errBody = "Ticket tier pricing changed; reload before buying"}
 
+    lockTicketPurchasePromo :: Maybe (Entity PromoCode) -> SqlPersistT IO (Either ServerError ())
+    lockTicketPurchasePromo Nothing = pure (Right ())
+    lockTicketPurchasePromo (Just (Entity promoKey quoted)) = do
+        backendName <- T.toCaseFold <$> getRDBMS
+        current <-
+            if "postgres" `T.isInfixOf` backendName
+                then listToMaybe <$> (rawSql
+                    "SELECT ?? FROM promo_code WHERE id = ? FOR UPDATE"
+                    [toPersistValue promoKey] :: SqlPersistT IO [Entity PromoCode])
+                else getEntity promoKey
+        -- Counters and caps stay authoritative at the atomic claim. Harmless
+        -- descriptive edits and later changes to stored orders are independent.
+        let sameTerms actual =
+                SM.promoCodeEventId actual == SM.promoCodeEventId quoted
+                    && SM.promoCodeDiscountType actual == SM.promoCodeDiscountType quoted
+                    && SM.promoCodeDiscountValue actual == SM.promoCodeDiscountValue quoted
+                    && T.toUpper (SM.promoCodeCurrency actual)
+                        == T.toUpper (SM.promoCodeCurrency quoted)
+                    && SM.promoCodeValidFrom actual == SM.promoCodeValidFrom quoted
+                    && SM.promoCodeValidUntil actual == SM.promoCodeValidUntil quoted
+                    && SM.promoCodeTierIds actual == SM.promoCodeTierIds quoted
+                    && SM.promoCodeMinPurchaseAmountCents actual
+                        == SM.promoCodeMinPurchaseAmountCents quoted
+                    && SM.promoCodeIsActive actual == SM.promoCodeIsActive quoted
+        pure $ case current of
+            Just (Entity _ promo) | sameTerms promo -> Right ()
+            _ -> Left err409{errBody = "Promotion changed; reload before buying"}
+
     deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
         Env{..} <- ask
@@ -5313,6 +5341,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                     liftIO (throwIO ticketTermsChangedError)
                                 pricing <- lockTicketPurchaseTierPricing eventKey tierKey tier
                                 either (liftIO . throwIO) pure pricing
+                                promotion <- lockTicketPurchasePromo mPromoCodeEnt
+                                either (liftIO . throwIO) pure promotion
                                 reserved <- TicketInventory.reserveTicketInventory
                                     eventKey tierKey ticketPurchaseQuantity now
                                 if reserved then createReservedOrder else pure Nothing

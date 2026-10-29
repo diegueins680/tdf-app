@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-29T00:46:54.621Z",
+  "generatedAt": "2026-10-29T03:01:29.252Z",
   "repositoryRoot": ".",
   "filesScanned": 2443,
   "candidateCount": 1353,
@@ -90497,7 +90497,7 @@
       "lines": [
         254
       ],
-      "consumerCount": 115,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -90590,6 +90590,7 @@
         "tdf-mobile/src/navigation/deepLinks.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/lib/production-release.mjs",
@@ -108823,7 +108824,7 @@
         797,
         1036
       ],
-      "consumerCount": 145,
+      "consumerCount": 146,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -108932,6 +108933,7 @@
         "scripts/__tests__/directory-search-plan-parity.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -110368,7 +110370,7 @@
       "lines": [
         905
       ],
-      "consumerCount": 155,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -110480,6 +110482,7 @@
         "scripts/__tests__/directory-search-plan-parity.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -112571,7 +112574,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 155,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -112683,6 +112686,7 @@
         "scripts/__tests__/directory-search-plan-parity.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -116869,7 +116873,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 112,
+      "consumerCount": 113,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -116959,6 +116963,7 @@
         "tdf-mobile/src/navigation/deepLinks.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -140108,7 +140113,7 @@
       "lines": [
         208
       ],
-      "consumerCount": 144,
+      "consumerCount": 145,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -140209,6 +140214,7 @@
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
+        "scripts/__tests__/ticket-admission-model.test.mjs",
         "scripts/archive/import-nocturna-event.sh",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -163282,7 +163288,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 62,
+      "consumerCount": 63,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
@@ -163305,6 +163311,7 @@
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/test/RecordsRuntimeProbe.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/Services/YouTubeSpec.hs",
         "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
         "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql",
