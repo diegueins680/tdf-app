@@ -1,0 +1,12 @@
+{
+  "baselineCommit": "7cd6d8a3a811027b0a4880af4e1c4c500a27ac9a",
+  "sourceHashes": {
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "84388b974c86f430b79e3af4a33fc3f8c22b0041f5fb421dabb872d6d5dab9d2",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "bdcaa87991c661ea6c441c0a5c2eeb9364ac30d2732a09ffa30f8a3d90eec7f0"
+  },
+  "logSha256": "73778066c9b9834713068cb54064c47da4adbe439735abff1d304ccafc7b770e",
+  "examples": 10,
+  "failures": 7,
+  "result": "7 actual200/paid0/sold3/tickets3/redemptions1 after organizer commit; inactive and harmlessdescription/currencycase3 compatibility pass",
+  "sourceChanged": false
+}

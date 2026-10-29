@@ -1,0 +1,278 @@
+{
+  "schemaVersion": 1,
+  "repository": "diegueins680/tdf-app",
+  "cycle": "2026-10-28-legacy-ticket-promo-snapshot",
+  "observedAt": "2026-10-29T03:27:53.255718+00:00",
+  "baselineCommit": "7cd6d8a3a811027b0a4880af4e1c4c500a27ac9a",
+  "sourceCommit": "3145981fdbfbde707badcdb766e1598bb6d9e9ad",
+  "mainObserved": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "confirmedDefect": {
+    "id": "TDF-CORRECTNESS-20261028-12",
+    "priority": "P1",
+    "category": "financial integrity / concurrency / cross-layer consistency",
+    "status": "corrected-tested-awaiting-protected-integration",
+    "consequence": "An ordinary organizer can commit changed promo terms before a waiting legacy buyer is admitted, yet a cached discount creates a paid zero-value order and issues tickets. This can bypass current financial/eligibility terms; no unauthorized provider charge or production incident is claimed."
+  },
+  "invariants": [
+    {
+      "id": "EVT-LEGACY-PROMO-SNAPSHOT-001",
+      "parent": "EVT-TICKET-001",
+      "statement": "A new legacy promo order consumes only the same current locked event/discount/type/uppercase-currency/date-window/tier/minimum/active quote inputs. A changed quote refuses409 before durable inventory/order/ticket/redemption effects. Later edits retain valid historical orders and idempotent replay.",
+      "implementationAssurance": "TESTED",
+      "designAssurance": "BOUNDED_VERIFIED",
+      "sourceCommit": "3145981fdbfbde707badcdb766e1598bb6d9e9ad",
+      "contract": "formal/system/legacy-ticket-promo-snapshot.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs:lockTicketPurchasePromo",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs:createStripePaymentIntent"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:ticketPromoSnapshotSpec",
+        "scripts/__tests__/ticket-admission-model.test.mjs:explorePromoTerms"
+      ],
+      "CIProtection": ".github/workflows/ci.yml backend-quality: real provider runtime suite and ticket-admission-model tests. Protected main still requires20 contexts and independent review."
+    }
+  ],
+  "authority": [
+    "Existing legacy promo date/tier/minimum/discount/currency validators and normal organizer updatePromoCode.",
+    "Canonical EventTicketCheckout.promoSnapshotUnchanged and its locked pre-reservation check.",
+    "EVT-LEGACY-PROMO-LIMIT-001 deliberately keeps current caps/counters outside immutable quote identity; preserve nonexhausted/unlimited/increased cap compatibility."
+  ],
+  "correction": {
+    "scope": "One backend-aware Promo row lock and comparison after Event/terms/Tier, before Inventory; no schema, API, dependency, UI or workflow change.",
+    "lockOrder": "Event -> optional terms -> Tier -> Promo. Inventory reacquires already-held Event/Tier; ordinary promo writer has nonlocking Event read then Promo UPDATE.",
+    "fields": [
+      "event binding",
+      "discount type",
+      "discount value",
+      "uppercase currency",
+      "validFrom",
+      "validUntil",
+      "tier restriction JSON",
+      "minimum purchase",
+      "active"
+    ],
+    "excluded": [
+      "currentRedemptions",
+      "maxRedemptions",
+      "description",
+      "updatedAt"
+    ],
+    "currentCapAuthority": "Existing atomic current-column UPDATE preserved unchanged.",
+    "historicalBehavior": "Existing order branch bypasses new admission fence; no stored order/counter is rewritten."
+  },
+  "counterexamples": {
+    "baseline": {
+      "cases": 10,
+      "failures": 7,
+      "compatibilityPasses": 3,
+      "mutations": [
+        "discount value",
+        "discount type and value",
+        "currency",
+        "future start",
+        "past end",
+        "disallowed tier",
+        "minimum301 above base300"
+      ],
+      "actual": "All seven failures return200 with paid0, sold3, tickets3, redemptions1 after ordinary organizer edit commits.",
+      "harness": "Unchanged Event barrier witnesses buyer wait; only actual organizer handler edits terms. No test-side financial mutation/provider/email."
+    },
+    "soleLockMutation": {
+      "control": "Remove only legacy promo snapshot SELECT FOR UPDATE; retain Event/Tier/Inventory/claim locks and every comparison",
+      "correctSha256": "54f7ecb8770f5b7ee98d8cbc97ec9c160e9f1ca95d21f32609f7899de8273df8",
+      "mutantSha256": "8dc774ada37afa96a1ba2fd79bb78d305a033540b449685352b2a02a33686b68",
+      "match": "legacy-ticket-promo-snapshot/locks",
+      "expected": "1 actual FIFO example fails because stale free order is created",
+      "exitCode": 1,
+      "actualExpectedFailureDetected": true,
+      "correctSourceRestored": true,
+      "persistedOutcome": "13|0|paid|3|3|1",
+      "receiptParserDiagnostic": "Initial detector expected standard but-got text; this explicit expectationFailure prints Claim ignored committed promo terms. Actual single-test fail and zero-value SPI already recorded; independently queried persisted outcome. No test assertion changed or rerun-to-green.",
+      "logSha256": "933578e2b59a163968a77279ff412d5a08623e0834a43410b586b33a3f21e8b2"
+    }
+  },
+  "verification": {
+    "targeted": {
+      "examples": 12,
+      "failures": 0,
+      "coverage": [
+        "Seven original failures refuse409/no effects.",
+        "Inactive remains refused; description-only/currency-case changes remain accepted.",
+        "Actual Promo FIFO queues editor first, buyer second; correct lock refuses changed terms.",
+        "Earlier completed order and same-key replay retain original amount/currency/identity and one redemption after later financial edit."
+      ]
+    },
+    "freshFullStack": {
+      "examples": 4516,
+      "failures": 0,
+      "pending": 21,
+      "pendingIsNotPassed": true,
+      "migrationsAppliedAndReplayed": 227,
+      "freshUTF8Template0Database": true,
+      "seed": 20261028,
+      "postgres": "PostgreSQL16.13",
+      "toolchain": "Pinned Stack lts24.42/GHC9.10.3 explicit tdf-hq:test:tdf-hq-test; no Cabal/systemGHC qualification.",
+      "scope": "Complete Hspec component against full schema and provider fixtures; not every separate wrapper, auth or provider integration."
+    },
+    "model": {
+      "suiteTests": 29,
+      "failures": 0,
+      "inputs": 18,
+      "states": 324,
+      "transitions": 324,
+      "retainedHistoricalStates": 18,
+      "dimensions": 9,
+      "valuesPerEditedDimension": 2,
+      "changedDimensionsPerInput": 1,
+      "claimants": 1,
+      "editors": 1,
+      "properties": [
+        "PromoTermsMatchAtClaim",
+        "RefusalHasNoEffects"
+      ],
+      "abstractControls": [
+        "Nine individually omitted fields",
+        "omitPromoLock",
+        "effectsBeforeCheck"
+      ],
+      "scope": "Finite design only, not all simultaneous field combinations, valid/invalid numeric input parsing, date-clock progression, SQL/Haskell refinement or every Haskell-guard mutation. Downstream active guard already refused deactivated promo in baseline."
+    },
+    "rootQuality": {
+      "status": "PASS",
+      "existingPlatformSkips": 11
+    },
+    "catalog": {
+      "baseline": "7cd6d8a3a811027b0a4880af4e1c4c500a27ac9a",
+      "qualifiedSource": "3145981fdbfbde707badcdb766e1598bb6d9e9ad",
+      "freshStrictJSONMatchesTrackedExceptGeneratedAt": true,
+      "trackedGeneratedAt": "2026-10-29T03:01:29.252Z",
+      "freshGeneratedAt": "2026-10-29T03:12:15.431Z",
+      "candidateCount": 1353,
+      "freshStrictCSVGeneratedFromCorrectRestoredSource": true,
+      "historicalDecisionFileUnchanged": true,
+      "catalogUnitCases": 8,
+      "catalogUnitFailures": 0,
+      "indexChecks": "Sequential discovery then conformance checks PASS",
+      "jsonSha256": "4de9f699389909cd071a54283d48ccdeefde936b11d06edcc41a60d1f4c42ca6",
+      "csvSha256": "53fb92f1ef3cb96250f574e4db53842b5fa37fe5af94ba12372a9d7d353aceac",
+      "limitation": "Strict catalog audit and rootquality do not substitute for the separately executed immutable historical-review unit lane."
+    },
+    "actualCatalogCILane": {
+      "command": "node --test scripts/__tests__/catalog-list-audit.test.mjs",
+      "passed": 8,
+      "failed": 0
+    },
+    "sourceSeal": {
+      "schemaVersion": 1,
+      "baselineCommit": "7cd6d8a3a811027b0a4880af4e1c4c500a27ac9a",
+      "sourceCommit": "3145981fdbfbde707badcdb766e1598bb6d9e9ad",
+      "sourceTree": "744ed5e77a07b1551ae6279f466ee19f9e927bf3",
+      "registeredSourceInputs": 1408,
+      "sourceDigest": "611bab0e8aea04f7d8151cb4a13b8b36c968d82ff68e54e2cfa711f574c8f73d",
+      "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+      "allRegisteredGitBlobAndMobileHashesVerified": true,
+      "workingAndCleanCommittedSourceHashesEqual": true,
+      "newContract": {
+        "path": "formal/system/legacy-ticket-promo-snapshot.md",
+        "sha256": "39beedf194ec499f8881e47aedfac7e993a1201b6f24d6be094f9b86429ac4ff",
+        "discoveryEntryMatches": true,
+        "authority": "Inferred from established legacy validators and canonical locked promo snapshot; required reviewer approval pending"
+      },
+      "otherRequirementObjectsUnchanged": 153,
+      "normativeCatalogDecisionObjectsPreserved": 1353,
+      "wholeCatalogDecisionFileExactBaseline": true,
+      "cleanCommittedReporterPass": true,
+      "immutableSourceAdmissionMaterialSurfaces": 3,
+      "currentServingExecutableQualification": "NOT_RUN for new3145 source; parent663 compiled3667 qualification remains historical",
+      "release": "BLOCKED",
+      "scope": "Actual implementation TESTED, finite one-field-at-a-time design BOUNDED_VERIFIED. No full SQL/Haskell refinement, current wall-clock expiry, HTTP authentication, real provider completion or deployment proof."
+    },
+    "assurance": {
+      "working": "PASS",
+      "cleanCommitted": "PASS",
+      "completeRequirementsUnproven": 154,
+      "implementationAndRefinementUnproven": 308,
+      "existingConditionalSourceSMTClaims": 11,
+      "newWholeProgramProofs": 0,
+      "release": "BLOCKED"
+    },
+    "independentReadOnlyReview": {
+      "sourceContractModelAndEvidenceBlockingFindings": 0,
+      "reviewedSource": "3145981fdbfbde707badcdb766e1598bb6d9e9ad",
+      "receipt": "reports/legacy-ticket-promo-snapshot-2026-10-28/independent-review.txt",
+      "independentRuntimeExecution": false,
+      "scope": "Final source/contract/model/evidence limits reviewed; sole-query mutation reconstructed in memory. Execution counts and all-input seal are reviewed root receipts, not independent reruns or GitHub approval."
+    },
+    "currentServingExecutable": "NOT_RUN for this new3145 source. Parent663 hosted3667 executable qualification is historical, not promoted."
+  },
+  "regressionPrevention": "Both actual handler regressions and finite design controls run in existing required backend-quality CI. Actual sole-lock-removal fault demonstrates eventual Inventory/claim locking does not compensate for an unlocked quote read. Dedicated historical catalog unit lane separately passes; no tests or specifications removed/weakened.",
+  "scorecard": {
+    "confirmedNewRootCauses": 1,
+    "correctedNewRootCauses": 1,
+    "newFinancialInvariantTESTED": 1,
+    "newFiniteDesignBOUNDED_VERIFIED": 1,
+    "originalFailuresCovered": 7,
+    "actualLockControlDetected": 1,
+    "newUniversalProofs": 0,
+    "newArchitectureAbstractionsOrDependencies": 0,
+    "historicalCatalogDecisionObjectsPreserved": 1353,
+    "mergedByThisFinancialCorrection": false,
+    "deployed": false
+  },
+  "integration": {
+    "parentPullRequest": 663,
+    "draftPlanned": true,
+    "autoMergeEnabled": false,
+    "merged": false,
+    "deployed": false,
+    "requiredCurrentHeadHostedCI": "pending",
+    "requiredCurrentHeadReview": "pending",
+    "currentMainComposition": "pending",
+    "protectedFIFO": "Selected638535 browser failed booking transient overflow and separate gallery contrast; required review pending. Preserve approved648/651 heads for their slots. No waiver or duplicate gallery patch.",
+    "sourceAndEvidenceCommits": "Source SHA above; later evidence/publication head must be checked independently."
+  },
+  "remainingRisks": [
+    "Valid initial rows and participating READ COMMITTED writers are assumptions; alternate isolation, direct writes, mixed old binaries and deployment availability remain separate.",
+    "Matching date endpoints does not refresh elapsed wall-clock expiry after lock waits; current database-time admission remains a separate unresolved obligation.",
+    "Existing stored orders/retries retain snapshots; current initial retry refusals and later provider recovery remain separate.",
+    "No HTTP authentication, actual provider charge/refund/email or complete Haskell/SQL refinement is established.",
+    "Protected main composition, current-head CI/approval and FIFO remain outstanding; no production data or deployed executable changed."
+  ],
+  "developmentLimitations": [
+    "An initial metadata checker used system Python without PyYAML and failed before generating conformance. Corrected explicit existing verification venv; final sequential checks pass.",
+    "The first mutation receipt parser expected standard but-got text, but this case uses an explicit expectationFailure. Retained actual1/1 failure, inspected exact diagnostic and independently queried persisted13|0|paid|3|3|1. No assertion changed and no rerun-to-green.",
+    "Delegated browser intervention was NOT_RUN because its OS sandbox refused loopback bind; no automatic approval-review rejection. Root interrupted the pending unstarted escalation. A separate permitted main-session diagnostic is outside this financial qualification. The independent review receipt accurately records the earlier delegated state; no browser pass is claimed here."
+  ],
+  "environmentCleanup": {
+    "postgresActive": false,
+    "stoppedStatusExit": 3,
+    "allSyntheticDatabasesPreserved": true,
+    "fullDatabase": "tdf_provider_retry_test",
+    "redAndMutantDatabase": "tdf_ticket_promo_snapshot_red_test",
+    "priorPromoFullDatabase": "tdf_ticket_promo_limit_final_full_test",
+    "currentMutantActive": false
+  },
+  "prioritizedBacklog": [
+    {
+      "id": "PROTECTED-INTEGRATION",
+      "priority": "P0",
+      "status": "PARTIAL",
+      "next": "Selected638535 has observed transient20px booking overflow plus separate gallery contrast. Delegated tooltip probe did not run after OS sandbox bind refusal; a separate main-session bounded probe now runs with normally permitted local tools. No browser result or causal repair is promoted into this financial evidence. Require all20/currentbase/exactreview/FIFO; preserve648/651."
+    },
+    {
+      "id": "LEGACY-PARTIAL-ALLOCATION",
+      "priority": "P0",
+      "status": "UNKNOWN",
+      "blocker": "Material product allocation policy unresolved; continue is not a policy selection."
+    },
+    {
+      "id": "LEGACY-DATABASE-TIME-ADMISSION",
+      "priority": "P1",
+      "status": "UNKNOWN",
+      "next": "Investigate actual expiry while waiting with authoritative requirements and ordinary workflow. No speculative repair."
+    }
+  ],
+  "nextHighestValueTask": "Finish protected integration/browser diagnosis where actionable; otherwise establish concrete current-time cutoff counterexamples.",
+  "evidenceDirectory": "reports/legacy-ticket-promo-snapshot-2026-10-28"
+}
