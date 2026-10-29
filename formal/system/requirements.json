@@ -13296,6 +13296,87 @@
         "Historical skipped-state reachability under GitHub orchestration is not established."
       ],
       "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
+    },
+    {
+      "id": "SYS-WORKER-COMPLETION-001",
+      "title": "Preserve close-based worker deadlines and first-failure lifecycle evidence",
+      "domain": "SYS",
+      "critical": false,
+      "statement": "The synthetic music runtime runner accepts asynchronous completion only after ChildProcess close, preserving status and full captured output. Its default completion deadline remains30000ms. A timeout remains fatal and includes the observed process/stream lifecycle and bounded output tails, distinguishing an observed exit awaiting close from no observed exit. Spawn failures remain rejected. Diagnostics never substitute process exit, stream destruction, a longer deadline or a later successful attempt for completion.",
+      "authority": "User mission sections1.2,8,9 require credible failure evidence, verification-control testing and no suppression of failing checks; existing runtime close/deadline behavior and Node24 child-process event contract.",
+      "source": "formal/system/music-worker-completion-observation.md; scripts/test-music-release-worker-runtime.mjs atmain e302; hosted40831374480/job123306367783 generic watchdog failure.",
+      "contract": "formal/system/music-worker-completion-observation.md",
+      "property": "Default deadline30000ms; success implies observed close; timeout preserves separate spawn/exit/close/stream fields and at most4000characters per output tail; error/timeout remain failures.",
+      "actors": [
+        "Synthetic worker runtime runner",
+        "CI maintainer investigating a failing worker scenario"
+      ],
+      "preconditions": [
+        "Observer attaches synchronously to a newly spawned ChildProcess with piped stdout/stderr.",
+        "Output belongs only to scrubbed synthetic local/CI fixtures; this is not a production logger."
+      ],
+      "inputs": [
+        "ChildProcess lifecycle and stream events",
+        "Completion promise and test deadline"
+      ],
+      "state": {
+        "process": [
+          "awaiting-exit",
+          "exited-awaiting-close",
+          "closed",
+          "spawn-error"
+        ],
+        "completion": [
+          "pending",
+          "closed-result",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Observed exit before output closure -> retain pending completion and exit milestone",
+        "Observed close -> preserve status/signal/full captured output",
+        "Deadline without close -> reject with bounded first-failure snapshot",
+        "Spawn error -> reject even when awaited after readiness"
+      ],
+      "forbiddenTransitions": [
+        "Exit alone -> accepted completion",
+        "Timeout -> discard all available lifecycle/output evidence",
+        "Timeout -> extend deadline or destroy streams to claim close",
+        "Missing fixture readiness -> unbounded unit-test wait preventing cleanup"
+      ],
+      "effects": [
+        "Additional synthetic diagnostics only; existing worker outcome assertions and process cleanup remain.",
+        "Root repository quality executes the real-child lifecycle regression tests."
+      ],
+      "authorization": "No provider/production authorization or deployed worker behavior change; fixtures own their child processes.",
+      "privacy": "Diagnostics include no environment or command arguments; tails are bounded synthetic fixture output, not a redaction guarantee for arbitrary production streams.",
+      "concurrency": "Exit and close milestones are observed separately; timeout snapshots reflect event delivery at the deadline and do not infer why a process is waiting.",
+      "idempotency": "Snapshots are read-only observations; successful completion retains the original result. Repeated observations cannot qualify a timed-out attempt.",
+      "failure": "Timeout and spawn errors reject; no observation is a claim of descendant quiescence or PostgreSQL/rootcause correctness.",
+      "recovery": "Investigate captured first-failure process/pipe/fixtureSQL state; preserve failed run. Actual shutdown corrections require their own counterexample and verification.",
+      "observability": "Monotonic start/spawn/exit/close/observation timestamps, PID/status/signal, stream flags, total character counts and bounded tails.",
+      "implementation": [
+        "scripts/lib/test-child-completion.mjs",
+        "scripts/test-music-release-worker-runtime.mjs",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/test-child-completion.test.mjs",
+        "scripts/test-music-release-worker-runtime.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Real normal/live/exited-parent-with-held-pipe/spawn-error/missing-readiness fixtures; unchanged default timer assertion; single-guard mutations; actual music concurrency lane. Passing receipts are separate source-bound artifacts, not a mathematical proof.",
+      "evidence": "reports/music-worker-completion-2026-10-29.json when committed; original hosted failure and setup/local probe receipts retain separate scopes.",
+      "confidence": "High for scoped local lifecycle observations under tested Node/OS; hosted worker shutdown cause remains UNKNOWN.",
+      "ambiguity": [
+        "An exit awaiting close does not identify the descriptor holder; a live process does not identify its wait cause.",
+        "No claim of output redaction for nonsynthetic callers, universal process-tree cleanup or whole-worker liveness."
+      ],
+      "status": "specified and implemented",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local observation controls are executable; actual hosted first-failure rootcause, product shutdown liveness and protected integration remain separate."
+      }
     }
   ]
 }
