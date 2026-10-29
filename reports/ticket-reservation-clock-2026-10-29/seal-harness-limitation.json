@@ -1,0 +1,1 @@
+{"status":"CORRECTED_VERIFIER_ASSUMPTION","reason":"Post-commit source seal requested absent Hpack package.yaml; actual supported dependency manifest is tdf-hq/tdf-hq.cabal. Clean committed assurance/admission already succeeded; resume rechecks every Git source and actual Cabal object. No domain code/test/spec changed or result suppressed."}

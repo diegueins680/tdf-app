@@ -32,12 +32,20 @@ returns409 without partially editing the tier.
 
 The two reservation copies now call the existing inventory authority inside
 order creation. It locks Event then Tier, reads the current capacity/total,
-checks current active and sale-window values using the supplied handler-start
-`now`, uses Integer arithmetic for the event capacity comparison, and updates
-stock before the caller inserts its order/tickets in that same transaction.
-Existing positive wire quantities are1–100 for both DTO decoders, matching this
-helper's bound. This is not a new public quantity limit. Sale-window ends remain
-inclusive; no database-time admission deadline is claimed.
+checks current active and sale-window values using the supplied timestamp, uses
+Integer arithmetic for the event capacity comparison, and updates stock before
+the caller inserts its order/tickets in that same transaction. Existing positive
+wire quantities are1–100 for both DTO decoders, matching this helper's bound.
+This is not a new public quantity limit. Sale-window ends remain inclusive.
+
+The original inventory repair supplied handler-start `now`; its historical
+receipts and bounded stock model did not establish elapsed-time admission.
+The owner's 2026-10-29 rule is now implemented separately by
+`EVT-TICKET-RESERVATION-CLOCK-001` in `ticket-reservation-clock.md`: all three new
+reservation callers supply a database wall-time sample after their final
+admission locks, shared with promo validity checks. That successor's runtime
+receipts determine its own assurance; the original inventory model is not
+promoted to a clock or whole-handler proof.
 
 Stripe checkout keeps its Event lock and terms-policy SHARE check before the
 helper. Its zero-total response, promo claim/compensation, idempotent checkout

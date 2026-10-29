@@ -1,0 +1,9 @@
+{
+  "baseline": "b827b7303e99196043f554dd16c4dedbfe725d36",
+  "sourceCommit": "05e123929f7b33bdaff27557f3e752dc51f73edf",
+  "sourceTree": "eeadc08fc4ccdc916cf75eba034a98fe9d564f4a",
+  "targetedFinal17": "17 actual examples/0fail; input hashes match committed C",
+  "other153RequirementObjectsUnchanged": true,
+  "whole1353HistoricalCatalogFileExactBaseline": true,
+  "fullAndMutationStatus": "PENDING; source commit is internal, not published"
+}

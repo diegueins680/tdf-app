@@ -1,0 +1,11 @@
+{
+  "sourceCommit": "05e123929f7b33bdaff27557f3e752dc51f73edf",
+  "full": "4544actual/0failure/20pending; Stackcomponenttdf-hq:test:tdf-hq-test",
+  "clockRegression": "17actual/0failure;17samefinalbodiesalsoincludedfullC",
+  "oneQueryMutation": "17actual/7expiredactual200failures/10compatibilitypasses;sourceexactrestored",
+  "independentSourceAndEvidenceReview": "0blockers;1408committedGit/Mobileinputs independentlyrehashed",
+  "PGStopped": true,
+  "noProductionOrProviderOperations": true,
+  "servingExecutableQualification": "NOT_RUN; testcomponentdoesnotestablishcurrentservingbinary",
+  "integration": "PENDING; draftstackpublication next, no protectedmain/deploymentclaim"
+}

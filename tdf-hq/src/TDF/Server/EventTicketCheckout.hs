@@ -647,17 +647,26 @@ createTicketCheckoutTransaction
               | otherwise -> Left (conflict
                   "Promotion changed or became unavailable while ticket inventory was being held")
             _ -> Left (conflict "Promotion is no longer available")
+      -- The last possible row-lock wait includes the policy and promotion.
+      -- Use this same database-time sample for promo and tier admission only;
+      -- original request/audit timestamps and hold duration remain unchanged.
+      admissionTime <- Inventory.ticketReservationTime
       case (lockedEventEligibility, lockedTiers, lockedPromo) of
         (Left eventError, _, _) -> pure (Left eventError)
         (Right (), [Entity _ lockedTier], Right transactionPromo)
           | SM.eventTicketTierEventId lockedTier == eventKey
           , SM.eventTicketTierIsActive lockedTier
-          , SocialEvents.isTicketTierSaleOpen now lockedTier ->
-              reserveAndCreate transactionPromo
+          , SocialEvents.isTicketTierSaleOpen admissionTime lockedTier ->
+              case transactionPromo of
+                Just (ValidPromo (Entity _ promo) _)
+                  | Left message <- SocialEvents.validatePromoCodeDateWindow admissionTime
+                      (SM.promoCodeValidFrom promo) (SM.promoCodeValidUntil promo) ->
+                      pure (Left (conflict message))
+                _ -> reserveAndCreate admissionTime transactionPromo
         (_, _, Left promoError) -> pure (Left promoError)
         _ -> pure (Left (conflict "Ticket tier is no longer available"))
-    reserveAndCreate transactionPromo = do
-      reserved <- Inventory.reserveTicketInventory eventKey tierKey quantityInt now
+    reserveAndCreate admissionTime transactionPromo = do
+      reserved <- Inventory.reserveTicketInventory eventKey tierKey quantityInt admissionTime
       if not reserved
         then pure (Left (conflict "Event or ticket tier inventory is exhausted"))
         else claimPromoAndCreate transactionPromo

@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "05e123929f7b33bdaff27557f3e752dc51f73edf",
+  "correctInventorySha256": "12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c",
+  "mutantInventorySha256": "023dbd0e95d795858033a5e15824e4665e85f8c2892e010389a5632c01e19e80",
+  "mutation": "Change ONLY shared SELECT clock_timestamp() to SELECT now(); keep all locks/date guards/test bodies and SQL inventory predicates. now() is transaction-start time even though queried after wait.",
+  "expected": "17actualcases,7expired cases fail withactual200/new effects,10compatibility/boundary/history cases pass.",
+  "scope": "Real compiled Haskell/PostgreSQL mutation, not only a finite design model.",
+  "driverExit": 1,
+  "exactCorrectSourceRestored": true,
+  "qualified": true,
+  "actualCases": 17,
+  "actualExpiredFailuresWithPersistedEffects": 7,
+  "actualCompatibilityPasses": 10,
+  "inputHashesStable": true,
+  "noAssertionOrTestChanged": true
+}
