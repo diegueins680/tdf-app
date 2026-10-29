@@ -1,0 +1,28 @@
+{
+  "baseline": "b827b7303e99196043f554dd16c4dedbfe725d36",
+  "appSourceUnchanged": true,
+  "actualStackExit": 1,
+  "actualExamples": 3,
+  "actualFailures": 3,
+  "lockWaitsFollowedByStrictlyElapsedDatabaseDeadlines": [
+    [
+      "1",
+      "2026-10-29 05:47:21.876364",
+      "2026-10-29 05:47:21.887468"
+    ],
+    [
+      "2",
+      "2026-10-29 05:47:26.990627",
+      "2026-10-29 05:47:26.994083"
+    ],
+    [
+      "3",
+      "2026-10-29 05:47:32.10173",
+      "2026-10-29 05:47:32.121636"
+    ]
+  ],
+  "testFileSha256": "73522345a538bb4e4e5b41c10bbb9d91ae2cf7c6c1b4d6dcfcbdcff13958208b",
+  "sourceSha256": "54f7ecb8770f5b7ee98d8cbc97ec9c160e9f1ca95d21f32609f7899de8273df8",
+  "evidence": "All3 actual handlers return200 and paid0/sold3/tickets3 after elapsed sale/promo deadlines; promo case additionally1redemption. Expected409 and no new effects under explicit user policy.",
+  "scope": "In-process real handlers, synthetic full227 PostgreSQL schema; no HTTP authentication or provider completion claim."
+}

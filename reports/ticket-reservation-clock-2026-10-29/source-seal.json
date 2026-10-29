@@ -1,0 +1,25 @@
+{
+  "baseline": "b827b7303e99196043f554dd16c4dedbfe725d36",
+  "sourceCommit": "05e123929f7b33bdaff27557f3e752dc51f73edf",
+  "sourceTree": "eeadc08fc4ccdc916cf75eba034a98fe9d564f4a",
+  "registeredSourceInputs": 1408,
+  "sourceDigest": "6bdbde0da0f054e6926eef47568132e0f14877eb51c738ed2cd460065fdaa7be",
+  "allRegisteredGitBlobAndMobileHashesVerified": true,
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "newContract": {
+    "path": "formal/system/ticket-reservation-clock.md",
+    "sha256": "8e25fe8724f48710dfa8e31237bc10023123717bb9601859dfcc4e537266be80",
+    "discoveryHashMatches": true
+  },
+  "whole1353HistoricalCatalogFileExactBaseline": true,
+  "other153RequirementObjectsUnchanged": true,
+  "UIAPIDependenciesMigrationsScriptsWorkflowsOpsEqualParent": true,
+  "cleanCommittedAssurance": "PASS",
+  "completeRequirementsUNPROVEN": 154,
+  "implementationRefinementUNPROVEN": 308,
+  "existingConditionalSMT": 11,
+  "newUniversalClockProofs": 0,
+  "release": "BLOCKED",
+  "currentMainComposition": "PENDING; stacked financial parent is not protected current main",
+  "scope": "Current actual17-case behavior TESTED by identical committed code hashes. Full and mutation qualification still pending."
+}

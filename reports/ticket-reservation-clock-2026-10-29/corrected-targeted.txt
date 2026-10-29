@@ -1,0 +1,463 @@
+tdf-hq> build (test) with ghc-9.10.3
+Preprocessing test suite 'tdf-hq-test' for tdf-hq-0.1.0.0...
+Building test suite 'tdf-hq-test' for tdf-hq-0.1.0.0...
+[123 of 321] Compiling TDF.Ticketing.Inventory [Source file changed]
+[242 of 321] Compiling TDF.Server.SocialEventsHandlers [Source file changed]
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/src/TDF/Server/SocialEventsHandlers.hs:177:1: warning: [GHC-66111] [-Wunused-imports]
+    The import of ‘System.Environment’ is redundant
+      except perhaps to import instances from ‘System.Environment’
+    To import instances alone, use: import System.Environment()
+    |
+177 | import System.Environment (lookupEnv)
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/src/TDF/Server/SocialEventsHandlers.hs:539:5: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘exists’ shadows the existing binding
+      imported from ‘Database.Persist’ at src/TDF/Server/SocialEventsHandlers.hs:189:1-23
+      (and originally defined in ‘Database.Persist.Class.PersistQuery’)
+    |
+539 |     exists <- doesDirectoryExist eventAssetsDir
+    |     ^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/src/TDF/Server/SocialEventsHandlers.hs:4775:20: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘orderRecord’ shadows the existing binding
+      bound at src/TDF/Server/SocialEventsHandlers.hs:4719:13
+     |
+4775 |         (orderDto, orderRecord, ticketCodes) <-
+     |                    ^^^^^^^^^^^
+
+[243 of 321] Compiling TDF.Social.FollowHandlerSpec [TDF.Server.SocialEventsHandlers changed]
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Social/FollowHandlerSpec.hs:1476:9: warning: [GHC-81995] [-Wunused-do-bind]
+    A do-notation statement discarded a result of type
+      ‘Key ExternalEventRef’
+    Suggested fix:
+      Suppress this warning by saying
+        ‘_ <- runSqlPool
+                (do insertKey
+                      suppressedEventKey
+                      (eventRow "system:event-discovery" "Suppressed import")
+                    insertKey visibleEventKey (eventRow "1" "Visible managed event")
+                    insert
+                      ExternalEventRef
+                        {externalEventRefProvider = "ticketmaster",
+                         externalEventRefExternalId = "tm-suppressed-admin-list",
+                         externalEventRefEventId = suppressedEventKey,
+                         externalEventRefCity = "Quito",
+                         externalEventRefCountryCode = Just "EC",
+                         externalEventRefSourceUrl = Just
+                                                       "https://tickets.example/suppressed",
+                         externalEventRefPriceCents = Just 1000,
+                         externalEventRefCurrency = Just "USD",
+                         externalEventRefLastSeenAt = now, externalEventRefMissingRuns = 0,
+                         externalEventRefSourceStatus = "  SuPpReSsEd  "})
+                pool’
+     |
+1476 |         runSqlPool
+     |         ^^^^^^^^^^...
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Social/FollowHandlerSpec.hs:1868:17: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘before’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/TDF/Social/FollowHandlerSpec.hs:41:1-17
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Hooks’)
+     |
+1868 |                 before <- runSqlPool (count [EventInvitationEventId ==. eventKey]) pool
+     |                 ^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Social/FollowHandlerSpec.hs:1897:25: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘after’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/TDF/Social/FollowHandlerSpec.hs:41:1-17
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Hooks’)
+     |
+1897 |                         after <- runSqlPool (count [EventInvitationEventId ==. eventKey]) pool
+     |                         ^^^^^
+
+[253 of 321] Compiling TDF.Server.EventTicketCheckout [Source file changed]
+[254 of 321] Compiling TDF.Server.ProviderExecution [TDF.Server.EventTicketCheckout changed]
+[255 of 321] Compiling TDF.TicketPaymentGateSpec [Source file changed]
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/TicketPaymentGateSpec.hs:201:13: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘before’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/TDF/TicketPaymentGateSpec.hs:28:1-17
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Hooks’)
+    |
+201 |             before <- scalar pool "SELECT count(*) FROM commerce_manual_payment_evidence WHERE checkout_id=?::uuid AND evidence_object_key IS NOT NULL" [PersistText (oCheckout order)]
+    |             ^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/TicketPaymentGateSpec.hs:450:39: warning: [GHC-38417] [-Wmissing-signatures]
+    Top-level binding with no type signature:
+      datafastCreate :: Int64
+                        -> Int64
+                        -> Maybe Text
+                        -> ReaderT Env Handler TDF.API.Types.DatafastCheckoutDTO
+    |
+450 | _ :<|> createOrder :<|> getOrder :<|> datafastCreate :<|> _ :<|> paypalCreate :<|> paypalCapture
+    |                                       ^^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/TicketPaymentGateSpec.hs:450:66: warning: [GHC-38417] [-Wmissing-signatures]
+    Top-level binding with no type signature:
+      paypalCreate :: Int64
+                      -> Int64
+                      -> Maybe Text
+                      -> ReaderT Env Handler TDF.API.Types.PaypalCreateDTO
+    |
+450 | _ :<|> createOrder :<|> getOrder :<|> datafastCreate :<|> _ :<|> paypalCreate :<|> paypalCapture
+    |                                                                  ^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/TicketPaymentGateSpec.hs:450:84: warning: [GHC-38417] [-Wmissing-signatures]
+    Top-level binding with no type signature:
+      paypalCapture :: Int64
+                       -> Int64
+                       -> Maybe Text
+                       -> Routes.PublicEventTicketPaypalCaptureRequest
+                       -> ReaderT Env Handler Routes.PublicEventTicketCheckoutResponse
+    |
+450 | _ :<|> createOrder :<|> getOrder :<|> datafastCreate :<|> _ :<|> paypalCreate :<|> paypalCapture
+    |                                                                                    ^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/TicketPaymentGateSpec.hs:451:8: warning: [GHC-38417] [-Wmissing-signatures]
+    Top-level binding with no type signature:
+      bankSelect :: Int64
+                    -> Int64
+                    -> Maybe Text
+                    -> ReaderT Env Handler Routes.PublicEventTicketCheckoutResponse
+    |
+451 |   :<|> bankSelect :<|> bankEvidence = publicEventTicketsServer
+    |        ^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/TicketPaymentGateSpec.hs:451:24: warning: [GHC-38417] [-Wmissing-signatures]
+    Top-level binding with no type signature:
+      bankEvidence :: Int64
+                      -> Int64
+                      -> Maybe Text
+                      -> Routes.PublicEventTicketBankTransferEvidenceRequest
+                      -> ReaderT Env Handler Routes.PublicEventTicketCheckoutResponse
+    |
+451 |   :<|> bankSelect :<|> bankEvidence = publicEventTicketsServer
+    |                        ^^^^^^^^^^^^
+
+[260 of 321] Compiling TDF.Commerce.ProviderRetrySpec [Source file changed]
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:77:30: warning: [GHC-38856] [-Wunused-imports]
+    The import of ‘toSqlKey’
+    from module ‘Database.Persist.Sql’ is redundant
+   |
+77 | import Database.Persist.Sql (toSqlKey, fromSqlKey)
+   |                              ^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:371:36: warning: [GHC-68441] [-Wdeprecations]
+    In the use of ‘closeManager’
+    (imported from Network.HTTP.Client, but defined in Network.HTTP.Client.Manager):
+    Deprecated: "Manager will be closed for you automatically when no longer in use"
+    |
+371 |   bracket (HC.newManager settings) HC.closeManager $ \manager ->
+    |                                    ^^^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:866:62: warning: [GHC-63394] [-Wx-partial]
+    In the use of ‘head’
+    (imported from Prelude, but defined in GHC.Internal.List):
+    "This is a partial function, it throws an error on empty lists. Use pattern matching, 'Data.List.uncons' or 'Data.Maybe.listToMaybe' instead. Consider refactoring to use "Data.List.NonEmpty"."
+    |
+866 |     map Event.pesReference results `shouldSatisfy` (\refs -> head refs == last refs)
+    |                                                              ^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:2194:15: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘before’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/TDF/Commerce/ProviderRetrySpec.hs:39:1-27
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Hooks’)
+     |
+2194 |               before <- runSqlPool (paymentSnapshot payment) pool
+     |               ^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:2304:13: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘creation’ shadows the existing binding
+      bound at test/TDF/Commerce/ProviderRetrySpec.hs:2284:7
+     |
+2304 |         let creation = Refund.RefundCreation
+     |             ^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:2655:9: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘before’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/TDF/Commerce/ProviderRetrySpec.hs:39:1-27
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Hooks’)
+     |
+2655 |         before <- serviceOrderSnapshot pool payment
+     |         ^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:3690:14: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘pending’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/TDF/Commerce/ProviderRetrySpec.hs:39:1-27
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Spec’)
+     |
+3690 |         Just pending <- runSqlPool (get (entityKey request)) pool
+     |              ^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:4311:18: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘key’ shadows the existing binding
+      bound at test/TDF/Commerce/ProviderRetrySpec.hs:4313:9
+     |
+4311 |         purchase key = runHandler (runReaderT (checkout (TD.TicketPurchaseWithPromoDTO request
+     |                  ^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:4556:18: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘key’ shadows the existing binding
+      bound at test/TDF/Commerce/ProviderRetrySpec.hs:4558:9
+     |
+4556 |         purchase key = runHandler (runReaderT (checkout (TD.TicketPurchaseWithPromoDTO request
+     |                  ^^^
+
+[280 of 321] Compiling TDF.Version
+[321 of 321] Compiling Main [TDF.Server.SocialEventsHandlers changed]
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:230:54: warning: [GHC-38856] [-Wunused-imports]
+    The import of ‘moduleName’ from module ‘TDF.Auth’ is redundant
+    |
+230 | import TDF.Auth (AuthedUser (..), ModuleAccess (..), moduleName, modulesForRoles)
+    |                                                      ^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:231:1: warning: [GHC-66111] [-Wunused-imports]
+    The import of ‘TDF.FeatureRegistry’ is redundant
+      except perhaps to import instances from ‘TDF.FeatureRegistry’
+    To import instances alone, use: import TDF.FeatureRegistry()
+    |
+231 | import TDF.FeatureRegistry
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^...
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:242:1: warning: [GHC-66111] [-Wunused-imports]
+    The qualified import of ‘TDF.Operations.ModelSpec’ is redundant
+      except perhaps to import instances from ‘TDF.Operations.ModelSpec’
+    To import instances alone, use: import TDF.Operations.ModelSpec()
+    |
+242 | import qualified TDF.Operations.ModelSpec as OperationsModelSpec
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:290:7: warning: [GHC-38856] [-Wunused-imports]
+    The import of ‘selectUniqueActiveInternTimeEntry’
+    from module ‘TDF.ServerInternships’ is redundant
+    |
+290 |       selectUniqueActiveInternTimeEntry,
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:380:7: warning: [GHC-38856] [-Wunused-imports]
+    The import of ‘driveUploadServer,
+                   loadCourseRegistrationReceiptCounts,
+                   toCourseRegistrationDTOWithReceiptCount, validateLabelTrackPathId’
+    from module ‘TDF.Server’ is redundant
+    |
+380 |       loadCourseRegistrationReceiptCounts,
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^...
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:524:5: warning: [GHC-38856] [-Wunused-imports]
+    The import of ‘validateArtistProfileCreateParty,
+                   validateArtistProfileWriteAccess,
+                   validateAuthenticatedPartyReference,
+                   validateSocialEventsFeatureAction’
+    from module ‘TDF.Server.SocialEventsHandlers’ is redundant
+    |
+524 |     validateSocialEventsFeatureAction,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^...
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:3017:21: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘pending’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/Spec.hs:49:1-17
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Spec’)
+     |
+3017 |                 let pending = transaction "PENDING_CONFIRMATION" (A.Number 125.15)
+     |                     ^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:7095:13: warning: [GHC-18042] [-Wtype-defaults]
+    • Defaulting the type variable ‘a0’ to type ‘String’ in the following constraints
+        (ghc-internal-9.1003.0:GHC.Internal.Data.String.IsString a0)
+          arising from a use of ‘assertInvalid’ at test/Spec.hs:7095:13-25
+        (Eq a0)
+          arising from a use of ‘assertInvalid’ at test/Spec.hs:7095:13-25
+    • In a stmt of a 'do' block:
+        assertInvalid
+          "INSTAGRAM_APP_TOKEN" "app token"
+          "INSTAGRAM_APP_TOKEN must not contain whitespace or control characters"
+      In the second argument of ‘($)’, namely
+        ‘do let assertInvalid envName rawToken expectedMessage
+                  = withEnvOverrides ... $ loadConfig `shouldThrow` ...
+            assertInvalid
+              "INSTAGRAM_APP_TOKEN" "app token"
+              "INSTAGRAM_APP_TOKEN must not contain whitespace or control characters"
+            assertInvalid
+              "INSTAGRAM_APP_TOKEN"
+              ("app-token" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+              "INSTAGRAM_APP_TOKEN must not contain hidden formatting characters"
+            assertInvalid
+              "INSTAGRAM_MESSAGING_TOKEN" "tokené"
+              "INSTAGRAM_MESSAGING_TOKEN must contain visible ASCII characters only"’
+      In a stmt of a 'do' block:
+        it
+          "rejects malformed configured Instagram token fallbacks at startup"
+          $ do let assertInvalid envName rawToken expectedMessage
+                     = withEnvOverrides ... $ loadConfig `shouldThrow` ...
+               assertInvalid
+                 "INSTAGRAM_APP_TOKEN" "app token"
+                 "INSTAGRAM_APP_TOKEN must not contain whitespace or control characters"
+               assertInvalid
+                 "INSTAGRAM_APP_TOKEN"
+                 ("app-token" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                 "INSTAGRAM_APP_TOKEN must not contain hidden formatting characters"
+               assertInvalid
+                 "INSTAGRAM_MESSAGING_TOKEN" "tokené"
+                 "INSTAGRAM_MESSAGING_TOKEN must contain visible ASCII characters only"
+     |
+7095 |             assertInvalid
+     |             ^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:7099:13: warning: [GHC-18042] [-Wtype-defaults]
+    • Defaulting the type variable ‘a0’ to type ‘String’ in the following constraints
+        (ghc-internal-9.1003.0:GHC.Internal.Data.String.IsString a0)
+          arising from a use of ‘assertInvalid’ at test/Spec.hs:7099:13-25
+        (Eq a0)
+          arising from a use of ‘assertInvalid’ at test/Spec.hs:7099:13-25
+    • In a stmt of a 'do' block:
+        assertInvalid
+          "INSTAGRAM_APP_TOKEN"
+          ("app-token" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+          "INSTAGRAM_APP_TOKEN must not contain hidden formatting characters"
+      In the second argument of ‘($)’, namely
+        ‘do let assertInvalid envName rawToken expectedMessage
+                  = withEnvOverrides ... $ loadConfig `shouldThrow` ...
+            assertInvalid
+              "INSTAGRAM_APP_TOKEN" "app token"
+              "INSTAGRAM_APP_TOKEN must not contain whitespace or control characters"
+            assertInvalid
+              "INSTAGRAM_APP_TOKEN"
+              ("app-token" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+              "INSTAGRAM_APP_TOKEN must not contain hidden formatting characters"
+            assertInvalid
+              "INSTAGRAM_MESSAGING_TOKEN" "tokené"
+              "INSTAGRAM_MESSAGING_TOKEN must contain visible ASCII characters only"’
+      In a stmt of a 'do' block:
+        it
+          "rejects malformed configured Instagram token fallbacks at startup"
+          $ do let assertInvalid envName rawToken expectedMessage
+                     = withEnvOverrides ... $ loadConfig `shouldThrow` ...
+               assertInvalid
+                 "INSTAGRAM_APP_TOKEN" "app token"
+                 "INSTAGRAM_APP_TOKEN must not contain whitespace or control characters"
+               assertInvalid
+                 "INSTAGRAM_APP_TOKEN"
+                 ("app-token" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                 "INSTAGRAM_APP_TOKEN must not contain hidden formatting characters"
+               assertInvalid
+                 "INSTAGRAM_MESSAGING_TOKEN" "tokené"
+                 "INSTAGRAM_MESSAGING_TOKEN must contain visible ASCII characters only"
+     |
+7099 |             assertInvalid
+     |             ^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:7103:13: warning: [GHC-18042] [-Wtype-defaults]
+    • Defaulting the type variable ‘a0’ to type ‘String’ in the following constraints
+        (ghc-internal-9.1003.0:GHC.Internal.Data.String.IsString a0)
+          arising from a use of ‘assertInvalid’ at test/Spec.hs:7103:13-25
+        (Eq a0)
+          arising from a use of ‘assertInvalid’ at test/Spec.hs:7103:13-25
+    • In a stmt of a 'do' block:
+        assertInvalid
+          "INSTAGRAM_MESSAGING_TOKEN" "tokené"
+          "INSTAGRAM_MESSAGING_TOKEN must contain visible ASCII characters only"
+      In the second argument of ‘($)’, namely
+        ‘do let assertInvalid envName rawToken expectedMessage
+                  = withEnvOverrides ... $ loadConfig `shouldThrow` ...
+            assertInvalid
+              "INSTAGRAM_APP_TOKEN" "app token"
+              "INSTAGRAM_APP_TOKEN must not contain whitespace or control characters"
+            assertInvalid
+              "INSTAGRAM_APP_TOKEN"
+              ("app-token" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+              "INSTAGRAM_APP_TOKEN must not contain hidden formatting characters"
+            assertInvalid
+              "INSTAGRAM_MESSAGING_TOKEN" "tokené"
+              "INSTAGRAM_MESSAGING_TOKEN must contain visible ASCII characters only"’
+      In a stmt of a 'do' block:
+        it
+          "rejects malformed configured Instagram token fallbacks at startup"
+          $ do let assertInvalid envName rawToken expectedMessage
+                     = withEnvOverrides ... $ loadConfig `shouldThrow` ...
+               assertInvalid
+                 "INSTAGRAM_APP_TOKEN" "app token"
+                 "INSTAGRAM_APP_TOKEN must not contain whitespace or control characters"
+               assertInvalid
+                 "INSTAGRAM_APP_TOKEN"
+                 ("app-token" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                 "INSTAGRAM_APP_TOKEN must not contain hidden formatting characters"
+               assertInvalid
+                 "INSTAGRAM_MESSAGING_TOKEN" "tokené"
+                 "INSTAGRAM_MESSAGING_TOKEN must contain visible ASCII characters only"
+     |
+7103 |             assertInvalid
+     |             ^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:16960:36: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘email’ shadows the existing binding
+      imported from ‘TDF.API.WhatsApp’ at test/Spec.hs:99:7-22
+      |
+16960 |             let mkMusician partyId email =
+      |                                    ^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:18279:1: warning: [GHC-40910] [-Wunused-top-binds]
+    Defined but not used: ‘initializeCourseRegistrationSummarySchema’
+      |
+18279 | initializeCourseRegistrationSummarySchema = do
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:18320:1: warning: [GHC-40910] [-Wunused-top-binds]
+    Defined but not used: ‘mkCourseRegistrationSummaryFixture’
+      |
+18320 | mkCourseRegistrationSummaryFixture slug now =
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/Spec.hs:18347:1: warning: [GHC-40910] [-Wunused-top-binds]
+    Defined but not used: ‘mkCourseRegistrationReceiptSummaryFixture’
+      |
+18347 | mkCourseRegistrationReceiptSummaryFixture regKey fileName now =
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[280 of 322] Compiling TDF.Version
+[322 of 322] Linking .stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test [Objects changed]
+tdf-hq> copy/register
+Installing executable tdf-ddex-render in /private/tmp/tdf-correctness-cycle-20261028/tdf-hq/.stack-work/install/x86_64-osx/5183c6d274f593a36eae69d28d98c0a8b88f4a56934f2364cfcf4644158ab5e0/9.10.3/bin
+Installing executable tdf-hq-exe in /private/tmp/tdf-correctness-cycle-20261028/tdf-hq/.stack-work/install/x86_64-osx/5183c6d274f593a36eae69d28d98c0a8b88f4a56934f2364cfcf4644158ab5e0/9.10.3/bin
+tdf-hq> test (suite: tdf-hq-test, args: --match=ticket-reservation-clock --fail-on=empty --seed=20261029 +RTS -N2 -RTS)
+
+
+provider-retry-runtime PostgreSQL
+  ticket-reservation-clock
+TICKET_CLOCK_WAIT event=11 end=2026-10-29 06:11:39.886008 UTC releasedAfter=Just 2026-10-29 06:01:39.937027 UTC
+    enforces deadline after the Event wait: checkout=False, promo=False, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=12 end=2026-10-29 06:01:45.027976 UTC releasedAfter=Just 2026-10-29 06:01:45.030097 UTC
+    enforces deadline after the Event wait: checkout=False, promo=False, elapsed=True [✔]
+TICKET_CLOCK_WAIT event=13 end=2026-10-29 06:11:45.108744 UTC releasedAfter=Just 2026-10-29 06:01:45.144292 UTC
+    enforces deadline after the Event wait: checkout=True, promo=False, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=14 end=2026-10-29 06:01:50.196371 UTC releasedAfter=Just 2026-10-29 06:01:50.218562 UTC
+    enforces deadline after the Event wait: checkout=True, promo=False, elapsed=True [✔]
+TICKET_CLOCK_WAIT event=15 end=2026-10-29 06:11:50.286393 UTC releasedAfter=Just 2026-10-29 06:01:50.319506 UTC
+    enforces deadline after the Event wait: checkout=True, promo=True, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=16 end=2026-10-29 06:01:55.384604 UTC releasedAfter=Just 2026-10-29 06:01:55.406209 UTC
+    enforces deadline after the Event wait: checkout=True, promo=True, elapsed=True [✔]
+TICKET_CLOCK_WAIT event=17 end=2026-10-29 06:11:55.44639 UTC releasedAfter=Just 2026-10-29 06:01:55.508561 UTC
+    enforces deadline after the Tier wait: checkout=False, promo=False, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=18 end=2026-10-29 06:02:00.602612 UTC releasedAfter=Just 2026-10-29 06:02:00.618815 UTC
+    enforces deadline after the Tier wait: checkout=False, promo=False, elapsed=True [✔]
+TICKET_CLOCK_WAIT event=19 end=2026-10-29 06:12:00.66469 UTC releasedAfter=Just 2026-10-29 06:02:00.701815 UTC
+    enforces deadline after the Promo wait: checkout=True, promo=True, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=20 end=2026-10-29 06:02:05.754189 UTC releasedAfter=Just 2026-10-29 06:02:05.772531 UTC
+    enforces deadline after the Promo wait: checkout=True, promo=True, elapsed=True [✔]
+    retains a prior order and same-key promo replay after its deadline [✔]
+ticket-payment-gate-postgresql
+CANONICAL_CLOCK_WAIT event=22 end=2026-10-29 06:12:10.944686 UTC releasedAfter=Just 2026-10-29 06:02:10.988573 UTC
+  ticket-reservation-clock enforces canonical deadline: promo=False, elapsed=False [✔]
+CANONICAL_CLOCK_WAIT event=23 end=2026-10-29 06:02:16.106346 UTC releasedAfter=Just 2026-10-29 06:02:16.109706 UTC
+  ticket-reservation-clock enforces canonical deadline: promo=False, elapsed=True [✔]
+CANONICAL_CLOCK_WAIT event=24 end=2026-10-29 06:12:16.189525 UTC releasedAfter=Just 2026-10-29 06:02:16.221985 UTC
+  ticket-reservation-clock enforces canonical deadline: promo=True, elapsed=False [✔]
+CANONICAL_CLOCK_WAIT event=25 end=2026-10-29 06:02:21.300744 UTC releasedAfter=Just 2026-10-29 06:02:21.318614 UTC
+  ticket-reservation-clock enforces canonical deadline: promo=True, elapsed=True [✔]
+
+Finished in 41.6314 seconds
+15 examples, 0 failures
+
+
+
+tdf-hq> Test suite tdf-hq-test passed
+Completed 2 action(s).

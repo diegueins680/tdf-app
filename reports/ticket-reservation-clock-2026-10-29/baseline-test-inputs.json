@@ -1,0 +1,11 @@
+{
+  "baseline": "b827b7303e99196043f554dd16c4dedbfe725d36",
+  "businessAuthority": "User29Oct explicitly requires validity when inventory reserved. Inclusive end preserved.",
+  "testFile": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+  "workingTestSha256": "73522345a538bb4e4e5b41c10bbb9d91ae2cf7c6c1b4d6dcfcbdcff13958208b",
+  "appSourceUnmodified": true,
+  "cases": 3,
+  "schema": 227,
+  "expected": "409, zero orders/sold/tickets/redemptions after actual observed lock wait and strictly expired DB time",
+  "noProviderOrProduction": true
+}

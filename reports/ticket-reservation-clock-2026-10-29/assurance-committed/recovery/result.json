@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "executionPassed": true,
+  "artifacts": [
+    {
+      "id": "window-equivalence",
+      "file": "window-equivalence.smt2",
+      "sha256": "0eaf4d81ea08baff7a1fee36724590647fad2d9451c316d7b9e1dc90076232f3",
+      "expected": "unsat",
+      "actual": "unsat",
+      "replay": "unsat",
+      "model": null
+    },
+    {
+      "id": "schema-correspondence",
+      "file": "schema-correspondence.smt2",
+      "sha256": "6ce0edc16b6585748c551b0e3f2f39e0b8ec6b2b6a931f40d6eb9f385b1e2f88",
+      "expected": "unsat",
+      "actual": "unsat",
+      "replay": "unsat",
+      "model": null
+    },
+    {
+      "id": "issuance-admission",
+      "file": "issuance-admission.smt2",
+      "sha256": "f06b27694c3a5ffd9ea9e8ca124d07869f0dca809705a4d04d103e106b054dbe",
+      "expected": "unsat",
+      "actual": "unsat",
+      "replay": "unsat",
+      "model": null
+    },
+    {
+      "id": "issuance-exact",
+      "file": "issuance-exact.smt2",
+      "sha256": "43a56c1e5385f426bf415d5f46658a1b364a552fb2d8afa2bdd65f3319660d99",
+      "expected": "unsat",
+      "actual": "unsat",
+      "replay": "unsat",
+      "model": null
+    },
+    {
+      "id": "witness-0-0",
+      "file": "witness-0-0.smt2",
+      "sha256": "4e6a8d78e1319e57b40f42b97f9f1e135dfac1283aa76bb60f7d3268399a90b9",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[issued = 0, current = 0, expires = 900]"
+    },
+    {
+      "id": "witness-0-899",
+      "file": "witness-0-899.smt2",
+      "sha256": "092874565efa8d1bf7fcde8aef1a23f1fd6945b98adc9ea14d560dded7696118",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[issued = 0, current = 899, expires = 900]"
+    },
+    {
+      "id": "witness-9223372036854774907-0",
+      "file": "witness-9223372036854774907-0.smt2",
+      "sha256": "5e06c2fa0197b355f0732c263cdb9285cfc3a73a472a0a6c3ba0467798389757",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[issued = 9223372036854774907,\n current = 9223372036854774907,\n expires = 9223372036854775807]"
+    },
+    {
+      "id": "witness-9223372036854774907-899",
+      "file": "witness-9223372036854774907-899.smt2",
+      "sha256": "57c3d882e4bc67cf89eb9f7093a2ce472c3d38510dba98d7aca99b13f4d183e0",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[issued = 9223372036854774907,\n current = 9223372036854775806,\n expires = 9223372036854775807]"
+    },
+    {
+      "id": "witness-overflow-rejection",
+      "file": "witness-overflow-rejection.smt2",
+      "sha256": "3133dccb8735eb77f646b547ef2574ecc854d2327620d46a8d38b81f41db9d55",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[issued = 9223372036854774908]"
+    },
+    {
+      "id": "control-inclusive-deadline",
+      "file": "control-inclusive-deadline.smt2",
+      "sha256": "fbdbdd1c6dc83f045527dd24b4131ca7ca84889884d93871d530ff129473836e",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[expires = 7203373022356540070,\n current = 7203373022356540070,\n issued = 7203373022356539170]"
+    },
+    {
+      "id": "control-future-issuance",
+      "file": "control-future-issuance.smt2",
+      "sha256": "ac99cecccaef4c4e243272a9f5474ad11f0d3ac023e1a8533db4afb1c3234414",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[expires = 49279507447678345,\n current = 23946570060792512,\n issued = 49279507447677445]"
+    },
+    {
+      "id": "control-validator-lifetime",
+      "file": "control-validator-lifetime.smt2",
+      "sha256": "8eaee02d8eeaf4e73202a21fbfe11f5af08f8dc349248636235bd0d5b9f17050",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[expires = 8070450532247928832,\n current = 8070450532247928831,\n issued = 8070450532247927931]"
+    },
+    {
+      "id": "control-database-lifetime",
+      "file": "control-database-lifetime.smt2",
+      "sha256": "bf333432149c853d3b8d22fb84afe72b46c4eb23472e619eced03c5dd3e48829",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[expires = 1930, issued = 1030]"
+    },
+    {
+      "id": "control-issuance-lifetime",
+      "file": "control-issuance-lifetime.smt2",
+      "sha256": "cfd0154fac07d92d6320df2df02035cf8afd022248f13b240d83f61dd1bde1b0",
+      "expected": "sat",
+      "actual": "sat",
+      "replay": "sat",
+      "model": "[issued = 0]"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "window-equivalence",
+      "requirementId": "ID-SESSION-003",
+      "claim": "For all signed Int64 inputs: recoveryWindowValid iff issued >= 0, expires = exact(issued + 900), issued <= current < expires.",
+      "implementation": "tdf-hq/src/TDF/ServerAuth.hs:recoveryWindowValid",
+      "category": "source-derived-recovery-SMT",
+      "risk": "P0",
+      "specification": "formal/system/recovery-expiry-arithmetic.md",
+      "method": "Z3 QF_BV UNSAT, SAT boundary witnesses, source mutation counterexamples and serialized replay",
+      "mapping": "Signed 64-bit inputs, 65-bit exact differences/sums, PostgreSQL checked arithmetic; restricted source translation",
+      "assumptions": [
+        "Defined Int64 inputs; reviewed restricted translator correct",
+        "Haskell Int64 wraps, toInteger is exact; PostgreSQL bigint overflow rejects and NOT NULL constraints hold",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Predicate and time-constraint contracts only. No compiler/translator refinement, installed-schema, transaction/rollback, credential binding, clock freshness, HTTP, delivery or whole-system proof.",
+      "status": "PROVEN",
+      "artifact": "window-equivalence.smt2"
+    },
+    {
+      "id": "schema-correspondence",
+      "requirementId": "ID-SESSION-003",
+      "claim": "The non-null PostgreSQL time CHECK admits exactly metadata that recoveryWindowValid admits at current = issued.",
+      "implementation": "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql:auth_recovery_time_window; TDF.ServerAuth.recoveryWindowValid",
+      "category": "source-derived-recovery-SMT",
+      "risk": "P0",
+      "specification": "formal/system/recovery-expiry-arithmetic.md",
+      "method": "Z3 QF_BV UNSAT, SAT boundary witnesses, source mutation counterexamples and serialized replay",
+      "mapping": "Signed 64-bit inputs, 65-bit exact differences/sums, PostgreSQL checked arithmetic; restricted source translation",
+      "assumptions": [
+        "Defined Int64 inputs; reviewed restricted translator correct",
+        "Haskell Int64 wraps, toInteger is exact; PostgreSQL bigint overflow rejects and NOT NULL constraints hold",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Predicate and time-constraint contracts only. No compiler/translator refinement, installed-schema, transaction/rollback, credential binding, clock freshness, HTTP, delivery or whole-system proof.",
+      "status": "PROVEN",
+      "artifact": "schema-correspondence.smt2"
+    },
+    {
+      "id": "issuance-admission",
+      "requirementId": "ID-SESSION-003",
+      "claim": "The time CHECK admits the generated Int64 expiry iff 0 <= issued <= maxInt64 - 900.",
+      "implementation": "tdf-hq/src/TDF/ServerAuth.hs:createPasswordResetToken; auth_recovery_time_window",
+      "category": "source-derived-recovery-SMT",
+      "risk": "P0",
+      "specification": "formal/system/recovery-expiry-arithmetic.md",
+      "method": "Z3 QF_BV UNSAT, SAT boundary witnesses, source mutation counterexamples and serialized replay",
+      "mapping": "Signed 64-bit inputs, 65-bit exact differences/sums, PostgreSQL checked arithmetic; restricted source translation",
+      "assumptions": [
+        "Defined Int64 inputs; reviewed restricted translator correct",
+        "Haskell Int64 wraps, toInteger is exact; PostgreSQL bigint overflow rejects and NOT NULL constraints hold",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Predicate and time-constraint contracts only. No compiler/translator refinement, installed-schema, transaction/rollback, credential binding, clock freshness, HTTP, delivery or whole-system proof.",
+      "status": "PROVEN",
+      "artifact": "issuance-admission.smt2"
+    },
+    {
+      "id": "issuance-exact",
+      "requirementId": "ID-SESSION-003",
+      "claim": "Any generated expiry admitted by the time CHECK equals the exact mathematical issued + 900; wrapped expiry is never admitted.",
+      "implementation": "tdf-hq/src/TDF/ServerAuth.hs:createPasswordResetToken; auth_recovery_time_window",
+      "category": "source-derived-recovery-SMT",
+      "risk": "P0",
+      "specification": "formal/system/recovery-expiry-arithmetic.md",
+      "method": "Z3 QF_BV UNSAT, SAT boundary witnesses, source mutation counterexamples and serialized replay",
+      "mapping": "Signed 64-bit inputs, 65-bit exact differences/sums, PostgreSQL checked arithmetic; restricted source translation",
+      "assumptions": [
+        "Defined Int64 inputs; reviewed restricted translator correct",
+        "Haskell Int64 wraps, toInteger is exact; PostgreSQL bigint overflow rejects and NOT NULL constraints hold",
+        "Z3 4.13.3 soundness"
+      ],
+      "limitations": "Predicate and time-constraint contracts only. No compiler/translator refinement, installed-schema, transaction/rollback, credential binding, clock freshness, HTTP, delivery or whole-system proof.",
+      "status": "PROVEN",
+      "artifact": "issuance-exact.smt2"
+    }
+  ],
+  "startedAt": "2026-10-29T06:21:27.115086+00:00",
+  "error": null,
+  "provenance": {
+    "revision": "05e123929f7b33bdaff27557f3e752dc51f73edf",
+    "worktreeDirty": false,
+    "files": {
+      ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
+      "formal/system/identity-lifecycle.md": "59dbd5b2c455d62cee46ddf2a6e0d7f60b1fe6ce6b8bfabcad83ca6cc5ef1a31",
+      "formal/system/recovery-expiry-arithmetic.json": "ef15fb5c615f577bf11c4158d8032a04714318f1033b68ffdb3f00e5f040c43f",
+      "formal/system/recovery-expiry-arithmetic.md": "2a772157e43a729e1469681f94ba94536dcd713ac1993b4ab8dd10331f6e6735",
+      "formal/system/requirements-verification.txt": "45143cb8813a041e179510b2f3eaa85e2ec817216b025a33433dfe61d3627050",
+      "formal/system/requirements.json": "65e6740de961759d20c96f593087e682fe4bb1110e3b1c4df9ffa20e50c64914",
+      "scripts/test-recovery-expiry-verifier.py": "9a192af0a5839dee66ad4b9f636e4ecbe58451d21087926893e3eaab87668d4e",
+      "scripts/verify-recovery-expiry.py": "05aaa2a08d1381939d4f48d9d25dcd0b1076d7f596dee2f07db414c2f1bf96c5",
+      "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
+      "tdf-hq/src/TDF/ServerAuth.hs": "2c536c7370dba0dd252a7c16f6f2d167324c007c374aa321f10e3ce4202a2c87",
+      "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+      "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
+      "tdf-hq/tdf-hq.cabal": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27"
+    },
+    "digest": "f504e5bdae6ba6892a955ce018086ce192d01853a477a77dff7ff6edc78b9763"
+  },
+  "toolchain": {
+    "python": "3.13.5 (v3.13.5:6cb20a219a8, Jun 11 2025, 12:23:45) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "z3": "4.13.3.0"
+  },
+  "finishedAt": "2026-10-29T06:21:27.874250+00:00"
+}

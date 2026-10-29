@@ -1,0 +1,43 @@
+Independent read-only investigation: ticket purchase admission clock
+
+Baseline / observed HEAD: b827b7303e99196043f554dd16c4dedbfe725d36 in /private/tmp/tdf-correctness-cycle-20261028. Working tree was clean. No source edits, database/server/provider calls, runtime tests, solver runs or network investigation were performed. This is independent source reasoning, not an actual reproduced defect, formal proof or GitHub approval.
+
+Confirmed source facts
+
+SocialEventsHandlers.hs:4674 (direct createTicketOrder) and :5122 (createStripePaymentIntent) capture application now before Event/Tier/Promo lock waits. The direct transaction at :4745 passes it to Inventory. The Stripe new-order transaction at :5330 first locks Event, terms, Tier and Promo, then passes that earlier now to Inventory. Its outer promo validation at :5220 uses the same request-time value; lockTicketPurchasePromo at :3109 compares unchanged endpoints but does not advance time. Its atomic cap claim at :5270 checks current active/cap values but not validity dates.
+
+Inventory.hs:16-30 locks Event and Tier, then evaluates the locked tier's salesStart/salesEnd against the caller's old now. Thus current row identity and current clock are independent gaps. Canonical EventTicketCheckout.hs:445 likewise captures now before transaction; :611-660 waits on advisory/Event/Tier/policy/Promo locks and checks sale windows with that supplied now. Canonical code is corroborating implementation, not independent authority that elapsed-time behavior is correct.
+
+By contrast PaymentIntentStore.hs:78-95 explicitly samples a separate SELECT clock_timestamp() after its checkout lock and preserves picOccurredAt only for audit. formal/system/payment-intent-expiry.md normatively specifies admission time and explicitly excludes every legacy writer. Existing PaymentIntentExpiryProbe.hs tests stale timestamps and observed lock-wait expiry at READ COMMITTED and REPEATABLE READ, and the existing verifier has stale-clock mutations. This provides a reusable test/clock pattern, not already completed coverage of legacy promo or tier admission.
+
+Existing scope and policy ambiguity
+
+Legacy promo validation explicitly rejects "Promo code has expired" (SocialEventsHandlers.hs:9259); Spec.hs:12952-12958 checks past/future windows. isTicketTierSaleOpen at :9512 and Inventory use inclusive endpoints: start <= time <= end. Promo also refuses only time > validUntil. Do not accidentally import payment-intent's exclusive end boundary.
+
+The current promo snapshot contract and its finite model explicitly assume an initially valid clock and exclude elapsed wall-clock progression. The report explicitly excludes date-clock progression. No new coverage is established by its previous 12 handler tests or 324-state quote-identity model. The legacy inventory contract also documents caller-supplied now. These are acknowledged remaining scope, not stale proof artifacts falsely claiming this guarantee.
+
+Existing validators and admission-before-effects architecture strongly support refusing new consumption of expired inventory/promotions; there is no visible persisted quote, reservation or guaranteed quote-duration entitlement before the locks. However, I found no ticket-specific normative statement explicitly choosing request-time versus post-wait admission-time eligibility. Payment-intent's normative choice does not automatically define promo commercial policy. Therefore the suspected business defect remains a grounded candidate pending an explicit narrow admission-time contract and actual-handler reproduction; no production incident or incorrect external charge is claimed. Request-start price guarantees, if product-authorized elsewhere, would materially change this interpretation. Existing accepted orders and idempotent replay should retain their purchased snapshots.
+
+Smallest actionable invariant and counterexample design
+
+Candidate invariant: a NEW legacy order may consume tier inventory/promo only if its locked current dates admit a fresh database wall-time sample taken after all admission row-lock waits and before inventory/redemption/order/ticket effects. Equality at an existing inclusive end remains allowed. This is admission at a linearization point, not a promise that transaction commit or provider completion precedes expiry.
+
+Minimal symbolic counterexample: request sample t=0; unchanged sale/promo end=1; buyer waits on Event until database t=2; all quote fields still match. Current code checks 0<=1 and permits effects, whereas the proposed admission predicate rejects 2>1. This is a source-derived prediction, not an executed Haskell/PostgreSQL receipt.
+
+Actual-handler test design: create an otherwise valid ordinary free tier with a near-future sale end, hold an unchanged Event lock, start the real direct buyer, witness its PostgreSQL lock wait, observe database clock strictly greater than the end, release, and require refusal with zero new sold/order/ticket effects. For the Stripe endpoint use an ordinary positive-price tier and 100%% discount with near-future promo end, so both baseline success and corrected refusal require no provider HTTP; assert zero redemption effects on refusal. A separate live-deadline case and purchase-first/history/replay preserve acceptance semantics. Exercise waiting on Tier and Promo too: sampling after Event alone can still go stale. Bound waits and always release/join workers. Full 227-schema execution is necessary to exclude a downstream trigger preventing the predicted persistence; this review did not execute that schema.
+
+Repair scope recommendation
+
+For a first focused legacy change, sample database time only after the already ordered Event -> optional terms -> Tier -> Promo locks, revalidate the locked promo with the existing inclusive date validator, and pass that fresh admission time to existing Inventory for its locked current tier window. Keep financial promo policy out of Inventory. Direct free orders need the analogous sample after Event/Tier. Preserve audit/request timestamps and all historical/reuse branches deliberately. A single sample defines the admission boundary; use a separate statement, not now()/CURRENT_TIMESTAMP, a pre-lock sample or clock_timestamp() embedded in a locking SELECT. Do not claim canonical creation or every generic Inventory caller fixed unless separately changed and tested. Host/DB clock authority and clock synchronization should be documented assumptions.
+
+Remaining risks / next action
+
+The highest-value next action is the zero-provider actual-handler lock-wait reproduction under the current full schema, coupled with a precise admission-time contract. Pure date tests alone cannot detect sampling before a lock. Required negative controls are request time, transaction-start time and time before the last possible lock wait. Canonical checkout creation and manual-review time have related pre-existing scope notes and should remain separate backlog items; the already repaired payment-intent expiry path is not a duplicate implementation task. This read-only investigation did not inspect live GitHub work, so duplication with newly opened external work remains unverified.
+
+Reviewed file SHA256 values:
+tdf-hq/src/TDF/Server/SocialEventsHandlers.hs: 54f7ecb8770f5b7ee98d8cbc97ec9c160e9f1ca95d21f32609f7899de8273df8
+tdf-hq/src/TDF/Ticketing/Inventory.hs: 4c4a50c689e0f9ff27afd95ece0e8e3b8bc29fe26c8b56bdccf9daedb922c1ab
+tdf-hq/src/TDF/Server/EventTicketCheckout.hs: 752c46c93d45ae82b5fce380a9616764a5bb2d97858f0b56a09285ef19b8dfaf
+tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs: 4a655de2a4eb6ad5edb36749d3001f32e9320aa326d9c8c7a84d3ae01cb9617a
+formal/system/legacy-ticket-promo-snapshot.md: 39beedf194ec499f8881e47aedfac7e993a1201b6f24d6be094f9b86429ac4ff
+formal/system/payment-intent-expiry.md: 683464a954270031bb91a5edfc3461c3ff40f4a41f7cdff004fcda3ab666f15a

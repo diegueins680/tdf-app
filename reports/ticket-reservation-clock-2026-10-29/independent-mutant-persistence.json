@@ -1,0 +1,81 @@
+{
+  "events": [
+    44,
+    46,
+    48,
+    50,
+    52,
+    55,
+    57
+  ],
+  "database": "tdf_provider_retry_clock_controls_20261029_test",
+  "method": "Separate direct psql SELECT after actual mutated handlers committed and test process exited; no test/harness parsing used for stored counts. EventIDs from actual expired failed scenarios.",
+  "columns": [
+    "event_id",
+    "sold",
+    "orders",
+    "issued_tickets",
+    "redemptions",
+    "order_amount_status"
+  ],
+  "rows": [
+    [
+      "44",
+      "3",
+      "1",
+      "3",
+      "0",
+      "0:paid"
+    ],
+    [
+      "46",
+      "3",
+      "1",
+      "3",
+      "0",
+      "0:paid"
+    ],
+    [
+      "48",
+      "3",
+      "1",
+      "3",
+      "1",
+      "0:paid"
+    ],
+    [
+      "50",
+      "3",
+      "1",
+      "3",
+      "0",
+      "0:paid"
+    ],
+    [
+      "52",
+      "3",
+      "1",
+      "3",
+      "1",
+      "0:paid"
+    ],
+    [
+      "55",
+      "1",
+      "1",
+      "0",
+      "0",
+      "1020:pending"
+    ],
+    [
+      "57",
+      "1",
+      "1",
+      "0",
+      "1",
+      "918:pending"
+    ]
+  ],
+  "matched": "5legacy3sold/1paidzeroorder/3tickets;2canonical1sold/1unpaidorder/noissuedtickets. Expiredpromo paths consume1redemption.",
+  "productionWrites": false
+}

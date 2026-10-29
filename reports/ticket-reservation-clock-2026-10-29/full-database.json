@@ -1,0 +1,11 @@
+{
+  "sourceCommit": "05e123929f7b33bdaff27557f3e752dc51f73edf",
+  "providerDatabase": "tdf_provider_retry_test",
+  "preservedTargetAndMutantDatabase": "tdf_provider_retry_clock_controls_20261029_test",
+  "freshUTF8Template0": true,
+  "all227MigrationsAppliedAndReplayed": true,
+  "canonicalGateDatabase": "tdf_ticket_clock_gate_full_test",
+  "canonicalGateSetupCommit": "b827b7303e99196043f554dd16c4dedbfe725d36",
+  "canonicalGateSchemaSQLAndLoaderByteExactCurrentC": true,
+  "scope": "Distinct synthetic full-schema DBs; all prior data preserved. No prod/provider writes."
+}

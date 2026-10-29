@@ -1,0 +1,10 @@
+{
+  "baseline": "b827b7303e99196043f554dd16c4dedbfe725d36",
+  "workingTestHashes": {
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "8c1b0e7ee01675744acfb4137e9d562e02aaf03af302af06bda5aee33e1f4c3c",
+    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "e7ff26dbeb48ce99a697ca3022fd6406a29d92aa8fc58e8080ddccc2b8636f31"
+  },
+  "appSourceUnchanged": true,
+  "caseCount": 7,
+  "expected": "Actual expired Event/Tier/Promo wait must refuse409 with no new effects. Canonical and legacy in-process handlers, no provider/production."
+}
