@@ -13297,6 +13297,64 @@
         "Historical skipped-state reachability under GitHub orchestration is not established."
       ],
       "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
+    },
+    {
+      "id": "UX-BRAND-ICONS-001",
+      "title": "Official TDF Records application icons",
+      "statement": "Browser and installed web application icons use the unchanged official TDF Records symbol, with correct dimensions, safe padding and discoverable manifest references.",
+      "domain": "UX",
+      "authority": "Explicit product owner correction requested2026-10-29: application icon must use the official logo.",
+      "source": "formal/system/app-brand-icons.md",
+      "contract": "formal/system/app-brand-icons.md",
+      "actors": [
+        "Web visitor",
+        "User installing a web shortcut",
+        "Developer regenerating brand assets"
+      ],
+      "preconditions": [
+        "Existing approved TDF Records SVG symbol and repository Playwright Chromium are available."
+      ],
+      "inputs": [
+        "tdf-hq-ui/src/assets/tdf-isotype.svg"
+      ],
+      "state": {
+        "source": "official symbol SVG",
+        "outputs": "versioned browser and installable web icons"
+      },
+      "allowedTransitions": [
+        "Render the original paths onto the declared square canvas and publish the generated assets through normal review."
+      ],
+      "forbiddenTransitions": [
+        "Redraw the logo with generic TDF text or distort its proportions.",
+        "Claim an installed OS icon has refreshed solely because source assets changed."
+      ],
+      "effects": [
+        "Browser favicon, Apple touch icon and installable web manifest use the same official symbol."
+      ],
+      "authorization": "Explicit owner request authorizes the icon correction; normal protected review and publication rules remain.",
+      "privacy": "No account, database or provider credentials are needed for icon generation or anonymous verification.",
+      "concurrency": "Generate and validate from an isolated source checkout; preserve unrelated changes and the native Mobile pin.",
+      "idempotency": "The same SVG, script and browser renderer produce the same asset pixels.",
+      "failure": "Missing assets, incorrect dimensions, failed decoding or missing manifest references fail the artifact verification.",
+      "recovery": "Restore the preceding reviewed asset set; existing shortcut refresh remains controlled by the browser and OS.",
+      "observability": "Record source and asset hashes, dimensions, HTTP results and target-size visual previews.",
+      "implementation": [
+        "scripts/generate-app-icons.mjs",
+        "tdf-hq-ui/public/manifest.json"
+      ],
+      "tests": [],
+      "formalModels": [],
+      "verification": "Actual generation, PNG/ICO decoding, browser HTTP image loads and target-size screenshots; no general installed-device proof.",
+      "evidence": "reports/app-brand-icons-2026-10-29.json",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Scoped artifact and browser verification; publication and existing installed shortcut refresh remain separate.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The visual asset pipeline is specified; current verification receipts record the tested source and browser, while canonical publication and OS cache behavior are separate obligations."
+      },
+      "property": "Generated icon artwork preserves official SVG geometry, has sufficient foreground/background contrast, matches its declared dimensions and is reachable through the page and manifest icon references."
     }
   ],
   "sourceFingerprints": {
@@ -13762,6 +13820,7 @@
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
     "scripts/fetch-ddex-ern432-schema.sh": "9a7e2da809fd59d0709067b8fdd75f71a21dd474449d62c28551d1ac1b1f3a84",
+    "scripts/generate-app-icons.mjs": "0d85263b6dc6e4d6909b7e7f6378a13c499446521b69eccd7e089ab7b68d5cc0",
     "scripts/get-admin-token.sh": "168dd8f5ba17d927685a86ac763a03a9aff55736bf4b4426a6d7541817a35110",
     "scripts/get-instagram-token.mjs": "0b00f6cc1ad6793f029339bc006ed520245af87ea55e285658faf48ba978e592",
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
@@ -13951,13 +14010,14 @@
     "scripts/verify-system-evidence.mjs": "01928fc197382c5a4a0e0e4107ed5311771d276217715b8bc88d42bb9f85ac17",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
-    "tdf-hq-ui/index.html": "30abaf9a346ef67f932c51cadeb5d1db5fcb36a420f7d04207821ef72f727b5c",
+    "tdf-hq-ui/index.html": "8d3e52d6badb31873b691579390fbee85fcba4329a3f2884421344546a24ecc6",
     "tdf-hq-ui/package.json": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d",
     "tdf-hq-ui/public/account/privacy-es.html": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
     "tdf-hq-ui/public/account/privacy.html": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
     "tdf-hq-ui/public/account/terms-es.html": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
     "tdf-hq-ui/public/account/terms.html": "dc4ca75896fb5b088626d963c59c6c7ddc4dfddcef293ae36ea7ec61221a7293",
     "tdf-hq-ui/public/data-deletion.html": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
+    "tdf-hq-ui/public/manifest.json": "d7b67201a7e31dc945d4fc7febf86e2a66aa00cc5b6ad91bf045772cf2e1b7cc",
     "tdf-hq-ui/public/mobile-app/data-deletion.html": "93271be8eb80d03703b19a71d45625c876b758e7b08636b986c3f83b39425666",
     "tdf-hq-ui/public/mobile-app/index.html": "4e3e201b1ba1cd62fa22d2c487c759cdc55569f0591fdf1e864c6eefd70731c2",
     "tdf-hq-ui/public/mobile-app/privacy.html": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
@@ -25852,6 +25912,18 @@
         "requirement": "SYS-CI-SELECTED-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/generate-app-icons.mjs": [
+      {
+        "requirement": "UX-BRAND-ICONS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/manifest.json": [
+      {
+        "requirement": "UX-BRAND-ICONS-001",
+        "relationship": "implementation"
+      }
     ]
   },
   "surfaces": [
@@ -28634,6 +28706,18 @@
       "sha256": "b33e03f60fcc7878e35c96cba5f85b28d90b59fb078558952e13da2f67654838",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-42dfae51eec6762d",
+      "path": "scripts/generate-app-icons.mjs",
+      "sha256": "0d85263b6dc6e4d6909b7e7f6378a13c499446521b69eccd7e089ab7b68d5cc0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-BRAND-ICONS-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d046bc8ebef81bf4",
@@ -32895,9 +32979,14 @@
     {
       "id": "SURFACE-a2ada5ea1a6d219a",
       "path": "tdf-hq-ui/public/manifest.json",
-      "sha256": "55627bc0699a4af5b4cb240c199041ed73966c346ceca712303e30525fba46c7",
+      "sha256": "d7b67201a7e31dc945d4fc7febf86e2a66aa00cc5b6ad91bf045772cf2e1b7cc",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-BRAND-ICONS-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6bf3e8831a095bee",
@@ -53240,7 +53329,6 @@
     "SURFACE-4573385494ace809",
     "SURFACE-dfe8096f81b40bd5",
     "SURFACE-16fd6a7d303023ea",
-    "SURFACE-a2ada5ea1a6d219a",
     "SURFACE-c13a12d2ea792bdf",
     "SURFACE-092f602711fabb68",
     "SURFACE-e5cf91b3e384faae",
@@ -54604,7 +54692,8 @@
   ],
   "untestedRequirements": [
     "OPS-CI-REGISTRY-001",
-    "SYS-UI-FIXTURE-001"
+    "SYS-UI-FIXTURE-001",
+    "UX-BRAND-ICONS-001"
   ],
   "unmodeledCriticalRequirements": [
     "SYS-VERIFY-001",
@@ -55779,7 +55868,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "91c0e168aadba00b3d5fb91d3d43a99d639ffc5038b93c9c81a6d1e53005e840",
+      "sourceSha256": "394efd023fb0bdd4c18702308a49bb7e16f4aeb8250e67a4e317938bde1dc56a",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -55807,7 +55896,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "91c0e168aadba00b3d5fb91d3d43a99d639ffc5038b93c9c81a6d1e53005e840",
+      "sourceSha256": "394efd023fb0bdd4c18702308a49bb7e16f4aeb8250e67a4e317938bde1dc56a",
       "definition": {
         "states": [
           "absent",
@@ -55837,7 +55926,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "91c0e168aadba00b3d5fb91d3d43a99d639ffc5038b93c9c81a6d1e53005e840",
+      "sourceSha256": "394efd023fb0bdd4c18702308a49bb7e16f4aeb8250e67a4e317938bde1dc56a",
       "definition": {
         "export": [
           "queued",
@@ -78311,7 +78400,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 156,
+    "PARTIAL": 157,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -13296,6 +13296,64 @@
         "Historical skipped-state reachability under GitHub orchestration is not established."
       ],
       "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
+    },
+    {
+      "id": "UX-BRAND-ICONS-001",
+      "title": "Official TDF Records application icons",
+      "statement": "Browser and installed web application icons use the unchanged official TDF Records symbol, with correct dimensions, safe padding and discoverable manifest references.",
+      "domain": "UX",
+      "authority": "Explicit product owner correction requested2026-10-29: application icon must use the official logo.",
+      "source": "formal/system/app-brand-icons.md",
+      "contract": "formal/system/app-brand-icons.md",
+      "actors": [
+        "Web visitor",
+        "User installing a web shortcut",
+        "Developer regenerating brand assets"
+      ],
+      "preconditions": [
+        "Existing approved TDF Records SVG symbol and repository Playwright Chromium are available."
+      ],
+      "inputs": [
+        "tdf-hq-ui/src/assets/tdf-isotype.svg"
+      ],
+      "state": {
+        "source": "official symbol SVG",
+        "outputs": "versioned browser and installable web icons"
+      },
+      "allowedTransitions": [
+        "Render the original paths onto the declared square canvas and publish the generated assets through normal review."
+      ],
+      "forbiddenTransitions": [
+        "Redraw the logo with generic TDF text or distort its proportions.",
+        "Claim an installed OS icon has refreshed solely because source assets changed."
+      ],
+      "effects": [
+        "Browser favicon, Apple touch icon and installable web manifest use the same official symbol."
+      ],
+      "authorization": "Explicit owner request authorizes the icon correction; normal protected review and publication rules remain.",
+      "privacy": "No account, database or provider credentials are needed for icon generation or anonymous verification.",
+      "concurrency": "Generate and validate from an isolated source checkout; preserve unrelated changes and the native Mobile pin.",
+      "idempotency": "The same SVG, script and browser renderer produce the same asset pixels.",
+      "failure": "Missing assets, incorrect dimensions, failed decoding or missing manifest references fail the artifact verification.",
+      "recovery": "Restore the preceding reviewed asset set; existing shortcut refresh remains controlled by the browser and OS.",
+      "observability": "Record source and asset hashes, dimensions, HTTP results and target-size visual previews.",
+      "implementation": [
+        "scripts/generate-app-icons.mjs",
+        "tdf-hq-ui/public/manifest.json"
+      ],
+      "tests": [],
+      "formalModels": [],
+      "verification": "Actual generation, PNG/ICO decoding, browser HTTP image loads and target-size screenshots; no general installed-device proof.",
+      "evidence": "reports/app-brand-icons-2026-10-29.json",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Scoped artifact and browser verification; publication and existing installed shortcut refresh remain separate.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The visual asset pipeline is specified; current verification receipts record the tested source and browser, while canonical publication and OS cache behavior are separate obligations."
+      },
+      "property": "Generated icon artwork preserves official SVG geometry, has sufficient foreground/background contrast, matches its declared dimensions and is reachable through the page and manifest icon references."
     }
   ]
 }
