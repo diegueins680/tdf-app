@@ -1,0 +1,491 @@
+{
+  "variant": "A-open-before-resize",
+  "slotText": "04:00",
+  "requestedViewport": {
+    "width": 320,
+    "height": 740
+  },
+  "preResize": {
+    "at": 11617,
+    "compatMode": "CSS1Compat",
+    "innerWidth": 390,
+    "clientWidth": 390,
+    "scrollWidth": 390,
+    "visualViewport": {
+      "width": 390,
+      "scale": 1
+    },
+    "overflow": false,
+    "label": "pre-resize-390",
+    "anchor": {
+      "tag": "DIV",
+      "text": "04:00",
+      "x": 200.21665954589844,
+      "y": 340.2166748046875,
+      "right": 260.18333435058594,
+      "width": 59.9666748046875,
+      "height": 32,
+      "clientWidth": 58,
+      "scrollWidth": 58,
+      "transform": "",
+      "placement": null
+    },
+    "tooltip": {
+      "tag": "DIV",
+      "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+      "x": 99,
+      "y": 372.70001220703125,
+      "right": 360.6499938964844,
+      "width": 261.6499938964844,
+      "height": 40.5,
+      "clientWidth": 262,
+      "scrollWidth": 262,
+      "transform": "translate(99px, 1561px)",
+      "placement": "bottom"
+    },
+    "bookingCard": {
+      "tag": "DIV",
+      "text": "Agenda p\u00fablicaReserva un servicio con TDFReserva en l\u00edneaCompleta tus datos y agenda el horario que ",
+      "x": 16,
+      "y": -1071.300048828125,
+      "right": 374,
+      "width": 358,
+      "height": 1768.5166015625,
+      "clientWidth": 356,
+      "scrollWidth": 368,
+      "transform": "",
+      "placement": null
+    },
+    "serviceSelect": {
+      "tag": "DIV",
+      "text": "Grabaci\u00f3n de pruebaUSD 100 / hour",
+      "x": 65,
+      "y": -114.76666259765625,
+      "right": 373,
+      "width": 308,
+      "height": 55.5,
+      "clientWidth": 308,
+      "scrollWidth": 308,
+      "transform": "",
+      "placement": null
+    },
+    "dateInput": {
+      "tag": "INPUT",
+      "text": "",
+      "x": 65,
+      "y": -2.6666717529296875,
+      "right": 373,
+      "width": 308,
+      "height": 54.56666564941406,
+      "clientWidth": 308,
+      "scrollWidth": 308,
+      "transform": "",
+      "placement": null
+    }
+  },
+  "initial": {
+    "at": 11749,
+    "compatMode": "CSS1Compat",
+    "innerWidth": 320,
+    "clientWidth": 320,
+    "scrollWidth": 320,
+    "visualViewport": {
+      "width": 320,
+      "scale": 1
+    },
+    "overflow": false,
+    "label": "initial-after-intervention",
+    "anchor": {
+      "tag": "DIV",
+      "text": "04:00",
+      "x": 200.21665954589844,
+      "y": 397.01666259765625,
+      "right": 260.18333435058594,
+      "width": 59.9666748046875,
+      "height": 32,
+      "clientWidth": 58,
+      "scrollWidth": 58,
+      "transform": "",
+      "placement": null
+    },
+    "tooltip": {
+      "tag": "DIV",
+      "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+      "x": 58,
+      "y": 429.45001220703125,
+      "right": 319.6499938964844,
+      "width": 261.6499938964844,
+      "height": 40.5,
+      "clientWidth": 262,
+      "scrollWidth": 262,
+      "transform": "translate(58px, 1914px)",
+      "placement": "bottom"
+    },
+    "bookingCard": {
+      "tag": "DIV",
+      "text": "Agenda p\u00fablicaReserva un servicio con TDFReserva en l\u00edneaCompleta tus datos y agenda el horario que ",
+      "x": 16,
+      "y": -1323.550048828125,
+      "right": 304,
+      "width": 288,
+      "height": 2117.566650390625,
+      "clientWidth": 286,
+      "scrollWidth": 298,
+      "transform": "",
+      "placement": null
+    },
+    "serviceSelect": {
+      "tag": "DIV",
+      "text": "Grabaci\u00f3n de pruebaUSD 100 / hour",
+      "x": 65,
+      "y": -114.76666259765625,
+      "right": 303,
+      "width": 238,
+      "height": 55.5,
+      "clientWidth": 238,
+      "scrollWidth": 264,
+      "transform": "",
+      "placement": null
+    },
+    "dateInput": {
+      "tag": "INPUT",
+      "text": "",
+      "x": 65,
+      "y": -2.6666717529296875,
+      "right": 303,
+      "width": 238,
+      "height": 54.56666564941406,
+      "clientWidth": 238,
+      "scrollWidth": 238,
+      "transform": "",
+      "placement": null
+    }
+  },
+  "samples": [
+    {
+      "label": "after-failed-one-shot",
+      "at": 11762,
+      "innerWidth": 320,
+      "clientWidth": 320,
+      "scrollWidth": 320,
+      "visualViewport": {
+        "width": 320,
+        "scale": 1
+      },
+      "bookingCard": {
+        "tag": "DIV",
+        "id": "",
+        "classes": "MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-g29u3x",
+        "text": "Agenda p\u00fablicaReserva un servicio con TDFReserva en l\u00edneaCompleta tus datos y agenda el horario que ",
+        "x": 16,
+        "right": 304,
+        "width": 288,
+        "clientWidth": 286,
+        "scrollWidth": 298,
+        "transform": ""
+      },
+      "serviceSelect": {
+        "tag": "DIV",
+        "id": ":r44:",
+        "classes": "MuiSelect-select MuiSelect-outlined MuiInputBase-input MuiOutlinedInput-input css-181tai7",
+        "text": "Grabaci\u00f3n de pruebaUSD 100 / hour",
+        "x": 65,
+        "right": 303,
+        "width": 238,
+        "clientWidth": 238,
+        "scrollWidth": 264,
+        "transform": ""
+      },
+      "dateInput": {
+        "tag": "INPUT",
+        "id": ":r46:",
+        "classes": "MuiInputBase-input MuiOutlinedInput-input css-438i8l",
+        "text": "",
+        "x": 65,
+        "right": 303,
+        "width": 238,
+        "clientWidth": 238,
+        "scrollWidth": 238,
+        "transform": ""
+      },
+      "tooltip": {
+        "tag": "DIV",
+        "id": ":r4c:",
+        "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1vxh2dt",
+        "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+        "x": 58,
+        "right": 319.6499938964844,
+        "width": 261.6499938964844,
+        "clientWidth": 262,
+        "scrollWidth": 262,
+        "transform": "translate(58px, 1914px)"
+      },
+      "tooltipPositioner": {
+        "tag": "DIV",
+        "id": ":r4c:",
+        "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1vxh2dt",
+        "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+        "x": 58,
+        "right": 319.6499938964844,
+        "width": 261.6499938964844,
+        "clientWidth": 262,
+        "scrollWidth": 262,
+        "transform": "translate(58px, 1914px)"
+      },
+      "beyondClientViewport": [
+        {
+          "tag": "P",
+          "id": "",
+          "classes": "MuiTypography-root MuiTypography-body2 css-f0jcyk",
+          "text": "USD 100 / hour",
+          "x": 231.35000610351562,
+          "right": 329.3000030517578,
+          "width": 97.94999694824219,
+          "clientWidth": 98,
+          "scrollWidth": 98,
+          "transform": ""
+        }
+      ]
+    },
+    {
+      "label": "next-frame-or-250ms",
+      "at": 11765,
+      "innerWidth": 320,
+      "clientWidth": 320,
+      "scrollWidth": 320,
+      "visualViewport": {
+        "width": 320,
+        "scale": 1
+      },
+      "bookingCard": {
+        "tag": "DIV",
+        "id": "",
+        "classes": "MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-g29u3x",
+        "text": "Agenda p\u00fablicaReserva un servicio con TDFReserva en l\u00edneaCompleta tus datos y agenda el horario que ",
+        "x": 16,
+        "right": 304,
+        "width": 288,
+        "clientWidth": 286,
+        "scrollWidth": 298,
+        "transform": ""
+      },
+      "serviceSelect": {
+        "tag": "DIV",
+        "id": ":r44:",
+        "classes": "MuiSelect-select MuiSelect-outlined MuiInputBase-input MuiOutlinedInput-input css-181tai7",
+        "text": "Grabaci\u00f3n de pruebaUSD 100 / hour",
+        "x": 65,
+        "right": 303,
+        "width": 238,
+        "clientWidth": 238,
+        "scrollWidth": 264,
+        "transform": ""
+      },
+      "dateInput": {
+        "tag": "INPUT",
+        "id": ":r46:",
+        "classes": "MuiInputBase-input MuiOutlinedInput-input css-438i8l",
+        "text": "",
+        "x": 65,
+        "right": 303,
+        "width": 238,
+        "clientWidth": 238,
+        "scrollWidth": 238,
+        "transform": ""
+      },
+      "tooltip": {
+        "tag": "DIV",
+        "id": ":r4c:",
+        "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1vxh2dt",
+        "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+        "x": 58,
+        "right": 319.6499938964844,
+        "width": 261.6499938964844,
+        "clientWidth": 262,
+        "scrollWidth": 262,
+        "transform": "translate(58px, 1914px)"
+      },
+      "tooltipPositioner": {
+        "tag": "DIV",
+        "id": ":r4c:",
+        "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1vxh2dt",
+        "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+        "x": 58,
+        "right": 319.6499938964844,
+        "width": 261.6499938964844,
+        "clientWidth": 262,
+        "scrollWidth": 262,
+        "transform": "translate(58px, 1914px)"
+      },
+      "beyondClientViewport": [
+        {
+          "tag": "P",
+          "id": "",
+          "classes": "MuiTypography-root MuiTypography-body2 css-f0jcyk",
+          "text": "USD 100 / hour",
+          "x": 231.35000610351562,
+          "right": 329.3000030517578,
+          "width": 97.94999694824219,
+          "clientWidth": 98,
+          "scrollWidth": 98,
+          "transform": ""
+        }
+      ]
+    },
+    {
+      "label": "another-100ms",
+      "at": 11871,
+      "innerWidth": 320,
+      "clientWidth": 320,
+      "scrollWidth": 320,
+      "visualViewport": {
+        "width": 320,
+        "scale": 1
+      },
+      "bookingCard": {
+        "tag": "DIV",
+        "id": "",
+        "classes": "MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-g29u3x",
+        "text": "Agenda p\u00fablicaReserva un servicio con TDFReserva en l\u00edneaCompleta tus datos y agenda el horario que ",
+        "x": 16,
+        "right": 304,
+        "width": 288,
+        "clientWidth": 286,
+        "scrollWidth": 298,
+        "transform": ""
+      },
+      "serviceSelect": {
+        "tag": "DIV",
+        "id": ":r44:",
+        "classes": "MuiSelect-select MuiSelect-outlined MuiInputBase-input MuiOutlinedInput-input css-181tai7",
+        "text": "Grabaci\u00f3n de pruebaUSD 100 / hour",
+        "x": 65,
+        "right": 303,
+        "width": 238,
+        "clientWidth": 238,
+        "scrollWidth": 264,
+        "transform": ""
+      },
+      "dateInput": {
+        "tag": "INPUT",
+        "id": ":r46:",
+        "classes": "MuiInputBase-input MuiOutlinedInput-input css-438i8l",
+        "text": "",
+        "x": 65,
+        "right": 303,
+        "width": 238,
+        "clientWidth": 238,
+        "scrollWidth": 238,
+        "transform": ""
+      },
+      "tooltip": {
+        "tag": "DIV",
+        "id": ":r4c:",
+        "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1vxh2dt",
+        "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+        "x": 58,
+        "right": 319.6499938964844,
+        "width": 261.6499938964844,
+        "clientWidth": 262,
+        "scrollWidth": 262,
+        "transform": "translate(58px, 1914px)"
+      },
+      "tooltipPositioner": {
+        "tag": "DIV",
+        "id": ":r4c:",
+        "classes": "MuiPopper-root MuiTooltip-popper MuiTooltip-popperInteractive css-1vxh2dt",
+        "text": "Thu 29 04:00 (GMT-5) \u00b7 Estudio 09:00 (UTC)",
+        "x": 58,
+        "right": 319.6499938964844,
+        "width": 261.6499938964844,
+        "clientWidth": 262,
+        "scrollWidth": 262,
+        "transform": "translate(58px, 1914px)"
+      },
+      "beyondClientViewport": [
+        {
+          "tag": "P",
+          "id": "",
+          "classes": "MuiTypography-root MuiTypography-body2 css-f0jcyk",
+          "text": "USD 100 / hour",
+          "x": 231.35000610351562,
+          "right": 329.3000030517578,
+          "width": 97.94999694824219,
+          "clientWidth": 98,
+          "scrollWidth": 98,
+          "transform": ""
+        }
+      ]
+    },
+    {
+      "label": "another-300ms",
+      "at": 12178,
+      "innerWidth": 320,
+      "clientWidth": 320,
+      "scrollWidth": 320,
+      "visualViewport": {
+        "width": 320,
+        "scale": 1
+      },
+      "bookingCard": {
+        "tag": "DIV",
+        "id": "",
+        "classes": "MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-g29u3x",
+        "text": "Agenda p\u00fablicaReserva un servicio con TDFReserva en l\u00edneaCompleta tus datos y agenda el horario que ",
+        "x": 16,
+        "right": 304,
+        "width": 288,
+        "clientWidth": 286,
+        "scrollWidth": 298,
+        "transform": ""
+      },
+      "serviceSelect": {
+        "tag": "DIV",
+        "id": ":r44:",
+        "classes": "MuiSelect-select MuiSelect-outlined MuiInputBase-input MuiOutlinedInput-input css-181tai7",
+        "text": "Grabaci\u00f3n de pruebaUSD 100 / hour",
+        "x": 65,
+        "right": 303,
+        "width": 238,
+        "clientWidth": 238,
+        "scrollWidth": 264,
+        "transform": ""
+      },
+      "dateInput": {
+        "tag": "INPUT",
+        "id": ":r46:",
+        "classes": "MuiInputBase-input MuiOutlinedInput-input css-438i8l",
+        "text": "",
+        "x": 65,
+        "right": 303,
+        "width": 238,
+        "clientWidth": 238,
+        "scrollWidth": 238,
+        "transform": ""
+      },
+      "tooltip": null,
+      "tooltipPositioner": null,
+      "beyondClientViewport": [
+        {
+          "tag": "P",
+          "id": "",
+          "classes": "MuiTypography-root MuiTypography-body2 css-f0jcyk",
+          "text": "USD 100 / hour",
+          "x": 231.35000610351562,
+          "right": 329.3000030517578,
+          "width": 97.94999694824219,
+          "clientWidth": 98,
+          "scrollWidth": 98,
+          "transform": ""
+        }
+      ]
+    }
+  ],
+  "browser": "firefox",
+  "hasTouch": false,
+  "errors": [],
+  "writes": [],
+  "providerCalls": 0,
+  "sourceHead": "535b113e7b4c139be9ea570c18e8d29c6a34700d",
+  "scope": "Controlled synthetic local UI intervention; no WebKit or production/provider execution."
+}

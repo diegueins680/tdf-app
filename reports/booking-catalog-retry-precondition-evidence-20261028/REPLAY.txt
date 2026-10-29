@@ -1,0 +1,6 @@
+Use protected source ce5916a502eb9f38eb20efa3132138e2aaba9adc and its normal production UI build.
+The red/fixed fixtures retain the same 30s case and 8s assertion budgets; each synthetic503 is delayed400ms. All business writes remain blocked.
+Run red error cases on desktop Chromium and Firefox (the inherited Firefox project grep also selects the empty-catalog control): expected2fail/1pass.
+Run fixed fixture on desktop Chromium, Pixel7 web emulation and Firefox: expected6pass/0fail/0skip/0retry.
+Only the fixed source waits for the fourth initial503 response before asserting the unavailable UI. No query policy or product source is changed.
+Initial harness setup failed before execution due to a fixture insertion sentinel; it is not a product counterexample.

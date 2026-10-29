@@ -1,0 +1,88 @@
+
+Running 3 tests using 1 worker
+
+[1A[2K(node:97788) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:97788) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[1/3] [chromium-desktop] › booking.spec.mjs:67:1 › booking viewport check detects known client-width overflow @critical @mobile-flow
+[1A[2K[2/3] [chromium-desktop] › booking.spec.mjs:90:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow
+[1A[2K  1) [chromium-desktop] › booking.spec.mjs:90:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThan[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: < [32m740[39m
+    Received:   [31m1231.4375[39m
+
+      237 |     expect(afterScroll.anchor.y - beforeScroll.anchor.y).toBeLessThan(-10);
+      238 |     expect(afterScroll.anchor.y).toBeGreaterThanOrEqual(0);
+    > 239 |     expect(afterScroll.anchor.y + afterScroll.anchor.height).toBeLessThan(740);
+          |                                                              ^
+      240 |     expect(afterScroll.tooltip).not.toBeNull();
+      241 |     expect(afterScroll.tooltip.text).toBe(helperText);
+      242 |     if (afterScroll.tooltip.placement === beforeScroll.tooltip.placement) {
+        at /private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs:239:62
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K(node:97840) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:97840) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[3/3] [chromium-desktop] › booking.spec.mjs:90:3 › public booking recovers an empty catalog without losing contact details @critical @mobile-flow
+[1A[2K  2) [chromium-desktop] › booking.spec.mjs:90:3 › public booking recovers an empty catalog without losing contact details @critical @mobile-flow 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThan[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: < [32m740[39m
+    Received:   [31m1231.4375[39m
+
+      237 |     expect(afterScroll.anchor.y - beforeScroll.anchor.y).toBeLessThan(-10);
+      238 |     expect(afterScroll.anchor.y).toBeGreaterThanOrEqual(0);
+    > 239 |     expect(afterScroll.anchor.y + afterScroll.anchor.height).toBeLessThan(740);
+          |                                                              ^
+      240 |     expect(afterScroll.tooltip).not.toBeNull();
+      241 |     expect(afterScroll.tooltip.text).toBe(helperText);
+      242 |     if (afterScroll.tooltip.placement === beforeScroll.tooltip.placement) {
+        at /private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs:239:62
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K  2 failed
+    [chromium-desktop] › booking.spec.mjs:90:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow 
+    [chromium-desktop] › booking.spec.mjs:90:3 › public booking recovers an empty catalog without losing contact details @critical @mobile-flow 
+  1 passed (28.6s)

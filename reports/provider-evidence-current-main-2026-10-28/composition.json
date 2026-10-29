@@ -1,0 +1,26 @@
+{
+  "baselineMain": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "publishedHeadBefore": "e29b516cda72e4c1e3afd6b0bd39f091525c34a9",
+  "reusedPreparation": "c828bfc668fde798401d07791924cf61426aa0c3",
+  "sourceCommit": "8780495dbf345ad3afabbc356f0be8a908f5a745",
+  "changedFiles": [
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/README.md",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/artifacts.tar.gz",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/build-receipt.json",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/check-delivery-chronology.py",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/ci-assurance.json",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/ci-assurance.zip",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/ci-backend.json",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/ci-backend.log.gz",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/delivery-chronology-controls.json",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/delivery-chronology.json",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/delivery.json",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/qualification.json",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/receipt.json",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/review-observation.json",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/sha256.json"
+  ],
+  "all15HistoricalArchiveObjectsExactOriginal": true,
+  "allProtectedMainMaterialObjectsUnchanged": true,
+  "freshFunctionalQualificationClaimed": false
+}

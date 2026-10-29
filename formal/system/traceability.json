@@ -1853,11 +1853,10 @@
         "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
         "scripts/verify-checkout-money.py",
         "scripts/__tests__/checkout-money-http.mjs",
-        "scripts/__tests__/identity-http-runtime.mjs",
-        "scripts/test-checkout-money-verifier.py"
+        "scripts/__tests__/identity-http-runtime.mjs"
       ],
       "formalModels": [],
-      "verification": "61 Hspec examples include three 1000-case properties across checkout/cart/Merch; nine source mutations. Real cart HTTP conflicts and rollback passed at834fad2aa. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration.",
+      "verification": "61 Hspec examples include three 1000-case properties across checkout/cart/Merch; nine source mutations. Real cart HTTP conflicts and rollback passed at834fad2aa.",
       "evidence": "checkout-money-tests.log; checkout-money-controls-final.json; checkout-overflow-before.log; production-checkout-arithmetic.json",
       "critical": true,
       "status": "specified and implemented",
@@ -2013,11 +2012,10 @@
         "scripts/verify-checkout-money.py",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "scripts/test-artist-merch-runtime.sh",
-        "scripts/__tests__/merch-commission-postgres.mjs",
-        "scripts/test-checkout-money-verifier.py"
+        "scripts/__tests__/merch-commission-postgres.mjs"
       ],
       "formalModels": [],
-      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration.",
+      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints.",
       "evidence": "merch-money-controls.json; merch-commission-postgres.log",
       "critical": true,
       "status": "specified and implemented",
@@ -10439,7 +10437,7 @@
       "domain": "BOOK",
       "statement": "The public booking form at /reservar shows the service selector on its first step (contact) as well as on the schedule step, listing every active offering returned by the public service catalog (recording, voice, podcast, mixing, mastering, rehearsal, DJ booth practice, classes, event production, ...). DJ booth practice is an ordinary offering: there is no dedicated booking page, header entry, Instagram entry link, platform or commerce card for it. The legacy /dj-booth and /reservar/dj-booth URLs redirect to /reservar with the DJ booth service preselected and tracking parameters preserved; a ?servicio= or ?service= query preselects a service without locking the selector. The legacy DJ booth feature remains addressable for compatibility but is absent from feature search on web and Mobile. Legacy DJ URLs remove conflicting service parameters before selecting DJ booth.",
       "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link. Product owner UX execution mission, continued 2026-10-26: actionable recovery from temporary failures while preserving form data and backend booking authority.",
-      "source": "tdf-hq-ui public booking form, public navigation and landing links",
+      "source": "tdf-hq-ui public booking form, public navigation and landing links; formal/system/booking-viewport-bounds.md (BOOK-VIEWPORT-BOUNDS-001); formal/system/booking-tooltip-viewport.md (BOOK-TOOLTIP-VIEWPORT-001)",
       "contract": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
       "actors": [
         "Visitor",
@@ -10507,7 +10505,7 @@
         "e2e/web/booking-catalog-recovery.spec.mjs"
       ],
       "formalModels": [],
-      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression. Error and empty-catalog component regressions preserve edited contacts across a pending retry and another empty response before success, keep the form gated, retain query-based service selection, and assert no booking/checkout calls. Browser fixtures cover keyboard retry and restored schedule progression with all business writes blocked.",
+      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression. Error and empty-catalog component regressions preserve edited contacts across a pending retry and another empty response before success, keep the form gated, retain query-based service selection, and assert no booking/checkout calls. Browser fixtures cover keyboard retry and restored schedule progression with all business writes blocked. Viewport verification uses a shared client-width bound instead of expandable mobile innerWidth. A permanent visible-width fault fixture must be detected and recover after removal; comparator mutation must fail the mobile regression. Initial numeric widths/result remain authoritative while bounded failure-only geometry observes later layout; local controls do not establish the original hosted WebKit cause. See formal/system/booking-viewport-bounds.md (BOOK-VIEWPORT-BOUNDS-001). Suggested-time helper viewport repair: actual open-before/closed-before/open-after resize controls isolate local mobile document expansion and zoom. A fixed-position overlay must preserve the immutable first client-bound result, helper text/accessibility name, scale1, real keyboard reachability and scroll tracking. Deterministic Date leaves timers running. Removing only the positioning option must fail the permanent keyboard case on actual persistent362/320 overflow; correct source restored. Local evidence does not establish the original hosted WebKit cause, all browsers or complete CSSOM refinement.",
       "evidence": "Local Jest execution (PublicBookingPage, publicRoutes, PublicBranding suites)",
       "status": "specified and implemented",
       "critical": false,
@@ -13492,77 +13490,6 @@
         "PARTIAL",
         "UNVERIFIED"
       ]
-    },
-    {
-      "id": "BOOK-STUDIO-TIMEZONE-001",
-      "title": "Public studio hours use Quito time independently of visitor preferences",
-      "domain": "BOOK",
-      "statement": "The public studio booking page interprets 08:00–22:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
-      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00–22:00.",
-      "source": "Direct owner confirmation after anonymous production observation showed studio UTC.",
-      "contract": "formal/system/public-booking-timezone.md",
-      "actors": [
-        "Visitor",
-        "Signed-in customer"
-      ],
-      "preconditions": [
-        "Active canonical offering available; existing backend booking admission applies."
-      ],
-      "inputs": [
-        "Visitor timezone",
-        "Selected local start and duration",
-        "General display timezone preference"
-      ],
-      "state": {
-        "schedule": [
-          "contact",
-          "schedule",
-          "confirmation",
-          "submitted or recoverable failure"
-        ]
-      },
-      "allowedTransitions": [
-        "Contact -> schedule -> confirmation for an interval within the Quito opening window",
-        "Confirmation -> recoverable booking error without false success",
-        "Schedule -> suggested time within the same selected Quito calendar date"
-      ],
-      "forbiddenTransitions": [
-        "General display timezone changes the physical studio zone",
-        "Start before 08:00 or end after 22:00 Quito admitted by the public form",
-        "Reinterpret persisted UTC booking timestamps",
-        "A quick-suggestion click moves the booking to the previous Quito calendar date"
-      ],
-      "effects": [
-        "Studio opening hours remain in Quito; selected visitor-local instants are serialized in UTC."
-      ],
-      "authorization": "Existing public and authenticated booking authorization is unchanged; frontend validation grants no backend authority.",
-      "privacy": "Regression traffic uses synthetic identities and intercepted API responses; no real reservations or payments.",
-      "concurrency": "Existing cancellation and stale availability response guards remain unchanged.",
-      "idempotency": "Existing booking idempotency semantics are unchanged; no automatic write replay.",
-      "failure": "Out-of-hours selection remains on schedule with actionable feedback; refused booking is never shown as successful.",
-      "recovery": "User can select another valid schedule while retaining contact details.",
-      "observability": "Source-bound unit and browser results; no new analytics events.",
-      "property": "QuitoOpeningWindowAndUtcInstantPreserved",
-      "implementation": [
-        "tdf-hq-ui/src/pages/PublicBookingPage.tsx"
-      ],
-      "tests": [
-        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-        "e2e/web/booking-timezone.spec.mjs"
-      ],
-      "formalModels": [],
-      "verification": "Rendered component regression with general UTC preference; browser boundary and refused synthetic submission tests for UTC and summer Europe/Madrid visitors. Not a proof of backend hours enforcement. Rendered-form regression reproduces original75 shifting January15 toJanuary14; corrected form preserves the date through repeated clicks. Browser UTC/Madrid scenarios now click suggestions repeatedly before and after a visitor-local midnight crossing.",
-      "evidence": "reports/booking-quito-timezone-2026-10-26.json",
-      "status": "specified and implemented",
-      "critical": false,
-      "confidence": "Owner-confirmed business rule; current source execution recorded separately.",
-      "ambiguity": [
-        "Backend schedule-policy authority is outside this frontend correction. No production deployment or existing booking migration is implied."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Scoped frontend implementation; current candidate tests and protected delivery recorded separately."
-      }
     }
   ],
   "sourceFingerprints": {
@@ -13587,8 +13514,7 @@
     "e2e/web/artist-follow.spec.mjs": "540fda97e2d352ce4e8319d85f21f12dd097968b3d7edd0689a7ca419dad5eb8",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "3bed38b4a63187e387f4c971d06f3e7fe3f76516d316ca2b1626d2aa1385412b",
-    "e2e/web/booking-catalog-recovery.spec.mjs": "04cb5ff5442060aaa69077587e4e51d7fcf3b814d387bbb07407fba0d508a595",
-    "e2e/web/booking-timezone.spec.mjs": "24ab1f1962db70d48f835f4b1986b5ec6a6ac43e2de17213592a26db694099e3",
+    "e2e/web/booking-catalog-recovery.spec.mjs": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
     "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
     "e2e/web/community-discovery.spec.mjs": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
     "e2e/web/course-enrollment.spec.mjs": "f64fed981fa69b332499556853637fca938c9b026b90c4aaf1b4f5bb97633311",
@@ -13953,7 +13879,7 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": "63b371bcbcf9338de2e4d022515bc9438cfd45f2b884411e913abcde5e713268",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
-    "scripts/__tests__/ci-change-scope.test.mjs": "54c909b7ed7a25c77ad113338b988199520dbc3bb7a3dc1778b99d1e588bcbb2",
+    "scripts/__tests__/ci-change-scope.test.mjs": "91549b10ba840aae75743b8954498f4e2d05be31beeb56deb51b7d9fbfa33143",
     "scripts/__tests__/ci-job-admission.test.mjs": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
     "scripts/__tests__/ci-pipeline.test.mjs": "c14476254c80d8f647dfe1176fe45550abb6463b97c4cb5db77a0815abd0cc73",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
@@ -14026,7 +13952,7 @@
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
-    "scripts/ci-change-scope.mjs": "b7b8a01efd976ac9938452fac60ff6f00864a407550fe5e09c0f660e1427d8c6",
+    "scripts/ci-change-scope.mjs": "cbc5ee9e7ce0e57797b5f35ee8e384349be44c07be4c0c3ed2481c0fdd652ea1",
     "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
@@ -14083,7 +14009,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "f9fc06aafa5b903c520d54aba1d7753b55800dac5d9893f84f9cdf62a9e952ab",
+    "scripts/quality-repo.sh": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -14110,7 +14036,6 @@
     "scripts/test-backend-version-rebuild.py": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
     "scripts/test-booking-conformance.py": "2d51aa2f20c498e3c00990c27a5b972d8dfe28593fb668ebd292587131e259dc",
     "scripts/test-chat-notifications.sh": "d01a8cbf2c0852222f53b36bd813a7f2dc8875ae6f3b53ea0ab108fba1f2b552",
-    "scripts/test-checkout-money-verifier.py": "cff1bbe3bfb77b881d3e2c8e9f3f04070615f7e1353ccffc5c7891e30e2c023c",
     "scripts/test-checkout-policy-terms-identity-migration.sh": "ceded6be2927dfcb777863190ea62779d58c3637e706d48c6dce5a58b97096c1",
     "scripts/test-checkout-terms-history.sh": "237e633cf0bc7e6efd3317e6dfeeddc2f43a2fd948fbae7888e0ee371324f922",
     "scripts/test-checkout-terms-upgrade-concurrency.py": "7f0d4db4046fa61057d2198469529b92bdeb9b05cf0b55233f8a047e042ba504",
@@ -14206,7 +14131,7 @@
     "scripts/verification-report.py": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
     "scripts/verify-alloy-controls.mjs": "3a609d6e22e004563fba4a4c58ec9e62267b1db572b073d880bd7feb19870e9c",
     "scripts/verify-auth-predicates.py": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
-    "scripts/verify-checkout-money.py": "bf698645e4ca026a168234a99a13371e1d359e26010b3771867158cb0bd47d6d",
+    "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
     "scripts/verify-event-operations-formal.sh": "955b1db4af68d844636b1c5d3e74707a28b57d62d283ed145202a5d610e549ed",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
@@ -14240,7 +14165,7 @@
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
     "tdf-hq-ui/src/App.tsx": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "220dd4c7eb4cd50d8047d1bdaa0d28849b0852ee0028a844c8b98069473ddb82",
-    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
+    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "caef6efc2017f76bfbc27eb6a1dbed146b016ac2d197cd4911e5c3fefd000293",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "72aa8e30a1a14092bcd77ba295d18e7e57810c877d6245df1fd08be839b20272",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
@@ -14461,7 +14386,7 @@
     "tdf-hq-ui/src/pages/PartiesPage.tsx": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
-    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "62d8a0d327953088f78e465fcaaa889ebd6e981cff69e8194561bdcc31a3841a",
+    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "2aa258dc66bffa06a09bc3581cc0d1c1342b512504cbd6f897854c79c0caeece",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
@@ -17007,16 +16932,6 @@
     "scripts/__tests__/checkout-money-http.mjs": [
       {
         "requirement": "PAY-CHECKOUT-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/test-checkout-money-verifier.py": [
-      {
-        "requirement": "PAY-CHECKOUT-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-CHECKOUT-003",
         "relationship": "tests"
       }
     ],
@@ -24030,10 +23945,6 @@
       {
         "requirement": "BOOK-SERVICE-PICKER-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "BOOK-STUDIO-TIMEZONE-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": [
@@ -24077,10 +23988,6 @@
       },
       {
         "requirement": "BOOK-SERVICE-PICKER-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "BOOK-STUDIO-TIMEZONE-001",
         "relationship": "tests"
       }
     ],
@@ -26327,12 +26234,6 @@
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
         "relationship": "formalModels"
       }
-    ],
-    "e2e/web/booking-timezone.spec.mjs": [
-      {
-        "requirement": "BOOK-STUDIO-TIMEZONE-001",
-        "relationship": "tests"
-      }
     ]
   },
   "surfaces": [
@@ -26704,23 +26605,11 @@
     {
       "id": "SURFACE-9517b2194ab847fb",
       "path": "e2e/web/booking-catalog-recovery.spec.mjs",
-      "sha256": "04cb5ff5442060aaa69077587e4e51d7fcf3b814d387bbb07407fba0d508a595",
+      "sha256": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "BOOK-SERVICE-PICKER-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-a58a6650faecc2e6",
-      "path": "e2e/web/booking-timezone.spec.mjs",
-      "sha256": "24ab1f1962db70d48f835f4b1986b5ec6a6ac43e2de17213592a26db694099e3",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "BOOK-STUDIO-TIMEZONE-001",
           "relationship": "tests"
         }
       ]
@@ -27602,7 +27491,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "54c909b7ed7a25c77ad113338b988199520dbc3bb7a3dc1778b99d1e588bcbb2",
+      "sha256": "91549b10ba840aae75743b8954498f4e2d05be31beeb56deb51b7d9fbfa33143",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28992,7 +28881,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "b7b8a01efd976ac9938452fac60ff6f00864a407550fe5e09c0f660e1427d8c6",
+      "sha256": "cbc5ee9e7ce0e57797b5f35ee8e384349be44c07be4c0c3ed2481c0fdd652ea1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30290,7 +30179,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "f9fc06aafa5b903c520d54aba1d7753b55800dac5d9893f84f9cdf62a9e952ab",
+      "sha256": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31304,22 +31193,6 @@
       "sha256": "32324ad3adc0f2b943284b71637548b54ee2e9d38adf68b483037dd0555e8710",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
-    },
-    {
-      "id": "SURFACE-1b1c5e57fb68ec97",
-      "path": "scripts/test-checkout-money-verifier.py",
-      "sha256": "cff1bbe3bfb77b881d3e2c8e9f3f04070615f7e1353ccffc5c7891e30e2c023c",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "PAY-CHECKOUT-001",
-          "relationship": "tests"
-        },
-        {
-          "requirement": "PAY-CHECKOUT-003",
-          "relationship": "tests"
-        }
-      ]
     },
     {
       "id": "SURFACE-408b8094f29cfa84",
@@ -33016,7 +32889,7 @@
     {
       "id": "SURFACE-8b6766b7ee7590fd",
       "path": "scripts/verify-checkout-money.py",
-      "sha256": "bf698645e4ca026a168234a99a13371e1d359e26010b3771867158cb0bd47d6d",
+      "sha256": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33656,7 +33529,7 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
+      "sha256": "caef6efc2017f76bfbc27eb6a1dbed146b016ac2d197cd4911e5c3fefd000293",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33665,10 +33538,6 @@
         },
         {
           "requirement": "BOOK-SERVICE-PICKER-001",
-          "relationship": "tests"
-        },
-        {
-          "requirement": "BOOK-STUDIO-TIMEZONE-001",
           "relationship": "tests"
         }
       ]
@@ -39352,7 +39221,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "62d8a0d327953088f78e465fcaaa889ebd6e981cff69e8194561bdcc31a3841a",
+      "sha256": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39361,10 +39230,6 @@
         },
         {
           "requirement": "BOOK-SERVICE-PICKER-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "BOOK-STUDIO-TIMEZONE-001",
           "relationship": "implementation"
         }
       ]
@@ -56528,7 +56393,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3095785902fc7ddb470486117bc8b586415a45f2ee38dc88a627bcf967b2ebe4",
+      "sourceSha256": "ab87b7ed50fba57d530b4769fdd6f7bc8ef0c7dee7958ddbe0a47da227acb728",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56556,7 +56421,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3095785902fc7ddb470486117bc8b586415a45f2ee38dc88a627bcf967b2ebe4",
+      "sourceSha256": "ab87b7ed50fba57d530b4769fdd6f7bc8ef0c7dee7958ddbe0a47da227acb728",
       "definition": {
         "states": [
           "absent",
@@ -56586,7 +56451,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3095785902fc7ddb470486117bc8b586415a45f2ee38dc88a627bcf967b2ebe4",
+      "sourceSha256": "ab87b7ed50fba57d530b4769fdd6f7bc8ef0c7dee7958ddbe0a47da227acb728",
       "definition": {
         "export": [
           "queued",
@@ -79073,7 +78938,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 159,
+    "PARTIAL": 158,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

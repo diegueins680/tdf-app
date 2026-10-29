@@ -1,0 +1,41 @@
+{
+  "message": "Unexpected browser errors/writes: {\"errors\":[],\"writes\":[{\"method\":\"POST\",\"path\":\"/session/onboarding/reconcile\"},{\"method\":\"DELETE\",\"path\":\"/radio/presence\"},{\"method\":\"POST\",\"path\":\"/navigation/preferences/admin.artist-enrichment/visit\"}]}",
+  "errors": [],
+  "writes": [
+    {
+      "method": "POST",
+      "path": "/session/onboarding/reconcile"
+    },
+    {
+      "method": "DELETE",
+      "path": "/radio/presence"
+    },
+    {
+      "method": "POST",
+      "path": "/navigation/preferences/admin.artist-enrichment/visit"
+    }
+  ],
+  "reads": [
+    "/v1/latest",
+    "/catalogs/batch",
+    "/catalogs/batch",
+    "/session",
+    "/v1/latest",
+    "/catalogs/batch",
+    "/session/preferences",
+    "/catalogs/batch",
+    "/catalog/countries/items",
+    "/catalog/genres/items",
+    "/radio/auto-stop-options",
+    "/radio/streams",
+    "/chat/threads",
+    "/fans/me/notifications/count",
+    "/social-events/upcoming",
+    "/admin/artists/enrichment/overview",
+    "/health",
+    "/navigation/preferences",
+    "/admin/artists/enrichment/overview",
+    "/chat/threads"
+  ],
+  "url": "http://127.0.0.1:41439/admin/artistas-enriquecimiento"
+}

@@ -1,0 +1,78 @@
+
+Running 9 tests using 1 worker
+
+[1A[2K(node:94799) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:94799) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[1/9] [chromium-desktop] › intervention.spec.mjs:81:3 › tooltip intervention A-open-before-resize @critical @mobile-flow
+[1A[2K[2/9] [chromium-desktop] › intervention.spec.mjs:81:3 › tooltip intervention B-closed-before-resize @critical @mobile-flow
+[1A[2K[3/9] [chromium-desktop] › intervention.spec.mjs:81:3 › tooltip intervention C-open-after-resize @critical @mobile-flow
+[1A[2K(node:95488) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:95488) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[4/9] [chromium-phone] › intervention.spec.mjs:81:3 › tooltip intervention A-open-before-resize @critical @mobile-flow
+[1A[2K  1) [chromium-phone] › intervention.spec.mjs:81:3 › tooltip intervention A-open-before-resize @critical @mobile-flow 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32mfalse[39m
+    Received: [31mtrue[39m
+
+      196 |     await page.screenshot({ path: testInfo.outputPath('intervention.png'), fullPage: true });
+      197 |     expect(initial.compatMode).toBe('CSS1Compat');
+    > 198 |     expect(initial.overflow).toBe(false);
+          |                              ^
+      199 |     expect(errors).toEqual([]);
+      200 |     expect(writes).toEqual([]);
+      201 |     await page.screenshot({ path: testInfo.outputPath('booking-catalog-recovered.png'), fullPage: true });
+        at /private/tmp/tdf-booking-tooltip-intervention-20261028/intervention.spec.mjs:198:30
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-phone/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-phone/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace output/intervention-tooltip-inter-8329e-resize-critical-mobile-flow-chromium-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K(node:97301) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:97301) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[5/9] [chromium-phone] › intervention.spec.mjs:81:3 › tooltip intervention B-closed-before-resize @critical @mobile-flow
+[1A[2K[6/9] [chromium-phone] › intervention.spec.mjs:81:3 › tooltip intervention C-open-after-resize @critical @mobile-flow
+[1A[2K(node:98196) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:98196) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[7/9] [firefox] › intervention.spec.mjs:81:3 › tooltip intervention A-open-before-resize @critical @mobile-flow
+[1A[2K[8/9] [firefox] › intervention.spec.mjs:81:3 › tooltip intervention B-closed-before-resize @critical @mobile-flow
+[1A[2K[9/9] [firefox] › intervention.spec.mjs:81:3 › tooltip intervention C-open-after-resize @critical @mobile-flow
+[1A[2K  1 failed
+    [chromium-phone] › intervention.spec.mjs:81:3 › tooltip intervention A-open-before-resize @critical @mobile-flow 
+  8 passed (2.9m)

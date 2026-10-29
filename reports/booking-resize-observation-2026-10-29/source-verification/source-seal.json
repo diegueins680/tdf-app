@@ -1,0 +1,21 @@
+{
+  "baseline": "21628cdc8523bfd5ff4bd3259648400c0d1ed34d",
+  "sourceCommit": "6252d712c54aeb9561ea2116b7662d5c3fe36c19",
+  "sourceDigest": "9cae09e195bac34f26d3f12c472b6371b175a96f1452258f60f1fefe1fbd82d4",
+  "registeredSourceInputs": 1413,
+  "allRegisteredGitBlobAndMobileHashesVerified": true,
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "updatedContractSha256": "12aeb6aec7a6379dd95b30c47abafb6f26cb01a1ba1e985c292f1e22e41e8254",
+  "currentDiscoveryMatches": true,
+  "all156RequirementObjectsByteExactBaseline": true,
+  "whole1352HistoricalDecisionFileAndDerivedCatalogByteExactBaseline": true,
+  "allProductUIBackendAPIDependenciesWorkflowsOpsUnchanged": true,
+  "priorProviderArchiveUnchanged": true,
+  "localDiagnosticPositives": "9/0/0skip/0retry",
+  "realControlledFailures": "1helper-only edgefailure/rootfits320;1sole-option rootfailure362/320; exactproductsourceandC2distrestored",
+  "existingWidthClaims": "2manualconditionalinteger claims normal/-O andrejectmutant; notCSSOM/JS/refinementproof",
+  "globalAssurance": "156/312UNPROVEN11existingconditionalSMT;releaseBLOCKED",
+  "currentHostedWebKitInitialOverlay": "FAILED at21628; observation-only followup, no repair or causality claimed",
+  "mainComposition": "Contains protectedmainE302; requiredreview/all20/FIFOpending",
+  "cleanSource": true
+}

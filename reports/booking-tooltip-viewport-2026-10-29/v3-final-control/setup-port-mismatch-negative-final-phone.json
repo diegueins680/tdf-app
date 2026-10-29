@@ -1,0 +1,156 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/playwright.negative-final-phone.config.mjs",
+    "rootDir": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/negative-final-phone",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-phone",
+        "name": "chromium-phone",
+        "testDir": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/negative-final-phone.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "booking.spec.mjs",
+      "file": "booking.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+          "ok": false,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1563,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:41101/reservar?service=recording-fixture\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:41101/reservar?service=recording-fixture\", waiting until \"domcontentloaded\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:41101/reservar?service=recording-fixture\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:41101/reservar?service=recording-fixture\", waiting until \"domcontentloaded\"\u001b[22m\n\n    at /private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/booking.spec.mjs:136:16",
+                    "location": {
+                      "file": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/booking.spec.mjs",
+                      "column": 16,
+                      "line": 136
+                    },
+                    "snippet": "  134 |       return route.fulfill({ status: 404, json: { error: 'No fixture for this API' } });\n  135 |     });\n> 136 |     await page.goto('/reservar?service=recording-fixture', { waitUntil: 'domcontentloaded' });\n      |                ^\n  137 |     const name = page.getByRole('textbox', { name: 'Nombre completo', exact: true });\n  138 |     const email = page.getByRole('textbox', { name: 'Correo', exact: true });\n  139 |     await name.fill('Visitante de prueba');"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/booking.spec.mjs",
+                        "column": 16,
+                        "line": 136
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:41101/reservar?service=recording-fixture\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:41101/reservar?service=recording-fixture\", waiting until \"domcontentloaded\"\u001b[22m\n\n\n  134 |       return route.fulfill({ status: 404, json: { error: 'No fixture for this API' } });\n  135 |     });\n> 136 |     await page.goto('/reservar?service=recording-fixture', { waitUntil: 'domcontentloaded' });\n      |                ^\n  137 |     const name = page.getByRole('textbox', { name: 'Nombre completo', exact: true });\n  138 |     const email = page.getByRole('textbox', { name: 'Correo', exact: true });\n  139 |     await name.fill('Visitante de prueba');\n    at /private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/booking.spec.mjs:136:16"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T05:32:28.718Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/booking.spec.mjs",
+                    "column": 16,
+                    "line": 136
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-86f8013d470642ab6e42",
+          "file": "booking.spec.mjs",
+          "line": 90,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-29T05:32:27.082Z",
+    "duration": 6646.375,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}
