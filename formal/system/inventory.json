@@ -2898,7 +2898,7 @@
     {
       "id": "SURFACE-9517b2194ab847fb",
       "path": "e2e/web/booking-catalog-recovery.spec.mjs",
-      "sha256": "04cb5ff5442060aaa69077587e4e51d7fcf3b814d387bbb07407fba0d508a595",
+      "sha256": "f65777a6f8b5f9823e0e66ea4d49900aef1051d00c4e4d4ce8e4c085cbf23dcd",
       "semanticConformance": "not-established-by-discovery"
     },
     {

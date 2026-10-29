@@ -52,7 +52,14 @@ for (const failure of ['error', 'empty']) {
     const email = page.getByRole('textbox', { name: 'Correo', exact: true });
     await name.fill('Visitante de prueba');
     await email.fill('visitante@example.test');
+    // SessionQueryProvider retries 503s three times (1s, 2s, 4s). Begin the
+    // UI assertion after the final synthetic response, rather than spending
+    // its 8s budget on that unrelated backoff. The case keeps its 30s budget.
+    const initialFailure = failure === 'error' ? page.waitForResponse(response =>
+      new URL(response.url()).pathname.replace(/^\/api(?=\/)/, '') === '/services/catalog/public'
+      && response.status() === 503 && requests === 4) : null;
     releaseInitial();
+    if (initialFailure) await initialFailure;
     const warning = page.getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo de servicios' });
     await expect(warning).toBeVisible();
     await expect(name).toBeDisabled();

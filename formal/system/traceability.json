@@ -13321,7 +13321,7 @@
     "e2e/web/artist-follow.spec.mjs": "540fda97e2d352ce4e8319d85f21f12dd097968b3d7edd0689a7ca419dad5eb8",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "3bed38b4a63187e387f4c971d06f3e7fe3f76516d316ca2b1626d2aa1385412b",
-    "e2e/web/booking-catalog-recovery.spec.mjs": "04cb5ff5442060aaa69077587e4e51d7fcf3b814d387bbb07407fba0d508a595",
+    "e2e/web/booking-catalog-recovery.spec.mjs": "f65777a6f8b5f9823e0e66ea4d49900aef1051d00c4e4d4ce8e4c085cbf23dcd",
     "e2e/web/chat-notification-navigation.spec.mjs": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
     "e2e/web/community-discovery.spec.mjs": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
     "e2e/web/course-enrollment.spec.mjs": "f64fed981fa69b332499556853637fca938c9b026b90c4aaf1b4f5bb97633311",
@@ -26219,7 +26219,7 @@
     {
       "id": "SURFACE-9517b2194ab847fb",
       "path": "e2e/web/booking-catalog-recovery.spec.mjs",
-      "sha256": "04cb5ff5442060aaa69077587e4e51d7fcf3b814d387bbb07407fba0d508a595",
+      "sha256": "f65777a6f8b5f9823e0e66ea4d49900aef1051d00c4e4d4ce8e4c085cbf23dcd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
