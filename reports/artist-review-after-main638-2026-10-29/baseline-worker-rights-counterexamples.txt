@@ -1,0 +1,54 @@
+{"timestamp":"2026-10-29T18:49:23.870Z","level":"info","event":"artist_completed","artistId":7,"reliable":null,"suggestions":0,"media":0}
+{"timestamp":"2026-10-29T18:49:23.875Z","level":"info","event":"run_completed","runId":1,"artists":1,"errors":0,"report":"/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tdf-image-audit-awhPs3/report.json"}
+✖ external image HTTP 200 keeps network validation separate from media rights (63.663408ms)
+{"timestamp":"2026-10-29T18:49:23.887Z","level":"info","event":"artist_completed","artistId":7,"reliable":null,"suggestions":0,"media":0}
+{"timestamp":"2026-10-29T18:49:23.889Z","level":"info","event":"run_completed","runId":1,"artists":1,"errors":0,"report":"/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tdf-image-audit-exgkOH/report.json"}
+✖ external image HTTP 404 keeps network validation separate from media rights (9.645313ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 348.309958
+
+✖ failing tests:
+
+test at scripts/__tests__/artist-enrichment.test.mjs:464:3
+✖ external image HTTP 200 keeps network validation separate from media rights (63.663408ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'link_validation_broken'
+  - 'media_rights_review'
+  
+      at TestContext.<anonymous> (file:///private/tmp/tdf-artist-639-after638-20261029/scripts/__tests__/artist-enrichment.test.mjs:489:14)
+      at async Test.run (node:internal/test_runner/test:1110:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'link_validation_broken',
+    expected: 'media_rights_review',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/__tests__/artist-enrichment.test.mjs:464:3
+✖ external image HTTP 404 keeps network validation separate from media rights (9.645313ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'link_validation_broken'
+  - 'media_rights_review'
+  
+      at TestContext.<anonymous> (file:///private/tmp/tdf-artist-639-after638-20261029/scripts/__tests__/artist-enrichment.test.mjs:489:14)
+      at async Test.run (node:internal/test_runner/test:1110:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:785:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'link_validation_broken',
+    expected: 'media_rights_review',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
