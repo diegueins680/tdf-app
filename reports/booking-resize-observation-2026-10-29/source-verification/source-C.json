@@ -1,0 +1,8 @@
+{
+  "baseline": "21628cdc8523bfd5ff4bd3259648400c0d1ed34d",
+  "sourceCommit": "6252d712c54aeb9561ea2116b7662d5c3fe36c19",
+  "testSha256": "64739fb8ceba20e8a984ecfdf05cfd92df015a333d1aaf99581a684d1d194e87",
+  "productUIUnchanged": true,
+  "diagnosticOnly": true,
+  "currentWebKitInitialOverlayInvariant": "FAILED; no new product repair or cause claim."
+}
