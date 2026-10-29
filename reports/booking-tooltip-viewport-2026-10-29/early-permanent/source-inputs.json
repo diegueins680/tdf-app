@@ -1,0 +1,8 @@
+{
+  "sourceHead": "535b113e7b4c139be9ea570c18e8d29c6a34700d",
+  "workingUIFileSha256": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
+  "trackedE2ESha256": "e8ba6328cebf5d47a638d86350017dd98759db5a40c4602aa1c4af7ba877f388",
+  "executedE2ESha256": "9d952ed2080419ba8de6f537a82f5807b78ce906cb49c848c25aa7ea2ba3e577",
+  "harnessTransform": "Only two package imports rewritten to matched dependency cache; all test bodies identical to tracked candidate.",
+  "scope": "New deterministic Date and actualTab/focus/resize/scroll case; no tests or product writes skipped."
+}

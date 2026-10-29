@@ -1,0 +1,8 @@
+{
+  "status": "NOT_RUN",
+  "reason": "Base Playwright config omitted from new isolated fixture; ERR_MODULE_NOT_FOUND before test collection.",
+  "browserExit": 1,
+  "testResultsProduced": false,
+  "sourceRestored": true,
+  "productConclusion": "NONE"
+}

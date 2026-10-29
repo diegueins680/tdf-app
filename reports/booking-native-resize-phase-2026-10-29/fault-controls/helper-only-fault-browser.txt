@@ -1,0 +1,45 @@
+
+Running 1 test using 1 worker
+
+[1A[2K(node:24563) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:24563) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[1/1] [chromium-phone] › helper-only-fault.spec.mjs:173:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow
+[1A[2K  1) [chromium-phone] › helper-only-fault.spec.mjs:173:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThanOrEqual[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: <= [32m320.3333333333333[39m
+    Received:    [31m366.046875[39m
+
+      343 |       expect(resizedViewport.tooltip.text).toBe(helperText);
+      344 |       expect(resizedViewport.tooltip.x).toBeGreaterThanOrEqual(-epsilon);
+    > 345 |       expect(resizedViewport.tooltip.right).toBeLessThanOrEqual(resizedViewport.clientWidth + epsilon);
+          |                                             ^
+      346 |       await expect(slot).toBeFocused();
+      347 |       await expect(slot).toHaveAccessibleName(helperText);
+      348 |     } finally {
+        at /private/tmp/tdf-booking-resize-phase-controls-20261029/helper-only-fault.spec.mjs:345:45
+
+    attachment #5: screenshot (image/png) ──────────────────────────────────────────────────────────
+    helper-only-fault/helper-only-fault-public-b-7ac59-etails-critical-mobile-flow-chromium-phone/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: helper-only-fault/helper-only-fault-public-b-7ac59-etails-critical-mobile-flow-chromium-phone/error-context.md
+
+    attachment #7: trace (application/zip) ─────────────────────────────────────────────────────────
+    helper-only-fault/helper-only-fault-public-b-7ac59-etails-critical-mobile-flow-chromium-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace helper-only-fault/helper-only-fault-public-b-7ac59-etails-critical-mobile-flow-chromium-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K  1 failed
+    [chromium-phone] › helper-only-fault.spec.mjs:173:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow 

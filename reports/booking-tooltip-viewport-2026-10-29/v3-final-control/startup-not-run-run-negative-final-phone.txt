@@ -1,0 +1,14 @@
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/playwright.config.mjs' imported from /private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/playwright.negative-final-phone.config.mjs
+    at finalizeResolution (node:internal/modules/esm/resolve:275:11)
+    at moduleResolve (node:internal/modules/esm/resolve:866:10)
+    at defaultResolve (node:internal/modules/esm/resolve:992:11)
+    at nextResolve (node:internal/modules/esm/hooks:785:28)
+    at resolve (/private/tmp/tdf-correctness-cycle-20261028/node_modules/playwright/lib/transform/esmLoader.js:39:24)
+    at nextResolve (node:internal/modules/esm/hooks:785:28)
+    at AsyncLoaderHooksOnLoaderHookWorker.resolve (node:internal/modules/esm/hooks:269:30)
+    at MessagePort.handleMessage (node:internal/modules/esm/worker:251:24)
+    at [nodejs.internal.kHybridDispatch] (node:internal/event_target:843:20)
+    at MessagePort.<anonymous> (node:internal/per_context/messageport:23:28) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/playwright.config.mjs'
+}
