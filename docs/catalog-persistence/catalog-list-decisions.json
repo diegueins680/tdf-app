@@ -19685,6 +19685,25 @@
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
+    },
+    {
+      "id": "2e1934058d8b99179c1e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Making required CI gate identifiers editable independently of workflow jobs and branch protection can admit unverified changes or block valid validation.",
+      "justification": "Individually reviewed: quality, api-contracts and production-migrations are the three fixed GitHub Actions aggregate job/status identifiers. The Node helper dispatches their dependency plans from the checked-in workflow; it neither reads nor defines application business catalog data. The audit's lexical quality matches in application/SQL consumers do not establish a data binding to these CI protocol keys. Keep the mapping in code and require reviewed source changes, tests and GitHub admission.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "ci-selected-job-admission-2026-10-26",
+      "evidence": {
+        "file": "scripts/ci-job-admission.mjs",
+        "line": 26,
+        "kind": "object-registry",
+        "name": "plans",
+        "valueCount": 3
+      }
     }
   ]
 }

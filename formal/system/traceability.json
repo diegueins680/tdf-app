@@ -13217,6 +13217,86 @@
         "classification": "PARTIAL",
         "reason": "Named client ownership/latest-intent and matched-owner corrupt-source rejection behaviors TESTED locally at b625969 with86tests and27browser cases (24real+3mock). No extracted identity model or mathematical proof. Exact integrated-candidate hosted checks,independent review and deployed acceptance remain pending."
       }
+    },
+    {
+      "authority": ".github/workflows/ci.yml aggregate step contracts and the requested verification mission",
+      "contract": "formal/system/ci-selected-job-admission.md",
+      "critical": true,
+      "source": "formal/system/ci-selected-job-admission.md",
+      "status": "specified and implemented",
+      "confidence": "Exact component counterexamples; no claim that the injected upstream state occurred in GitHub.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite component behavior tested; GitHub orchestration, classifier correctness and full refinement remain unproven."
+      },
+      "observability": "Record exact source, tool versions, cases and control exits; inspect current-head hosted checks.",
+      "recovery": "Repair the failed validation/selection contract and rerun; never relax selected validation to skip.",
+      "verification": "Exhaustive finite selection/result tests, actual workflow CLI execution, historical false-accept controls and guard-removal mutation controls.",
+      "id": "SYS-CI-SELECTED-001",
+      "title": "Selected validation cannot be admitted as skipped",
+      "domain": "SYS",
+      "statement": "Quality, API-contract and migration admission requires every selected dependency to succeed; skips are admissible only with an explicit false selection. Missing, failed, cancelled or ambiguous classification/results reject admission.",
+      "actors": [
+        "GitHub Actions",
+        "Repository contributors"
+      ],
+      "preconditions": [
+        "GitHub result reporting, checked-in execution, path classification and selection expressions are trusted."
+      ],
+      "inputs": [
+        "Exact workflow revision",
+        "Serialized needs context",
+        "Six exact scope flags",
+        "Native Android dispatch selection"
+      ],
+      "state": {
+        "validation": [
+          "success",
+          "skipped",
+          "failure",
+          "cancelled",
+          "missing",
+          "unknown"
+        ],
+        "admission": [
+          "accepted",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Admit successful classification and successful selected validations.",
+        "Admit an explicitly unselected skipped dependency."
+      ],
+      "forbiddenTransitions": [
+        "Admit a selected skipped dependency.",
+        "Admit missing, failed, cancelled or malformed evidence."
+      ],
+      "effects": [
+        "Required status admission or rejection"
+      ],
+      "authorization": "Existing branch protections and independent review remain required; no deployment authority is granted.",
+      "privacy": "Never log unrelated dependency outputs or credentials.",
+      "concurrency": "Superseded and cancelled checks are not passing evidence.",
+      "idempotency": "Each run/attempt records its own revision-bound result.",
+      "failure": "The required aggregate exits nonzero for invalid or insufficient evidence.",
+      "property": "For each dependency, success OR (unselected AND skipped), with valid successful classification.",
+      "implementation": [
+        ".github/workflows/ci.yml",
+        "scripts/ci-job-admission.mjs",
+        "package.json",
+        "scripts/ci-change-scope.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/ci-job-admission.test.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "Historical skipped-state reachability under GitHub orchestration is not established."
+      ],
+      "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
     }
   ],
   "sourceFingerprints": {
@@ -13224,7 +13304,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "ffc633b826c98c09ed685d9f40afb37f23593a0374b6bb31f758210f97177f15",
+    ".github/workflows/ci.yml": "de8329e17a8315a54f65864b1ef0f28302ecde59a70428b6456808a4f30ab1ab",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "a6886296d4991567b39e08b0f1a722f6d16e2165cf443c31ef9a6b5ae969eb8e",
     ".github/workflows/event-raci-browser.yml": "6c031ce5ee1152d3c212bedb78c00768897ad91e0edcd653087fa065e0000f84",
@@ -13232,7 +13312,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "923c00595907746ca88493b79f36af67e08dc20fe308b3b991556183218d5079",
+    "docs/catalog-persistence/catalog-list-decisions.json": "dfb05263f8744d61806b46ff4d2f7295c5ee65ef1e2df5fdd6fc4195792044fc",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -13590,7 +13670,7 @@
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
-    "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+    "package.json": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
     "playwright.config.mjs": "3b3298f30ef87aaac997a92d3fa0def4bd0a907bb41dff89dc3712210b32a957",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
     "playwright.music-native.config.mjs": "d89a8b06cf0ac2b15c0acd6000325edb73b46a17cb6df8ecaa39c52b0cd772c7",
@@ -13604,8 +13684,9 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": "63b371bcbcf9338de2e4d022515bc9438cfd45f2b884411e913abcde5e713268",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
-    "scripts/__tests__/ci-change-scope.test.mjs": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
-    "scripts/__tests__/ci-pipeline.test.mjs": "9a2db7e690c4c5211be36dd7e338d9189cd2ae15fdb1bdc63f09c391caa00722",
+    "scripts/__tests__/ci-change-scope.test.mjs": "79b6186e102713934dfba527d7ce5c69ed9bcfad75db9e771622bdcd7886a8b0",
+    "scripts/__tests__/ci-job-admission.test.mjs": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
+    "scripts/__tests__/ci-pipeline.test.mjs": "c14476254c80d8f647dfe1176fe45550abb6463b97c4cb5db77a0815abd0cc73",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
@@ -13618,6 +13699,7 @@
     "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
     "scripts/__tests__/event-raci-browser-runner.test.mjs": "0a036a388afece87cf55c150dfac92e411ffcc4c82e76301f502b8c288d9c657",
     "scripts/__tests__/event-raci-editor-context-runner.test.mjs": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
+    "scripts/__tests__/fixtures/ci-selected-job-admission-before.json": "26b3c6db0d66d9897de3d8759c0093514dfbac749fc77ef54613c1896f15909e",
     "scripts/__tests__/fixtures/provider-domain-fixtures.sql": "17d645e924bd5d6533523dcfb1e3a4522a403ac420de7dde45f94a44eca9e14d",
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": "186495b321cdc2ac067af786a72dffa740b289eb1ac22429c1d6e5c14ce85a9c",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
@@ -13674,7 +13756,8 @@
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
-    "scripts/ci-change-scope.mjs": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+    "scripts/ci-change-scope.mjs": "c89aaa9963b6cb6aa80e224724bda30972f2a1f4d23dae5f3bdeaec8c40c0ab0",
+    "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
@@ -15166,6 +15249,10 @@
       {
         "requirement": "MEDIA-MUSIC-SOURCES-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-CI-SELECTED-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/integration/ledger_posting_balance.sql": [
@@ -15265,6 +15352,10 @@
       },
       {
         "requirement": "MEDIA-MUSIC-SOURCES-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-CI-SELECTED-001",
         "relationship": "tests"
       }
     ],
@@ -15682,6 +15773,10 @@
       {
         "requirement": "SOCIAL-EVENT-MODERATION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-CI-SELECTED-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/api/generated/types.ts": [
@@ -15773,6 +15868,10 @@
       },
       {
         "requirement": "DEPLOY-VERSION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-CI-SELECTED-001",
         "relationship": "tests"
       }
     ],
@@ -17395,6 +17494,10 @@
     "package.json": [
       {
         "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-CI-SELECTED-001",
         "relationship": "implementation"
       }
     ],
@@ -25731,6 +25834,24 @@
         "requirement": "MEDIA-MUSIC-PRIVACY-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/ci-job-admission.mjs": [
+      {
+        "requirement": "SYS-CI-SELECTED-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/ci-job-admission.test.mjs": [
+      {
+        "requirement": "SYS-CI-SELECTED-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/fixtures/ci-selected-job-admission-before.json": [
+      {
+        "requirement": "SYS-CI-SELECTED-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -25799,7 +25920,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "ffc633b826c98c09ed685d9f40afb37f23593a0374b6bb31f758210f97177f15",
+      "sha256": "de8329e17a8315a54f65864b1ef0f28302ecde59a70428b6456808a4f30ab1ab",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25869,6 +25990,10 @@
         {
           "requirement": "SOCIAL-EVENT-MODERATION-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-CI-SELECTED-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -26827,11 +26952,15 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+      "sha256": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-CI-SELECTED-001",
           "relationship": "implementation"
         }
       ]
@@ -26960,7 +27089,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
+      "sha256": "79b6186e102713934dfba527d7ce5c69ed9bcfad75db9e771622bdcd7886a8b0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26982,13 +27111,29 @@
         {
           "requirement": "MEDIA-MUSIC-SOURCES-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-CI-SELECTED-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-cccd3e9f4c20fe26",
+      "path": "scripts/__tests__/ci-job-admission.test.mjs",
+      "sha256": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-CI-SELECTED-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "9a2db7e690c4c5211be36dd7e338d9189cd2ae15fdb1bdc63f09c391caa00722",
+      "sha256": "c14476254c80d8f647dfe1176fe45550abb6463b97c4cb5db77a0815abd0cc73",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27017,6 +27162,10 @@
         },
         {
           "requirement": "DEPLOY-VERSION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-CI-SELECTED-001",
           "relationship": "tests"
         }
       ]
@@ -27267,6 +27416,18 @@
       "sha256": "20d601eaf885eedf213e1110da3fa9489d19eed8629cd32f149e690fd947512c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-4fe5090e4b9e3bea",
+      "path": "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
+      "sha256": "26b3c6db0d66d9897de3d8759c0093514dfbac749fc77ef54613c1896f15909e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-CI-SELECTED-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-ee1bb502b120babb",
@@ -28298,7 +28459,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+      "sha256": "c89aaa9963b6cb6aa80e224724bda30972f2a1f4d23dae5f3bdeaec8c40c0ab0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28315,6 +28476,22 @@
         },
         {
           "requirement": "MEDIA-MUSIC-SOURCES-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-CI-SELECTED-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-a7af8a95b2af74b0",
+      "path": "scripts/ci-job-admission.mjs",
+      "sha256": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-CI-SELECTED-001",
           "relationship": "implementation"
         }
       ]
@@ -54482,7 +54659,8 @@
     "SOCIAL-EVENT-MEMORY-001",
     "SOCIAL-EVENT-MODERATION-001",
     "SOCIAL-EVENT-SESSION-001",
-    "MEDIA-MUSIC-PRIVACY-001"
+    "MEDIA-MUSIC-PRIVACY-001",
+    "SYS-CI-SELECTED-001"
   ],
   "stateMachines": [
     {
@@ -55601,7 +55779,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6b4a0e2232c91a3b9274f8b5f3704dbc0314dfac7715f054a8711cab99705c29",
+      "sourceSha256": "370509c5fcdbb712c771ee57749cc8dd2967899b474e582da30e93411788c359",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -55629,7 +55807,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6b4a0e2232c91a3b9274f8b5f3704dbc0314dfac7715f054a8711cab99705c29",
+      "sourceSha256": "370509c5fcdbb712c771ee57749cc8dd2967899b474e582da30e93411788c359",
       "definition": {
         "states": [
           "absent",
@@ -55659,7 +55837,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6b4a0e2232c91a3b9274f8b5f3704dbc0314dfac7715f054a8711cab99705c29",
+      "sourceSha256": "370509c5fcdbb712c771ee57749cc8dd2967899b474e582da30e93411788c359",
       "definition": {
         "export": [
           "queued",
@@ -78133,7 +78311,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 155,
+    "PARTIAL": 156,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

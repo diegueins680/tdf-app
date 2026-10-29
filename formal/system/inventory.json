@@ -119,6 +119,7 @@
       "scripts/__tests__/checkout-amount-postgres.mjs",
       "scripts/__tests__/checkout-money-http.mjs",
       "scripts/__tests__/ci-change-scope.test.mjs",
+      "scripts/__tests__/ci-job-admission.test.mjs",
       "scripts/__tests__/ci-pipeline.test.mjs",
       "scripts/__tests__/compiled-api-surface.test.mjs",
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
@@ -145,6 +146,7 @@
       "scripts/__tests__/experiment-http-runtime.mjs",
       "scripts/__tests__/fixtures/artist-management-claim.sql",
       "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
+      "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
       "scripts/__tests__/fixtures/production-schema-20260814.sql",
       "scripts/__tests__/fixtures/production-ticketing-base.sql",
       "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
@@ -239,6 +241,7 @@
       "scripts/check-public-routes.py",
       "scripts/check-state-machines.py",
       "scripts/ci-change-scope.mjs",
+      "scripts/ci-job-admission.mjs",
       "scripts/codex-logical-correctness-loop.sh",
       "scripts/codex-loop-worker.sh",
       "scripts/continuous-improvement-loop-dirty-worktree.mjs",
@@ -2787,7 +2790,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "ffc633b826c98c09ed685d9f40afb37f23593a0374b6bb31f758210f97177f15",
+      "sha256": "de8329e17a8315a54f65864b1ef0f28302ecde59a70428b6456808a4f30ab1ab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3267,7 +3270,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+      "sha256": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3339,13 +3342,19 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
+      "sha256": "79b6186e102713934dfba527d7ce5c69ed9bcfad75db9e771622bdcd7886a8b0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-cccd3e9f4c20fe26",
+      "path": "scripts/__tests__/ci-job-admission.test.mjs",
+      "sha256": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "9a2db7e690c4c5211be36dd7e338d9189cd2ae15fdb1bdc63f09c391caa00722",
+      "sha256": "c14476254c80d8f647dfe1176fe45550abb6463b97c4cb5db77a0815abd0cc73",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3496,6 +3505,12 @@
       "id": "SURFACE-46aeee723adfa6c5",
       "path": "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
       "sha256": "20d601eaf885eedf213e1110da3fa9489d19eed8629cd32f149e690fd947512c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4fe5090e4b9e3bea",
+      "path": "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
+      "sha256": "26b3c6db0d66d9897de3d8759c0093514dfbac749fc77ef54613c1896f15909e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4059,7 +4074,13 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+      "sha256": "c89aaa9963b6cb6aa80e224724bda30972f2a1f4d23dae5f3bdeaec8c40c0ab0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a7af8a95b2af74b0",
+      "path": "scripts/ci-job-admission.mjs",
+      "sha256": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27254,6 +27275,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/ci-selected-job-admission.md",
+      "sha256": "af0eae67852ec12417d34a8d70e41ae4598af4d331954ab373ef4a46642f5a8b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/client-error-privacy.md",
       "sha256": "c5059e6129c698ca66d88d2d0167292a953c01ef569a1ea825faac9c8b4b5fcf",
       "authority": "inferred",
@@ -27815,7 +27843,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6b4a0e2232c91a3b9274f8b5f3704dbc0314dfac7715f054a8711cab99705c29",
+      "sha256": "370509c5fcdbb712c771ee57749cc8dd2967899b474e582da30e93411788c359",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -13216,6 +13216,86 @@
         "classification": "PARTIAL",
         "reason": "Named client ownership/latest-intent and matched-owner corrupt-source rejection behaviors TESTED locally at b625969 with86tests and27browser cases (24real+3mock). No extracted identity model or mathematical proof. Exact integrated-candidate hosted checks,independent review and deployed acceptance remain pending."
       }
+    },
+    {
+      "authority": ".github/workflows/ci.yml aggregate step contracts and the requested verification mission",
+      "contract": "formal/system/ci-selected-job-admission.md",
+      "critical": true,
+      "source": "formal/system/ci-selected-job-admission.md",
+      "status": "specified and implemented",
+      "confidence": "Exact component counterexamples; no claim that the injected upstream state occurred in GitHub.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite component behavior tested; GitHub orchestration, classifier correctness and full refinement remain unproven."
+      },
+      "observability": "Record exact source, tool versions, cases and control exits; inspect current-head hosted checks.",
+      "recovery": "Repair the failed validation/selection contract and rerun; never relax selected validation to skip.",
+      "verification": "Exhaustive finite selection/result tests, actual workflow CLI execution, historical false-accept controls and guard-removal mutation controls.",
+      "id": "SYS-CI-SELECTED-001",
+      "title": "Selected validation cannot be admitted as skipped",
+      "domain": "SYS",
+      "statement": "Quality, API-contract and migration admission requires every selected dependency to succeed; skips are admissible only with an explicit false selection. Missing, failed, cancelled or ambiguous classification/results reject admission.",
+      "actors": [
+        "GitHub Actions",
+        "Repository contributors"
+      ],
+      "preconditions": [
+        "GitHub result reporting, checked-in execution, path classification and selection expressions are trusted."
+      ],
+      "inputs": [
+        "Exact workflow revision",
+        "Serialized needs context",
+        "Six exact scope flags",
+        "Native Android dispatch selection"
+      ],
+      "state": {
+        "validation": [
+          "success",
+          "skipped",
+          "failure",
+          "cancelled",
+          "missing",
+          "unknown"
+        ],
+        "admission": [
+          "accepted",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Admit successful classification and successful selected validations.",
+        "Admit an explicitly unselected skipped dependency."
+      ],
+      "forbiddenTransitions": [
+        "Admit a selected skipped dependency.",
+        "Admit missing, failed, cancelled or malformed evidence."
+      ],
+      "effects": [
+        "Required status admission or rejection"
+      ],
+      "authorization": "Existing branch protections and independent review remain required; no deployment authority is granted.",
+      "privacy": "Never log unrelated dependency outputs or credentials.",
+      "concurrency": "Superseded and cancelled checks are not passing evidence.",
+      "idempotency": "Each run/attempt records its own revision-bound result.",
+      "failure": "The required aggregate exits nonzero for invalid or insufficient evidence.",
+      "property": "For each dependency, success OR (unselected AND skipped), with valid successful classification.",
+      "implementation": [
+        ".github/workflows/ci.yml",
+        "scripts/ci-job-admission.mjs",
+        "package.json",
+        "scripts/ci-change-scope.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/ci-job-admission.test.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "Historical skipped-state reachability under GitHub orchestration is not established."
+      ],
+      "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
     }
   ]
 }
