@@ -1,0 +1,18 @@
+{
+  "mutation": "Remove only FOR UPDATE from the shared financial read; Inventory lock retained",
+  "correctSourceSha256": "25130b989bd3d8abcd866ee80239b003e315f450a9dbefe7a8dfcb509f24584c",
+  "mutantSourceSha256": "41a0a13415fe0f83d650cc78bc3b7d81767c321d8ae87c3c4f534c90e79d89b4",
+  "targetTests": 2,
+  "expected": "Two failed pricing-lock actual-handler cases; no production calls",
+  "observed": {
+    "examples": 2,
+    "failures": 2,
+    "bothActualStatus": 200,
+    "bothActualOrderAmount": 0,
+    "bothActualSoldAndTickets": 3,
+    "normalEditorPrice": 1,
+    "schemaMigrations": 227,
+    "realProviderCalls": 0
+  },
+  "correctSourceRestored": true
+}

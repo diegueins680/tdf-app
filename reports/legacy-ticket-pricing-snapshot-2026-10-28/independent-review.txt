@@ -1,0 +1,8 @@
+Independent read-only review by /root/independent_financial_review, 2026-10-28/29 UTC.
+No blocking defect found. Previous actual SQL lock-removal detection gap is closed.
+Tier FIFO tests queue real editor first and buyer second under unchanged Tier barrier, witness one then two lock waiters, and release. Both use ordinary handlers, four pool slots, bounded MVar waits and nested bracket cleanup.
+Mutation removed only the shared financial SELECT FOR UPDATE; Inventory locking remained. Both actual cases failed intended assertions: returned200 with paid0 order, sold3/tickets3 after normal editor price1 commit. This was not a compile, timeout or harness failure. Restored source passes11/0 targeted cases.
+Reviewer independently reconstructed the mutant in memory and verified its41a0a13415fe0f83d650cc78bc3b7d81767c321d8ae87c3c4f534c90e79d89b4 hash and current correct25130b989bd3d8abcd866ee80239b003e315f450a9dbefe7a8dfcb509f24584c hash. No source writes, builds, test executions, database or provider access were performed by reviewer.
+For participating PostgreSQL tier writers, Tier FOR UPDATE binds price and uppercase-currency comparison to order commit. Direct Either and Stripe exception refusals precede effects; Event -> optional terms -> Tier order preserved. Existing snapshots/reuse retained.
+Model12inputs/216states/216transitions,12historical states and four controls are design evidence only. Documentation correctly separates4original failures,2controlled implementation failures,11green cases.
+Review does not qualify full4496 suite, clean committed source, serving binary, HTTP authentication, provider payment, old binaries, catalog governance or full Haskell/SQL refinement. Required independent GitHub approval is separate.

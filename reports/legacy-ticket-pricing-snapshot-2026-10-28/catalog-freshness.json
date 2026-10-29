@@ -1,0 +1,7 @@
+{
+  "decisions": 1353,
+  "decisionFileByteIdenticalToBaseline": true,
+  "freshJSONSemanticMatchExceptGenerationClock": true,
+  "freshCSVByteIdentical": true,
+  "trackedTimestampPreserved": true
+}

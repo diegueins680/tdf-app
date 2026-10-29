@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "f302b3da87a5e40934b2bdf5426dff64b686be49",
+  "sourceCommit": "c162c6f670c304d9c6ece578de3e8677e1b05e23",
+  "sourceTree": "839b1faf4d2c980fbe4b06bd61ab68cd15e31e6a",
+  "registeredSourceInputs": 1408,
+  "sourceDigest": "da431387bffe0a8394cb0491d04bc1fff33f779ab72364ebfe65a18e2804c9db",
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "executionHashesMatchCommittedTreeAndMobilePin": true,
+  "newContract": {
+    "path": "formal/system/legacy-ticket-pricing-snapshot.md",
+    "sha256": "0628da96785aaecbad74314e0f531baa54ff9191911ea6144727066c1e6e6092",
+    "discoveryEntryMatches": true
+  },
+  "otherRequirementsUnchanged": 153,
+  "normativeCatalogDecisionObjectsPreserved": 1353,
+  "cleanCommittedReporterPass": true,
+  "immutableSourceAdmissionPass": true,
+  "parentPR": 661,
+  "mainObserved": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+  "requiredReviewPending": true,
+  "currentMainCompositionPending": true,
+  "servingExecutableQualification": "NOT_RUN locally for this source; new hosted build required. Parent661 serving receipt remains historical.",
+  "release": "BLOCKED",
+  "scope": "Implementation TESTED; finite buyer/editor model BOUNDED_VERIFIED under documented bounds. Source correspondence does not prove SQL/Haskell refinement, authentication, provider payment or reproducible executable identity.",
+  "pullRequest": 662
+}
