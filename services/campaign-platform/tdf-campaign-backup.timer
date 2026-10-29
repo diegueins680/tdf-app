@@ -1,0 +1,8 @@
+[Unit]
+Description=Daily TDF campaign backup
+[Timer]
+OnCalendar=*-*-* 04:00:00 America/Guayaquil
+Persistent=true
+RandomizedDelaySec=300
+[Install]
+WantedBy=timers.target

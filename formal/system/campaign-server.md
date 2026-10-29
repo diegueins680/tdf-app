@@ -1,0 +1,15 @@
+# CAMP-SERVER-001 — Durable musical campaign authority
+
+Authority: Diego's explicit 2026-10-29 implementation instruction, including any registered user, own accounts, TDF-admin approval, all four networks with truthful capabilities, 5 GB Free and proposed paid tiers, server execution, scoped notifications, no spend. This is a new scoped requirement, not a proof of whole-system conformance.
+
+The canonical TDF session supplies actor id and strict administrator status. No campaign data are returned to another actor without explicit membership. OAuth state is single-use, expires in ten minutes and is bound to the current actor and administrative authority. Tokens are encrypted at rest; signed provider media URLs carry only an expiring capability.
+
+Campaign/piece approval is bound to the current versions. Changing material content invalidates approval. A TDF destination needs its own current admin approval; DMs need separate consent. A transaction claims at most one local job. Every final supported provider publication boundary rechecks active state and approvals. Pausing cannot undo an already admitted external effect. A crash or timeout after admission is uncertain and cannot automatically start a second publication. The provider is not assumed transactional with SQLite.
+
+YouTube uploads remain private until HD is confirmed and the authorized reviewer records Studio checks against the exact uploaded video id/version. Studio restrictions are not inferred from a successful API upload. Unsupported native operations remain explicit assisted actions. Provider acknowledgments do not by themselves establish independent public playback; `verified_at` remains unset for those responses.
+
+FFmpeg derivatives preserve musical time and originals. Automated RMS selection is a draft, not semantic recognition of songs or lyrics. Rendered media attach only to the corresponding unapproved draft. Reservations serialize per-user quota and global unfilled reservations; finite host disk capacity can block an otherwise permitted tier. Deleted media retain audit metadata and cannot be removed while referenced. Generating a plan does not schedule publications.
+
+Evidence: actual SQLite concurrency/HTTP boundary tests, OAuth identity readback, isolated real-media server qualification, client-disconnected jobs and restart observations, snapshot restore test. The bounded model explores 1024 abstract states and three counterexamples; it is **not** a refinement proof of HTTP, Python, SQLite, FFmpeg, OAuth, provider behavior, operating system, backups or arbitrary interleavings. Local tests and server qualification retain their actual source manifests; CI and protected frontend integration are separate gates.
+
+External prerequisites remain Google app verification, Meta/TikTok account and app approvals, unsupported native operations, optional notification channels, off-host full backup and capacity provision before selling large tiers. Operational details: [operations](../../docs/campaign-platform/operations.md).

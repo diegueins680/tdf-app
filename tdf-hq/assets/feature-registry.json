@@ -3503,6 +3503,70 @@
       "icon": "album",
       "breadcrumb": [],
       "accessRequestEligible": false
+    },
+    {
+      "id": "social.music-campaigns",
+      "parentId": "social",
+      "webRoute": "/social/campanas",
+      "routeType": "important-submodule",
+      "classification": "important-submodule",
+      "label": {
+        "es": "Campañas musicales",
+        "en": "Music campaigns"
+      },
+      "synonyms": {
+        "es": [
+          "lanzamiento",
+          "campaña",
+          "promoción musical"
+        ],
+        "en": [
+          "release",
+          "campaign",
+          "music promotion"
+        ]
+      },
+      "keywords": [
+        "campaign",
+        "music",
+        "release",
+        "youtube",
+        "instagram",
+        "facebook",
+        "tiktok"
+      ],
+      "navigationGroup": "people",
+      "icon": "campaign",
+      "breadcrumb": [
+        "social"
+      ],
+      "globalMenu": true,
+      "permissions": {
+        "discover": {},
+        "view": {},
+        "create": {},
+        "edit": {},
+        "approve": {},
+        "publish": {}
+      },
+      "mobilePresentation": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Campaign creation and review are available through the responsive web interface."
+      },
+      "apiScopes": [
+        {
+          "pathPrefix": "/campaign-platform",
+          "methods": {
+            "GET": "view",
+            "POST": "create",
+            "PUT": "edit",
+            "DELETE": "edit"
+          }
+        }
+      ],
+      "recordScope": "owner-and-explicit-team",
+      "requiredAuth": "authenticated"
     }
   ]
 }

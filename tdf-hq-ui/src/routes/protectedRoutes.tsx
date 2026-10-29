@@ -18,6 +18,7 @@ const BrainAdminPage = lazy(() => import('../pages/BrainAdminPage'));
 const CatalogsPage = lazy(() => import('../pages/CatalogsPage'));
 const FeedbackCatalogPage = lazy(() => import('../pages/FeedbackCatalogPage'));
 const CalendarSyncPage = lazy(() => import('../pages/CalendarSyncPage'));
+const MusicCampaignsPage = lazy(() => import('../pages/MusicCampaignsPage'));
 const CampaignAutomationsPage = lazy(() => import('../pages/CampaignAutomationsPage'));
 const ChatKitPage = lazy(() => import('../pages/ChatKitPage'));
 const ChatPage = lazy(() => import('../pages/ChatPage'));
@@ -133,6 +134,7 @@ export function renderProtectedRoutes() {
         <Route path="/merch/vendedor/tiendas/:storeId/reputacion" element={<MerchSellerReputationPage />} />
         <Route path="/admin/merch/reputacion" element={<MerchReputationModerationPage />} />
         <Route path="/social" element={<SocialPageView />} />
+        <Route path="/social/campanas" element={<MusicCampaignsPage />} />
         <Route path="/social/instagram" element={<InstagramConnectPage />} />
         <Route path="/social/inbox" element={<SocialInboxPage />} />
         <Route path="/social/eventos" element={<SocialEventsPage />} />

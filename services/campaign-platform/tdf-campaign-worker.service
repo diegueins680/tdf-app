@@ -1,0 +1,29 @@
+[Unit]
+Description=TDF durable music campaign executor
+After=network-online.target tdf-campaign-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tdf-campaign
+Group=tdf-campaign
+WorkingDirectory=/opt/tdf-campaign-platform/current
+Environment=CAMPAIGN_CONFIG=/etc/tdf-campaign-platform/config.json
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/tdf-campaign-platform/venv/bin/python /opt/tdf-campaign-platform/current/worker.py
+Restart=on-failure
+RestartSec=5
+UMask=0077
+Nice=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/tdf-campaign-platform
+MemoryMax=600M
+CPUQuota=65%
+TasksMax=64
+LimitNOFILE=1024
+
+[Install]
+WantedBy=multi-user.target
