@@ -360,7 +360,7 @@ export default function PublicBookingPage() {
   const bookingReadinessNote = useMemo(() => {
     if (!requiresManualConfirmation) return null;
     if (serviceCatalogUnavailable) {
-      return 'No pudimos cargar el catálogo de servicios. Reintenta en unos minutos; no enviaremos una reserva sin un servicio canónico.';
+      return 'No pudimos cargar el catálogo de servicios. Reintenta sin salir de esta página; conservaremos tus datos y no enviaremos una reserva sin un servicio disponible.';
     }
     return 'Puedes dejar la solicitud ahora mismo. Guarda el ID de reserva y escríbenos por WhatsApp si necesitas confirmar disponibilidad o recursos.';
   }, [requiresManualConfirmation, serviceCatalogUnavailable]);
@@ -1785,7 +1785,19 @@ export default function PublicBookingPage() {
               )}
               {bookingReadinessNote && (
                 <Alert severity="info" variant="outlined">
-                  {bookingReadinessNote}
+                  <Stack spacing={1} alignItems="flex-start">
+                    <span>{bookingReadinessNote}</span>
+                    {serviceCatalogUnavailable && (
+                      <Button
+                        variant="outlined"
+                        disabled={serviceCatalogQuery.isFetching}
+                        aria-busy={serviceCatalogQuery.isFetching}
+                        onClick={() => void serviceCatalogQuery.refetch()}
+                      >
+                        {serviceCatalogQuery.isFetching ? 'Cargando catálogo…' : 'Reintentar catálogo'}
+                      </Button>
+                    )}
+                  </Stack>
                 </Alert>
               )}
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap" sx={WRAPPING_CHIP_ROW_SX}>
@@ -2126,7 +2138,11 @@ export default function PublicBookingPage() {
                                 </Typography>
                                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                                   {suggestedSlots.map((slot) => (
-                                    <Tooltip key={slot.value} title={slot.helper}>
+                                    <Tooltip
+                                      key={slot.value}
+                                      title={slot.helper}
+                                      slotProps={{ popper: { popperOptions: { strategy: 'fixed' } } }}
+                                    >
                                       <Chip
                                         label={slot.label}
                                         onClick={() => {

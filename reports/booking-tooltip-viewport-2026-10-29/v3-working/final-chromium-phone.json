@@ -1,0 +1,218 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028/playwright.final-chromium-phone.config.mjs",
+    "rootDir": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028/final-chromium-phone",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-phone",
+        "name": "chromium-phone",
+        "testDir": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028/final-chromium-phone.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "booking.spec.mjs",
+      "file": "booking.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "booking viewport check detects known client-width overflow @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 863,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T05:23:31.729Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028/final-chromium-phone/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-phone/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-fa5ca4fce60c062da8bd",
+          "file": "booking.spec.mjs",
+          "line": 67,
+          "column": 1
+        },
+        {
+          "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12967,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T05:23:33.323Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "booking-tooltip-scroll",
+                      "contentType": "application/json",
+                      "body": "ewogICJiZWZvcmVTY3JvbGwiOiB7CiAgICAiYXQiOiAxMDcwNiwKICAgICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICAgImlubmVyV2lkdGgiOiAzMjAsCiAgICAiY2xpZW50V2lkdGgiOiAzMjAsCiAgICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAgICJ3aWR0aCI6IDMyMCwKICAgICAgInNjYWxlIjogMQogICAgfSwKICAgICJvdmVyZmxvdyI6IGZhbHNlLAogICAgImRldmljZVBpeGVsUmF0aW8iOiAzLAogICAgInNjcm9sbFkiOiAxNTI3LAogICAgImFuY2hvciI6IHsKICAgICAgIngiOiAyMDAuMjUsCiAgICAgICJ5IjogMzU0LjQzNzUsCiAgICAgICJyaWdodCI6IDI2MC4yMzQzNzUsCiAgICAgICJ3aWR0aCI6IDU5Ljk4NDM3NSwKICAgICAgImhlaWdodCI6IDMyLAogICAgICAidGV4dCI6ICIwNDowMCIsCiAgICAgICJwbGFjZW1lbnQiOiBudWxsCiAgICB9LAogICAgInRvb2x0aXAiOiB7CiAgICAgICJ4IjogNTgsCiAgICAgICJ5IjogMzg2LjMzMzM0MzUwNTg1OTQsCiAgICAgICJyaWdodCI6IDMyMC4wNDY4NzUsCiAgICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAgICJoZWlnaHQiOiA0MC41LAogICAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9CiAgfSwKICAiYWZ0ZXJTY3JvbGwiOiB7CiAgICAiYXQiOiAxMDc0NywKICAgICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICAgImlubmVyV2lkdGgiOiAzMjAsCiAgICAiY2xpZW50V2lkdGgiOiAzMjAsCiAgICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAgICJ3aWR0aCI6IDMyMCwKICAgICAgInNjYWxlIjogMQogICAgfSwKICAgICJvdmVyZmxvdyI6IGZhbHNlLAogICAgImRldmljZVBpeGVsUmF0aW8iOiAzLAogICAgInNjcm9sbFkiOiAxNTY3LAogICAgImFuY2hvciI6IHsKICAgICAgIngiOiAyMDAuMjUsCiAgICAgICJ5IjogMzE0LjQzNzUsCiAgICAgICJyaWdodCI6IDI2MC4yMzQzNzUsCiAgICAgICJ3aWR0aCI6IDU5Ljk4NDM3NSwKICAgICAgImhlaWdodCI6IDMyLAogICAgICAidGV4dCI6ICIwNDowMCIsCiAgICAgICJwbGFjZW1lbnQiOiBudWxsCiAgICB9LAogICAgInRvb2x0aXAiOiB7CiAgICAgICJ4IjogNTgsCiAgICAgICJ5IjogMzQ2LjMzMzM0MzUwNTg1OTQsCiAgICAgICJyaWdodCI6IDMyMC4wNDY4NzUsCiAgICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAgICJoZWlnaHQiOiA0MC41LAogICAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9CiAgfSwKICAiZXBzaWxvbiI6IDAuMzMzMzMzMzMzMzMzMzMzMwp9"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028/final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-86f8013d470642ab6e42",
+          "file": "booking.spec.mjs",
+          "line": 90,
+          "column": 3
+        },
+        {
+          "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5733,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T05:23:46.848Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "booking-tooltip-scroll",
+                      "contentType": "application/json",
+                      "body": "ewogICJiZWZvcmVTY3JvbGwiOiB7CiAgICAiYXQiOiAzNjA1LAogICAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgICAiaW5uZXJXaWR0aCI6IDMyMCwKICAgICJjbGllbnRXaWR0aCI6IDMyMCwKICAgICJzY3JvbGxXaWR0aCI6IDMyMCwKICAgICJ2aXN1YWxWaWV3cG9ydCI6IHsKICAgICAgIndpZHRoIjogMzIwLAogICAgICAic2NhbGUiOiAxCiAgICB9LAogICAgIm92ZXJmbG93IjogZmFsc2UsCiAgICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDMsCiAgICAic2Nyb2xsWSI6IDE1MjcsCiAgICAiYW5jaG9yIjogewogICAgICAieCI6IDIwMC4yNSwKICAgICAgInkiOiAzNTQuNDM3NSwKICAgICAgInJpZ2h0IjogMjYwLjIzNDM3NSwKICAgICAgIndpZHRoIjogNTkuOTg0Mzc1LAogICAgICAiaGVpZ2h0IjogMzIsCiAgICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICAgInBsYWNlbWVudCI6IG51bGwKICAgIH0sCiAgICAidG9vbHRpcCI6IHsKICAgICAgIngiOiA1OCwKICAgICAgInkiOiAzODYuMzMzMzQzNTA1ODU5NCwKICAgICAgInJpZ2h0IjogMzIwLjA0Njg3NSwKICAgICAgIndpZHRoIjogMjYyLjA0Njg3NSwKICAgICAgImhlaWdodCI6IDQwLjUsCiAgICAgICJ0ZXh0IjogIlRodSAyOSAwNDowMCAoR01ULTUpIMK3IEVzdHVkaW8gMDk6MDAgKFVUQykiLAogICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgIH0KICB9LAogICJhZnRlclNjcm9sbCI6IHsKICAgICJhdCI6IDM2MzksCiAgICAiY29tcGF0TW9kZSI6ICJDU1MxQ29tcGF0IiwKICAgICJpbm5lcldpZHRoIjogMzIwLAogICAgImNsaWVudFdpZHRoIjogMzIwLAogICAgInNjcm9sbFdpZHRoIjogMzIwLAogICAgInZpc3VhbFZpZXdwb3J0IjogewogICAgICAid2lkdGgiOiAzMjAsCiAgICAgICJzY2FsZSI6IDEKICAgIH0sCiAgICAib3ZlcmZsb3ciOiBmYWxzZSwKICAgICJkZXZpY2VQaXhlbFJhdGlvIjogMywKICAgICJzY3JvbGxZIjogMTU2NywKICAgICJhbmNob3IiOiB7CiAgICAgICJ4IjogMjAwLjI1LAogICAgICAieSI6IDMxNC40Mzc1LAogICAgICAicmlnaHQiOiAyNjAuMjM0Mzc1LAogICAgICAid2lkdGgiOiA1OS45ODQzNzUsCiAgICAgICJoZWlnaHQiOiAzMiwKICAgICAgInRleHQiOiAiMDQ6MDAiLAogICAgICAicGxhY2VtZW50IjogbnVsbAogICAgfSwKICAgICJ0b29sdGlwIjogewogICAgICAieCI6IDU4LAogICAgICAieSI6IDM0Ni4zMzMzNDM1MDU4NTk0LAogICAgICAicmlnaHQiOiAzMjAuMDQ2ODc1LAogICAgICAid2lkdGgiOiAyNjIuMDQ2ODc1LAogICAgICAiaGVpZ2h0IjogNDAuNSwKICAgICAgInRleHQiOiAiVGh1IDI5IDA0OjAwIChHTVQtNSkgwrcgRXN0dWRpbyAwOTowMCAoVVRDKSIsCiAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgfQogIH0sCiAgImVwc2lsb24iOiAwLjMzMzMzMzMzMzMzMzMzMzMKfQ=="
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-v3-20261028/final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-bee2f5ad4fd4a309d24d",
+          "file": "booking.spec.mjs",
+          "line": 90,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-29T05:23:30.192Z",
+    "duration": 29234.708,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

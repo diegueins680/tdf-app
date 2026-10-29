@@ -1,0 +1,45 @@
+
+Running 1 test using 1 worker
+
+[1A[2K(node:94913) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:94913) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[1/1] [chromium-phone] › booking.spec.mjs:90:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow
+[1A[2K  1) [chromium-phone] › booking.spec.mjs:90:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32mfalse[39m
+    Received: [31mtrue[39m
+
+      210 |     });
+      211 |     expect(viewportMeasurement.compatMode).toBe('CSS1Compat');
+    > 212 |     expect(viewportMeasurement.overflow).toBe(false);
+          |                                          ^
+      213 |     // Root overflow has zero tolerance. Overlay edges allow one physical pixel
+      214 |     // for Popper's device-pixel rounding, independently of its implementation.
+      215 |     const epsilon = 1 / viewportMeasurement.devicePixelRatio;
+        at /private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs:212:42
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace negative-final-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K  1 failed
+    [chromium-phone] › booking.spec.mjs:90:3 › public booking recovers an error catalog without losing contact details @critical @mobile-flow 

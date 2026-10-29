@@ -37,6 +37,7 @@ This contract covers web (`tdf-hq-ui`) behavior only. Backend authorization and 
 - Booking, Live Sessions and pages with the docked radio bar do not squeeze sibling columns or overflow horizontally.
 - Fixed bars never cover the page end or submit controls.
 - At 320-430 CSS px, the radio bar exposes a 44px minimize control and a reachable restore action. The open panel exposes a 44px minimize control without horizontal clipping. Taps on header buttons or their icons do not initiate dragging or cancel native activation.
+- The floating panel fits the viewport, including restored positions. Its minimize control stays in a fixed header while the body scrolls vertically; phones anchor the panel above the bottom safe area rather than restoring desktop drag coordinates. Escape minimizes without changing playback.
 - Minimizing/restoring changes presentation only; the selected station and playback state survive. The visibility choice persists across reloads. The restore control sits above any docked global player and the device safe area.
 - Controls on dark surfaces keep at least 3:1 icon contrast and 4.5:1 text contrast.
 

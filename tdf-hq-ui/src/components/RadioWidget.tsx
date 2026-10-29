@@ -2188,10 +2188,10 @@ export default function RadioWidget() {
               <Typography variant="subtitle1" fontWeight={800} noWrap>
                 Radio Inteligente
               </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <Typography component="p" variant="caption" color="text.secondary" noWrap>
                 {nowPlayingStatus}: {nowPlayingLabel}
               </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <Typography component="p" variant="caption" color="text.secondary" noWrap>
                 {nowPlayingSubtitle}
               </Typography>
               {recentStations.length > 1 && (

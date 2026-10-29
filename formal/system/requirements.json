@@ -10435,8 +10435,8 @@
       "title": "Every published service is selectable from the first step of the public booking form",
       "domain": "BOOK",
       "statement": "The public booking form at /reservar shows the service selector on its first step (contact) as well as on the schedule step, listing every active offering returned by the public service catalog (recording, voice, podcast, mixing, mastering, rehearsal, DJ booth practice, classes, event production, ...). DJ booth practice is an ordinary offering: there is no dedicated booking page, header entry, Instagram entry link, platform or commerce card for it. The legacy /dj-booth and /reservar/dj-booth URLs redirect to /reservar with the DJ booth service preselected and tracking parameters preserved; a ?servicio= or ?service= query preselects a service without locking the selector. The legacy DJ booth feature remains addressable for compatibility but is absent from feature search on web and Mobile. Legacy DJ URLs remove conflicting service parameters before selecting DJ booth.",
-      "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link.",
-      "source": "tdf-hq-ui public booking form, public navigation and landing links",
+      "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link. Product owner UX execution mission, continued 2026-10-26: actionable recovery from temporary failures while preserving form data and backend booking authority.",
+      "source": "tdf-hq-ui public booking form, public navigation and landing links; formal/system/booking-viewport-bounds.md (BOOK-VIEWPORT-BOUNDS-001); formal/system/booking-tooltip-viewport.md (BOOK-TOOLTIP-VIEWPORT-001)",
       "contract": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
       "actors": [
         "Visitor",
@@ -10461,7 +10461,8 @@
       "allowedTransitions": [
         "catalog loading -> first active offering selected",
         "first active offering selected -> visitor-selected offering (any step before confirmation)",
-        "/dj-booth -> /reservar?servicio=dj-booth-practice (replace navigation, query and hash preserved)"
+        "/dj-booth -> /reservar?servicio=dj-booth-practice (replace navigation, query and hash preserved)",
+        "catalog unavailable -> visitor-triggered catalog retry -> available service selection, or another recoverable unavailable state without leaving the page"
       ],
       "forbiddenTransitions": [
         "Service selector hidden until the schedule step",
@@ -10477,8 +10478,8 @@
       "privacy": "No personal data in the redirect beyond the tracking parameters already present in the inbound URL.",
       "concurrency": "Catalog refetches keep the visitor's selection when the offering is still active and fall back to the first active offering otherwise. Changing the service synchronously clears the previous quote and terms acceptance. New availability requests clear stale pricing; aborted responses and cancellations cannot overwrite a newer quote.",
       "idempotency": "Re-selecting the same offering is a no-op; the redirect is replace-navigation.",
-      "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps.",
-      "recovery": "Reloading the page refetches the catalog.",
+      "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps. Retrying does not create a booking, checkout or payment, and the form remains disabled while an unavailable catalog is being refetched.",
+      "recovery": "The catalog-unavailable notice provides an explicit retry of GET /services/catalog/public without reloading the page or clearing contact edits, the service query parameter or the current step. The retry button is disabled while fetching. Another failure or empty response retains the retry action; a nonempty successful response restores normal service selection and form progression. Reloading the page also refetches the catalog.",
       "observability": "Existing booking and API telemetry; no new events.",
       "property": "AllActiveOfferingsSelectableOnContactStep and LegacyDjBoothUrlRedirects",
       "implementation": [
@@ -10499,10 +10500,11 @@
         "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
-        "tdf-mobile/__tests__/featureRegistry.test.ts"
+        "tdf-mobile/__tests__/featureRegistry.test.ts",
+        "e2e/web/booking-catalog-recovery.spec.mjs"
       ],
       "formalModels": [],
-      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression.",
+      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression. Error and empty-catalog component regressions preserve edited contacts across a pending retry and another empty response before success, keep the form gated, retain query-based service selection, and assert no booking/checkout calls. Browser fixtures cover keyboard retry and restored schedule progression with all business writes blocked. Viewport verification uses a shared client-width bound instead of expandable mobile innerWidth. A permanent visible-width fault fixture must be detected and recover after removal; comparator mutation must fail the mobile regression. Initial numeric widths/result remain authoritative while bounded failure-only geometry observes later layout; local controls do not establish the original hosted WebKit cause. See formal/system/booking-viewport-bounds.md (BOOK-VIEWPORT-BOUNDS-001). Suggested-time helper viewport repair: actual open-before/closed-before/open-after resize controls isolate local mobile document expansion and zoom. A fixed-position overlay must preserve the immutable first client-bound result, helper text/accessibility name, scale1, real keyboard reachability and scroll tracking. Deterministic Date leaves timers running. Removing only the positioning option must fail the permanent keyboard case on actual persistent362/320 overflow; correct source restored. Local evidence does not establish the original hosted WebKit cause, all browsers or complete CSSOM refinement.",
       "evidence": "Local Jest execution (PublicBookingPage, publicRoutes, PublicBranding suites)",
       "status": "specified and implemented",
       "critical": false,
@@ -13214,6 +13216,86 @@
         "classification": "PARTIAL",
         "reason": "Named client ownership/latest-intent and matched-owner corrupt-source rejection behaviors TESTED locally at b625969 with86tests and27browser cases (24real+3mock). No extracted identity model or mathematical proof. Exact integrated-candidate hosted checks,independent review and deployed acceptance remain pending."
       }
+    },
+    {
+      "authority": ".github/workflows/ci.yml aggregate step contracts and the requested verification mission",
+      "contract": "formal/system/ci-selected-job-admission.md",
+      "critical": true,
+      "source": "formal/system/ci-selected-job-admission.md",
+      "status": "specified and implemented",
+      "confidence": "Exact component counterexamples; no claim that the injected upstream state occurred in GitHub.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite component behavior tested; GitHub orchestration, classifier correctness and full refinement remain unproven."
+      },
+      "observability": "Record exact source, tool versions, cases and control exits; inspect current-head hosted checks.",
+      "recovery": "Repair the failed validation/selection contract and rerun; never relax selected validation to skip.",
+      "verification": "Exhaustive finite selection/result tests, actual workflow CLI execution, historical false-accept controls and guard-removal mutation controls.",
+      "id": "SYS-CI-SELECTED-001",
+      "title": "Selected validation cannot be admitted as skipped",
+      "domain": "SYS",
+      "statement": "Quality, API-contract and migration admission requires every selected dependency to succeed; skips are admissible only with an explicit false selection. Missing, failed, cancelled or ambiguous classification/results reject admission.",
+      "actors": [
+        "GitHub Actions",
+        "Repository contributors"
+      ],
+      "preconditions": [
+        "GitHub result reporting, checked-in execution, path classification and selection expressions are trusted."
+      ],
+      "inputs": [
+        "Exact workflow revision",
+        "Serialized needs context",
+        "Six exact scope flags",
+        "Native Android dispatch selection"
+      ],
+      "state": {
+        "validation": [
+          "success",
+          "skipped",
+          "failure",
+          "cancelled",
+          "missing",
+          "unknown"
+        ],
+        "admission": [
+          "accepted",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Admit successful classification and successful selected validations.",
+        "Admit an explicitly unselected skipped dependency."
+      ],
+      "forbiddenTransitions": [
+        "Admit a selected skipped dependency.",
+        "Admit missing, failed, cancelled or malformed evidence."
+      ],
+      "effects": [
+        "Required status admission or rejection"
+      ],
+      "authorization": "Existing branch protections and independent review remain required; no deployment authority is granted.",
+      "privacy": "Never log unrelated dependency outputs or credentials.",
+      "concurrency": "Superseded and cancelled checks are not passing evidence.",
+      "idempotency": "Each run/attempt records its own revision-bound result.",
+      "failure": "The required aggregate exits nonzero for invalid or insufficient evidence.",
+      "property": "For each dependency, success OR (unselected AND skipped), with valid successful classification.",
+      "implementation": [
+        ".github/workflows/ci.yml",
+        "scripts/ci-job-admission.mjs",
+        "package.json",
+        "scripts/ci-change-scope.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/ci-job-admission.test.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "Historical skipped-state reachability under GitHub orchestration is not established."
+      ],
+      "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
     }
   ]
 }

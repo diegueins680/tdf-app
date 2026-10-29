@@ -268,6 +268,15 @@ for (const width of [320, 360, 390, 430]) {
     expect(box.height).toBeGreaterThanOrEqual(44);
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(width);
+    const panel = page.getByTestId('radio-floating-panel');
+    const panelBox = await panel.boundingBox();
+    expect(panelBox.y).toBeGreaterThanOrEqual(0);
+    expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(760);
+    const content = page.getByTestId('radio-panel-content');
+    await content.evaluate((node) => { node.scrollTop = node.scrollHeight; });
+    const afterScroll = await minimize.boundingBox();
+    expect(afterScroll.y).toBeCloseTo(box.y, 1);
+    expect(await content.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
     await expect.poll(() => fitsViewport(page)).toBe(true);
     const header = minimize.locator('xpath=..');
     const before = await header.boundingBox();

@@ -1,0 +1,13 @@
+{
+  "sourceCommit": "a5535c59e49064fec535daa3682a4a1dc31c68f4",
+  "sourceTree": "3aa473b92662cba8e7a319149454d6cdf9a5b8ec",
+  "parent": "a5d8b29987acfeb460a86e662fd5ead53ab379e8",
+  "catalog": {
+    "candidates": 1352,
+    "freshEqualsTrackedExceptGeneratedAt": true,
+    "wholeHistoricalDecisionFileExact535": true,
+    "CSVExact535": true
+  },
+  "V3WorkingMatrix": "9PASS/0fail/0skip/0retry; same UI/dependencies as compiledC1",
+  "quality": "PASS; inspect retained log for existing skips"
+}

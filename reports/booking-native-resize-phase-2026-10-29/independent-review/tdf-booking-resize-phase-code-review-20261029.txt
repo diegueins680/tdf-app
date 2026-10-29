@@ -1,0 +1,20 @@
+Independent read-only code review: native resize acknowledgment phase
+
+Compared working e2e/contract to a9095bc3e3bf53f5a76244564472fe53cfff7691. Observed HEAD: a9095bc3e3bf53f5a76244564472fe53cfff7691. Worktree /private/tmp/tdf-provider-evidence-actualmain-20261028. No independent browser/server/test/build/database execution, source edit or permission action. This review assesses exact code/contract hashes below, not later runtime receipts or required GitHub approval.
+
+Blocking findings: 0 within this implementation/contract scope.
+
+armBookingResizeAcknowledgement installs its listener before requesting320x740. It accepts only a trusted resize targeted at Window, at positive clientWidth<=320 and innerHeight740. It does not inspect fit, tooltip geometry or Popper state. Synthetic dispatch or an unrelated-dimension event cannot satisfy the gate. The accepted event removes its listener and schedules one following task; it does not request Popper updates or poll convergence. The first strict helper snapshot follows that acknowledgment, with explicit time ordering checks.
+
+The eight-second timeout resolves a refusal object rather than creating an unobserved rejecting Promise. Missing delivery then fails the explicit delivered assertion. finish clears both timeout and next-task timer and removes the exact listener. The finally block executes on initial root/scale failure, later gate/helper failure or success, cancels a still-pending gate, disconnects observation and deletes acknowledgment globals. Repeated finish after resolution only performs cleanup and cannot replace the already resolved result. Page teardown remains the fallback if the execution context is destroyed. No listener or product option is added to application source.
+
+The first same-evaluation viewport result is attached and remains immutable. Its standards, root-overflow and scale assertions run BEFORE awaiting or accepting the native-event result. Failure-only later diagnostics may record convergence, but cannot alter those initial assertions. A sole-option-removal root regression must therefore still fail even if its later samples fit. At the post-event phase, missing/wrong helper, out-of-bounds edges, root overflow, scale or focus/name failures remain falsifiable; no forceUpdate, CSS clipping, dismissal, arbitrary settle delay or dimension-to-fit polling is introduced. The original visible-anchor and nonvacuous scroll tracking scenario remains after the phase block.
+
+The contract explicitly changes the added helper timing rule rather than pretending it was previously met. It preserves historical21628/a909 literal-contract failures and the causal event evidence, retains original root/scale strictness, links primary CSSOM/HTML phase authority, and does not reinterpret eight seconds as a product SLA or claim a new business requirement. The earlier a909 geometry independent review remains the rationale: dimensions preceded the observed resize/update batch by138ms/220ms. Coarsened timestamps/MutationObserver batching do not prove every internal Popper step or absence of painted transients.
+
+Local instrumented nine-case execution has been reported by root but was not independently examined in this code receipt. Instrumentation-free execution is underway; helper-only, root-option and missing/synthetic-ack controls remain planned/pending at review time. These must be supplied with exact-source receipts before qualification. A false/untrusted event must not substitute for the real gate; the negative root must fail its initial predicate, and persistent helper displacement must fail after acknowledgment with a fitting root. This review alone establishes neither current Linux WebKit green nor full product/browser correctness, native paint timing, deployment or integration.
+
+Reviewed SHA256 values:
+e2e/web/booking-catalog-recovery.spec.mjs: deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f
+formal/system/booking-tooltip-viewport.md: 3e1b489f81fede443101fd8f259603c1a989f040b8ba3eac16324139d13feeba
+tdf-hq-ui/src/pages/PublicBookingPage.tsx: 3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3
