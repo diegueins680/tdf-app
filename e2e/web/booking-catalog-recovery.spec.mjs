@@ -1,6 +1,36 @@
 import { expect, test } from '@playwright/test';
 import axe from 'axe-core';
 
+// A changed clientWidth does not acknowledge delivery of the browser's resize
+// event. Arm before requesting the viewport, then allow the event's queued
+// Popper microtask to finish. This never polls geometry for an acceptable fit.
+async function armBookingResizeAcknowledgement(page) {
+  await page.evaluate(() => {
+    window.__bookingResizeAcknowledgement = new Promise(resolve => {
+      let timeout, nextTask;
+      const finish = result => {
+        clearTimeout(timeout);
+        clearTimeout(nextTask);
+        removeEventListener('resize', onResize);
+        resolve(result);
+      };
+      const onResize = event => {
+        const clientWidth = document.documentElement.clientWidth;
+        if (!event.isTrusted || event.target !== window || clientWidth <= 0
+          || clientWidth > 320 || innerHeight !== 740) return;
+        const delivered = { delivered: true, trusted: event.isTrusted,
+          eventAt: performance.now(), clientWidth, innerHeight };
+        clearTimeout(timeout);
+        removeEventListener('resize', onResize);
+        nextTask = setTimeout(() => finish({ ...delivered, taskAt: performance.now() }), 0);
+      };
+      window.__cancelBookingResizeAcknowledgement = () => finish({ delivered: false, reason: 'cancelled' });
+      timeout = setTimeout(() => finish({ delivered: false, reason: 'native resize not delivered within 8s' }), 8000);
+      addEventListener('resize', onResize, { passive: true });
+    });
+  });
+}
+
 // Observe delivered events and Popper style changes without updating the
 // positioner, scrolling, reading layout or changing application state.
 async function observeBookingViewportEvents(page) {
@@ -248,40 +278,75 @@ for (const failure of ['error', 'empty']) {
     await expect(tooltip).toHaveText(helperText);
     await expect(slot).toHaveAccessibleName(helperText);
     await observeBookingViewportEvents(page);
-    await page.setViewportSize({ width: 320, height: 740 });
-    // The mobile marker exists at both390 and320px. Bind the measurement to
-    // the requested content viewport, without waiting for overflow to vanish.
-    await expect(page.getByText('Paso 2 de 3', { exact: true })).toBeVisible();
-    await expect.poll(() => page.evaluate(() => {
-      const width = document.documentElement.clientWidth;
-      return width > 0 && width <= 320;
-    })).toBe(true);
-    const viewportMeasurement = await measureBookingViewport(page);
-    const epsilon = 1 / viewportMeasurement.devicePixelRatio;
-    await testInfo.attach('booking-initial-viewport', {
-      body: Buffer.from(JSON.stringify(viewportMeasurement, null, 2)), contentType: 'application/json',
-    });
-    const helper = viewportMeasurement.tooltip;
-    const initialBoundFailure = viewportMeasurement.overflow || !helper || helper.text !== helperText
-      || helper.x < -epsilon || helper.right > viewportMeasurement.clientWidth + epsilon
-      || Math.abs(viewportMeasurement.visualViewport.scale - 1) >= 0.0005;
-    if (initialBoundFailure) await testInfo.attach('booking-viewport-geometry', {
-      body: Buffer.from(JSON.stringify({ requestedViewport: page.viewportSize(), initial: viewportMeasurement,
-        samples: await failedViewportGeometry(page) }, null, 2)),
-      contentType: 'application/json',
-    });
-    await page.evaluate(() => window.__stopBookingViewportObservation?.());
-    expect(viewportMeasurement.compatMode).toBe('CSS1Compat');
-    expect(viewportMeasurement.overflow).toBe(false);
-    // Root overflow has zero tolerance. Overlay edges allow one physical pixel
-    // for Popper's device-pixel rounding, independently of its implementation.
-    expect(viewportMeasurement.visualViewport.scale).toBeCloseTo(1, 3);
-    expect(viewportMeasurement.tooltip).not.toBeNull();
-    expect(viewportMeasurement.tooltip.text).toBe(helperText);
-    expect(viewportMeasurement.tooltip.x).toBeGreaterThanOrEqual(-epsilon);
-    expect(viewportMeasurement.tooltip.right).toBeLessThanOrEqual(viewportMeasurement.clientWidth + epsilon);
-    await expect(slot).toBeFocused();
-    await expect(slot).toHaveAccessibleName(helperText);
+    await armBookingResizeAcknowledgement(page);
+    let epsilon;
+    try {
+      await page.setViewportSize({ width: 320, height: 740 });
+      // The mobile marker exists at both390 and320px. Bind the measurement to
+      // the requested content viewport, without waiting for overflow to vanish.
+      await expect(page.getByText('Paso 2 de 3', { exact: true })).toBeVisible();
+      await expect.poll(() => page.evaluate(() => {
+        const width = document.documentElement.clientWidth;
+        return width > 0 && width <= 320;
+      })).toBe(true);
+      const viewportMeasurement = await measureBookingViewport(page);
+      epsilon = 1 / viewportMeasurement.devicePixelRatio;
+      await testInfo.attach('booking-initial-viewport', {
+        body: Buffer.from(JSON.stringify(viewportMeasurement, null, 2)), contentType: 'application/json',
+      });
+      const initialBoundFailure = viewportMeasurement.overflow
+        || Math.abs(viewportMeasurement.visualViewport.scale - 1) >= 0.0005;
+      if (initialBoundFailure) await testInfo.attach('booking-viewport-geometry', {
+        body: Buffer.from(JSON.stringify({ requestedViewport: page.viewportSize(), initial: viewportMeasurement,
+          samples: await failedViewportGeometry(page) }, null, 2)),
+        contentType: 'application/json',
+      });
+      expect(viewportMeasurement.compatMode).toBe('CSS1Compat');
+      expect(viewportMeasurement.overflow).toBe(false);
+      expect(viewportMeasurement.visualViewport.scale).toBeCloseTo(1, 3);
+      const resizeAcknowledgement = await page.evaluate(() => window.__bookingResizeAcknowledgement);
+      await testInfo.attach('booking-resize-acknowledgement', {
+        body: Buffer.from(JSON.stringify(resizeAcknowledgement, null, 2)), contentType: 'application/json',
+      });
+      expect(resizeAcknowledgement.delivered).toBe(true);
+      expect(resizeAcknowledgement.trusted).toBe(true);
+      expect(resizeAcknowledgement.clientWidth).toBeGreaterThan(0);
+      expect(resizeAcknowledgement.clientWidth).toBeLessThanOrEqual(320);
+      expect(resizeAcknowledgement.innerHeight).toBe(740);
+      expect(resizeAcknowledgement.taskAt).toBeGreaterThanOrEqual(resizeAcknowledgement.eventAt);
+      const resizedViewport = await measureBookingViewport(page);
+      await testInfo.attach('booking-after-native-resize', {
+        body: Buffer.from(JSON.stringify(resizedViewport, null, 2)), contentType: 'application/json',
+      });
+      const helper = resizedViewport.tooltip;
+      if (resizedViewport.overflow || !helper || helper.text !== helperText
+        || helper.x < -epsilon || helper.right > resizedViewport.clientWidth + epsilon
+        || Math.abs(resizedViewport.visualViewport.scale - 1) >= 0.0005) {
+        await testInfo.attach('booking-viewport-geometry', {
+          body: Buffer.from(JSON.stringify({ requestedViewport: page.viewportSize(), initial: viewportMeasurement,
+            resizeAcknowledgement, afterNativeResize: resizedViewport,
+            samples: await failedViewportGeometry(page) }, null, 2)), contentType: 'application/json',
+        });
+      }
+      expect(resizedViewport.at).toBeGreaterThanOrEqual(resizeAcknowledgement.taskAt);
+      expect(resizedViewport.overflow).toBe(false);
+      expect(resizedViewport.visualViewport.scale).toBeCloseTo(1, 3);
+      // Root overflow has zero tolerance. Overlay edges allow one physical pixel
+      // for Popper's device-pixel rounding, independently of its implementation.
+      expect(resizedViewport.tooltip).not.toBeNull();
+      expect(resizedViewport.tooltip.text).toBe(helperText);
+      expect(resizedViewport.tooltip.x).toBeGreaterThanOrEqual(-epsilon);
+      expect(resizedViewport.tooltip.right).toBeLessThanOrEqual(resizedViewport.clientWidth + epsilon);
+      await expect(slot).toBeFocused();
+      await expect(slot).toHaveAccessibleName(helperText);
+    } finally {
+      await page.evaluate(() => {
+        window.__cancelBookingResizeAcknowledgement?.();
+        window.__stopBookingViewportObservation?.();
+        delete window.__bookingResizeAcknowledgement;
+        delete window.__cancelBookingResizeAcknowledgement;
+      });
+    }
     // Additional scroll verification follows the immutable initial assertion.
     // Scroll-event acknowledgment never polls overflow until it disappears.
     // Reflow can move the focused control below the viewport. Establish the

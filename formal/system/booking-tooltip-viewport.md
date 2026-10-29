@@ -8,9 +8,11 @@ document beyond the requested mobile content viewport or cause automatic page
 zoom when the booking form reflows. Its helper text and accessible name remain
 available to keyboard users. At the first atomic measurement after the requested
 320px client viewport is established, root scrollWidth must be <= clientWidth,
-visual scale must remain1, and the helper must fit within one physical pixel of
-the client bounds. Root overflow itself has zero tolerance. A later fit cannot
-replace that initial result.
+visual scale must remain1. Root overflow itself has zero tolerance. A later fit
+cannot replace that initial result. Helper placement is checked once after the
+requested native window resize event and its queued update have run: the helper
+must fit within one physical pixel of the client bounds, retain its text/name
+and keyboard focus, with root bounds and scale checked again.
 
 Authority is the existing public booking narrow-screen/no-overflow check and
 the established keyboard-accessible catalog-recovery workflow. The helper is
@@ -75,16 +77,16 @@ composition and protected FIFO integration remain necessary. Gallery contrast
 is separate: retain approved648/651 for their slots without a duplicate patch.
 No API, database, backend, dependency or production financial state is changed.
 
-## Current hosted failure and observation scope
+## Historical hosted failure and observation scope
 
 Source21628's Linux WebKit iPhone run passes the original initial root-width
 and scale guards but fails both new helper-edge checks at339.640625px in a320px
-client. Its current initial-overlay contract therefore remains FAILED. The
+client. The literal initial-overlay contract at that source remains FAILED. The
 observed old fixed transform persists75–92ms through final trace snapshots;
-the trace contains no DOM resize-delivery or Popper-update milestone. Event
-timing, a missing visualViewport signal and other update causes remain hypotheses.
+the trace contains no DOM resize-delivery or Popper-update milestone. At that stage event timing, a missing visualViewport signal and other update
+causes were unresolved hypotheses.
 
-The successor diagnostic records bounded window/visualViewport resize events
+Source6252 / public a909 diagnostic records bounded window/visualViewport resize events
 and positioner style/placement mutations before the viewport request. Event
 callbacks read no layout and do not update Popper, scroll or mutate application
 state. Every initial atomic result is attached; ANY initial root, helper or scale
@@ -93,11 +95,57 @@ and listeners are disconnected before assertions, with page teardown covering
 exceptions. The original initial measurement still supplies every unchanged
 assertion: a later fit can never turn a failure into a pass. Observation can
 perturb scheduling and is not itself a product repair or proof of causality.
-No assertion, tolerance, timeout, focus/keyboard requirement or product option is
-relaxed. New evidence must establish the cause before another product change.
+That observation-only source preserves the literal initial-overlay assertion;
+it does not claim a product repair. Its evidence is historical and not replaced
+by the specification correction below.
 
 A saturation flag makes the128-event cap visible; no event-absence conclusion is
 supported after truncation. Mutation records retain the prior attribute value
 and current inline style, with batching still possible. The initial snapshot
 identifies whether the current helper is the observed node and whether that
 node remains connected; the observer does not follow a remount automatically.
+
+
+## Native resize phase correction
+
+The a909 hosted run40833156449 provides the missing milestone. Both original
+first root measurements remain320px with scale1, while helper right339.640625
+is outside. In the error case the first native window.resize and
+visualViewport.resize arrive at11518ms,138ms after the11380ms measurement;
+in the empty case they arrive at4316ms,220ms after the4096ms measurement.
+At each delivery the same connected Popper node changes from the old transform
+to the corrected transform; later helper right319.97396 fits. The bounded
+observers are not truncated. These cases do not support a missing
+visualViewport-listener diagnosis or establish painted clipping.
+
+This is a specification/harness defect in the added helper phase: observing
+clientWidth does not acknowledge delivery of resize notification. CSSOM View
+[13.1, published draft16September2025](https://www.w3.org/TR/2025/WD-cssom-view-1-20250916/#resizing-viewports)
+defines window/visual viewport resize notification in resize steps. The HTML
+[rendering task](https://html.spec.whatwg.org/multipage/webappapis.html#update-the-rendering)
+runs these steps during rendering; a viewport protocol response or layout read
+is not the event milestone. These specifications explain the phase boundary;
+they do not prove Popper correctness or prescribe an8second product SLA.
+
+The corrected oracle preserves the original immutable first root/scale result.
+Before requesting320x740 it registers a listener requiring a trusted window
+resize at a positive client width<=320 and height740. It accepts no fit predicate,
+dispatched event, forceUpdate, tooltip dismissal, scroll, clipping, or extra
+product listener. Missing notification fails closed within the existing8second
+assertion budget. The first following task acknowledges the installed Popper
+resize handler's Promise microtask; one subsequent helper measurement supplies
+all strict bounds/content assertions. No fit/convergence polling is introduced.
+The same visible-anchor scroll check follows. Timers/listeners/observers are
+cleaned in finally, including an earlier immutable-root failure.
+
+Pre-notification helper geometry remains attached as diagnostic evidence;
+the earlier literal helper assertion remains FAILED in the old receipts.
+Corrected-phase evidence is TESTED only when the exact new body executes.
+Both instrumentation-free execution (retaining only the required native-event
+acknowledgment) and independent fault controls must qualify: removing the sole
+fixed strategy still fails the first root guard, a persistently misplaced helper
+still fails after notification with a fitting root, and missing native resize
+still fails. Historical21628's invalid pre-notification helper phase is not a
+success criterion for the corrected oracle. Hosted Linux WebKit qualification,
+independent exact-head approval, gallery/FIFO sequencing and all protected
+checks remain required. No product code is changed by this phase correction.
