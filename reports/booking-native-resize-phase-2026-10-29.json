@@ -1,0 +1,1096 @@
+{
+  "schemaVersion": 1,
+  "repository": "diegueins680/tdf-app",
+  "cycle": "2026-10-29 booking native-resize specification and harness correction",
+  "pullRequest": 638,
+  "baselineCommit": "a9095bc3e3bf53f5a76244564472fe53cfff7691",
+  "baselineMain": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "sourceCommit": "5cac026c325c7f0ad08b62b08f5ad41b9d0958e7",
+  "sourceSeal": {
+    "baseline": "a9095bc3e3bf53f5a76244564472fe53cfff7691",
+    "sourceCommit": "5cac026c325c7f0ad08b62b08f5ad41b9d0958e7",
+    "sourceDigest": "21c2b2ca05807ac7bc7366161b1af0bf5d47f800cae9028640a00c3cfd6170ba",
+    "registeredSourceInputs": 1413,
+    "allRegisteredGitBlobAndMobileHashesVerified": true,
+    "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+    "updatedContractSha256": "3e1b489f81fede443101fd8f259603c1a989f040b8ba3eac16324139d13feeba",
+    "currentDiscoveryMatches": true,
+    "all156RequirementObjectsByteExactBaseline": true,
+    "whole1352HistoricalDecisionFileAndDerivedCatalogByteExactBaseline": true,
+    "allProductUIBackendAPIDependenciesWorkflowsOpsUnchanged": true,
+    "priorProviderArchiveUnchanged": true,
+    "localPhasePositives": "9instrumented+9uninstrumented/0fail/0skip/0retry",
+    "realControlledFailures": "1post-native helper edgefailure/rootfits320;1sole-option firstrootfailure362/320;1synthetic-only ack rejected/fails8s; exactproductsourceandC2distrestored",
+    "existingWidthClaims": "2manualconditionalinteger claims normal/-O andrejectmutant; notCSSOM/JS/refinementproof",
+    "globalAssurance": "156/312UNPROVEN11existingconditionalSMT;releaseBLOCKED",
+    "historicalHostedWebKitInitialOverlay": "FAILED at21628/a909; a909 timeline identifies pre-notification helper phase error.",
+    "correctedHostedPhase": "PENDING; local cases TESTED, no universal convergence proof or product repair claimed",
+    "mainComposition": "Contains protectedmainE302; requiredreview/all20/FIFOpending",
+    "cleanSource": true
+  },
+  "confirmedDefect": {
+    "id": "CORRECTNESS-20261029-04",
+    "category": [
+      "Specification defect",
+      "Verification harness defect"
+    ],
+    "statement": "The added initial helper-edge oracle demands an event-driven Popper response before the browser delivers its resize input. clientWidth availability alone is not that input milestone.",
+    "introducedRequirement": "Original immediate root/scale safety is established; the extra pre-notification helper phase was introduced by the correction harness and is unsupported by native event ordering.",
+    "actualCounterexamples": [
+      {
+        "case": "error",
+        "firstMeasurementAtMs": 11380,
+        "firstNativeWindowAndVisualResizeAtMs": 11518,
+        "gapMs": 138
+      },
+      {
+        "case": "empty",
+        "firstMeasurementAtMs": 4096,
+        "firstNativeWindowAndVisualResizeAtMs": 4316,
+        "gapMs": 220
+      }
+    ],
+    "sharedValues": "Initial inner/client/scroll320/320/320 and scale1; helper right339.640625. Same original connected node; observations untruncated. At native notification the transform changes; later right319.97396087646484 fits.",
+    "correction": "Preserve immutable first root/scale. Arm trusted requested-dimension native Window resize before viewport request; require delivery within existing8s, await one following task, then take one strict helper/root/scale observation. Finally cancel timers/listener/observer on success or failure.",
+    "historicalStatus": "Literal helper-at-first-clientWidth contract remains FAILED at21628/a909. Its receipts are retained, not marked satisfied. No new product UI repair is claimed.",
+    "unsupportedHypotheses": "The observed two cases do not support a missing visualViewport product listener. Painted clipping, universal convergence and the original84d failure cause remain unestablished."
+  },
+  "primarySpecificationEvidence": [
+    {
+      "source": "CSSOM View13.1, published Working Draft16September2025",
+      "url": "https://www.w3.org/TR/2025/WD-cssom-view-1-20250916/#resizing-viewports",
+      "scope": "Resize notifications occur in resize steps; work-in-progress specification, not a Popper or timing proof."
+    },
+    {
+      "source": "HTML Living Standard, update the rendering",
+      "url": "https://html.spec.whatwg.org/multipage/webappapis.html#update-the-rendering",
+      "scope": "Rendering tasks run resize steps; a protocol result or layout read does not acknowledge event delivery."
+    }
+  ],
+  "hostedCounterexample": {
+    "head": "a9095bc3e3bf53f5a76244564472fe53cfff7691",
+    "run": 40833156449,
+    "personaJob": 123312090748,
+    "totals": {
+      "passed": 640,
+      "failed": 3,
+      "skipped": 22
+    },
+    "booking": "Two WebKit iPhone pre-notification helper-edge failures; original root/scale pass.",
+    "gallery": "Separate gallery contrast failure retained; approved648/651 heads preserved for FIFO slots.",
+    "artifact": {
+      "id": 12879978125,
+      "bytes": 122796504,
+      "sha256": "a0c7003b3bcc25c5816e2ce1f2b624e61a499b009127a9c2f3cff6f028773392",
+      "digestIndependentlyMatched": true,
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40833156449/artifacts/12879978125",
+      "retention": "Full archive local only; both failed traces, screenshots, decoded geometry and hash receipt committed here."
+    }
+  },
+  "invariants": [
+    {
+      "id": "BOOK-TOOLTIP-VIEWPORT-001",
+      "parent": "BOOK-SERVICE-PICKER-001",
+      "contract": "formal/system/booking-tooltip-viewport.md",
+      "status": "TESTED",
+      "statement": "First atomic client-bound root/scale result remains immutable and strict. After trusted requested native resize plus next task, one helper observation must satisfy the same physical-pixel bounds, content/name/focus and root/scale guards. Existing visible-anchor scroll tracking follows.",
+      "assumptions": [
+        "Standards mode; requested320x740 and positive clientWidth<=320; synthetic APIs; actual browser resize event.",
+        "Installed Popper update uses a Promise microtask; next-task observation is an implementation-specific tested phase, not a universal rendering/paint theorem."
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx"
+      ],
+      "verification": [
+        "e2e/web/booking-catalog-recovery.spec.mjs"
+      ],
+      "CIProtection": "Existing critical/mobile-flow persona cases and protected aggregate; new hosted qualification pending."
+    }
+  ],
+  "verification": {
+    "localInstrumented": "9/0fail/0skip/0retry across Chrome desktop, Chromium iPhone emulation and Firefox; actualCLI0 for each profile.",
+    "localUninstrumented": "Separate9/0fail/0skip/0retry. Only two import paths and diagnostic observer call differ; native-event acknowledgment and all acceptance assertions remain. Does not rerun the invalid old pre-notification oracle.",
+    "UIIdentity": "No product edits. Exact immutableC2 artifacts compileda5535c59e49064fec535daa3682a4a1dc31c68f4; complete artifact hashes matched before/after; all UI/dependency tree inputs byte-identical.",
+    "helperFault": "Persistent CSS fault injected after native acknowledgment: first and post-event root320/320 scale1; helper right366.046875 fails strict resizedViewport.tooltip.right. ActualCLI1/onefailure.",
+    "rootFault": "Remove sole fixed strategy, keep complete new test body: initial inner/client/scroll362/320/362 scale0.886426568031311 fails original viewportMeasurement.overflow. Later observations cannot heal the captured result. ActualCLI1/onefailure.",
+    "nativeEventFault": "An untrusted synthetic event at requested dimensions is sent on a fixture channel; the real native event cannot acknowledge that listener. Synthetic rejection plus missing native acknowledgment yields deliveredfalse at unchanged8s, failing its explicit assertion. ActualCLI1/onefailure.",
+    "sourceChecks": "Node syntax, root quality (11existingplatformskips), actual8catalogtests, fresh strict1352audit and sequential index generation/checks PASS.",
+    "preservation": "Whole historical catalog-review/derived files and all156 requirement objects byte-exact baseline; productUI/backend/API/dependencies/workflows/ops unchanged.",
+    "sourceBinding": "1413 registered Git/Mobile inputs independently rehashed; updated contract and current test hash sealed; material-surface admissions versusa909 and protectedmain pass.",
+    "formal": "Two inherited manual integer-comparator claims rechecked normal/-O, rejecting innerWidth mutations and retaining omitted-ordering SAT control. No new CSSOM/JS/Popper/compiler/refinement proof.156whole requirements/312implementation-refinement obligations remainUNPROVEN;11existingconditionalSMT retain scope; releaseBLOCKED.",
+    "independentReview": "Independent actual-native/specification, code/lifecycle and executed-body/control receipt reviews. No independent runtime or GitHub approval is supplied by those reviews.",
+    "notRun": [
+      "Local supported Linux WebKit",
+      "Physical iOS",
+      "Fresh fullUI suite for test-only changes: prior3669/type/lint/build qualification retained by exact UI tree identity",
+      "Production/provider/deployment operations"
+    ]
+  },
+  "integration": {
+    "state": "LOCAL_PHASE_TESTED_AWAITING_HOSTED_AND_PROTECTED_REVIEW",
+    "mainBefore": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+    "mainResult": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+    "merged": false,
+    "deployed": false,
+    "autoMerge": false,
+    "controls": "All20contexts, strict base, independent exact-head review, stale-review dismissal, admin/conversation controls and FIFO remain. No forced push, waiver, duplicate gallery patch or retry-to-green.",
+    "otherBranch": "Draft666 remains02c2177; hosted backend40831374480 fails earlier music sibling-worker stop30s before datePG lane. CauseUNKNOWN; local4544/0/20pending and17targeted clock qualification retain scope."
+  },
+  "scorecard": {
+    "confirmedSpecificationHarnessDefectsCorrectedLocally": 1,
+    "newProductCorrections": 0,
+    "localPositiveCases": 18,
+    "controlledActualFailures": 3,
+    "historicalNativeLiteralContract": "FAILED; retained",
+    "correctedNativePhase": "UNKNOWN pending new hosted run",
+    "newWholePlatformProofs": 0,
+    "criticalInvariantsTraced": 1,
+    "historicalProviderArtifactsChanged": 0,
+    "correctionsIntegratedThisCycle": 0
+  },
+  "nextHighestValueTask": "Qualify the corrected phase on hosted Linux WebKit; preserve independent gallery failure/FIFO. Diagnose the music-worker first failure using process/pipe/fixtureSQL evidence without deadline extension.",
+  "evidenceDirectory": "reports/booking-native-resize-phase-2026-10-29",
+  "artifactManifest": [
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/arithmetic/capture-admission.smt2",
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "bytes": 628
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/arithmetic/capture-legacy-counterexample.smt2",
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+      "bytes": 773
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/arithmetic/capture-safety.smt2",
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "bytes": 662
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/arithmetic/capture-witness-0.smt2",
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+      "bytes": 459
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/arithmetic/capture-witness-1.smt2",
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+      "bytes": 459
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/arithmetic/refund-admission.smt2",
+      "sha256": "e13705f80cccf961c215a629f079a40c819bf83256390912a9ca5dc06cc46030",
+      "bytes": 628
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/arithmetic/refund-legacy-counterexample.smt2",
+      "sha256": "661eb0c5bf0d5c29203d747ef29ba026471b92c65f47105471eb0f6d9e0421b8",
+      "bytes": 773
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/arithmetic/refund-safety.smt2",
+      "sha256": "d7a87fe1660aec15c6b3fbe1144b102c2c75224d2598c7de12a561ef88343e4a",
+      "bytes": 662
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/arithmetic/refund-witness-0.smt2",
+      "sha256": "e4b2b6f74f8973100c05346d80d2cf6814074e79449b6745f62266964689acd0",
+      "bytes": 459
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/arithmetic/refund-witness-1.smt2",
+      "sha256": "d2b702db49e577b42bda333ecb783ecdaec1bb4cc814446c0ac2c3c6e512a07f",
+      "bytes": 459
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/arithmetic/result.json",
+      "sha256": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+      "bytes": 3706
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/cardinality-nonnegative.smt2",
+      "sha256": "538c1648575c93dcf01c97ad2acf74e6ac86bbb0c8bc09225e0d298dfb7a3915",
+      "bytes": 173
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/cardinality-sum.smt2",
+      "sha256": "f7354ee4a94da5df4c7055469e6e717351460ed89f8955df2c45685ad1c4e3dc",
+      "bytes": 3774
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/cardinality-zero.smt2",
+      "sha256": "ab060b0519198be8ee779a51e3bad67bbcac8d49b38f4314b551a105f93a095c",
+      "bytes": 197
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/control-admit-operational-role.smt2",
+      "sha256": "c0eb0fafc11e007470c645ccab64665f20e44bc8e23b0fc3323361796c046e59",
+      "bytes": 6870
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/control-allow-zero-identity.smt2",
+      "sha256": "0dc3e705e2041bdb5a58f01562167fb6a0f6b581e434df1f3ec959e8da6a7b33",
+      "bytes": 6955
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/control-drop-coherence.smt2",
+      "sha256": "1aa33b1d244326d8ee1d79787f3fe5ec5e762adc228f422d56296efb6ee6e3cd",
+      "bytes": 7284
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/control-drop-module-grant.smt2",
+      "sha256": "e9f92c4f12111b7c5984b4c5c2f8300976eaff22b07ef83767ea678231e221e4",
+      "bytes": 4482
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/control-module-implies-admin.smt2",
+      "sha256": "7b7b07ad81bd0f453b589ed24e4dca7a6e29f01d6f96bff8bbfe4b28891af912",
+      "bytes": 7429
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/ingestion-admission-witness-false.smt2",
+      "sha256": "e812df3fef5cadd0a37fafb4cbc760ec34443a4a2fbd514c753711a987df551c",
+      "bytes": 6655
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/ingestion-admission-witness-true.smt2",
+      "sha256": "727d41a67f48c39ccf6f2dce096eb46bd1568c19bd72bc7307a5e86f1ae13243",
+      "bytes": 6653
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/ingestion-admission.smt2",
+      "sha256": "33bc931447fac518c2660bdc38614b10a9f0c3dcbea488537e8bdba7f43a90bf",
+      "bytes": 7063
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/module-access-witness-false.smt2",
+      "sha256": "513953eccb5de4ec24b36f2a755007c915d0967c5dc276715d798a73b9b9594e",
+      "bytes": 4563
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/module-access-witness-true.smt2",
+      "sha256": "b69a30273b6417f139fbad50f0f06566ee5bb85ab9d585602afc888cf18f9b04",
+      "bytes": 4562
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/module-access.smt2",
+      "sha256": "b501d1aa1ee540182d45946adae64be2dd961b1018bc4c63cc191edd0731d0f6",
+      "bytes": 4447
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/result.json",
+      "sha256": "331a4abb7fc0099292cb68b7e32da5e1cbde8d0d0a6f7dc220fef5ed6b7ba906",
+      "bytes": 19330
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/strict-admin-witness-false.smt2",
+      "sha256": "eeaed47cf2849128d81eee8543f1488f2538ec607e5f1054314300b199e0fe6d",
+      "bytes": 6527
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/strict-admin-witness-true.smt2",
+      "sha256": "70b2a1205bbe7f4f5cdb8c8a17ff9dd57ac60ee96fbc0265e0ed63bf9b251ea0",
+      "bytes": 6525
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization/strict-admin.smt2",
+      "sha256": "7fc3e60bbba531afc47b543e41978f668b1ea0d693b36afe295f713154b4296e",
+      "bytes": 6914
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization-execution.log",
+      "sha256": "b5d23fb4e6220723c9de620673f449fd268fccf4d2412019b91e62545c722726",
+      "bytes": 245
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/authorization-replay.json",
+      "sha256": "859274a485839265a5663fbf5afde628be2a80448171456e1fc749a9dbdb2993",
+      "bytes": 10216
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/execution-0.log",
+      "sha256": "96459551010bd9623096d15014d32a52ca4c8663d6700eae85490d5b18bd989a",
+      "bytes": 3706
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/execution-1.log",
+      "sha256": "9bbd299e7fcc2ace531f576e7c226e1bf4dd8940680ab0db51dd74b787229f73",
+      "bytes": 101
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/control-database-lifetime.smt2",
+      "sha256": "bf333432149c853d3b8d22fb84afe72b46c4eb23472e619eced03c5dd3e48829",
+      "bytes": 1196
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/control-future-issuance.smt2",
+      "sha256": "ac99cecccaef4c4e243272a9f5474ad11f0d3ac023e1a8533db4afb1c3234414",
+      "bytes": 1069
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/control-inclusive-deadline.smt2",
+      "sha256": "fbdbdd1c6dc83f045527dd24b4131ca7ca84889884d93871d530ff129473836e",
+      "bytes": 1069
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/control-issuance-lifetime.smt2",
+      "sha256": "cfd0154fac07d92d6320df2df02035cf8afd022248f13b240d83f61dd1bde1b0",
+      "bytes": 1041
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/control-validator-lifetime.smt2",
+      "sha256": "8eaee02d8eeaf4e73202a21fbfe11f5af08f8dc349248636235bd0d5b9f17050",
+      "bytes": 1069
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/issuance-admission.smt2",
+      "sha256": "f06b27694c3a5ffd9ea9e8ca124d07869f0dca809705a4d04d103e106b054dbe",
+      "bytes": 1041
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/issuance-exact.smt2",
+      "sha256": "43a56c1e5385f426bf415d5f46658a1b364a552fb2d8afa2bdd65f3319660d99",
+      "bytes": 1103
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/result.json",
+      "sha256": "a9de57e0a51bfc425fa521d3491d255ca17d0d75bf398b24afe32892682286e8",
+      "bytes": 11466
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/schema-correspondence.smt2",
+      "sha256": "6ce0edc16b6585748c551b0e3f2f39e0b8ec6b2b6a931f40d6eb9f385b1e2f88",
+      "bytes": 1196
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/window-equivalence.smt2",
+      "sha256": "0eaf4d81ea08baff7a1fee36724590647fad2d9451c316d7b9e1dc90076232f3",
+      "bytes": 1069
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/witness-0-0.smt2",
+      "sha256": "4e6a8d78e1319e57b40f42b97f9f1e135dfac1283aa76bb60f7d3268399a90b9",
+      "bytes": 1063
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/witness-0-899.smt2",
+      "sha256": "092874565efa8d1bf7fcde8aef1a23f1fd6945b98adc9ea14d560dded7696118",
+      "bytes": 1063
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/witness-9223372036854774907-0.smt2",
+      "sha256": "5e06c2fa0197b355f0732c263cdb9285cfc3a73a472a0a6c3ba0467798389757",
+      "bytes": 1063
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/witness-9223372036854774907-899.smt2",
+      "sha256": "57c3d882e4bc67cf89eb9f7093a2ce472c3d38510dba98d7aca99b13f4d183e0",
+      "bytes": 1063
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery/witness-overflow-rejection.smt2",
+      "sha256": "3133dccb8735eb77f646b547ef2574ecc854d2327620d46a8d38b81f41db9d55",
+      "bytes": 1003
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery-execution.log",
+      "sha256": "40c4d491167fa35255a4b7b48b5b7775f272d1677552a773baccf34516920c06",
+      "bytes": 281
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/recovery-replay.json",
+      "sha256": "2d78916bbcee8b537364251a2914c842cbcccfb947c8dfb7ffdf993136842cf6",
+      "bytes": 2490
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/replay.json",
+      "sha256": "8ac7d963ca2bd83b91a5945626203f9d3cb82bb6f579b006e69e8fbbb2dfc60d",
+      "bytes": 1686
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/report.json",
+      "sha256": "52bd4ee079d324d153fb496610784daf2c25f5d3a612a45c8c852e1f8442c2ca",
+      "bytes": 750084
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/report.md",
+      "sha256": "a10da4fd575a7c4315b2785b02ba97564f19a6b6b90cb0fa7836e5c2cf0e1d4b",
+      "bytes": 10047
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed/sources.json",
+      "sha256": "790f3d0c7047a5f6eebd1ed470b45a4571b16973cd4af9bfe09f73b685c176ac",
+      "bytes": 169666
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/assurance-committed.txt",
+      "sha256": "c8a592b7dd2dfea7e5b14a91a833a650a2d1873e6567207c2ce1e0ac7d90a30e",
+      "bytes": 757
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/catalog-unit.txt",
+      "sha256": "7eaca369aa6596261253c581d4a5a94c4c23f0e905714654cc3f25a0b752d4a4",
+      "bytes": 963
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/conformance-check.txt",
+      "sha256": "4806454fda49dc9a598dc50014efe219b274f127b722dabac35befefb772595e",
+      "bytes": 35
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/conformance.txt",
+      "sha256": "93b0fde3ed29120f5e3dda0c9a6c1ee559a080662a4e1f7ddb7c5ed12ea47ce6",
+      "bytes": 37
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/diff-check.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/fresh-catalog.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/inner-width-checker-mutant.mjs",
+      "sha256": "cec8078422ba10d77015a4a6eb8fd7193818b0b990b1ab3ad30b1f7f43325387",
+      "bytes": 23273
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/inventory-check.txt",
+      "sha256": "ffd8f783941abada12d8baefa6edca5af461e80e728335b6379d15352529fc3d",
+      "bytes": 38
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/inventory.txt",
+      "sha256": "283c1cf1c803957488a5c1ced619c3b32a9eefa5402102018b292c7ff02ecee5",
+      "bytes": 40
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/main-admission.txt",
+      "sha256": "dffbb5cafbbd58d790d49cbdd55b69d33c8f6123ce4a3b1542dd3f19bcf938ac",
+      "bytes": 532
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/qualification.json",
+      "sha256": "e02334043e62bf2fcc250c587964c89d870d3a45e24846e47617e5b43d9262b6",
+      "bytes": 561
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/root-quality.txt",
+      "sha256": "0ba451d07b640a85dd331444f8b209c50cb24de384a208e594ac7e31276ef8a7",
+      "bytes": 74632
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/source-C.json",
+      "sha256": "ec8e2b60a629fed193bc129d0f5bc03d6451d955680a5d0269bc12b904791e59",
+      "bytes": 451
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/source-add.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/source-admission.txt",
+      "sha256": "43ea10be066d7518fc053c8beb681b922a77066f7a8b61e8d915819d2574d8ce",
+      "bytes": 483
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/source-commit.txt",
+      "sha256": "0ee052388b275af600a359465772b6e5fd29965796a516f3c214f9a30a830c74",
+      "bytes": 170
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/source-seal.json",
+      "sha256": "d94c430339af7b242c610fc72d77a624b1dca24b33735d5d28b782b6284c562f",
+      "bytes": 1539
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/syntax.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/width-negative.txt",
+      "sha256": "5e34e9e88acd2aca1ef5ddb32d77963bae88f353f625ab4f17995cfa82ea23ca",
+      "bytes": 95
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/width-optimized-negative.txt",
+      "sha256": "5e34e9e88acd2aca1ef5ddb32d77963bae88f353f625ab4f17995cfa82ea23ca",
+      "bytes": 95
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/width-optimized.txt",
+      "sha256": "fb5850cce75c83415a62ebffb3999cfed18d084465014bb9df1707411e48057b",
+      "bytes": 874
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/source-verification/width.txt",
+      "sha256": "fb5850cce75c83415a62ebffb3999cfed18d084465014bb9df1707411e48057b",
+      "bytes": 874
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/booking.spec.mjs",
+      "sha256": "cb0e8c06e80d1c65cefaad186397fb7db0e3a0d55f8c6cd953e1960c1ed3c668",
+      "bytes": 23405
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/execution-final-chromium-desktop.json",
+      "sha256": "964b589c644f170d4e57352ba8b11f0c713b5f756d143651b79ff4078aa40ddf",
+      "bytes": 454
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/execution-final-chromium-phone.json",
+      "sha256": "dd0316cc38b997bc01628baa9c9026c68f9b4102b932989b5721fabb80965267",
+      "bytes": 455
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/execution-final-firefox.json",
+      "sha256": "2812ead0e811b52b44d6dc6f1d77dafedb70ebfd60c3d02c253d7806125663a7",
+      "bytes": 455
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/final-chromium-desktop.json",
+      "sha256": "f85319d019fa1f00bb51a1a7d99c797e32f9768995c032b445e4b263db3aac44",
+      "bytes": 94126
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/final-chromium-phone.json",
+      "sha256": "fe5d3c543271f4d07fcc983c554862e707a99c98670d93c75ae58bdc9d12d491",
+      "bytes": 30768
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/final-firefox.json",
+      "sha256": "1352b6a383be31dc6be6f49709581926243641cab3473ce8a4d2b06130305cda",
+      "bytes": 94494
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/inputs.json",
+      "sha256": "6e184bf7bd5e461fafb35c529f9555efb1c8a1586e471380f17ef4505d3d8c88",
+      "bytes": 804
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/matrix.json",
+      "sha256": "caa42b92ce4854cd78aea1bcda58fc69612acb73fac323b5a38359c4249870ff",
+      "bytes": 3721
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/playwright.config.mjs",
+      "sha256": "6ad7a2ccbf71e92d62977caffda9af211932fd89a2de03b685b88645b631f0db",
+      "bytes": 1149
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/playwright.final-chromium-desktop.config.mjs",
+      "sha256": "0d915759459434195fe4ea470e4abcf1d950f06a342f848f61ebfd174e44caaa",
+      "bytes": 538
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/playwright.final-chromium-phone.config.mjs",
+      "sha256": "786a234a1766de3d40f43a5c03f979c09e43bbce33fe82d9fcccdc8ea26d3160",
+      "bytes": 532
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/playwright.final-firefox.config.mjs",
+      "sha256": "89b0f6c520b268630a9fbab7a7ee1465a7b034ce05565af20839dbf29fbfbb9b",
+      "bytes": 511
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/run-final-chromium-desktop.py",
+      "sha256": "3fdca4ea5a37eb4d616acd3b9467718346e860371db0188aa17ef70d544053f3",
+      "bytes": 3374
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/run-final-chromium-phone.py",
+      "sha256": "ba3dc25a6cbccf9f603564973563b06cfcb933ebb303b91c7118fc026924fa50",
+      "bytes": 3364
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/run-final-firefox.py",
+      "sha256": "e93bc90265d30905031f822790b1d9707f6fe8759d3ae49fb5141811d4dab339",
+      "bytes": 3329
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/booking.spec.mjs",
+      "sha256": "a2dfeb232b242e64424812bc32dada09acad92653b17562204c322de1896002a",
+      "bytes": 23425
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/execution-final-chromium-desktop.json",
+      "sha256": "92408755e22b533ae63da1de916ce7912d03d7c3494321b3264c54f0404891ef",
+      "bytes": 455
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/execution-final-chromium-phone.json",
+      "sha256": "f6d7c08178bc416429dc0c0b70a90bf125138d3bbf76ed63927e13e91f53d2cf",
+      "bytes": 454
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/execution-final-firefox.json",
+      "sha256": "553a0885cf2429d700e771cec81b692250a37d4496fd527a6e0c5640b5afa43e",
+      "bytes": 454
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/final-chromium-desktop.json",
+      "sha256": "f48e84e2ec6256b1ebdcd3c9f1ce0d98bf9e332292dd491c0a6c969c7598a8b2",
+      "bytes": 16707
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/final-chromium-phone.json",
+      "sha256": "e10355df90d818f5b8e2762d22e6b7054dcf701f081a3e50f17c6b5629752a13",
+      "bytes": 16863
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/final-firefox.json",
+      "sha256": "79623a2578d499ac71f3631247394b0e962bbb088b792cefffc31054aa2f9f30",
+      "bytes": 17082
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/inputs.json",
+      "sha256": "49826acfd68c9f802a0df8adba7600acf25bc79ad4cef42511eb6509b39f40cb",
+      "bytes": 933
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/matrix.json",
+      "sha256": "4b5a6eb290a2fac3d2cfd8b8086514d09f410e6da78ef2509b3b984394e54405",
+      "bytes": 3859
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/playwright.config.mjs",
+      "sha256": "fb16051a1e5303627ac7e3e31e73e285c9ce6d8dead363fed407711ef5fea3dd",
+      "bytes": 1167
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/playwright.final-chromium-desktop.config.mjs",
+      "sha256": "fe87c158ab6d78969dbb50de4955b40a544f0aa767ec1d9241208e275145617e",
+      "bytes": 556
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/playwright.final-chromium-phone.config.mjs",
+      "sha256": "475cdc680d68decce2fd677ebf790e4e766fed84642b7153cb87fd4929e1a8f5",
+      "bytes": 550
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/playwright.final-firefox.config.mjs",
+      "sha256": "ece83abd46137ab3b8a4cce1bce85c0038bd9e1b255c67bfae2ac9011f200232",
+      "bytes": 529
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/run-final-chromium-desktop.py",
+      "sha256": "dcba5f6573dc4f847a5acd7f394a4f420c9b815f641a1d87faf1a2aa0e666d95",
+      "bytes": 3383
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/run-final-chromium-phone.py",
+      "sha256": "8a3eb44fc92c022faa3acbc832a6bbd9a8a18ab4cab49b866cac2961d17eaa8c",
+      "bytes": 3373
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/run-final-firefox.py",
+      "sha256": "1ae6e48d5d3387e2fa2f88044d8a462a94e6f304259d64a8a901436d170353ae",
+      "bytes": 3338
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/controls.json",
+      "sha256": "5e05913720464558ccf0218bc3acf683e2d5fe39ea198f2233d930d605a9a844",
+      "bytes": 793
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/helper-only-fault-browser.txt",
+      "sha256": "468e2d6abcc5f8fa6eb5c9ab2e6fe3a6f5ce0de5c222068444556d9aa51af79d",
+      "bytes": 3204
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/helper-only-fault-execution.json",
+      "sha256": "980705a389764514379dd5d900f2f48f23af8110d8dd6867a2a3bdc4b53b42d4",
+      "bytes": 384
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/helper-only-fault-geometry.json",
+      "sha256": "bc42d113ed12801fa47718496a1a80a3f1e4d165c28e648f80438dbfc19400f7",
+      "bytes": 24665
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/helper-only-fault-preview.txt",
+      "sha256": "b2245cac7f90884ab207b3e7c0d3f0703d703dcf529f4a723174141edf0677fd",
+      "bytes": 40
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/helper-only-fault.config.mjs",
+      "sha256": "0500552f0b26f51e208e2921112a8a0fac89438c5f776794588a55750830b08d",
+      "bytes": 642
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/helper-only-fault.json",
+      "sha256": "7b980a6e3b67d02f087f6b53f09b45c9dca54dceefa520e60b6e8c9938ac7467",
+      "bytes": 45990
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/helper-only-fault.spec.mjs",
+      "sha256": "1a8420dccb1b75d99c5562aff6aaccf09855de93b9e5abe558d5394f89a2b6d1",
+      "bytes": 23701
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/root-mutant-build.txt",
+      "sha256": "4e7303cc964d88a8d2c90b088e582a63d82b2406285df74f8f983318d6820f77",
+      "bytes": 31069
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/root-mutant-inputs.json",
+      "sha256": "34658b6bdb95445a521ee078908775ef42c6ceb019c9c99248c90f3dcaca201f",
+      "bytes": 43747
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/root-option-removal-browser.txt",
+      "sha256": "f306b9afe551886850e778d856170f84f08d2ee54830842dabbefa36030c349f",
+      "bytes": 3219
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/root-option-removal-execution.json",
+      "sha256": "822ac53249290606537b8894c3694093793097dbc16bd8ce5a260312a037087e",
+      "bytes": 388
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/root-option-removal-geometry.json",
+      "sha256": "3396aa103fd91d73a21bdc4db1e0f98b0e96504177865e8af66b511eca3eb580",
+      "bytes": 22523
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/root-option-removal-preview.txt",
+      "sha256": "26a2aa5a8b459ddae4249fb34ae12717e6ff9ea2a9f433dbf5316ea673a62395",
+      "bytes": 40
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/root-option-removal.config.mjs",
+      "sha256": "81b703ef5c82719fdeca362edd4f57b01a9e868dd2816ae00ae37ff378d91af8",
+      "bytes": 646
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/root-option-removal.json",
+      "sha256": "e88e6347b5180781a76a4b195fca709c71a8aef359cad62cbd488e335daee89c",
+      "bytes": 39984
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/root-option-removal.spec.mjs",
+      "sha256": "cb0e8c06e80d1c65cefaad186397fb7db0e3a0d55f8c6cd953e1960c1ed3c668",
+      "bytes": 23405
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/synthetic-without-native-ack-browser.txt",
+      "sha256": "d49cd5e4026fbaa292a8e69f4efb547cfe3d2e42a970b2e883d8951e5ce423ce",
+      "bytes": 3297
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/synthetic-without-native-ack-execution.json",
+      "sha256": "4f98a0f28ce39922f0b93445f15a937d11549bf2ae45e0b4d7207ca1fbc02083",
+      "bytes": 397
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/synthetic-without-native-ack-geometry.json",
+      "sha256": "050376e42133697454eb3fee630ff33530a7f73d285dda98d941a4ae3bcd6bb6",
+      "bytes": 78
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/synthetic-without-native-ack-preview.txt",
+      "sha256": "afe6a1f8a3273f2aaf01fc6edb27b14d9979a8a0e4e310a6614c0b8cc805a44d",
+      "bytes": 40
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/synthetic-without-native-ack.config.mjs",
+      "sha256": "febb2bf8099011adc64a20829c6c30cdeead0aa78d7038cee30dc92e6d6e3cc1",
+      "bytes": 664
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/synthetic-without-native-ack.json",
+      "sha256": "e8af633d11fed67a0748bc9696a54dae8fbcc16c5bb80d4325efa894cfc64a00",
+      "bytes": 10295
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/synthetic-without-native-ack.spec.mjs",
+      "sha256": "e7e793fc5f23e743898924c0f004f933c155085eaac712a18f0c8fe523e42825",
+      "bytes": 23513
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/screenshots/helper-only-fault__helper-only-fault-public-b-7ac59-etails-critical-mobile-flow-chromium-phone__test-failed-1.png",
+      "sha256": "d1745807ce075a43266894864906dfec7106d87c18b03fec136087f7b92bf4b9",
+      "bytes": 461659
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/screenshots/root-option-removal__root-option-removal-public-048bf-etails-critical-mobile-flow-chromium-phone__test-failed-1.png",
+      "sha256": "7b3fee5403739c68cf508190c9a1aea0340c24916abf7f513477192194fe9821",
+      "bytes": 359838
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/screenshots/synthetic-without-native-ack__synthetic-without-native-a-47492-etails-critical-mobile-flow-chromium-phone__test-failed-1.png",
+      "sha256": "ce09b1efa2897c34a640950e7ae8ad7d6c1c89a601593201cfe750da98562824",
+      "bytes": 457741
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/helper-only-fault-trace.zip",
+      "sha256": "d14682f0d843c7ebbf5218b3844dfabb96fe38f0bc5aacf45aa6645363dca7df",
+      "bytes": 5903039
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/root-option-removal-trace.zip",
+      "sha256": "b20fdf45947e91578dbe9c2b59bbc3dcaaeb73bb34fec4c9f887b3a1825ca12d",
+      "bytes": 5496523
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/fault-controls/synthetic-without-native-ack-trace.zip",
+      "sha256": "508999ea62f6af5c50b33daa79ee9950dc63ac569f3ef7edab2975cc1af100a2",
+      "bytes": 5528414
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-instrumented/representative-phone-trace.zip",
+      "sha256": "7a368c4bec3682c7e93f79b959475798ae4f104f4bebf3db7c6abfeedcee460b",
+      "bytes": 16786
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/local-uninstrumented/representative-phone-trace.zip",
+      "sha256": "6774d5eec9b0ea35f16a76fbfde758aefc02257ae783b4c77fa2a27d8a7a7ba0",
+      "bytes": 16423
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/hosted-a909/artifact.json",
+      "sha256": "1a818e4b96a74a42748249d7446cfb033ab968cd5ed561393de10325597ff615",
+      "bytes": 212
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/hosted-a909/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/error-context.md",
+      "sha256": "c05463100a7e12f8aa32f9aa637fee9c5d9d28b133809319b722e70b1beed9fb",
+      "bytes": 27952
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/hosted-a909/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/geometry.json",
+      "sha256": "57924fe063d65216ed4fac6f34d50ffe1c75769040b524029dc52ceb8123ca1b",
+      "bytes": 15337
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/hosted-a909/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/test-failed-1.png",
+      "sha256": "aaf839d49e33b56c1d6f80fab83e001874a6c7e0c2d7f52c13cf7a8379513e92",
+      "bytes": 266145
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/hosted-a909/booking-catalog-recovery-p-95d15-etails-critical-mobile-flow-webkit-iphone/trace.zip",
+      "sha256": "85ad1f46c28336c12d79b69117cb22a5fdd6cf79688a31c9ccef08878ede54ac",
+      "bytes": 2090046
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/hosted-a909/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/error-context.md",
+      "sha256": "499024c5fb70293f7b688abe8c6eeaa65a8bcaa94229578744a20c6f39d25b5a",
+      "bytes": 27952
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/hosted-a909/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/geometry.json",
+      "sha256": "228ce0383944ef6c4ce92401007b493bc2e11edcaa35472e748e6772d4dfa005",
+      "bytes": 15672
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/hosted-a909/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/test-failed-1.png",
+      "sha256": "aaf839d49e33b56c1d6f80fab83e001874a6c7e0c2d7f52c13cf7a8379513e92",
+      "bytes": 266145
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/hosted-a909/booking-catalog-recovery-p-e3d7f-etails-critical-mobile-flow-webkit-iphone/trace.zip",
+      "sha256": "0cfafb9f865fa27dfbd9a7b42255991cdd8d433799cf776879e5b52d3ed75907",
+      "bytes": 2569722
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/independent-review/tdf-booking-resize-phase-independent-review-20261029.txt",
+      "sha256": "bdb78f74f3b7d4ddd6aaad4a0f43d32de689f1f8bc9fef7448db6b916a45499a",
+      "bytes": 7337
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/independent-review/tdf-booking-resize-phase-code-review-20261029.txt",
+      "sha256": "b47b9ba2e136baf08e5b5820856aa2ac178481938208162bdadd887d5fdefe80",
+      "bytes": 4144
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/independent-review/tdf-booking-resize-phase-final-review-20261029.txt",
+      "sha256": "5b39599314e593bf2d988e188a922e60e8767da9f9f037cebdae4de54b84d0f5",
+      "bytes": 7034
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/execution-drivers/tdf-booking-resize-phase-final-matrix-20261029.py",
+      "sha256": "562fb9d53666d5647bce941c2cc7acb23e0a63e22ddda02285ada22340a9a918",
+      "bytes": 5362
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/execution-drivers/tdf-booking-resize-phase-uninstrumented-matrix-20261029.py",
+      "sha256": "b45c6b7c30f05defd274e075b4e3c10e04d6752b3bbce5ad6889c947acaa0556",
+      "bytes": 5628
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/execution-drivers/tdf-booking-resize-phase-controls-20261029.py",
+      "sha256": "1450d1147ef12c101187d439c5c5b9e43a145c90bd451088f4fa7ea1e446863c",
+      "bytes": 11246
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/execution-drivers/tdf-booking-resize-phase-quality-20261029.py",
+      "sha256": "a8dbccfdb14aae70ced5ca2fa9fb22a7abfd2377014ede74b5d5d2c57c37bd99",
+      "bytes": 3601
+    },
+    {
+      "path": "reports/booking-native-resize-phase-2026-10-29/execution-drivers/tdf-booking-resize-phase-seal-20261029.py",
+      "sha256": "b0e58ec212d094be3a92d04baa46581dfdc79a1cacc17067210111b81ce45b82",
+      "bytes": 6741
+    }
+  ],
+  "retainedTraceManifest": [
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029",
+      "relativePath": "final-chromium-desktop/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-desktop/trace.zip",
+      "sha256": "cab4603ee30aaaf65c7f1d84c7f088e8e2e0a237e8ff2ae99efc150ab963fb5f",
+      "bytes": 15805,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "sha256": "e02b99d508dc2de6cc7d48e25709923be915e9a1126dbf0f311e8c7269b1f369",
+      "bytes": 5261949,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "sha256": "32aca61136f0fc1eccf4e43f9ccd32241c6225e71b374b304566f1ca68930f79",
+      "bytes": 4217579,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029",
+      "relativePath": "final-chromium-phone/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "7a368c4bec3682c7e93f79b959475798ae4f104f4bebf3db7c6abfeedcee460b",
+      "bytes": 16786,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "de4f853ff57397500adcb14152fd2d70098e5f25adf03b60625fa1efaff204cb",
+      "bytes": 5503208,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "eeeefc550d2ba2145df6a47bb877b64057f8a0f3c7d1a9a7740a081e6688b394",
+      "bytes": 4571050,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029",
+      "relativePath": "final-firefox/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-firefox/trace.zip",
+      "sha256": "dfcecf22b3602511f0eb6b35eda41e10d1a0fe098bdc963b5d82207d671ed894",
+      "bytes": 31584,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029",
+      "relativePath": "final-firefox/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-firefox/trace.zip",
+      "sha256": "64073a02e3eb4ff2ff871ffd8cb560a23f42b3402bad5aa89826bf4397f178de",
+      "bytes": 6224868,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-final-matrix-20261029",
+      "relativePath": "final-firefox/booking-public-booking-rec-a439f-etails-critical-mobile-flow-firefox/trace.zip",
+      "sha256": "f4ef06aa8fe1a6fc691d314be929cb59b7dd27824dfaf892601ab7e23d0c41bc",
+      "bytes": 3564621,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+      "relativePath": "final-chromium-desktop/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-desktop/trace.zip",
+      "sha256": "5c32a19168f0820b31f2330b53cf9e924390af47710b2a099cfd5977b1a7ffd5",
+      "bytes": 16284,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "sha256": "4971f851919a7b4320a429c1a8dd9a12a66d20c3976a115c8c7000e5376a3c70",
+      "bytes": 5384526,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+      "relativePath": "final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/trace.zip",
+      "sha256": "3585281e31f10de0f89da9fb9a0283976acc80ceec5b7b751ec916c0d5c7643e",
+      "bytes": 4190405,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+      "relativePath": "final-chromium-phone/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "6774d5eec9b0ea35f16a76fbfde758aefc02257ae783b4c77fa2a27d8a7a7ba0",
+      "bytes": 16423,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "1e55dd620c9460ac888a560aa273f85a6a792832cfdc0e7241ff6f68198cd250",
+      "bytes": 5486475,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+      "relativePath": "final-chromium-phone/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "3a65ca75675ef405cd47b1ab6aebab6322c8b461e67bbe67c8ca425c5a130f17",
+      "bytes": 4437659,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+      "relativePath": "final-firefox/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-firefox/trace.zip",
+      "sha256": "9b1866464019b717e5ba31edf8907ce66636096d90a7d5617023067cc0b9a1c4",
+      "bytes": 29460,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+      "relativePath": "final-firefox/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-firefox/trace.zip",
+      "sha256": "2827bc8742769e2c93bea364c12da573e69f905d5c475caa29736602a196e827",
+      "bytes": 6160874,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-uninstrumented-matrix-20261029",
+      "relativePath": "final-firefox/booking-public-booking-rec-a439f-etails-critical-mobile-flow-firefox/trace.zip",
+      "sha256": "9b3e9b0f676101d00db9bbecce878eecf6def035e49fca440dae0dd7990087dd",
+      "bytes": 3565523,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-controls-20261029",
+      "relativePath": "helper-only-fault/helper-only-fault-public-b-7ac59-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "d14682f0d843c7ebbf5218b3844dfabb96fe38f0bc5aacf45aa6645363dca7df",
+      "bytes": 5903039,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-controls-20261029",
+      "relativePath": "root-option-removal/root-option-removal-public-048bf-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "b20fdf45947e91578dbe9c2b59bbc3dcaaeb73bb34fec4c9f887b3a1825ca12d",
+      "bytes": 5496523,
+      "scope": "Selected copies committed; other traces retained locally only."
+    },
+    {
+      "localDirectory": "/private/tmp/tdf-booking-resize-phase-controls-20261029",
+      "relativePath": "synthetic-without-native-ack/synthetic-without-native-a-47492-etails-critical-mobile-flow-chromium-phone/trace.zip",
+      "sha256": "508999ea62f6af5c50b33daa79ee9950dc63ac569f3ef7edab2975cc1af100a2",
+      "bytes": 5528414,
+      "scope": "Selected copies committed; other traces retained locally only."
+    }
+  ],
+  "cleanup": {
+    "ownedPreviewServersStopped": true,
+    "ownedDependencyAliasesRemoved": true,
+    "correctC2UIAndDistRestored": true,
+    "syntheticFinancialPostgresStopped": true,
+    "productionWritesOrProviderCalls": false
+  }
+}

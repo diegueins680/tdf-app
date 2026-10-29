@@ -1,0 +1,166 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack.config.mjs",
+    "rootDir": "/private/tmp/tdf-booking-resize-phase-controls-20261029",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-phone",
+        "name": "chromium-phone",
+        "testDir": "/private/tmp/tdf-booking-resize-phase-controls-20261029",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "synthetic-without-native-ack.spec.mjs",
+      "file": "synthetic-without-native-ack.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+          "ok": false,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 20477,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack.spec.mjs:312:47",
+                    "location": {
+                      "file": "/private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack.spec.mjs",
+                      "column": 47,
+                      "line": 312
+                    },
+                    "snippet": "  310 |         body: Buffer.from(JSON.stringify(resizeAcknowledgement, null, 2)), contentType: 'application/json',\n  311 |       });\n> 312 |       expect(resizeAcknowledgement.delivered).toBe(true);\n      |                                               ^\n  313 |       expect(resizeAcknowledgement.trusted).toBe(true);\n  314 |       expect(resizeAcknowledgement.clientWidth).toBeGreaterThan(0);\n  315 |       expect(resizeAcknowledgement.clientWidth).toBeLessThanOrEqual(320);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack.spec.mjs",
+                        "column": 47,
+                        "line": 312
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  310 |         body: Buffer.from(JSON.stringify(resizeAcknowledgement, null, 2)), contentType: 'application/json',\n  311 |       });\n> 312 |       expect(resizeAcknowledgement.delivered).toBe(true);\n      |                                               ^\n  313 |       expect(resizeAcknowledgement.trusted).toBe(true);\n  314 |       expect(resizeAcknowledgement.clientWidth).toBeGreaterThan(0);\n  315 |       expect(resizeAcknowledgement.clientWidth).toBeLessThanOrEqual(320);\n    at /private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack.spec.mjs:312:47"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T15:18:26.821Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "booking-initial-viewport",
+                      "contentType": "application/json",
+                      "body": "ewogICJhdCI6IDEwOTYzLAogICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICJpbm5lcldpZHRoIjogMzIwLAogICJjbGllbnRXaWR0aCI6IDMyMCwKICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgInZpc3VhbFZpZXdwb3J0IjogewogICAgIndpZHRoIjogMzIwLAogICAgInNjYWxlIjogMQogIH0sCiAgIm92ZXJmbG93IjogZmFsc2UsCiAgImRldmljZVBpeGVsUmF0aW8iOiAzLAogICJzY3JvbGxZIjogMTQ2NiwKICAiYW5jaG9yIjogewogICAgIngiOiAyMDAuMjUsCiAgICAieSI6IDQxNS40Mzc1LAogICAgInJpZ2h0IjogMjYwLjIzNDM3NSwKICAgICJ3aWR0aCI6IDU5Ljk4NDM3NSwKICAgICJoZWlnaHQiOiAzMiwKICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICJwbGFjZW1lbnQiOiBudWxsCiAgfSwKICAidG9vbHRpcCI6IHsKICAgICJ4IjogNTgsCiAgICAieSI6IDQ0Ny4zMzMzNDM1MDU4NTk0LAogICAgInJpZ2h0IjogMzIwLjA0Njg3NSwKICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAiaGVpZ2h0IjogNDAuNSwKICAgICJ0ZXh0IjogIlRodSAyOSAwNDowMCAoR01ULTUpIMK3IEVzdHVkaW8gMDk6MDAgKFVUQykiLAogICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgfSwKICAiZXZlbnRzIjogWwogICAgewogICAgICAiYXQiOiAxMDgxOSwKICAgICAgInR5cGUiOiAiYmVmb3JlLXZpZXdwb3J0LXJlcXVlc3QiLAogICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgInRyYW5zZm9ybSI6ICJ0cmFuc2xhdGUzZCg5OS4zMzMzcHgsIDM5MC4zMzNweCwgMHB4KSIsCiAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgfSwKICAgIHsKICAgICAgImF0IjogMTA5MDAsCiAgICAgICJ0eXBlIjogInBvc2l0aW9uZXIuYXR0cmlidXRlIiwKICAgICAgImF0dHJpYnV0ZSI6ICJzdHlsZSIsCiAgICAgICJvbGRWYWx1ZSI6ICJwb3NpdGlvbjogZml4ZWQ7IGluc2V0OiAwcHggYXV0byBhdXRvIDBweDsgbWFyZ2luOiAwcHg7IHRyYW5zZm9ybTogdHJhbnNsYXRlM2QoOTkuMzMzM3B4LCAzOTAuMzMzcHgsIDBweCk7IiwKICAgICAgImNvbm5lY3RlZCI6IHRydWUsCiAgICAgICJ0cmFuc2Zvcm0iOiAidHJhbnNsYXRlM2QoNThweCwgNDQ3LjMzM3B4LCAwcHgpIiwKICAgICAgInBvc2l0aW9uIjogImZpeGVkIiwKICAgICAgInBsYWNlbWVudCI6ICJib3R0b20iCiAgICB9LAogICAgewogICAgICAiYXQiOiAxMDkwMCwKICAgICAgInR5cGUiOiAicG9zaXRpb25lci5hdHRyaWJ1dGUiLAogICAgICAiYXR0cmlidXRlIjogImRhdGEtcG9wcGVyLXBsYWNlbWVudCIsCiAgICAgICJvbGRWYWx1ZSI6ICJib3R0b20iLAogICAgICAiY29ubmVjdGVkIjogdHJ1ZSwKICAgICAgInRyYW5zZm9ybSI6ICJ0cmFuc2xhdGUzZCg1OHB4LCA0NDcuMzMzcHgsIDBweCkiLAogICAgICAicG9zaXRpb24iOiAiZml4ZWQiLAogICAgICAicGxhY2VtZW50IjogImJvdHRvbSIKICAgIH0sCiAgICB7CiAgICAgICJhdCI6IDEwOTAwLAogICAgICAidHlwZSI6ICJ3aW5kb3cucmVzaXplIgogICAgfSwKICAgIHsKICAgICAgImF0IjogMTA5MDAsCiAgICAgICJ0eXBlIjogInZpc3VhbFZpZXdwb3J0LnJlc2l6ZSIKICAgIH0sCiAgICB7CiAgICAgICJhdCI6IDEwOTAyLAogICAgICAidHlwZSI6ICJwb3NpdGlvbmVyLmF0dHJpYnV0ZSIsCiAgICAgICJhdHRyaWJ1dGUiOiAiZGF0YS1wb3BwZXItcGxhY2VtZW50IiwKICAgICAgIm9sZFZhbHVlIjogImJvdHRvbSIsCiAgICAgICJjb25uZWN0ZWQiOiB0cnVlLAogICAgICAidHJhbnNmb3JtIjogInRyYW5zbGF0ZTNkKDU4cHgsIDQ0Ny4zMzNweCwgMHB4KSIsCiAgICAgICJwb3NpdGlvbiI6ICJmaXhlZCIsCiAgICAgICJwbGFjZW1lbnQiOiAiYm90dG9tIgogICAgfQogIF0sCiAgIm9ic2VydmF0aW9uVHJ1bmNhdGVkIjogZmFsc2UsCiAgIm9ic2VydmVkUG9zaXRpb25lckNvbm5lY3RlZCI6IHRydWUsCiAgInNhbWVPYnNlcnZlZFBvc2l0aW9uZXIiOiB0cnVlCn0="
+                    },
+                    {
+                      "name": "booking-resize-acknowledgement",
+                      "contentType": "application/json",
+                      "body": "ewogICJkZWxpdmVyZWQiOiBmYWxzZSwKICAicmVhc29uIjogIm5hdGl2ZSByZXNpemUgbm90IGRlbGl2ZXJlZCB3aXRoaW4gOHMiCn0="
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack/synthetic-without-native-a-47492-etails-critical-mobile-flow-chromium-phone/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack/synthetic-without-native-a-47492-etails-critical-mobile-flow-chromium-phone/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack/synthetic-without-native-a-47492-etails-critical-mobile-flow-chromium-phone/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/private/tmp/tdf-booking-resize-phase-controls-20261029/synthetic-without-native-ack.spec.mjs",
+                    "column": 47,
+                    "line": 312
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "7e897dc26eaa66ea9361-2880b0eec6b5d7a2434e",
+          "file": "synthetic-without-native-ack.spec.mjs",
+          "line": 173,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-29T15:18:24.948Z",
+    "duration": 27265.137,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}
