@@ -1,6 +1,78 @@
 import { expect, test } from '@playwright/test';
 import axe from 'axe-core';
 
+async function measureBookingViewport(page) {
+  return page.evaluate(() => {
+    const viewport = { at: performance.now(), compatMode: document.compatMode, innerWidth,
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      visualViewport: visualViewport && { width: visualViewport.width, scale: visualViewport.scale } };
+    // Mobile innerWidth can grow with overflowing content; clientWidth is the
+    // visible content bound, including on a page whose layout viewport grows.
+    return { ...viewport, overflow: viewport.scrollWidth > viewport.clientWidth };
+  });
+}
+
+// Observe a failed measurement without changing its asserted result. In
+// particular, a later fit must not turn the original failure into a pass.
+async function failedViewportGeometry(page) {
+  return page.evaluate(async () => {
+    const describe = element => {
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      return { tag: element.tagName, id: element.id, classes: element.getAttribute('class'),
+        text: element.textContent?.slice(0, 100), x: rect.x, right: rect.right,
+        width: rect.width, clientWidth: element.clientWidth, scrollWidth: element.scrollWidth,
+        transform: element.style.transform };
+    };
+    const sample = label => ({ label, at: performance.now(), innerWidth,
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      visualViewport: visualViewport && { width: visualViewport.width, scale: visualViewport.scale },
+      bookingCard: describe(document.querySelector('[data-testid="public-booking-card"]')),
+      serviceSelect: describe(document.querySelector('[role="combobox"]')),
+      dateInput: describe(document.querySelector('input[type="datetime-local"]')),
+      tooltip: describe(document.querySelector('[role="tooltip"]')),
+      tooltipPositioner: describe(document.querySelector('[role="tooltip"]')?.closest('[data-popper-placement]')),
+      beyondClientViewport: [...document.querySelectorAll('body *')].filter(element => {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return rect.width > 0 && rect.right > document.documentElement.clientWidth + 0.5
+          && style.display !== 'none' && style.visibility !== 'hidden';
+      }).slice(0, 15).map(describe),
+    });
+    const samples = [sample('after-failed-one-shot')];
+    await Promise.race([new Promise(resolve => requestAnimationFrame(resolve)),
+      new Promise(resolve => setTimeout(resolve, 250))]);
+    samples.push(sample('next-frame-or-250ms'));
+    await new Promise(resolve => setTimeout(resolve, 100));
+    samples.push(sample('another-100ms'));
+    await new Promise(resolve => setTimeout(resolve, 300));
+    samples.push(sample('another-300ms'));
+    return samples;
+  });
+}
+
+test('booking viewport check detects known client-width overflow @critical @mobile-flow', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.setContent('<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0}</style>');
+  await expect.poll(() => page.evaluate(() => document.documentElement.clientWidth)).toBe(320);
+  expect((await measureBookingViewport(page)).overflow).toBe(false);
+  await page.evaluate(() => {
+    const offender = document.createElement('div');
+    offender.id = 'known-viewport-overflow';
+    offender.style.cssText = 'position:absolute;left:0;top:0;width:calc(100vw + 80px);height:1px;background:red;';
+    document.body.append(offender);
+  });
+  await expect.poll(async () => (await measureBookingViewport(page)).overflow).toBe(true);
+  const wide = await measureBookingViewport(page);
+  expect(wide.compatMode).toBe('CSS1Compat');
+  expect(wide.clientWidth).toBe(320);
+  expect(wide.scrollWidth).toBeGreaterThan(320);
+  await page.locator('#known-viewport-overflow').evaluate(element => element.remove());
+  await expect.poll(async () => (await measureBookingViewport(page)).overflow).toBe(false);
+});
+
 // All business/session APIs are fixtures. Only local static assets reach the
 // preview server; no reservation, provider request or external traffic is sent.
 for (const failure of ['error', 'empty']) {
@@ -87,10 +159,21 @@ for (const failure of ['error', 'empty']) {
     await page.getByRole('button', { name: 'Continuar', exact: true }).click();
     await expect(page.getByLabel(/^Fecha y hora/)).toBeVisible();
     await page.setViewportSize({ width: 320, height: 740 });
-    // Viewport resizing can resolve before the matchMedia-driven React render.
-    // Measure the settled mobile view, retaining the zero-overflow assertion.
+    // The mobile marker exists at both390 and320px. Bind the measurement to
+    // the requested content viewport, without waiting for overflow to vanish.
     await expect(page.getByText('Paso 2 de 3', { exact: true })).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+    await expect.poll(() => page.evaluate(() => {
+      const width = document.documentElement.clientWidth;
+      return width > 0 && width <= 320;
+    })).toBe(true);
+    const viewportMeasurement = await measureBookingViewport(page);
+    if (viewportMeasurement.overflow) await testInfo.attach('booking-viewport-geometry', {
+      body: Buffer.from(JSON.stringify({ requestedViewport: page.viewportSize(), initial: viewportMeasurement,
+        samples: await failedViewportGeometry(page) }, null, 2)),
+      contentType: 'application/json',
+    });
+    expect(viewportMeasurement.compatMode).toBe('CSS1Compat');
+    expect(viewportMeasurement.overflow).toBe(false);
     expect(errors).toEqual([]);
     expect(writes).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath('booking-catalog-recovered.png'), fullPage: true });

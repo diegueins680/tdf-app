@@ -2898,7 +2898,7 @@
     {
       "id": "SURFACE-9517b2194ab847fb",
       "path": "e2e/web/booking-catalog-recovery.spec.mjs",
-      "sha256": "f65777a6f8b5f9823e0e66ea4d49900aef1051d00c4e4d4ce8e4c085cbf23dcd",
+      "sha256": "4d2c74f95eb3683f93f0c94d3ab46def1437e7876f70d7a760889a2e384091b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27233,6 +27233,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/booking-viewport-bounds.md",
+      "sha256": "c8d4474bf2041987906192b6560ae09e1d5ef08d44964cb080bf2719c6700263",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/bookings.md",
       "sha256": "39a90741bfb9d3a0f6ff199680be4a03d7576aaa50e51ad89c72fbb12c4f8e81",
       "authority": "inferred",
@@ -27843,7 +27850,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "370509c5fcdbb712c771ee57749cc8dd2967899b474e582da30e93411788c359",
+      "sha256": "90f9450a7749c612f6463686097e5f4d96139681f20383f55afce7f3fc5e6bfa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
