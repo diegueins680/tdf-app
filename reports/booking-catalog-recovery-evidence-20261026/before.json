@@ -1,0 +1,27 @@
+{
+  "scope": "Actual preview static artifact, simulated API503 only. No real reservation or provider calls.",
+  "observations": [
+    {
+      "mode": "desktop",
+      "path": "/tdf#estudio -> /reservar",
+      "catalogCalls": 4,
+      "contactFormDisabled": true,
+      "warningActions": 0,
+      "warning": "No pudimos cargar el catálogo de servicios. Reintenta en unos minutos; no enviaremos una reserva sin un servicio canónico.",
+      "pageErrors": [],
+      "businessWrites": [],
+      "observedAt": "2026-10-26T22:43:11.597Z"
+    },
+    {
+      "mode": "Pixel7",
+      "path": "/tdf#estudio -> /reservar",
+      "catalogCalls": 4,
+      "contactFormDisabled": true,
+      "warningActions": 0,
+      "warning": "No pudimos cargar el catálogo de servicios. Reintenta en unos minutos; no enviaremos una reserva sin un servicio canónico.",
+      "pageErrors": [],
+      "businessWrites": [],
+      "observedAt": "2026-10-26T22:43:20.953Z"
+    }
+  ]
+}

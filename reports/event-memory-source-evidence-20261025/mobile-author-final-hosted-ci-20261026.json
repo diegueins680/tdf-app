@@ -1,0 +1,281 @@
+{
+  "observedAt": "2026-10-26T16:30:38.302966+00:00",
+  "pr": {
+    "autoMergeRequest": null,
+    "baseRefName": "feat/event-moment-audio-20261026",
+    "headRefOid": "41a68b776676e50e38d9de77cfb1dcda598ce7fe",
+    "isDraft": false,
+    "number": 174,
+    "reviewRequests": [
+      {
+        "__typename": "User",
+        "login": "tdfrecords"
+      }
+    ],
+    "reviews": [],
+    "url": "https://github.com/diegueins680/TDF-mobile/pull/174"
+  },
+  "runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 40359050881,
+      "headSha": "41a68b776676e50e38d9de77cfb1dcda598ce7fe",
+      "jobs": [
+        {
+          "completedAt": "2026-10-26T16:27:21Z",
+          "conclusion": "success",
+          "databaseId": 121699226101,
+          "name": "validate",
+          "startedAt": "2026-10-26T16:26:00Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-10-26T16:26:01Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-26T16:26:00Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:26:05Z",
+              "conclusion": "success",
+              "name": "Checkout",
+              "number": 2,
+              "startedAt": "2026-10-26T16:26:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:26:12Z",
+              "conclusion": "success",
+              "name": "Setup Node",
+              "number": 3,
+              "startedAt": "2026-10-26T16:26:05Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:26:21Z",
+              "conclusion": "success",
+              "name": "Install dependencies",
+              "number": 4,
+              "startedAt": "2026-10-26T16:26:12Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:26:35Z",
+              "conclusion": "success",
+              "name": "Run release checks",
+              "number": 5,
+              "startedAt": "2026-10-26T16:26:21Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:27:15Z",
+              "conclusion": "success",
+              "name": "Run tests",
+              "number": 6,
+              "startedAt": "2026-10-26T16:26:35Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:27:15Z",
+              "conclusion": "success",
+              "name": "Verify signing and artifact guards",
+              "number": 7,
+              "startedAt": "2026-10-26T16:27:15Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:27:18Z",
+              "conclusion": "success",
+              "name": "Run Expo Doctor",
+              "number": 8,
+              "startedAt": "2026-10-26T16:27:15Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:27:18Z",
+              "conclusion": "success",
+              "name": "Post Setup Node",
+              "number": 15,
+              "startedAt": "2026-10-26T16:27:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:27:18Z",
+              "conclusion": "success",
+              "name": "Post Checkout",
+              "number": 16,
+              "startedAt": "2026-10-26T16:27:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:27:18Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 17,
+              "startedAt": "2026-10-26T16:27:18Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/40359050881/job/121699226101"
+        }
+      ],
+      "name": "Mobile Validate",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/40359050881"
+    },
+    {
+      "conclusion": "",
+      "databaseId": 40359055946,
+      "headSha": "41a68b776676e50e38d9de77cfb1dcda598ce7fe",
+      "jobs": [
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "databaseId": 121699243530,
+          "name": "android",
+          "startedAt": "2026-10-26T16:26:02Z",
+          "status": "in_progress",
+          "steps": [
+            {
+              "completedAt": "2026-10-26T16:26:04Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-26T16:26:02Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:26:09Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+              "number": 2,
+              "startedAt": "2026-10-26T16:26:04Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:26:15Z",
+              "conclusion": "success",
+              "name": "Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+              "number": 3,
+              "startedAt": "2026-10-26T16:26:09Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:26:16Z",
+              "conclusion": "success",
+              "name": "Run actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961",
+              "number": 4,
+              "startedAt": "2026-10-26T16:26:15Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:26:29Z",
+              "conclusion": "success",
+              "name": "Run npm ci --include=dev",
+              "number": 5,
+              "startedAt": "2026-10-26T16:26:16Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-26T16:26:30Z",
+              "conclusion": "success",
+              "name": "Isolate emulator build from production and OTA",
+              "number": 6,
+              "startedAt": "2026-10-26T16:26:29Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "0001-01-01T00:00:00Z",
+              "conclusion": "",
+              "name": "Build bundled test APK with the repository debug test key",
+              "number": 7,
+              "startedAt": "2026-10-26T16:26:30Z",
+              "status": "in_progress"
+            },
+            {
+              "completedAt": "0001-01-01T00:00:00Z",
+              "conclusion": "",
+              "name": "Run actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f",
+              "number": 8,
+              "startedAt": "0001-01-01T00:00:00Z",
+              "status": "pending"
+            },
+            {
+              "completedAt": "0001-01-01T00:00:00Z",
+              "conclusion": "",
+              "name": "Post Run actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961",
+              "number": 14,
+              "startedAt": "0001-01-01T00:00:00Z",
+              "status": "pending"
+            },
+            {
+              "completedAt": "0001-01-01T00:00:00Z",
+              "conclusion": "",
+              "name": "Post Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+              "number": 15,
+              "startedAt": "0001-01-01T00:00:00Z",
+              "status": "pending"
+            },
+            {
+              "completedAt": "0001-01-01T00:00:00Z",
+              "conclusion": "",
+              "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+              "number": 16,
+              "startedAt": "0001-01-01T00:00:00Z",
+              "status": "pending"
+            }
+          ],
+          "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/40359055946/job/121699243530"
+        }
+      ],
+      "name": "Interaction Android test build",
+      "status": "in_progress",
+      "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/40359055946"
+    },
+    {
+      "conclusion": "",
+      "databaseId": 40359061603,
+      "headSha": "41a68b776676e50e38d9de77cfb1dcda598ce7fe",
+      "jobs": [
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "databaseId": 121699261995,
+          "name": "simulator",
+          "startedAt": "2026-10-26T16:26:01Z",
+          "status": "queued",
+          "steps": [],
+          "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/40359061603/job/121699261995"
+        }
+      ],
+      "name": "Interaction simulator build",
+      "status": "queued",
+      "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/40359061603"
+    }
+  ],
+  "qualification": {
+    "validate": "SUCCESS",
+    "jestTests": 759,
+    "jestSuites": 101,
+    "artifactTestsTotal": 14,
+    "artifactTestsExecuted": 13,
+    "artifactTestsSkipped": 1,
+    "expoDoctor": "17/17",
+    "logSha256": "e1f2600288f84dec8bd8167bdc4755ab4700feea2ce23ee5ca3ec8c1c1771304",
+    "localMacArtifactGuards": "14 executed in initial qualification; guard/native inputs unchanged, original identity retained",
+    "nativeBinaries": "Not yet qualified for final head; Android in progress and iOS queued at observation",
+    "physicalDevice": "NOT_VERIFIED"
+  },
+  "prior41505ce": {
+    "validate": 40357472951,
+    "validateStatus": "SUCCESS",
+    "android": 40357478781,
+    "androidStatus": "CANCELLED after source change, not a pass",
+    "ios": 40357483884,
+    "iosStatus": "CANCELLED after source change, not a pass"
+  },
+  "productionWrites": 0,
+  "realInvitationsSent": 0
+}

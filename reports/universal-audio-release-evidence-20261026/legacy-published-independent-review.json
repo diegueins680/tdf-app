@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS_READ_ONLY_INDEPENDENT_EVIDENCE_REVIEW",
+  "worktree": "/private/tmp/tdf-music-catalog-inventory-20261026",
+  "observedHead": "fe940e4d8f26328691c638d2fc2e5529aaf5034f",
+  "reviewedTargetMain": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "archiveFilesHashed": 12,
+  "archiveFilesAccounted": 13,
+  "artifactManifestSha256": "b6df7ac328511c99bfc92cd0dbecc3b5326fd53424e11d39ce2b0776d3a5f3c9",
+  "archiveHashes": {
+    "attempt1-legacy-provider-playback.spec.mjs": "ce9ad540a66d52d995db15ad7f7f07228d590810f7fdb2b0a0bccacd4f796fa1",
+    "attempt1-playwright.config.mjs": "1edfb6c34cf0d0458c2c33d41816ce35158ac3e192cd860a7b1d4c1fb33559d1",
+    "attempt1-provenance.json": "0e65afcdd3f49f87000a5bba6e0c641b81ecb7c8bd261cd6b4bf5833900c1045",
+    "attempt1-results.json": "93d6348f68bba1266a646e423ffb295130e2d8b979ea0d5ff88a38e9f297fbeb",
+    "attempt2-legacy-provider-playback.spec.mjs": "fab22e991746a624cb4c91be9f6973d69633277bf8a94469a0fa8993d6e7692c",
+    "attempt2-playwright.config.mjs": "f9a1dcaf84e5e798c2ab91a25629730270dd2bf275dec2303c70a5dd55e76b75",
+    "attempt2-provenance.json": "27317cdfce295dbd22153c3bbbdf8cb616f76c2181ff8bae075be70700fab5c1",
+    "attempt2-results.json": "28ccae8493f81ea59167d0e92edbcfb8d380cc650e2f594781cacfdcbe88dd78",
+    "final-native-guard.json": "eeb4af4be560a57a8b32514179aa528c580d4cdf916d03ddfa0b2c942830c184",
+    "hosted-qualification.json": "7e530bafb0f86f8fcfb147118455f6544eea2fb90828c5e32e2d19c6730bf5bd",
+    "protected-merge.json": "97ecbb1b5e9fc8b8f2122d5e5aa300183ad0b3a6a5d26ef7de3ba479de6356cd",
+    "qualification-summary.json": "e81e4fea0c83de0e0280f9893fd818aad33ea721c270ffafd8df45f150af1be7"
+  },
+  "reviewedDocSha256": "b2235f0541a6297c92bc1878cb0a412c19f7d9b59a89847f01685828a13352ed",
+  "reviewedMainReportSha256": "c845044c4e78bf36e06248a2a145a93cf590156954e58df9c2cd008a4b1e5951",
+  "decodedCases": [
+    {
+      "project": "chromium-desktop",
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+      "takeovers": 1,
+      "nativeCommands": 0,
+      "unexpectedMutations": 0,
+      "decodedBoundaryMatchesSummary": true
+    },
+    {
+      "project": "chromium-desktop",
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+      "takeovers": 0,
+      "nativeCommands": 0,
+      "unexpectedMutations": 0,
+      "decodedBoundaryMatchesSummary": true
+    },
+    {
+      "project": "chromium-phone",
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection",
+      "takeovers": 1,
+      "nativeCommands": 0,
+      "unexpectedMutations": 0,
+      "decodedBoundaryMatchesSummary": true
+    },
+    {
+      "project": "chromium-phone",
+      "title": "@critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command",
+      "takeovers": 0,
+      "nativeCommands": 0,
+      "unexpectedMutations": 0,
+      "decodedBoundaryMatchesSummary": true
+    }
+  ],
+  "attemptHistory": {
+    "retained": 2,
+    "firstAttempt": "4 failures at unchanged final unexpectedMutations assertion: blocked external POST /flags misclassified. No first-attempt pass claimed.",
+    "secondAttempt": "4 passed,0skip/flaky/retry; exact original test bodies unchanged.",
+    "correction": "6-line early external fetch/xhr abort and reporter output destination only; existing business API guards/assertions/30s test+8s expect bounds/retries0 unchanged."
+  },
+  "protectedMerge": {
+    "merge": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "sourceHead": "ba2729db2ce89183f7daaad4f6e941a3bbbbff9f",
+    "actualMergeAndSourceTree": "f64d801e110320edfeee4d789f03c2176b24cacb",
+    "testedComputedMerge": "c79de0ca05c0dc882ef6d5ad4c8af4a6fc071ae6",
+    "requiredContextsAllSuccess": 20,
+    "contextTypes": "19 completed exact-head check runs plus successful native main-integration-admission commit status",
+    "currentHeadApproval": "Later20:36 approval supersedes explicitly historical19:32 pending snapshot; before20:53 protected merge",
+    "mergeGuardHashMatchesProtectedReceipt": true
+  },
+  "acceptance": {
+    "uniqueIDs": 23,
+    "PARTIAL": 21,
+    "UNVERIFIED": 2,
+    "fullyMet": 0
+  },
+  "canonical": {
+    "formal/system/requirements.json": {
+      "sha256": "a60d928b211c49fae8c466f88c0be189d234bba697b928b584420546a566b431",
+      "count": 147,
+      "byteExactProtectedMain": true
+    },
+    "docs/catalog-persistence/catalog-list-decisions.json": {
+      "sha256": "fc28d03ed980644c63767c8bd82b9ef3e947673ddadefd6399f1018b6650a54e",
+      "count": 1341,
+      "byteExactProtectedMain": true
+    },
+    "scripts/production-migrations.json": {
+      "sha256": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529",
+      "count": 222,
+      "byteExactProtectedMain": true
+    }
+  },
+  "localMdLinksResolved": 10,
+  "findings": [],
+  "runtimeBrowserNetworkOrGeneratorsExecuted": false,
+  "repoMutationsByReviewer": false,
+  "limits": [
+    "Offline archive consistency and semantic review only; no browser rerun, new production observation or fresh GitHub gate request.",
+    "Published bundle bytes not archived here: observed SHA recorded, exact2e substring awaited in each reviewed loaded-entry test. No independent redownload of historical bytes by reviewer.",
+    "Synthetic account/catalog/API/provider destination; no actual provider media/decoder, physical device, production upload-to-playback, CDN/rights/backend activation, AA certification or SLO acceptance."
+  ]
+}

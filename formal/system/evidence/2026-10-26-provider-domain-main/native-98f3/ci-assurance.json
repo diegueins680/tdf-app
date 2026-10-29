@@ -1,0 +1,60 @@
+{
+  "workflowRun": 40413235088,
+  "associatedPRHead": "98f3ed230d2bcc87971d9e7c9b2083bd1cb9700d",
+  "actualCICheckout": "7f89768d75bfcdf019f5c9ba192f08c4e4ed55eb",
+  "artifactId": 12693119937,
+  "artifactSha256": "b4320ba2768e43b143eee648e7cf84acd5bf2e5b5d93f2aae0aa1c9ac85a8f81",
+  "allRecordedSourceInputsMatchNativeCheckout": true,
+  "matchedSourceInputs": 1351,
+  "executionPassed": true,
+  "requirements": {
+    "total": 148,
+    "criticalP0": 118,
+    "financialP0": 20,
+    "authorizationP0": 12
+  },
+  "metrics": {
+    "requirements": {
+      "PROVEN": 0,
+      "REFUTED": 0,
+      "UNPROVEN": 148,
+      "NOT_APPLICABLE": 0
+    },
+    "requirementsWithDeclaredAmbiguityEntries": 137,
+    "obligationsByCategory": {
+      "implementation": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 148,
+        "NOT_APPLICABLE": 0
+      },
+      "refinement": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 148,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-authorization-SMT": {
+        "PROVEN": 3,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "source-derived-recovery-SMT": {
+        "PROVEN": 4,
+        "REFUTED": 0,
+        "UNPROVEN": 0,
+        "NOT_APPLICABLE": 0
+      }
+    }
+  },
+  "releaseDecision": "BLOCKED",
+  "productionExecutionAllowed": false,
+  "scope": "Native qualification is source98f3. This independent hosted assurance report is the actual synthetic merge checkout7f89768d; every recorded source file matches native98f3. Conditional SMT results do not prove complete requirements or authorize deployment."
+}

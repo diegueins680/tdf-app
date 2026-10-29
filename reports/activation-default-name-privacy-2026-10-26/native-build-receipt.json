@@ -1,0 +1,27 @@
+{
+  "source": "48eb295581e31a27b52e4a0353defce8aca890d0",
+  "sourceTree": "bf7e6b737dc6642ce9ae4ac7c65c002c68bafc5e",
+  "backendTree": "75edfbfe4bc002cb6bda30a53d47f9a614490d27",
+  "protectedSchemaAuthority": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+  "scope": "Native macOS candidate API with reviewed-source privacy fix, based on protected main626. Build only; NOT runtime-qualified, independently reviewed or deployed. Actual /version/API/SQL acceptance required.",
+  "resolver": "lts-24.42",
+  "compiler": "GHC9.10.3 selected by Stack",
+  "command": [
+    "stack",
+    "--no-terminal",
+    "build",
+    "--force-dirty",
+    "--jobs",
+    "2",
+    "tdf-hq:exe:tdf-hq-exe",
+    "--copy-bins",
+    "--local-bin-path",
+    "/private/tmp/tdf-activation-private-name-binary-20261026"
+  ],
+  "startedAt": "2026-10-27T02:07:26.530371+00:00",
+  "status": "BUILT_NOT_RUNTIME_QUALIFIED",
+  "processGroup": 98472,
+  "exitCode": 0,
+  "binarySha256": "575e4b5cf9cdcb3258dab12bb4450bb23b3b90a68ec9572582119ae9eda29043",
+  "finishedAt": "2026-10-27T02:08:41.272779+00:00"
+}

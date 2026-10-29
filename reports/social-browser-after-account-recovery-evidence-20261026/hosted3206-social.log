@@ -1,0 +1,413 @@
+﻿2026-10-26T23:32:03.7161285Z Current runner version: '2.338.0'
+2026-10-26T23:32:03.7184847Z ##[group]Runner Image Provisioner
+2026-10-26T23:32:03.7185481Z Hosted Compute Agent
+2026-10-26T23:32:03.7185912Z Version: 20261021.618
+2026-10-26T23:32:03.7186317Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-26T23:32:03.7186763Z Build Date: 2026-10-21T00:45:21Z
+2026-10-26T23:32:03.7187267Z Worker ID: {f60bdcb1-3698-45a0-b75f-3594bd0dc24a}
+2026-10-26T23:32:03.7187752Z Region: centralus
+2026-10-26T23:32:03.7188144Z Cloud: Azure
+2026-10-26T23:32:03.7188537Z ##[endgroup]
+2026-10-26T23:32:03.7189404Z ##[group]Operating System
+2026-10-26T23:32:03.7189817Z Ubuntu
+2026-10-26T23:32:03.7190220Z 24.04.5
+2026-10-26T23:32:03.7190535Z LTS
+2026-10-26T23:32:03.7190909Z ##[endgroup]
+2026-10-26T23:32:03.7191251Z ##[group]Runner Image
+2026-10-26T23:32:03.7191699Z Image: ubuntu-24.04
+2026-10-26T23:32:03.7192289Z Version: 20261012.334.1
+2026-10-26T23:32:03.7193143Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-26T23:32:03.7194052Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-26T23:32:03.7194693Z ##[endgroup]
+2026-10-26T23:32:03.7195418Z ##[group]GITHUB_TOKEN Permissions
+2026-10-26T23:32:03.7196853Z Contents: read
+2026-10-26T23:32:03.7197222Z Metadata: read
+2026-10-26T23:32:03.7197568Z ##[endgroup]
+2026-10-26T23:32:03.7199193Z Secret source: Actions
+2026-10-26T23:32:03.7199771Z Cache mode: write
+2026-10-26T23:32:03.7200291Z Prepare workflow directory
+2026-10-26T23:32:03.7581480Z Prepare all required actions
+2026-10-26T23:32:03.7619103Z Getting action download info
+2026-10-26T23:32:03.9863766Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-26T23:32:04.0870742Z Download action repository 'actions/setup-node@v7' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+2026-10-26T23:32:04.6374256Z Download action repository 'actions/upload-artifact@v7' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-26T23:32:05.3333246Z Complete job name: social-client
+2026-10-26T23:32:05.3868933Z ##[group]Checking docker version
+2026-10-26T23:32:05.3878780Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-10-26T23:32:05.4909121Z '1.48'
+2026-10-26T23:32:05.4917140Z Docker daemon API version: '1.48'
+2026-10-26T23:32:05.4918089Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-10-26T23:32:05.5080693Z '1.48'
+2026-10-26T23:32:05.5095428Z Docker client API version: '1.48'
+2026-10-26T23:32:05.5099528Z ##[endgroup]
+2026-10-26T23:32:05.5101169Z ##[group]Clean up resources from previous jobs
+2026-10-26T23:32:05.5105659Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=21fb8e"
+2026-10-26T23:32:05.5245249Z ##[command]/usr/bin/docker network prune --force --filter "label=21fb8e"
+2026-10-26T23:32:05.5371037Z ##[endgroup]
+2026-10-26T23:32:05.5371712Z ##[group]Create local container network
+2026-10-26T23:32:05.5381584Z ##[command]/usr/bin/docker network create --label 21fb8e github_network_0a18f88913584c308f5267bb3a2c3b49
+2026-10-26T23:32:05.6017595Z 8ffc3ae1d538d3f86d69f051156dacedc71f2f1c04f29cab39246b66cf385507
+2026-10-26T23:32:05.6035156Z ##[endgroup]
+2026-10-26T23:32:05.6057387Z ##[group]Starting job container
+2026-10-26T23:32:05.6075008Z ##[command]/usr/bin/docker pull mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+2026-10-26T23:32:05.7003662Z mcr.microsoft.com/playwright@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53: Pulling from playwright
+2026-10-26T23:32:05.7328594Z 18dbadc1f2f9: Pulling fs layer
+2026-10-26T23:32:05.7331447Z 0087bd18691f: Pulling fs layer
+2026-10-26T23:32:05.7332710Z b59ffadf3f32: Pulling fs layer
+2026-10-26T23:32:05.7333426Z 824c9c26fa20: Pulling fs layer
+2026-10-26T23:32:05.7334193Z 824c9c26fa20: Waiting
+2026-10-26T23:32:05.7971186Z b59ffadf3f32: Verifying Checksum
+2026-10-26T23:32:05.7972528Z b59ffadf3f32: Download complete
+2026-10-26T23:32:05.9088660Z 18dbadc1f2f9: Download complete
+2026-10-26T23:32:06.3454435Z 0087bd18691f: Verifying Checksum
+2026-10-26T23:32:06.3457985Z 0087bd18691f: Download complete
+2026-10-26T23:32:06.8376884Z 18dbadc1f2f9: Pull complete
+2026-10-26T23:32:09.4521930Z 824c9c26fa20: Verifying Checksum
+2026-10-26T23:32:09.4522706Z 824c9c26fa20: Download complete
+2026-10-26T23:32:17.3052971Z 0087bd18691f: Pull complete
+2026-10-26T23:32:17.3331638Z b59ffadf3f32: Pull complete
+2026-10-26T23:32:35.0447423Z 824c9c26fa20: Pull complete
+2026-10-26T23:32:35.0530531Z Digest: sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+2026-10-26T23:32:35.0536396Z Status: Downloaded newer image for mcr.microsoft.com/playwright@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+2026-10-26T23:32:35.0543863Z mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+2026-10-26T23:32:35.0613899Z ##[command]/usr/bin/docker create --name 9ec4d5a8a9514efeb8d18bccb808991f_mcrmicrosoftcomplaywrightv1591noblesha256b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53_a61930 --label 21fb8e --workdir /__w/tdf-app/tdf-app --network github_network_0a18f88913584c308f5267bb3a2c3b49 --init --ipc=host --user 1001 -e "HOME=/github/home" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work":"/__w" -v "/home/runner/actions-runner/cached/2.338.0/externals":"/__e":ro -v "/home/runner/work/_temp":"/__w/_temp" -v "/home/runner/work/_actions":"/__w/_actions" -v "/opt/hostedtoolcache":"/__t" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" --entrypoint "tail" mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53 "-f" "/dev/null"
+2026-10-26T23:32:35.0842756Z 0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8
+2026-10-26T23:32:35.0866115Z ##[command]/usr/bin/docker start 0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8
+2026-10-26T23:32:35.2436787Z 0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8
+2026-10-26T23:32:35.2467023Z ##[command]/usr/bin/docker ps --all --filter id=0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-10-26T23:32:35.2564452Z 0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8 Up Less than a second
+2026-10-26T23:32:35.2581995Z ##[command]/usr/bin/docker inspect --format "{{range .Config.Env}}{{println .}}{{end}}" 0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8
+2026-10-26T23:32:35.2675094Z CI=true
+2026-10-26T23:32:35.2675397Z HOME=/github/home
+2026-10-26T23:32:35.2675651Z GITHUB_ACTIONS=true
+2026-10-26T23:32:35.2676008Z PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+2026-10-26T23:32:35.2676331Z LANG=C.UTF-8
+2026-10-26T23:32:35.2676553Z LC_ALL=C.UTF-8
+2026-10-26T23:32:35.2676785Z PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+2026-10-26T23:32:35.2694477Z ##[endgroup]
+2026-10-26T23:32:35.2701553Z ##[group]Waiting for all services to be ready
+2026-10-26T23:32:35.2703267Z ##[endgroup]
+2026-10-26T23:32:35.2979828Z ##[group]Run actions/checkout@v7
+2026-10-26T23:32:35.2980136Z with:
+2026-10-26T23:32:35.2980288Z   repository: diegueins680/tdf-app
+2026-10-26T23:32:35.2982134Z   token: ***
+2026-10-26T23:32:35.2982301Z   ssh-strict: true
+2026-10-26T23:32:35.2982433Z   ssh-user: git
+2026-10-26T23:32:35.2982576Z   persist-credentials: true
+2026-10-26T23:32:35.2982727Z   clean: true
+2026-10-26T23:32:35.2982864Z   sparse-checkout-cone-mode: true
+2026-10-26T23:32:35.2983021Z   fetch-depth: 1
+2026-10-26T23:32:35.2983147Z   fetch-tags: false
+2026-10-26T23:32:35.2983278Z   show-progress: true
+2026-10-26T23:32:35.2983412Z   lfs: false
+2026-10-26T23:32:35.2983533Z   submodules: false
+2026-10-26T23:32:35.2983669Z   set-safe-directory: true
+2026-10-26T23:32:35.2983823Z   allow-unsafe-pr-checkout: false
+2026-10-26T23:32:35.2984279Z env:
+2026-10-26T23:32:35.2984403Z   NPM_CONFIG_IGNORE_SCRIPTS: true
+2026-10-26T23:32:35.2984602Z   TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
+2026-10-26T23:32:35.2984935Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-10-26T23:32:35.2985127Z ##[endgroup]
+2026-10-26T23:32:35.3028332Z ##[command]/usr/bin/docker exec  0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8 sh -c "cat /etc/*release | grep ^ID"
+2026-10-26T23:32:35.6304598Z Syncing repository: diegueins680/tdf-app
+2026-10-26T23:32:35.6305951Z ##[group]Getting Git version info
+2026-10-26T23:32:35.6306248Z Working directory is '/__w/tdf-app/tdf-app'
+2026-10-26T23:32:35.6306632Z [command]/usr/bin/git version
+2026-10-26T23:32:35.6306787Z git version 2.43.0
+2026-10-26T23:32:35.6307484Z ##[endgroup]
+2026-10-26T23:32:35.6314919Z Temporarily overriding HOME='/__w/_temp/be863951-981f-4446-815f-07677e28a572' before making global git config changes
+2026-10-26T23:32:35.6315342Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-26T23:32:35.6318950Z [command]/usr/bin/git config --global --add safe.directory /__w/tdf-app/tdf-app
+2026-10-26T23:32:35.6353929Z Deleting the contents of '/__w/tdf-app/tdf-app'
+2026-10-26T23:32:35.6357829Z ##[group]Determining repository object format
+2026-10-26T23:32:35.6359069Z ##[endgroup]
+2026-10-26T23:32:35.6359440Z ##[group]Initializing the repository
+2026-10-26T23:32:35.6362427Z [command]/usr/bin/git init /__w/tdf-app/tdf-app
+2026-10-26T23:32:35.6400360Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-26T23:32:35.6401092Z hint: is subject to change. To configure the initial branch name to use in all
+2026-10-26T23:32:35.6401586Z hint: of your new repositories, which will suppress this warning, call:
+2026-10-26T23:32:35.6402047Z hint: 
+2026-10-26T23:32:35.6402423Z hint: 	git config --global init.defaultBranch <name>
+2026-10-26T23:32:35.6403104Z hint: 
+2026-10-26T23:32:35.6403704Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-26T23:32:35.6404255Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-26T23:32:35.6404629Z hint: 
+2026-10-26T23:32:35.6404864Z hint: 	git branch -m <name>
+2026-10-26T23:32:35.6407789Z Initialized empty Git repository in /__w/tdf-app/tdf-app/.git/
+2026-10-26T23:32:35.6419627Z [command]/usr/bin/git remote add origin https://github.com/diegueins680/tdf-app
+2026-10-26T23:32:35.6458685Z ##[endgroup]
+2026-10-26T23:32:35.6459296Z ##[group]Disabling automatic garbage collection
+2026-10-26T23:32:35.6460789Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-26T23:32:35.6490893Z ##[endgroup]
+2026-10-26T23:32:35.6491409Z ##[group]Setting up auth
+2026-10-26T23:32:35.6491730Z Removing SSH command configuration
+2026-10-26T23:32:35.6496781Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-26T23:32:35.6527742Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-26T23:32:35.6753441Z Removing HTTP extra header
+2026-10-26T23:32:35.6754614Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-26T23:32:35.6795229Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-26T23:32:35.7022537Z Removing includeIf entries pointing to credentials config files
+2026-10-26T23:32:35.7022969Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-26T23:32:35.7054872Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-26T23:32:35.7265013Z [command]/usr/bin/git config --file /__w/_temp/git-credentials-73ea4be4-6cd1-4905-b6e0-0dd5f4a77e48.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-26T23:32:35.7309978Z [command]/usr/bin/git config --local includeIf.gitdir:/__w/tdf-app/tdf-app/.git.path /__w/_temp/git-credentials-73ea4be4-6cd1-4905-b6e0-0dd5f4a77e48.config
+2026-10-26T23:32:35.7345690Z [command]/usr/bin/git config --local includeIf.gitdir:/__w/tdf-app/tdf-app/.git/worktrees/*.path /__w/_temp/git-credentials-73ea4be4-6cd1-4905-b6e0-0dd5f4a77e48.config
+2026-10-26T23:32:35.7378164Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-73ea4be4-6cd1-4905-b6e0-0dd5f4a77e48.config
+2026-10-26T23:32:35.7410394Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-73ea4be4-6cd1-4905-b6e0-0dd5f4a77e48.config
+2026-10-26T23:32:35.7440530Z ##[endgroup]
+2026-10-26T23:32:35.7440920Z ##[group]Fetching the repository
+2026-10-26T23:32:35.7446583Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +8a40665add3d4630479e7ae4631b3e1915e2a642:refs/remotes/pull/634/merge
+2026-10-26T23:32:40.6953403Z From https://github.com/diegueins680/tdf-app
+2026-10-26T23:32:40.6954091Z  * [new ref]         8a40665add3d4630479e7ae4631b3e1915e2a642 -> pull/634/merge
+2026-10-26T23:32:40.6974210Z ##[endgroup]
+2026-10-26T23:32:40.6974592Z ##[group]Determining the checkout info
+2026-10-26T23:32:40.6975519Z ##[endgroup]
+2026-10-26T23:32:40.6979001Z [command]/usr/bin/git sparse-checkout disable
+2026-10-26T23:32:40.7021321Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-26T23:32:40.7055598Z ##[group]Checking out the ref
+2026-10-26T23:32:40.7058532Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/634/merge
+2026-10-26T23:32:41.5742391Z Note: switching to 'refs/remotes/pull/634/merge'.
+2026-10-26T23:32:41.5742693Z 
+2026-10-26T23:32:41.5742882Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-26T23:32:41.5743357Z changes and commit them, and you can discard any commits you make in this
+2026-10-26T23:32:41.5743793Z state without impacting any branches by switching back to a branch.
+2026-10-26T23:32:41.5744056Z 
+2026-10-26T23:32:41.5744224Z If you want to create a new branch to retain commits you create, you may
+2026-10-26T23:32:41.5744618Z do so (now or later) by using -c with the switch command. Example:
+2026-10-26T23:32:41.5744851Z 
+2026-10-26T23:32:41.5744958Z   git switch -c <new-branch-name>
+2026-10-26T23:32:41.5745111Z 
+2026-10-26T23:32:41.5745211Z Or undo this operation with:
+2026-10-26T23:32:41.5745353Z 
+2026-10-26T23:32:41.5745440Z   git switch -
+2026-10-26T23:32:41.5745582Z 
+2026-10-26T23:32:41.5745789Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-26T23:32:41.5746057Z 
+2026-10-26T23:32:41.5746350Z HEAD is now at 8a40665 Merge 3206faad3999f85d610360175e05389e0a7addf2 into c66a65a10a8e5e48f89172d61f6f57fb81697896
+2026-10-26T23:32:41.5822376Z ##[endgroup]
+2026-10-26T23:32:41.5870305Z [command]/usr/bin/git log -1 --format=%H
+2026-10-26T23:32:41.5892911Z 8a40665add3d4630479e7ae4631b3e1915e2a642
+2026-10-26T23:32:41.6153281Z ##[group]Run actions/setup-node@v7
+2026-10-26T23:32:41.6153457Z with:
+2026-10-26T23:32:41.6153581Z   node-version: 24
+2026-10-26T23:32:41.6153702Z   cache: npm
+2026-10-26T23:32:41.6153822Z   check-latest: false
+2026-10-26T23:32:41.6155268Z   token: ***
+2026-10-26T23:32:41.6155399Z   package-manager-cache: true
+2026-10-26T23:32:41.6155547Z env:
+2026-10-26T23:32:41.6155672Z   NPM_CONFIG_IGNORE_SCRIPTS: true
+2026-10-26T23:32:41.6155862Z   TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
+2026-10-26T23:32:41.6156067Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-10-26T23:32:41.6156230Z ##[endgroup]
+2026-10-26T23:32:41.6160660Z ##[command]/usr/bin/docker exec  0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8 sh -c "cat /etc/*release | grep ^ID"
+2026-10-26T23:32:41.7803766Z Found in cache @ /__t/node/24.21.0/x64
+2026-10-26T23:32:41.8524449Z ##[group]Environment details
+2026-10-26T23:32:42.1177369Z node: v24.21.0
+2026-10-26T23:32:42.1177654Z npm: 11.19.0
+2026-10-26T23:32:42.1177988Z yarn: 1.22.22
+2026-10-26T23:32:42.1178844Z ##[endgroup]
+2026-10-26T23:32:42.1187777Z [command]/__t/node/24.21.0/x64/bin/npm config get cache
+2026-10-26T23:32:42.2970265Z /github/home/.npm
+2026-10-26T23:32:42.4587824Z Cache hit for: node-cache-Linux-x64-npm-ff005079a67770f98ca82e9e2c50144e45a4db957d2b78d0946355c70ce663f3
+2026-10-26T23:32:43.6399467Z Received 90808016 of 99196624 (91.5%), 86.5 MBs/sec
+2026-10-26T23:32:43.6793543Z Received 99196624 of 99196624 (100.0%), 91.0 MBs/sec
+2026-10-26T23:32:43.6794089Z Cache Size: ~95 MB (99196624 B)
+2026-10-26T23:32:43.6812718Z [command]/usr/bin/tar -xf /__w/_temp/a261f258-6227-4cb7-9f36-4a47f6d520c0/cache.tgz -P -C /__w/tdf-app/tdf-app -z
+2026-10-26T23:32:44.1707428Z Cache restored successfully
+2026-10-26T23:32:44.1757544Z Cache restored from key: node-cache-Linux-x64-npm-ff005079a67770f98ca82e9e2c50144e45a4db957d2b78d0946355c70ce663f3
+2026-10-26T23:32:44.1954272Z ##[group]Run npm ci
+2026-10-26T23:32:44.1954487Z [36;1mnpm ci[0m
+2026-10-26T23:32:44.1957310Z shell: sh -e {0}
+2026-10-26T23:32:44.1957449Z env:
+2026-10-26T23:32:44.1957585Z   NPM_CONFIG_IGNORE_SCRIPTS: true
+2026-10-26T23:32:44.1957786Z   TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
+2026-10-26T23:32:44.1958003Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-10-26T23:32:44.1958174Z ##[endgroup]
+2026-10-26T23:32:48.7208134Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-10-26T23:32:48.7733676Z npm warn deprecated rimraf@2.4.5: Rimraf versions prior to v4 are no longer supported
+2026-10-26T23:32:48.8380983Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2026-10-26T23:32:48.8500736Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2026-10-26T23:32:48.9724974Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2026-10-26T23:32:48.9732378Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2026-10-26T23:32:48.9744723Z npm warn deprecated glob@6.0.4: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-10-26T23:32:48.9771643Z npm warn deprecated glob@8.1.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-10-26T23:32:49.0920352Z npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+2026-10-26T23:32:49.0997680Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2026-10-26T23:32:49.3456575Z npm warn deprecated reflect-metadata@0.2.1: This version has a critical bug in fallback handling. Please upgrade to reflect-metadata@0.2.2 or newer.
+2026-10-26T23:32:49.9980641Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2026-10-26T23:32:50.5751621Z npm warn deprecated uuid@9.0.1: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+2026-10-26T23:32:52.2611534Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2026-10-26T23:32:56.0713338Z 
+2026-10-26T23:32:56.0714262Z added 1469 packages, and audited 1472 packages in 12s
+2026-10-26T23:32:56.0715184Z 
+2026-10-26T23:32:56.0715388Z 274 packages are looking for funding
+2026-10-26T23:32:56.0715682Z   run `npm fund` for details
+2026-10-26T23:32:56.0930600Z 
+2026-10-26T23:32:56.0931550Z 16 vulnerabilities (11 moderate, 5 high)
+2026-10-26T23:32:56.0932158Z 
+2026-10-26T23:32:56.0932388Z To address issues that do not require attention, run:
+2026-10-26T23:32:56.0932808Z   npm audit fix
+2026-10-26T23:32:56.0932949Z 
+2026-10-26T23:32:56.0933358Z To address all issues (including breaking changes), run:
+2026-10-26T23:32:56.0933720Z   npm audit fix --force
+2026-10-26T23:32:56.0933868Z 
+2026-10-26T23:32:56.0933996Z Run `npm audit` for details.
+2026-10-26T23:32:56.2797434Z ##[group]Run resolver_dir=$(mktemp -d)
+2026-10-26T23:32:56.2797675Z [36;1mresolver_dir=$(mktemp -d)[0m
+2026-10-26T23:32:56.2797868Z [36;1mtrap 'rm -rf "$resolver_dir"' EXIT[0m
+2026-10-26T23:32:56.2798277Z [36;1mnpm install --prefix "$resolver_dir" --workspaces=false --no-save --package-lock=false --ignore-scripts @unrs/resolver-binding-linux-x64-gnu@1.11.1[0m
+2026-10-26T23:32:56.2798685Z [36;1mmkdir -p node_modules/@unrs[0m
+2026-10-26T23:32:56.2798967Z [36;1mcp -R "$resolver_dir/node_modules/@unrs/resolver-binding-linux-x64-gnu" node_modules/@unrs/[0m
+2026-10-26T23:32:56.2799327Z shell: sh -e {0}
+2026-10-26T23:32:56.2799454Z env:
+2026-10-26T23:32:56.2799583Z   NPM_CONFIG_IGNORE_SCRIPTS: true
+2026-10-26T23:32:56.2799781Z   TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
+2026-10-26T23:32:56.2799994Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-10-26T23:32:56.2800161Z ##[endgroup]
+2026-10-26T23:32:56.7645712Z 
+2026-10-26T23:32:56.7646502Z added 1 package in 344ms
+2026-10-26T23:32:56.8178746Z ##[group]Run node_modules/.bin/jest --config tdf-hq-ui/jest.config.cjs --runInBand tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx tdf-hq-ui/src/api/socialV2.test.ts tdf-hq-ui/src/api/social.test.ts tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx tdf-hq-ui/src/utils/chatReadState.test.ts tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts
+2026-10-26T23:32:56.8180894Z [36;1mnode_modules/.bin/jest --config tdf-hq-ui/jest.config.cjs --runInBand tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx tdf-hq-ui/src/api/socialV2.test.ts tdf-hq-ui/src/api/social.test.ts tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx tdf-hq-ui/src/utils/chatReadState.test.ts tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts[0m
+2026-10-26T23:32:56.8182458Z shell: sh -e {0}
+2026-10-26T23:32:56.8182643Z env:
+2026-10-26T23:32:56.8182827Z   NPM_CONFIG_IGNORE_SCRIPTS: true
+2026-10-26T23:32:56.8183105Z   TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
+2026-10-26T23:32:56.8183449Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-10-26T23:32:56.8183724Z   NODE_OPTIONS: --experimental-vm-modules
+2026-10-26T23:32:56.8183975Z ##[endgroup]
+2026-10-26T23:32:58.7844965Z (node:248) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+2026-10-26T23:32:58.7845705Z (Use `node --trace-warnings ...` to show where the warning was created)
+2026-10-26T23:32:58.7911215Z [90m[TESTOMATIO][39m Testomatio Reporter v2.12.0
+2026-10-26T23:32:58.7912003Z [90m[TESTOMATIO][39m [36mPipes:[39m [36mNo pipes enabled[39m
+2026-10-26T23:32:58.7912560Z [90m[TESTOMATIO][39m [2mIf you want to use Testomatio reporter, pass your token as TESTOMATIO env variable[22m
+2026-10-26T23:33:01.4680696Z PASS tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx
+2026-10-26T23:33:01.5592131Z PASS tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts
+2026-10-26T23:33:02.0926862Z PASS tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx
+2026-10-26T23:33:02.1495299Z PASS tdf-hq-ui/src/utils/chatReadState.test.ts
+2026-10-26T23:33:02.2586811Z PASS tdf-hq-ui/src/api/socialV2.test.ts
+2026-10-26T23:33:02.3506391Z PASS tdf-hq-ui/src/api/social.test.ts
+2026-10-26T23:33:02.3522087Z 
+2026-10-26T23:33:02.3529644Z Test Suites: 6 passed, 6 total
+2026-10-26T23:33:02.3529927Z Tests:       63 passed, 63 total
+2026-10-26T23:33:02.3530108Z Snapshots:   0 total
+2026-10-26T23:33:02.3530295Z Time:        5.035 s
+2026-10-26T23:33:02.3531565Z Ran all test suites matching tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx|tdf-hq-ui/src/api/socialV2.test.ts|tdf-hq-ui/src/api/social.test.ts|tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx|tdf-hq-ui/src/utils/chatReadState.test.ts|tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts.
+2026-10-26T23:33:02.4124203Z ##[group]Run node_modules/.bin/openapi-typescript tdf-hq/docs/openapi/social-v2.yaml --output /tmp/social-v2.ts
+2026-10-26T23:33:02.4124677Z [36;1mnode_modules/.bin/openapi-typescript tdf-hq/docs/openapi/social-v2.yaml --output /tmp/social-v2.ts[0m
+2026-10-26T23:33:02.4125034Z [36;1mdiff -u tdf-hq-ui/src/api/generated/social-v2.ts /tmp/social-v2.ts[0m
+2026-10-26T23:33:02.4125760Z shell: sh -e {0}
+2026-10-26T23:33:02.4125885Z env:
+2026-10-26T23:33:02.4126015Z   NPM_CONFIG_IGNORE_SCRIPTS: true
+2026-10-26T23:33:02.4126210Z   TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
+2026-10-26T23:33:02.4126417Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-10-26T23:33:02.4126596Z ##[endgroup]
+2026-10-26T23:33:02.7382169Z ✨ openapi-typescript 7.10.1
+2026-10-26T23:33:02.7684243Z 🚀 tdf-hq/docs/openapi/social-v2.yaml → /tmp/social-v2.ts [31.9ms]
+2026-10-26T23:33:02.7859685Z ##[group]Run node scripts/verify-playwright-image.mjs --workflow .github/workflows/social-verification.yml --job social-client
+2026-10-26T23:33:02.7860224Z [36;1mnode scripts/verify-playwright-image.mjs --workflow .github/workflows/social-verification.yml --job social-client[0m
+2026-10-26T23:33:02.7860632Z shell: sh -e {0}
+2026-10-26T23:33:02.7860755Z env:
+2026-10-26T23:33:02.7860886Z   NPM_CONFIG_IGNORE_SCRIPTS: true
+2026-10-26T23:33:02.7861078Z   TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
+2026-10-26T23:33:02.7861285Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-10-26T23:33:02.7861452Z ##[endgroup]
+2026-10-26T23:33:04.5974545Z {"kind":"bundled-browser-preflight","workflow":".github/workflows/social-verification.yml","job":"social-client","playwright":"1.59.1","browserUser":1001,"browsers":[{"browser":"chromium","version":"147.0.7727.15"},{"browser":"firefox","version":"148.0.2"},{"browser":"webkit","version":"26.4"}]}
+2026-10-26T23:33:04.6141590Z ##[group]Run node scripts/social/preview.mjs > /tmp/social-preview.txt 2>&1 &
+2026-10-26T23:33:04.6142125Z [36;1mnode scripts/social/preview.mjs > /tmp/social-preview.txt 2>&1 &[0m
+2026-10-26T23:33:04.6142358Z [36;1mpreview_pid=$![0m
+2026-10-26T23:33:04.6142522Z [36;1mtrap 'kill "$preview_pid"' EXIT[0m
+2026-10-26T23:33:04.6142847Z [36;1mcurl --fail --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:5199/social-preview > /dev/null[0m
+2026-10-26T23:33:04.6143170Z [36;1mnode scripts/social/verify-preview.mjs[0m
+2026-10-26T23:33:04.6143455Z shell: sh -e {0}
+2026-10-26T23:33:04.6143579Z env:
+2026-10-26T23:33:04.6143706Z   NPM_CONFIG_IGNORE_SCRIPTS: true
+2026-10-26T23:33:04.6143901Z   TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
+2026-10-26T23:33:04.6144106Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-10-26T23:33:04.6144286Z ##[endgroup]
+2026-10-26T23:33:04.6613408Z   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+2026-10-26T23:33:04.6614175Z                                  Dload  Upload   Total   Spent    Left  Speed
+2026-10-26T23:33:04.6614395Z 
+2026-10-26T23:33:04.6614576Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+2026-10-26T23:33:04.6614957Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+2026-10-26T23:33:04.6616849Z curl: (7) Failed to connect to 127.0.0.1 port 5199 after 0 ms: Couldn't connect to server
+2026-10-26T23:33:04.6617399Z Warning: Problem : connection refused. Will retry in 1 seconds. 30 retries 
+2026-10-26T23:33:04.6617747Z Warning: left.
+2026-10-26T23:33:05.6626152Z 
+2026-10-26T23:33:05.6764584Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+2026-10-26T23:33:05.6764994Z 100   539  100   539    0     0  39120      0 --:--:-- --:--:-- --:--:-- 41461
+2026-10-26T23:33:06.8938761Z PASS: local component journey, keyboard tabs, mobile overflow, WCAG axe checks
+2026-10-26T23:33:06.9368190Z ##[group]Run actions/upload-artifact@v7
+2026-10-26T23:33:06.9368443Z with:
+2026-10-26T23:33:06.9368718Z   name: social-client-browser
+2026-10-26T23:33:06.9368998Z   path: /tmp/social-browser-current/*
+/tmp/social-preview.txt
+
+2026-10-26T23:33:06.9369310Z   if-no-files-found: warn
+2026-10-26T23:33:06.9369570Z   compression-level: 6
+2026-10-26T23:33:06.9369793Z   overwrite: false
+2026-10-26T23:33:06.9370050Z   include-hidden-files: false
+2026-10-26T23:33:06.9370272Z   archive: true
+2026-10-26T23:33:06.9370487Z env:
+2026-10-26T23:33:06.9384909Z   NPM_CONFIG_IGNORE_SCRIPTS: true
+2026-10-26T23:33:06.9385117Z   TDF_SOCIAL_BROWSER_RESULTS: /tmp/social-browser-current
+2026-10-26T23:33:06.9385326Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-10-26T23:33:06.9385493Z ##[endgroup]
+2026-10-26T23:33:06.9388224Z ##[command]/usr/bin/docker exec  0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8 sh -c "cat /etc/*release | grep ^ID"
+2026-10-26T23:33:07.1123993Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-10-26T23:33:07.1125115Z The least common ancestor is /tmp. This will be the root directory of the artifact
+2026-10-26T23:33:07.1125644Z With the provided path, there will be 4 files uploaded
+2026-10-26T23:33:07.1126159Z Artifact name is valid!
+2026-10-26T23:33:07.1126451Z Root directory input is valid!
+2026-10-26T23:33:07.3924289Z Uploading artifact: social-client-browser.zip
+2026-10-26T23:33:07.3950279Z Beginning upload of artifact content to blob storage
+2026-10-26T23:33:07.6354719Z Uploaded bytes 87386
+2026-10-26T23:33:07.6769434Z Finished uploading artifact content to blob storage!
+2026-10-26T23:33:07.6770131Z SHA256 digest of uploaded artifact is cebd52de97f50fde717bd8238c2a96bfc653dcb0a91e2310bf8ab18bd4587e46
+2026-10-26T23:33:07.6770865Z Finalizing artifact upload
+2026-10-26T23:33:08.1765639Z Artifact social-client-browser successfully finalized. Artifact ID 12696932797
+2026-10-26T23:33:08.1773783Z Artifact social-client-browser has been successfully uploaded! Final size is 87386 bytes. Artifact ID is 12696932797
+2026-10-26T23:33:08.1774694Z Artifact download URL: https://github.com/diegueins680/tdf-app/actions/runs/40420390206/artifacts/12696932797
+2026-10-26T23:33:08.1944480Z Post job cleanup.
+2026-10-26T23:33:08.1948689Z ##[command]/usr/bin/docker exec  0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8 sh -c "cat /etc/*release | grep ^ID"
+2026-10-26T23:33:08.3734037Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-ff005079a67770f98ca82e9e2c50144e45a4db957d2b78d0946355c70ce663f3, not saving cache.
+2026-10-26T23:33:08.3878165Z Post job cleanup.
+2026-10-26T23:33:08.3883115Z ##[command]/usr/bin/docker exec  0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8 sh -c "cat /etc/*release | grep ^ID"
+2026-10-26T23:33:08.5247131Z [command]/usr/bin/git version
+2026-10-26T23:33:08.5281491Z git version 2.43.0
+2026-10-26T23:33:08.5307193Z Temporarily overriding HOME='/__w/_temp/99bc69bc-e060-4dc1-9156-4272cc316ee0' before making global git config changes
+2026-10-26T23:33:08.5308106Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-26T23:33:08.5310204Z [command]/usr/bin/git config --global --add safe.directory /__w/tdf-app/tdf-app
+2026-10-26T23:33:08.5339061Z Removing SSH command configuration
+2026-10-26T23:33:08.5343730Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-26T23:33:08.5386330Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-26T23:33:08.5645386Z Removing HTTP extra header
+2026-10-26T23:33:08.5649521Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-26T23:33:08.5686773Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-26T23:33:08.5921502Z Removing includeIf entries pointing to credentials config files
+2026-10-26T23:33:08.5927929Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-26T23:33:08.5952918Z includeif.gitdir:/__w/tdf-app/tdf-app/.git.path
+2026-10-26T23:33:08.5953383Z includeif.gitdir:/__w/tdf-app/tdf-app/.git/worktrees/*.path
+2026-10-26T23:33:08.5953791Z includeif.gitdir:/github/workspace/.git.path
+2026-10-26T23:33:08.5954192Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-26T23:33:08.5958966Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/__w/tdf-app/tdf-app/.git.path
+2026-10-26T23:33:08.5982411Z /__w/_temp/git-credentials-73ea4be4-6cd1-4905-b6e0-0dd5f4a77e48.config
+2026-10-26T23:33:08.5990357Z [command]/usr/bin/git config --local --unset includeif.gitdir:/__w/tdf-app/tdf-app/.git.path \/__w\/_temp\/git\-credentials\-73ea4be4\-6cd1\-4905\-b6e0\-0dd5f4a77e48\.config
+2026-10-26T23:33:08.6024793Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/__w/tdf-app/tdf-app/.git/worktrees/*.path
+2026-10-26T23:33:08.6047419Z /__w/_temp/git-credentials-73ea4be4-6cd1-4905-b6e0-0dd5f4a77e48.config
+2026-10-26T23:33:08.6053555Z [command]/usr/bin/git config --local --unset includeif.gitdir:/__w/tdf-app/tdf-app/.git/worktrees/*.path \/__w\/_temp\/git\-credentials\-73ea4be4\-6cd1\-4905\-b6e0\-0dd5f4a77e48\.config
+2026-10-26T23:33:08.6084210Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-26T23:33:08.6105808Z /github/runner_temp/git-credentials-73ea4be4-6cd1-4905-b6e0-0dd5f4a77e48.config
+2026-10-26T23:33:08.6116708Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-73ea4be4\-6cd1\-4905\-b6e0\-0dd5f4a77e48\.config
+2026-10-26T23:33:08.6147402Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-26T23:33:08.6169396Z /github/runner_temp/git-credentials-73ea4be4-6cd1-4905-b6e0-0dd5f4a77e48.config
+2026-10-26T23:33:08.6205282Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-73ea4be4\-6cd1\-4905\-b6e0\-0dd5f4a77e48\.config
+2026-10-26T23:33:08.6235288Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-26T23:33:08.6438218Z Removing credentials config '/__w/_temp/git-credentials-73ea4be4-6cd1-4905-b6e0-0dd5f4a77e48.config'
+2026-10-26T23:33:08.6571101Z Stop and remove container: 9ec4d5a8a9514efeb8d18bccb808991f_mcrmicrosoftcomplaywrightv1591noblesha256b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53_a61930
+2026-10-26T23:33:08.6575179Z ##[command]/usr/bin/docker rm --force 0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8
+2026-10-26T23:33:10.8217102Z 0686c0318c055514118884bb8827e043457319d321897902963ea3dcfea95fd8
+2026-10-26T23:33:10.8242965Z Remove container network: github_network_0a18f88913584c308f5267bb3a2c3b49
+2026-10-26T23:33:10.8245663Z ##[command]/usr/bin/docker network rm github_network_0a18f88913584c308f5267bb3a2c3b49
+2026-10-26T23:33:10.9193698Z github_network_0a18f88913584c308f5267bb3a2c3b49
+2026-10-26T23:33:10.9252679Z Cleaning up orphan processes
+
