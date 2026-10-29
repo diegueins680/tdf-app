@@ -1,0 +1,286 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-booking-tooltip-regression-20261028/playwright.final-chromium-desktop.config.mjs",
+    "rootDir": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-booking-tooltip-regression-20261028/final-chromium-desktop",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-desktop",
+        "name": "chromium-desktop",
+        "testDir": "/private/tmp/tdf-booking-tooltip-regression-20261028",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/tdf-booking-tooltip-regression-20261028/final-chromium-desktop.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "booking.spec.mjs",
+      "file": "booking.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "booking viewport check detects known client-width overflow @critical @mobile-flow",
+          "ok": true,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 854,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T05:02:07.257Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-20261028/final-chromium-desktop/booking-booking-viewport-c-28ccf-erflow-critical-mobile-flow-chromium-desktop/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-ecb69b4aceb2dcf794b4",
+          "file": "booking.spec.mjs",
+          "line": 67,
+          "column": 1
+        },
+        {
+          "title": "public booking recovers an error catalog without losing contact details @critical @mobile-flow",
+          "ok": false,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 11447,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m740\u001b[39m\nReceived:   \u001b[31m1231.4375\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m740\u001b[39m\nReceived:   \u001b[31m1231.4375\u001b[39m\n    at /private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs:239:62",
+                    "location": {
+                      "file": "/private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs",
+                      "column": 62,
+                      "line": 239
+                    },
+                    "snippet": "  237 |     expect(afterScroll.anchor.y - beforeScroll.anchor.y).toBeLessThan(-10);\n  238 |     expect(afterScroll.anchor.y).toBeGreaterThanOrEqual(0);\n> 239 |     expect(afterScroll.anchor.y + afterScroll.anchor.height).toBeLessThan(740);\n      |                                                              ^\n  240 |     expect(afterScroll.tooltip).not.toBeNull();\n  241 |     expect(afterScroll.tooltip.text).toBe(helperText);\n  242 |     if (afterScroll.tooltip.placement === beforeScroll.tooltip.placement) {"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs",
+                        "column": 62,
+                        "line": 239
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m740\u001b[39m\nReceived:   \u001b[31m1231.4375\u001b[39m\n\n  237 |     expect(afterScroll.anchor.y - beforeScroll.anchor.y).toBeLessThan(-10);\n  238 |     expect(afterScroll.anchor.y).toBeGreaterThanOrEqual(0);\n> 239 |     expect(afterScroll.anchor.y + afterScroll.anchor.height).toBeLessThan(740);\n      |                                                              ^\n  240 |     expect(afterScroll.tooltip).not.toBeNull();\n  241 |     expect(afterScroll.tooltip.text).toBe(helperText);\n  242 |     if (afterScroll.tooltip.placement === beforeScroll.tooltip.placement) {\n    at /private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs:239:62"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T05:02:09.009Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "booking-tooltip-scroll",
+                      "contentType": "application/json",
+                      "body": "ewogICJiZWZvcmVTY3JvbGwiOiB7CiAgICAiYXQiOiAxMDYwMywKICAgICJjb21wYXRNb2RlIjogIkNTUzFDb21wYXQiLAogICAgImlubmVyV2lkdGgiOiAzMjAsCiAgICAiY2xpZW50V2lkdGgiOiAzMjAsCiAgICAic2Nyb2xsV2lkdGgiOiAzMjAsCiAgICAidmlzdWFsVmlld3BvcnQiOiB7CiAgICAgICJ3aWR0aCI6IDMyMCwKICAgICAgInNjYWxlIjogMQogICAgfSwKICAgICJvdmVyZmxvdyI6IGZhbHNlLAogICAgImRldmljZVBpeGVsUmF0aW8iOiAxLAogICAgInNjcm9sbFkiOiA2NDIsCiAgICAiYW5jaG9yIjogewogICAgICAieCI6IDIxMi4yNSwKICAgICAgInkiOiAxMjM5LjQzNzUsCiAgICAgICJyaWdodCI6IDI3Mi4yMzQzNzUsCiAgICAgICJ3aWR0aCI6IDU5Ljk4NDM3NSwKICAgICAgImhlaWdodCI6IDMyLAogICAgICAidGV4dCI6ICIwNDowMCIsCiAgICAgICJwbGFjZW1lbnQiOiBudWxsCiAgICB9LAogICAgInRvb2x0aXAiOiB7CiAgICAgICJ4IjogNTgsCiAgICAgICJ5IjogMTE5OC41LAogICAgICAicmlnaHQiOiAzMjAuMDQ2ODc1LAogICAgICAid2lkdGgiOiAyNjIuMDQ2ODc1LAogICAgICAiaGVpZ2h0IjogNDAuNSwKICAgICAgInRleHQiOiAiVGh1IDI5IDA0OjAwIChHTVQtNSkgwrcgRXN0dWRpbyAwOTowMCAoVVRDKSIsCiAgICAgICJwbGFjZW1lbnQiOiAidG9wIgogICAgfQogIH0sCiAgImFmdGVyU2Nyb2xsIjogewogICAgImF0IjogMTA2MzgsCiAgICAiY29tcGF0TW9kZSI6ICJDU1MxQ29tcGF0IiwKICAgICJpbm5lcldpZHRoIjogMzIwLAogICAgImNsaWVudFdpZHRoIjogMzIwLAogICAgInNjcm9sbFdpZHRoIjogMzIwLAogICAgInZpc3VhbFZpZXdwb3J0IjogewogICAgICAid2lkdGgiOiAzMjAsCiAgICAgICJzY2FsZSI6IDEKICAgIH0sCiAgICAib3ZlcmZsb3ciOiBmYWxzZSwKICAgICJkZXZpY2VQaXhlbFJhdGlvIjogMSwKICAgICJzY3JvbGxZIjogNjgyLAogICAgImFuY2hvciI6IHsKICAgICAgIngiOiAyMTIuMjUsCiAgICAgICJ5IjogMTE5OS40Mzc1LAogICAgICAicmlnaHQiOiAyNzIuMjM0Mzc1LAogICAgICAid2lkdGgiOiA1OS45ODQzNzUsCiAgICAgICJoZWlnaHQiOiAzMiwKICAgICAgInRleHQiOiAiMDQ6MDAiLAogICAgICAicGxhY2VtZW50IjogbnVsbAogICAgfSwKICAgICJ0b29sdGlwIjogewogICAgICAieCI6IDU4LAogICAgICAieSI6IDExNTguNSwKICAgICAgInJpZ2h0IjogMzIwLjA0Njg3NSwKICAgICAgIndpZHRoIjogMjYyLjA0Njg3NSwKICAgICAgImhlaWdodCI6IDQwLjUsCiAgICAgICJ0ZXh0IjogIlRodSAyOSAwNDowMCAoR01ULTUpIMK3IEVzdHVkaW8gMDk6MDAgKFVUQykiLAogICAgICAicGxhY2VtZW50IjogInRvcCIKICAgIH0KICB9LAogICJlcHNpbG9uIjogMQp9"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-20261028/final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-20261028/final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-20261028/final-chromium-desktop/booking-public-booking-rec-8cb83-etails-critical-mobile-flow-chromium-desktop/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs",
+                    "column": 62,
+                    "line": 239
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-3ce95e578e7b352a01b0",
+          "file": "booking.spec.mjs",
+          "line": 90,
+          "column": 3
+        },
+        {
+          "title": "public booking recovers an empty catalog without losing contact details @critical @mobile-flow",
+          "ok": false,
+          "tags": [
+            "critical",
+            "mobile-flow"
+          ],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 4684,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m740\u001b[39m\nReceived:   \u001b[31m1231.4375\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m740\u001b[39m\nReceived:   \u001b[31m1231.4375\u001b[39m\n    at /private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs:239:62",
+                    "location": {
+                      "file": "/private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs",
+                      "column": 62,
+                      "line": 239
+                    },
+                    "snippet": "  237 |     expect(afterScroll.anchor.y - beforeScroll.anchor.y).toBeLessThan(-10);\n  238 |     expect(afterScroll.anchor.y).toBeGreaterThanOrEqual(0);\n> 239 |     expect(afterScroll.anchor.y + afterScroll.anchor.height).toBeLessThan(740);\n      |                                                              ^\n  240 |     expect(afterScroll.tooltip).not.toBeNull();\n  241 |     expect(afterScroll.tooltip.text).toBe(helperText);\n  242 |     if (afterScroll.tooltip.placement === beforeScroll.tooltip.placement) {"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs",
+                        "column": 62,
+                        "line": 239
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m740\u001b[39m\nReceived:   \u001b[31m1231.4375\u001b[39m\n\n  237 |     expect(afterScroll.anchor.y - beforeScroll.anchor.y).toBeLessThan(-10);\n  238 |     expect(afterScroll.anchor.y).toBeGreaterThanOrEqual(0);\n> 239 |     expect(afterScroll.anchor.y + afterScroll.anchor.height).toBeLessThan(740);\n      |                                                              ^\n  240 |     expect(afterScroll.tooltip).not.toBeNull();\n  241 |     expect(afterScroll.tooltip.text).toBe(helperText);\n  242 |     if (afterScroll.tooltip.placement === beforeScroll.tooltip.placement) {\n    at /private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs:239:62"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T05:02:26.185Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "booking-tooltip-scroll",
+                      "contentType": "application/json",
+                      "body": "ewogICJiZWZvcmVTY3JvbGwiOiB7CiAgICAiYXQiOiAzNTgzLAogICAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgICAiaW5uZXJXaWR0aCI6IDMyMCwKICAgICJjbGllbnRXaWR0aCI6IDMyMCwKICAgICJzY3JvbGxXaWR0aCI6IDMyMCwKICAgICJ2aXN1YWxWaWV3cG9ydCI6IHsKICAgICAgIndpZHRoIjogMzIwLAogICAgICAic2NhbGUiOiAxCiAgICB9LAogICAgIm92ZXJmbG93IjogZmFsc2UsCiAgICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDEsCiAgICAic2Nyb2xsWSI6IDY0MiwKICAgICJhbmNob3IiOiB7CiAgICAgICJ4IjogMjEyLjI1LAogICAgICAieSI6IDEyMzkuNDM3NSwKICAgICAgInJpZ2h0IjogMjcyLjIzNDM3NSwKICAgICAgIndpZHRoIjogNTkuOTg0Mzc1LAogICAgICAiaGVpZ2h0IjogMzIsCiAgICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICAgInBsYWNlbWVudCI6IG51bGwKICAgIH0sCiAgICAidG9vbHRpcCI6IHsKICAgICAgIngiOiA1OCwKICAgICAgInkiOiAxMTk4LjUsCiAgICAgICJyaWdodCI6IDMyMC4wNDY4NzUsCiAgICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAgICJoZWlnaHQiOiA0MC41LAogICAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICAgInBsYWNlbWVudCI6ICJ0b3AiCiAgICB9CiAgfSwKICAiYWZ0ZXJTY3JvbGwiOiB7CiAgICAiYXQiOiAzNjE2LAogICAgImNvbXBhdE1vZGUiOiAiQ1NTMUNvbXBhdCIsCiAgICAiaW5uZXJXaWR0aCI6IDMyMCwKICAgICJjbGllbnRXaWR0aCI6IDMyMCwKICAgICJzY3JvbGxXaWR0aCI6IDMyMCwKICAgICJ2aXN1YWxWaWV3cG9ydCI6IHsKICAgICAgIndpZHRoIjogMzIwLAogICAgICAic2NhbGUiOiAxCiAgICB9LAogICAgIm92ZXJmbG93IjogZmFsc2UsCiAgICAiZGV2aWNlUGl4ZWxSYXRpbyI6IDEsCiAgICAic2Nyb2xsWSI6IDY4MiwKICAgICJhbmNob3IiOiB7CiAgICAgICJ4IjogMjEyLjI1LAogICAgICAieSI6IDExOTkuNDM3NSwKICAgICAgInJpZ2h0IjogMjcyLjIzNDM3NSwKICAgICAgIndpZHRoIjogNTkuOTg0Mzc1LAogICAgICAiaGVpZ2h0IjogMzIsCiAgICAgICJ0ZXh0IjogIjA0OjAwIiwKICAgICAgInBsYWNlbWVudCI6IG51bGwKICAgIH0sCiAgICAidG9vbHRpcCI6IHsKICAgICAgIngiOiA1OCwKICAgICAgInkiOiAxMTU4LjUsCiAgICAgICJyaWdodCI6IDMyMC4wNDY4NzUsCiAgICAgICJ3aWR0aCI6IDI2Mi4wNDY4NzUsCiAgICAgICJoZWlnaHQiOiA0MC41LAogICAgICAidGV4dCI6ICJUaHUgMjkgMDQ6MDAgKEdNVC01KSDCtyBFc3R1ZGlvIDA5OjAwIChVVEMpIiwKICAgICAgInBsYWNlbWVudCI6ICJ0b3AiCiAgICB9CiAgfSwKICAiZXBzaWxvbiI6IDEKfQ=="
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-20261028/final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-20261028/final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/private/tmp/tdf-booking-tooltip-regression-20261028/final-chromium-desktop/booking-public-booking-rec-a439f-etails-critical-mobile-flow-chromium-desktop/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/private/tmp/tdf-booking-tooltip-regression-20261028/booking.spec.mjs",
+                    "column": 62,
+                    "line": 239
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "148e5d051c92d7f89e54-9379661b561a698b59d2",
+          "file": "booking.spec.mjs",
+          "line": 90,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-29T05:02:05.704Z",
+    "duration": 28578.004,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

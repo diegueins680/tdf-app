@@ -1,0 +1,11 @@
+{
+  "strictJSONAndCSV": "PASS",
+  "normativeDecisionObjectsPreserved": 1352,
+  "entireDecisionFileByteIdentical": true,
+  "candidateCount": 1352,
+  "generatedChangedCandidateIds": [],
+  "initialJSONSemanticMatch": true,
+  "initialCSVByteMatch": true,
+  "canonicalOutputsRefreshedWhenChanged": true,
+  "historicalDecisionEvidenceCountersNotClaimedUniversallyCurrent": true
+}

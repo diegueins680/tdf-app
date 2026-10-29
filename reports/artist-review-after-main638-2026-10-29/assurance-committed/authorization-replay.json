@@ -1,0 +1,121 @@
+[
+  {
+    "id": "cardinality-nonnegative",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "cardinality-zero",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "cardinality-sum",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "strict-admin",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "strict-admin-witness-true",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[count_Fan = 0,\n party = 1,\n count_Customer = 0,\n count_Songwriter = 0,\n count_Producer = 0,\n count_Photographer = 0,\n count_Admin = 1,\n count_StageManager = 0,\n count_Publicist = 0,\n count_Student = 0,\n count_RoadCrew = 0,\n count_Teacher = 0,\n count_Reception = 0,\n count_DJ = 0,\n count_Agency = 0,\n count_Engineer = 0,\n count_LabelRep = 0,\n count_TourManager = 0,\n count_ReadOnly = 0,\n count_Promoter = 0,\n count_Webmaster = 0,\n count_LiveSessionsProducer = 0,\n count_Maintenance = 0,\n count_AandR = 0,\n count_StudioManager = 0,\n count_Promotor = 0,\n count_Accounting = 0,\n count_Intern = 0,\n count_Vendor = 0,\n count_Artista = 0,\n count_Artist = 0,\n count_Manager = 0]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "strict-admin-witness-false",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[count_Manager = 1,\n count_Artist = 1,\n count_Artista = 1,\n count_Vendor = 1,\n count_Intern = 1,\n count_Fan = 2,\n count_Accounting = 1,\n party = 1,\n count_Promotor = 1,\n count_StudioManager = 1,\n count_AandR = 1,\n count_Maintenance = 1,\n count_LiveSessionsProducer = 1,\n count_Webmaster = 1,\n count_Promoter = 1,\n count_ReadOnly = 1,\n count_TourManager = 1,\n count_LabelRep = 1,\n count_Engineer = 1,\n count_Agency = 1,\n count_DJ = 1,\n count_Reception = 1,\n count_Teacher = 1,\n count_RoadCrew = 1,\n count_Student = 1,\n count_Publicist = 1,\n count_Admin = 0,\n count_StageManager = 1,\n count_Photographer = 1,\n count_Customer = 2,\n count_Producer = 1,\n count_Songwriter = 1]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "module-access",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "module-access-witness-true",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[count_Admin = 0,\n party = 1,\n count_Engineer = 0,\n count_StudioManager = 0,\n count_Manager = 0,\n count_Maintenance = 0,\n count_Fan = 0,\n count_Customer = 0,\n count_ReadOnly = 0,\n count_Vendor = 0,\n count_Student = 0,\n count_AandR = 0,\n count_Photographer = 0,\n count_RoadCrew = 0,\n count_StageManager = 0,\n count_LabelRep = 0,\n count_TourManager = 0,\n count_Publicist = 0,\n count_DJ = 0,\n count_Songwriter = 0,\n count_Agency = 0,\n count_Producer = 0,\n count_Promoter = 0,\n count_Promotor = 0,\n count_Webmaster = 0,\n count_Artista = 0,\n count_Artist = 0,\n count_Intern = 0,\n count_LiveSessionsProducer = 0,\n count_Accounting = 0,\n count_Reception = 0,\n count_Teacher = 0,\n requested_module_grant = True]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "module-access-witness-false",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[count_Manager = 2,\n count_Artist = 2,\n count_Artista = 2,\n count_Vendor = 2,\n count_Intern = 2,\n count_Fan = 2,\n count_Accounting = 2,\n party = 1,\n count_Promotor = 2,\n count_StudioManager = 2,\n count_AandR = 2,\n count_Maintenance = 2,\n count_LiveSessionsProducer = 2,\n count_Webmaster = 2,\n count_Promoter = 2,\n count_ReadOnly = 2,\n count_TourManager = 2,\n count_LabelRep = 2,\n count_Engineer = 2,\n count_Agency = 2,\n count_DJ = 2,\n requested_module_grant = True,\n count_Teacher = 2,\n count_Reception = 2,\n count_RoadCrew = 2,\n count_Student = 2,\n count_Publicist = 2,\n count_Admin = 2,\n count_StageManager = 2,\n count_Photographer = 2,\n count_Customer = 2,\n count_Producer = 2,\n count_Songwriter = 2]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "ingestion-admission",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "ingestion-admission-witness-true",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[count_Fan = 0,\n party = 1,\n count_Customer = 0,\n count_Songwriter = 0,\n count_Producer = 0,\n count_Photographer = 0,\n count_Admin = 1,\n count_StageManager = 0,\n count_Publicist = 0,\n admin_module_grant = True,\n count_Student = 0,\n count_RoadCrew = 0,\n count_Teacher = 0,\n count_Reception = 0,\n count_DJ = 0,\n count_Agency = 0,\n count_Engineer = 0,\n count_LabelRep = 0,\n count_TourManager = 0,\n count_ReadOnly = 0,\n count_Promoter = 0,\n count_Webmaster = 0,\n count_LiveSessionsProducer = 0,\n count_Maintenance = 0,\n count_AandR = 0,\n count_StudioManager = 0,\n count_Promotor = 0,\n count_Accounting = 0,\n count_Intern = 0,\n count_Vendor = 0,\n count_Artista = 0,\n count_Artist = 0,\n count_Manager = 0]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "ingestion-admission-witness-false",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[count_Manager = 1,\n count_Artist = 1,\n count_Artista = 1,\n count_Vendor = 1,\n count_Intern = 1,\n count_Fan = 2,\n count_Accounting = 1,\n party = 1,\n count_Promotor = 1,\n count_StudioManager = 1,\n count_AandR = 1,\n count_Maintenance = 1,\n count_LiveSessionsProducer = 1,\n count_Webmaster = 1,\n count_Promoter = 1,\n count_ReadOnly = 1,\n count_TourManager = 1,\n count_LabelRep = 1,\n count_Engineer = 1,\n count_Agency = 1,\n count_DJ = 1,\n count_Reception = 1,\n count_Teacher = 1,\n count_RoadCrew = 1,\n count_Student = 1,\n admin_module_grant = True,\n count_Publicist = 1,\n count_Admin = 0,\n count_StageManager = 1,\n count_Photographer = 1,\n count_Customer = 2,\n count_Producer = 1,\n count_Songwriter = 1]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "control-drop-coherence",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[count_Manager = 0,\n count_Artist = 0,\n count_Artista = 0,\n count_Vendor = 0,\n count_Intern = 0,\n count_Fan = 0,\n count_Accounting = 0,\n party = 1,\n count_Promotor = 0,\n count_StudioManager = 0,\n count_AandR = 0,\n count_Maintenance = 0,\n count_LiveSessionsProducer = 0,\n count_Webmaster = 0,\n count_Promoter = 0,\n count_ReadOnly = 0,\n count_TourManager = 0,\n count_LabelRep = 0,\n count_Engineer = 0,\n count_Agency = 0,\n count_DJ = 0,\n count_Reception = 0,\n count_Teacher = 0,\n count_RoadCrew = 0,\n count_Student = 0,\n count_Publicist = 0,\n count_Admin = 0,\n count_StageManager = 0,\n count_Photographer = 0,\n count_Customer = 0,\n count_Producer = 1,\n count_Songwriter = 0]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "control-admit-operational-role",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[count_Manager = 0,\n count_Artist = 0,\n count_Artista = 0,\n count_Vendor = 0,\n count_Intern = 0,\n count_Fan = 0,\n count_Accounting = 0,\n party = 1,\n count_Promotor = 0,\n count_StudioManager = 0,\n count_AandR = 0,\n count_Maintenance = 0,\n count_LiveSessionsProducer = 0,\n count_Webmaster = 1,\n count_Promoter = 0,\n count_ReadOnly = 0,\n count_TourManager = 0,\n count_LabelRep = 0,\n count_Engineer = 0,\n count_Agency = 0,\n count_DJ = 0,\n count_Reception = 0,\n count_Teacher = 0,\n count_RoadCrew = 0,\n count_Student = 0,\n count_Publicist = 0,\n count_Admin = 1,\n count_StageManager = 0,\n count_Photographer = 0,\n count_Customer = 0,\n count_Producer = 0,\n count_Songwriter = 0]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "control-allow-zero-identity",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[count_Manager = 0,\n count_Artist = 0,\n count_Artista = 0,\n count_Vendor = 0,\n count_Intern = 0,\n count_Fan = 0,\n count_Accounting = 0,\n party = 0,\n count_Promotor = 0,\n count_StudioManager = 0,\n count_AandR = 0,\n count_Maintenance = 0,\n count_LiveSessionsProducer = 0,\n count_Webmaster = 0,\n count_Promoter = 0,\n count_ReadOnly = 0,\n count_TourManager = 0,\n count_LabelRep = 0,\n count_Engineer = 0,\n count_Agency = 0,\n count_DJ = 0,\n count_Reception = 0,\n count_Teacher = 0,\n count_RoadCrew = 0,\n count_Student = 0,\n count_Publicist = 0,\n count_Admin = 1,\n count_StageManager = 0,\n count_Photographer = 0,\n count_Customer = 0,\n count_Producer = 0,\n count_Songwriter = 0]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "control-drop-module-grant",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[count_Manager = 0,\n count_Artist = 0,\n count_Artista = 0,\n count_Vendor = 0,\n count_Intern = 0,\n count_Fan = 0,\n count_Accounting = 0,\n party = 0,\n count_Promotor = 0,\n count_StudioManager = 0,\n count_AandR = 0,\n count_Maintenance = 0,\n count_LiveSessionsProducer = 0,\n count_Webmaster = 0,\n count_Promoter = 0,\n count_ReadOnly = 0,\n count_TourManager = 0,\n count_LabelRep = 0,\n count_Engineer = 0,\n count_Agency = 0,\n count_DJ = 2,\n count_Reception = 0,\n count_Teacher = 0,\n count_RoadCrew = 0,\n count_Student = 0,\n count_Publicist = 0,\n requested_module_grant = True,\n count_Admin = 0,\n count_StageManager = 0,\n count_Photographer = 0,\n count_Customer = 0,\n count_Producer = 0,\n count_Songwriter = 0]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "control-module-implies-admin",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[count_Manager = 0,\n count_Artist = 0,\n count_Artista = 0,\n count_Vendor = 0,\n count_Intern = 0,\n count_Fan = 0,\n count_Accounting = 0,\n party = 1,\n count_Promotor = 0,\n count_StudioManager = 0,\n count_AandR = 0,\n count_Maintenance = 0,\n count_LiveSessionsProducer = 0,\n count_Webmaster = 0,\n count_Promoter = 0,\n count_ReadOnly = 0,\n count_TourManager = 0,\n count_LabelRep = 0,\n count_Engineer = 0,\n count_Agency = 1,\n count_DJ = 0,\n count_Reception = 0,\n count_Teacher = 0,\n count_RoadCrew = 0,\n count_Student = 0,\n count_Publicist = 0,\n count_Admin = 0,\n count_StageManager = 0,\n admin_module_grant = True,\n count_Photographer = 0,\n count_Customer = 0,\n count_Producer = 0,\n count_Songwriter = 0]",
+    "reasonUnknown": null
+  }
+]

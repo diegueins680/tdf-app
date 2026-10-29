@@ -1,0 +1,32 @@
+Independent read-only C2 control and qualification provenance review
+
+Source: a5535c59e49064fec535daa3682a4a1dc31c68f4, tree 3aa473b92662cba8e7a319149454d6cdf9a5b8ec.
+Baseline: 535b113e7b4c139be9ea570c18e8d29c6a34700d.
+Scope: local source seal, assurance provenance and final negative-control receipts. No independent browser, test, solver, build, server or database execution was performed. This is not current-head GitHub approval.
+
+Blocking findings: 0 within this scope.
+
+Independently rehashed all 1413 registered committed input blobs against assurance provenance: 1313 main-repository files at C2 and 100 Mobile files at 7000df1da934aa467e443ad267c0a8caa1e9cb72, with zero mismatches. Source-seal and assurance agree on source digest 08b2d70e468a81e68db6b26f251f336bec916e251f77e432924ea49aafe3fc3a. The new contract hash matches its C2 Git blob. This verifies input identity, not execution or behavioral refinement of all those files.
+
+UI source SHA256: 3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3.
+Committed e2e SHA256: 401c4c15062d4337d53a118c25b0d52b0facb7db0e3119fdc98ded8a05932198.
+Contract SHA256: ef0b6d6c7b70d1ade3ae6f51943a4e2369da52e25c4357961bb1ca28c965ff41.
+Each current working file equals its C2 Git blob. The correct UI contains exactly one target option line; deleting only that line independently reproduces the recorded mutant hash 2d6f240e0db0525d25ddf34dfaad885d9b150e4e1cdbd6f4e7746b4738f606e4. The executed fixture equals the complete committed e2e file after exactly the two recorded package-import substitutions. Its independently recomputed SHA256 is 46d8b4492545b9a1e77f74f570d04a438ae84d2216fb76d60edda3524d3a3d76. Test bodies and assertions therefore remain unchanged by the local import adaptation.
+
+The final Playwright JSON records one unexpected failure, no passes/skips/flaky cases, specifically at viewportMeasurement.overflow.toBe(false), not merely a generic exit code. Its numeric attachment reports client 320, scroll/inner 362, visual width about 361 and scale about 0.8864, with the focused helper extending to about 361.05. Four later samples still report 362/320 overflow. The geometry-qualified driver requires CLI/browser exit 1, exactly one unexpected result and geometry attachment, actual root overflow at client 320, and the expected failure point. This is credible empirical detection of the local sole-option mutant with the exact C2 test bodies; it is not proof of all-browser behavior or the original hosted WebKit cause.
+
+Source restoration is independently confirmed by the exact current UI/test/contract Git-blob equality above. At review time only the parent's temporary dependency aliases were visible as untracked paths while the correct immutable build was underway; those are not tracked source changes or proof of completed build cleanup. The recorded negative-run cleanup says its preview stopped and its aliases were removed. This review did not independently inspect process state.
+
+Both setup failures remain retained and correctly excluded from product evidence: missing base config failed before collection and produced no test results; the port mismatch collected one navigation failure before product assertions. Neither meets the final geometry-qualified acceptance. The later resumed driver also checks the complete built mutant artifact hash map before accepting its run, limiting source/artifact drift across setup recovery. No setup failure is relabeled as the successful product counterexample.
+
+Assurance limits remain explicit: all 156 requirements and all 312 complete implementation/refinement obligations remain UNPROVEN; 11 conditional source-derived SMT obligations do not prove this overlay behavior. Release is BLOCKED. The correct immutable C2 build and final C2 nine-case positive matrix remain pending at this review's requested qualification boundary. This receipt must not be used to promote those pending results. Earlier partial drivers and secondary-harness failures remain historical evidence, distinct from this final control. Hosted current WebKit and protected integration remain outstanding.
+
+Reviewed receipt file SHA256 values:
+/private/tmp/tdf-booking-tooltip-receipts-v3-20261028/source-seal.json: 5423b2c86dd5664182da9c54db6503d790136c12af7ae48ff44dd238686da4ee
+/private/tmp/tdf-booking-tooltip-receipts-v3-20261028/assurance/report.json: 5a5b921e090ae769ec48017fea61aa7101749a1529fd419e8e0a755e66f9bbb3
+/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/final-sole-strategy-removal.json: c3b9fdb86b32019e87dbc0202f94c1523a53ce545bb2adfaf42450f753853f86
+/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/negative-final-phone.json: bbecbd0c321598c07214bcb7a496de514a43056933a0dbeb638567e02e0d7ecc
+/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/negative-final-geometry.json: 6c377b8339fc3f6e6555903f427d46f2567e890989801e809649e3609c066ece
+/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/booking.spec.mjs: 46d8b4492545b9a1e77f74f570d04a438ae84d2216fb76d60edda3524d3a3d76
+/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/startup-not-run.json: 6b6fd38d735a4fbafcb2d677c3c6338c27be2e55bd7f443108de46bcccdb922c
+/private/tmp/tdf-booking-tooltip-regression-qualified-v3-20261028/setup-port-mismatch.json: 3c1a20f3535f677d12531e74d9eb1809508d034ab6aed01fbf6953f7004a6e09
