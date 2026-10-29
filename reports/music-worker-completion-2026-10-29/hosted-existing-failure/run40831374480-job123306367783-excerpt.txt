@@ -1,0 +1,105 @@
+43.3940626Z   ---
+2026-10-29T07:06:43.3941037Z   duration_ms: 0.635521
+2026-10-29T07:06:43.3941474Z   type: 'test'
+2026-10-29T07:06:43.3941819Z   ...
+2026-10-29T07:06:43.3942501Z # Subtest: worker fixture ignores ambient libpq and provider credentials by default
+2026-10-29T07:06:43.3943373Z ok 5 - worker fixture ignores ambient libpq and provider credentials by default
+2026-10-29T07:06:43.3944006Z   ---
+2026-10-29T07:06:43.3944309Z   duration_ms: 0.332693
+2026-10-29T07:06:43.3944637Z   type: 'test'
+2026-10-29T07:06:43.3944943Z   ...
+2026-10-29T07:06:43.3947697Z # Subtest: explicit isolated CI connection never reuses the supplied database
+2026-10-29T07:06:43.3949764Z ok 6 - explicit isolated CI connection never reuses the supplied database
+2026-10-29T07:06:43.3950885Z   ---
+2026-10-29T07:06:43.3951525Z   duration_ms: 0.430877
+2026-10-29T07:06:43.3952380Z   type: 'test'
+2026-10-29T07:06:43.3952819Z   ...
+2026-10-29T07:06:43.3953973Z # Subtest: worker CI connection rejects remote, non-test and connection override targets
+2026-10-29T07:06:43.3955263Z ok 7 - worker CI connection rejects remote, non-test and connection override targets
+2026-10-29T07:06:43.3956032Z   ---
+2026-10-29T07:06:43.3956441Z   duration_ms: 0.788929
+2026-10-29T07:06:43.3956889Z   type: 'test'
+2026-10-29T07:06:43.3957848Z   ...
+2026-10-29T07:06:43.3959042Z # Subtest: worker connection follows the isolated server port and never targets a non-owned database
+2026-10-29T07:06:43.3960729Z ok 8 - worker connection follows the isolated server port and never targets a non-owned database
+2026-10-29T07:06:43.3961649Z   ---
+2026-10-29T07:06:43.3962026Z   duration_ms: 5.341631
+2026-10-29T07:06:43.3962445Z   type: 'test'
+2026-10-29T07:06:43.3962817Z   ...
+2026-10-29T07:06:43.3964284Z # Subtest: synthetic renderer accepts owned local/CI URLs and rejects routing overrides before writing
+2026-10-29T07:06:43.3968034Z ok 9 - synthetic renderer accepts owned local/CI URLs and rejects routing overrides before writing
+2026-10-29T07:06:43.3969675Z   ---
+2026-10-29T07:06:43.3970602Z   duration_ms: 256.576896
+2026-10-29T07:06:43.3971079Z   type: 'test'
+2026-10-29T07:06:43.3971470Z   ...
+2026-10-29T07:06:43.4081950Z 1..9
+2026-10-29T07:06:43.4082729Z # tests 9
+2026-10-29T07:06:43.4084404Z # suites 0
+2026-10-29T07:06:43.4084856Z # pass 9
+2026-10-29T07:06:43.4085270Z # fail 0
+2026-10-29T07:06:43.4085692Z # cancelled 0
+2026-10-29T07:06:43.4087091Z # skipped 0
+2026-10-29T07:06:43.4087712Z # todo 0
+2026-10-29T07:06:43.4088185Z # duration_ms 349.381196
+2026-10-29T07:06:43.5691994Z 
+2026-10-29T07:06:43.5692856Z > tdf-app@0.2.0 test:music-worker-runtime
+2026-10-29T07:06:43.5693817Z > node scripts/test-music-release-worker-runtime.mjs
+2026-10-29T07:06:43.5694352Z 
+2026-10-29T07:06:44.9792715Z PASS idle worker and scheduler execute real SQL
+2026-10-29T07:06:55.4332888Z PASS preview ranges, automatic reprocessing, immutable history and migration rollback
+2026-10-29T07:06:56.8140120Z PASS GET failure stops processing, preserves original and schedules retry/dead letter
+2026-10-29T07:06:57.4391415Z PASS checksum mismatch never promotes unverified original
+2026-10-29T07:07:02.9339086Z PASS re-upload with the same declared hash is inspected after a checksum-mismatch dead letter
+2026-10-29T07:07:03.7583149Z PASS failed audio decoding cannot produce success or delete quarantine
+2026-10-29T07:07:06.6942219Z PASS failed master PUT stops before DB promotion or quarantine deletion
+2026-10-29T07:07:18.0897826Z PASS failed derivative PUT retries from intact promoted master and publishes no missing assets
+2026-10-29T07:07:22.1784891Z PASS quarantine cleanup failure retains recoverable bytes and still finishes derivatives
+2026-10-29T07:07:29.2243387Z PASS metadata failure rolls back promotion and keeps quarantine recoverable
+2026-10-29T07:07:30.1532053Z PASS validation refresh failure rolls back succeeded state and remains retryable
+2026-10-29T07:07:30.8944933Z PASS failed artwork decoding blocks all uploads
+2026-10-29T07:07:34.1032650Z PASS real artwork processing promotes original and registers matching derivative hashes
+2026-10-29T07:07:44.5983136Z PASS DDEX commit gate: synthetic package succeeds; recipient revoked during rendering blocks final validation
+2026-10-29T07:07:46.7671913Z PASS DDEX processing failure: export report carries a fixed message, job keeps the operator summary, retry reaches valid
+2026-10-29T07:07:46.7672970Z PASS complete audio release becomes ready for human review exactly once
+2026-10-29T07:07:48.8394766Z PASS valid DDEX retry preserves the existing package without rendering or uploading again
+2026-10-29T07:08:19.4490520Z file:///__w/tdf-app/tdf-app/scripts/test-music-release-worker-runtime.mjs:50
+2026-10-29T07:08:19.4491831Z       timer = globalThis.setTimeout(() => reject(new Error('Worker did not stop within 30s')), 30000);
+2026-10-29T07:08:19.4492548Z                                                  ^
+2026-10-29T07:08:19.4492832Z 
+2026-10-29T07:08:19.4493052Z Error: Worker did not stop within 30s
+2026-10-29T07:08:19.4493808Z     at Timeout.<anonymous> (file:///__w/tdf-app/tdf-app/scripts/test-music-release-worker-runtime.mjs:50:50)
+2026-10-29T07:08:19.4494545Z     at listOnTimeout (node:internal/timers:585:17)
+2026-10-29T07:08:19.4495067Z     at process.processTimers (node:internal/timers:521:7)
+2026-10-29T07:08:19.4495383Z 
+2026-10-29T07:08:19.4495803Z Node.js v22.23.4
+2026-10-29T07:08:19.4724096Z ##[error]Process completed with exit code 1.
+2026-10-29T07:08:19.5008231Z ##[group]Run actions/upload-artifact@v7
+2026-10-29T07:08:19.5008579Z with:
+2026-10-29T07:08:19.5008957Z   name: backend-version-rebuild-c1cfa3b7b1678054b5d88cbd8c6b4f2858d1e87a-1
+2026-10-29T07:08:19.5010108Z   path: tmp/specification/backend-version-rebuild/result.json
+tmp/specification/backend-version-rebuild/*/*.log
+tmp/specification/backend-version-rebuild/*/*.json
+
+2026-10-29T07:08:19.5010899Z   if-no-files-found: ignore
+2026-10-29T07:08:19.5011186Z   retention-days: 7
+2026-10-29T07:08:19.5011420Z   compression-level: 6
+2026-10-29T07:08:19.5011673Z   overwrite: false
+2026-10-29T07:08:19.5011913Z   include-hidden-files: false
+2026-10-29T07:08:19.5012187Z   archive: true
+2026-10-29T07:08:19.5012405Z env:
+2026-10-29T07:08:19.5012617Z   REQUIRE_STACK: 1
+2026-10-29T07:08:19.5012867Z   TDF_TEST_POSTGRES_HOST: postgres
+2026-10-29T07:08:19.5013181Z   TDF_TEST_POSTGRES_PASSWORD: postgres
+2026-10-29T07:08:19.5013575Z   STACK_ROOT: /home/runner/work/tdf-app/tdf-app/.stack-root
+2026-10-29T07:08:19.5014131Z   BACKEND_BINARY_OUT: /home/runner/work/tdf-app/tdf-app/tdf-hq/.release/tdf-hq-exe
+2026-10-29T07:08:19.5014791Z   TDF_VERSION_REBUILD_OUTPUT: /home/runner/work/tdf-app/tdf-app/tmp/specification/backend-version-rebuild
+2026-10-29T07:08:19.5015309Z ##[endgroup]
+2026-10-29T07:08:19.5020431Z ##[command]/usr/bin/docker exec  0c23908d55fabc6c704b137cfafbfa26f9146a72a6ca63b8b9abee4cab3f88fb sh -c "cat /etc/*release | grep ^ID"
+2026-10-29T07:08:19.8067437Z With the provided path, there will be 30 files uploaded
+2026-10-29T07:08:19.8078115Z Artifact name is valid!
+2026-10-29T07:08:19.8078913Z Root directory input is valid!
+2026-10-29T07:08:20.2215129Z Uploading artifact: backend-version-rebuild-c1cfa3b7b1678054b5d88cbd8c6b4f2858d1e87a-1.zip
+2026-10-29T07:08:20.2258544Z Beginning upload of artifact content to blob storage
+2026-10-29T07:08:20.5830861Z Uploaded bytes 8991
+2026-10-29T07:08:20.6635314Z Finished uploading artifact content to blob storage!
+2026-10-2

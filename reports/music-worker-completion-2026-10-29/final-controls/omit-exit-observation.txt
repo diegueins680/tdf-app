@@ -1,0 +1,34 @@
+✖ exited parent with descendant-held output cannot complete before close (270.712988ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 446.126043
+
+✖ failing tests:
+
+test at scripts/__tests__/test-child-completion.test.mjs:104:1
+✖ exited parent with descendant-held output cannot complete before close (270.712988ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'awaiting-exit'
+  - 'exited-awaiting-close'
+  
+      at Object.<anonymous> (file:///private/tmp/tdf-music-worker-completion-20261029/scripts/__tests__/test-child-completion.test.mjs:116:14)
+      at expectedException (node:assert:578:17)
+      at expectsError (node:assert:703:21)
+      at strict.rejects (node:assert:769:3)
+      at async TestContext.<anonymous> (file:///private/tmp/tdf-music-worker-completion-20261029/scripts/__tests__/test-child-completion.test.mjs:114:5)
+      at async Test.run (node:internal/test_runner/test:1110:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'awaiting-exit',
+    expected: 'exited-awaiting-close',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

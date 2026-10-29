@@ -1,0 +1,2 @@
+PASS two sibling jobs close a release once without losing the final validation
+Music worker runtime: 1 scenarios passed (transport fault injector; no S3 compatibility claim).

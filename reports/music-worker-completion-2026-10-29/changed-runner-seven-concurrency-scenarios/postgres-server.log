@@ -1,0 +1,26 @@
+2026-10-29 10:44:05.248 -05 [93131] LOG:  starting PostgreSQL 16.13 (Homebrew) on x86_64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.202), 64-bit
+2026-10-29 10:44:05.251 -05 [93131] LOG:  listening on IPv4 address "127.0.0.1", port 55728
+2026-10-29 10:44:05.252 -05 [93131] LOG:  listening on Unix socket "/private/tmp/.s.PGSQL.55728"
+2026-10-29 10:44:05.902 -05 [93152] LOG:  database system was shut down at 2026-10-29 10:30:32 -05
+2026-10-29 10:44:06.007 -05 [93131] LOG:  database system is ready to accept connections
+2026-10-29 10:45:18.858 -05 [97465] ERROR:  Music worker lease lost or expired
+2026-10-29 10:45:18.858 -05 [97465] CONTEXT:  PL/pgSQL function pg_temp_3.music_worker_guard(uuid,text,integer,integer,text) line 18 at RAISE
+2026-10-29 10:45:18.858 -05 [97465] STATEMENT:  SELECT pg_temp.music_worker_guard('ca47d515-358d-4608-a844-b161acace7f0'::uuid,  E'worker''s :quoted \\ identity', '1'::integer, '900'::integer, '')
+2026-10-29 10:45:26.052 -05 [98477] ERROR:  Music worker lease lost or expired
+2026-10-29 10:45:26.052 -05 [98477] CONTEXT:  PL/pgSQL function pg_temp_3.music_worker_guard(uuid,text,integer,integer,text) line 18 at RAISE
+2026-10-29 10:45:26.052 -05 [98477] STATEMENT:  SELECT pg_temp.music_worker_guard('d7d4cf00-97c4-4caf-8c70-7cddbc1c0a3d'::uuid,  E'worker''s :quoted \\ identity', '1'::integer, '900'::integer, '')
+2026-10-29 10:45:26.148 -05 [98486] ERROR:  Music worker lease lost or expired
+2026-10-29 10:45:26.148 -05 [98486] CONTEXT:  PL/pgSQL function pg_temp_3.music_worker_guard(uuid,text,integer,integer,text) line 18 at RAISE
+2026-10-29 10:45:26.148 -05 [98486] STATEMENT:  SELECT pg_temp.music_worker_guard('d7d4cf00-97c4-4caf-8c70-7cddbc1c0a3d'::uuid,  E'worker''s :quoted \\ identity', '1'::integer, '900'::integer, '')
+2026-10-29 10:45:28.851 -05 [98582] ERROR:  Music worker lease lost or expired
+2026-10-29 10:45:28.851 -05 [98582] CONTEXT:  PL/pgSQL function pg_temp_3.music_worker_guard(uuid,text,integer,integer,text) line 18 at RAISE
+2026-10-29 10:45:28.851 -05 [98582] STATEMENT:  SELECT pg_temp.music_worker_guard('30d2bb6b-515d-4e62-a59e-62498732e41e'::uuid,  E'worker''s :quoted \\ identity', '1'::integer, '30'::integer, '')
+2026-10-29 10:45:32.167 -05 [93150] LOG:  checkpoint starting: immediate force wait
+2026-10-29 10:45:32.176 -05 [93150] LOG:  checkpoint complete: wrote 5 buffers (0.0%); 0 WAL file(s) added, 0 removed, 1 recycled; write=0.003 s, sync=0.001 s, total=0.009 s; sync files=6, longest=0.001 s, average=0.001 s; distance=10437 kB, estimate=10437 kB; lsn=0/58339F90, redo lsn=0/58339F58
+2026-10-29 10:45:33.353 -05 [93131] LOG:  received fast shutdown request
+2026-10-29 10:45:33.354 -05 [93131] LOG:  aborting any active transactions
+2026-10-29 10:45:33.357 -05 [93131] LOG:  background worker "logical replication launcher" (PID 93158) exited with exit code 1
+2026-10-29 10:45:33.358 -05 [93150] LOG:  shutting down
+2026-10-29 10:45:33.358 -05 [93150] LOG:  checkpoint starting: shutdown immediate
+2026-10-29 10:45:33.362 -05 [93150] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.004 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=9393 kB; lsn=0/5833A0B0, redo lsn=0/5833A0B0
+2026-10-29 10:45:33.600 -05 [93131] LOG:  database system is shut down

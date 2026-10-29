@@ -1,0 +1,28 @@
+{
+  "baseline": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "sourceHashes": {
+    "scripts/test-music-release-worker-runtime.mjs": "b834205dcb146dc5893e604f4fa1390ca68fb371f9a6edf2f5fbdb96f02e70e5",
+    "scripts/run-music-release-worker-once.sh": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
+    "scripts/lib/music-test-database.mjs": "b63039bc86ab6dd58a17cd7448bf26ad439e27e23a0c7ab7b67b3eca94d7ebaf",
+    "scripts/lib/test-child-completion.mjs": "e973125ac3263f52673627f88b69e7afd296184b687ff7b27befdf160d7f849c",
+    "scripts/__tests__/test-child-completion.test.mjs": "1c753d04d03af8ec7e5dcb86ada718dfb77854d231d87e3fb917f1bc46744d67",
+    "formal/system/requirements.json": "392f9e81d0bb61bf5ffe81b45b8ad0dfffd2f80afcd3a33bbf635acc1c3fa26e",
+    "formal/system/music-worker-completion-observation.md": "d3184c19d5e7ee9c897e5fb4f3c9938862a16e8605cac8698df9214f6ffecb60",
+    "scripts/quality-repo.sh": "2dece353b5d14b49fdaf4a1a8bb4497c1cab746a3f4e2e1999c8fc0c809750ac"
+  },
+  "all156ExistingRequirementObjectsUnchanged": true,
+  "newRequirement": "SYS-WORKER-COMPLETION-001",
+  "globalRequirements": 157,
+  "whole1352HistoricalCatalogReviewBytesUnchanged": true,
+  "canonicalJSONAndCSVStrictScans": "actualexit0/1352candidates",
+  "rootQuality": "PASS; existing platform skips retained",
+  "actualCatalogUnitCases": 8,
+  "unitCases": 6,
+  "intendedMutantFailures": 3,
+  "actualMusicConcurrencyScenarios": 7,
+  "runtimeBinding": "Four executed runtime/core files exact final; later unit-only finally/container-bound changes qualified by final6/3controls.",
+  "productUIBackendSchemaDependenciesWorkflowsUnchanged": true,
+  "ownedAliasesRemoved": true,
+  "syntheticPGStopped": true,
+  "scope": "TESTED bounded synthetic observations; hosted worker cause UNKNOWN; no full backend/provider/liveness proof or integration claim."
+}

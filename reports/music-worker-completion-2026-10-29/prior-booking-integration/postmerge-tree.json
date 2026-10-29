@@ -1,0 +1,10 @@
+{
+  "mergeCommit": "6197b87326a437350dca239ee64902e78da6964c",
+  "parents": [
+    "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+    "959cf3bc31cc794717e1786b7d133b2907f79322"
+  ],
+  "mergeTree": "84dbbd072300fd5a9265fe676d11ae8c4f41eb13",
+  "equalsQualifiedHeadTree": true,
+  "originMainVerified": true
+}

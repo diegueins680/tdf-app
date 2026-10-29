@@ -1,0 +1,108 @@
+{
+  "mergeAt": "2026-10-29T16:01:01Z",
+  "actualRequiredContexts": 20,
+  "allCompletedAtOrBeforeMerge": true,
+  "entries": [
+    {
+      "context": "quality",
+      "at": "2026-10-29T15:50:54Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "api-contracts",
+      "at": "2026-10-29T15:29:49Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "production-migrations",
+      "at": "2026-10-29T15:29:48Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "specification-contracts",
+      "at": "2026-10-29T15:32:33Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "verify",
+      "at": "2026-10-29T15:38:59Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "postgres-foundation",
+      "at": "2026-10-29T15:29:50Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "postgres-api",
+      "at": "2026-10-29T15:29:33Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "postgres-task-commit",
+      "at": "2026-10-29T15:29:27Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "postgres-task-read",
+      "at": "2026-10-29T15:29:34Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "postgres-task-revision",
+      "at": "2026-10-29T15:29:23Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "postgres-task-revisioned-read",
+      "at": "2026-10-29T15:29:35Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "postgres-raci-reassignment",
+      "at": "2026-10-29T15:30:10Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "postgres-raci-editor-context",
+      "at": "2026-10-29T15:29:53Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "postgres-task-completion",
+      "at": "2026-10-29T15:30:36Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "postgres-complete-schema",
+      "at": "2026-10-29T15:29:32Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "main-integration-admission",
+      "at": "2026-10-29T15:29:16Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "models-and-postgres",
+      "at": "2026-10-29T15:32:19Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "social-client",
+      "at": "2026-10-29T15:30:05Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "postgres-properties",
+      "at": "2026-10-29T15:29:52Z",
+      "atOrBeforeMerge": true
+    },
+    {
+      "context": "hardcoded-list-audit",
+      "at": "2026-10-29T15:31:13Z",
+      "atOrBeforeMerge": true
+    }
+  ],
+  "scope": "Onlycurrentrequired20; notallstatuses orhistoricalgateenforcement."
+}

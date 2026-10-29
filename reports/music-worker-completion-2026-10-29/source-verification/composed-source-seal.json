@@ -1,0 +1,33 @@
+{
+  "baselineMain": "6197b87326a437350dca239ee64902e78da6964c",
+  "qualifiedComponentCommit": "4ac12ee2f9a4b2e1b7fd33ae01ac2b0adfb8b630",
+  "sourceCommit": "ab261ee88fd48ec784419ad62f06c9bf1a06421a",
+  "mergeParents": [
+    "4ac12ee2f9a4b2e1b7fd33ae01ac2b0adfb8b630",
+    "6197b87326a437350dca239ee64902e78da6964c"
+  ],
+  "registeredInputs": 1415,
+  "sourceDigest": "2d1515df350bcb7a85d77e5abaa3165f2204621758e4fa1525dfb3c4a1433e1e",
+  "allGitAndPinnedMobileHashesVerified": true,
+  "selectedContractGitHashesSeparatelyBound": {
+    "formal/system/music-worker-completion-observation.md": "d3184c19d5e7ee9c897e5fb4f3c9938862a16e8605cac8698df9214f6ffecb60",
+    "formal/system/booking-tooltip-viewport.md": "3e1b489f81fede443101fd8f259603c1a989f040b8ba3eac16324139d13feeba"
+  },
+  "sourceFingerprintMarkdownLimit": "Markdown is outside registered source set; selected contracts are separately bound to Git and discovery hashes.",
+  "regeneratedConflicts": [
+    "docs/catalog-persistence/reports/static-list-inventory.json",
+    "formal/system/inventory.json",
+    "formal/system/traceability.json"
+  ],
+  "strictCanonicalJSONAndCSV": "PASS1352",
+  "composedCatalogTests": 8,
+  "allOwnRuntimeUnitQualitySourcesExactQualifiedC": true,
+  "allProductUIBackendWorkflowsExactProtectedMain": true,
+  "all156IncomingMainObjectsPlusOwnRequirementPreserved": true,
+  "historical1352ReviewFile": "unchanged",
+  "verificationComposition": "OwnC rootQ/6unit/3mutant/7actualconcurrency plus protectedmain CI643persona; current merged indices/strictcatalog/admission/assurance/Gitbinding rechecked. No single full composed backend serving run claimed.",
+  "assurance": "TESTED scoped observation;157whole/314implementation-refinementUNPROVEN/11existingconditionalSMT/releaseBLOCKED",
+  "hostedNewWorkerSource": "PENDING; underlying workerstopcauseUNKNOWN",
+  "deployment": "UNVERIFIED",
+  "clean": true
+}

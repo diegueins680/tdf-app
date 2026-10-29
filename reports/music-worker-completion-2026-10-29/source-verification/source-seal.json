@@ -1,0 +1,23 @@
+{
+  "baseline": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "sourceCommit": "4ac12ee2f9a4b2e1b7fd33ae01ac2b0adfb8b630",
+  "registeredInputs": 1415,
+  "sourceDigest": "e120af52f43670cad9a6d36191423276de58766ca1d01dc2c3096440ed2ba531",
+  "allRegisteredGitAndPinnedMobileHashesVerified": true,
+  "contractSha256": "d3184c19d5e7ee9c897e5fb4f3c9938862a16e8605cac8698df9214f6ffecb60",
+  "all156ExistingRequirementObjectsUnchanged": true,
+  "newWholeRequirement": "SYS-WORKER-COMPLETION-001",
+  "wholeHistorical1352ReviewFileBytesUnchanged": true,
+  "currentStrictGeneratedJSONAndCSV": true,
+  "localNewUnitCases": 6,
+  "intendedMutantFailures": 3,
+  "actualMusicConcurrencyScenarios": 7,
+  "actualCatalogCases": 8,
+  "rootQuality": "PASS",
+  "runtimeQualification": "Executed core files exact sourceC; later unit-only finally/outerbounds changes have separate exact final6case/3mutant receipts.",
+  "globalAssurance": "157whole/314implementation-refinement UNPROVEN;11existingconditionalSMT;releaseBLOCKED",
+  "productWorkerUIBackendSchemaDependenciesWorkflowsUnchanged": true,
+  "hostedWorkerFailureCause": "UNKNOWN; diagnostics correction does not claim shutdown repair",
+  "currentMainComposition": "Source qualified against statedE302 baseline; recheck latest main before integration",
+  "cleanSource": true
+}
