@@ -1,0 +1,15 @@
+
+Running 3 tests using 1 worker
+
+[1A[2K(node:37852) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K(node:37852) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[1/3] [chromium-desktop] › intervention.spec.mjs:81:3 › tooltip intervention A-open-before-resize @critical @mobile-flow
+[1A[2K[2/3] [chromium-desktop] › intervention.spec.mjs:81:3 › tooltip intervention B-closed-before-resize @critical @mobile-flow
+[1A[2K[3/3] [chromium-desktop] › intervention.spec.mjs:81:3 › tooltip intervention C-open-after-resize @critical @mobile-flow
+[1A[2K  3 passed (47.4s)

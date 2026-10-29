@@ -1,0 +1,9 @@
+{
+  "baseline": "a9095bc3e3bf53f5a76244564472fe53cfff7691",
+  "sourceCommit": "5cac026c325c7f0ad08b62b08f5ad41b9d0958e7",
+  "testSha256": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
+  "productUIUnchanged": true,
+  "specificationAndHarnessCorrection": true,
+  "historicalWebKitInitialOverlayInvariant": "FAILED at a909 before native notification; retained.",
+  "newHostedPhaseQualification": "PENDING; no new product repair."
+}

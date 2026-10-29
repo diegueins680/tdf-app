@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "repository": "diegueins680/tdf-app",
+  "cycle": "2026-10-28-booking-viewport-bounds",
+  "pullRequest": 638,
+  "baselineCommit": "84d7ed562ef54f759d061dce7a71337b047871a6",
+  "baselineMain": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "sourceCommit": "24cdaa83f7110b62f9b3f7a715c7d25cd3395f7b",
+  "confirmedDefect": {
+    "id": "TDF-CORRECTNESS-20261028-11",
+    "priority": "P1",
+    "category": "verification false negative / responsive UX contract",
+    "status": "corrected-tested-awaiting-protected-integration",
+    "consequence": "The mobile no-overflow test can pass a page with400px content in a320px client viewport because innerWidth grows to400 with the content. This accepts an invalid page and weakens regression protection; a persistent product UI defect is not inferred from the separate original hosted failure."
+  },
+  "invariants": [
+    {
+      "id": "BOOK-VIEWPORT-BOUNDS-001",
+      "parentRequirement": "BOOK-SERVICE-PICKER-001",
+      "statement": "Require the requested positive client viewport and reject scrollWidth>clientWidth in standards mode; retain the initial result despite later diagnostic convergence.",
+      "implementationAssurance": "TESTED"
+    }
+  ],
+  "contract": "formal/system/booking-viewport-bounds.md",
+  "authority": [
+    "Existing zero-overflow320px booking assertion and responsive-render synchronization requirement.",
+    "Actual standards-mode mobile browser numeric counterexample and app index doctype."
+  ],
+  "counterexample": {
+    "oldPersistentControl": {
+      "desktop": "correctly fails",
+      "Firefox": "correctly fails",
+      "ChromePhone": "incorrectly passes"
+    },
+    "mobileNumeric": {
+      "innerWidth": 400,
+      "clientWidth": 320,
+      "scrollWidth": 400,
+      "visualWidth": 320,
+      "visualScale": 1,
+      "offenderRight": 400
+    },
+    "controlledFault": "Owned visible body child width100vw+80px; all application/business APIs synthetic."
+  },
+  "correction": [
+    "One shared same-evaluation client-width predicate for booking and a new permanent browser fault/recovery regression.",
+    "Require standards mode and positive requestedclient<=320; existing mobile marker alone cannot bind390->320. No business-case polling for overflow to disappear.",
+    "Record initial widths/result, then failure-only numeric samples and candidate offending/tooltip rectangles. The initial failure remains authoritative even if later samples fit.",
+    "No product UI clipping, tooltip dismissal, API, database, dependency or workflow policy changes."
+  ],
+  "formalProperties": {
+    "noClientOverflowAccepted": {
+      "assurance": "PROVEN",
+      "method": "SMT negation UNSAT in manual integer-width abstraction; source/hash syntax binding only."
+    },
+    "oldRejectionsRetained": {
+      "assurance": "PROVEN",
+      "assumptions": [
+        "positive clientWidth<=innerWidth",
+        "stable captured integer widths"
+      ],
+      "method": "Order transitivity and SMT negation UNSAT."
+    },
+    "knownOldFalseNegative": {
+      "assurance": "TESTED",
+      "values": [
+        320,
+        400,
+        400
+      ],
+      "SMTWitness": "SAT"
+    },
+    "wholeJavaScriptCSSOMAndSchedulingRefinement": "UNPROVEN",
+    "originalHostedWebKitRootCause": "UNKNOWN"
+  },
+  "verification": {
+    "positiveLocalBrowserCases": 9,
+    "positiveFailures": 0,
+    "positiveSkips": 0,
+    "PlaywrightRetries": 0,
+    "profiles": [
+      "Chrome desktop",
+      "Chrome phone emulation",
+      "Firefox"
+    ],
+    "coverage": "Six actual booking error/empty recovery cases and three permanent wide-child detection/recovery cases.",
+    "comparatorMutation": {
+      "passed": 2,
+      "intendedFailure": 1,
+      "failureProfile": "Chrome phone",
+      "mutation": "Change only clientWidth threshold back to innerWidth."
+    },
+    "persistentFault": {
+      "intendedFailures": 3,
+      "lateOverflowRetainedInAllProfiles": true
+    },
+    "transientFault": {
+      "intendedInitialFailures": 3,
+      "allLastSamplesFit": true,
+      "laterConvergenceNeverHealsInitialFailure": true
+    },
+    "caseTimeoutMs": 30000,
+    "assertionTimeoutMs": 8000,
+    "budgetsIncreased": false,
+    "manualSMTNormalAndOptimizedIdentical": true,
+    "manualSMTComparatorMutantRejectedBothModes": true,
+    "catalogRegressionTests": 8,
+    "catalogRegressionFailures": 0,
+    "repositoryQuality": "PASS",
+    "existingPlatformSkips": 11,
+    "strictCatalogCandidates": 1352,
+    "allNormativeDecisionBytesExactMain": true,
+    "sequentialInventoryThenConformance": "PASS",
+    "immutableChangedMaterialSurfaces": 1,
+    "sourceSeal": {
+      "schemaVersion": 1,
+      "baselineCommit": "84d7ed562ef54f759d061dce7a71337b047871a6",
+      "baselineMain": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+      "sourceCommit": "24cdaa83f7110b62f9b3f7a715c7d25cd3395f7b",
+      "sourceTree": "6da51d00079fa666f04f292652c3807935162a3b",
+      "registeredInputs": 1413,
+      "sourceDigest": "93efb8be0154ebfd7c543cd55f0b2b25bb52d9d279b6ec7b1a1d047cdf388be0",
+      "allRegisteredGitBlobAndMobileHashesVerified": true,
+      "mobilePin": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+      "contract": {
+        "path": "formal/system/booking-viewport-bounds.md",
+        "sha256": "c8d4474bf2041987906192b6560ae09e1d5ef08d44964cb080bf2719c6700263",
+        "discoveryEntryMatches": true
+      },
+      "mainApplicationAndWorkflowObjectsUnchanged": true,
+      "otherRequirementObjectsPreserved": 155,
+      "totalRequirements": 156,
+      "allCatalogDecisionObjectsExactMain": 1352,
+      "originalProviderArchiveObjectsExactOriginal": 15,
+      "materialChangedSurfaces": 1,
+      "cleanCommittedAssurancePass": true,
+      "localPositiveBrowserCases": 9,
+      "localWebKitExecuted": false,
+      "manualIntegerWidthClaims": {
+        "count": 2,
+        "checkerSha256": "2a8b301bd8beba7947f813cb65181703647049778c16e2b240e9ce333b3673bf",
+        "sourceSha256": "4d2c74f95eb3683f93f0c94d3ab46def1437e7876f70d7a760889a2e384091b7",
+        "normalAndOptimizedReceiptsIdentical": true,
+        "sourceComparatorMutantRejectedBothModes": true,
+        "scope": "Conditional comparison abstraction only; hash/syntax binding is not JS/CSSOM/compiler refinement."
+      },
+      "originalHostedWebKitCause": "UNKNOWN",
+      "hostedNewSourceQualification": "pending",
+      "requiredNewCurrentHeadGitHubReview": "pending",
+      "release": "BLOCKED"
+    },
+    "completeRequirementsUnproven": 156,
+    "implementationAndRefinementObligationsUnproven": 312,
+    "existingConditionalSourceSMTClaims": 11,
+    "release": "BLOCKED"
+  },
+  "originalHostedFailure": {
+    "run": 40796438713,
+    "job": 123194166119,
+    "runHead": "84d7ed562ef54f759d061dce7a71337b047871a6",
+    "passed": 635,
+    "skipped": 22,
+    "failed": 1,
+    "case": "WebKit iPhone booking error-catalog case, one-shot overflow boolean true.",
+    "artifactId": 12865431888,
+    "artifactBytes": 105189397,
+    "artifactSHA256": "9014d67c1dcfe955964821252ab1c1ea037cf2fceb91f8d11d0137c013ce8b3f",
+    "downloadedAndIndependentlyHashVerified": true,
+    "initialNumericGeometryAbsent": true,
+    "staleTooltipPlacement": "Candidate observed across resized snapshots; causal attribution not established.",
+    "newHostedMeasurementsRequired": true
+  },
+  "regressionProtection": {
+    "CI": "Permanent controlled-width/recovery case runs in the existing critical/mobile browser suites and uses the same predicate as booking. Existing cases, assertions, projects and budgets remain.",
+    "mutationEvidence": "Reverting only threshold field fails new mobile regression.",
+    "observation": "Failure attachment retains initial widths and later candidates for current hosted diagnosis; not a proof of original cause."
+  },
+  "integration": {
+    "pullRequest": 638,
+    "merged": false,
+    "autoMergeEnabled": false,
+    "newCurrentHeadGitHubReview": "required; approved84d head is not reused",
+    "freshHostedQualification": "pending",
+    "mainComposition": "main e302 is an ancestor; guard again before publication/merge",
+    "protections": "All20 required contexts, strict base, independent approval/stale dismissal, conversation resolution/admin enforcement and FIFO retained.",
+    "originalProviderEvidence": "All15 files remain byteexactoriginale29b; native98f3/hosted7f897 qualification stays historical,39reported-before/2after/2unknown with historical enforcementUNKNOWN.",
+    "precedingProtectedMerge": {
+      "PR": 637,
+      "baseline": "002343fc5301b87d01e6c9ebe046242fb8031d7f",
+      "merge": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+      "verified": true
+    },
+    "financialCorrections": "662 pricing and663 promo limit remain separate drafts;663 historicalreview metadata restoration is being qualified after a caught CI failure.",
+    "productionOrDeploymentClaimed": false
+  },
+  "scorecard": {
+    "newVerificationDefectsCorrected": 1,
+    "newProductUIDefectsClaimed": 0,
+    "correctedDefectsIntegrated": 0,
+    "permanentFaultRegressionAdded": 1,
+    "localProfilesWithCorrectedDetection": 3,
+    "scopedIntegerWidthClaimsProven": 2,
+    "newWholeApplicationProofs": 0
+  },
+  "limitations": [
+    "Current local platform is macOS12 with no compatible current WebKit cache; local Docker Unix daemon unavailable. No new localWebKit or original-LinuxWebKit qualification claimed.",
+    "Observed rectangle overflow may be clipped and is only a candidate; no root contributor is inferred without current measurements.",
+    "Original WebKit failure remains unclassified as persistent versus transient; new stronger measurements and hosted execution remain required.",
+    "First blank control lacked doctype and entered quirks mode; three fixture failures retained. Corrected fixture matches application standards mode, explicitly asserted.",
+    "A guessed npm convenience script was absent, then a direct catalog run lacked TypeScript after dependency alias cleanup. Both diagnostics retained; actual unchanged CI command reran with matching dependencies and passed8/0. No test or hash assertions changed.",
+    "Application frontend build was executed before this commit from84d source with identical protected-main UI inputs; no new clean-C frontend/backend executable build or provider execution claimed."
+  ],
+  "environmentCleanup": {
+    "ownedVitePreviewStopped": true,
+    "ownedDependencyAliasesRemoved": true,
+    "ownedSyntheticPGStopped": true,
+    "allSyntheticDatabasesPreserved": true
+  },
+  "prioritizedBacklog": [
+    {
+      "id": "ORIGINAL-BOOKING-WEBKIT-OVERFLOW",
+      "priority": "P0-integration",
+      "status": "UNKNOWN",
+      "next": "Use fresh hosted numeric geometry to establish contributor and persistence before product or synchronization correction."
+    },
+    {
+      "id": "PROMO-HISTORICAL-REVIEW",
+      "priority": "P0-integration",
+      "status": "PARTIAL",
+      "next": "Restore immutable row exactly, retain current counts separately, fresh8test/strict/spec/source evidence and663CI."
+    },
+    {
+      "id": "PROTECTED-FIFO",
+      "priority": "P0",
+      "status": "PARTIAL",
+      "next": "Only merge selected638 after all required checks/current-head review/current-main/FIFO/threads; preserve later approved heads."
+    }
+  ],
+  "nextHighestValueTask": "Publish exact qualified source/evidence to existing638 and obtain fresh CI/review; diagnose actual WebKit geometry while completing663 immutable-review restoration.",
+  "evidenceDirectory": "reports/booking-viewport-bounds-2026-10-28",
+  "artifactRetention": {
+    "manifest": "artifact-retention.json",
+    "publicExecutionArchiveBytes": 20302620,
+    "omittedDuplicateLocalTraces": 12,
+    "allRawLocalTracesRetainedPrivately": true,
+    "originalHostedFailureTraceRetainedPublicly": true
+  }
+}

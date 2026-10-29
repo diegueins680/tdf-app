@@ -1,0 +1,24 @@
+{
+  "baselineCommit": "535b113e7b4c139be9ea570c18e8d29c6a34700d",
+  "main": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "sourceCommit": "a5535c59e49064fec535daa3682a4a1dc31c68f4",
+  "sourceTree": "3aa473b92662cba8e7a319149454d6cdf9a5b8ec",
+  "registeredSourceInputs": 1413,
+  "sourceDigest": "08b2d70e468a81e68db6b26f251f336bec916e251f77e432924ea49aafe3fc3a",
+  "allRegisteredGitBlobAndMobileHashesVerified": true,
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "newContract": {
+    "path": "formal/system/booking-tooltip-viewport.md",
+    "sha256": "ef0b6d6c7b70d1ade3ae6f51943a4e2369da52e25c4357961bb1ca28c965ff41",
+    "discoveryHashMatches": true
+  },
+  "otherRequirementObjectsUnchanged": 155,
+  "whole1352HistoricalDecisionFileExactBaseline": true,
+  "entireUITreeEqualsPreviouslyQualifiedC1": true,
+  "backendScriptsWorkflowsOpsDependenciesEqualProtectedMain": true,
+  "historicalProviderArchive15FilesExactOriginalE29b": true,
+  "cleanCommittedAssurance": "PASS",
+  "newUniversalLayoutProofs": 0,
+  "release": "BLOCKED",
+  "scope": "UI behavior TESTED only; two inherited manual conditional integer claims are not CSSOM/JS/compiler refinement."
+}
