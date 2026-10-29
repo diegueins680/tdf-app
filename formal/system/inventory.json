@@ -2898,7 +2898,7 @@
     {
       "id": "SURFACE-9517b2194ab847fb",
       "path": "e2e/web/booking-catalog-recovery.spec.mjs",
-      "sha256": "401c4c15062d4337d53a118c25b0d52b0facb7db0e3119fdc98ded8a05932198",
+      "sha256": "64739fb8ceba20e8a984ecfdf05cfd92df015a333d1aaf99581a684d1d194e87",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27234,7 +27234,7 @@
     },
     {
       "path": "formal/system/booking-tooltip-viewport.md",
-      "sha256": "ef0b6d6c7b70d1ade3ae6f51943a4e2369da52e25c4357961bb1ca28c965ff41",
+      "sha256": "12aeb6aec7a6379dd95b30c47abafb6f26cb01a1ba1e985c292f1e22e41e8254",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

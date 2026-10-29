@@ -1,6 +1,51 @@
 import { expect, test } from '@playwright/test';
 import axe from 'axe-core';
 
+// Observe delivered events and Popper style changes without updating the
+// positioner, scrolling, reading layout or changing application state.
+async function observeBookingViewportEvents(page) {
+  await page.evaluate(() => {
+    const events = [];
+    const record = (type, details = {}) => {
+      if (events.length < 128) events.push({ at: performance.now(), type, ...details });
+      else window.__bookingViewportEventsTruncated = true;
+    };
+    const helper = document.activeElement?.getAttribute('aria-label');
+    const tooltip = [...document.querySelectorAll('[role="tooltip"]')]
+      .find(element => helper && element.textContent === helper);
+    const positioner = tooltip?.closest('[data-popper-placement]');
+    const style = () => ({ connected: positioner?.isConnected ?? false,
+      transform: positioner?.style.transform ?? null, position: positioner?.style.position ?? null,
+      placement: positioner?.getAttribute('data-popper-placement') ?? null });
+    const listeners = [];
+    const listen = (target, type, label) => {
+      if (!target) return;
+      const callback = () => record(label);
+      target.addEventListener(type, callback, { passive: true });
+      listeners.push(() => target.removeEventListener(type, callback));
+    };
+    listen(window, 'resize', 'window.resize');
+    listen(window, 'orientationchange', 'window.orientationchange');
+    listen(visualViewport, 'resize', 'visualViewport.resize');
+    listen(visualViewport, 'scroll', 'visualViewport.scroll');
+    const observer = new MutationObserver(records => {
+      for (const mutation of records) record('positioner.attribute', {
+        attribute: mutation.attributeName, oldValue: mutation.oldValue, ...style() });
+    });
+    if (positioner) observer.observe(positioner, { attributes: true,
+      attributeFilter: ['style', 'data-popper-placement'], attributeOldValue: true });
+    record('before-viewport-request', style());
+    window.__bookingViewportEvents = events;
+    window.__bookingViewportEventsTruncated = false;
+    window.__bookingViewportOriginalPositioner = positioner;
+    window.__stopBookingViewportObservation = () => {
+      observer.disconnect();
+      listeners.forEach(remove => remove());
+      delete window.__stopBookingViewportObservation;
+    };
+  });
+}
+
 async function measureBookingViewport(page) {
   return page.evaluate(() => {
     const viewport = { at: performance.now(), compatMode: document.compatMode, innerWidth,
@@ -20,7 +65,12 @@ async function measureBookingViewport(page) {
         text: element.textContent, placement: element.getAttribute('data-popper-placement') };
     };
     return { ...viewport, overflow: viewport.scrollWidth > viewport.clientWidth,
-      devicePixelRatio, scrollY, anchor: describe(anchor), tooltip: describe(tooltip) };
+      devicePixelRatio, scrollY, anchor: describe(anchor), tooltip: describe(tooltip),
+      events: window.__bookingViewportEvents?.slice() ?? [],
+      observationTruncated: window.__bookingViewportEventsTruncated ?? false,
+      observedPositionerConnected: window.__bookingViewportOriginalPositioner?.isConnected ?? null,
+      sameObservedPositioner: window.__bookingViewportOriginalPositioner
+        ? tooltip?.closest('[data-popper-placement]') === window.__bookingViewportOriginalPositioner : null };
   });
 }
 
@@ -37,6 +87,9 @@ async function failedViewportGeometry(page) {
         transform: element.style.transform };
     };
     const sample = label => ({ label, at: performance.now(), innerWidth,
+      events: window.__bookingViewportEvents?.slice() ?? [],
+      observationTruncated: window.__bookingViewportEventsTruncated ?? false,
+      observedPositionerConnected: window.__bookingViewportOriginalPositioner?.isConnected ?? null,
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
       visualViewport: visualViewport && { width: visualViewport.width, scale: visualViewport.scale },
@@ -194,6 +247,7 @@ for (const failure of ['error', 'empty']) {
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toHaveText(helperText);
     await expect(slot).toHaveAccessibleName(helperText);
+    await observeBookingViewportEvents(page);
     await page.setViewportSize({ width: 320, height: 740 });
     // The mobile marker exists at both390 and320px. Bind the measurement to
     // the requested content viewport, without waiting for overflow to vanish.
@@ -203,16 +257,24 @@ for (const failure of ['error', 'empty']) {
       return width > 0 && width <= 320;
     })).toBe(true);
     const viewportMeasurement = await measureBookingViewport(page);
-    if (viewportMeasurement.overflow) await testInfo.attach('booking-viewport-geometry', {
+    const epsilon = 1 / viewportMeasurement.devicePixelRatio;
+    await testInfo.attach('booking-initial-viewport', {
+      body: Buffer.from(JSON.stringify(viewportMeasurement, null, 2)), contentType: 'application/json',
+    });
+    const helper = viewportMeasurement.tooltip;
+    const initialBoundFailure = viewportMeasurement.overflow || !helper || helper.text !== helperText
+      || helper.x < -epsilon || helper.right > viewportMeasurement.clientWidth + epsilon
+      || Math.abs(viewportMeasurement.visualViewport.scale - 1) >= 0.0005;
+    if (initialBoundFailure) await testInfo.attach('booking-viewport-geometry', {
       body: Buffer.from(JSON.stringify({ requestedViewport: page.viewportSize(), initial: viewportMeasurement,
         samples: await failedViewportGeometry(page) }, null, 2)),
       contentType: 'application/json',
     });
+    await page.evaluate(() => window.__stopBookingViewportObservation?.());
     expect(viewportMeasurement.compatMode).toBe('CSS1Compat');
     expect(viewportMeasurement.overflow).toBe(false);
     // Root overflow has zero tolerance. Overlay edges allow one physical pixel
     // for Popper's device-pixel rounding, independently of its implementation.
-    const epsilon = 1 / viewportMeasurement.devicePixelRatio;
     expect(viewportMeasurement.visualViewport.scale).toBeCloseTo(1, 3);
     expect(viewportMeasurement.tooltip).not.toBeNull();
     expect(viewportMeasurement.tooltip.text).toBe(helperText);

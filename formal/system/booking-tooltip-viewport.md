@@ -74,3 +74,30 @@ Current Linux WebKit, hosted CI, current-head independent review, current-main
 composition and protected FIFO integration remain necessary. Gallery contrast
 is separate: retain approved648/651 for their slots without a duplicate patch.
 No API, database, backend, dependency or production financial state is changed.
+
+## Current hosted failure and observation scope
+
+Source21628's Linux WebKit iPhone run passes the original initial root-width
+and scale guards but fails both new helper-edge checks at339.640625px in a320px
+client. Its current initial-overlay contract therefore remains FAILED. The
+observed old fixed transform persists75–92ms through final trace snapshots;
+the trace contains no DOM resize-delivery or Popper-update milestone. Event
+timing, a missing visualViewport signal and other update causes remain hypotheses.
+
+The successor diagnostic records bounded window/visualViewport resize events
+and positioner style/placement mutations before the viewport request. Event
+callbacks read no layout and do not update Popper, scroll or mutate application
+state. Every initial atomic result is attached; ANY initial root, helper or scale
+failure collects the same bounded later geometry plus event timeline. Observer
+and listeners are disconnected before assertions, with page teardown covering
+exceptions. The original initial measurement still supplies every unchanged
+assertion: a later fit can never turn a failure into a pass. Observation can
+perturb scheduling and is not itself a product repair or proof of causality.
+No assertion, tolerance, timeout, focus/keyboard requirement or product option is
+relaxed. New evidence must establish the cause before another product change.
+
+A saturation flag makes the128-event cap visible; no event-absence conclusion is
+supported after truncation. Mutation records retain the prior attribute value
+and current inline style, with batching still possible. The initial snapshot
+identifies whether the current helper is the observed node and whether that
+node remains connected; the observer does not follow a remount automatically.
