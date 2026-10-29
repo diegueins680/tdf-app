@@ -14200,7 +14200,7 @@
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/MarkdownText.test.tsx": "65d585af63ed177db6a2ed7d3f290ba9687e13c161afa98ab7103e618dffabd6",
-    "tdf-hq-ui/src/components/MarkdownText.tsx": "9b8daeadd6177537ce9ec72c524e1b0af4a7e05947fb44d592669a66d2399d0b",
+    "tdf-hq-ui/src/components/MarkdownText.tsx": "72d0e07115e2ac30933034fdc0dd7e85305d4e530f2b22f33dfe74c940075c5a",
     "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx": "3e64719ad28e77a7720252e86610dcb712a508d0af9d8bd1eed1a715a18c33a3",
     "tdf-hq-ui/src/components/MarketplaceCartButton.tsx": "c40979f81f4af476e7a47933a2e86cf3d3889b7674731794e91e1fa3d40dddcd",
     "tdf-hq-ui/src/components/NotificationBell.tsx": "14f8f702675e5922530c6599ab0677ba2e6d084d809ac2d969410a3c054e6715",
@@ -35534,7 +35534,7 @@
     {
       "id": "SURFACE-1e5e203495c86d2c",
       "path": "tdf-hq-ui/src/components/MarkdownText.tsx",
-      "sha256": "9b8daeadd6177537ce9ec72c524e1b0af4a7e05947fb44d592669a66d2399d0b",
+      "sha256": "72d0e07115e2ac30933034fdc0dd7e85305d4e530f2b22f33dfe74c940075c5a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

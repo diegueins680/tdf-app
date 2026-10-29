@@ -46,7 +46,8 @@ export default function MarkdownText({ children, inline = false, disableLinks = 
         {
           overflowWrap: 'anywhere', whiteSpace: 'normal', minWidth: 0,
           '& p': { my: 1 }, '& > :first-child': { mt: 0 }, '& > :last-child': { mb: 0 },
-          '& a': { color: 'primary.main', textDecoration: 'underline' },
+          // Match the surrounding foreground, including text on colored message bubbles.
+          '& a': { color: 'inherit', textDecoration: 'underline' },
           '& img': { maxWidth: '100%', height: 'auto', borderRadius: 1 },
           '& pre': { overflowX: 'auto', p: 1.5, borderRadius: 1, bgcolor: 'action.hover', whiteSpace: 'pre' },
           '& code': { fontFamily: 'monospace', bgcolor: 'action.hover', borderRadius: 0.5, px: 0.4 },
