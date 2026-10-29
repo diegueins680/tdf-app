@@ -407,6 +407,7 @@
     "Shared Mobile dependencies lacked hermes-parser; isolated npm ci fixed setup.",
     "Initial Mobile full run had one existing 5s notification timeout; focused unchanged rerun and subsequent full suite passed.",
     "Initial repo quality missed jq; final run uses a privately copied binary matching the cached official checksum.",
-    "Latest graphic qualification first used a service user against root-owned isolated fixtures; rerun used the fixture owner. No live permissions were weakened."
+    "Latest graphic qualification first used a service user against root-owned isolated fixtures; rerun used the fixture owner. No live permissions were weakened.",
+    "First hosted catalog audit found stale historical-successor pointers for the new Mobile mirror. Current pointers updated with full previous-resolution objects preserved; original historical decisions/hashes and all test assertions unchanged."
   ]
 }
