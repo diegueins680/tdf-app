@@ -1,0 +1,178 @@
+{
+  "persistent": [
+    {
+      "profile": "chromium-desktop",
+      "initial": {
+        "at": 9528.10000000894,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 400,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": true
+      },
+      "laterFit": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "stillFailedOriginalAssertion": true
+    },
+    {
+      "profile": "chromium-phone",
+      "initial": {
+        "at": 9458.40000000596,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 400,
+        "clientWidth": 320,
+        "scrollWidth": 400,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": true
+      },
+      "laterFit": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "stillFailedOriginalAssertion": true
+    },
+    {
+      "profile": "firefox",
+      "initial": {
+        "at": 11232,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 400,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": true
+      },
+      "laterFit": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "stillFailedOriginalAssertion": true
+    }
+  ],
+  "transient": [
+    {
+      "profile": "chromium-desktop",
+      "initial": {
+        "at": 9662,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 400,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": true
+      },
+      "laterFit": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "stillFailedOriginalAssertion": true
+    },
+    {
+      "profile": "chromium-phone",
+      "initial": {
+        "at": 9645.90000000596,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 400,
+        "clientWidth": 320,
+        "scrollWidth": 400,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": true
+      },
+      "laterFit": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "stillFailedOriginalAssertion": true
+    },
+    {
+      "profile": "firefox",
+      "initial": {
+        "at": 10489,
+        "compatMode": "CSS1Compat",
+        "innerWidth": 320,
+        "clientWidth": 320,
+        "scrollWidth": 400,
+        "visualViewport": {
+          "width": 320,
+          "scale": 1
+        },
+        "overflow": true
+      },
+      "laterFit": [
+        false,
+        false,
+        true,
+        true
+      ],
+      "stillFailedOriginalAssertion": true
+    }
+  ],
+  "baselineStats": {
+    "startTime": "2026-10-29T01:35:43.366Z",
+    "duration": 58895.244999999995,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "corrected-standardsStats": {
+    "startTime": "2026-10-29T01:48:45.824Z",
+    "duration": 39618.433,
+    "expected": 9,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "mutant-standardsStats": {
+    "startTime": "2026-10-29T01:52:05.212Z",
+    "duration": 14963.948,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  },
+  "persistentStats": {
+    "startTime": "2026-10-29T01:37:22.312Z",
+    "duration": 47895.552,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  },
+  "persistent-phone-diagnosticsStats": {
+    "startTime": "2026-10-29T01:41:34.560Z",
+    "duration": 25003.502,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
