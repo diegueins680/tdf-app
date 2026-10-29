@@ -3012,7 +3012,7 @@
     {
       "id": "SURFACE-0ff897863a04e3f4",
       "path": "e2e/web/mobile-layout-regressions.spec.mjs",
-      "sha256": "db3505fa7e16300fac202d80cca9957d8208eb067b8f2c6c53f0e08f547411fc",
+      "sha256": "0be1916b95d3bff15572a7237bcb427295142aa1d31322df1257b0406e50ec9c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7782,7 +7782,7 @@
     {
       "id": "SURFACE-d385ed9b2a05df5c",
       "path": "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
-      "sha256": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
+      "sha256": "0f61ba07e4d1c71af5f550af67ada13232f96b00104a7a6f353582991353db61",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7794,7 +7794,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "8ca26bdf9324376d67357d0bf94a32411d6099d02ec12a3c0d215b4067ddfd98",
+      "sha256": "d200680b4e94a88ed6d53dbb77b8e76ba79dcb81090f50538e35f281a97aa64a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27577,7 +27577,7 @@
     },
     {
       "path": "formal/system/mobile-entry-ux.md",
-      "sha256": "0297d2b5521eeb801449c59c22b9525f67fa5ed3b11116856ea464bfb8125f76",
+      "sha256": "1bb0a68ffcd7585bc47af1ddc73eee5f3d8a2e837d4219073e92f836a752be01",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27857,7 +27857,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "91c0e168aadba00b3d5fb91d3d43a99d639ffc5038b93c9c81a6d1e53005e840",
+      "sha256": "1ce52b7385d7dfe5599faaf4842f46e8012146036035df47b04ea4432457c06a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

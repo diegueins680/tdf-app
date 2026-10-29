@@ -210,7 +210,7 @@ test('Docked radio bar fits 360px and never hides the bottom of the page @mobile
   const barBox = await bar.boundingBox();
   expect(barBox.x).toBeGreaterThanOrEqual(0);
   expect(barBox.x + barBox.width).toBeLessThanOrEqual(VIEWPORT.width + 0.5);
-  for (const label of ['Silenciar radio', 'Ocultar barra de radio', 'Expandir radio']) {
+  for (const label of ['Silenciar radio', 'Minimizar radio', 'Expandir radio']) {
     const control = bar.getByRole('button', { name: label });
     await expect(control).toBeVisible();
     const box = await control.boundingBox();
@@ -235,8 +235,58 @@ test('Docked radio bar fits 360px and never hides the bottom of the page @mobile
   expect(submitBox.y + submitBox.height).toBeLessThanOrEqual(barTop + 0.5);
 
   // Hiding the bar releases the reserved space.
-  await bar.getByRole('button', { name: 'Ocultar barra de radio' }).click();
+  await bar.getByRole('button', { name: 'Minimizar radio' }).click();
   await expect.poll(() => page.evaluate(
     () => getComputedStyle(document.documentElement).getPropertyValue('--tdf-radio-bar-height').trim(),
   )).toBe('');
 });
+
+for (const width of [320, 360, 390, 430]) {
+  test(`Radio minimizes and restores with reachable controls at ${width}px @mobile-flow`, async ({ page, baseURL }) => {
+    await page.setViewportSize({ width, height: 760 });
+    await fixture(page, baseURL, { authenticated: true });
+    await page.addInitScript(() => localStorage.setItem('radio-position', JSON.stringify({ x: 900, y: 900 })));
+    await page.goto('/live-sessions/registro');
+    const bar = page.getByTestId('radio-docked-bar');
+    await expect(bar).toBeVisible({ timeout: 15_000 });
+    const activate = async (control) => {
+      if (await page.evaluate(() => navigator.maxTouchPoints > 0)) await control.tap();
+      else await control.click();
+    };
+    await activate(bar.getByRole('button', { name: 'Minimizar radio', exact: true }));
+    await expect(bar).toHaveCount(0);
+    await expect(page.getByText('Radio minimizada', { exact: true })).toBeVisible();
+    await page.reload();
+    await expect(page.getByText('Radio minimizada', { exact: true })).toBeVisible();
+    await activate(page.getByRole('button', { name: 'Mostrar', exact: true }));
+    await expect(bar).toBeVisible();
+    await activate(bar.getByRole('button', { name: 'Expandir radio', exact: true }));
+    const minimize = page.getByRole('button', { name: 'Minimizar radio a la barra', exact: true });
+    await expect(minimize).toBeVisible();
+    const box = await minimize.boundingBox();
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+    const panel = page.getByTestId('radio-floating-panel');
+    const panelBox = await panel.boundingBox();
+    expect(panelBox.y).toBeGreaterThanOrEqual(0);
+    expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(760);
+    const content = page.getByTestId('radio-panel-content');
+    await content.evaluate((node) => { node.scrollTop = node.scrollHeight; });
+    const afterScroll = await minimize.boundingBox();
+    expect(afterScroll.y).toBeCloseTo(box.y, 1);
+    expect(await content.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+    await expect.poll(() => fitsViewport(page)).toBe(true);
+    const header = minimize.locator('xpath=..');
+    const before = await header.boundingBox();
+    const defaultAllowed = await minimize.evaluate((button) => button.querySelector('svg').dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerType: 'touch', pointerId: 11 }),
+    ));
+    expect(defaultAllowed).toBe(true);
+    await activate(minimize);
+    await expect(bar).toBeVisible();
+    expect(before.width).toBeLessThanOrEqual(width);
+    await expect.poll(() => fitsViewport(page)).toBe(true);
+  });
+}
