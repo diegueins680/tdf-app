@@ -13296,6 +13296,77 @@
         "Historical skipped-state reachability under GitHub orchestration is not established."
       ],
       "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
+    },
+    {
+      "id": "ART-ENRICH-REVIEW-001",
+      "title": "Separate artist verification, profile completeness and image-rights review",
+      "statement": "Artist review distinguishes supported identity verification from optional missing profile data, and distinguishes actual link availability failures from permission to ingest externally hosted images. Legacy hotlink-rights observations must not hide real network failures or label working images as broken.",
+      "authority": "Explicit product owner request, 2026-10-26: explain artist verification and repair Verde70 issues.",
+      "domain": "Artist enrichment",
+      "source": "docs/artist-enrichment-runbook.md",
+      "contract": "docs/artist-enrichment-runbook.md",
+      "actors": [
+        "Strict administrator",
+        "Artist enrichment worker"
+      ],
+      "preconditions": [
+        "Existing enrichment API and source observations",
+        "Existing strict-admin review authorization"
+      ],
+      "inputs": [
+        "Profile completeness and verification metadata",
+        "Artist-scoped timestamped source observations and URLs"
+      ],
+      "state": {
+        "boundary": "Artist review presentation and worker source classification",
+        "authority": "Source observations, existing field-decision API and audit history"
+      },
+      "allowedTransitions": [
+        "Working external image -> rights review without broken-link classification",
+        "Actual HTTP failure -> broken-link result, independently of media rights",
+        "New image URL -> supersede stale warnings about the previous URL",
+        "Evidence review -> approve supported fields, confidence and date before verified status"
+      ],
+      "forbiddenTransitions": [
+        "Infer image reuse rights from HTTP200 or identity verification",
+        "Hide a genuine HTTP failure behind media-rights review",
+        "Use another artist source observation",
+        "Require invented awards or optional metadata to remove an incomplete-profile chip",
+        "Audit action automatically verifies identity"
+      ],
+      "effects": [
+        "Record media-rights observations separately from availability",
+        "Render accurate review guidance, status and link filters"
+      ],
+      "authorization": "Existing strict-admin field-decision and identity-review boundaries are unchanged; no new approval bypass.",
+      "privacy": "Profile and source review retains current authorization. No automatic image copying or account-ownership grants.",
+      "concurrency": "Resolve latest evidence by observation timestamp and source ID; existing server stale-value guards remain authoritative.",
+      "idempotency": "Existing source and suggestion idempotency remains; rendering and filtering perform no decisions.",
+      "failure": "Malformed legacy attribution remains a network failure; missing detailed evidence retains server-reported failures.",
+      "recovery": "Retain all historical observations; rerun availability checks or obtain authorized media without deleting earlier evidence.",
+      "observability": "Source type, decision history and deterministic worker/UI regression coverage.",
+      "property": "Working legacy hotlinks retain permission review but are excluded from broken-only results. Real failures remain visible; URL replacements and actor scope isolate evidence. Artist-specific views include only matching artists or their references, retaining legitimate competing candidates.",
+      "implementation": [
+        "scripts/artist-enrichment.mjs",
+        "tdf-hq-ui/src/utils/artistEnrichmentReview.ts",
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx"
+      ],
+      "tests": [
+        "scripts/__tests__/artist-enrichment.test.mjs",
+        "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts",
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Worker and rendered-review regressions with injected network observations; no formal proof claimed.",
+      "evidence": "Source-bound test logs and separate production data-repair receipt.",
+      "status": "specified and implemented",
+      "openQuestions": [],
+      "confidence": "Deterministic local checks; actual source publication and production data corrections are recorded separately.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Bounded worker/UI correction; approval policy, external image rights and source publication remain separate obligations."
+      }
     }
   ]
 }
