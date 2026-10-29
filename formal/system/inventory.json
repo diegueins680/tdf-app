@@ -20117,7 +20117,7 @@
     },
     {
       "path": "docs/campaign-platform/operations.md",
-      "sha256": "c17dbb14fe188f1a3426771b22826318fa72af2d7021aba6244ded1483c24805",
+      "sha256": "8edb111d2e23f32414da1e3897673bb33b3f03fee4b418b6cdb59f8e102ec1e0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
