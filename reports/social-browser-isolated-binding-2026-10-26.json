@@ -1,0 +1,77 @@
+{
+  "recordedAt": "2026-10-26T22:19:58.800773+00:00",
+  "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "parentCandidate": "fd5eefbc1b94acbec6e9ab22ad8f27f138e17083",
+  "firstLinuxFailure": {
+    "observedAt": "2026-10-26T22:10:32.676004+00:00",
+    "head": "fd5eefbc1b94acbec6e9ab22ad8f27f138e17083",
+    "workflow": 40409516730,
+    "job": 121876132007,
+    "conclusion": "failure",
+    "phase": "Verify bundled Playwright browsers",
+    "expectedLockAndImageVersion": "1.59.1",
+    "observedInstalledVersion": "1.64.1",
+    "focusedTestsPassed": 63,
+    "focusedSuitesPassed": 6,
+    "generatedContract": "PASS",
+    "actualThreeBrowserPreflight": "FAILED before launch",
+    "socialBrowserJourney": "SKIPPED",
+    "rootInstallStep": "npm install --no-save --package-lock=false --ignore-scripts @unrs/resolver-binding-linux-x64-gnu@1.11.1",
+    "guardNotWeakened": true,
+    "oldResultNotRerunOrReclassified": true,
+    "proposedCorrection": "Install only pinned resolver binding in a fresh isolated prefix, disabling workspaces and scripts; copy only that package into original install. Fresh source CI required.",
+    "log": "634-fd5-social-first-failure.log",
+    "logSha256": "ebc51bc9802c50882f5516e63f840caf1efbbec22e0bf27f48f05e935ccdf884",
+    "sourceAcceptance": "BLOCKED pending corrected-head runtime qualification"
+  },
+  "correction": {
+    "scope": "Install only the same pinned missing1.11.1resolverbinding into freshmktemp prefix,with workspaces/scripts disabled,copy only that package and clean ownprefix. Rootproject packages are not re-resolved.",
+    "projectLockOrDependencyChanges": false,
+    "imageVersionOrVersionGuardRelaxed": false,
+    "budgetOrApplicationAssertionChanges": false,
+    "same15minuteSocialJobAnd63Tests": true
+  },
+  "localActualNpmIsolationControl": {
+    "observedAt": "2026-10-26T22:13:38.137130+00:00",
+    "actualNpmCli": "/private/tmp/tdf-node22-20261026/node-v22.14.0-darwin-x64/lib/node_modules/npm/bin/npm-cli.js",
+    "network": "offline",
+    "isolatedPrefixExitCode": 0,
+    "unscopedNegativeControlExitCode": 254,
+    "unscopedFailure": "attempted missing root project tarball dependency",
+    "projectManifestLockAndInstalledSentinelUnchanged": true,
+    "targetInstalledOnlyInIsolatedPrefix": true,
+    "postinstallNotExecuted": true,
+    "initialFixtureFailureRetained": "First negative fixture used a nonexistent file:directory, which npm may materialize as a link; changed the synthetic fixture to a missing tarball to witness root dependency resolution. No production source guard weakened.",
+    "scope": "Synthetic local package-manager experiment Node22/macOS; no Linux binding/browser proof. Fresh hosted preflight remains mandatory.",
+    "allOwnedFixtureCleanup": true
+  },
+  "localValidation": {
+    "pureAndPipelineControls": 49,
+    "failed": 0,
+    "skipped": 0,
+    "strictCatalogCandidates": 1341,
+    "unreviewed": 0,
+    "stale": 0,
+    "decisionFileExactMain": true,
+    "onlyDerivedCandidateFieldsChanged": [
+      "automationConsumers",
+      "consumerCount"
+    ],
+    "inventoryAndTraceability": "Regenerated and freshness checked",
+    "entireAppBackendSqlOpsDependenciesMobileApiExactMain": true
+  },
+  "materialInputSha256": {
+    ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
+    "scripts/verify-playwright-image.mjs": "88fe2d6257a3c64943b5a29f98a2fde3d296df138c0750bc5d1a71368445584f",
+    "scripts/__tests__/playwright-image.test.mjs": "dff4fdac0f095e6015f7de4565fa49c52de355720dac9608230f442c8fdabc39",
+    "scripts/__tests__/ci-pipeline.test.mjs": "b51fded0ec0fe1efd8ade7249be4e613f95a1c0b8b46ec3bc83112dd808fac38"
+  },
+  "localControlsSha256": "8410261796a66b2e9d1a498c0ca3208fc48713eba0c9eefe52650072a2f472ce",
+  "runtimeQualification": "PENDING fresh corrected-head Linux image launches and unchanged social browser journey. No failed job rerun, timeout/assertion changes or approval waiver.",
+  "deployment": {
+    "protectedMainMerge": false,
+    "productionWrites": 0,
+    "backendOrStore": false,
+    "delivered": false
+  }
+}

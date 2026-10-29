@@ -1,0 +1,46 @@
+{
+  "recordedAt": "2026-10-26T18:36:52.525166+00:00",
+  "source": "5f45677588bd8494226e00fd51d81c134b84bdd6",
+  "sourceTree": "dabd64ad893e2959fd21226206488121eaad8a24",
+  "binarySha256": "e68a97c3496ee8d0e3b8ad1689e299f410c089a5c15f128dbc677e80da189332",
+  "actualVersion": {
+    "buildTime": "2026-10-26T18:24:44Z",
+    "commit": "5f45677588bd8494226e00fd51d81c134b84bdd6",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "command": "stack --no-terminal build --force-dirty --jobs 2 --ghc-options=-fforce-recomp tdf-hq:exe:tdf-hq-exe tdf-hq:exe:tdf-ddex-render",
+  "buildExitCode": 0,
+  "rawBuildLogSha256": "f6f631a95a5ee712d80c1443f1b94e4fc836515d9386ac2209866015ba8553dd",
+  "assertionsPassed": 34,
+  "stepsRecorded": 54,
+  "backendSourceChangedForQualification": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "outcome": "HARNESS_INITIALIZATION_ERROR; no services/HTTP",
+      "changeForNextAttempt": "Rename opener variable that shadowed http.cookiejar; no application change."
+    },
+    {
+      "attempt": 2,
+      "outcome": "MIGRATION_PASS_STARTUP_CONFIGURATION_REJECTED; all resources cleaned",
+      "changeForNextAttempt": "DEFAULT_LOCALE=es matches authoritative persisted locale default and existing native harness; no DB or startup-guard change."
+    },
+    {
+      "attempt": 3,
+      "outcome": "PASS-real-compiled-http-synthetic-metadata-only",
+      "cleanup": {
+        "backendStopped": true,
+        "databaseRemoved": true,
+        "clusterStopped": true
+      }
+    }
+  ],
+  "scope": "Real Stack-compiled HTTP/catalog SQL bindings, session and signing handlers with owned PostgreSQL222 and synthetic publishable asset metadata. No actual object delivery, browser playback, upload processing, production environment or performance SLO claim.",
+  "cacheObservation": {
+    "cacheControl": null,
+    "interpretation": "Actual local signing response lacked Cache-Control. Shared-cache disclosure is not demonstrated; targeted response-header correction is separate pending work."
+  },
+  "mediaObjectOrCdnRequests": 0,
+  "performanceSloClaim": false
+}

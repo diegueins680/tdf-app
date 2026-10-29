@@ -32,6 +32,7 @@
       "e2e/web/artist-follow.spec.mjs",
       "e2e/web/artist-merch.spec.mjs",
       "e2e/web/auth-landing.spec.mjs",
+      "e2e/web/booking-catalog-recovery.spec.mjs",
       "e2e/web/campaign-accessibility.spec.mjs",
       "e2e/web/chat-notification-navigation.spec.mjs",
       "e2e/web/checkout-readiness.spec.mjs",
@@ -122,6 +123,7 @@
       "scripts/__tests__/checkout-amount-postgres.mjs",
       "scripts/__tests__/checkout-money-http.mjs",
       "scripts/__tests__/ci-change-scope.test.mjs",
+      "scripts/__tests__/ci-job-admission.test.mjs",
       "scripts/__tests__/ci-pipeline.test.mjs",
       "scripts/__tests__/compiled-api-surface.test.mjs",
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
@@ -149,6 +151,7 @@
       "scripts/__tests__/experiment-http-runtime.mjs",
       "scripts/__tests__/fixtures/artist-management-claim.sql",
       "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
+      "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
       "scripts/__tests__/fixtures/event-report.mjs",
       "scripts/__tests__/fixtures/production-schema-20260814.sql",
       "scripts/__tests__/fixtures/production-ticketing-base.sql",
@@ -244,6 +247,7 @@
       "scripts/check-public-routes.py",
       "scripts/check-state-machines.py",
       "scripts/ci-change-scope.mjs",
+      "scripts/ci-job-admission.mjs",
       "scripts/codex-logical-correctness-loop.sh",
       "scripts/codex-loop-worker.sh",
       "scripts/continuous-improvement-loop-dirty-worktree.mjs",
@@ -1311,6 +1315,7 @@
       "tdf-hq-ui/src/pages/teachersPageLogic.test.ts",
       "tdf-hq-ui/src/pages/teachersPageLogic.ts",
       "tdf-hq-ui/src/player/GlobalPlayer.tsx",
+      "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
       "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
       "tdf-hq-ui/src/player/PlayerProvider.tsx",
       "tdf-hq-ui/src/player/PlayerShell.tsx",
@@ -2792,7 +2797,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "ffc633b826c98c09ed685d9f40afb37f23593a0374b6bb31f758210f97177f15",
+      "sha256": "de8329e17a8315a54f65864b1ef0f28302ecde59a70428b6456808a4f30ab1ab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2834,7 +2839,7 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
+      "sha256": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2895,6 +2900,12 @@
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
       "sha256": "3bed38b4a63187e387f4c971d06f3e7fe3f76516d316ca2b1626d2aa1385412b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9517b2194ab847fb",
+      "path": "e2e/web/booking-catalog-recovery.spec.mjs",
+      "sha256": "f65777a6f8b5f9823e0e66ea4d49900aef1051d00c4e4d4ce8e4c085cbf23dcd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3032,7 +3043,7 @@
     {
       "id": "SURFACE-056631e61150574f",
       "path": "e2e/web/music-player-native.spec.mjs",
-      "sha256": "c30ef37d2013401f3baffede88298930fa0795fb277d06c9167d3c9747fb55a0",
+      "sha256": "fac07b5d9a994ae4335ccd1095426dd2da5383b7ef34d70a4c86216c4e352a78",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3290,7 +3301,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+      "sha256": "99a06b352b5db269ad4df6682dc0ee6053ddb1424f352e4e761f54c877b39dfe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3362,13 +3373,19 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "7c3be84caef2ec83418066f9a99370df04ead89065a79783193d340e629d285a",
+      "sha256": "79b6186e102713934dfba527d7ce5c69ed9bcfad75db9e771622bdcd7886a8b0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-cccd3e9f4c20fe26",
+      "path": "scripts/__tests__/ci-job-admission.test.mjs",
+      "sha256": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "76ec02976468affc43319d2d77b4461ac6304a89065f9fe3ce483ca819b49760",
+      "sha256": "c14476254c80d8f647dfe1176fe45550abb6463b97c4cb5db77a0815abd0cc73",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3452,7 +3469,7 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "19f89fa87840e1b47c72d201bcb63eafbd803a1cae047d5d9da9ed6a091debfc",
+      "sha256": "4b464df800da5e7b0dcfc1b2a045c3d918c7578ea49e608a3d1093ceac58948a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3525,6 +3542,12 @@
       "id": "SURFACE-46aeee723adfa6c5",
       "path": "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
       "sha256": "20d601eaf885eedf213e1110da3fa9489d19eed8629cd32f149e690fd947512c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4fe5090e4b9e3bea",
+      "path": "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
+      "sha256": "26b3c6db0d66d9897de3d8759c0093514dfbac749fc77ef54613c1896f15909e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3812,7 +3835,7 @@
     {
       "id": "SURFACE-68bd93791e9d6d28",
       "path": "scripts/__tests__/playwright-image.test.mjs",
-      "sha256": "47ff4fe3a759e41e0ea89498cda3aef9f6146e332f6c6d30354717e31c1c870c",
+      "sha256": "dff4fdac0f095e6015f7de4565fa49c52de355720dac9608230f442c8fdabc39",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4094,7 +4117,13 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "7aca08bebd6c96dbdf233c408a85badae5f997e839980de029f950b6cbaf705c",
+      "sha256": "c89aaa9963b6cb6aa80e224724bda30972f2a1f4d23dae5f3bdeaec8c40c0ab0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a7af8a95b2af74b0",
+      "path": "scripts/ci-job-admission.mjs",
+      "sha256": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6350,7 +6379,7 @@
     {
       "id": "SURFACE-6074376bf1c8f4b9",
       "path": "scripts/verify-playwright-image.mjs",
-      "sha256": "2545cf9b5a081a85fae318dd11bb50f96177fe64fa3ad7a9f89b6ce8fbba250c",
+      "sha256": "88fe2d6257a3c64943b5a29f98a2fde3d296df138c0750bc5d1a71368445584f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6542,7 +6571,7 @@
     {
       "id": "SURFACE-02bd88f022e926a3",
       "path": "tdf-hq-ui/src/App.tsx",
-      "sha256": "a43e646790f5293655dc06d92c1f8ce242e18932ec3241bf302e9a866b1237b9",
+      "sha256": "041afa598b0bbe232f2db9d9465d4d81619fc5a8808881dba5f07d61ff7b3cc7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6596,7 +6625,7 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "e9b604b8d0c83c918608e020e2c4e8e1ba38658387c3d81fa8fa39650ccbbdb5",
+      "sha256": "caef6efc2017f76bfbc27eb6a1dbed146b016ac2d197cd4911e5c3fefd000293",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10004,7 +10033,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "495911682a5a165839906d23f3ed5581be3b950b961a777ebc6eeec23893653c",
+      "sha256": "6abc794d19484430b8e0b53da892826b80a20fefbb30c69f8ea0fccfb632be5b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10476,15 +10505,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4fcbb0b9c41b6de4",
+      "path": "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+      "sha256": "16227bfeb8b8858ead6aa79ecc75f24f24b657dcc63d484a5292ab54f6ab3c8a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "0933e9cc20b04130bc4a86065556a55525028f8e3f3b02624674c04c695e4d50",
+      "sha256": "0cf881b0228da9a69f8699e618deb53cbdd73af28e2242750fb75a47833dccc4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "e6ea941fbe1463ca01d11c07044e6ff518b5572a1be7be9a038b50cef1903a9a",
+      "sha256": "5b28707df52612a9376fe2cb5bec1f62d8831065a5df07e5b71a56a07957420e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10520,7 +10555,7 @@
     {
       "id": "SURFACE-6f181a8eb8c4a407",
       "path": "tdf-hq-ui/src/player/queue.ts",
-      "sha256": "f7156de7da66f35bd26390af0ef14a3968b23a7bd6ddf1b41966e482c16a7ddb",
+      "sha256": "5c55aa09fdd0dbf24c32aea638fb1bcf38b620d761d6ca98c3b12c44c6ef375f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10694,7 +10729,7 @@
     {
       "id": "SURFACE-10caedec4015767f",
       "path": "tdf-hq-ui/src/session/SessionProviders.tsx",
-      "sha256": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
+      "sha256": "993723d58cfd86b5604c9a0faae84c0c21db167a50b8459f0b0439e7381617c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19946,6 +19981,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/engineering/booking-catalog-recovery-2026-10-26.md",
+      "sha256": "867c27c4ca0511f5f2347d4d5941c288311f68b58ddcf90911ae6f54d245aabd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/engineering/public-ux-main-integration-2026-10-21.md",
       "sha256": "11e5b51c7da1a822ca4af8ec6208eecbc1a215e9469104b71f4bdeb6b045ec45",
       "authority": "inferred",
@@ -21179,7 +21221,7 @@
     },
     {
       "path": "docs/music-releases/README.md",
-      "sha256": "a065c8889c524bfe4ad5d78683169de8738473cd2fbdbde8bdbc570b9451c19a",
+      "sha256": "5298efc9d2ba425606b5dbe99aabd64adc6d08fee1dd70e82f7e428c3e929778",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21332,6 +21374,27 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/music-releases/listener-disposal-2026-10-27.md",
+      "sha256": "75410195417b54b345b6ebea8a0ad548d0a5467340d3d7995198983b6d6c418a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/music-releases/listener-scoped-player-state.md",
+      "sha256": "8210e13bd13c7a5142c737fc6feeef03f050fc2a1c7c6010853fe828c0329a40",
+      "authority": "inferred",
+      "authorityBasis": "Status: implemented at `b6259692c11c7b502b974cf6bee7d4ca189925f7`, locally tested;",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/music-releases/live-catalog-inventory-2026-10-26.md",
+      "sha256": "7cc083c778191e9252276f06e56a8e0bde2a21852d845df861807f9ce1f050d7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/music-releases/local-s3-integration.md",
       "sha256": "32736afb17cb3ad73d79d6abdaa1996c381c6487c226560f0e96a8d66b08157a",
       "authority": "inferred",
@@ -21347,7 +21410,7 @@
     },
     {
       "path": "docs/music-releases/operations-runbook.md",
-      "sha256": "68ba6d089aad86ab99306287068c441abe02916eb70d629d33c486f4ee37d29d",
+      "sha256": "51a6baac5db45e226b70b4dd1967214796a74635a3f43aeb71d0fc41f1ef0e0d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21404,6 +21467,13 @@
     {
       "path": "docs/music-releases/universal-audio-delivery-2026-10-25.md",
       "sha256": "5ed80d49ead443e2161f37aa99049227914aa6b4df824ec0aa6cc6c2936afc08",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/music-releases/universal-audio-release-2026-10-26.md",
+      "sha256": "b2235f0541a6297c92bc1878cb0a412c19f7d9b59a89847f01685828a13352ed",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27227,7 +27297,7 @@
     },
     {
       "path": "formal/system/browser-ci-image.md",
-      "sha256": "0923d5f228e24fdc2116d9fe2ee03494357c62b29a8ee07cd05c5af775401849",
+      "sha256": "edb2e891c992102dcfd920559271740a99e641a111336b6e1a67c86babb7d4f5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27256,6 +27326,13 @@
     {
       "path": "formal/system/checkout-snapshot.md",
       "sha256": "34088a67077f113fc3f980f79b6410a47a3ba56fb83492b19ceeb72664ecd677",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ci-selected-job-admission.md",
+      "sha256": "af0eae67852ec12417d34a8d70e41ae4598af4d331954ab373ef4a46642f5a8b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27716,8 +27793,15 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/player-listening-privacy.md",
+      "sha256": "cba10039295f343b5cafab911298d0072d9ae2d874c5f5328892566e4017ec51",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/player-session.md",
-      "sha256": "81cef40eb0c0ff1135257fd630136f365a02a6bf97d4f3ca2514e476a02906ce",
+      "sha256": "1b42df5d646e6c417de273e4b3e3ddd38017a5142becda4fe40dd772e267b2a0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27815,7 +27899,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2a2b13d66c3bd251f5169d1629b9d809852bae3ad3de0d76184558d9681c7a8e",
+      "sha256": "e63df23ae8566bf8ba464566fe8611dd3c3f6f073489feffe6a6d53cd1eeaddd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
