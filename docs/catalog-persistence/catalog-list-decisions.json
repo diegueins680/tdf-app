@@ -13390,7 +13390,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 13,
+        "consumerCount": 12,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       },
