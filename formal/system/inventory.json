@@ -33,6 +33,7 @@
       "e2e/web/artist-merch.spec.mjs",
       "e2e/web/auth-landing.spec.mjs",
       "e2e/web/booking-catalog-recovery.spec.mjs",
+      "e2e/web/booking-timezone.spec.mjs",
       "e2e/web/campaign-accessibility.spec.mjs",
       "e2e/web/chat-notification-navigation.spec.mjs",
       "e2e/web/checkout-readiness.spec.mjs",
@@ -458,6 +459,7 @@
       "scripts/test-catalog-production-cutover.sh",
       "scripts/test-chat-notifications.sh",
       "scripts/test-checkout-event-refund-runtime-migration.sh",
+      "scripts/test-checkout-money-verifier.py",
       "scripts/test-checkout-policy-terms-identity-migration.sh",
       "scripts/test-checkout-terms-history.sh",
       "scripts/test-checkout-terms-upgrade-concurrency.py",
@@ -2915,6 +2917,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a58a6650faecc2e6",
+      "path": "e2e/web/booking-timezone.spec.mjs",
+      "sha256": "24ab1f1962db70d48f835f4b1986b5ec6a6ac43e2de17213592a26db694099e3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-99efca801c54dd18",
       "path": "e2e/web/campaign-accessibility.spec.mjs",
       "sha256": "a139094a63cf3084ff1f5a47c7d282db5864e9ba9a052dd55df2087984904f95",
@@ -3361,7 +3369,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "91549b10ba840aae75743b8954498f4e2d05be31beeb56deb51b7d9fbfa33143",
+      "sha256": "54c909b7ed7a25c77ad113338b988199520dbc3bb7a3dc1778b99d1e588bcbb2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4099,7 +4107,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "cbc5ee9e7ce0e57797b5f35ee8e384349be44c07be4c0c3ed2481c0fdd652ea1",
+      "sha256": "b7b8a01efd976ac9938452fac60ff6f00864a407550fe5e09c0f660e1427d8c6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4789,7 +4797,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "dad435c781ca9341c44657b1952a0414a63bf2077ab32933b9dc31f6573f9630",
+      "sha256": "f9fc06aafa5b903c520d54aba1d7753b55800dac5d9893f84f9cdf62a9e952ab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5390,6 +5398,12 @@
       "id": "SURFACE-1910077a9107778a",
       "path": "scripts/test-checkout-event-refund-runtime-migration.sh",
       "sha256": "32324ad3adc0f2b943284b71637548b54ee2e9d38adf68b483037dd0555e8710",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1b1c5e57fb68ec97",
+      "path": "scripts/test-checkout-money-verifier.py",
+      "sha256": "cff1bbe3bfb77b881d3e2c8e9f3f04070615f7e1353ccffc5c7891e30e2c023c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6301,7 +6315,7 @@
     {
       "id": "SURFACE-8b6766b7ee7590fd",
       "path": "scripts/verify-checkout-money.py",
-      "sha256": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
+      "sha256": "bf698645e4ca026a168234a99a13371e1d359e26010b3771867158cb0bd47d6d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6607,7 +6621,7 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "caef6efc2017f76bfbc27eb6a1dbed146b016ac2d197cd4911e5c3fefd000293",
+      "sha256": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10045,7 +10059,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
+      "sha256": "aec2259be898d0b415f4e1a4f46fb7ecd229abca07b08b5295653c65f145e951",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27374,7 +27388,7 @@
     },
     {
       "path": "formal/system/checkout-arithmetic.md",
-      "sha256": "e076c317f3ab6740d9b4118d5dad938fd6acb5a4e527c48e2acba01fd70014e3",
+      "sha256": "e815c0a2aea29facf4cd1934d09d9708f4cdabe7bbbfda6293ce4185faf313e9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27898,6 +27912,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/public-booking-timezone.md",
+      "sha256": "53093ef5397e06c3830fb37ff16f62023923cef7417976aa98a92c83d415e74b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/public-knowledge-retrieval.md",
       "sha256": "4a00570991ab6ad89525de51e2b5b2a77127116bd8743d1f6175f6d977047c4d",
       "authority": "inferred",
@@ -27962,7 +27983,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ab87b7ed50fba57d530b4769fdd6f7bc8ef0c7dee7958ddbe0a47da227acb728",
+      "sha256": "8ee08fef13c033acfb907a44184da7a80c1ca0d66d6946d25c9ade30f92f6088",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
