@@ -13307,6 +13307,7 @@
       "contract": "formal/system/campaign-server.md",
       "implementation": [
         ".github/workflows/campaign-platform.yml",
+        "scripts/quality-repo.sh",
         "services/campaign-platform/backup.py",
         "services/campaign-platform/backup_control.py",
         "services/campaign-platform/backup_crypto.py",
@@ -13335,11 +13336,14 @@
         "services/campaign-platform/tdf-campaign-monitor.service",
         "services/campaign-platform/tdf-campaign-monitor.timer",
         "services/campaign-platform/tdf-campaign-worker.service",
+        "services/campaign-platform/tiktok.py",
+        "services/campaign-platform/tiktok_token.py",
         "services/campaign-platform/ui/app.js",
         "services/campaign-platform/ui/index.html",
         "services/campaign-platform/ui/style.css",
         "services/campaign-platform/ui/tdf-logo.png",
         "services/campaign-platform/ui/tdf-logo.svg",
+        "services/campaign-platform/ui/tiktok.js",
         "services/campaign-platform/verify_drive_backup.py",
         "services/campaign-platform/worker.py",
         "services/campaign-platform/youtube_upload.py",
@@ -13348,8 +13352,8 @@
         "tdf-hq/assets/feature-registry.json",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
-      "verification": "SQLite concurrency and multi-actor HTTP boundaries; finite model with three negative controls; real-media exports; authenticated block encryption and resumable-upload protocol tests; actual private Drive upload/resumption and separately recorded recovery verification. Facebook publishing protocol uses controlled mocks, without a connected Page or live publication. No full implementation refinement.",
-      "evidence": "reports/campaign-platform-2026-10-29.json; reports/campaign-platform-drive-2026-10-29.json; docs/campaign-platform/operations.md; exact-commit hosted workflow when run",
+      "verification": "SQLite concurrency and multi-actor HTTP boundaries; finite model with three negative controls; real-media exports; authenticated block encryption and resumable-upload protocol tests; actual private Drive upload/resumption and separately recorded recovery verification. Facebook publishing protocol uses controlled mocks, without a connected Page or live publication. No full implementation refinement. TikTok controlled protocol, SQLite consent binding, HTTP isolation, token rotation and actual UI tests, with two deliberately failing guard-removal controls; no live TikTok publication or app-audit qualification.",
+      "evidence": "reports/campaign-platform-2026-10-29.json; reports/campaign-platform-drive-2026-10-29.json; docs/campaign-platform/operations.md; exact-commit hosted workflow when run; reports/campaign-platform-tiktok-2026-10-29.json",
       "status": "specified and implemented",
       "critical": true,
       "domain": "CAMP",
@@ -13413,7 +13417,9 @@
         "services/campaign-platform/tests/test_domain.py",
         "services/campaign-platform/tests/test_facebook.py",
         "services/campaign-platform/tests/test_http.py",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts"
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "services/campaign-platform/tests/test_tiktok.py",
+        "scripts/__tests__/campaign-tiktok-ui.test.mjs"
       ],
       "formalModels": [
         "services/campaign-platform/model_check.py"

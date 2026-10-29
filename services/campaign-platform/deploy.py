@@ -19,7 +19,7 @@ from cryptography.fernet import Fernet
 config.setdefault('ENCRYPTION_KEY',Fernet.generate_key().decode());config.setdefault('MEDIA_KEY',secrets.token_hex(32))
 config.update(STATE_DIR=str(state),PUBLIC_BASE='https://api.tdfrecords.net/campaign-platform',AUTH_URL='https://api.tdfrecords.net/session',BIND='172.21.0.1',PORT=8791,ALLOWED_ORIGINS=['https://api.tdfrecords.net','https://www.tdfrecords.net','https://tdfrecords.net'],FRAME_ORIGINS=['https://www.tdfrecords.net','https://tdfrecords.net'],META_API_VERSION='v23.0',LOGO_PNG=str(root/'tdf-logo.png'))
 config.setdefault('TDF_ACCOUNT_IDS',{'youtube':['UCx9Jpaw_XDrMtIdzWYlU51g'],'instagram':['17841445628242005'],'facebook':[existing['FACEBOOK_MESSAGING_PAGE_ID']] if existing.get('FACEBOOK_MESSAGING_PAGE_ID') else []})
-for name in ('GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','FACEBOOK_APP_ID','FACEBOOK_APP_SECRET','YOUTUBE_API_KEY','SMTP_HOST','SMTP_PORT','SMTP_USERNAME','SMTP_PASSWORD','SMTP_FROM'):
+for name in ('GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','TIKTOK_CLIENT_KEY','TIKTOK_CLIENT_SECRET','FACEBOOK_APP_ID','FACEBOOK_APP_SECRET','YOUTUBE_API_KEY','SMTP_HOST','SMTP_PORT','SMTP_USERNAME','SMTP_PASSWORD','SMTP_FROM'):
  if existing.get(name):config[name]=existing[name]
 files=sorted(p for p in source.rglob('*') if p.is_file() and '__pycache__' not in str(p));manifest={str(p.relative_to(source)):hashlib.sha256(p.read_bytes()).hexdigest() for p in files};digest=hashlib.sha256(json.dumps(manifest,sort_keys=True).encode()).hexdigest()[:20];config['VERSION']=digest
 release=root/'releases'/digest;release.parent.mkdir(exist_ok=True)

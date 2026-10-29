@@ -71,7 +71,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
   url=urllib.parse.urlsplit(self.path);path=url.path
   if not path.startswith(PREFIX+'/') and path!=PREFIX:raise Denied('No encontrado.',404)
   path=path[len(PREFIX):] or '/';method=self.command;s=self.server.store;cfg=self.server.config
-  if path in ('/','/app.js','/style.css','/tdf-logo.svg') and method in ('GET','HEAD'):
+  if path in ('/','/app.js','/tiktok.js','/style.css','/tdf-logo.svg') and method in ('GET','HEAD'):
    f=STATIC/({'/':'index.html','/tdf-logo.svg':'tdf-logo.svg'}.get(path,path[1:]));content=f.read_bytes();ctype=mimetypes.guess_type(str(f))[0] or 'application/octet-stream';self.respond(200,content,ctype,{'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; frame-ancestors https://www.tdfrecords.net https://tdfrecords.net; base-uri 'none'; form-action 'self'"});return
   if path=='/health' and method=='GET':
    with s.db() as d:h=d.execute('SELECT at FROM heartbeat WHERE name="worker"').fetchone()
@@ -105,8 +105,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
    if method=='GET':
     rows=s.tdf_review(actor)
     for row in rows:
-     if row['asset']:row['preview_url']=signed_media_url(cfg,row['asset'])
-     children=json.loads(row['settings']).get('children',[]);row['preview_files']=[]
+     photo_tiktok=row['platform']=='tiktok' and row['format']=='photo'
+     if row['asset'] and not photo_tiktok:row['preview_url']=signed_media_url(cfg,row['asset'])
+     options=json.loads(row['settings'])
+     children=options.get('tiktok',{}).get('images',[]) if photo_tiktok else options.get('children',[]);row['preview_files']=[]
      if isinstance(children,list):
       with s.db() as d:
        for aid in children:
@@ -140,6 +142,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
   if m:
    cid,action=m[1],m[2]
    if not action and method=='GET':self.respond(200,s.detail(actor,cid));return
+   if action in ('tiktok-creator','tiktok-consent') and method=='POST':
+    import tiktok
+    data=self.read_json()
+    result=tiktok.review_context(self.server.providers,actor,cid,data.get('account')) if action=='tiktok-creator' else tiktok.consent(self.server.providers,actor,cid,data)
+    self.respond(200,result);return
    if action=='members' and method=='POST':s.member(actor,cid,self.read_json());self.respond(204);return
    if action=='approve' and method=='POST':s.approve(actor,cid,self.read_json());self.respond(200,s.detail(actor,cid));return
    if action=='youtube-checks' and method=='POST':s.youtube_checks(actor,cid,self.read_json());self.respond(200,s.detail(actor,cid));return

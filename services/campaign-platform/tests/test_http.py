@@ -52,6 +52,16 @@ class HttpBoundaryTests(unittest.TestCase):
   self.assertEqual(self.req('/backups')[0],403)
   for path in ('/backups/key','/backups/key/challenge','/backups/key/confirm','/backups/enable','/backups/run'):
    self.assertEqual(self.req(path,{})[0],403)
+ def test_tiktok_review_endpoints_keep_campaign_authority_and_private_credentials(self):
+  cid=self.create();aid=uid()
+  with self.store.db(True) as db:db.execute('INSERT INTO accounts VALUES(?,?,?,?,?,?,?,?,?,?)',(aid,1,'tiktok','creator','Artista','own',self.p.vault.seal({'access_token':'test-only'}),'"video.publish"',None,0))
+  with patch('tiktok.request') as network:
+   self.assertEqual(self.req('/campaigns/'+cid+'/tiktok-creator',{'account':aid},who='user2')[0],404)
+   self.assertEqual(self.req('/campaigns/'+cid+'/tiktok-consent',{'account':aid},who='user2')[0],404)
+   self.assertEqual(self.req('/campaigns/'+cid+'/tiktok-creator',{'account':aid})[0],409)
+   self.assertEqual(self.req('/campaigns/'+cid+'/tiktok-creator',{'account':aid},origin='https://evil.example')[0],403)
+   network.assert_not_called()
+  status,body,headers=self.req('/tiktok.js');self.assertEqual(status,200);self.assertIn('script-src',headers['Content-Security-Policy']);self.assertNotIn(b'test-only',body)
  def test_delete_original_requires_owner_and_explicit_confirmation(self):
   cid=self.create();aid=json.loads(self.req('/campaigns/'+cid+'/uploads',{'name':'original.mp4','size':3,'original':True})[1])['id'];self.req('/uploads/'+aid,method='PUT',raw=b'abc',headers={'Upload-Offset':'0'})
   self.assertEqual(self.req('/assets/'+aid,{},method='DELETE',who='user2')[0],404)

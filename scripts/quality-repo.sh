@@ -79,3 +79,4 @@ python3 "$ROOT/scripts/test_mail_deliverability_monitor.py"
 node --test "$ROOT/scripts/__tests__/production-catalog-inventory.test.mjs"
 
 node --test "$ROOT/scripts/__tests__/retired-messaging-refresher.test.mjs"
+node --test "$ROOT/scripts/__tests__/campaign-tiktok-ui.test.mjs"

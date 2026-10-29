@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-29T22:11:06.857328+00:00",
+  "parent_source": "eb2f7b8e407600842a1a622278c895cdbeccbfcd",
+  "qualification": "controlled implementation boundaries, no live TikTok publication",
+  "tests": {
+    "python": {
+      "count": 80,
+      "pass": 80,
+      "log_sha256": "2e5bd4f72492f5a44457bf28e9fee9e526074e604aad417e32ef0f849ac8a9ce",
+      "duration_seconds": 18.446
+    },
+    "actual_form": {
+      "count": 4,
+      "pass": 4,
+      "log_sha256": "f3811b83ca9992670adbe8407f2e70e0d229808d39fd05fc3c7a00fd2569f1d7"
+    },
+    "negative_controls": {
+      "result": "PASS",
+      "controls": [
+        {
+          "control": "consent-content",
+          "test": "test_changed_text_asset_or_privacy_invalidates_consent",
+          "exit_code": 1,
+          "expected_failure_observed": true,
+          "log_sha256": "0971b14634e3acee07dfd83a693f10c320f3f0463937d2e97d6633014aa331da"
+        },
+        {
+          "control": "consent-replay",
+          "test": "test_one_consent_cannot_be_replayed_on_another_piece",
+          "exit_code": 1,
+          "expected_failure_observed": true,
+          "log_sha256": "f6f5ac67ae64060116626ac4c1334c42b980cf46c48e7ff201d0d0044d96f29b"
+        }
+      ],
+      "canonical_source_modified": false
+    },
+    "catalog": {
+      "pass": 8,
+      "log_sha256": "9be5335b9159877c5f159e5a85ece9af123a1b47f7f7de9c19c3b29c7894d5c5"
+    },
+    "design_model": {
+      "result": "PASS",
+      "positive": {
+        "states": 1024,
+        "violations": []
+      },
+      "negative_controls": {
+        "ignore_owner": {
+          "states": 1024,
+          "violations": [
+            "cross_tenant"
+          ]
+        },
+        "ignore_approval": {
+          "states": 1024,
+          "violations": [
+            "stale_approval"
+          ]
+        },
+        "retry_unknown": {
+          "states": 1024,
+          "violations": [
+            "uncertain_replay"
+          ]
+        }
+      },
+      "scope": "Finite abstract dispatch admission only; SQLite interleavings, OAuth and real providers verified separately."
+    },
+    "repository_quality": {
+      "result": "PASS",
+      "explicit_platform_skips": 11,
+      "log_sha256": "165d4683c0c9a2d3f14f663e73f893bc6ab712c0615623a56b1087f9ddbab3d1"
+    },
+    "actual_live_ui": {
+      "at": "2026-10-29T22:17:12.707Z",
+      "session": {
+        "id": 9,
+        "admin": true,
+        "logo": true,
+        "tikTokAvailable": "tiktok_connector_pending_audit_and_verified_domain",
+        "hasConsentFunction": true
+      },
+      "layout": [
+        {
+          "inner": 390,
+          "root": 390,
+          "scroll": 390,
+          "visual": 390
+        },
+        {
+          "inner": 320,
+          "root": 320,
+          "scroll": 320,
+          "visual": 320
+        }
+      ],
+      "externalPublications": 0,
+      "credentialReads": 0
+    }
+  },
+  "deployment": {
+    "state": "deployed with TikTok disabled pending external approval",
+    "release": "c1e5170dce4732959262",
+    "previous_live": "45a3c4eaaed5baf32dcb",
+    "at": 1793312155.54317,
+    "source_tests": "80 tests passed by deploy.py before activation; exact 80-case host suite loaded and source manifest matched",
+    "manifest_matches_local": true,
+    "units": {
+      "tdf-campaign-api.service": "active",
+      "tdf-campaign-worker.service": "active",
+      "tdf-campaign-backup.timer": "active",
+      "tdf-campaign-backup-request.timer": "active",
+      "tdf-campaign-monitor.timer": "active"
+    },
+    "public_health": {
+      "service": "tdf-campaign-platform",
+      "version": "c1e5170dce4732959262",
+      "worker_healthy": true
+    },
+    "tiktok_configuration": {
+      "client_key_present": false,
+      "client_secret_present": false,
+      "audit_approved": false,
+      "media_prefix_verified": false,
+      "connected_accounts": 0
+    },
+    "pilot": {
+      "campaign": {
+        "status": "active",
+        "version": 4,
+        "approved_version": 4
+      },
+      "cl01": [
+        {
+          "id": "05ae991b76191250522f22e8eec9c77f",
+          "name": "CL01",
+          "status": "approved",
+          "version": 1,
+          "approved_version": 1,
+          "tdf_approval_version": 1,
+          "kind": "publish",
+          "job_state": "queued",
+          "attempts": 0,
+          "due_at": 1793316600.0
+        }
+      ],
+      "ready_assets": 38
+    }
+  },
+  "external_blockers": [
+    "TikTok client credentials absent",
+    "TikTok application audit not qualified",
+    "TikTok media prefix ownership not qualified",
+    "No connected TikTok account or live publication qualification",
+    "Approved TDF-logo designs require TikTok content-policy eligibility review"
+  ],
+  "preserved": [
+    "Original approved Roj(o) assets and required logo",
+    "CL01 queued 2026-10-29T23:30:00Z; no earlier manual publish",
+    "No changes to protected main, Mobile pin or existing backup proof identities",
+    "No external test posts, messages or spend",
+    "Earlier web/Mobile/restore evidence retains original execution identities; no new full React or Mobile test execution is attributed to TikTok changes"
+  ],
+  "source_manifest": {
+    "services/campaign-platform/backup.py": "fbc72e9d0d38e09d7de286d980b3a2983b57ffed2867b00878cb27d3c3db5c83",
+    "services/campaign-platform/backup_control.py": "65f1befe17e659b21b98a308583cf4e601d683a7beb03a108633aa154cba543a",
+    "services/campaign-platform/backup_crypto.py": "4078c9daad93c68cb1c8feaafb42c676b34df89703fa1a792ade66f932679357",
+    "services/campaign-platform/deploy.py": "61b7066ca402a2c9277ec85335b5920ebebc30a27781b56b4a6f63739e18b366",
+    "services/campaign-platform/domain.py": "fcbc5b19bce6fdcaa61dfcb08ab983c3471f3eb26e3b3a163955cec8240fbbcf",
+    "services/campaign-platform/drive_backup.py": "db50b9ea20536486d65bf4de1ad176e24480ed21db49d22656a0d6cc3f892763",
+    "services/campaign-platform/facebook.py": "214e97cd12ed03369aba75d777d35cab47aabb17319d78c7e3a62153825abe91",
+    "services/campaign-platform/graphics.py": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
+    "services/campaign-platform/import_rojo.py": "ff1575eca3f2553a2ee9a89b37a3e8443fad838f830f67e4dd5d876be56535c4",
+    "services/campaign-platform/media.py": "0964eacd3e98878b379edc1aa1770acbca7d5cdda61c7feaceaf72db5112112c",
+    "services/campaign-platform/model_check.py": "96aba654ff652f9e0279b96d60a632622037f2d9f4ff05f64855ebbc36d9bcc2",
+    "services/campaign-platform/monitor.py": "58a594f304a9f037eca507a9b9614b9f9ca3b1e6f627afd76ac57570dd165529",
+    "services/campaign-platform/notifications.py": "731a4d446e224b26bd8b1da6061af4220486dee498aae433c44e0a6700038860",
+    "services/campaign-platform/planning.py": "39103469c4e025eff5b5552ab89da959950606efa44071bfcaf7c2cfdfc039fa",
+    "services/campaign-platform/providers.py": "0341fdda3db354c373451803ae1eae7373f7b4748a9334d09a288bd75e9f22d1",
+    "services/campaign-platform/qualify_media.py": "1c82685fb2e45a3ce10b991876c30a3fdae729c1d8c44df0961d51fd5e3c3d95",
+    "services/campaign-platform/requirements.txt": "47f9d65a21898d47bcdb492a2b2abf5e9a767e738eeaa329151706ed6c950f87",
+    "services/campaign-platform/schema.sql": "966f5881fb8807373b3800f0392dff6c283ed787c53b7ab4da7aea9a4d68703d",
+    "services/campaign-platform/server.py": "df1c7b8902c72d05fbcc3afae0bc593f7422c9cda56bb227321643e92562f188",
+    "services/campaign-platform/stream_backup_object.py": "4c12c6d15fb8a656e350a341c3840ab08fad59525f277b0f55a4b863c4ed611c",
+    "services/campaign-platform/tdf-campaign-api.service": "c583a4b1fb5da557cfe3d0160b293718acc407980a2a07183375041571ba9bec",
+    "services/campaign-platform/tdf-campaign-backup-request.service": "c7de57347a940bce347d2b09b57af48ce86f9dcd1a77da01fe8baa828b75ea71",
+    "services/campaign-platform/tdf-campaign-backup-request.timer": "c0b20d73362c8138c3b217b2c5d99347b3f19441b0c67c3d76424c86bb8c65e6",
+    "services/campaign-platform/tdf-campaign-backup.service": "467d499ec9c0091c612ec1448dca9c39d5eaffbde3b213fb28d853e3cb0a0ae6",
+    "services/campaign-platform/tdf-campaign-backup.timer": "fd87995d8f61ec2a387ff7b68ae97f8e533bb261f639ebf05e5795fdb21c445d",
+    "services/campaign-platform/tdf-campaign-monitor.service": "d35e2cd2667fc79d1d1deb098b1096b975f11723830d9a7f318376a22eed618c",
+    "services/campaign-platform/tdf-campaign-monitor.timer": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
+    "services/campaign-platform/tdf-campaign-worker.service": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
+    "services/campaign-platform/tests/test_backups.py": "6e707a002138126284d0255aaff2b135ff15499c001db3417503ed4aecf6fe0c",
+    "services/campaign-platform/tests/test_domain.py": "0648f1b3e3c52a5288e0daad7e72a8d757ccbfea081d2e6fab461fc398512e4d",
+    "services/campaign-platform/tests/test_facebook.py": "032f9d24458fa90e9f79e738e35c988f796d59e71cbffcffd0e0276e3cb96f3c",
+    "services/campaign-platform/tests/test_http.py": "0b0df9d992a48f30d37f045c96ab0a764aea096e17c08c453cda977baa78bd6a",
+    "services/campaign-platform/tests/test_tiktok.py": "17a24c16b2a5e9195f6ca20c641795390af10e2e357bc719b2fb97461f101a17",
+    "services/campaign-platform/tiktok.py": "102978cd2f110c205f06b59f83e252d2aafc9e57290ce15a39c14faeceda9c6d",
+    "services/campaign-platform/tiktok_token.py": "7fdc81f84cf5577ccba3c62e434821bc9b062fb3b6e0517ba3331ac958734e3c",
+    "services/campaign-platform/ui/app.js": "859f877be53e813f0f78f475a2f909e99199c2752f1ad98c53ddf8c683576e94",
+    "services/campaign-platform/ui/index.html": "6a8832b2c47a8752e94990578477727d5c570b87fcc1ed38b2fa8901ed9f57dc",
+    "services/campaign-platform/ui/style.css": "928cb0ef766273fed6c7010216d955d2a1f6b2d2bfd1fc269e75488819ebea07",
+    "services/campaign-platform/ui/tdf-logo.png": "a0a1c050709ac1630450265e6fc0c5c7aa03f16a3733595c64f7f64c1138d0ce",
+    "services/campaign-platform/ui/tdf-logo.svg": "304000649b977061530239f82214efd2c37fef1db6a14823bb6e6d6ecb9f6092",
+    "services/campaign-platform/ui/tiktok.js": "86618007e3b34fb024388898caa35dde6e94891ee14a7caad14a5a39c4df05e6",
+    "services/campaign-platform/verify_drive_backup.py": "62f519896d66cbacdf3271d87e4b82e78f7d41ef116e97b156a3105bf094d696",
+    "services/campaign-platform/worker.py": "6324998f3f5691b895573098445d98da1623b8e0f8331f86a7f22d8f0d9f492e",
+    "services/campaign-platform/youtube_upload.py": "a7a0e513d0e607d88f8e87d39b6650224dc342fb5b5bee843ece578fee2c801f"
+  }
+}

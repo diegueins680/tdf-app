@@ -30,11 +30,12 @@ def request(url,token=None,data=None,method=None,headers=None):
 class Providers:
  def __init__(self,store,vault,config):self.store=store;self.vault=vault;self.config=config;self.graph='https://graph.facebook.com/'+config.get('META_API_VERSION','v23.0')
  def capabilities(self):
-  return {'youtube':{'video':'automatic_after_oauth_and_studio_checks','short':'automatic_after_oauth_and_studio_checks','community':'assisted','comment':'automatic_after_oauth','collaboration':'assisted','related_video':'assisted','end_screen':'assisted'},'instagram':{'reel':'automatic_after_oauth','post':'automatic_after_oauth','carousel':'automatic_after_oauth','story':'automatic_if_eligible_without_link_sticker','story_link_sticker':'assisted','message':'assisted_with_separate_approval'},'facebook':{'post':'connector_ready_pending_page_authorization_and_live_validation','video':'connector_ready_pending_page_authorization_and_live_validation','reel':'connector_ready_pending_page_authorization_and_live_validation','story':'assisted','carousel':'connector_ready_pending_page_authorization_and_live_validation','message':'assisted_with_separate_approval'},'tiktok':{'video':'blocked_pending_tiktok_app_configuration_and_audit','photo':'assisted'},'oauth_configured':{p:bool(self.config.get(k)) for p,k in [('youtube','GOOGLE_CLIENT_ID'),('instagram','FACEBOOK_APP_ID'),('facebook','FACEBOOK_APP_ID'),('tiktok','TIKTOK_CLIENT_KEY')]}}
+  return {'youtube':{'video':'automatic_after_oauth_and_studio_checks','short':'automatic_after_oauth_and_studio_checks','community':'assisted','comment':'automatic_after_oauth','collaboration':'assisted','related_video':'assisted','end_screen':'assisted'},'instagram':{'reel':'automatic_after_oauth','post':'automatic_after_oauth','carousel':'automatic_after_oauth','story':'automatic_if_eligible_without_link_sticker','story_link_sticker':'assisted','message':'assisted_with_separate_approval'},'facebook':{'post':'connector_ready_pending_page_authorization_and_live_validation','video':'connector_ready_pending_page_authorization_and_live_validation','reel':'connector_ready_pending_page_authorization_and_live_validation','story':'assisted','carousel':'connector_ready_pending_page_authorization_and_live_validation','message':'assisted_with_separate_approval'},'tiktok':{'video':'tiktok_connector_pending_audit_and_verified_domain','photo':'tiktok_connector_pending_audit_and_verified_domain'},'oauth_configured':{p:bool(self.config.get(k)) for p,k in [('youtube','GOOGLE_CLIENT_ID'),('instagram','FACEBOOK_APP_ID'),('facebook','FACEBOOK_APP_ID'),('tiktok','TIKTOK_CLIENT_KEY')]}}
  def known_tdf_identity(self,platform,external_id):
   return external_id in self.config.get('TDF_ACCOUNT_IDS',{}).get(platform,[])
  def start(self,actor,platform,scope):
   if platform not in ('youtube','instagram','facebook','tiktok','drive'):raise Denied('Plataforma inválida.')
+  if platform=='tiktok' and not self.config.get('TIKTOK_CLIENT_SECRET'):raise Denied('Falta configurar la aplicación de TikTok en el servidor.',409)
   if platform=='drive' and (not actor.get('admin') or scope!='tdf'):raise Denied('El respaldo de TDF requiere un administrador y una conexión de TDF.',403)
   if scope=='tdf' and not actor['admin']:raise Denied('Solo un administrador puede conectar canales de TDF.',403)
   if scope not in ('own','tdf'):raise Denied('Ámbito inválido.')
@@ -81,6 +82,9 @@ class Providers:
     expiry=time.time()+c['token']['expires_in'] if c['token'].get('expires_in') else None
     d.execute('INSERT INTO accounts(id,owner,platform,external_id,handle,scope,credentials,permissions,expires_at) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(platform,external_id) DO UPDATE SET credentials=excluded.credentials,permissions=excluded.permissions,expires_at=excluded.expires_at,revoked=0,handle=excluded.handle',(uid(),row['owner'],platform,c['id'],c['handle'],row['scope'],self.vault.seal(c['token']),json.dumps(c.get('permissions',c['token'].get('scope','requested_in_oauth'))),expiry));self.store.audit(d,row['owner'],'account.connect',subject=c['id'],details={'platform':platform,'scope':row['scope']})
  def token(self,account):
+  if account['platform']=='tiktok':
+   from tiktok_token import refresh
+   return refresh(self,account)
   token=self.vault.open(account['credentials'])
   if account['platform'] in ('youtube','drive') and token.get('refresh_token'):
    # Refresh on the server. Do not require the user's browser to stay open.
@@ -129,6 +133,9 @@ class Providers:
   if platform=='youtube' and p['format'] in ('video','short'):
    from youtube_upload import upload
    return upload(self,p,a,token)
+  if platform=='tiktok':
+   from tiktok import publish
+   return publish(self,p,a,media_url)
   if platform=='facebook':
    from facebook import publish
    return publish(self,p,a,token,media_url)

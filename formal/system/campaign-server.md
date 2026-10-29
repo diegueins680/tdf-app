@@ -26,3 +26,14 @@ An independent resource-limited systemd process uploads a consistent campaign SQ
 ## Facebook publication boundary
 
 Text/link, single/multiple photos, normal video and native Reels have protocol implementations. Video/Reel stages retain durable provider identity, wait for readiness, recheck exact-version and TDF authority, and record a final-publication intent before the write. Readiness alone never means publication. An uncertain final request is quarantined and never replayed; the read-only verifier can inspect it. These stages have controlled protocol/SQLite tests; no connected Facebook Page or live publication qualification is claimed. Known configured TDF identities cannot be relabeled as personal accounts to bypass admin approval.
+
+
+## TikTok publication boundary
+
+TikTok remains disabled until the operator supplies real client credentials, records provider audit approval and configures the exact verified server media prefix. These local configuration assertions cannot substitute for TikTok approval. Server media use only `PULL_FROM_URL`; there is no private-visibility fallback or local-upload workaround.
+
+The actual creator profile and current privacy/interactions are queried before review and again before publication. Privacy has no default, interactions start unchecked and disabled creator options remain disabled. Explicit music, preview, original-content and applicable brand-policy consent binds the exact text, account, due date, selected asset hashes and publication settings. A short-lived actor/campaign/account context creates one consent, which binds transactionally to one piece and version. Edited or replayed consent cannot authorize another publication. TDF admin approval remains independently necessary. Video duration/codec/size and photo formats are probed against the actual immutable file before submission.
+
+An encrypted initialization intent precedes the single external initialization. A timeout, crash or uncertain response cannot reinitialize automatically. Follow-up jobs only read the original publish identity; completion without a public id remains pending for public content. Nonpublic completion is explicitly restricted, and no public URL or independent playback verification is invented. Refresh-token rotation is serialized across API/worker processes, checks account identity and rechecks revocation before credential replacement.
+
+Evidence is 80 finite Python tests (18 TikTok-specific), four tests executing the actual plain-JavaScript form and two guard-removal controls. Tests use controlled provider responses and a mocked format probe, not a live TikTok app, upload, moderation decision, policy approval or full provider refinement. Approved campaign graphics retain the required official TDF logo; eligibility of those branded graphics under TikTok's developer guidelines needs review and is not inferred from consent.

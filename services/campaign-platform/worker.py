@@ -22,18 +22,19 @@ def run_one(store,providers,media_url):
    with store.db() as d:p=dict(d.execute('SELECT * FROM pieces WHERE id=?',(j['piece'],)).fetchone())
    result=providers.metrics(p)
    with store.db(True) as d:d.execute('INSERT INTO metrics VALUES(?,?,?,?,?)',(uid(),p['campaign'],p['id'],time.time(),json.dumps(result)))
-  elif j['kind'] in ('verify_youtube','verify_facebook'):
+  elif j['kind'] in ('verify_youtube','verify_facebook','verify_tiktok'):
    if j['kind']=='verify_youtube':from youtube_upload import verify
-   else:from facebook import verify
+   elif j['kind']=='verify_facebook':from facebook import verify
+   else:from tiktok import verify
    with store.db() as d:
     p=dict(d.execute('SELECT * FROM pieces WHERE id=?',(j['piece'],)).fetchone())
     if j['kind']=='verify_youtube':a=store.execution_guard(d,p)
     else:
      a=d.execute('SELECT * FROM accounts WHERE id=? AND revoked=0',(p['account'],)).fetchone()
-     if not a:raise Denied('La conexión de Facebook ya no está disponible.',409)
+     if not a:raise Denied('La conexión de publicación ya no está disponible.',409)
      a=dict(a)
    result=verify(providers,p,a)
-   if result['state'] in ('waiting_for_hd','waiting_for_facebook'):
+   if result['state'] in ('waiting_for_hd','waiting_for_facebook','waiting_for_tiktok'):
     with store.db(True) as d:d.execute('UPDATE jobs SET state="queued",due_at=? WHERE id=?',(time.time()+60,j['id']))
     ACTIVE_JOB=None
     return True
@@ -51,7 +52,7 @@ def run_one(store,providers,media_url):
    d.execute('UPDATE jobs SET state="blocked",error=? WHERE id=?',(str(e),j['id']));d.execute('UPDATE pieces SET status="blocked" WHERE id=? AND status!="published"',(j['piece'],));c=d.execute('SELECT owner FROM campaigns WHERE id=?',(j['campaign'],)).fetchone()
    if c:store.notice(d,c['owner'],str(e),j['campaign'])
  except ProviderError as e:
-  state='unknown' if e.uncertain or j['kind'] in ('publish','verify_facebook') else ('queued' if j['attempts']<3 else 'failed')
+  state=('queued' if j['attempts']<3 else 'failed') if j['kind']=='verify_tiktok' else ('unknown' if e.uncertain or j['kind'] in ('publish','verify_facebook') else ('queued' if j['attempts']<3 else 'failed'))
   with store.db(True) as d:
    d.execute('UPDATE jobs SET state=?,error=?,due_at=? WHERE id=?',(state,str(e),time.time()+60*2**j['attempts'],j['id']));
    if j['kind'] in ('publish','verify_facebook'):d.execute('UPDATE pieces SET status="unknown" WHERE id=?',(j['piece'],))
@@ -61,7 +62,7 @@ def run_one(store,providers,media_url):
   # Fail closed, with no provider payloads or secrets in logs.
   with store.db(True) as d:
    d.execute('UPDATE jobs SET state="unknown",error="internal_error_requires_review" WHERE id=?',(j['id'],))
-   if j['kind'] in ('publish','verify_facebook','verify_youtube'):d.execute('UPDATE pieces SET status="unknown" WHERE id=? AND status!="published"',(j['piece'],))
+   if j['kind'] in ('publish','verify_facebook','verify_youtube','verify_tiktok'):d.execute('UPDATE pieces SET status="unknown" WHERE id=? AND status!="published"',(j['piece'],))
    c=d.execute('SELECT owner FROM campaigns WHERE id=?',(j['campaign'],)).fetchone()
    if c:store.notice(d,c['owner'],'Una operación se detuvo sin confirmar su resultado. Revisa el registro antes de repetirla.',j['campaign'],'error')
   log.error('job_failed id=%s kind=%s',j['id'],j['kind'])

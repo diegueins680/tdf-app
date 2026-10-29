@@ -25,3 +25,4 @@ jobs:
       - run: python -m unittest discover -s services/campaign-platform/tests -v
       - run: python services/campaign-platform/model_check.py
       - run: node --check services/campaign-platform/ui/app.js
+      - run: node --check services/campaign-platform/ui/tiktok.js

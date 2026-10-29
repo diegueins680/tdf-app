@@ -13308,6 +13308,7 @@
       "contract": "formal/system/campaign-server.md",
       "implementation": [
         ".github/workflows/campaign-platform.yml",
+        "scripts/quality-repo.sh",
         "services/campaign-platform/backup.py",
         "services/campaign-platform/backup_control.py",
         "services/campaign-platform/backup_crypto.py",
@@ -13336,11 +13337,14 @@
         "services/campaign-platform/tdf-campaign-monitor.service",
         "services/campaign-platform/tdf-campaign-monitor.timer",
         "services/campaign-platform/tdf-campaign-worker.service",
+        "services/campaign-platform/tiktok.py",
+        "services/campaign-platform/tiktok_token.py",
         "services/campaign-platform/ui/app.js",
         "services/campaign-platform/ui/index.html",
         "services/campaign-platform/ui/style.css",
         "services/campaign-platform/ui/tdf-logo.png",
         "services/campaign-platform/ui/tdf-logo.svg",
+        "services/campaign-platform/ui/tiktok.js",
         "services/campaign-platform/verify_drive_backup.py",
         "services/campaign-platform/worker.py",
         "services/campaign-platform/youtube_upload.py",
@@ -13349,8 +13353,8 @@
         "tdf-hq/assets/feature-registry.json",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
-      "verification": "SQLite concurrency and multi-actor HTTP boundaries; finite model with three negative controls; real-media exports; authenticated block encryption and resumable-upload protocol tests; actual private Drive upload/resumption and separately recorded recovery verification. Facebook publishing protocol uses controlled mocks, without a connected Page or live publication. No full implementation refinement.",
-      "evidence": "reports/campaign-platform-2026-10-29.json; reports/campaign-platform-drive-2026-10-29.json; docs/campaign-platform/operations.md; exact-commit hosted workflow when run",
+      "verification": "SQLite concurrency and multi-actor HTTP boundaries; finite model with three negative controls; real-media exports; authenticated block encryption and resumable-upload protocol tests; actual private Drive upload/resumption and separately recorded recovery verification. Facebook publishing protocol uses controlled mocks, without a connected Page or live publication. No full implementation refinement. TikTok controlled protocol, SQLite consent binding, HTTP isolation, token rotation and actual UI tests, with two deliberately failing guard-removal controls; no live TikTok publication or app-audit qualification.",
+      "evidence": "reports/campaign-platform-2026-10-29.json; reports/campaign-platform-drive-2026-10-29.json; docs/campaign-platform/operations.md; exact-commit hosted workflow when run; reports/campaign-platform-tiktok-2026-10-29.json",
       "status": "specified and implemented",
       "critical": true,
       "domain": "CAMP",
@@ -13414,7 +13418,9 @@
         "services/campaign-platform/tests/test_domain.py",
         "services/campaign-platform/tests/test_facebook.py",
         "services/campaign-platform/tests/test_http.py",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts"
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "services/campaign-platform/tests/test_tiktok.py",
+        "scripts/__tests__/campaign-tiktok-ui.test.mjs"
       ],
       "formalModels": [
         "services/campaign-platform/model_check.py"
@@ -13434,7 +13440,7 @@
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
-    ".github/workflows/campaign-platform.yml": "0afa7b1525456426a5e9c732af89592248af7d8d1e03cd739d0a265776d348fb",
+    ".github/workflows/campaign-platform.yml": "ee39e82787a587a79eccd8f69cb74cbd5d389430674c2930d571eaee08b2e008",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci.yml": "de8329e17a8315a54f65864b1ef0f28302ecde59a70428b6456808a4f30ab1ab",
@@ -13814,6 +13820,7 @@
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
+    "scripts/__tests__/campaign-tiktok-ui.test.mjs": "1592e44f7bd1c12fd5ced8148baa0d2fd16e419acb46eb3aff8bdc6255683d2f",
     "scripts/__tests__/catalog-list-audit.test.mjs": "63b371bcbcf9338de2e4d022515bc9438cfd45f2b884411e913abcde5e713268",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
@@ -13946,7 +13953,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "8e167b6a04ebeeef2d6a3b4a8782f08bea04baf96448f62f17c007bf66091d15",
+    "scripts/quality-repo.sh": "85f1846038dd659ed99ac85058ecb0d1f0707fd95f819cadb397e2e39b437f68",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
@@ -14085,8 +14092,8 @@
     "services/campaign-platform/backup.py": "fbc72e9d0d38e09d7de286d980b3a2983b57ffed2867b00878cb27d3c3db5c83",
     "services/campaign-platform/backup_control.py": "65f1befe17e659b21b98a308583cf4e601d683a7beb03a108633aa154cba543a",
     "services/campaign-platform/backup_crypto.py": "4078c9daad93c68cb1c8feaafb42c676b34df89703fa1a792ade66f932679357",
-    "services/campaign-platform/deploy.py": "a4106b3b8698f1967b7b894eef393a9e4d41e3ec5af691e5a9e0a1a0849ded4a",
-    "services/campaign-platform/domain.py": "84cb1424a5203445253c7447df084cfc0c6dbac7c4572ed8139da00c4cc03abf",
+    "services/campaign-platform/deploy.py": "61b7066ca402a2c9277ec85335b5920ebebc30a27781b56b4a6f63739e18b366",
+    "services/campaign-platform/domain.py": "fcbc5b19bce6fdcaa61dfcb08ab983c3471f3eb26e3b3a163955cec8240fbbcf",
     "services/campaign-platform/drive_backup.py": "db50b9ea20536486d65bf4de1ad176e24480ed21db49d22656a0d6cc3f892763",
     "services/campaign-platform/facebook.py": "214e97cd12ed03369aba75d777d35cab47aabb17319d78c7e3a62153825abe91",
     "services/campaign-platform/graphics.py": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
@@ -14096,11 +14103,11 @@
     "services/campaign-platform/monitor.py": "58a594f304a9f037eca507a9b9614b9f9ca3b1e6f627afd76ac57570dd165529",
     "services/campaign-platform/notifications.py": "731a4d446e224b26bd8b1da6061af4220486dee498aae433c44e0a6700038860",
     "services/campaign-platform/planning.py": "39103469c4e025eff5b5552ab89da959950606efa44071bfcaf7c2cfdfc039fa",
-    "services/campaign-platform/providers.py": "dba38baaff7dc243c8c475d398d7f3fc91250f5c6fa8d6d28febdc4a1d4b0b31",
+    "services/campaign-platform/providers.py": "0341fdda3db354c373451803ae1eae7373f7b4748a9334d09a288bd75e9f22d1",
     "services/campaign-platform/qualify_media.py": "1c82685fb2e45a3ce10b991876c30a3fdae729c1d8c44df0961d51fd5e3c3d95",
     "services/campaign-platform/requirements.txt": "47f9d65a21898d47bcdb492a2b2abf5e9a767e738eeaa329151706ed6c950f87",
-    "services/campaign-platform/schema.sql": "99b692a9ee5445cb00d82d968b5558b261b97a8794ccbcdefabfd388860502bf",
-    "services/campaign-platform/server.py": "539e17e98c79f4ecc47f9e4224c78fb9dd85e647d699564060a35d86cbf9e812",
+    "services/campaign-platform/schema.sql": "966f5881fb8807373b3800f0392dff6c283ed787c53b7ab4da7aea9a4d68703d",
+    "services/campaign-platform/server.py": "df1c7b8902c72d05fbcc3afae0bc593f7422c9cda56bb227321643e92562f188",
     "services/campaign-platform/stream_backup_object.py": "4c12c6d15fb8a656e350a341c3840ab08fad59525f277b0f55a4b863c4ed611c",
     "services/campaign-platform/tdf-campaign-api.service": "c583a4b1fb5da557cfe3d0160b293718acc407980a2a07183375041571ba9bec",
     "services/campaign-platform/tdf-campaign-backup-request.service": "c7de57347a940bce347d2b09b57af48ce86f9dcd1a77da01fe8baa828b75ea71",
@@ -14113,14 +14120,18 @@
     "services/campaign-platform/tests/test_backups.py": "6e707a002138126284d0255aaff2b135ff15499c001db3417503ed4aecf6fe0c",
     "services/campaign-platform/tests/test_domain.py": "0648f1b3e3c52a5288e0daad7e72a8d757ccbfea081d2e6fab461fc398512e4d",
     "services/campaign-platform/tests/test_facebook.py": "032f9d24458fa90e9f79e738e35c988f796d59e71cbffcffd0e0276e3cb96f3c",
-    "services/campaign-platform/tests/test_http.py": "d39f92aeac9a9111b53dc8eeeffea182bfbd35bf253e74c9f4342febbce896e5",
-    "services/campaign-platform/ui/app.js": "fb347d1fe812d43d9ef16cd497c62de221a859ca415ec41fb6056a1aac3cd79b",
-    "services/campaign-platform/ui/index.html": "0de259ce103a8df0ac13e2cc346ecb9ce88cc8d749ef651a63d67697187bf7db",
-    "services/campaign-platform/ui/style.css": "6cad8291175503191933c9e25118cae0011aeeace5f7bef5d9045dc820c13cce",
+    "services/campaign-platform/tests/test_http.py": "0b0df9d992a48f30d37f045c96ab0a764aea096e17c08c453cda977baa78bd6a",
+    "services/campaign-platform/tests/test_tiktok.py": "17a24c16b2a5e9195f6ca20c641795390af10e2e357bc719b2fb97461f101a17",
+    "services/campaign-platform/tiktok.py": "102978cd2f110c205f06b59f83e252d2aafc9e57290ce15a39c14faeceda9c6d",
+    "services/campaign-platform/tiktok_token.py": "7fdc81f84cf5577ccba3c62e434821bc9b062fb3b6e0517ba3331ac958734e3c",
+    "services/campaign-platform/ui/app.js": "859f877be53e813f0f78f475a2f909e99199c2752f1ad98c53ddf8c683576e94",
+    "services/campaign-platform/ui/index.html": "6a8832b2c47a8752e94990578477727d5c570b87fcc1ed38b2fa8901ed9f57dc",
+    "services/campaign-platform/ui/style.css": "928cb0ef766273fed6c7010216d955d2a1f6b2d2bfd1fc269e75488819ebea07",
     "services/campaign-platform/ui/tdf-logo.png": "a0a1c050709ac1630450265e6fc0c5c7aa03f16a3733595c64f7f64c1138d0ce",
     "services/campaign-platform/ui/tdf-logo.svg": "304000649b977061530239f82214efd2c37fef1db6a14823bb6e6d6ecb9f6092",
+    "services/campaign-platform/ui/tiktok.js": "86618007e3b34fb024388898caa35dde6e94891ee14a7caad14a5a39c4df05e6",
     "services/campaign-platform/verify_drive_backup.py": "62f519896d66cbacdf3271d87e4b82e78f7d41ef116e97b156a3105bf094d696",
-    "services/campaign-platform/worker.py": "5210139cda705bdd658adc8baf1a6e0807bdc84f93ffc953e0ec9470156dbfdb",
+    "services/campaign-platform/worker.py": "6324998f3f5691b895573098445d98da1623b8e0f8331f86a7f22d8f0d9f492e",
     "services/campaign-platform/youtube_upload.py": "a7a0e513d0e607d88f8e87d39b6650224dc342fb5b5bee843ece578fee2c801f",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
@@ -15180,6 +15191,10 @@
       },
       {
         "requirement": "SYS-CI-BROWSER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CAMP-SERVER-001",
         "relationship": "implementation"
       }
     ],
@@ -26221,6 +26236,18 @@
         "relationship": "implementation"
       }
     ],
+    "services/campaign-platform/tiktok.py": [
+      {
+        "requirement": "CAMP-SERVER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "services/campaign-platform/tiktok_token.py": [
+      {
+        "requirement": "CAMP-SERVER-001",
+        "relationship": "implementation"
+      }
+    ],
     "services/campaign-platform/ui/app.js": [
       {
         "requirement": "CAMP-SERVER-001",
@@ -26246,6 +26273,12 @@
       }
     ],
     "services/campaign-platform/ui/tdf-logo.svg": [
+      {
+        "requirement": "CAMP-SERVER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "services/campaign-platform/ui/tiktok.js": [
       {
         "requirement": "CAMP-SERVER-001",
         "relationship": "implementation"
@@ -26298,6 +26331,18 @@
         "requirement": "CAMP-SERVER-001",
         "relationship": "tests"
       }
+    ],
+    "services/campaign-platform/tests/test_tiktok.py": [
+      {
+        "requirement": "CAMP-SERVER-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/campaign-tiktok-ui.test.mjs": [
+      {
+        "requirement": "CAMP-SERVER-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -26328,7 +26373,7 @@
     {
       "id": "SURFACE-1b60139feb4d9fb0",
       "path": ".github/workflows/campaign-platform.yml",
-      "sha256": "0afa7b1525456426a5e9c732af89592248af7d8d1e03cd739d0a265776d348fb",
+      "sha256": "ee39e82787a587a79eccd8f69cb74cbd5d389430674c2930d571eaee08b2e008",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27531,6 +27576,18 @@
       "sha256": "9929ea8be38bf021fa6b9b90b672958a9c0a052f0be30444d972d5e94ba16bcd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-f351982a52e6f37a",
+      "path": "scripts/__tests__/campaign-tiktok-ui.test.mjs",
+      "sha256": "1592e44f7bd1c12fd5ced8148baa0d2fd16e419acb46eb3aff8bdc6255683d2f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "CAMP-SERVER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-d41c5a6a64677381",
@@ -30235,7 +30292,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "8e167b6a04ebeeef2d6a3b4a8782f08bea04baf96448f62f17c007bf66091d15",
+      "sha256": "85f1846038dd659ed99ac85058ecb0d1f0707fd95f819cadb397e2e39b437f68",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30284,6 +30341,10 @@
         },
         {
           "requirement": "SYS-CI-BROWSER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "CAMP-SERVER-001",
           "relationship": "implementation"
         }
       ]
@@ -33282,7 +33343,7 @@
     {
       "id": "SURFACE-bf7873f7b8d0b162",
       "path": "services/campaign-platform/deploy.py",
-      "sha256": "a4106b3b8698f1967b7b894eef393a9e4d41e3ec5af691e5a9e0a1a0849ded4a",
+      "sha256": "61b7066ca402a2c9277ec85335b5920ebebc30a27781b56b4a6f63739e18b366",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33294,7 +33355,7 @@
     {
       "id": "SURFACE-4d817f76014e9965",
       "path": "services/campaign-platform/domain.py",
-      "sha256": "84cb1424a5203445253c7447df084cfc0c6dbac7c4572ed8139da00c4cc03abf",
+      "sha256": "fcbc5b19bce6fdcaa61dfcb08ab983c3471f3eb26e3b3a163955cec8240fbbcf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33418,7 +33479,7 @@
     {
       "id": "SURFACE-dd915c4b36f5a11e",
       "path": "services/campaign-platform/providers.py",
-      "sha256": "dba38baaff7dc243c8c475d398d7f3fc91250f5c6fa8d6d28febdc4a1d4b0b31",
+      "sha256": "0341fdda3db354c373451803ae1eae7373f7b4748a9334d09a288bd75e9f22d1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33454,7 +33515,7 @@
     {
       "id": "SURFACE-a81a32947bfdf9ef",
       "path": "services/campaign-platform/schema.sql",
-      "sha256": "99b692a9ee5445cb00d82d968b5558b261b97a8794ccbcdefabfd388860502bf",
+      "sha256": "966f5881fb8807373b3800f0392dff6c283ed787c53b7ab4da7aea9a4d68703d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33466,7 +33527,7 @@
     {
       "id": "SURFACE-046f5b5bc5783c06",
       "path": "services/campaign-platform/server.py",
-      "sha256": "539e17e98c79f4ecc47f9e4224c78fb9dd85e647d699564060a35d86cbf9e812",
+      "sha256": "df1c7b8902c72d05fbcc3afae0bc593f7422c9cda56bb227321643e92562f188",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33622,7 +33683,7 @@
     {
       "id": "SURFACE-682ec32ac659d8cb",
       "path": "services/campaign-platform/tests/test_http.py",
-      "sha256": "d39f92aeac9a9111b53dc8eeeffea182bfbd35bf253e74c9f4342febbce896e5",
+      "sha256": "0b0df9d992a48f30d37f045c96ab0a764aea096e17c08c453cda977baa78bd6a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33632,9 +33693,45 @@
       ]
     },
     {
+      "id": "SURFACE-bfa885cfbaf8b851",
+      "path": "services/campaign-platform/tests/test_tiktok.py",
+      "sha256": "17a24c16b2a5e9195f6ca20c641795390af10e2e357bc719b2fb97461f101a17",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "CAMP-SERVER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-9a16e9f2b660bf49",
+      "path": "services/campaign-platform/tiktok.py",
+      "sha256": "102978cd2f110c205f06b59f83e252d2aafc9e57290ce15a39c14faeceda9c6d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "CAMP-SERVER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-dbce437071d03bba",
+      "path": "services/campaign-platform/tiktok_token.py",
+      "sha256": "7fdc81f84cf5577ccba3c62e434821bc9b062fb3b6e0517ba3331ac958734e3c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "CAMP-SERVER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-39b88f2b72e34e12",
       "path": "services/campaign-platform/ui/app.js",
-      "sha256": "fb347d1fe812d43d9ef16cd497c62de221a859ca415ec41fb6056a1aac3cd79b",
+      "sha256": "859f877be53e813f0f78f475a2f909e99199c2752f1ad98c53ddf8c683576e94",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33646,7 +33743,7 @@
     {
       "id": "SURFACE-3921e200531965a2",
       "path": "services/campaign-platform/ui/index.html",
-      "sha256": "0de259ce103a8df0ac13e2cc346ecb9ce88cc8d749ef651a63d67697187bf7db",
+      "sha256": "6a8832b2c47a8752e94990578477727d5c570b87fcc1ed38b2fa8901ed9f57dc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33658,7 +33755,7 @@
     {
       "id": "SURFACE-28072cb5d8ec61ba",
       "path": "services/campaign-platform/ui/style.css",
-      "sha256": "6cad8291175503191933c9e25118cae0011aeeace5f7bef5d9045dc820c13cce",
+      "sha256": "928cb0ef766273fed6c7010216d955d2a1f6b2d2bfd1fc269e75488819ebea07",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33692,6 +33789,18 @@
       ]
     },
     {
+      "id": "SURFACE-0988cfc5d5669fc0",
+      "path": "services/campaign-platform/ui/tiktok.js",
+      "sha256": "86618007e3b34fb024388898caa35dde6e94891ee14a7caad14a5a39c4df05e6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "CAMP-SERVER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-cec7709e0bd0d7c4",
       "path": "services/campaign-platform/verify_drive_backup.py",
       "sha256": "62f519896d66cbacdf3271d87e4b82e78f7d41ef116e97b156a3105bf094d696",
@@ -33706,7 +33815,7 @@
     {
       "id": "SURFACE-eabde3f755919b20",
       "path": "services/campaign-platform/worker.py",
-      "sha256": "5210139cda705bdd658adc8baf1a6e0807bdc84f93ffc953e0ec9470156dbfdb",
+      "sha256": "6324998f3f5691b895573098445d98da1623b8e0f8331f86a7f22d8f0d9f492e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56773,7 +56882,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "2583a98684bb2987a6e380f66c2f5aede088db61513a49376e70b4b3e17de711",
+      "sourceSha256": "df7701df1b0df1ec5fbddbfeb5f72066eeb3f061a64b85c647e0df24ef2e8fec",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -56801,7 +56910,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "2583a98684bb2987a6e380f66c2f5aede088db61513a49376e70b4b3e17de711",
+      "sourceSha256": "df7701df1b0df1ec5fbddbfeb5f72066eeb3f061a64b85c647e0df24ef2e8fec",
       "definition": {
         "states": [
           "absent",
@@ -56831,7 +56940,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "2583a98684bb2987a6e380f66c2f5aede088db61513a49376e70b4b3e17de711",
+      "sourceSha256": "df7701df1b0df1ec5fbddbfeb5f72066eeb3f061a64b85c647e0df24ef2e8fec",
       "definition": {
         "export": [
           "queued",

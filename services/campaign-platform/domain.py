@@ -94,10 +94,14 @@ class Store:
    if pid:
     old=d.execute('SELECT * FROM pieces WHERE id=? AND campaign=?',(pid,cid)).fetchone()
     if not old:raise Denied('Pieza no encontrada.',404)
-    if old['status'] in ('publishing','processing','published','unknown'):raise Denied('La pieza ya tiene un efecto externo; requiere una acción de edición independiente.',409)
+    if old['status'] in ('publishing','processing','published','published_restricted','unknown'):raise Denied('La pieza ya tiene un efecto externo; requiere una acción de edición independiente.',409)
     d.execute('UPDATE pieces SET name=?,platform=?,format=?,account=?,copy=?,asset=?,destination=?,due_at=?,late_seconds=?,recipient=?,settings=?,version=version+1,approved_version=NULL,tdf_approval_version=NULL,dm_approval_version=NULL,status="draft" WHERE id=?',values+(pid,));d.execute('UPDATE jobs SET state="cancelled" WHERE piece=? AND state="queued"',(pid,))
    else:
     pid=uid();d.execute('INSERT INTO pieces(name,platform,format,account,copy,asset,destination,due_at,late_seconds,recipient,settings,id,campaign,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',values+(pid,cid,time.time()))
+   if data['platform']=='tiktok':
+    from tiktok import bind_piece_consent
+    current_version=d.execute('SELECT version FROM pieces WHERE id=?',(pid,)).fetchone()[0]
+    bind_piece_consent(d,actor,cid,pid,current_version,settings)
    d.execute('UPDATE campaigns SET version=version+1,approved_version=NULL,updated_at=? WHERE id=?',(time.time(),cid));self.audit(d,actor['id'],'piece.edit',cid,pid)
   return pid
  def approve(self,actor,cid,data):
@@ -165,7 +169,7 @@ class Store:
     if j['kind'] in ('publish','verify_facebook'):
      d.execute('UPDATE jobs SET state="unknown",error="worker_interrupted_after_claim" WHERE id=?',(j['id'],));d.execute('UPDATE pieces SET status="unknown" WHERE id=?',(j['piece'],))
     else:d.execute('UPDATE jobs SET state="queued" WHERE id=?',(j['id'],))
-   j=d.execute('SELECT j.* FROM jobs j LEFT JOIN campaigns c ON c.id=j.campaign WHERE j.state="queued" AND j.due_at<=? AND ((j.kind="heartbeat" OR j.kind="metrics" OR j.kind LIKE "metrics_%") OR (j.kind IN ("verify_youtube","verify_facebook") AND c.status="active") OR (j.kind IN ("render","plan") AND c.status IN ("draft","approved","paused","active")) OR (j.kind="publish" AND c.status="active")) ORDER BY j.due_at LIMIT 1',(now,)).fetchone()
+   j=d.execute('SELECT j.* FROM jobs j LEFT JOIN campaigns c ON c.id=j.campaign WHERE j.state="queued" AND j.due_at<=? AND ((j.kind="heartbeat" OR j.kind="metrics" OR j.kind LIKE "metrics_%") OR (j.kind IN ("verify_youtube","verify_facebook","verify_tiktok") AND c.status="active") OR (j.kind IN ("render","plan") AND c.status IN ("draft","approved","paused","active")) OR (j.kind="publish" AND c.status="active")) ORDER BY j.due_at LIMIT 1',(now,)).fetchone()
    if not j:return None
    d.execute('UPDATE jobs SET state="running",claimed_at=?,attempts=attempts+1 WHERE id=?',(now,j['id']));return dict(j)
  def execution_guard(self,d,p,now=None):
