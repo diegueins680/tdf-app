@@ -1,0 +1,159 @@
+{
+  "at": "2026-10-29T18:17:03.382011+00:00",
+  "scope": "Local source integration of the campaign platform with protected main. Existing live runtime and recovery evidence retain their original execution identity.",
+  "qualified_source_commit": "ab31ec0145dc6ef083a8e3c90ebf31c7e791910e",
+  "main_base": "6197b87326a437350dca239ee64902e78da6964c",
+  "previous_campaign_head": "bc234b2f2609c5dbabbb80cb061e63876f74a9e7",
+  "merge_parents": [
+    "bc234b2f2609c5dbabbb80cb061e63876f74a9e7",
+    "6197b87326a437350dca239ee64902e78da6964c"
+  ],
+  "preservation": {
+    "result": "PASS",
+    "head": "ab31ec0145dc6ef083a8e3c90ebf31c7e791910e",
+    "main": "6197b87326a437350dca239ee64902e78da6964c",
+    "previous_campaign": "bc234b2f2609c5dbabbb80cb061e63876f74a9e7",
+    "merge_parents": [
+      "bc234b2f2609c5dbabbb80cb061e63876f74a9e7",
+      "6197b87326a437350dca239ee64902e78da6964c"
+    ],
+    "main_requirements_preserved": 156,
+    "own_requirement_preserved": true,
+    "incoming_only_files_unchanged": true,
+    "historical_decisions_unchanged": true,
+    "deployed_campaign_runtime_unchanged": true,
+    "mobile_revision_unchanged": true,
+    "scope": "Git source/traceability composition only. Earlier runtime and recovery executions retain their original identities."
+  },
+  "registered_source_manifest": {
+    "files": 855,
+    "sha256": "ed9273f9e3d9e0167ca774823dd59ee662fc53e1d0ad9a7a5899f6b3fe1b0c02",
+    "working_files_equal_committed_blobs": true
+  },
+  "validation": {
+    "web": {
+      "tests": 3670,
+      "suites": 318,
+      "result": "PASS",
+      "testomatio_external_reporting": "disabled"
+    },
+    "build": {
+      "result": "PASS",
+      "initial_js_gzip_bytes": 337667,
+      "preloads": 5
+    },
+    "lint": "PASS",
+    "campaign_service_tests": {
+      "tests": 61,
+      "result": "PASS"
+    },
+    "bounded_dispatch_model": {
+      "result": "PASS",
+      "positive": {
+        "states": 1024,
+        "violations": []
+      },
+      "negative_controls": {
+        "ignore_owner": {
+          "states": 1024,
+          "violations": [
+            "cross_tenant"
+          ]
+        },
+        "ignore_approval": {
+          "states": 1024,
+          "violations": [
+            "stale_approval"
+          ]
+        },
+        "retry_unknown": {
+          "states": 1024,
+          "violations": [
+            "uncertain_replay"
+          ]
+        }
+      },
+      "scope": "Finite abstract dispatch admission only; SQLite interleavings, OAuth and real providers verified separately."
+    },
+    "catalog_regression_tests": {
+      "tests": 8,
+      "result": "PASS"
+    },
+    "repository_quality": {
+      "result": "PASS",
+      "explicit_platform_skips": 11
+    },
+    "specification_inventory": "PASS",
+    "specification_conformance": "PASS",
+    "committed_source_admission": {
+      "result": "PASS",
+      "base": "6197b87326a437350dca239ee64902e78da6964c",
+      "head": "ab31ec0145dc6ef083a8e3c90ebf31c7e791910e",
+      "mapped_changed_surfaces": 48
+    }
+  },
+  "unchanged_executions": {
+    "mobile_revision": "f7d2e5a3eb599adeb16b096c60649116f495bb31",
+    "mobile": "Source unchanged; earlier 653 tests / 98 suites execution retains its original identity.",
+    "deployed_campaign_release": "45a3c4eaaed5baf32dcb",
+    "campaign_runtime_source": "Unchanged from previous qualified/deployed service. No new deployment or service restart in this integration.",
+    "core_backend": "Haskell runtime, production PostgreSQL and migration ledger unchanged; no new full compiled-backend qualification claimed.",
+    "recovery": "See campaign-platform-drive-2026-10-29.json. Previous full and incremental private Drive restore receipts retain their source identity."
+  },
+  "campaign_observation": {
+    "observed_at": 1793297524.3105433,
+    "not_T24_checkpoint": true,
+    "public_statistics": {
+      "viewCount": "147",
+      "likeCount": "17",
+      "commentCount": "9"
+    },
+    "analytics_status": "pending",
+    "watch_time": null,
+    "attributed_subscribers": null,
+    "attribution": "No causal promotional attribution; recent Analytics rows remain pending."
+  },
+  "collaborations": {
+    "at": "2026-10-29T18:09:35.858Z",
+    "video_id": "uRNyIMLiqU8",
+    "collaborators": [
+      {
+        "handle": "@rojito639",
+        "display": "Andrés Martín",
+        "state": "invitation_pending_acceptance"
+      },
+      {
+        "handle": "@rojo3438",
+        "display": "Roj(o)",
+        "state": "invitation_pending_acceptance"
+      }
+    ],
+    "native_dialog_observed": true,
+    "changes_saved": false,
+    "invitations_resent": false,
+    "scope": "Same two previously verified native invitations, read only. Prior delivery remains recorded; acceptance is not active."
+  },
+  "remaining": [
+    "Fresh hosted combined-source checks and independent review through normal ordered integration; no protected merge or frontend rollout performed.",
+    "Facebook Page choice and final native consent pending; application external-user reviews and TikTok configuration/audit remain prerequisites."
+  ],
+  "qualification_notes": [
+    "Only three generated artifacts conflicted; they were canonically regenerated without editing historical review decisions.",
+    "Raw incoming main evidence contains pre-existing whitespace diagnostics; historical bytes were preserved. The complete campaign delta against actual main passes git diff --check."
+  ],
+  "evidence_sha256": {
+    "web-tests.log": "3618778d00accb01d0ae4a20812679c4b7abc133ee454ddf47060fa224817c88",
+    "web-build.log": "a62e14c40ee031917c213c5e8df8a0c7001aa6beffee9d46b28690d705477b24",
+    "web-lint.log": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+    "service-tests.log": "0522816448046759a7ad082039b8d51a2d3ebbc3714044a19df0d44258348deb",
+    "repository-quality.log": "45c9ba5f2123ba1248de73e958cdc117ad30df7e70671c2804afd4439e557d09",
+    "catalog-regressions.log": "8ed4c5dc11a413fd583ab431b3a681ca4d9c01a834c20fd74654f34439aca3d2",
+    "source-manifest.json": "a5e053cab02c0fdf9b1a7a4d5815711951fe9db96e1577e3b82fec79f4af104e",
+    "preservation.json": "7e2fb12adf8a5cdd76ec7808a2b1e71b4548aaccdeecf7296044c1c781903a37",
+    "source-admission.json": "709d377cd8ae65ff8e8dbefc39fb7af3cecb7f4084de09c81bab31e546ab5983",
+    "youtube-observation.json": "5c20747ce2a5084f8de88e65a4872c8521bdba1cc35005b8deb96101d121e1b0",
+    "collaboration-readback.json": "dbf22de890bc28a406612980a23031c79b8206a1465d5fc5ca03f02efbc89377"
+  },
+  "no_spend": true,
+  "new_publications_or_third_party_messages": 0
+}
