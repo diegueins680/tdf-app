@@ -1,3 +1,4 @@
+import { buildArtistPublicPath } from '../utils/artistIdentity';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { EventMemoryModerationPanel } from '../components/events/EventMemoryModeration';
 import { useEffect, useRef, useState } from 'react';
@@ -374,8 +375,8 @@ export default function SocialEventDetailPage() {
                 {event.eventArtists.length > 0 && <>
                   <Typography component="h2" variant="h6">Artistas participantes</Typography>
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {event.eventArtists.map((artist, index) => artist.artistPartyId && /^[1-9][0-9]*$/.test(artist.artistPartyId)
-                      ? <Button key={artist.artistId ?? index} component={RouterLink} to={`/artista/${encodeURIComponent(artist.artistPartyId)}`} variant="outlined">{artist.artistName}</Button>
+                    {event.eventArtists.map((artist, index) => buildArtistPublicPath(artist.artistPartyId)
+                      ? <Button key={artist.artistId ?? index} component={RouterLink} to={buildArtistPublicPath(artist.artistPartyId)!} variant="outlined">{artist.artistName}</Button>
                       : <Chip key={artist.artistId ?? index} label={artist.artistName} />)}
                   </Stack>
                   <Typography variant="caption" color="text.secondary">Visita sus perfiles para descubrir su música y decidir a quién seguir.</Typography>

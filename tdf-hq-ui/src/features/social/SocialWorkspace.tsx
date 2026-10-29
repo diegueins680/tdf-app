@@ -1,3 +1,4 @@
+import { buildArtistPublicPath } from '../../utils/artistIdentity';
 import { useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, Button, Card, Checkbox, FormControlLabel, Stack, Tab, Tabs, Typography } from '@mui/material';
@@ -97,7 +98,7 @@ export default function SocialWorkspace() {
           {new Date(post.publishedAt).toLocaleString('es-EC')}
         </Typography>
         <Typography>{post.authorName}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{post.content}</Typography>
-        <Button component={Link} to={`/artista/${post.artistId}`}>Ver artista</Button>
+        <Button component={Link} to={buildArtistPublicPath(post.artistId) ?? '/fans'}>Ver artista</Button>
       </Card>)}
       {feed.hasNextPage && <Button disabled={feed.isFetchingNextPage} onClick={() => { void feed.fetchNextPage(); }}>Ver más</Button>}
     </Stack>}
