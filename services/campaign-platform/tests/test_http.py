@@ -48,6 +48,10 @@ class HttpBoundaryTests(unittest.TestCase):
  def test_unapproved_work_not_scheduled(self):
   cid=self.create();self.assertEqual(self.req('/campaigns/'+cid+'/status',{'status':'active'})[0],409)
  def test_javascript_destination_refused(self):self.assertEqual(self.req('/campaigns',{'name':'X','objective':'X','destination':'javascript:alert(1)'})[0],400)
+ def test_backup_controls_require_current_admin_authority(self):
+  self.assertEqual(self.req('/backups')[0],403)
+  for path in ('/backups/key','/backups/key/challenge','/backups/key/confirm','/backups/enable','/backups/run'):
+   self.assertEqual(self.req(path,{})[0],403)
  def test_delete_original_requires_owner_and_explicit_confirmation(self):
   cid=self.create();aid=json.loads(self.req('/campaigns/'+cid+'/uploads',{'name':'original.mp4','size':3,'original':True})[1])['id'];self.req('/uploads/'+aid,method='PUT',raw=b'abc',headers={'Upload-Offset':'0'})
   self.assertEqual(self.req('/assets/'+aid,{},method='DELETE',who='user2')[0],404)

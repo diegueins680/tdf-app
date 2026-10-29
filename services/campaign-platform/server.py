@@ -89,6 +89,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
    return self.send_asset(a)
   actor=self.actor(method not in ('GET','HEAD'))
   if path=='/session' and method=='GET':self.respond(200,{'user':actor,'usage':s.stats(actor),'accounts':s.account_list(actor),'capabilities':self.server.providers.capabilities()});return
+  if path.startswith('/backups'):
+   import backup_control as backup
+   if path=='/backups' and method=='GET':self.respond(200,backup.status(s,actor));return
+   if method=='POST':
+    data=self.read_json()
+    if path=='/backups/key':self.respond(200,backup.generate_key(s,actor,data));return
+    if path=='/backups/key/challenge':self.respond(200,backup.key_challenge(s,actor));return
+    if path=='/backups/key/confirm':backup.confirm_key(s,actor,data);self.respond(200,{'confirmed':True});return
+    if path=='/backups/enable':self.respond(200,backup.enable(s,self.server.providers,actor,data));return
+    if path=='/backups/disable':backup.disable(s,actor);self.respond(200,{'disabled':True});return
+    if path=='/backups/run':self.respond(201,{'request':backup.queue(s,actor)});return
+   raise Denied('Ruta no encontrada.',404)
   if path=='/tdf/review':
    if method=='GET':
     rows=s.tdf_review(actor)

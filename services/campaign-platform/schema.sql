@@ -15,3 +15,6 @@ CREATE TABLE IF NOT EXISTS usage(owner INTEGER NOT NULL, month TEXT NOT NULL, re
 CREATE TABLE IF NOT EXISTS heartbeat(name TEXT PRIMARY KEY, at REAL NOT NULL, details TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS imports(key TEXT PRIMARY KEY, imported_at REAL NOT NULL, digest TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS provider_sessions(piece TEXT PRIMARY KEY REFERENCES pieces(id), payload TEXT NOT NULL, updated_at REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS backup_settings(id INTEGER PRIMARY KEY CHECK(id=1),owner INTEGER NOT NULL REFERENCES users(id),account TEXT REFERENCES accounts(id),folder_id TEXT,public_key TEXT,fingerprint TEXT,key_confirmed_at REAL,enabled INTEGER NOT NULL DEFAULT 0,last_completed_at REAL,challenge TEXT,challenge_expires_at REAL);
+CREATE TABLE IF NOT EXISTS backup_objects(id TEXT PRIMARY KEY,account TEXT NOT NULL REFERENCES accounts(id),folder_id TEXT NOT NULL,source_sha256 TEXT NOT NULL,source_size INTEGER NOT NULL,recipient TEXT NOT NULL,cipher_size INTEGER NOT NULL DEFAULT 0,upload_state TEXT,remote_id TEXT,verified_at REAL,updated_at REAL NOT NULL,UNIQUE(account,folder_id,source_sha256,source_size,recipient));
+CREATE TABLE IF NOT EXISTS backup_requests(id TEXT PRIMARY KEY,owner INTEGER NOT NULL,requested_at REAL NOT NULL,state TEXT NOT NULL DEFAULT 'queued',started_at REAL,finished_at REAL,error TEXT,manifest_id TEXT);

@@ -81,6 +81,14 @@ class CampaignTests(unittest.TestCase):
    def publish(*args):raise ProviderError('timeout',True)
   run_one(self.store,P(),lambda a:'');self.assertIsNone(self.store.claim())
   with self.store.db() as d:self.assertEqual(d.execute('SELECT status FROM pieces WHERE id=?',(pid,)).fetchone()[0],'unknown')
+ def test_unexpected_publication_error_is_visible_and_not_replayed(self):
+  pid=self.piece();self.approve();self.store.status(self.a,self.cid,'active')
+  class P:
+   def publish(*args):raise RuntimeError('Internal fixture error')
+  run_one(self.store,P(),lambda a:'');self.assertIsNone(self.store.claim())
+  with self.store.db() as d:
+   self.assertEqual(d.execute('SELECT status FROM pieces WHERE id=?',(pid,)).fetchone()[0],'unknown')
+   self.assertTrue(d.execute('SELECT 1 FROM notices WHERE owner=1 AND severity="error"').fetchone())
  def test_encrypted_credentials_not_plaintext(self):
   key=Fernet.generate_key();v=Vault(key);value=v.seal({'access_token':'private-provider-secret'});self.assertNotIn('private-provider-secret',value);self.assertEqual(v.open(value)['access_token'],'private-provider-secret')
  def test_missing_oauth_client_is_explicit_block(self):

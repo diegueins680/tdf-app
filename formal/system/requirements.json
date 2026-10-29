@@ -13308,8 +13308,12 @@
       "implementation": [
         ".github/workflows/campaign-platform.yml",
         "services/campaign-platform/backup.py",
+        "services/campaign-platform/backup_control.py",
+        "services/campaign-platform/backup_crypto.py",
         "services/campaign-platform/deploy.py",
         "services/campaign-platform/domain.py",
+        "services/campaign-platform/drive_backup.py",
+        "services/campaign-platform/facebook.py",
         "services/campaign-platform/graphics.py",
         "services/campaign-platform/import_rojo.py",
         "services/campaign-platform/media.py",
@@ -13322,7 +13326,10 @@
         "services/campaign-platform/requirements.txt",
         "services/campaign-platform/schema.sql",
         "services/campaign-platform/server.py",
+        "services/campaign-platform/stream_backup_object.py",
         "services/campaign-platform/tdf-campaign-api.service",
+        "services/campaign-platform/tdf-campaign-backup-request.service",
+        "services/campaign-platform/tdf-campaign-backup-request.timer",
         "services/campaign-platform/tdf-campaign-backup.service",
         "services/campaign-platform/tdf-campaign-backup.timer",
         "services/campaign-platform/tdf-campaign-monitor.service",
@@ -13333,6 +13340,7 @@
         "services/campaign-platform/ui/style.css",
         "services/campaign-platform/ui/tdf-logo.png",
         "services/campaign-platform/ui/tdf-logo.svg",
+        "services/campaign-platform/verify_drive_backup.py",
         "services/campaign-platform/worker.py",
         "services/campaign-platform/youtube_upload.py",
         "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx",
@@ -13340,8 +13348,8 @@
         "tdf-hq/assets/feature-registry.json",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
-      "verification": "SQLite concurrency, two-actor HTTP boundaries, credential vault and OAuth state tests; bounded model with three negative controls; isolated actual FFmpeg exports; scoped live server observations. No full implementation refinement.",
-      "evidence": "reports/campaign-platform-2026-10-29.json; docs/campaign-platform/operations.md; exact-commit hosted workflow when run",
+      "verification": "SQLite concurrency and multi-actor HTTP boundaries; finite model with three negative controls; real-media exports; authenticated block encryption and resumable-upload protocol tests; actual private Drive upload/resumption and separately recorded recovery verification. Facebook publishing protocol uses controlled mocks, without a connected Page or live publication. No full implementation refinement.",
+      "evidence": "reports/campaign-platform-2026-10-29.json; reports/campaign-platform-drive-2026-10-29.json; docs/campaign-platform/operations.md; exact-commit hosted workflow when run",
       "status": "specified and implemented",
       "critical": true,
       "domain": "CAMP",
@@ -13394,14 +13402,16 @@
         "Private uploads, derived real media, approved supported publications, explicit assisted tasks, durable notifications and measurement checkpoints"
       ],
       "authorization": "Canonical TDF session; owner and per-campaign roles; independent TDF and private-message approvals. Admin alone does not grant blanket private-campaign access.",
-      "privacy": "Provider credentials stay encrypted on server; export and logs omit credentials; media capabilities expire.",
+      "privacy": "Provider credentials stay encrypted on server; export and logs omit credentials; media capabilities expire. Private Drive backup is restricted to its admin custodian, encrypted before upload, with separately held recovery key and owner-only folder.",
       "concurrency": "SQLite immediate transactions serialize local claims/reservations. No distributed exactly-once guarantee across provider boundaries.",
       "idempotency": "Imported existing publications never create new publication jobs. Unique piece/kind jobs preserve identity. Unknown provider effects cannot auto-retry.",
       "failure": "Fail closed on missing credentials, expired dates, quota, unavailable providers or stale authorization; retain uncertain results for review.",
-      "recovery": "Systemd restarts local services. Reconcile uncertain publications. Local snapshot and manifest do not constitute off-host disaster recovery.",
+      "recovery": "Systemd restarts local services; uncertain publications require reconciliation. Independent private Drive backup resumes acknowledged encrypted ranges and commits manifest last; recovery qualification is scoped to captured ready objects, configuration and isolated campaign SQLite. Core PostgreSQL, production failover and incomplete uploads are excluded.",
       "observability": "Versioned audit records, server heartbeat, independent monitor, notifications, per-provider status and metric availability.",
       "tests": [
+        "services/campaign-platform/tests/test_backups.py",
         "services/campaign-platform/tests/test_domain.py",
+        "services/campaign-platform/tests/test_facebook.py",
         "services/campaign-platform/tests/test_http.py",
         "tdf-hq-ui/src/features/featureRegistry.test.ts"
       ],
@@ -13411,12 +13421,12 @@
       "confidence": "Observed finite implementation boundaries and bounded design model; external provider completeness and unbounded refinement not established.",
       "ambiguity": [
         "Google/Meta/TikTok verification and native assisted features remain external prerequisites.",
-        "Push/WhatsApp notifications, complete off-host backup and physical capacity for larger tiers remain pending.",
+        "Push/WhatsApp notifications and physical capacity for larger tiers remain pending. Key replacement, retention deletion and full-host disaster recovery require separate procedures.",
         "Native web route requires normal protected integration; live standalone panel is independently deployed."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local/server scoped checks cover the implementation boundaries; full refinement, universal provider automation, off-host recovery and protected frontend rollout remain unestablished."
+        "reason": "Scoped local/server checks cover authorization and recovery boundaries. Full refinement, unrestricted provider automation, protected frontend rollout and full-host failover remain unestablished."
       }
     }
   ]

@@ -18,6 +18,7 @@ config_file=etc/'config.json';config=json.loads(config_file.read_text()) if conf
 from cryptography.fernet import Fernet
 config.setdefault('ENCRYPTION_KEY',Fernet.generate_key().decode());config.setdefault('MEDIA_KEY',secrets.token_hex(32))
 config.update(STATE_DIR=str(state),PUBLIC_BASE='https://api.tdfrecords.net/campaign-platform',AUTH_URL='https://api.tdfrecords.net/session',BIND='172.21.0.1',PORT=8791,ALLOWED_ORIGINS=['https://api.tdfrecords.net','https://www.tdfrecords.net','https://tdfrecords.net'],FRAME_ORIGINS=['https://www.tdfrecords.net','https://tdfrecords.net'],META_API_VERSION='v23.0',LOGO_PNG=str(root/'tdf-logo.png'))
+config.setdefault('TDF_ACCOUNT_IDS',{'youtube':['UCx9Jpaw_XDrMtIdzWYlU51g'],'instagram':['17841445628242005'],'facebook':[existing['FACEBOOK_MESSAGING_PAGE_ID']] if existing.get('FACEBOOK_MESSAGING_PAGE_ID') else []})
 for name in ('GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','FACEBOOK_APP_ID','FACEBOOK_APP_SECRET','YOUTUBE_API_KEY','SMTP_HOST','SMTP_PORT','SMTP_USERNAME','SMTP_PASSWORD','SMTP_FROM'):
  if existing.get(name):config[name]=existing[name]
 files=sorted(p for p in source.rglob('*') if p.is_file() and '__pycache__' not in str(p));manifest={str(p.relative_to(source)):hashlib.sha256(p.read_bytes()).hexdigest() for p in files};digest=hashlib.sha256(json.dumps(manifest,sort_keys=True).encode()).hexdigest()[:20];config['VERSION']=digest
@@ -30,10 +31,10 @@ subprocess.run([str(root/'venv/bin/python'),'-m','unittest','discover','-s',str(
 previous=None;current=root/'current'
 if current.is_symlink():previous=str(current.resolve())
 next_link=root/'next';next_link.symlink_to(release);os.replace(next_link,current)
-for name in ('tdf-campaign-api.service','tdf-campaign-worker.service','tdf-campaign-backup.service','tdf-campaign-backup.timer','tdf-campaign-monitor.service','tdf-campaign-monitor.timer'):
+for name in ('tdf-campaign-api.service','tdf-campaign-worker.service','tdf-campaign-backup.service','tdf-campaign-backup.timer','tdf-campaign-monitor.service','tdf-campaign-monitor.timer','tdf-campaign-backup-request.service','tdf-campaign-backup-request.timer'):
  pathlib.Path('/etc/systemd/system',name).write_text((release/name).read_text())
 subprocess.run(['systemctl','daemon-reload'],check=True,capture_output=True)
-subprocess.run(['systemctl','enable','--now','tdf-campaign-api.service','tdf-campaign-worker.service','tdf-campaign-backup.timer','tdf-campaign-monitor.timer'],check=True,capture_output=True)
+subprocess.run(['systemctl','enable','--now','tdf-campaign-api.service','tdf-campaign-worker.service','tdf-campaign-backup.timer','tdf-campaign-monitor.timer','tdf-campaign-backup-request.timer'],check=True,capture_output=True)
 if previous and previous!=str(release):
  # Restart only this feature's processes. Uncertain provider effects remain quarantined by the durable job state.
  subprocess.run(['systemctl','restart','tdf-campaign-api.service','tdf-campaign-worker.service'],check=True,capture_output=True)
@@ -49,5 +50,5 @@ if 'handle /campaign-platform/*' not in before:
  reload=subprocess.run(['docker','exec','tdf-production-edge-1','caddy','reload','--config','/etc/caddy/Caddyfile','--adapter','caddyfile'],capture_output=True)
  if reload.returncode:
   caddy.write_text(before);raise RuntimeError('Caddy reload failed; file restored')
-receipt={'release':digest,'previous_release':previous,'manifest':manifest,'api_url':config['PUBLIC_BASE']+'/','source_tests':'passed on server','new_units':['tdf-campaign-api.service','tdf-campaign-worker.service','tdf-campaign-backup.timer','tdf-campaign-monitor.timer'],'note':'New sidecar writer; stop worker, API, backup timer and monitor timer before future coordinated production writer fencing. Pinned host admission policy was not weakened.','at':time.time()}
+receipt={'release':digest,'previous_release':previous,'manifest':manifest,'api_url':config['PUBLIC_BASE']+'/','source_tests':'passed on server','new_units':['tdf-campaign-api.service','tdf-campaign-worker.service','tdf-campaign-backup.timer','tdf-campaign-monitor.timer','tdf-campaign-backup-request.timer'],'note':'New sidecar writer; stop campaign API, worker, both backup services, monitor service and all three campaign timers before future coordinated production writer fencing. Pinned host admission policy was not weakened.','at':time.time()}
 (root/'deployment-receipt.json').write_text(json.dumps(receipt,indent=2));print(json.dumps({k:v for k,v in receipt.items() if k!='manifest'}))

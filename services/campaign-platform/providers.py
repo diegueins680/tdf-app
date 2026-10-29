@@ -15,7 +15,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 def request(url,token=None,data=None,method=None,headers=None):
  """Fixed provider HTTPS endpoints only; never follow credential-bearing redirects."""
  u=urllib.parse.urlsplit(url)
- if u.scheme!='https' or u.hostname not in {'graph.facebook.com','graph.instagram.com','www.googleapis.com','youtubeanalytics.googleapis.com','oauth2.googleapis.com','open.tiktokapis.com'}:raise ProviderError('provider_destination_refused')
+ if u.scheme!='https' or u.hostname not in {'graph.facebook.com','graph.instagram.com','rupload.facebook.com','www.googleapis.com','youtubeanalytics.googleapis.com','oauth2.googleapis.com','open.tiktokapis.com'} or u.username or u.password:raise ProviderError('provider_destination_refused')
  h={'Accept':'application/json',**(headers or {})}
  if token:h['Authorization']='Bearer '+token
  if isinstance(data,dict):data=json.dumps(data).encode();h['Content-Type']='application/json'
@@ -30,18 +30,21 @@ def request(url,token=None,data=None,method=None,headers=None):
 class Providers:
  def __init__(self,store,vault,config):self.store=store;self.vault=vault;self.config=config;self.graph='https://graph.facebook.com/'+config.get('META_API_VERSION','v23.0')
  def capabilities(self):
-  return {'youtube':{'video':'automatic_after_oauth_and_studio_checks','short':'automatic_after_oauth_and_studio_checks','community':'assisted','comment':'automatic_after_oauth','collaboration':'assisted','related_video':'assisted','end_screen':'assisted'},'instagram':{'reel':'automatic_after_oauth','post':'automatic_after_oauth','carousel':'automatic_after_oauth','story':'automatic_if_eligible_without_link_sticker','story_link_sticker':'assisted','message':'assisted_with_separate_approval'},'facebook':{'post':'automatic_after_oauth','video':'assisted','reel':'assisted','story':'assisted','carousel':'assisted','message':'assisted_with_separate_approval'},'tiktok':{'video':'blocked_pending_tiktok_app_configuration_and_audit','photo':'assisted'},'oauth_configured':{p:bool(self.config.get(k)) for p,k in [('youtube','GOOGLE_CLIENT_ID'),('instagram','FACEBOOK_APP_ID'),('facebook','FACEBOOK_APP_ID'),('tiktok','TIKTOK_CLIENT_KEY')]}}
+  return {'youtube':{'video':'automatic_after_oauth_and_studio_checks','short':'automatic_after_oauth_and_studio_checks','community':'assisted','comment':'automatic_after_oauth','collaboration':'assisted','related_video':'assisted','end_screen':'assisted'},'instagram':{'reel':'automatic_after_oauth','post':'automatic_after_oauth','carousel':'automatic_after_oauth','story':'automatic_if_eligible_without_link_sticker','story_link_sticker':'assisted','message':'assisted_with_separate_approval'},'facebook':{'post':'connector_ready_pending_page_authorization_and_live_validation','video':'connector_ready_pending_page_authorization_and_live_validation','reel':'connector_ready_pending_page_authorization_and_live_validation','story':'assisted','carousel':'connector_ready_pending_page_authorization_and_live_validation','message':'assisted_with_separate_approval'},'tiktok':{'video':'blocked_pending_tiktok_app_configuration_and_audit','photo':'assisted'},'oauth_configured':{p:bool(self.config.get(k)) for p,k in [('youtube','GOOGLE_CLIENT_ID'),('instagram','FACEBOOK_APP_ID'),('facebook','FACEBOOK_APP_ID'),('tiktok','TIKTOK_CLIENT_KEY')]}}
+ def known_tdf_identity(self,platform,external_id):
+  return external_id in self.config.get('TDF_ACCOUNT_IDS',{}).get(platform,[])
  def start(self,actor,platform,scope):
-  if platform not in ('youtube','instagram','facebook','tiktok'):raise Denied('Plataforma inválida.')
+  if platform not in ('youtube','instagram','facebook','tiktok','drive'):raise Denied('Plataforma inválida.')
+  if platform=='drive' and (not actor.get('admin') or scope!='tdf'):raise Denied('El respaldo de TDF requiere un administrador y una conexión de TDF.',403)
   if scope=='tdf' and not actor['admin']:raise Denied('Solo un administrador puede conectar canales de TDF.',403)
   if scope not in ('own','tdf'):raise Denied('Ámbito inválido.')
   state=uid()+uid();verifier=base64.urlsafe_b64encode(os.urandom(48)).decode().rstrip('=');redirect=self.config['PUBLIC_BASE']+'/oauth/callback/'+platform
-  conf={'youtube':('https://accounts.google.com/o/oauth2/v2/auth','GOOGLE_CLIENT_ID','https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/yt-analytics.readonly'),'instagram':('https://www.facebook.com/'+self.config.get('META_API_VERSION','v23.0')+'/dialog/oauth','FACEBOOK_APP_ID','pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish,instagram_manage_insights'),'facebook':('https://www.facebook.com/'+self.config.get('META_API_VERSION','v23.0')+'/dialog/oauth','FACEBOOK_APP_ID','pages_show_list,pages_read_engagement,pages_manage_posts'),'tiktok':('https://www.tiktok.com/v2/auth/authorize/','TIKTOK_CLIENT_KEY','user.info.basic,video.publish,video.list')}
+  conf={'youtube':('https://accounts.google.com/o/oauth2/v2/auth','GOOGLE_CLIENT_ID','https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/yt-analytics.readonly'),'drive':('https://accounts.google.com/o/oauth2/v2/auth','GOOGLE_CLIENT_ID','https://www.googleapis.com/auth/drive.file'),'instagram':('https://www.facebook.com/'+self.config.get('META_API_VERSION','v23.0')+'/dialog/oauth','FACEBOOK_APP_ID','pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish,instagram_manage_insights'),'facebook':('https://www.facebook.com/'+self.config.get('META_API_VERSION','v23.0')+'/dialog/oauth','FACEBOOK_APP_ID','pages_show_list,pages_read_engagement,pages_manage_posts'),'tiktok':('https://www.tiktok.com/v2/auth/authorize/','TIKTOK_CLIENT_KEY','user.info.basic,video.publish,video.list')}
   base,key,scopes=conf[platform]
   if not self.config.get(key):raise Denied('Falta configurar la aplicación de '+platform+' en el servidor.',409)
   with self.store.db(True) as d:d.execute('INSERT INTO oauth_states VALUES(?,?,?,?,?,?,0)',(state,actor['id'],platform,scope,self.vault.seal({'verifier':verifier}),time.time()+600))
   q={'client_key' if platform=='tiktok' else 'client_id':self.config[key],'redirect_uri':redirect,'response_type':'code','scope':scopes,'state':state}
-  if platform=='youtube':q.update(access_type='offline',prompt='consent',code_challenge=base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).decode().rstrip('='),code_challenge_method='S256')
+  if platform in ('youtube','drive'):q.update(access_type='offline',prompt='consent',code_challenge=base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).decode().rstrip('='),code_challenge_method='S256')
   return base+'?'+urllib.parse.urlencode(q)
  def callback(self,platform,state,code,actor):
   with self.store.db(True) as d:
@@ -50,25 +53,36 @@ class Providers:
    if row['owner']!=actor['id'] or (row['scope']=='tdf' and not actor.get('admin')):raise Denied('La autorización no pertenece a esta sesión o ya no tienes permiso administrativo.',403)
    d.execute('UPDATE oauth_states SET used=1 WHERE state=?',(state,));row=dict(row)
   redirect=self.config['PUBLIC_BASE']+'/oauth/callback/'+platform
-  if platform=='youtube':
-   body={'client_id':self.config['GOOGLE_CLIENT_ID'],'client_secret':self.config['GOOGLE_CLIENT_SECRET'],'code':code,'redirect_uri':redirect,'grant_type':'authorization_code','code_verifier':self.vault.open(row['verifier'])['verifier']};token,_=request('https://oauth2.googleapis.com/token',data=urllib.parse.urlencode(body).encode(),headers={'Content-Type':'application/x-www-form-urlencoded'});info,_=request('https://www.googleapis.com/youtube/v3/channels?part=id,snippet&mine=true',token['access_token']);candidates=[{'id':i['id'],'handle':i['snippet']['title'],'platform':'youtube','token':token} for i in info.get('items',[])]
+  if platform in ('youtube','drive'):
+   body={'client_id':self.config['GOOGLE_CLIENT_ID'],'client_secret':self.config['GOOGLE_CLIENT_SECRET'],'code':code,'redirect_uri':redirect,'grant_type':'authorization_code','code_verifier':self.vault.open(row['verifier'])['verifier']};token,_=request('https://oauth2.googleapis.com/token',data=urllib.parse.urlencode(body).encode(),headers={'Content-Type':'application/x-www-form-urlencoded'})
+   if platform=='youtube':
+    info,_=request('https://www.googleapis.com/youtube/v3/channels?part=id,snippet&mine=true',token['access_token']);candidates=[{'id':i['id'],'handle':i['snippet']['title'],'platform':'youtube','token':token} for i in info.get('items',[])]
+   else:
+    info,_=request('https://www.googleapis.com/drive/v3/about?fields=user(permissionId,emailAddress,displayName),storageQuota',token['access_token']);user=info.get('user',{});candidates=[{'id':user['permissionId'],'handle':user.get('emailAddress') or user.get('displayName','Google Drive'),'platform':'drive','token':token}] if user.get('permissionId') else []
+    if user.get('emailAddress','').casefold()!=self.config.get('BACKUP_GOOGLE_EMAIL','tdfestudiodegrabacion@gmail.com').casefold():raise Denied('Selecciona la cuenta de Google Drive de TDF configurada para el respaldo.',403)
   elif platform in ('facebook','instagram'):
-   q=urllib.parse.urlencode({'client_id':self.config['FACEBOOK_APP_ID'],'client_secret':self.config['FACEBOOK_APP_SECRET'],'redirect_uri':redirect,'code':code});token,_=request(self.graph+'/oauth/access_token?'+q);info,_=request(self.graph+'/me/accounts?fields=id,name,access_token,instagram_business_account{id,username}',token['access_token']);candidates=[]
+   q=urllib.parse.urlencode({'client_id':self.config['FACEBOOK_APP_ID'],'client_secret':self.config['FACEBOOK_APP_SECRET'],'redirect_uri':redirect,'code':code});token,_=request(self.graph+'/oauth/access_token?'+q);grants,_=request(self.graph+'/me/permissions',token['access_token']);granted=[x['permission'] for x in grants.get('data',[]) if x.get('status')=='granted'];info,_=request(self.graph+'/me/accounts?fields=id,name,access_token,instagram_business_account{id,username}',token['access_token']);candidates=[]
    for page in info.get('data',[]):
     if platform=='facebook':candidates.append({'id':page['id'],'handle':page['name'],'platform':platform,'token':{'access_token':page['access_token']}})
     elif page.get('instagram_business_account'):candidates.append({'id':page['instagram_business_account']['id'],'handle':page['instagram_business_account'].get('username','Instagram'),'platform':platform,'token':{'access_token':page['access_token']}})
+   for candidate in candidates:candidate['permissions']=granted
   else:
    body={'client_key':self.config['TIKTOK_CLIENT_KEY'],'client_secret':self.config['TIKTOK_CLIENT_SECRET'],'code':code,'grant_type':'authorization_code','redirect_uri':redirect};token,_=request('https://open.tiktokapis.com/v2/oauth/token/',data=urllib.parse.urlencode(body).encode(),headers={'Content-Type':'application/x-www-form-urlencoded'});info,_=request('https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name',token['access_token']);u=info['data']['user'];candidates=[{'id':u['open_id'],'handle':u['display_name'],'platform':platform,'token':token}]
-  if not candidates:raise Denied('No se encontró una cuenta elegible administrada por este usuario.',409)
+  if platform!='drive':
+   # Provider grants can include unrelated assets already connected to this app.
+   # A TDF OAuth connection must never turn those assets into shared TDF channels.
+   candidates=[c for c in candidates if self.known_tdf_identity(platform,c['id']) == (row['scope']=='tdf')]
+  if not candidates:raise Denied('No se encontró una cuenta elegible para este ámbito. Los canales de TDF deben figurar en su registro oficial del servidor.',409)
   with self.store.db(True) as d:
    for c in candidates:
+    if self.known_tdf_identity(platform,c['id']) and row['scope']!='tdf':raise Denied('Esta identidad corresponde a un canal oficial de TDF. Debe conectarla un administrador como canal de TDF.',403)
     old=d.execute('SELECT owner,scope FROM accounts WHERE platform=? AND external_id=?',(platform,c['id'])).fetchone()
     if old and (old['owner']!=row['owner'] or old['scope']!=row['scope']):raise Denied('Esta cuenta ya pertenece a otra conexión. Solicita una transferencia administrativa.',409)
     expiry=time.time()+c['token']['expires_in'] if c['token'].get('expires_in') else None
-    d.execute('INSERT INTO accounts(id,owner,platform,external_id,handle,scope,credentials,permissions,expires_at) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(platform,external_id) DO UPDATE SET credentials=excluded.credentials,expires_at=excluded.expires_at,revoked=0,handle=excluded.handle',(uid(),row['owner'],platform,c['id'],c['handle'],row['scope'],self.vault.seal(c['token']),json.dumps(c['token'].get('scope','requested_in_oauth')),expiry));self.store.audit(d,row['owner'],'account.connect',subject=c['id'],details={'platform':platform,'scope':row['scope']})
+    d.execute('INSERT INTO accounts(id,owner,platform,external_id,handle,scope,credentials,permissions,expires_at) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(platform,external_id) DO UPDATE SET credentials=excluded.credentials,permissions=excluded.permissions,expires_at=excluded.expires_at,revoked=0,handle=excluded.handle',(uid(),row['owner'],platform,c['id'],c['handle'],row['scope'],self.vault.seal(c['token']),json.dumps(c.get('permissions',c['token'].get('scope','requested_in_oauth'))),expiry));self.store.audit(d,row['owner'],'account.connect',subject=c['id'],details={'platform':platform,'scope':row['scope']})
  def token(self,account):
   token=self.vault.open(account['credentials'])
-  if account['platform']=='youtube' and token.get('refresh_token'):
+  if account['platform'] in ('youtube','drive') and token.get('refresh_token'):
    # Refresh on the server. Do not require the user's browser to stay open.
    body={'grant_type':'refresh_token','refresh_token':token['refresh_token'],'client_id':self.config['GOOGLE_CLIENT_ID'],'client_secret':self.config['GOOGLE_CLIENT_SECRET']};fresh,_=request('https://oauth2.googleapis.com/token',data=urllib.parse.urlencode(body).encode(),headers={'Content-Type':'application/x-www-form-urlencoded'});token.update(fresh)
    with self.store.db(True) as d:d.execute('UPDATE accounts SET credentials=?,expires_at=? WHERE id=?',(self.vault.seal(token),time.time()+fresh.get('expires_in',3600),account['id']))
@@ -77,8 +91,10 @@ class Providers:
   with self.store.db() as d:
    current=d.execute('SELECT * FROM pieces WHERE id=?',(p['id'],)).fetchone()
    if not current or current['version']!=p['version']:raise Denied('La pieza cambió durante el procesamiento.',409)
-   self.store.execution_guard(d,current)
+   account=self.store.execution_guard(d,current)
+   if self.known_tdf_identity(account['platform'],account['external_id']) and account['scope']!='tdf':raise Denied('Un canal oficial de TDF requiere su conexión y aprobación administrativa.',403)
  def publish(self,p,a,media_url=None):
+  self.effect_guard(p)
   settings=json.loads(p['settings']);token=self.token(a);platform=p['platform']
   if platform=='instagram':
    if p['format'] not in ('reel','post','carousel','story') or (p['format']=='story' and p['destination']):raise Denied('Esta pieza requiere publicación asistida para conservar su enlace o función nativa.',409)
@@ -113,10 +129,9 @@ class Providers:
   if platform=='youtube' and p['format'] in ('video','short'):
    from youtube_upload import upload
    return upload(self,p,a,token)
-  if platform=='facebook' and p['format']=='post':
-   if media_url:raise Denied('Esta integración de Facebook publica texto y enlace. Descarga el archivo para completar la publicación con imagen o video en Meta.',409)
-   self.effect_guard(p)
-   r,_=request(self.graph+'/'+a['external_id']+'/feed',token,{'message':p['copy'],'link':p['destination']});return {'external_id':r['id'],'url':'https://www.facebook.com/'+r['id'],'state':'published'}
+  if platform=='facebook':
+   from facebook import publish
+   return publish(self,p,a,token,media_url)
   if platform=='youtube' and p['format']=='comment':
    video=settings.get('video_id')
    if not video:raise Denied('Selecciona el video de destino.')

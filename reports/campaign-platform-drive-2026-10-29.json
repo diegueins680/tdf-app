@@ -1,0 +1,177 @@
+{
+  "at": "2026-10-29T17:07:24.353722+00:00",
+  "scope": "Continuation of the server campaign platform: private off-host campaign backup and Facebook protocol connectors. No full-host recovery or unrestricted four-provider claim.",
+  "previous_qualification": "reports/campaign-platform-2026-10-29.json",
+  "release": "45a3c4eaaed5baf32dcb",
+  "deployed_source_manifest": {
+    "backup.py": "fbc72e9d0d38e09d7de286d980b3a2983b57ffed2867b00878cb27d3c3db5c83",
+    "backup_control.py": "65f1befe17e659b21b98a308583cf4e601d683a7beb03a108633aa154cba543a",
+    "backup_crypto.py": "4078c9daad93c68cb1c8feaafb42c676b34df89703fa1a792ade66f932679357",
+    "deploy.py": "a4106b3b8698f1967b7b894eef393a9e4d41e3ec5af691e5a9e0a1a0849ded4a",
+    "domain.py": "84cb1424a5203445253c7447df084cfc0c6dbac7c4572ed8139da00c4cc03abf",
+    "drive_backup.py": "db50b9ea20536486d65bf4de1ad176e24480ed21db49d22656a0d6cc3f892763",
+    "facebook.py": "214e97cd12ed03369aba75d777d35cab47aabb17319d78c7e3a62153825abe91",
+    "graphics.py": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
+    "import_rojo.py": "ff1575eca3f2553a2ee9a89b37a3e8443fad838f830f67e4dd5d876be56535c4",
+    "media.py": "0964eacd3e98878b379edc1aa1770acbca7d5cdda61c7feaceaf72db5112112c",
+    "model_check.py": "96aba654ff652f9e0279b96d60a632622037f2d9f4ff05f64855ebbc36d9bcc2",
+    "monitor.py": "58a594f304a9f037eca507a9b9614b9f9ca3b1e6f627afd76ac57570dd165529",
+    "notifications.py": "731a4d446e224b26bd8b1da6061af4220486dee498aae433c44e0a6700038860",
+    "planning.py": "39103469c4e025eff5b5552ab89da959950606efa44071bfcaf7c2cfdfc039fa",
+    "providers.py": "dba38baaff7dc243c8c475d398d7f3fc91250f5c6fa8d6d28febdc4a1d4b0b31",
+    "qualify_media.py": "1c82685fb2e45a3ce10b991876c30a3fdae729c1d8c44df0961d51fd5e3c3d95",
+    "requirements.txt": "47f9d65a21898d47bcdb492a2b2abf5e9a767e738eeaa329151706ed6c950f87",
+    "schema.sql": "99b692a9ee5445cb00d82d968b5558b261b97a8794ccbcdefabfd388860502bf",
+    "server.py": "539e17e98c79f4ecc47f9e4224c78fb9dd85e647d699564060a35d86cbf9e812",
+    "stream_backup_object.py": "4c12c6d15fb8a656e350a341c3840ab08fad59525f277b0f55a4b863c4ed611c",
+    "tdf-campaign-api.service": "c583a4b1fb5da557cfe3d0160b293718acc407980a2a07183375041571ba9bec",
+    "tdf-campaign-backup-request.service": "c7de57347a940bce347d2b09b57af48ce86f9dcd1a77da01fe8baa828b75ea71",
+    "tdf-campaign-backup-request.timer": "c0b20d73362c8138c3b217b2c5d99347b3f19441b0c67c3d76424c86bb8c65e6",
+    "tdf-campaign-backup.service": "467d499ec9c0091c612ec1448dca9c39d5eaffbde3b213fb28d853e3cb0a0ae6",
+    "tdf-campaign-backup.timer": "fd87995d8f61ec2a387ff7b68ae97f8e533bb261f639ebf05e5795fdb21c445d",
+    "tdf-campaign-monitor.service": "d35e2cd2667fc79d1d1deb098b1096b975f11723830d9a7f318376a22eed618c",
+    "tdf-campaign-monitor.timer": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
+    "tdf-campaign-worker.service": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
+    "tests/test_backups.py": "6e707a002138126284d0255aaff2b135ff15499c001db3417503ed4aecf6fe0c",
+    "tests/test_domain.py": "0648f1b3e3c52a5288e0daad7e72a8d757ccbfea081d2e6fab461fc398512e4d",
+    "tests/test_facebook.py": "032f9d24458fa90e9f79e738e35c988f796d59e71cbffcffd0e0276e3cb96f3c",
+    "tests/test_http.py": "d39f92aeac9a9111b53dc8eeeffea182bfbd35bf253e74c9f4342febbce896e5",
+    "ui/app.js": "fb347d1fe812d43d9ef16cd497c62de221a859ca415ec41fb6056a1aac3cd79b",
+    "ui/index.html": "0de259ce103a8df0ac13e2cc346ecb9ce88cc8d749ef651a63d67697187bf7db",
+    "ui/style.css": "6cad8291175503191933c9e25118cae0011aeeace5f7bef5d9045dc820c13cce",
+    "ui/tdf-logo.png": "a0a1c050709ac1630450265e6fc0c5c7aa03f16a3733595c64f7f64c1138d0ce",
+    "ui/tdf-logo.svg": "304000649b977061530239f82214efd2c37fef1db6a14823bb6e6d6ecb9f6092",
+    "verify_drive_backup.py": "62f519896d66cbacdf3271d87e4b82e78f7d41ef116e97b156a3105bf094d696",
+    "worker.py": "5210139cda705bdd658adc8baf1a6e0807bdc84f93ffc953e0ec9470156dbfdb",
+    "youtube_upload.py": "a7a0e513d0e607d88f8e87d39b6650224dc342fb5b5bee843ece578fee2c801f"
+  },
+  "source_matches_local": true,
+  "tests": {
+    "campaign_service": {
+      "tests": 61,
+      "local": "PASS",
+      "on_server": "PASS",
+      "server_deploy_rejects_test_failure": true
+    },
+    "inventory_regressions": 7,
+    "conformance_regressions": 10,
+    "source_admission_regressions": 11,
+    "abstract_model": {
+      "result": "PASS",
+      "positive": {
+        "states": 1024,
+        "violations": []
+      },
+      "negative_controls": {
+        "ignore_owner": {
+          "states": 1024,
+          "violations": [
+            "cross_tenant"
+          ]
+        },
+        "ignore_approval": {
+          "states": 1024,
+          "violations": [
+            "stale_approval"
+          ]
+        },
+        "retry_unknown": {
+          "states": 1024,
+          "violations": [
+            "uncertain_replay"
+          ]
+        }
+      },
+      "scope": "Finite abstract dispatch admission only; SQLite interleavings, OAuth and real providers verified separately."
+    },
+    "unchanged_web_mobile": "Prior web 3670/318 and Mobile 653/98 executions retain their original source identity; no new execution claimed.",
+    "repository_quality": {
+      "result": "PASS",
+      "explicit_platform_skips": 11
+    },
+    "catalog_regressions": {
+      "tests": 8,
+      "result": "PASS"
+    }
+  },
+  "backup": {
+    "destination": "Existing TDF Google Drive, owner-only private folder, no new storage purchase",
+    "oauth_scope": "drive.file",
+    "account_identity_verified": true,
+    "capacity_checked_before_writes": true,
+    "private_key_sent_to_server": false,
+    "recipient_fingerprint": "c09086095a2984fc1be1505f3eda72e162b42efb252709e46b1d46b0555ac498",
+    "request_state": "completed",
+    "completed_at": "2026-10-29T16:59:43.093948+00:00",
+    "verified_encrypted_objects_in_index": 27,
+    "master_source_bytes": 9672941728,
+    "master_cipher_bytes": 9673127006,
+    "master_source_sha256": "b41584f625938a5774803a62697e891179a352c3792248eed1c5b161e76966da",
+    "master_object_count": 1,
+    "controlled_interruption": {
+      "confirmed_bytes_before_resume": 8967421952,
+      "publishing_services_unchanged": true,
+      "same_master_transfer_completed": true
+    },
+    "manifest_committed_last": true,
+    "independent_restore": {
+      "status": "RUNNING; do not interpret as recovery proof"
+    },
+    "executed_release": "5d5fd7a04a1b60918693"
+  },
+  "facebook": {
+    "implemented": [
+      "text_link",
+      "single_photo",
+      "multi_photo_feed",
+      "private_video_upload",
+      "native_reel_upload",
+      "durable_processing_verification",
+      "guarded_final_publication"
+    ],
+    "protocol_and_sqlite_tests": "PASS",
+    "live_page_connection": false,
+    "live_publication_tested": false,
+    "remaining": [
+      "Page authorization and permissions",
+      "real-provider validation",
+      "native assisted Stories and private messages"
+    ],
+    "connection_blocker": "pages_manage_posts enabled for testing after native Invalid Scopes failure. Page selection pending: account shows two TDF Pages; awaiting owner identity choice before final native consent. No Page connection or live publication claimed.",
+    "redirect_settings": "Both campaign Facebook and Instagram callback URIs added and read back in the existing Meta app; prior pages.dev redirect retained. Strict HTTPS/exact URI settings not changed.",
+    "tdf_account_filter": "Only server-registered official identities are imported as shared TDF accounts. Other existing app assets are excluded; personal connections exclude registered TDF identities."
+  },
+  "services": {
+    "tdf-campaign-api": "active",
+    "tdf-campaign-worker": "active",
+    "tdf-campaign-backup.timer": "active",
+    "tdf-campaign-monitor.timer": "active",
+    "tdf-campaign-backup-request.timer": "active"
+  },
+  "pilot": {
+    "status": "active",
+    "version": 4,
+    "next_approved_reel_quito": "2026-10-29T18:30:00-05:00",
+    "previous_publications_and_invitations_not_replayed": true
+  },
+  "remaining": [
+    "Protected web navigation and paired Mobile review/integration",
+    "Google verification for unrestricted users, Meta app/account permissions and TikTok app configuration/audit",
+    "Optional opt-in notification integrations",
+    "Recovery qualification excludes core PostgreSQL, incomplete uploads, reconstructed host and production failover",
+    "Separate key-rotation/retention/index-rebuild procedures before destructive recovery operations",
+    "Physical capacity and cost validation before selling larger tiers"
+  ],
+  "no_spend": true,
+  "new_external_test_posts_or_messages": 0,
+  "evidence_files": {
+    "continuation-all-tests.log": "a31bf0cf69cb3252d643eb943d105c646fdd864de421f67d015b6da5e585ebd1",
+    "continuation-deployed-manifest.json": "429dc94cd898cb2af2f5329a08f41daafe0758616e541ff576d323ce86dd42a6",
+    "drive-completed-readback.json": "d67bf154f2d0074bfd59447434709812bf820a3df743c4a41486ae615cb010d3",
+    "drive-resume-confirmed-offset.json": "f0558e0491168ed7f56f3757f3287caefdf4fa0963ac7a92b865210348a52243",
+    "continuation-final-manifest.json": "e2f268aa111591881f299d39be185d4084510bcbc0f8de657f0796072bae0b00",
+    "continuation-final-tests.log": "e227efec7e2e974dac9f85214da132478d0647c601616c015c819f07a5e80ad6",
+    "continuation-repository-quality.log": "4dd6a34e4a96be64ced9fa2a0f0b5411ea29b944edc3a70710376546d966fdeb",
+    "continuation-catalog-regressions.log": "e9e4f13390dd0195531b63b95e7d3f584f473bf7e75c4f7a7a01b57543ec7bc4"
+  }
+}

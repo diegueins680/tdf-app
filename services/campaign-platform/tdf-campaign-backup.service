@@ -14,3 +14,5 @@ ProtectHome=true
 ReadWritePaths=/var/lib/tdf-campaign-platform
 MemoryMax=160M
 Nice=15
+CPUQuota=40%
+TimeoutStartSec=6h

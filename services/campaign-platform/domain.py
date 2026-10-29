@@ -142,7 +142,7 @@ class Store:
     d.execute('UPDATE jobs SET state="cancelled" WHERE campaign=? AND state="queued"',(cid,));d.execute('UPDATE pieces SET status="cancelled" WHERE campaign=? AND status IN ("draft","approved","blocked")',(cid,))
    self.audit(d,actor['id'],'campaign.'+status,cid)
  def account_list(self,actor):
-  with self.db() as d:return [dict(r) for r in d.execute('SELECT id,platform,external_id,handle,scope,permissions,expires_at,revoked FROM accounts WHERE owner=? OR scope="tdf"',(actor['id'],))]
+  with self.db() as d:return [dict(r) for r in d.execute('SELECT id,platform,external_id,handle,scope,permissions,expires_at,revoked FROM accounts WHERE (owner=? OR scope="tdf") AND (platform!="drive" OR ?)',(actor['id'],int(bool(actor.get('admin')))))]
  def stats(self,actor):
   with self.db() as d:
    u=dict(d.execute('SELECT * FROM users WHERE id=?',(actor['id'],)).fetchone());limit=u['storage_limit'] or PLANS[u['plan']]['storage'];used=d.execute('SELECT coalesce(sum(reserved),0) FROM assets WHERE owner=?',(actor['id'],)).fetchone()[0];return {'plan':u['plan'],'used_bytes':used,'limit_bytes':limit,'plans':PLANS,'prices_status':'propuesta; sin cobros automáticos','notices':[dict(r) for r in d.execute('SELECT * FROM notices WHERE owner=? ORDER BY created_at DESC LIMIT 100',(actor['id'],))]}
@@ -162,10 +162,10 @@ class Store:
   with self.db(True) as d:
    # A crash after the provider boundary is uncertain, never an automatic replay.
    for j in d.execute('SELECT * FROM jobs WHERE state="running" AND claimed_at<?',(now-600,)).fetchall():
-    if j['kind']=='publish':
+    if j['kind'] in ('publish','verify_facebook'):
      d.execute('UPDATE jobs SET state="unknown",error="worker_interrupted_after_claim" WHERE id=?',(j['id'],));d.execute('UPDATE pieces SET status="unknown" WHERE id=?',(j['piece'],))
     else:d.execute('UPDATE jobs SET state="queued" WHERE id=?',(j['id'],))
-   j=d.execute('SELECT j.* FROM jobs j LEFT JOIN campaigns c ON c.id=j.campaign WHERE j.state="queued" AND j.due_at<=? AND ((j.kind="heartbeat" OR j.kind="metrics" OR j.kind LIKE "metrics_%") OR (j.kind="verify_youtube" AND c.status="active") OR (j.kind IN ("render","plan") AND c.status IN ("draft","approved","paused","active")) OR (j.kind="publish" AND c.status="active")) ORDER BY j.due_at LIMIT 1',(now,)).fetchone()
+   j=d.execute('SELECT j.* FROM jobs j LEFT JOIN campaigns c ON c.id=j.campaign WHERE j.state="queued" AND j.due_at<=? AND ((j.kind="heartbeat" OR j.kind="metrics" OR j.kind LIKE "metrics_%") OR (j.kind IN ("verify_youtube","verify_facebook") AND c.status="active") OR (j.kind IN ("render","plan") AND c.status IN ("draft","approved","paused","active")) OR (j.kind="publish" AND c.status="active")) ORDER BY j.due_at LIMIT 1',(now,)).fetchone()
    if not j:return None
    d.execute('UPDATE jobs SET state="running",claimed_at=?,attempts=attempts+1 WHERE id=?',(now,j['id']));return dict(j)
  def execution_guard(self,d,p,now=None):
