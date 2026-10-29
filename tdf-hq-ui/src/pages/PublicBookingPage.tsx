@@ -2138,7 +2138,11 @@ export default function PublicBookingPage() {
                                 </Typography>
                                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                                   {suggestedSlots.map((slot) => (
-                                    <Tooltip key={slot.value} title={slot.helper}>
+                                    <Tooltip
+                                      key={slot.value}
+                                      title={slot.helper}
+                                      slotProps={{ popper: { popperOptions: { strategy: 'fixed' } } }}
+                                    >
                                       <Chip
                                         label={slot.label}
                                         onClick={() => {

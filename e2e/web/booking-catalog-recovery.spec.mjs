@@ -9,7 +9,18 @@ async function measureBookingViewport(page) {
       visualViewport: visualViewport && { width: visualViewport.width, scale: visualViewport.scale } };
     // Mobile innerWidth can grow with overflowing content; clientWidth is the
     // visible content bound, including on a page whose layout viewport grows.
-    return { ...viewport, overflow: viewport.scrollWidth > viewport.clientWidth };
+    const anchor = document.activeElement;
+    const helperText = anchor?.getAttribute('aria-label');
+    const tooltip = [...document.querySelectorAll('[role="tooltip"]')]
+      .find(element => helperText && element.textContent === helperText);
+    const describe = element => {
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, right: rect.right, width: rect.width, height: rect.height,
+        text: element.textContent, placement: element.getAttribute('data-popper-placement') };
+    };
+    return { ...viewport, overflow: viewport.scrollWidth > viewport.clientWidth,
+      devicePixelRatio, scrollY, anchor: describe(anchor), tooltip: describe(tooltip) };
   });
 }
 
@@ -83,6 +94,9 @@ for (const failure of ['error', 'empty']) {
     const initial = new Promise(resolve => { releaseInitial = resolve; });
     const retry = new Promise(resolve => { releaseRetry = resolve; });
     page.on('pageerror', error => errors.push(error.message));
+    // Fix Date only: retry/transition timers still run. Slot availability must
+    // not depend on whether CI happens to execute near studio closing time.
+    await page.clock.setFixedTime(new Date('2026-10-29T03:00:00Z'));
     await page.addInitScript(() => localStorage.setItem('tdf-hq-ui/locale', 'es'));
     await page.route('**/*', async route => {
       const request = route.request(), url = new URL(request.url());
@@ -158,6 +172,28 @@ for (const failure of ['error', 'empty']) {
     await expect(page.getByRole('combobox', { name: /^Servicio\b/ })).toContainText('Grabación de prueba');
     await page.getByRole('button', { name: 'Continuar', exact: true }).click();
     await expect(page.getByLabel(/^Fecha y hora/)).toBeVisible();
+    const slots = page.getByText('Sugerencias rápidas', { exact: true }).locator('..').getByRole('button');
+    expect(await slots.count()).toBeGreaterThanOrEqual(3);
+    const slot = slots.nth(2);
+    // Reach the real control by keyboard, with the pointer away. Focus remains
+    // across resize, so a closing hover tooltip cannot hide the defect.
+    await page.mouse.move(0, 0);
+    // Start at the date field in this step, then follow its real Tab order to
+    // the suggestion; avoid an unrelated tour through the header and footer.
+    const dateInput = page.getByLabel(/^Fecha y hora/);
+    await dateInput.focus();
+    await expect(dateInput).toBeFocused();
+    for (let tabs = 0; tabs < 30; tabs++) {
+      await page.keyboard.press('Tab');
+      if (await slot.evaluate(element => element === document.activeElement)) break;
+    }
+    await expect(slot).toBeFocused();
+    const helperText = await slot.getAttribute('aria-label');
+    expect(helperText).toBeTruthy();
+    const tooltip = page.getByRole('tooltip').filter({ hasText: helperText });
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toHaveText(helperText);
+    await expect(slot).toHaveAccessibleName(helperText);
     await page.setViewportSize({ width: 320, height: 740 });
     // The mobile marker exists at both390 and320px. Bind the measurement to
     // the requested content viewport, without waiting for overflow to vanish.
@@ -174,6 +210,46 @@ for (const failure of ['error', 'empty']) {
     });
     expect(viewportMeasurement.compatMode).toBe('CSS1Compat');
     expect(viewportMeasurement.overflow).toBe(false);
+    // Root overflow has zero tolerance. Overlay edges allow one physical pixel
+    // for Popper's device-pixel rounding, independently of its implementation.
+    const epsilon = 1 / viewportMeasurement.devicePixelRatio;
+    expect(viewportMeasurement.visualViewport.scale).toBeCloseTo(1, 3);
+    expect(viewportMeasurement.tooltip).not.toBeNull();
+    expect(viewportMeasurement.tooltip.text).toBe(helperText);
+    expect(viewportMeasurement.tooltip.x).toBeGreaterThanOrEqual(-epsilon);
+    expect(viewportMeasurement.tooltip.right).toBeLessThanOrEqual(viewportMeasurement.clientWidth + epsilon);
+    await expect(slot).toBeFocused();
+    await expect(slot).toHaveAccessibleName(helperText);
+    // Additional scroll verification follows the immutable initial assertion.
+    // The bounded frame observation never polls overflow until it disappears.
+    const beforeScroll = await measureBookingViewport(page);
+    await page.evaluate(async () => {
+      scrollBy(0, 40);
+      await Promise.race([new Promise(resolve => requestAnimationFrame(resolve)),
+        new Promise(resolve => setTimeout(resolve, 250))]);
+    });
+    const afterScroll = await measureBookingViewport(page);
+    await testInfo.attach('booking-tooltip-scroll', {
+      body: Buffer.from(JSON.stringify({ beforeScroll, afterScroll, epsilon }, null, 2)),
+      contentType: 'application/json',
+    });
+    expect(afterScroll.scrollY - beforeScroll.scrollY).toBeGreaterThan(10);
+    expect(afterScroll.anchor.y - beforeScroll.anchor.y).toBeLessThan(-10);
+    expect(afterScroll.anchor.y).toBeGreaterThanOrEqual(0);
+    expect(afterScroll.anchor.y + afterScroll.anchor.height).toBeLessThan(740);
+    expect(afterScroll.tooltip).not.toBeNull();
+    expect(afterScroll.tooltip.text).toBe(helperText);
+    if (afterScroll.tooltip.placement === beforeScroll.tooltip.placement) {
+      const anchorDelta = afterScroll.anchor.y - beforeScroll.anchor.y;
+      const tooltipDelta = afterScroll.tooltip.y - beforeScroll.tooltip.y;
+      expect(Math.abs(anchorDelta - tooltipDelta)).toBeLessThanOrEqual(epsilon + 0.05);
+    }
+    expect(afterScroll.overflow).toBe(false);
+    expect(afterScroll.visualViewport.scale).toBeCloseTo(1, 3);
+    expect(afterScroll.tooltip.x).toBeGreaterThanOrEqual(-epsilon);
+    expect(afterScroll.tooltip.right).toBeLessThanOrEqual(afterScroll.clientWidth + epsilon);
+    await expect(slot).toBeFocused();
+    await expect(slot).toHaveAccessibleName(helperText);
     expect(errors).toEqual([]);
     expect(writes).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath('booking-catalog-recovered.png'), fullPage: true });
