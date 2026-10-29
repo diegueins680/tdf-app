@@ -75,12 +75,16 @@
       "functions/_middleware.js",
       "functions/_shared/app-smart-link.mjs",
       "functions/_shared/event-preview.mjs",
+      "functions/_shared/event-report-crypto.mjs",
+      "functions/_shared/event-report-data.mjs",
+      "functions/_shared/event-report.mjs",
       "functions/_shared/ticket-page.mjs",
       "functions/descargar.js",
       "functions/download.js",
       "functions/eventos/[eventId].js",
       "functions/eventos/[eventId]/entradas.js",
-      "functions/eventos/[eventId]/orden/[orderId].js"
+      "functions/eventos/[eventId]/orden/[orderId].js",
+      "functions/reportes/eventos/[token].js"
     ],
     "ops": [
       "ops/hetzner/backup-postgres.py",
@@ -139,6 +143,7 @@
       "scripts/__tests__/event-raci-editor-context-runner.test.mjs",
       "scripts/__tests__/event-raci-reassignment-runner.test.mjs",
       "scripts/__tests__/event-raci-web-editor.test.mjs",
+      "scripts/__tests__/event-report-crypto.test.mjs",
       "scripts/__tests__/event-task-completion-client.test.mjs",
       "scripts/__tests__/event-task-completion-runner.test.mjs",
       "scripts/__tests__/event-task-revision-runner.test.mjs",
@@ -147,6 +152,7 @@
       "scripts/__tests__/fixtures/artist-management-claim.sql",
       "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
       "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
+      "scripts/__tests__/fixtures/event-report.mjs",
       "scripts/__tests__/fixtures/production-schema-20260814.sql",
       "scripts/__tests__/fixtures/production-ticketing-base.sql",
       "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
@@ -372,6 +378,7 @@
       "scripts/run-music-release-worker.sh",
       "scripts/run-native-audio-tests.sh",
       "scripts/scan-music-legacy-releases.sh",
+      "scripts/seal-event-report.mjs",
       "scripts/set-loop-github-polling.mjs",
       "scripts/social/ApiContractSpec.hs",
       "scripts/social/ChatSpec.hs",
@@ -3114,7 +3121,7 @@
     {
       "id": "SURFACE-6d25c31944ebbae3",
       "path": "functions/_middleware.js",
-      "sha256": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
+      "sha256": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3127,6 +3134,24 @@
       "id": "SURFACE-48f151ff03188032",
       "path": "functions/_shared/event-preview.mjs",
       "sha256": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3f0b18976213b333",
+      "path": "functions/_shared/event-report-crypto.mjs",
+      "sha256": "8dd9954c2296bb3079c736528458a35bd421bfbf073fe067c4afa4957731638c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fad664812f6bd2b4",
+      "path": "functions/_shared/event-report-data.mjs",
+      "sha256": "ee7e242ebd1b14c26f46041f4e8dd5338c845652b7c5066a4414a890dfd922ca",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-93bd665a68aee2b9",
+      "path": "functions/_shared/event-report.mjs",
+      "sha256": "c586bdc4d476e4e994b8419b82aa6c8e0ceb2287ab88dabd8006d7fd06db175d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3163,6 +3188,12 @@
       "id": "SURFACE-29ec9a025d2c7d61",
       "path": "functions/eventos/[eventId]/orden/[orderId].js",
       "sha256": "4590c38182a6223fe6b8c62f6b329a0aaca66b377a13b6085e5e32dee4cc0de4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-028892e356c1a73b",
+      "path": "functions/reportes/eventos/[token].js",
+      "sha256": "c4145e461e1abd457f3d94c6c993bd3b1516efebe14f4661e94bee41206785c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3438,7 +3469,7 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
+      "sha256": "4b464df800da5e7b0dcfc1b2a045c3d918c7578ea49e608a3d1093ceac58948a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3463,6 +3494,12 @@
       "id": "SURFACE-5b7249f002376b56",
       "path": "scripts/__tests__/event-raci-web-editor.test.mjs",
       "sha256": "44850348b40e60664480e0a8c76f815e27ac3fadbe43e5bde3c785ea987e0f1d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bef1909d5eaebc81",
+      "path": "scripts/__tests__/event-report-crypto.test.mjs",
+      "sha256": "92363873ec7bf9f0567239f2687f790657eaa2801c19e2e5617baefb40642a81",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3511,6 +3548,12 @@
       "id": "SURFACE-4fe5090e4b9e3bea",
       "path": "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
       "sha256": "26b3c6db0d66d9897de3d8759c0093514dfbac749fc77ef54613c1896f15909e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a745a4fac5f5c864",
+      "path": "scripts/__tests__/fixtures/event-report.mjs",
+      "sha256": "3a289551a7c9f95d1811bd50ec60d292be48097a881e61a2895d30dc3043d7b8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4764,7 +4807,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "8e167b6a04ebeeef2d6a3b4a8782f08bea04baf96448f62f17c007bf66091d15",
+      "sha256": "d05677da2c244b2ac3a942f7fc4b521d49da767b2f7e98f16f0fb0c688569632",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4861,6 +4904,12 @@
       "id": "SURFACE-e62b469d42a02d7a",
       "path": "scripts/scan-music-legacy-releases.sh",
       "sha256": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e0cc51e9db9362ef",
+      "path": "scripts/seal-event-report.mjs",
+      "sha256": "2c7087ccb785b9a725a5c1e9e23582236d76a40be28f62e08b0f2124d4fa4764",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20576,6 +20625,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/events/report-link-access.md",
+      "sha256": "ba8211ce8e227bbfd17f5707094758514f8919aba7251c09cc3881cde6c09b09",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/events/ticket-electronic-invoices.md",
       "sha256": "42bd8249b44424d0902c5c2d1782f5d085719e00b87b823d25f37a1b7b473221",
       "authority": "inferred",
@@ -27185,7 +27241,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "3bc84f42151c341af9bbbeb0d83a55a3d1f0a530712b5d19687678fc98260de0",
+      "sha256": "fecc0b746c1c51ed42ce072a0db98042e2b3432cca0c6d0b3925d75c22cfc1c0",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -27843,7 +27899,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "370509c5fcdbb712c771ee57749cc8dd2967899b474e582da30e93411788c359",
+      "sha256": "e63df23ae8566bf8ba464566fe8611dd3c3f6f073489feffe6a6d53cd1eeaddd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

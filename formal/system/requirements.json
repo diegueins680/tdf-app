@@ -13296,6 +13296,82 @@
         "Historical skipped-state reachability under GitHub orchestration is not established."
       ],
       "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
+    },
+    {
+      "id": "EVT-REPORT-LINK-001",
+      "title": "Read-only event closeout accessible by an unguessable link",
+      "domain": "EVT",
+      "statement": "Serve the organizer-authorized PATCH CULTURE provisional financial closeout within the TDF application only to a complete matching capability; preserve its reconciliation qualifications and permit revocation and rotation without exposing accounting records.",
+      "authority": "Direct organizer instruction on 2026-10-27: the URL must be inside the application; implement what is necessary in the repository, continuing the request for Anyone who has the link privacy.",
+      "source": "docs/events/report-link-access.md",
+      "contract": "docs/events/report-link-access.md",
+      "actors": [
+        "Organizer",
+        "Recipient with report capability",
+        "Unauthenticated visitor"
+      ],
+      "preconditions": [
+        "The approved snapshot is deployed as authenticated ciphertext, with its key kept outside the public repository",
+        "A cryptographically random 32-byte capability is delivered separately to the organizer"
+      ],
+      "inputs": [
+        "HTTP method",
+        "Route capability",
+        "Enable binding",
+        "Expected SHA-256 digest binding"
+      ],
+      "state": {
+        "enabled": "Absent or exact true binding",
+        "capability": "SHA-256 digest and AES-256-GCM ciphertext; separately delivered 32-byte raw capability is the key",
+        "content": "Authenticated encrypted provisional snapshot, not a live ledger"
+      },
+      "allowedTransitions": [
+        "Matching canonical capability, successful authenticated decryption and enabled configuration -> GET HTML or empty successful HEAD",
+        "Disable or rotate -> former link denied on next request in that deployment",
+        "Malformed or missing capability -> generic 404"
+      ],
+      "forbiddenTransitions": [
+        "Publish snapshot in static assets or React bundles",
+        "Admit by predictable event ID, name, query string or session alone",
+        "Mutate ledger, payment, event or attendee data",
+        "Render snapshot for a revoked or incorrect capability",
+        "Publish plaintext snapshot or private editorial values in current public source, tests or documentation"
+      ],
+      "effects": [
+        "Read-only HTML response and protective HTTP headers"
+      ],
+      "authorization": "The canonical 256-bit random bearer capability is required at the edge for digest matching and AES-256-GCM authentication/decryption. Digest overrides cannot substitute a new key for resealing.",
+      "privacy": "No client analytics, index/listing, third-party resource, frame, script or referrer. Responses and redirects are no-store. Recipients may retain copies; provider URL logging and historical deployments remain operational boundaries. Earlier public PR revisions disclosed plaintext; this forward correction cannot erase public Git history or recipient copies.",
+      "concurrency": "Each request checks the current deployment configuration; no writes or mutable shared state.",
+      "idempotency": "Repeated reads have no business side effects.",
+      "failure": "Invalid capability/configuration, failed authentication, malformed or corrupted payload -> generic 404; unsupported methods -> 405. Malformed report paths do not fall through to the SPA.",
+      "recovery": "Disable or reseal with a fresh capability and redeploy every serving environment; update any digest override and retire old previews separately.",
+      "observability": "Node Request/Response tests, installed local Pages worker and browser inspection; never log a real token in test output.",
+      "implementation": [
+        "functions/_shared/event-report-data.mjs",
+        "functions/_shared/event-report.mjs",
+        "functions/reportes/eventos/[token].js",
+        "functions/_middleware.js",
+        "functions/_shared/event-report-crypto.mjs",
+        "scripts/seal-event-report.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/event-preview.test.mjs",
+        "scripts/__tests__/event-report-crypto.test.mjs",
+        "scripts/__tests__/fixtures/event-report.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Finite handler and middleware boundary checks; not a cryptographic proof or a proof of all hosting/CDN configurations.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Handler implementation and explicit negative access tests exist; canonical hosted deployment and provider cache/log behavior require release verification."
+      },
+      "property": "No report content is returned without an enabled matching capability; a valid link confers read-only access to the authorized provisional snapshot only.",
+      "verification": "Independent Node/OpenSSL ciphertext fixtures, Worker WebCrypto authentication and malformed-input controls, CLI disclosure checks, actual Request/Response access tests and hosted Pages verification before release.",
+      "evidence": "23 focused local crypto/event/transaction tests pass with fictional fixtures; current encrypted source-bound hosted deployment evidence remains pending."
     }
   ]
 }
