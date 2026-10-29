@@ -221,13 +221,31 @@ for (const failure of ['error', 'empty']) {
     await expect(slot).toBeFocused();
     await expect(slot).toHaveAccessibleName(helperText);
     // Additional scroll verification follows the immutable initial assertion.
-    // The bounded frame observation never polls overflow until it disappears.
-    const beforeScroll = await measureBookingViewport(page);
-    await page.evaluate(async () => {
-      scrollBy(0, 40);
+    // Scroll-event acknowledgment never polls overflow until it disappears.
+    // Reflow can move the focused control below the viewport. Establish the
+    // visible-anchor precondition for this additional scroll check only after
+    // the immutable resize assertion has passed.
+    await slot.evaluate(async element => {
+      element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
       await Promise.race([new Promise(resolve => requestAnimationFrame(resolve)),
         new Promise(resolve => setTimeout(resolve, 250))]);
     });
+    await expect(slot).toBeInViewport({ ratio: 1 });
+    const beforeScroll = await measureBookingViewport(page);
+    await page.evaluate(() => new Promise((resolve, reject) => {
+      // Popper updates from scroll events in a microtask. A frame callback can
+      // run before that event; observe its delivery and the following task.
+      const onScroll = () => {
+        clearTimeout(timeout);
+        setTimeout(resolve, 0);
+      };
+      const timeout = setTimeout(() => {
+        removeEventListener('scroll', onScroll);
+        reject(new Error('Booking tracking fixture did not receive a scroll event'));
+      }, 8000);
+      addEventListener('scroll', onScroll, { once: true, passive: true });
+      scrollBy(0, 40);
+    }));
     const afterScroll = await measureBookingViewport(page);
     await testInfo.attach('booking-tooltip-scroll', {
       body: Buffer.from(JSON.stringify({ beforeScroll, afterScroll, epsilon }, null, 2)),

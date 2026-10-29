@@ -46,13 +46,17 @@ scale0.8864, and the same overflow in all four later samples while focus remains
 This is a persistent keyboard case, separately from the earlier transient hover
 observation. Exact correct source is restored after the controlled mutant build.
 
-After the immutable initial assertion, a separate40px scroll checks actual scroll
-and anchor movement, helper bounds/content/focus and scale. With unchanged Popper
+After the immutable initial assertion, the test places the still-focused anchor
+fully in view. A separate40px scroll then checks actual scroll and anchor
+movement, helper bounds/content/focus and scale. With unchanged Popper
 placement, helper and anchor displacement must agree within the documented
 device-pixel tolerance plus0.05px arithmetic allowance. A legitimate placement
-flip does not imply equal displacement. One animation-frame observation has a
-250ms fallback; this bounds observation scheduling, not browser response time or
-universal convergence. No product overflow is polled until it becomes acceptable.
+flip does not imply equal displacement. Centering uses one animation-frame
+observation with a250ms fallback. The tracking scroll registers a listener before
+scrolling, requires the actual scroll event within8seconds, then measures after
+the following task so Popper's event-driven microtask can update. A frame alone
+can precede delivery of the scroll event in Firefox; it is not a convergence
+contract. No product overflow is polled until it becomes acceptable.
 
 ## Assurance and limitations
 
