@@ -1,10 +1,10 @@
 import { jest } from '@jest/globals';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactNode } from 'react';
 const listPublic = jest.fn(async () => [{ id: 'canonical', artistPartyId: 17, title: 'Published title', slug: 'published',
-  displayArtist: 'Synthetic', kind: 'single', publishedAt: '2026-01-01', coverAssetId: null }]);
+  displayArtist: 'Synthetic', kind: 'single', publishedAt: '2024-01-01', coverAssetId: null }]);
 jest.unstable_mockModule('../api/admin', () => ({ Admin: {
   listArtistProfiles: jest.fn(async () => [{ apArtistId: 17, apDisplayName: 'Synthetic' }]),
 } }));
@@ -21,6 +21,12 @@ it('shows published and legacy releases through the same label catalog without c
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={client}><MemoryRouter><LabelReleasesPage /></MemoryRouter></QueryClientProvider>);
   expect((await screen.findByRole('link', { name: /Published title/ })).getAttribute('href')).toBe('/musica/published');
-  expect(await screen.findByText('Legacy title')).toBeTruthy();
+  const legacyTitle = await screen.findByText('Legacy title');
+  const publishedLink = screen.getByRole('link', { name: /Published title/ });
+  expect(legacyTitle.compareDocumentPosition(publishedLink) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Ordenar' }));
+  fireEvent.click(await screen.findByRole('option', { name: 'Más antiguos' }));
+  await waitFor(() => expect(screen.getByRole('link', { name: /Published title/ })
+    .compareDocumentPosition(screen.getByText('Legacy title')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy());
   client.clear();
 });

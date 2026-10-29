@@ -77,3 +77,12 @@ cancellation, bounded concurrency, exact Party parsing, cache/account scoping,
 and Label rendering of both release sources. Existing profile follow/session,
 Fan Hub, public catalog, event and Social V2 component tests are retained.
 These executable checks do not prove production data correspondence or rights.
+
+Local full-suite verification completed with 325 suites and 3,718 tests passing.
+The package's in-band run first hit Node's roughly 2 GiB heap limit; rerunning the
+same suite with `NODE_OPTIONS=--experimental-vm-modules` and Jest
+`--maxWorkers=2 --workerIdleMemoryLimit=768MB --silent` passed. A subsequent
+focused Label regression checks cross-source newest/oldest ordering in one
+paginated list. TypeScript, changed-source ESLint and the UI production build
+were also run. These local results do not replace current-head hosted checks,
+independent GitHub approval or a production smoke test.

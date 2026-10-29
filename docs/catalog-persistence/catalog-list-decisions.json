@@ -3,8 +3,8 @@
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "reconciliation": {
-    "preservedDecisions": 1176,
-    "reviewedByPolicy": 147,
+    "preservedDecisions": 1207,
+    "reviewedByPolicy": 146,
     "removedStaleDecisions": 0,
     "reviewBatch": "deterministic-policy-v3",
     "consolidatedMainRetirements": {
@@ -19703,6 +19703,28 @@
         "kind": "object-registry",
         "name": "plans",
         "valueCount": 3
+      }
+    },
+    {
+      "id": "44a129d61d3814253c76",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Conflating these source tags could replace a legacy reference with an inferred canonical publication.",
+      "justification": "Individually reviewed discriminants for two existing API response shapes. These are internal source-provenance tags, not artist-selectable business values, editable release kinds, persisted genre values or streaming grants.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "artist-catalog-unification-2026-10-29",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/artistCatalog.ts",
+        "line": 5,
+        "kind": "literal-union",
+        "name": "CatalogSource",
+        "valueCount": 2,
+        "consumerCount": 30,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
       }
     }
   ]

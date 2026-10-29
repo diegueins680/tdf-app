@@ -181,12 +181,8 @@ export default function LabelReleasesPage() {
         .toLowerCase();
       return haystack.includes(term);
     });
-    return [...filtered].sort((a, b) => {
-      if (sortOrder === 'artist') return a.artistName.localeCompare(b.artistName);
-      if (sortOrder === 'oldest') return compareReleaseDateValues(a.arReleaseDate, b.arReleaseDate, 'asc');
-      return compareReleaseDateValues(a.arReleaseDate, b.arReleaseDate, 'desc');
-    });
-  }, [filterArtistId, filterWindow, releases, search, sortOrder]);
+    return filtered;
+  }, [filterArtistId, filterWindow, releases, search]);
 
   const canonicalReleases = useMemo(() => (releasesQuery.data?.canonical ?? []).filter((release) => {
     if (filterArtistId && release.artistPartyId !== filterArtistId) return false;
@@ -194,9 +190,18 @@ export default function LabelReleasesPage() {
     if (filterWindow !== 'all' && (timestamp === null
       || (filterWindow === 'upcoming' ? timestamp < Date.now() : timestamp >= Date.now()))) return false;
     return `${release.title} ${release.displayArtist}`.toLowerCase().includes(search.trim().toLowerCase());
-  }).sort((a, b) => sortOrder === 'artist' ? a.displayArtist.localeCompare(b.displayArtist)
-    : compareReleaseDateValues(a.releaseAtUtc ?? a.publishedAt, b.releaseAtUtc ?? b.publishedAt, sortOrder === 'oldest' ? 'asc' : 'desc')),
-  [filterArtistId, filterWindow, releasesQuery.data, search, sortOrder]);
+  }), [filterArtistId, filterWindow, releasesQuery.data, search]);
+
+  const unifiedReleases = useMemo(() => {
+    const rows = [
+      ...filteredReleases.map((release) => ({ source: 'legacy' as const, release,
+        artist: release.artistName, date: release.arReleaseDate })),
+      ...canonicalReleases.map((release) => ({ source: 'canonical' as const, release,
+        artist: release.displayArtist, date: release.releaseAtUtc ?? release.publishedAt })),
+    ];
+    return rows.sort((a, b) => sortOrder === 'artist' ? a.artist.localeCompare(b.artist)
+      : compareReleaseDateValues(a.date, b.date, sortOrder === 'oldest' ? 'asc' : 'desc'));
+  }, [canonicalReleases, filteredReleases, sortOrder]);
 
   const handleCoverFileChange = (file: File | null) => {
     if (!file) {
@@ -574,11 +579,8 @@ export default function LabelReleasesPage() {
             )}
 
             {releasesQuery.data?.partial && <Alert severity="warning" action={<Button onClick={() => { void releasesQuery.refetch(); }}>Reintentar</Button>}>No pudimos cargar todas las fuentes del catálogo.</Alert>}
-            {canonicalReleases.length > 0 && <Grid container spacing={2}>
-              {canonicalReleases.map((release) => <Grid item key={release.id} xs={12} md={6}><PublishedReleaseCard compact release={release} /></Grid>)}
-            </Grid>}
             <LazyPaginatedList
-              items={filteredReleases}
+              items={unifiedReleases}
               pagination={{
                 itemLabel: 'lanzamientos',
                 initialRowsPerPage: 12,
@@ -586,7 +588,11 @@ export default function LabelReleasesPage() {
               }}
               renderItems={(visibleReleases) => (
                 <Grid container spacing={2}>
-                  {visibleReleases.map((release) => {
+                  {visibleReleases.map((entry) => {
+                    if (entry.source === 'canonical') return <Grid item key={`canonical:${entry.release.id}`} xs={12} md={6}>
+                      <PublishedReleaseCard compact release={entry.release} />
+                    </Grid>;
+                    const release = entry.release;
                     const artworkSources = getReleaseArtworkSources(release, recordsQuery.data?.releases ?? []);
                     const sources = buildReleaseStreamingSources({
                       arReleaseId: release.arReleaseId,
