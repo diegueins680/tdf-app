@@ -94,9 +94,9 @@ requiredCapabilities flow =
 runtimeReady :: Checkout.CheckoutEnvironment -> ProductFlow -> PaymentMethod -> ProviderActivation -> AppM Bool
 runtimeReady environment flow method activation = case paProvider activation of
   Checkout.ProviderDatafast ->
-    ((\configured -> ServiceStorefront.sdfEnvironment configured == environment
+    ((\(configured, _) -> ServiceStorefront.sdfEnvironment configured == environment
         && merchantMatches (ServiceStorefront.sdfEntityId configured))
-      <$> ServiceStorefront.loadServiceDatafastEnv)
+      <$> ServiceStorefront.loadServiceDatafastCheckoutEnv)
       `catchError` const (pure False)
   Checkout.ProviderPayPal -> do
     configured <- ((\(_, _, _, configuredEnvironment, merchantRef) ->

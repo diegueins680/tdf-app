@@ -258,7 +258,7 @@ createMusicDatafastCheckout user orderId idempotencyHeader = do
   idempotencyKey <- requireIdempotencyKey idempotencyHeader
   context <- loadPurchaseContext user orderId
   requirePayable context
-  datafast <- Provider.loadServiceDatafastEnv
+  (datafast, _) <- Provider.loadServiceDatafastCheckoutEnv
   checkout <- checkoutFor context (Provider.sdfEnvironment datafast)
   existing <- providerBinding (purchaseCheckoutId context) "datafast" "checkout"
   case existing of

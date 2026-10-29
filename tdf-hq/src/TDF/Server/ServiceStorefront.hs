@@ -15,6 +15,7 @@ module TDF.Server.ServiceStorefront
   , ServiceDatafastEnv(..)
   , ServiceDatafastPaymentStatus(..)
   , loadServiceDatafastEnv
+  , loadServiceDatafastCheckoutEnv
   , requestDatafastCheckoutForService
   , checkDatafastPaymentStatus
   , validateDatafastSuccessfulPayment
@@ -89,6 +90,7 @@ import           TDF.API.Types (DatafastCheckoutDTO(..), PaypalCreateDTO(..))
 import           TDF.Auth (AuthedUser(..), hasStrictAdminAccess)
 import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.DatafastConfig as DatafastConfig
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
 import qualified TDF.Commerce.ProviderAdapter.Http as ProviderHttp
@@ -366,7 +368,7 @@ createDatafastCheckoutHandler orderIdText mLookupToken = do
           buyerEmail = ME.serviceStorefrontOrderBuyerEmail order
           buyerPhone = ME.serviceStorefrontOrderBuyerPhone order
 
-      dfEnv <- loadServiceDatafastEnv
+      (dfEnv, _) <- loadServiceDatafastCheckoutEnv
       (checkout, attempt) <- beginCanonicalPaymentAttempt
         oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
         Checkout.OperationCreate (sdfEntityId dfEnv) "create"
@@ -2259,6 +2261,15 @@ loadServiceDatafastEnv = do
     , sdfEnvironment = environment
     }
 
+-- Creation additionally needs Dataweb merchant metadata. Status queries keep
+-- using loadServiceDatafastEnv so removing creation metadata cannot block recovery.
+loadServiceDatafastCheckoutEnv :: AppM (ServiceDatafastEnv, [(ByteString, ByteString)])
+loadServiceDatafastCheckoutEnv = do
+  configured <- loadServiceDatafastEnv
+  parameters <- liftIO DatafastConfig.loadDatafastMerchantParameters
+    >>= either (throwError . configurationError) pure
+  pure (configured, parameters)
+
 -- | Request a Datafast checkout session for a service order.
 requestDatafastCheckoutForService
   :: Text  -- ^ Transaction ID (order UUID)
@@ -2269,7 +2280,7 @@ requestDatafastCheckoutForService
   -> Maybe Text  -- ^ Buyer phone
   -> AppM (Text, String)  -- ^ (checkoutId, widgetUrl)
 requestDatafastCheckoutForService txnId totalCents currency name email mPhone = do
-  dfEnv <- loadServiceDatafastEnv
+  (dfEnv, merchantParameters) <- loadServiceDatafastCheckoutEnv
   let manager = ProviderHttp.sharedProviderManager
   let amountTxt = T.pack $ show (totalCents `div` 100) <> "." <> pad2 (totalCents `mod` 100)
       currencyTxt = T.toUpper (T.strip currency)
@@ -2287,7 +2298,7 @@ requestDatafastCheckoutForService txnId totalCents currency name email mPhone = 
         ]
       phoneParam = maybe [] (\p -> [("customer.phone", TE.encodeUtf8 p)]) mPhone
       testModeParam = maybe [] (\tm -> [("testMode", TE.encodeUtf8 tm)]) (sdfTestMode dfEnv)
-      allParams = baseParams <> phoneParam <> testModeParam
+      allParams = baseParams <> phoneParam <> testModeParam <> merchantParameters
       body = renderFormBody allParams
       baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
   req0 <- providerRequest Checkout.ProviderDatafast (baseUrlClean ++ "/v1/checkouts")
@@ -2426,20 +2437,7 @@ splitBuyerName name =
 
 -- | Render form parameters as URL-encoded body (strict ByteString).
 renderFormBody :: [(ByteString, ByteString)] -> ByteString
-renderFormBody params =
-  let encoded = map (\(k, v) -> urlEncodeBS k <> "=" <> urlEncodeBS v) params
-  in BS.intercalate "&" encoded
-  where
-    urlEncodeBS bs =
-      let txt = TE.decodeUtf8 bs
-          encodedTxt = T.concatMap (\c ->
-            if c `elem` ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~" :: String)
-              then T.singleton c
-              else "%" <> hexByte c) txt
-      in TE.encodeUtf8 encodedTxt
-    hexByte c = let n = fromEnum c in T.pack [intToHex (n `div` 16), intToHex (n `mod` 16)]
-    intToHex n | n < 10 = toEnum (fromEnum '0' + n)
-               | otherwise = toEnum (fromEnum 'A' + n - 10)
+renderFormBody = DatafastConfig.encodeDatafastForm
 
 -- | Strip trailing slash from a URL string.
 stripTrailingSlash :: String -> String

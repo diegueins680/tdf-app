@@ -1363,7 +1363,7 @@ createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken = do
   when (tpcCheckoutStatus context == "paid") $
     throwError (conflict "This ticket order is already paid")
   ensureNoOtherActiveTicketAttempt context Checkout.ProviderDatafast
-  datafast <- ServiceStorefront.loadServiceDatafastEnv
+  (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireTicketProvider context
     (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
   attempt <- beginSalesGatedTicketPaymentAttempt context Checkout.ProviderDatafast

@@ -1035,7 +1035,7 @@ createPublicCourseDatafastCheckout rawSlug rawRegistrationId mLookupToken = do
   when (cpcCheckoutStatus context == "paid") $
     throwError (conflictError "This course registration is already paid")
   ensureNoOtherActiveCourseOnlineAttempt context Checkout.ProviderDatafast
-  datafast <- ServiceStorefront.loadServiceDatafastEnv
+  (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireCourseProvider context
     (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
   attempt <- beginCoursePaymentAttempt context Checkout.ProviderDatafast

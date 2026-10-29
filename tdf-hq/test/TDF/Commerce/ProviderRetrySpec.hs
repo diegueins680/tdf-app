@@ -3344,6 +3344,9 @@ withCompletionEnvironment action = bracket
     values =
       [("DATAFAST_ENV", "sandbox"), ("DATAFAST_ENTITY_ID", "synthetic-provider-retry-merchant")
       , ("DATAFAST_BEARER_TOKEN", "synthetic-token"), ("DATAFAST_BASE_URL", "https://test.oppwa.com")
+      , ("DATAFAST_MID", "1234567890"), ("DATAFAST_TID", "PD123456")
+      , ("DATAFAST_PSERV", "12345678"), ("DATAFAST_USER_DATA2", "Synthetic Merchant")
+      , ("DATAFAST_VERSIONDF", "2")
       , ("DATAFAST_TEST_MODE", "EXTERNAL"), ("PAYPAL_ENV", "sandbox")
       , ("PAYPAL_MERCHANT_ID", "synthetic-provider-retry-merchant"), ("PAYPAL_CLIENT_ID", "synthetic-client")
       , ("PAYPAL_CLIENT_SECRET", "synthetic-secret"), ("PAYPAL_WEBHOOK_ID", "synthetic-webhook")
