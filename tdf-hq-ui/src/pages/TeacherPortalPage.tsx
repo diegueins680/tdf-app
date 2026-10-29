@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -390,9 +391,9 @@ function AvailabilitySlotCard(props: AvailabilitySlotCardProps) {
             {formatDateTime(slot.startAt)} → {formatDateTime(slot.endAt)}
           </Typography>
           {slot.notes && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            <MarkdownText variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               {slot.notes}
-            </Typography>
+            </MarkdownText>
           )}
         </Box>
         <Stack direction="row" spacing={1}>

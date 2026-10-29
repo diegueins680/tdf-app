@@ -60,6 +60,10 @@ const isReviewPage = (value: unknown): value is ExperienceReviewPage => {
     && isReviewSourceKind(review['sourceKind'])
     && isRecord(review['author'])
     && typeof review['author']['name'] === 'string'
+    && (review['author']['partyId'] == null || (
+      typeof review['author']['partyId'] === 'number'
+      && Number.isSafeInteger(review['author']['partyId']) && review['author']['partyId'] > 0
+    ))
     && (review['author']['avatarUrl'] == null || typeof review['author']['avatarUrl'] === 'string')
   ));
 };

@@ -77,7 +77,7 @@ export interface MerchReviewPublic {
   status: 'published' | 'limited';
   verifiedPurchase: true;
   badge: 'Compra verificada';
-  author: { name: string; avatarUrl?: string | null };
+  author: { partyId?: number; name: string; avatarUrl?: string | null };
   dimensions: Record<string, number>;
   images: { assetId: string; url: string; altText: string; position: number }[];
   sellerResponse?: { id: string; body: string; updatedAt: string; status: string } | null;

@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -70,9 +71,9 @@ export default function AdsInboxPage() {
                           <Chip label={inq.status} size="small" color="primary" variant="outlined" />
                         </Stack>
                         {inq.message && (
-                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                          <MarkdownText variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                             {inq.message}
-                          </Typography>
+                          </MarkdownText>
                         )}
                       </Box>
                       <Typography variant="body2" color="text.secondary">

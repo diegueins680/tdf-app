@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -571,7 +572,7 @@ export default function OperationsControlCenterPage() {
               ))}
               {(detailQuery.data?.notes ?? []).map((note) => (
                 <ListItem key={note.id} alignItems="flex-start">
-                  <ListItemText primary={note.body} secondary={`${t('operations.internalNote')} · #${note.authorPartyId}`} />
+                  <ListItemText primary={<MarkdownText>{note.body}</MarkdownText>} primaryTypographyProps={{ component: 'div' }} secondary={`${t('operations.internalNote')} · #${note.authorPartyId}`} />
                 </ListItem>
               ))}
             </List>

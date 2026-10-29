@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import BugReportOutlinedIcon from '@mui/icons-material/BugReportOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -94,13 +95,13 @@ function ExecutionHistory({ testCaseId }: { testCaseId: string }) {
           <Typography variant="body2" fontWeight={700}>
             Ejecución {execution.itexExecutionNumber}: {STATUS_LABELS[execution.itexStatus]}
           </Typography>
-          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+          <MarkdownText variant="body2">
             {firstNonEmptyString(
               execution.itexActualResult,
               execution.itexBlockerReason,
               'Sin observación.',
             )}
-          </Typography>
+          </MarkdownText>
         </Box>
       ))}
     </Stack>
@@ -384,9 +385,9 @@ export default function InternAuditPlanPage() {
                     <Stack spacing={2}>
                       <Typography><strong>Objetivo:</strong> {testCase.itcObjective}</Typography>
                       <Typography><strong>Para qué sirve:</strong> {testCase.itcBusinessPurpose}</Typography>
-                      <Typography sx={{ whiteSpace: 'pre-wrap' }}><strong>Antes de comenzar:</strong>{'\n'}{testCase.itcPreconditions}</Typography>
-                      <Typography sx={{ whiteSpace: 'pre-wrap' }}><strong>Datos ficticios:</strong>{'\n'}{testCase.itcRequiredTestData}</Typography>
-                      <Typography sx={{ whiteSpace: 'pre-wrap' }}><strong>Pasos:</strong>{'\n'}{testCase.itcDetailedSteps}</Typography>
+                      <Box><Typography fontWeight={700}>Antes de comenzar:</Typography><MarkdownText>{testCase.itcPreconditions}</MarkdownText></Box>
+                      <Box><Typography fontWeight={700}>Datos ficticios:</Typography><MarkdownText>{testCase.itcRequiredTestData}</MarkdownText></Box>
+                      <Box><Typography fontWeight={700}>Pasos:</Typography><MarkdownText>{testCase.itcDetailedSteps}</MarkdownText></Box>
                       <Alert severity="info"><strong>Resultado esperado:</strong> {testCase.itcExpectedResult}<br /><strong>Estado guardado esperado:</strong> {testCase.itcExpectedPersistedState}<br /><strong>Efectos esperados:</strong> {testCase.itcExpectedSideEffects}</Alert>
                       {testCase.itcExploratoryCharter && <Alert severity="success"><strong>Exploración:</strong> {testCase.itcExploratoryCharter}</Alert>}
                       <Typography variant="body2"><strong>Evidencia:</strong> {testCase.itcEvidenceRequirement === 'strong' ? 'fuerte (captura, video externo seguro o referencia verificable)' : 'confirmación breve'}.</Typography>

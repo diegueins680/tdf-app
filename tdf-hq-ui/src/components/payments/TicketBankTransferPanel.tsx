@@ -1,4 +1,5 @@
-import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material';
+import MarkdownText from '../MarkdownText';
+import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 
 import type { PublicEventTicketBankTransfer } from '../../api/eventTickets';
@@ -41,9 +42,7 @@ export default function TicketBankTransferPanel({
             <strong>{transfer.paymentReference}</strong>
           </Typography>
           {transfer.instructions && (
-            <Box component="p" sx={{ m: 0, whiteSpace: 'pre-wrap', typography: 'body2' }}>
-              {transfer.instructions}
-            </Box>
+            <MarkdownText variant="body2">{transfer.instructions}</MarkdownText>
           )}
           <Typography variant="body2">
             {english
@@ -55,7 +54,7 @@ export default function TicketBankTransferPanel({
       {transfer.evidenceStatus === 'rejected' && (
         <Alert severity="error">
           {english ? 'We could not confirm this transfer.' : 'No pudimos confirmar esta transferencia.'}
-          {transfer.reviewNotes ? ` ${transfer.reviewNotes}` : ''}
+          {transfer.reviewNotes && <MarkdownText>{transfer.reviewNotes}</MarkdownText>}
         </Alert>
       )}
       {(transfer.evidenceStatus === 'submitted' || transfer.evidenceStatus === 'under_review') && (

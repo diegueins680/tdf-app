@@ -13296,6 +13296,167 @@
         "Historical skipped-state reachability under GitHub orchestration is not established."
       ],
       "evidence": "Finite component tests only; complete workflow/refinement proof remains unproven."
+    },
+    {
+      "id": "WEB-CONTENT-001",
+      "title": "Render authored Markdown and navigate known user identities to profiles",
+      "domain": "WEB",
+      "statement": "Display authored long-form web content as Markdown with plain-text line breaks, while rejecting raw HTML and unsafe URL schemes; clicking a known user name or avatar opens that user profile without changing anonymous identity preferences.",
+      "authority": "User request on 2026-10-28 using the Categal artist biography and Juan Diego Illescas fan entry; continued implementation and release preparation requested in the same session.",
+      "contract": "formal/system/authored-content.md",
+      "source": "formal/system/authored-content.md",
+      "actors": [
+        "Content authors",
+        "Web readers",
+        "Authenticated community members"
+      ],
+      "preconditions": [
+        "A content field contains a string. Profile navigation requires a known positive safe-integer Party identity.",
+        "Existing authentication and profile visibility rules remain authoritative."
+      ],
+      "inputs": [
+        "Authored Markdown",
+        "Plain text and Unicode content",
+        "API user identity and buyer privacy projection",
+        "Mention offsets counted in Unicode code points"
+      ],
+      "state": {
+        "display": [
+          "block Markdown",
+          "inline preview",
+          "raw editor input"
+        ],
+        "identity": [
+          "known",
+          "unavailable",
+          "anonymous"
+        ]
+      },
+      "allowedTransitions": [
+        "Authored text to safe React Markdown elements.",
+        "Known Party name/avatar click to /perfil/{partyId}.",
+        "Anonymous buyer to display without profile ID or avatar."
+      ],
+      "forbiddenTransitions": [
+        "Markdown HTML or executable URLs to active DOM content.",
+        "Nested links inside a clickable preview.",
+        "Missing, malformed or guessed identity to a fabricated profile link.",
+        "Private buyer identity to a public profile link."
+      ],
+      "effects": [
+        "Markdown display and accessible user profile navigation. No authoring writes or migrations."
+      ],
+      "authorization": "Existing route, session and server profile authorization remains required; a profile link grants no access.",
+      "privacy": "No author lookup by name or avatar. Merch buyer privacy suppresses both partyId and avatarUrl. No stored content rewrite or private values in diagnostics.",
+      "concurrency": "Rendering is read-only; existing session-generation and content visibility controls remain intact.",
+      "idempotency": "Rendering and link construction are deterministic and do not send write requests.",
+      "failure": "Unavailable IDs remain plain display content; unsafe links lose their destination; raw HTML is skipped.",
+      "recovery": "Revert the display integration and optional response fields; no data migration or content recovery is required.",
+      "observability": "Synthetic rendering/navigation regressions, real browser layout checks, and exact SQL identity projection checks. Deployment evidence is recorded separately.",
+      "property": "Authored text never evaluates raw HTML; a profile destination is constructed only from a known valid Party ID; private buyer projection omits identity fields.",
+      "implementation": [
+        "tdf-hq-ui/package.json",
+        "tdf-hq-ui/src/api/merchReputation.ts",
+        "tdf-hq-ui/src/api/reviews.ts",
+        "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
+        "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
+        "tdf-hq-ui/src/components/ArtistFansList.tsx",
+        "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
+        "tdf-hq-ui/src/components/MarkdownText.tsx",
+        "tdf-hq-ui/src/components/NotificationBell.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/UserProfileLink.tsx",
+        "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx",
+        "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
+        "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
+        "tdf-hq-ui/src/components/reviews/ExperienceReviews.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx",
+        "tdf-hq-ui/src/features/interactions/AccountControls.tsx",
+        "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx",
+        "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
+        "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
+        "tdf-hq-ui/src/pages/AdsInboxPage.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/BrainAdminPage.tsx",
+        "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+        "tdf-hq-ui/src/pages/CampaignAutomationsPage.tsx",
+        "tdf-hq-ui/src/pages/ChatPage.tsx",
+        "tdf-hq-ui/src/pages/ClassesPage.tsx",
+        "tdf-hq-ui/src/pages/CompaniesPage.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+        "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx",
+        "tdf-hq-ui/src/pages/FanClubPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/InstagramConnectPage.tsx",
+        "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+        "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
+        "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+        "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+        "tdf-hq-ui/src/pages/InventoryPage.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
+        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
+        "tdf-hq-ui/src/pages/LabelProjectsPage.tsx",
+        "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
+        "tdf-hq-ui/src/pages/LeadsPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx",
+        "tdf-hq-ui/src/pages/MerchProductPage.tsx",
+        "tdf-hq-ui/src/pages/MerchReputationPage.tsx",
+        "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "tdf-hq-ui/src/pages/NotificationPage.tsx",
+        "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/PublicProfilePage.tsx",
+        "tdf-hq-ui/src/pages/PublicReputationRightsPage.tsx",
+        "tdf-hq-ui/src/pages/RecentlyDiscoveredEventsPage.tsx",
+        "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/SocialInboxPage.tsx",
+        "tdf-hq-ui/src/pages/SocialPage.tsx",
+        "tdf-hq-ui/src/pages/TeacherPortalPage.tsx",
+        "tdf-hq-ui/src/pages/TeachersPage.tsx",
+        "tdf-hq-ui/src/pages/TrialLessonsPage.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
+        "tdf-hq-ui/src/utils/markdownMentions.ts",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/reviews.yaml",
+        "tdf-hq/src/TDF/Server/MerchReputation.hs",
+        "tdf-hq/src/TDF/Server/Reviews.hs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/reviews.test.ts",
+        "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
+        "tdf-hq-ui/src/components/MarkdownText.test.tsx",
+        "tdf-hq-ui/src/components/UserProfileLink.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Component/browser and SQL projection evidence only. Markdown parser correctness and full implementation refinement are not formally proven.",
+      "ambiguity": [
+        "Native mobile Markdown rendering is outside this web change; only matching generated mobile API types are updated.",
+        "Existing raw code, diagnostic payloads, editing inputs and identity labels remain literal."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped empirical checks; independent review, hosted CI and deployed availability must be recorded separately. No universal parser/refinement proof."
+      },
+      "verification": "Safe Markdown/GFM/Unicode mention cases, unsafe URL/HTML controls, real name/photo navigation, compact preview validity, browser widths/themes and public/private/default buyer SQL projection checks.",
+      "evidence": "Revision-bound local logs and hosted PR checks; prior-source passes retain their original identities."
     }
   ]
 }

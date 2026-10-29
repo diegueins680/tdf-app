@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import {
   forwardRef,
   useCallback,
@@ -1379,9 +1380,9 @@ function InstructorCard({ meta }: { meta?: CourseMetadata }) {
             </Typography>
           </Box>
         </Stack>
-        <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
+        <MarkdownText variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
           {bio}
-        </Typography>
+        </MarkdownText>
       </CardContent>
     </Card>
   );
@@ -2173,10 +2174,10 @@ function EnrollmentDialog({
                     title="Términos del curso"
                     summary={`Versión ${checkoutTerms.termsVersion}`}
                   >
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{checkoutTerms.termsSummary}</Typography>
+                    <MarkdownText variant="body2">{checkoutTerms.termsSummary}</MarkdownText>
                   </LegalDisclosure>
                   <LegalDisclosure id="course-cancellation-policy" title="Política de cancelación">
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{checkoutTerms.cancellationPolicy}</Typography>
+                    <MarkdownText variant="body2">{checkoutTerms.cancellationPolicy}</MarkdownText>
                   </LegalDisclosure>
                 </Stack>
               )}

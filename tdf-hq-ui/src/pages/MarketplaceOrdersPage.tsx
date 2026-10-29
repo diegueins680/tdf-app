@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -2250,7 +2251,7 @@ export default function MarketplaceOrdersPage() {
                                     {formatDate(request.mcrRequestedAt)}
                                   </Typography>
                                 </Stack>
-                                <Typography variant="body2">{request.mcrReason}</Typography>
+                                <MarkdownText variant="body2">{request.mcrReason}</MarkdownText>
                                 {request.mcrRequestedEndDate && (
                                   <Typography variant="body2">
                                     Fecha solicitada: {request.mcrRequestedEndDate}

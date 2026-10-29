@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import {
   Alert,
   Box,
@@ -538,7 +539,7 @@ export default function PublicEventTicketsPage() {
               <Stack spacing={2}>
                 <Chip icon={<ConfirmationNumberIcon />} label={english ? 'Official TDF checkout' : 'Checkout oficial TDF'} color="primary" sx={{ alignSelf: 'flex-start' }} />
                 <Typography component="h1" variant="h3" fontWeight={900}>{storefront.data.title}</Typography>
-                {storefront.data.description && <Typography color="text.secondary">{storefront.data.description}</Typography>}
+                {storefront.data.description && <MarkdownText color="text.secondary">{storefront.data.description}</MarkdownText>}
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
                   <Chip icon={<EventIcon />} label={date(storefront.data.startsAt)} variant="outlined" />
                   {storefront.data.venueName && <Chip icon={<PlaceIcon />} label={storefront.data.venueName} variant="outlined" />}
@@ -641,14 +642,14 @@ export default function PublicEventTicketsPage() {
                         title={english ? 'Ticket terms' : 'Términos de las entradas'}
                         summary={`${english ? 'Terms version' : 'Versión de términos'}: ${storefront.data.policy.termsVersion}`}
                       >
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{storefront.data.policy.termsSummary}</Typography>
+                        <MarkdownText variant="body2">{storefront.data.policy.termsSummary}</MarkdownText>
                       </LegalDisclosure>
                       <LegalDisclosure
                         id="ticket-refund-policy"
                         language={english ? 'en' : 'es'}
                         title={english ? 'Refund policy' : 'Política de reembolso'}
                       >
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{storefront.data.policy.refundPolicy}</Typography>
+                        <MarkdownText variant="body2">{storefront.data.policy.refundPolicy}</MarkdownText>
                       </LegalDisclosure>
                     </Stack>
                   )}

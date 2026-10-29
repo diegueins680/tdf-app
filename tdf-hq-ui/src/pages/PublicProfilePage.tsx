@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -243,9 +244,9 @@ export default function PublicProfilePage() {
               </Card>
             )}
             {party.sppBio && (
-              <Typography variant="body2" color="text.secondary">
+              <MarkdownText variant="body2" color="text.secondary">
                 {party.sppBio}
-              </Typography>
+              </MarkdownText>
             )}
             {!presence && (
               <Typography variant="body2" color="text.secondary">

@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
@@ -354,7 +355,7 @@ export default function MarketplaceOrderTrackingPage() {
                           <Typography variant="body2" fontWeight={700}>
                             {requestLabels[request.mcrRequestType]} · {requestStatusLabels[request.mcrStatus]}
                           </Typography>
-                          <Typography variant="body2">{request.mcrReason}</Typography>
+                          <MarkdownText variant="body2">{request.mcrReason}</MarkdownText>
                           {request.mcrRequestedEndDate && (
                             <Typography variant="body2">
                               Nueva fecha solicitada: {request.mcrRequestedEndDate}

@@ -1,3 +1,4 @@
+import MarkdownText from './MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
@@ -122,7 +123,7 @@ function NoteRow({ item, onToggle, onDelete }: NoteRowProps) {
         onChange={() => onToggle(item.id)}
         inputProps={{ 'aria-label': `Marcar pendiente: ${item.text}` }}
       />
-      <Typography
+      <MarkdownText
         variant="body2"
         sx={{
           flexGrow: 1,
@@ -132,7 +133,7 @@ function NoteRow({ item, onToggle, onDelete }: NoteRowProps) {
         }}
       >
         {item.text}
-      </Typography>
+      </MarkdownText>
       <IconButton
         data-note-delete-action
         tabIndex={0}

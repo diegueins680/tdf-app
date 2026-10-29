@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -214,7 +215,7 @@ function PlacesSection({
                     `${place.elpLatitude}, ${place.elpLongitude}`,
                   )}
                 </Typography>
-                {place.elpInstructions && <Typography variant="caption">{place.elpInstructions}</Typography>}
+                {place.elpInstructions && <MarkdownText variant="caption">{place.elpInstructions}</MarkdownText>}
               </Box>
               <Stack className="no-print" direction="row">
                 <Button component={Link} href={`https://www.google.com/maps/search/?api=1&query=${place.elpLatitude},${place.elpLongitude}`} size="small" target="_blank">
@@ -643,7 +644,7 @@ export default function EventLogisticsPage() {
               {activity.eacType === 'travel' && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}><DirectionsCarIcon color="action" /><Typography>{origin?.elpLabel ?? 'Origen'} → {destination?.elpLabel ?? 'Destino'}</Typography>{routeUrl && <Link href={routeUrl} target="_blank" rel="noreferrer">Abrir ruta</Link>}</Stack>}
               {activity.eacPlaceId && <Typography variant="body2">Lugar: {placesById.get(activity.eacPlaceId)?.elpLabel ?? activity.eacPlaceId}</Typography>}
               {activity.eacAssignments.length > 0 && <Typography variant="body2">Responsables: {activity.eacAssignments.map((assignment) => assignment.elaDisplayName ?? assignment.elaExternalName ?? assignment.elaPartyId).filter(Boolean).join(', ')}</Typography>}
-              {activity.eacNotes && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{activity.eacNotes}</Typography>}
+              {activity.eacNotes && <MarkdownText>{activity.eacNotes}</MarkdownText>}
               {verification && <Alert icon={<RouteIcon />} severity={verification.ervVerdict === 'feasible' ? 'success' : verification.ervVerdict === 'tight' ? 'warning' : 'error'}>
                 Ruta {verification.ervVerdict}: estimado {secondsLabel(verification.ervDurationSeconds)}, holgura {secondsLabel(verification.ervBufferSeconds)}, reservado {secondsLabel(verification.ervAllocatedSeconds)}{verification.ervDistanceMeters ? ` · ${(verification.ervDistanceMeters / 1000).toFixed(1)} km` : ''}.
               </Alert>}

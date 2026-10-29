@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { readOptionalBrowserStorage, writeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -833,9 +834,9 @@ export default function TrialLessonsPage() {
                             </Button>
                           </Stack>
                           {cls.notes && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            <MarkdownText variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                               {cls.notes}
-                            </Typography>
+                            </MarkdownText>
                           )}
                           <Typography variant="caption" color="text.secondary">
                             Última actualización: {updatedDisplay || 'No disponible'}

@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { EventMemoryModerationPanel } from '../components/events/EventMemoryModeration';
 import { useEffect, useRef, useState } from 'react';
@@ -314,7 +315,7 @@ export default function SocialEventDetailPage() {
                     </Stack>
                   )}
                   {moment.emMediaType === 'text' ? null : moment.emMediaType === 'audio' ? <Box component="audio" src={moment.emMediaUrl} controls preload="none" aria-label={`Audio de ${moment.emAuthorName}`} sx={{ width: '100%' }} /> : moment.emMediaType === 'video' ? <Box component="video" src={moment.emMediaUrl} controls preload="metadata" playsInline sx={{ width: '100%', maxHeight: 520, borderRadius: 2, bgcolor: 'black' }} /> : <Box component="img" loading="lazy" src={moment.emMediaUrl} alt={moment.emCaption ?? `Publicación de ${moment.emAuthorName}`} sx={{ width: '100%', maxHeight: 520, objectFit: 'contain', borderRadius: 2, bgcolor: 'action.hover' }} />}
-                  {moment.emCaption && <><Divider /><Typography sx={{ whiteSpace: 'pre-wrap' }}>{moment.emCaption}</Typography></>}
+                  {moment.emCaption && <><Divider /><MarkdownText>{moment.emCaption}</MarkdownText></>}
                   {event?.eventPublicListable === true && moment.emId && <Button component={RouterLink} to={`/eventos/${encodeURIComponent(eventId)}?moment=${encodeURIComponent(moment.emId)}`} startIcon={<LinkIcon />}>Enlace a esta publicación</Button>}
                   {supportsExtended && moment.emId && String(session?.partyId) === moment.emAuthorPartyId && moment.emUpdatedAt && <Stack direction="row" spacing={1}>
                     <Button onClick={() => { ownMutation.reset(); setOwnAction({ id: moment.emId!, mode: 'edit', caption: moment.emCaption ?? '', updatedAt: moment.emUpdatedAt! }); }}>Editar mi recuerdo</Button>
@@ -370,7 +371,7 @@ export default function SocialEventDetailPage() {
                   )}
                   {event.eventCapacity && <Chip label={`${event.eventCapacity} personas`} variant="outlined" />}
                 </Stack>
-                {event.eventDescription && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{event.eventDescription}</Typography>}
+                {event.eventDescription && <MarkdownText>{event.eventDescription}</MarkdownText>}
                 {event.eventArtists.length > 0 && <>
                   <Typography component="h2" variant="h6">Artistas participantes</Typography>
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>

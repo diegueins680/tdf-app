@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
@@ -511,9 +512,9 @@ export default function InternTaskDetailPage() {
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                     {t('internships.taskDetail.instructions')}
                   </Typography>
-                  <Typography sx={{ whiteSpace: 'pre-wrap' }}>
+                  <MarkdownText>
                     {task.itDescription ?? 'Esta tarea no tiene instrucciones adicionales.'}
-                  </Typography>
+                  </MarkdownText>
                 </Box>
               </Stack>
             </CardContent>
