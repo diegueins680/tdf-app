@@ -15,7 +15,7 @@ interface MarkdownTextProps extends Omit<TypographyProps, 'children' | 'componen
 
 const components: Components = {
   a: ({ href, children, title }) => href ? (
-    <a href={href} title={title} {...(/^(?:https?:)?\/\//i.test(href)
+    <a href={href} title={title} onClick={(event) => event.stopPropagation()} {...(/^(?:https?:)?\/\//i.test(href)
       ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{children}</a>
   ) : <>{children}</>,
   img: ({ src, alt, title }) => src ? <img src={src} alt={alt ?? ''} title={title} loading="lazy" /> : <>{alt}</>,

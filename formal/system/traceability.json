@@ -14199,8 +14199,8 @@
     "tdf-hq-ui/src/components/InstagramEntryLinks.tsx": "b0f7c70bc37e4178d5a33e4104ad4083402da01262505a13d424f3299664fbfa",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
-    "tdf-hq-ui/src/components/MarkdownText.test.tsx": "65d585af63ed177db6a2ed7d3f290ba9687e13c161afa98ab7103e618dffabd6",
-    "tdf-hq-ui/src/components/MarkdownText.tsx": "72d0e07115e2ac30933034fdc0dd7e85305d4e530f2b22f33dfe74c940075c5a",
+    "tdf-hq-ui/src/components/MarkdownText.test.tsx": "0f575ed766ce35c3af16d9c08856f5b6da71e8bc68d82ca98d8ce20f7bebe2f1",
+    "tdf-hq-ui/src/components/MarkdownText.tsx": "56d9b02f102e8c04f44ecebcbb3febace682453741c645ddd6a0f94b3dabe27e",
     "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx": "3e64719ad28e77a7720252e86610dcb712a508d0af9d8bd1eed1a715a18c33a3",
     "tdf-hq-ui/src/components/MarketplaceCartButton.tsx": "c40979f81f4af476e7a47933a2e86cf3d3889b7674731794e91e1fa3d40dddcd",
     "tdf-hq-ui/src/components/NotificationBell.tsx": "14f8f702675e5922530c6599ab0677ba2e6d084d809ac2d969410a3c054e6715",
@@ -35522,7 +35522,7 @@
     {
       "id": "SURFACE-6b73f6ff34a9a41e",
       "path": "tdf-hq-ui/src/components/MarkdownText.test.tsx",
-      "sha256": "65d585af63ed177db6a2ed7d3f290ba9687e13c161afa98ab7103e618dffabd6",
+      "sha256": "0f575ed766ce35c3af16d9c08856f5b6da71e8bc68d82ca98d8ce20f7bebe2f1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35534,7 +35534,7 @@
     {
       "id": "SURFACE-1e5e203495c86d2c",
       "path": "tdf-hq-ui/src/components/MarkdownText.tsx",
-      "sha256": "72d0e07115e2ac30933034fdc0dd7e85305d4e530f2b22f33dfe74c940075c5a",
+      "sha256": "56d9b02f102e8c04f44ecebcbb3febace682453741c645ddd6a0f94b3dabe27e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

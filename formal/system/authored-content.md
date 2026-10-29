@@ -8,6 +8,8 @@ supported. Raw HTML is skipped. URL filtering uses the Markdown library safe
 transform; image sources also reject non-HTTP schemes. Rendered tables and code
 scroll within the content area. Compact previews use phrasing elements and omit
 nested controls or links when their containing card is already interactive.
+Link clicks preserve their native destination without invoking an enclosing
+card action; clicking the remaining card content still opens the artist.
 Editing inputs, source comparisons, diagnostics and identity labels remain literal.
 
 User profile links require a known positive safe-integer Party ID. Names and

@@ -1,7 +1,8 @@
 import '@testing-library/jest-dom';
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from '@jest/globals';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import MarkdownText from './MarkdownText';
+import { Card } from '@mui/material';
 
 afterEach(cleanup);
 
@@ -75,6 +76,22 @@ const ritmo = 1;
     expect(container.querySelector('strong')).toHaveTextContent('CATEGAL');
     expect(container).toHaveTextContent('Escucha');
   });
+
+  it.each(['[Escucha](https://example.test/music)', 'https://example.test/music'])(
+    'keeps link navigation independent from its enclosing artist card: %s', (content) => {
+      const navigateToArtist = jest.fn();
+      render(<Card onClick={navigateToArtist}>
+        <span>Artist preview</span><MarkdownText inline>{content}</MarkdownText>
+      </Card>);
+      const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+      fireEvent(screen.getByRole('link'), click);
+      expect(navigateToArtist).not.toHaveBeenCalled();
+      expect(click.defaultPrevented).toBe(false);
+      expect(screen.getByRole('link')).toHaveAttribute('target', '_blank');
+      fireEvent.click(screen.getByText('Artist preview'));
+      expect(navigateToArtist).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it('preserves Unicode mention offsets alongside Markdown and never nests links', () => {
     const body = '🎶 **Hola** @Ana y [@Ana](/otro)';
