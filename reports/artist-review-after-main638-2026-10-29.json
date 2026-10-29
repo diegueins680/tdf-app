@@ -258,14 +258,14 @@
     "backend": "SUCCESS4045/0/21pending;23 music worker scenarios passed",
     "persona": "FAILED642/1/22skip; only WebKit-iPhone gallery contrast1.01<4.5;21 booking cases passed",
     "review": "Exact tdfrecords5702607706 APPROVED; draft/autoOFF/unmerged",
-    "scope": "Diagnostic correction only; original worker stop cause UNKNOWN. Does not qualify ticket-clock666 tests absent from this source. Preserve existing approved gallery648/651 forFIFO; no duplicate patch or unchanged rerun-to-green."
+    "scope": "Diagnostic correction only; original worker stop cause UNKNOWN. Does not qualify ticket-clock666 tests absent from this source. Preserve existing gallery draft648 and separate refund651 heads for their FIFO slots; no duplicate patch or unchanged rerun-to-green."
   },
   "remainingRisks": [
     "Fresh exact published-head hostedCI and independent approval pending.",
     "No real artist writes/provider calls or end-to-end authorization validation in the synthetic browser cases.",
     "Backend legacy brokenFields aggregate remains historical; only scoped web consumer recognizes old rights records. No historic database rewrite.",
     "Image rights/account ownership/deployment not established by these checks.",
-    "Known gallery contrast failure remains; approved648/651 heads preserved for their protected queue slots.",
+    "Known gallery contrast failure remains; reuse existing gallery draft648. Separate refund651 head is preserved for its protected queue slot.",
     "Financial reservation clock666 locally repaired/verified, not integrated; hosted qualification remains pending."
   ],
   "nextHighestValueTask": "Publish this exact composition with autoOFF, obtain current20checks/exact-head review and normally merge if permitted; then advance existing FIFO work.",
@@ -1378,5 +1378,17 @@
       "encoding": "gzip"
     }
   ],
-  "createdAt": "2026-10-29T19:21:27.470065+00:00"
+  "createdAt": "2026-10-29T19:21:27.470065+00:00",
+  "reportScopeErratum": {
+    "date": "2026-10-29",
+    "priorEvidenceCommit": "150718a4c03e346c409e7bc443e6d061b2cd23fc",
+    "finding": "Earlier prose grouped648/651 as approved gallery heads. Live PR metadata/files show648 is gallery paint-readiness draft and651 is a separate legacy Stripe refund correction.648 has no current approval requested.",
+    "correction": "Only648 is the existing gallery work. Preserve both distinct heads in their normal protected queue slots; old embedded summaries/reviewer wording are historical and do not establish gallery scope or approval.",
+    "sourceAndQualificationUnchanged": true,
+    "liveEvidence": [
+      "https://api.github.com/repos/diegueins680/tdf-app/pulls/648",
+      "https://api.github.com/repos/diegueins680/tdf-app/pulls/651/files?per_page=100"
+    ],
+    "notARerunToHideFailure": "This changes report metadata only; previous fresh CI40939530124 is retained with its actual eventual status."
+  }
 }
