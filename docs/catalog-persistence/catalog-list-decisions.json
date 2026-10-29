@@ -712,6 +712,13 @@
       },
       "supersededDecisionId": "dfec3f046ad1157e0f0c",
       "successorDecisionId": "5ed33d9cd50e8f195d05"
+    },
+    "campaignTikTokFixtureReview": {
+      "reviewBatch": "campaign-tiktok-fixture-20261029",
+      "newCandidate": "7c4fd4b445f988d4bf38",
+      "preservedPriorDecisionObjects": 1352,
+      "reviewedNewFixtures": 1,
+      "reason": "Test-only mocked creator privacy options; runtime choices remain provider-controlled. Prior reconciliation counters and retirement ledgers retain their original execution scope."
     }
   },
   "decisions": [
@@ -19908,6 +19915,26 @@
         "kind": "object-registry",
         "name": "plans",
         "valueCount": 3
+      }
+    },
+    {
+      "id": "7c4fd4b445f988d4bf38",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Treating this synthetic creator response as runtime privacy authority would bypass current provider options. The two values are confined to the controlled test response.",
+      "justification": "This test-only TikTok creator response supplies public/private protocol options to exercise an empty default, manual selection and paid-content restrictions in the actual JavaScript form. Production options are fetched from the creator API and revalidated before publication; this fixture neither defines a selectable business catalog nor grants publication authority.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-technical-review",
+      "reviewBatch": "campaign-tiktok-fixture-20261029",
+      "evidence": {
+        "file": "scripts/__tests__/campaign-tiktok-ui.test.mjs",
+        "line": 23,
+        "kind": "array",
+        "name": "privacy_level_options",
+        "valueCount": 2,
+        "consumerCount": 0
       }
     }
   ]

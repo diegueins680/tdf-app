@@ -1,0 +1,215 @@
+{
+  "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+  "cases": [
+    {
+      "profile": "desktop",
+      "network": "valid",
+      "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+      "passed": true,
+      "viewport": {
+        "compatMode": "CSS1Compat",
+        "client": 1440,
+        "scroll": 1440,
+        "inner": 1440,
+        "scale": 1
+      },
+      "errors": [],
+      "blockedAppWriteIntents": [
+        {
+          "method": "POST",
+          "path": "/session/onboarding/reconcile"
+        },
+        {
+          "method": "DELETE",
+          "path": "/radio/presence"
+        },
+        {
+          "method": "POST",
+          "path": "/navigation/preferences/admin.artist-enrichment/visit"
+        }
+      ],
+      "allWriteIntentsAborted": true,
+      "artistWriteIntents": 0,
+      "interceptedReads": [
+        "/v1/latest",
+        "/catalogs/batch",
+        "/catalogs/batch",
+        "/session",
+        "/v1/latest",
+        "/catalogs/batch",
+        "/session/preferences",
+        "/catalogs/batch",
+        "/catalog/countries/items",
+        "/catalog/genres/items",
+        "/radio/auto-stop-options",
+        "/radio/streams",
+        "/chat/threads",
+        "/fans/me/notifications/count",
+        "/social-events/upcoming",
+        "/admin/artists/enrichment/overview",
+        "/health",
+        "/navigation/preferences",
+        "/admin/artists/enrichment/overview",
+        "/chat/threads"
+      ],
+      "assertions": "Verification guide/status; network versus rights; selected/ref-linked competing identity3; broken-only filtering; viewport."
+    },
+    {
+      "profile": "desktop",
+      "network": "broken",
+      "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+      "passed": true,
+      "viewport": {
+        "compatMode": "CSS1Compat",
+        "client": 1440,
+        "scroll": 1440,
+        "inner": 1440,
+        "scale": 1
+      },
+      "errors": [],
+      "blockedAppWriteIntents": [
+        {
+          "method": "POST",
+          "path": "/session/onboarding/reconcile"
+        },
+        {
+          "method": "DELETE",
+          "path": "/radio/presence"
+        },
+        {
+          "method": "POST",
+          "path": "/navigation/preferences/admin.artist-enrichment/visit"
+        }
+      ],
+      "allWriteIntentsAborted": true,
+      "artistWriteIntents": 0,
+      "interceptedReads": [
+        "/v1/latest",
+        "/catalogs/batch",
+        "/catalogs/batch",
+        "/session",
+        "/v1/latest",
+        "/catalogs/batch",
+        "/session/preferences",
+        "/catalogs/batch",
+        "/catalog/countries/items",
+        "/catalog/genres/items",
+        "/radio/auto-stop-options",
+        "/radio/streams",
+        "/chat/threads",
+        "/fans/me/notifications/count",
+        "/social-events/upcoming",
+        "/admin/artists/enrichment/overview",
+        "/health",
+        "/navigation/preferences",
+        "/admin/artists/enrichment/overview",
+        "/chat/threads"
+      ],
+      "assertions": "Verification guide/status; network versus rights; selected/ref-linked competing identity3; broken-only filtering; viewport."
+    },
+    {
+      "profile": "phone",
+      "network": "valid",
+      "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+      "passed": true,
+      "viewport": {
+        "compatMode": "CSS1Compat",
+        "client": 390,
+        "scroll": 390,
+        "inner": 390,
+        "scale": 1
+      },
+      "errors": [],
+      "blockedAppWriteIntents": [
+        {
+          "method": "POST",
+          "path": "/session/onboarding/reconcile"
+        },
+        {
+          "method": "DELETE",
+          "path": "/radio/presence"
+        },
+        {
+          "method": "POST",
+          "path": "/navigation/preferences/admin.artist-enrichment/visit"
+        }
+      ],
+      "allWriteIntentsAborted": true,
+      "artistWriteIntents": 0,
+      "interceptedReads": [
+        "/v1/latest",
+        "/catalogs/batch",
+        "/catalogs/batch",
+        "/session",
+        "/v1/latest",
+        "/catalogs/batch",
+        "/session/preferences",
+        "/catalogs/batch",
+        "/catalog/countries/items",
+        "/catalog/genres/items",
+        "/radio/auto-stop-options",
+        "/radio/streams",
+        "/fans/me/notifications/count",
+        "/social-events/upcoming",
+        "/admin/artists/enrichment/overview",
+        "/health",
+        "/navigation/preferences",
+        "/admin/artists/enrichment/overview"
+      ],
+      "assertions": "Verification guide/status; network versus rights; selected/ref-linked competing identity3; broken-only filtering; viewport."
+    },
+    {
+      "profile": "phone",
+      "network": "broken",
+      "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+      "passed": true,
+      "viewport": {
+        "compatMode": "CSS1Compat",
+        "client": 390,
+        "scroll": 390,
+        "inner": 390,
+        "scale": 1
+      },
+      "errors": [],
+      "blockedAppWriteIntents": [
+        {
+          "method": "POST",
+          "path": "/session/onboarding/reconcile"
+        },
+        {
+          "method": "DELETE",
+          "path": "/radio/presence"
+        },
+        {
+          "method": "POST",
+          "path": "/navigation/preferences/admin.artist-enrichment/visit"
+        }
+      ],
+      "allWriteIntentsAborted": true,
+      "artistWriteIntents": 0,
+      "interceptedReads": [
+        "/v1/latest",
+        "/catalogs/batch",
+        "/catalogs/batch",
+        "/session",
+        "/v1/latest",
+        "/catalogs/batch",
+        "/session/preferences",
+        "/catalogs/batch",
+        "/catalog/countries/items",
+        "/catalog/genres/items",
+        "/radio/auto-stop-options",
+        "/radio/streams",
+        "/fans/me/notifications/count",
+        "/social-events/upcoming",
+        "/admin/artists/enrichment/overview",
+        "/health",
+        "/navigation/preferences",
+        "/admin/artists/enrichment/overview"
+      ],
+      "assertions": "Verification guide/status; network versus rights; selected/ref-linked competing identity3; broken-only filtering; viewport."
+    }
+  ],
+  "passed": 4,
+  "scope": "Four local Chrome desktop/phone-emulation cases; no real API/provider operations or physical iOS guarantee."
+}
