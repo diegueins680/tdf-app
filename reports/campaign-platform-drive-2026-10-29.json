@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-29T17:07:24.353722+00:00",
+  "at": "2026-10-29T17:36:51.377071+00:00",
   "scope": "Continuation of the server campaign platform: private off-host campaign backup and Facebook protocol connectors. No full-host recovery or unrestricted four-provider claim.",
   "previous_qualification": "reports/campaign-platform-2026-10-29.json",
   "release": "45a3c4eaaed5baf32dcb",
@@ -87,11 +87,27 @@
     "unchanged_web_mobile": "Prior web 3670/318 and Mobile 653/98 executions retain their original source identity; no new execution claimed.",
     "repository_quality": {
       "result": "PASS",
-      "explicit_platform_skips": 11
+      "explicit_platform_skips": 11,
+      "source_commit": "e430bc662bc6e523c3bf71b95ca16189a9f18619"
     },
     "catalog_regressions": {
       "tests": 8,
       "result": "PASS"
+    },
+    "committed_source_admission": {
+      "result": "PASS",
+      "base": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+      "head": "e430bc662bc6e523c3bf71b95ca16189a9f18619",
+      "mapped_changed_surfaces": 48
+    },
+    "live_chromium_mobile": {
+      "widths": [
+        390,
+        320
+      ],
+      "client_scroll_inner_visual_widths_equal": true,
+      "overflow": false,
+      "native_mobile_device_tested": false
     }
   },
   "backup": {
@@ -115,9 +131,41 @@
     },
     "manifest_committed_last": true,
     "independent_restore": {
-      "status": "RUNNING; do not interpret as recovery proof"
+      "status": "PASS for first complete snapshot",
+      "ready_assets": 22,
+      "objects_verified": 25,
+      "master_authenticated_and_sha256_matches_original": true,
+      "credential_vault_records_recovered": 3,
+      "sqlite_integrity": "ok",
+      "foreign_keys": "ok",
+      "scope": "All captured ready objects decrypted/authenticated and hashed; isolated SQLite restored and vault recovered. No restored service started, provider calls made with restored credentials, production failover or core-TDF PostgreSQL recovery.",
+      "private_key_sent_to_server": false
     },
-    "executed_release": "5d5fd7a04a1b60918693"
+    "executed_release": "5d5fd7a04a1b60918693",
+    "incremental_with_guides": {
+      "state": "completed",
+      "ready_assets": 38,
+      "master_object_count": 1,
+      "completed_at": "2026-10-29T17:23:20.770458+00:00",
+      "guides_registered": 16,
+      "private_only": true,
+      "independent_restore": {
+        "status": "PASS",
+        "ready_assets": 38,
+        "objects": 41,
+        "unchanged_objects_admitted_from_pinned_full_decryption_proof": 22,
+        "new_objects_decrypted_and_hashed_now": 19,
+        "sqlite_integrity": "ok",
+        "foreign_keys": "ok",
+        "credential_vault_records_recovered": 3,
+        "private_key_sent_to_server": false,
+        "scope": "Captured ready objects verified: unchanged IDs/hashes/sizes/recipients use pinned prior full decryption receipt, every new object decrypted/authenticated and hashed now. Isolated SQLite restored and vault recovered. No restored service started, provider calls made with restored credentials, production failover or core-TDF PostgreSQL recovery."
+      }
+    },
+    "daily_schedule": "04:00 America/Guayaquil, randomized delay up to 300 seconds, persistent systemd timer",
+    "transfer_started_release": "30c07cdd969baa571546",
+    "resumed_completed_release": "5d5fd7a04a1b60918693",
+    "backup_crypto_identical_across_transfer_and_current_release": "4078c9daad93c68cb1c8feaafb42c676b34df89703fa1a792ade66f932679357"
   },
   "facebook": {
     "implemented": [
@@ -172,6 +220,22 @@
     "continuation-final-manifest.json": "e2f268aa111591881f299d39be185d4084510bcbc0f8de657f0796072bae0b00",
     "continuation-final-tests.log": "e227efec7e2e974dac9f85214da132478d0647c601616c015c819f07a5e80ad6",
     "continuation-repository-quality.log": "4dd6a34e4a96be64ced9fa2a0f0b5411ea29b944edc3a70710376546d966fdeb",
-    "continuation-catalog-regressions.log": "e9e4f13390dd0195531b63b95e7d3f584f473bf7e75c4f7a7a01b57543ec7bc4"
-  }
+    "continuation-catalog-regressions.log": "e9e4f13390dd0195531b63b95e7d3f584f473bf7e75c4f7a7a01b57543ec7bc4",
+    "continuation-final-quality.log": "62c7935227a5e6654f5e6f6f9f9973d376dbcdcb257118b350be2c9d0b9bd394",
+    "continuation-source-admission.json": "ae9dbf5e5eeb0397652596103c81e6a4bb058ce8bbf96082558847246ea91f31",
+    "pilot-documents-verified.json": "1c1ee02755775a3abc4e4ad310dea946843991148c1e0cdd89a6337f8b46a260",
+    "drive-incremental-state.json": "c521ada2097d56504f9be377f04b6910c8f2bb6e10d7654839108c48ddfe9312",
+    "drive-phone-geometry.json": "b8ea3e48b7f8dd76b1bea1ecc42c9a6131e602cd2f53e0e201e5e0c4f3997bf7",
+    "drive-phone-320-geometry.json": "6a23a8479e25d29206bcea38fdfff4e52a47acbf4129afe83678f6f9a5c95896",
+    "final-campaign-authority-readback.json": "4defb6b872c8a6a06ebb505b6439309a9d8e89a75534a7bbce3d7696275928b4",
+    "drive-full-restore-proof.json": "a27376855b52783350171a1920e3f857998ebf769c208693fc807a8952fae6f8",
+    "backup-crypto-release-identity.txt": "3ea257eb8f51f9f2a6a61f15a50b9ff91187de4fa32348476011d5e20d2fd360",
+    "drive-incremental-restore-proof.json": "13ebd55107b862bb54fa286c6d97739dc31849460bba9a5d32d0781b007c9fa7",
+    "verify-drive-incremental.py": "80e588e3f58c6928393d481b06f974a6515b6237a74a684b334737f3f1018f2b"
+  },
+  "qualification_history": [
+    "First manual stop deliberately interrupted only the backup process and request timer; source API and publisher stayed active. The same large transfer resumed from its acknowledged range.",
+    "Native Meta first rejected the missing callback, then the not-enabled pages_manage_posts scope; callback entries were preserved/added and the permission enabled for testing. No external-user app review approval or publication was obtained.",
+    "Continuation readback found the 16 guide source files present but their prior planned import had no completed receipt. Registered all 16 as private assets, verified 38 ready assets, then completed an incremental backup without duplicating the master."
+  ]
 }
