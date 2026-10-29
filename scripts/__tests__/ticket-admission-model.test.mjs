@@ -831,3 +831,100 @@ test('eligibility controls detect cached predicates, omitted locking and effects
     t.diagnostic(JSON.stringify({ control, ...result }));
   }
 });
+
+// One editor and one new hold share Tier. Event eligibility/terms have already
+// succeeded. Financial identity is required at admission, not after later edits.
+function exploreTierPricing({ omitPrice = false, omitCurrency = false,
+  omitTierLock = false, effectsBeforeCheck = false } = {}) {
+  const pairs = [0, 1].flatMap(price => ['USD', 'EUR'].map(currency => ({ price, currency })));
+  const same = (a, b) => a.price === b.price && a.currency.toUpperCase() === b.currency.toUpperCase();
+  const coverage = new Set(), witnesses = {};
+  let inputs = 0, states = 0, transitions = 0, retainedHistoricalStates = 0;
+  for (const initial of pairs) for (const target of pairs) {
+    if (same(initial, target)) continue;
+    inputs++;
+    const queue = [{ tier: initial, quote: null, observed: null, lock: null,
+      phase: [0, 0], result: null, effects: 0, mismatchAtAdmission: false, trace: [] }];
+    const seen = new Set();
+    while (queue.length) {
+      const current = queue.shift(), { trace, ...identity } = current;
+      const key = JSON.stringify(identity);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (current.mismatchAtAdmission) witnesses.FinancialSnapshotMatchesAtAdmission ??= { initial, target, trace };
+      if (current.result === 'refused' && current.effects) {
+        witnesses.RefusalHasNoEffects ??= { initial, target, trace };
+      }
+      if (current.phase[0] === 2 && current.result === 'accepted'
+        && !current.mismatchAtAdmission && !same(current.quote, current.tier)) retainedHistoricalStates++;
+      const push = (next, label) => {
+        transitions++;
+        coverage.add(label);
+        next.trace = [...trace, label];
+        queue.push(next);
+      };
+      if (current.phase[0] === 0 && current.lock === null) {
+        const next = structuredClone(current);
+        next.lock = 'editor'; next.phase[0] = 1;
+        push(next, 'editor:lock');
+      } else if (current.phase[0] === 1) {
+        const next = structuredClone(current);
+        next.tier = target; next.lock = null; next.phase[0] = 2;
+        push(next, 'editor:commit');
+      }
+      if (current.phase[1] === 0) {
+        const next = structuredClone(current);
+        next.quote = current.tier; next.phase[1] = 1;
+        push(next, 'purchase:quote');
+      } else if (current.phase[1] === 1 && (omitTierLock || current.lock === null)) {
+        const next = structuredClone(current);
+        if (!omitTierLock) next.lock = 'buyer';
+        next.phase[1] = 2;
+        push(next, 'purchase:lock');
+      } else if (current.phase[1] === 2) {
+        const next = structuredClone(current);
+        next.observed = current.tier; next.phase[1] = 3;
+        push(next, 'purchase:check');
+      } else if (current.phase[1] === 3) {
+        const next = structuredClone(current);
+        const accepted = (omitPrice || current.quote.price === current.observed.price)
+          && (omitCurrency || current.quote.currency.toUpperCase() === current.observed.currency.toUpperCase());
+        next.effects = accepted || effectsBeforeCheck ? 1 : 0;
+        next.mismatchAtAdmission = accepted && !same(current.quote, current.tier);
+        next.result = accepted ? 'accepted' : 'refused'; next.phase[1] = 4;
+        if (current.lock === 'buyer') next.lock = null;
+        push(next, accepted ? 'purchase:accept' : 'purchase:refuse');
+      }
+    }
+    states += seen.size;
+  }
+  return { inputs, states, transitions, retainedHistoricalStates,
+    coverage: [...coverage].sort(), violations: Object.keys(witnesses).sort(), witnesses };
+}
+
+test('bounded new holds bind price and currency at admission while retaining historical snapshots', t => {
+  const result = exploreTierPricing();
+  assert.equal(result.inputs, 12);
+  assert.equal(result.states, 216);
+  assert.equal(result.transitions, 216);
+  assert.equal(result.retainedHistoricalStates, 12);
+  assert.deepEqual(result.violations, []);
+  for (const label of ['editor:commit', 'purchase:accept', 'purchase:refuse']) {
+    assert.ok(result.coverage.includes(label), `Missing pricing scenario: ${label}`);
+  }
+  t.diagnostic(JSON.stringify({ model: 'new-hold-tier-pricing', ...result }));
+});
+
+test('pricing controls detect omitted fields, omitted Tier locking and committed refusal effects', t => {
+  for (const control of ['omitPrice', 'omitCurrency', 'omitTierLock', 'effectsBeforeCheck']) {
+    const result = exploreTierPricing({ [control]: true });
+    assert.equal(result.states, control === 'omitTierLock' ? 264 : 216);
+    assert.equal(result.transitions, control === 'omitTierLock' ? 312 : 216);
+    const property = control === 'effectsBeforeCheck' ? 'RefusalHasNoEffects' : 'FinancialSnapshotMatchesAtAdmission';
+    assert.deepEqual(result.violations, [property]);
+    const trace = result.witnesses[property].trace;
+    assert.match(trace.at(-1), /purchase:(accept|refuse)$/);
+    assert.ok(trace.includes('editor:commit'));
+    t.diagnostic(JSON.stringify({ control, ...result }));
+  }
+});
