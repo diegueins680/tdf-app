@@ -13341,7 +13341,7 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "verification": "SQLite concurrency, two-actor HTTP boundaries, credential vault and OAuth state tests; bounded model with three negative controls; isolated actual FFmpeg exports; scoped live server observations. No full implementation refinement.",
-      "evidence": "docs/campaign-platform/operations.md; server qualification receipts retained privately; exact-commit hosted workflow when run",
+      "evidence": "reports/campaign-platform-2026-10-29.json; docs/campaign-platform/operations.md; exact-commit hosted workflow when run",
       "status": "specified and implemented",
       "critical": true,
       "domain": "CAMP",

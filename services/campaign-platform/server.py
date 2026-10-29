@@ -94,6 +94,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
     rows=s.tdf_review(actor)
     for row in rows:
      if row['asset']:row['preview_url']=signed_media_url(cfg,row['asset'])
+     children=json.loads(row['settings']).get('children',[]);row['preview_files']=[]
+     if isinstance(children,list):
+      with s.db() as d:
+       for aid in children:
+        child=d.execute('SELECT id,name FROM assets WHERE id=? AND campaign=? AND status="ready"',(aid,row['campaign'])).fetchone()
+        if child:row['preview_files'].append({'name':child['name'],'url':signed_media_url(cfg,child['id'])})
     self.respond(200,rows);return
    if method=='POST':
     data=self.read_json();self.respond(200,s.tdf_review(actor,data.get('piece'),data.get('version')));return

@@ -16986,83 +16986,233 @@
       "reviewed": true
     },
     {
-      "id": "49d1c72ba174118670bf",
+      "id": "61ed19b1b2ff8942c616",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "The 163-entry generated registry retains the 161 reviewed definitions, relabels the social.events destination from 'Eventos sociales' / 'Social events' to 'Eventos' / 'Events' (the former names stay as search synonyms; route, permissions and API scopes are unchanged), and carries the two music destinations the parent registry already defines: music.public.catalog (public, opened on the web from the app) and music.library (signed-in, no role or module requirement). Neither adds a role, module, permission or API scope. The file is generated from tdf-hq/assets/feature-registry.json and its source digest matches.",
+      "justification": "The generated mirror preserves all 163 prior entries and adds only social.music-campaigns, an authenticated web destination available to every registered user. This registry does not authorize provider writes: the campaign service independently enforces owner/team isolation, current-version approval and a strict administrator approval for TDF-channel posts. Mobile presentation is web-only with a documented exception; no new native route, payment flow or production API contract is imported.",
       "reviewed": true,
       "reviewMethod": "manual-source-review",
-      "reviewBatch": "eventos-label-2026-10-11",
+      "reviewBatch": "server-campaign-platform-2026-10-29",
       "evidence": {
         "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
         "line": 55
       },
       "previousDecision": {
-        "id": "66c48cc059727856b6f1",
+        "id": "49d1c72ba174118670bf",
         "classification": "security-system-registry",
         "disposition": "migrate-and-remove-authority-from-code",
         "specializedModel": "navigation_item, navigation_item_permission",
         "priority": "P0-security",
         "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-        "justification": "The 161-entry canonical generated registry retains the 159 reviewed definitions, preserves the existing admin.video-sources destination, and adds authenticated account.deletion discovery. This navigation metadata grants no permission or erasure authority. The deletion endpoint requires the matching authenticated account and a current-session transaction lock; the destination cannot be pinned, favorited or added to recents.",
+        "justification": "The 163-entry generated registry retains the 161 reviewed definitions, relabels the social.events destination from 'Eventos sociales' / 'Social events' to 'Eventos' / 'Events' (the former names stay as search synonyms; route, permissions and API scopes are unchanged), and carries the two music destinations the parent registry already defines: music.public.catalog (public, opened on the web from the app) and music.library (signed-in, no role or module requirement). Neither adds a role, module, permission or API scope. The file is generated from tdf-hq/assets/feature-registry.json and its source digest matches.",
         "reviewed": true,
         "reviewMethod": "manual-source-review",
-        "reviewBatch": "account-deletion-discovery-2026-10-05",
+        "reviewBatch": "eventos-label-2026-10-11",
         "evidence": {
           "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
           "line": 55
         },
         "previousDecision": {
-          "id": "44c80a6dd2f154d0d59a",
+          "id": "66c48cc059727856b6f1",
           "classification": "security-system-registry",
           "disposition": "migrate-and-remove-authority-from-code",
           "specializedModel": "navigation_item, navigation_item_permission",
           "priority": "P0-security",
           "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-          "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant. The canonical tester landing adds one public discovery destination while retaining all 158 definitions from the merged payment main, with no authorization grants changed.",
+          "justification": "The 161-entry canonical generated registry retains the 159 reviewed definitions, preserves the existing admin.video-sources destination, and adds authenticated account.deletion discovery. This navigation metadata grants no permission or erasure authority. The deletion endpoint requires the matching authenticated account and a current-session transaction lock; the destination cannot be pinned, favorited or added to recents.",
           "reviewed": true,
           "reviewMethod": "manual-source-review",
-          "reviewBatch": "mobile-program-current-main-2026-10-04",
+          "reviewBatch": "account-deletion-discovery-2026-10-05",
           "evidence": {
             "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
             "line": 55
           },
           "previousDecision": {
-            "id": "0eafdd9f0a8bbebf9a23",
+            "id": "44c80a6dd2f154d0d59a",
             "classification": "security-system-registry",
             "disposition": "migrate-and-remove-authority-from-code",
             "specializedModel": "navigation_item, navigation_item_permission",
             "priority": "P0-security",
             "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-            "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant.",
+            "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant. The canonical tester landing adds one public discovery destination while retaining all 158 definitions from the merged payment main, with no authorization grants changed.",
             "reviewed": true,
-            "reviewMethod": "deterministic-policy-v3",
-            "reviewBatch": "universal-interactions-2026-09-28",
+            "reviewMethod": "manual-source-review",
+            "reviewBatch": "mobile-program-current-main-2026-10-04",
             "evidence": {
               "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
               "line": 55
             },
             "previousDecision": {
-              "id": "5147eb2751a01d8b4c73",
+              "id": "0eafdd9f0a8bbebf9a23",
               "classification": "security-system-registry",
               "disposition": "migrate-and-remove-authority-from-code",
               "specializedModel": "navigation_item, navigation_item_permission",
               "priority": "P0-security",
               "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-              "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+              "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant.",
               "reviewed": true,
               "reviewMethod": "deterministic-policy-v3",
               "reviewBatch": "universal-interactions-2026-09-28",
               "evidence": {
                 "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
                 "line": 55
+              },
+              "previousDecision": {
+                "id": "5147eb2751a01d8b4c73",
+                "classification": "security-system-registry",
+                "disposition": "migrate-and-remove-authority-from-code",
+                "specializedModel": "navigation_item, navigation_item_permission",
+                "priority": "P0-security",
+                "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+                "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+                "reviewed": true,
+                "reviewMethod": "deterministic-policy-v3",
+                "reviewBatch": "universal-interactions-2026-09-28",
+                "evidence": {
+                  "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                  "line": 55
+                }
               }
             }
           }
-        }
+        },
+        "concurrentReviewHistory": [
+          {
+            "id": "0bd23196640f34d2ea12",
+            "classification": "security-system-registry",
+            "disposition": "migrate-and-remove-authority-from-code",
+            "specializedModel": "navigation_item, navigation_item_permission",
+            "priority": "P0-security",
+            "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+            "justification": "The160-entry mirror combines the newly shipped147ec8bc Mobile tester program (public.mobile) with strict-admin video-source discovery. It preserves governed payment return behavior and the complete new shipped lineage per explicit product decision. Generated discovery is not backend authorization. Both prior review histories are retained.",
+            "reviewed": true,
+            "reviewMethod": "source-review-2026-10-04",
+            "reviewBatch": "booking-conformance-2026-10-05",
+            "evidence": {
+              "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+              "line": 55
+            },
+            "previousDecisions": [
+              {
+                "id": "714645381e4ae8080a3a",
+                "classification": "security-system-registry",
+                "disposition": "migrate-and-remove-authority-from-code",
+                "specializedModel": "navigation_item, navigation_item_permission",
+                "priority": "P0-security",
+                "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+                "justification": "The shipped Mobile lineage receives only generated API types and the combined 159-entry feature mirror: strict-admin video settings remain concealed, and the new provider-return route remains technical with no native destination. This does not import newer Mobile payment flows. Backend capability enforcement and provider activation gates remain authoritative.",
+                "reviewed": true,
+                "reviewMethod": "source-review-2026-10-04",
+                "reviewBatch": "consolidated-main-specification-conformance",
+                "evidence": {
+                  "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                  "line": 55
+                },
+                "previousDecisions": [
+                  {
+                    "id": "e9fb532f768747ee20c0",
+                    "classification": "security-system-registry",
+                    "disposition": "migrate-and-remove-authority-from-code",
+                    "specializedModel": "navigation_item, navigation_item_permission",
+                    "priority": "P0-security",
+                    "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+                    "justification": "Generated client discovery mirror adds only admin.video-sources with strict Admin role/module predicates and concealed Mobile presentation. Existing 157 entries are unchanged. Backend RecordsIngestion independently enforces strict Admin. Runtime selectable grants remain database-governed; this generated mirror cannot authorize a request.",
+                    "reviewed": true,
+                    "reviewMethod": "source-review-2026-10-04",
+                    "reviewBatch": "specification-conformance-shipped-mobile",
+                    "evidence": {
+                      "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                      "line": 55
+                    }
+                  },
+                  {
+                    "id": "0eafdd9f0a8bbebf9a23",
+                    "classification": "security-system-registry",
+                    "disposition": "migrate-and-remove-authority-from-code",
+                    "specializedModel": "navigation_item, navigation_item_permission",
+                    "priority": "P0-security",
+                    "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+                    "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant.",
+                    "reviewed": true,
+                    "reviewMethod": "deterministic-policy-v3",
+                    "reviewBatch": "universal-interactions-2026-09-28",
+                    "evidence": {
+                      "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                      "line": 55
+                    },
+                    "previousDecision": {
+                      "id": "5147eb2751a01d8b4c73",
+                      "classification": "security-system-registry",
+                      "disposition": "migrate-and-remove-authority-from-code",
+                      "specializedModel": "navigation_item, navigation_item_permission",
+                      "priority": "P0-security",
+                      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+                      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+                      "reviewed": true,
+                      "reviewMethod": "deterministic-policy-v3",
+                      "reviewBatch": "universal-interactions-2026-09-28",
+                      "evidence": {
+                        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                        "line": 55
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "44c80a6dd2f154d0d59a",
+                "classification": "security-system-registry",
+                "disposition": "migrate-and-remove-authority-from-code",
+                "specializedModel": "navigation_item, navigation_item_permission",
+                "priority": "P0-security",
+                "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+                "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant. The canonical tester landing adds one public discovery destination while retaining all 158 definitions from the merged payment main, with no authorization grants changed.",
+                "reviewed": true,
+                "reviewMethod": "manual-source-review",
+                "reviewBatch": "mobile-program-current-main-2026-10-04",
+                "evidence": {
+                  "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                  "line": 55
+                },
+                "previousDecision": {
+                  "id": "0eafdd9f0a8bbebf9a23",
+                  "classification": "security-system-registry",
+                  "disposition": "migrate-and-remove-authority-from-code",
+                  "specializedModel": "navigation_item, navigation_item_permission",
+                  "priority": "P0-security",
+                  "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+                  "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant.",
+                  "reviewed": true,
+                  "reviewMethod": "deterministic-policy-v3",
+                  "reviewBatch": "universal-interactions-2026-09-28",
+                  "evidence": {
+                    "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                    "line": 55
+                  },
+                  "previousDecision": {
+                    "id": "5147eb2751a01d8b4c73",
+                    "classification": "security-system-registry",
+                    "disposition": "migrate-and-remove-authority-from-code",
+                    "specializedModel": "navigation_item, navigation_item_permission",
+                    "priority": "P0-security",
+                    "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+                    "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+                    "reviewed": true,
+                    "reviewMethod": "deterministic-policy-v3",
+                    "reviewBatch": "universal-interactions-2026-09-28",
+                    "evidence": {
+                      "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                      "line": 55
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
       },
       "concurrentReviewHistory": [
         {

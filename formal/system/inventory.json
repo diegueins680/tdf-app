@@ -1,11 +1,12 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mobileRevision": "f7d2e5a3eb599adeb16b096c60649116f495bb31",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
       ".github/workflows/build.yml",
+      ".github/workflows/campaign-platform.yml",
       ".github/workflows/catalog-list-audit.yml",
       ".github/workflows/check-messaging-token.yml",
       ".github/workflows/check-mobile-distribution.yml",
@@ -98,6 +99,8 @@
       "ops/hetzner/recovery-tools.json",
       "ops/hetzner/rehearse-postgres-restore.py",
       "ops/hetzner/release-journal.py",
+      "ops/hetzner/tdf-postgres-backup.service",
+      "ops/hetzner/tdf-postgres-backup.timer",
       "ops/privacy/request-workflow.json"
     ],
     "package-lock.json": [
@@ -624,6 +627,38 @@
       "scripts/verify-simulator-health.sh",
       "scripts/verify-system-evidence.mjs",
       "scripts/wrap-catalog-canonical-schema.mjs"
+    ],
+    "services": [
+      "services/campaign-platform/backup.py",
+      "services/campaign-platform/deploy.py",
+      "services/campaign-platform/domain.py",
+      "services/campaign-platform/graphics.py",
+      "services/campaign-platform/import_rojo.py",
+      "services/campaign-platform/media.py",
+      "services/campaign-platform/model_check.py",
+      "services/campaign-platform/monitor.py",
+      "services/campaign-platform/notifications.py",
+      "services/campaign-platform/planning.py",
+      "services/campaign-platform/providers.py",
+      "services/campaign-platform/qualify_media.py",
+      "services/campaign-platform/requirements.txt",
+      "services/campaign-platform/schema.sql",
+      "services/campaign-platform/server.py",
+      "services/campaign-platform/tdf-campaign-api.service",
+      "services/campaign-platform/tdf-campaign-backup.service",
+      "services/campaign-platform/tdf-campaign-backup.timer",
+      "services/campaign-platform/tdf-campaign-monitor.service",
+      "services/campaign-platform/tdf-campaign-monitor.timer",
+      "services/campaign-platform/tdf-campaign-worker.service",
+      "services/campaign-platform/tests/test_domain.py",
+      "services/campaign-platform/tests/test_http.py",
+      "services/campaign-platform/ui/app.js",
+      "services/campaign-platform/ui/index.html",
+      "services/campaign-platform/ui/style.css",
+      "services/campaign-platform/ui/tdf-logo.png",
+      "services/campaign-platform/ui/tdf-logo.svg",
+      "services/campaign-platform/worker.py",
+      "services/campaign-platform/youtube_upload.py"
     ],
     "streaming": [
       "streaming/docker-compose.streaming.yml",
@@ -1204,6 +1239,7 @@
       "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
       "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
       "tdf-hq-ui/src/pages/MobileAppPage.tsx",
+      "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx",
       "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
       "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
       "tdf-hq-ui/src/pages/MusicLibraryPage.tsx",
@@ -2764,6 +2800,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1b60139feb4d9fb0",
+      "path": ".github/workflows/campaign-platform.yml",
+      "sha256": "0afa7b1525456426a5e9c732af89592248af7d8d1e03cd739d0a265776d348fb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-e322a9d58d6bbd4b",
       "path": ".github/workflows/catalog-list-audit.yml",
       "sha256": "041b23f7325b9960d0f8158e15a154cd205b02ae742c64dc37f65cd7b52e20f5",
@@ -3253,6 +3295,18 @@
       "id": "SURFACE-d640099eda9235a7",
       "path": "ops/hetzner/release-journal.py",
       "sha256": "1c9dccb95894a676582e27acee4f8191225dcbd33a776f773e12fc322289635d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8b539014a90ca8b5",
+      "path": "ops/hetzner/tdf-postgres-backup.service",
+      "sha256": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-98b8d3b883a561d9",
+      "path": "ops/hetzner/tdf-postgres-backup.timer",
+      "sha256": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5238,7 +5292,7 @@
     {
       "id": "SURFACE-d18ca1829df72762",
       "path": "scripts/specification-inventory.py",
-      "sha256": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
+      "sha256": "717ca96ab62100ea5bd349ad0365a0906461ea1d55e170c1b9e605b72c3404ab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6090,7 +6144,7 @@
     {
       "id": "SURFACE-0d2014021bc7262a",
       "path": "scripts/test-specification-inventory.py",
-      "sha256": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
+      "sha256": "803f1a3ba0e54e29c3f7ea8fcc2c7e263a0b1c450c0e358912091bd745332369",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6373,6 +6427,186 @@
       "id": "SURFACE-531960a153f9c90c",
       "path": "scripts/wrap-catalog-canonical-schema.mjs",
       "sha256": "ed89532f6e41753b0b766025eb962809bca9908e45fd4c3d6d1746bb06747b9b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9063cab573083a3b",
+      "path": "services/campaign-platform/backup.py",
+      "sha256": "096fe80be625cbed09efee05b3f3abe2c330e183638d57e972b04c2290f303df",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bf7873f7b8d0b162",
+      "path": "services/campaign-platform/deploy.py",
+      "sha256": "5b243088053a5e50d3473010d4ed37334f1ffb9d0bb149448c6d66b4a7041628",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4d817f76014e9965",
+      "path": "services/campaign-platform/domain.py",
+      "sha256": "c449947fb05a0b17d5109a99fe48c876e3b46ce446071257f409276e55691a83",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-111d11475a9b877e",
+      "path": "services/campaign-platform/graphics.py",
+      "sha256": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3989ae6c13229e72",
+      "path": "services/campaign-platform/import_rojo.py",
+      "sha256": "ff1575eca3f2553a2ee9a89b37a3e8443fad838f830f67e4dd5d876be56535c4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-00d53256ed14388b",
+      "path": "services/campaign-platform/media.py",
+      "sha256": "0964eacd3e98878b379edc1aa1770acbca7d5cdda61c7feaceaf72db5112112c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c882a5d167f0f60d",
+      "path": "services/campaign-platform/model_check.py",
+      "sha256": "96aba654ff652f9e0279b96d60a632622037f2d9f4ff05f64855ebbc36d9bcc2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a282a0c72e09f7fd",
+      "path": "services/campaign-platform/monitor.py",
+      "sha256": "58a594f304a9f037eca507a9b9614b9f9ca3b1e6f627afd76ac57570dd165529",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-03f680412847c2c7",
+      "path": "services/campaign-platform/notifications.py",
+      "sha256": "731a4d446e224b26bd8b1da6061af4220486dee498aae433c44e0a6700038860",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9bb212c5068f9498",
+      "path": "services/campaign-platform/planning.py",
+      "sha256": "39103469c4e025eff5b5552ab89da959950606efa44071bfcaf7c2cfdfc039fa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dd915c4b36f5a11e",
+      "path": "services/campaign-platform/providers.py",
+      "sha256": "a31cb90aaadc1063aadd470d3f18bc73735fd777fd00627fa3eb2a5b11dcf933",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-15fcf4a4a5ebcfd1",
+      "path": "services/campaign-platform/qualify_media.py",
+      "sha256": "1c82685fb2e45a3ce10b991876c30a3fdae729c1d8c44df0961d51fd5e3c3d95",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9797e32784d6619e",
+      "path": "services/campaign-platform/requirements.txt",
+      "sha256": "47f9d65a21898d47bcdb492a2b2abf5e9a767e738eeaa329151706ed6c950f87",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a81a32947bfdf9ef",
+      "path": "services/campaign-platform/schema.sql",
+      "sha256": "8b5755a355bf1ea8fb67569024e8f6ab31dcd64a617f3273b4184867c4383d1a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-046f5b5bc5783c06",
+      "path": "services/campaign-platform/server.py",
+      "sha256": "68adde653ca9153253167974a0b696e6db32d28d9ddd2a0433a08a268f9e54a8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-66651f2b3df90bd7",
+      "path": "services/campaign-platform/tdf-campaign-api.service",
+      "sha256": "c583a4b1fb5da557cfe3d0160b293718acc407980a2a07183375041571ba9bec",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7bb29e6f7830138a",
+      "path": "services/campaign-platform/tdf-campaign-backup.service",
+      "sha256": "7ffc4f368bf7e978b15352e6de1b56d8cf279edabdd41fc531b046ff50749102",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5f0fe5c5ea932bb1",
+      "path": "services/campaign-platform/tdf-campaign-backup.timer",
+      "sha256": "fd87995d8f61ec2a387ff7b68ae97f8e533bb261f639ebf05e5795fdb21c445d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c1cfa7121a40fc4e",
+      "path": "services/campaign-platform/tdf-campaign-monitor.service",
+      "sha256": "d35e2cd2667fc79d1d1deb098b1096b975f11723830d9a7f318376a22eed618c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-83ba6d77e61aa929",
+      "path": "services/campaign-platform/tdf-campaign-monitor.timer",
+      "sha256": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c5b1752afe7e5770",
+      "path": "services/campaign-platform/tdf-campaign-worker.service",
+      "sha256": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1d9e726769e9e1db",
+      "path": "services/campaign-platform/tests/test_domain.py",
+      "sha256": "e1fcfcb79c736e0783d650e5d8a179a4e316c389a58876ea49659979d8119d6f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-682ec32ac659d8cb",
+      "path": "services/campaign-platform/tests/test_http.py",
+      "sha256": "14da0852850ee2c455e49af98a5a5dc881ec11e7716334399374a01eda4efdf1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-39b88f2b72e34e12",
+      "path": "services/campaign-platform/ui/app.js",
+      "sha256": "d5d54fd52a49beb1881838565d0dea9bb5afb684dcd021d19bfe43d9258dbae2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3921e200531965a2",
+      "path": "services/campaign-platform/ui/index.html",
+      "sha256": "b69997b418c5bac57bb8b68ec35655e096f854cf1285ca6663612bf93e330004",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-28072cb5d8ec61ba",
+      "path": "services/campaign-platform/ui/style.css",
+      "sha256": "6cad8291175503191933c9e25118cae0011aeeace5f7bef5d9045dc820c13cce",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3219b339bd433408",
+      "path": "services/campaign-platform/ui/tdf-logo.png",
+      "sha256": "a0a1c050709ac1630450265e6fc0c5c7aa03f16a3733595c64f7f64c1138d0ce",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d483edd735c01f0f",
+      "path": "services/campaign-platform/ui/tdf-logo.svg",
+      "sha256": "304000649b977061530239f82214efd2c37fef1db6a14823bb6e6d6ecb9f6092",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-eabde3f755919b20",
+      "path": "services/campaign-platform/worker.py",
+      "sha256": "a4149ddb33ed6ffb57be3990c1ab72abd9bd7766ce54bcaa5e564034bd69fdb3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4a81d91536277a61",
+      "path": "services/campaign-platform/youtube_upload.py",
+      "sha256": "a7a0e513d0e607d88f8e87d39b6650224dc342fb5b5bee843ece578fee2c801f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8496,7 +8730,7 @@
     {
       "id": "SURFACE-2ee656af772bf719",
       "path": "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "sha256": "7f091bdd2722c7eeea2a7003f098a6a265c6f2d1f8f6b7fc15288d009cebec33",
+      "sha256": "94364cf09fdb93d4166eba58d8594e48c10b34b51a6e4fe19c56e8a577b6e750",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9832,6 +10066,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-b372c70ee4eae69c",
+      "path": "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx",
+      "sha256": "b914809cea81f9ff7b4c6f02d95cf01813ae506779335e9113c50d04393c76a9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-eb82e4705c1d2848",
       "path": "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
       "sha256": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
@@ -10590,7 +10830,7 @@
     {
       "id": "SURFACE-f0dfc7a18e8b49c7",
       "path": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
-      "sha256": "7841629427f2d73e5732da6c16cb8be991bbbb624c5e51d3e963c247520b71fb",
+      "sha256": "bd49b500f0243ae6413203205466d5a1a2220c9cd5a10de3e41a3420275cffb3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11442,7 +11682,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "0930159122e545da4166de525b05449b4b22f5207f0bf645ae90d0bb7eee1e92",
+      "sha256": "6adc9fd306b794efa0e2f853484404f60d2768422c834d1e3cb151ea871e61b3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18438,7 +18678,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "f9bd8a81e1e95afb53af970c6e3b165b1777ef709183528cac7126c3f08f72fe",
+      "sha256": "103bb6eaf591be0c427e961e94e72d4418eb3cbc9b82696a8f6ef94810a054c2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19745,6 +19985,13 @@
     {
       "path": "docs/campaign-automation.md",
       "sha256": "ce072923638a314b0820af65f3cf1e4c48fd8ac9b1137cdba9989c4de63d1ef5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/campaign-platform/operations.md",
+      "sha256": "c17dae0982816c5fc1a99d614a03c0d69b8507897ad35f70962f4849dfd0e828",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27185,7 +27432,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "3bc84f42151c341af9bbbeb0d83a55a3d1f0a530712b5d19687678fc98260de0",
+      "sha256": "800a18496c340fc74f3fbe1bd348bceff471bf246439e054e55a672013674a5f",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -27249,6 +27496,13 @@
     {
       "path": "formal/system/build-trust.md",
       "sha256": "a151c33756459b9de9133382fa93d32dec616abf063c5ac6401f6954c89aef4f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/campaign-server.md",
+      "sha256": "51d3ecff44cbbe21c70a59b96d678f86a2a42de90a99a030e04ccba315abfd8a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27843,7 +28097,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "370509c5fcdbb712c771ee57749cc8dd2967899b474e582da30e93411788c359",
+      "sha256": "c8c272c8363f516c4ac81d86a4bc778596d81d9d23763854fe0362ff6a6240e7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

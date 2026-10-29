@@ -182,7 +182,7 @@ class Store:
  def tdf_review(self,actor,piece=None,version=None):
   if not actor.get('admin'):raise Denied('Solo administradores de TDF.',403)
   with self.db(True) as d:
-   rows=d.execute('SELECT p.*,c.name AS campaign_name FROM pieces p JOIN campaigns c ON c.id=p.campaign JOIN accounts a ON a.id=p.account WHERE a.scope="tdf" AND p.approved_version=p.version AND p.status="approved" AND p.tdf_approval_version IS NOT p.version').fetchall()
+   rows=d.execute('SELECT p.*,c.name AS campaign_name,c.timezone AS campaign_timezone,a.handle AS account_handle,a.external_id AS account_external_id FROM pieces p JOIN campaigns c ON c.id=p.campaign JOIN accounts a ON a.id=p.account WHERE a.scope="tdf" AND p.approved_version=p.version AND p.status="approved" AND p.tdf_approval_version IS NOT p.version').fetchall()
    if piece:
     row=next((r for r in rows if r['id']==piece),None)
     if not row or row['version']!=version:raise Denied('Solicitud no encontrada o versión distinta.',409)
