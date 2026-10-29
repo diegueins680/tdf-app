@@ -15235,7 +15235,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "752c46c93d45ae82b5fce380a9616764a5bb2d97858f0b56a09285ef19b8dfaf",
+      "sha256": "cda8992999a9f9ac324172aa765d78c37c82362be76b5fde51dfcabbfceeb8f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15337,7 +15337,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "54f7ecb8770f5b7ee98d8cbc97ec9c160e9f1ca95d21f32609f7899de8273df8",
+      "sha256": "8080a090e36d8eb6092de3fc6fc9c80339fa9f34f4d3b181518129e1b314390d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15565,7 +15565,7 @@
     {
       "id": "SURFACE-b48f5e82f84a1379",
       "path": "tdf-hq/src/TDF/Ticketing/Inventory.hs",
-      "sha256": "4c4a50c689e0f9ff27afd95ece0e8e3b8bc29fe26c8b56bdccf9daedb922c1ab",
+      "sha256": "12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15799,7 +15799,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "5c618c4a8de46e236039c1cca0a2b6bec5f958c00cbc3216d9a7ea106ee71f78",
+      "sha256": "4cab19a0b36115efb835bced07f8543284647ecebbdc25afdd922ba14e31c0a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16165,7 +16165,7 @@
     {
       "id": "SURFACE-b88bd7d333ae2b44",
       "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
-      "sha256": "772dbe703b1b80ffa120ab9a5a4cf6cb97f808eb0e1a837ee710d6cb48dfd4e5",
+      "sha256": "79ee5e669a2e4f14adc869ed26d3828bd2ef174ed8fb1472d81a206303a4fbcb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27472,7 +27472,7 @@
     },
     {
       "path": "formal/system/legacy-ticket-inventory.md",
-      "sha256": "abcf11f48af8acafaf29e3feebf3fd323fe0ebcca20322b8099bef12f590b122",
+      "sha256": "ef131d8320337d5ccae19d238ae08b83ef4334bcda3f63cef588b43a230b02e4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27493,7 +27493,7 @@
     },
     {
       "path": "formal/system/legacy-ticket-promo-snapshot.md",
-      "sha256": "39beedf194ec499f8881e47aedfac7e993a1201b6f24d6be094f9b86429ac4ff",
+      "sha256": "678b95ce33ec5e279320fc6ccec500f35f16bff877f336527be64aac87eee9f3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -27836,7 +27836,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b746ae421051d8d3369f2ad8c4ece44d0dd3f13efd1598dc349b9b93912f1966",
+      "sha256": "65e6740de961759d20c96f593087e682fe4bb1110e3b1c4df9ffa20e50c64914",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -27914,6 +27914,13 @@
     {
       "path": "formal/system/ticket-manual-review.md",
       "sha256": "39eaed4619a4b6d883d5b347009dbe3802f7afa9ff944ee6bc3cf629baefadd5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ticket-reservation-clock.md",
+      "sha256": "8e25fe8724f48710dfa8e31237bc10023123717bb9601859dfcc4e537266be80",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
