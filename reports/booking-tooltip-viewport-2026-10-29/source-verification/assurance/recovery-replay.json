@@ -1,0 +1,100 @@
+[
+  {
+    "id": "window-equivalence",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "schema-correspondence",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "issuance-admission",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "issuance-exact",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "witness-0-0",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[issued = 0, current = 0, expires = 900]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "witness-0-899",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[issued = 0, current = 899, expires = 900]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "witness-9223372036854774907-0",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[issued = 9223372036854774907,\n current = 9223372036854774907,\n expires = 9223372036854775807]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "witness-9223372036854774907-899",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[issued = 9223372036854774907,\n current = 9223372036854775806,\n expires = 9223372036854775807]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "witness-overflow-rejection",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[issued = 9223372036854774908]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "control-inclusive-deadline",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[current = 6014557302353297604,\n expires = 6014557302353297604,\n issued = 6014557302353296704]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "control-future-issuance",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[expires = 1073741825,\n current = 13835058056355905535,\n issued = 1073740925]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "control-validator-lifetime",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[current = 2892911374034272252,\n expires = 2892911374034272402,\n issued = 2892911374034271502]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "control-database-lifetime",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[expires = 1262, issued = 361]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "control-issuance-lifetime",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[issued = 0]",
+    "reasonUnknown": null
+  }
+]

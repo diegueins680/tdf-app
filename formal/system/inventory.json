@@ -2898,7 +2898,7 @@
     {
       "id": "SURFACE-9517b2194ab847fb",
       "path": "e2e/web/booking-catalog-recovery.spec.mjs",
-      "sha256": "f65777a6f8b5f9823e0e66ea4d49900aef1051d00c4e4d4ce8e4c085cbf23dcd",
+      "sha256": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9984,7 +9984,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "6abc794d19484430b8e0b53da892826b80a20fefbb30c69f8ea0fccfb632be5b",
+      "sha256": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27233,6 +27233,20 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/booking-tooltip-viewport.md",
+      "sha256": "3e1b489f81fede443101fd8f259603c1a989f040b8ba3eac16324139d13feeba",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/booking-viewport-bounds.md",
+      "sha256": "c8d4474bf2041987906192b6560ae09e1d5ef08d44964cb080bf2719c6700263",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/bookings.md",
       "sha256": "39a90741bfb9d3a0f6ff199680be4a03d7576aaa50e51ad89c72fbb12c4f8e81",
       "authority": "inferred",
@@ -27843,7 +27857,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "370509c5fcdbb712c771ee57749cc8dd2967899b474e582da30e93411788c359",
+      "sha256": "91c0e168aadba00b3d5fb91d3d43a99d639ffc5038b93c9c81a6d1e53005e840",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

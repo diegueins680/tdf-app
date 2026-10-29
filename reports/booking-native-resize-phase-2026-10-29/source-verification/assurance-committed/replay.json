@@ -1,0 +1,72 @@
+[
+  {
+    "id": "capture-safety",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "capture-admission",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "capture-witness-0",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[current = 0, limit = 1, amount = 1]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "capture-witness-1",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[current = 1,\n limit = 9223372036854775807,\n amount = 9223372036854775806]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "capture-legacy-counterexample",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[current = 1,\n limit = 9223372036854775807,\n amount = 9223372036854775807]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "refund-safety",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "refund-admission",
+    "expected": "unsat",
+    "result": "unsat",
+    "model": null,
+    "reasonUnknown": null
+  },
+  {
+    "id": "refund-witness-0",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[current = 0, limit = 1, amount = 1]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "refund-witness-1",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[current = 1,\n limit = 9223372036854775807,\n amount = 9223372036854775806]",
+    "reasonUnknown": null
+  },
+  {
+    "id": "refund-legacy-counterexample",
+    "expected": "sat",
+    "result": "sat",
+    "model": "[current = 1,\n limit = 9223372036854775807,\n amount = 9223372036854775807]",
+    "reasonUnknown": null
+  }
+]
