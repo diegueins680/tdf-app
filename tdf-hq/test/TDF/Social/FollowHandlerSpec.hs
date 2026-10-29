@@ -4,7 +4,7 @@ module TDF.Social.FollowHandlerSpec (spec) where
 
 import Control.Concurrent (newEmptyMVar, putMVar, takeMVar, threadDelay, tryPutMVar)
 import Control.Concurrent.Async (wait, withAsync)
-import Control.Exception (finally)
+import Control.Exception (bracket, finally)
 import Control.Monad (forM_, void)
 import qualified Data.ByteString.Char8 as BS8
 import Database.Persist.Postgresql (createPostgresqlPool)
@@ -18,6 +18,7 @@ import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Char (chr)
 import Data.Int (Int64)
 import Data.List (sort)
+import Data.Pool (destroyAllResources)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
@@ -48,6 +49,8 @@ import TDF.API.SocialEventsAPI
 import TDF.DTO.SocialEventsDTO
     ( ArtistDTO
     , ArtistFollowerDTO (..)
+    , EventBudgetLineDTO (..)
+    , EventFinanceSummaryDTO (..)
     , EventDTO (..)
     , EventMetadataUpdateDTO (..)
     , EventMomentCreateDTO (..)
@@ -482,6 +485,86 @@ spec = describe "social event handler helpers" $ do
             "Stored event metadata contains unknown fields: curency"
         assertInvalid (Just "{\"currency\":\"USDT\"}") "Stored event currency is invalid"
         assertInvalid (Just "{\"budgetCents\":-1}") "Stored event budget is invalid"
+
+    describe "event finance report range" $ do
+        it "rejects overflowing budget actuals rather than reporting a negative sum" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 0
+                rangeEntry env "expense" "manual" "posted" maxBound
+                rangeEntry env "expense" "manual" "posted" 1
+                rangeReject =<< rangeBudgetList env
+
+        it "refuses an overflowing budget update before changing stored fields" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 7
+                rangeEntry env "expense" "manual" "posted" maxBound
+                rangeEntry env "expense" "manual" "posted" 1
+                rangeReject =<< rangeBudgetUpdate env (rangeBudgetPayload 99)
+                stored <- runSqlPool (get (toSqlKey 1 :: EventBudgetLineId)) (envPool env)
+                fmap eventBudgetLinePlannedCents stored `shouldBe` Just 7
+
+        it "reports the exact supported budget boundary" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 0
+                rangeEntry env "expense" "manual" "posted" (maxBound - 1)
+                rangeEntry env "expense" "manual" "posted" 1
+                result <- rangeBudgetList env
+                fmap (map eblActualCents) result `shouldBe` Right [Just maxBound]
+
+        forM_ ["income", "expense"] $ \direction -> do
+            it ("rejects overflowing planned " <> T.unpack direction) $
+                withFinanceRangeEnv $ \env -> do
+                    rangeBudget env 1 direction maxBound
+                    rangeBudget env 2 direction 1
+                    rangeReject =<< rangeSummary env
+            it ("rejects overflowing posted manual " <> T.unpack direction) $
+                withFinanceRangeEnv $ \env -> do
+                    rangeEntry env direction "manual" "posted" maxBound
+                    rangeEntry env direction "manual" "posted" 1
+                    rangeReject =<< rangeSummary env
+
+        forM_ [("manual", "income"), ("manual", "expense"),
+               ("contract_commitment", "expense"), ("purchase_order", "expense")] $ \(source, direction) ->
+            it ("rejects overflowing draft " <> T.unpack source <> " " <> T.unpack direction) $
+                withFinanceRangeEnv $ \env -> do
+                    rangeEntry env direction source (if source `elem` ["contract_commitment", "purchase_order"] then "posted" else "draft") maxBound
+                    rangeEntry env direction source "draft" 1
+                    rangeReject =<< rangeSummary env
+
+        it "checks combined canonical and legacy ticket revenue before narrowing" $
+            withFinanceRangeEnv $ \env -> do
+                rangeTicket env 1 "paid" maxBound
+                rangeTicket env 2 "paid" 1
+                runSqlPool (do
+                    rawExecute "INSERT INTO commerce_checkout_session VALUES ('canonical',? ,0,'USD')" [toPersistValue (maxBound :: Int)]
+                    rawExecute "INSERT INTO event_ticket_checkout_runtime VALUES (1,7,'canonical')" []) (envPool env)
+                rangeReject =<< rangeSummary env
+
+        it "checks combined manual and ticket receivables" $
+            withFinanceRangeEnv $ \env -> do
+                rangeEntry env "income" "manual" "draft" maxBound
+                rangeTicket env 1 "pending" 1
+                rangeReject =<< rangeSummary env
+
+        it "preserves exact supported sums and legitimate negative balances" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 10
+                rangeEntry env "income" "manual" "posted" 20
+                rangeEntry env "expense" "liability_payment" "posted" 30
+                result <- rangeSummary env
+                fmap (\dto -> (efsActualIncomeCents dto, efsActualExpenseCents dto,
+                    efsNetCents dto, efsLiabilityBalanceCents dto, efsBudgetVarianceCents dto,
+                    efsBudgetUtilizationPct dto)) result `shouldBe` Right (20,30,-10,-30,Just (-20),Just 300)
+
+        it "allows maxBound and keeps posted, draft and void filters separate" $
+            withFinanceRangeEnv $ \env -> do
+                rangeEntry env "income" "manual" "posted" (maxBound - 1)
+                rangeEntry env "income" "manual" "posted" 1
+                rangeEntry env "income" "manual" "void" maxBound
+                rangeEntry env "expense" "manual" "draft" 3
+                result <- rangeSummary env
+                fmap (\dto -> (efsActualIncomeCents dto,efsAccountsPayableCents dto,
+                    efsActualExpenseCents dto,efsBudgetCents dto)) result `shouldBe` Right (maxBound,3,0,Nothing)
 
     it "decodes stored promo-code tier ids only from JSON text arrays" $ do
         decodeStoredPromoCodeTierIds Nothing `shouldBe` Nothing
@@ -2785,3 +2868,70 @@ initializeSocialSchema = do
         \FOREIGN KEY(\"artist_id\") REFERENCES \"social_artist_profile\"(\"id\") ON DELETE CASCADE\
         \)"
         []
+
+-- These SQLite fixtures exercise the real Servant handlers and Haskell Int
+-- arithmetic. They do not attest production PostgreSQL DDL or provider behavior.
+withFinanceRangeEnv :: (Env -> IO ()) -> IO ()
+withFinanceRangeEnv action = do
+    cfg <- Config.loadConfig
+    bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+        runSqlPool (do
+            initializeSocialSchema
+            rawExecute "CREATE TABLE event_budget_line (id INTEGER PRIMARY KEY,event_id INTEGER NOT NULL,code TEXT NOT NULL,name TEXT NOT NULL,line_type TEXT NOT NULL,category TEXT NOT NULL,planned_cents INTEGER NOT NULL,notes TEXT,created_at TIMESTAMP NOT NULL,updated_at TIMESTAMP NOT NULL,UNIQUE(event_id,code))" []
+            rawExecute "CREATE TABLE event_finance_entry (id INTEGER PRIMARY KEY,event_id INTEGER NOT NULL,budget_line_id INTEGER,direction TEXT NOT NULL,source TEXT NOT NULL,category TEXT NOT NULL,concept TEXT NOT NULL,amount_cents INTEGER NOT NULL,currency TEXT NOT NULL,status TEXT NOT NULL,external_ref TEXT,notes TEXT,metadata TEXT,occurred_at TIMESTAMP NOT NULL,recorded_by_party_id TEXT,created_at TIMESTAMP NOT NULL,updated_at TIMESTAMP NOT NULL)" []
+            rawExecute "ALTER TABLE event_ticket_checkout_runtime ADD COLUMN event_id INTEGER" []
+            rawExecute "ALTER TABLE event_ticket_checkout_runtime ADD COLUMN checkout_id TEXT" []
+            rawExecute "CREATE TABLE commerce_checkout_session (id TEXT PRIMARY KEY,paid_minor INTEGER NOT NULL,refunded_minor INTEGER NOT NULL,currency TEXT NOT NULL)" []
+            insertKey (toSqlKey 7) (seedSocialEvent "1" "Finance range fixture" socialEventStartFixture)
+            rawExecute "INSERT INTO event_ticket_tier (id,event_id,code,name,price_cents,currency,quantity_total,quantity_sold,is_active,enable_waitlist,allow_transfers,refund_policy,created_at,updated_at) VALUES (1,7,'range','Range',1,'USD',10,0,1,0,1,'full',?,?)" [toPersistValue socialEventStartFixture,toPersistValue socialEventStartFixture]
+
+            ) pool
+        action Env{envPool=pool,envConfig=cfg{Config.defaultCurrency="USD"}}
+
+rangeBudget :: Env -> Int -> T.Text -> Int -> IO ()
+rangeBudget env key direction amount = runSqlPool
+    (rawExecute "INSERT INTO event_budget_line (id,event_id,code,name,line_type,category,planned_cents,created_at,updated_at) VALUES (?,7,?,'Range',?,'other',?,?,?)"
+        [toPersistValue key,toPersistValue (T.pack (show key)),toPersistValue direction,toPersistValue amount,
+         toPersistValue socialEventStartFixture,toPersistValue socialEventStartFixture]) (envPool env)
+
+rangeEntry :: Env -> T.Text -> T.Text -> T.Text -> Int -> IO ()
+rangeEntry env direction source status amount = runSqlPool
+    (rawExecute "INSERT INTO event_finance_entry (event_id,budget_line_id,direction,source,category,concept,amount_cents,currency,status,occurred_at,created_at,updated_at) VALUES (7,(SELECT id FROM event_budget_line WHERE id=1),?,?,'other','Range',?,'USD',?,?,?,?)"
+        [toPersistValue direction,toPersistValue source,toPersistValue amount,toPersistValue status,
+         toPersistValue socialEventStartFixture,toPersistValue socialEventStartFixture,toPersistValue socialEventStartFixture]) (envPool env)
+
+rangeTicket :: Env -> Int -> T.Text -> Int -> IO ()
+rangeTicket env key status amount = runSqlPool
+    (rawExecute "INSERT INTO event_ticket_order (id,event_id,tier_id,quantity,amount_cents,currency,status,purchased_at,created_at,updated_at) VALUES (?,7,1,1,?,'USD',?,?,?,?)"
+        [toPersistValue key,toPersistValue amount,toPersistValue status,toPersistValue socialEventStartFixture,
+         toPersistValue socialEventStartFixture,toPersistValue socialEventStartFixture]) (envPool env)
+
+rangeBudgetPayload :: Int -> EventBudgetLineDTO
+rangeBudgetPayload amount = EventBudgetLineDTO Nothing Nothing "1" "Range" "expense" "other" amount Nothing Nothing Nothing Nothing
+
+rangeBudgetList :: Env -> IO (Either ServerError [EventBudgetLineDTO])
+rangeBudgetList env = case socialEventsServer (strictAdminSocialEventUser 1) of
+    _events :<|> _cities :<|> _discovery :<|> _research :<|> _venues
+        :<|> _artists :<|> _rsvps :<|> _invitations :<|> _moments :<|> _broadcasts :<|> _tickets
+        :<|> (listHandler :<|> _ :<|> _) :<|> _ ->
+        runHandler $ runReaderT (listHandler "7") env
+
+rangeBudgetUpdate :: Env -> EventBudgetLineDTO -> IO (Either ServerError EventBudgetLineDTO)
+rangeBudgetUpdate env dto = case socialEventsServer (strictAdminSocialEventUser 1) of
+    _events :<|> _cities :<|> _discovery :<|> _research :<|> _venues
+        :<|> _artists :<|> _rsvps :<|> _invitations :<|> _moments :<|> _broadcasts :<|> _tickets
+        :<|> (_ :<|> _ :<|> updateHandler) :<|> _ ->
+        runHandler $ runReaderT (updateHandler "7" "1" dto) env
+
+rangeSummary :: Env -> IO (Either ServerError EventFinanceSummaryDTO)
+rangeSummary env = case socialEventsServer (strictAdminSocialEventUser 1) of
+    _events :<|> _cities :<|> _discovery :<|> _research :<|> _venues
+        :<|> _artists :<|> _rsvps :<|> _invitations :<|> _moments :<|> _broadcasts :<|> _tickets
+        :<|> _budget :<|> (_ :<|> _ :<|> _ :<|> summaryHandler) :<|> _ ->
+        runHandler $ runReaderT (summaryHandler "7") env
+
+rangeReject :: Show a => Either ServerError a -> Expectation
+rangeReject (Left err) = do
+    errHTTPCode err `shouldBe` 500
+    BL8.unpack (errBody err) `shouldContain` "supported reporting range"
+rangeReject (Right value) = expectationFailure ("Expected range refusal, got " <> show value)

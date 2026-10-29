@@ -6168,20 +6168,16 @@ socialEventsServer user =
                 runSqlPool
                     (selectList [EventFinanceEntryEventId ==. eventKey, EventFinanceEntryStatus ==. "posted"] [])
                     envPool
-        pure $
-            map
-                ( \lineEnt@(Entity lineKey lineRec) ->
-                    let lineTypeVal = normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec))
-                        actualCents =
-                            sum
-                                [ eventFinanceEntryAmountCents entry
-                                | Entity _ entry <- postedEntries
-                                , eventFinanceEntryBudgetLineId entry == Just lineKey
-                                , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
-                                ]
-                     in budgetLineEntityToDTO eventKey (Just actualCents) lineEnt
-                )
-                budgetRows
+        forM budgetRows $ \lineEnt@(Entity lineKey lineRec) -> do
+            let lineTypeVal = normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec))
+                exactActualCents = sum
+                    [ toInteger (eventFinanceEntryAmountCents entry)
+                    | Entity _ entry <- postedEntries
+                    , eventFinanceEntryBudgetLineId entry == Just lineKey
+                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
+                    ]
+            actualCents <- checkedEventFinanceCents exactActualCents
+            pure (budgetLineEntityToDTO eventKey (Just actualCents) lineEnt)
 
     createBudgetLine :: T.Text -> EventBudgetLineDTO -> AppM EventBudgetLineDTO
     createBudgetLine eventIdStr dto = do
@@ -6239,6 +6235,24 @@ socialEventsServer user =
                 | existingKey /= lineKey ->
                     throwError err409{errBody = "budget line code already exists for this event"}
             _ -> pure ()
+        postedEntries <-
+            liftIO $
+                runSqlPool
+                    ( selectList
+                        [ EventFinanceEntryEventId ==. eventKey
+                        , EventFinanceEntryBudgetLineId ==. Just lineKey
+                        , EventFinanceEntryStatus ==. "posted"
+                        ]
+                        []
+                    )
+                    envPool
+        let exactActualCents =
+                sum
+                    [ toInteger (eventFinanceEntryAmountCents entry)
+                    | Entity _ entry <- postedEntries
+                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
+                    ]
+        actualCents <- checkedEventFinanceCents exactActualCents
         liftIO $
             runSqlPool
                 ( update
@@ -6253,24 +6267,7 @@ socialEventsServer user =
                     ]
                 )
                 envPool
-        postedEntries <-
-            liftIO $
-                runSqlPool
-                    ( selectList
-                        [ EventFinanceEntryEventId ==. eventKey
-                        , EventFinanceEntryBudgetLineId ==. Just lineKey
-                        , EventFinanceEntryStatus ==. "posted"
-                        ]
-                        []
-                    )
-                    envPool
         mUpdated <- liftIO $ runSqlPool (getEntity lineKey) envPool
-        let actualCents =
-                sum
-                    [ eventFinanceEntryAmountCents entry
-                    | Entity _ entry <- postedEntries
-                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
-                    ]
         maybe
             (throwError err500{errBody = "Could not update budget line"})
             (pure . budgetLineEntityToDTO eventKey (Just actualCents))
@@ -6464,17 +6461,17 @@ socialEventsServer user =
 
         let plannedIncomeCents =
                 sum
-                    [ plannedCents
+                    [ toInteger plannedCents
                     | (plannedCents, lineTypeVal) <- normalizedBudgetRows
                     , lineTypeVal == "income"
                     ]
             plannedExpenseCents =
                 sum
-                    [ plannedCents
+                    [ toInteger plannedCents
                     | (plannedCents, lineTypeVal) <- normalizedBudgetRows
                     , lineTypeVal == "expense"
                     ]
-            entryAmount (amountCents, _, _, _) = amountCents
+            entryAmount (amountCents, _, _, _) = toInteger amountCents
             entryDirection (_, directionVal, _, _) = directionVal
             entrySource (_, _, sourceVal, _) = sourceVal
             entryStatus (_, _, _, statusVal) = statusVal
@@ -6498,20 +6495,20 @@ socialEventsServer user =
                     , entryDirection entry == "expense"
                     ]
             ticketPaidRevenueCents =
-                fromInteger canonicalGross + sum
-                    [ amountCents
+                canonicalGross + sum
+                    [ toInteger amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "paid"
                     ]
             ticketRefundedRevenueCents =
-                fromInteger canonicalRefunded + sum
-                    [ amountCents
+                canonicalRefunded + sum
+                    [ toInteger amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "refunded"
                     ]
             ticketPendingRevenueCents =
                 sum
-                    [ amountCents
+                    [ toInteger amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "pending"
                     ]
@@ -6585,7 +6582,7 @@ socialEventsServer user =
             actualIncomeCents = manualIncomeCents + ticketPaidRevenueCents
             actualExpenseCents = manualExpenseCents + ticketRefundedRevenueCents
             netCents = actualIncomeCents - actualExpenseCents
-            budgetCentsVal = budgetOverride <|> fallbackBudget plannedExpenseCents
+            budgetCentsVal = fmap toInteger budgetOverride <|> fallbackBudget plannedExpenseCents
             budgetVarianceCents = fmap (\budgetCap -> budgetCap - actualExpenseCents) budgetCentsVal
             budgetUtilizationPct =
                 case budgetCentsVal of
@@ -6594,28 +6591,40 @@ socialEventsServer user =
                             Just ((fromIntegral actualExpenseCents / fromIntegral budgetCap) * 100)
                     _ -> Nothing
 
+        -- All sums and differences above are Integer. Validate every monetary
+        -- output before constructing the bounded DTO; no wrapped value is sent.
+        forM_ (
+            [ plannedIncomeCents, plannedExpenseCents, actualIncomeCents, actualExpenseCents
+            , netCents, ticketPaidRevenueCents, ticketRefundedRevenueCents, ticketPendingRevenueCents
+            , accountsPayableCents, accountsReceivableCents, contractCommittedCents, contractPaidCents
+            , procurementCommittedCents, procurementPaidCents, assetInvestmentCents, liabilityBalanceCents
+            ]
+            ++ maybe [] pure budgetCentsVal
+            ++ maybe [] pure budgetVarianceCents
+            ) checkedEventFinanceCents
+
         pure
             EventFinanceSummaryDTO
                 { efsEventId = renderKeyText eventKey
                 , efsCurrency = eventCurrencyVal
-                , efsBudgetCents = budgetCentsVal
-                , efsPlannedIncomeCents = plannedIncomeCents
-                , efsPlannedExpenseCents = plannedExpenseCents
-                , efsActualIncomeCents = actualIncomeCents
-                , efsActualExpenseCents = actualExpenseCents
-                , efsNetCents = netCents
-                , efsTicketPaidRevenueCents = ticketPaidRevenueCents
-                , efsTicketRefundedRevenueCents = ticketRefundedRevenueCents
-                , efsTicketPendingRevenueCents = ticketPendingRevenueCents
-                , efsAccountsPayableCents = accountsPayableCents
-                , efsAccountsReceivableCents = accountsReceivableCents
-                , efsContractCommittedCents = contractCommittedCents
-                , efsContractPaidCents = contractPaidCents
-                , efsProcurementCommittedCents = procurementCommittedCents
-                , efsProcurementPaidCents = procurementPaidCents
-                , efsAssetInvestmentCents = assetInvestmentCents
-                , efsLiabilityBalanceCents = liabilityBalanceCents
-                , efsBudgetVarianceCents = budgetVarianceCents
+                , efsBudgetCents = fmap fromInteger budgetCentsVal
+                , efsPlannedIncomeCents = fromInteger plannedIncomeCents
+                , efsPlannedExpenseCents = fromInteger plannedExpenseCents
+                , efsActualIncomeCents = fromInteger actualIncomeCents
+                , efsActualExpenseCents = fromInteger actualExpenseCents
+                , efsNetCents = fromInteger netCents
+                , efsTicketPaidRevenueCents = fromInteger ticketPaidRevenueCents
+                , efsTicketRefundedRevenueCents = fromInteger ticketRefundedRevenueCents
+                , efsTicketPendingRevenueCents = fromInteger ticketPendingRevenueCents
+                , efsAccountsPayableCents = fromInteger accountsPayableCents
+                , efsAccountsReceivableCents = fromInteger accountsReceivableCents
+                , efsContractCommittedCents = fromInteger contractCommittedCents
+                , efsContractPaidCents = fromInteger contractPaidCents
+                , efsProcurementCommittedCents = fromInteger procurementCommittedCents
+                , efsProcurementPaidCents = fromInteger procurementPaidCents
+                , efsAssetInvestmentCents = fromInteger assetInvestmentCents
+                , efsLiabilityBalanceCents = fromInteger liabilityBalanceCents
+                , efsBudgetVarianceCents = fmap fromInteger budgetVarianceCents
                 , efsBudgetUtilizationPct = budgetUtilizationPct
                 , efsGeneratedAt = now
                 }
@@ -9216,7 +9225,7 @@ eventImageUploadFormServerError :: T.Text -> ServerError
 eventImageUploadFormServerError message =
     err400{errBody = BL.fromStrict (TE.encodeUtf8 message)}
 
-fallbackBudget :: Int -> Maybe Int
+fallbackBudget :: Integer -> Maybe Integer
 fallbackBudget plannedExpenseCents
     | plannedExpenseCents > 0 = Just plannedExpenseCents
     | otherwise = Nothing
@@ -10424,6 +10433,14 @@ budgetLineEntityToDTO eventKey mActualCents (Entity lineKey lineRec) =
         , eblCreatedAt = Just (eventBudgetLineCreatedAt lineRec)
         , eblUpdatedAt = Just (eventBudgetLineUpdatedAt lineRec)
         }
+
+-- Event DTO amounts use host Int. Arithmetic must be exact before checking
+-- both bounds: negative net, liability and budget-variance values are valid.
+checkedEventFinanceCents :: Integer -> AppM Int
+checkedEventFinanceCents exact
+    | exact < toInteger (minBound :: Int) || exact > toInteger (maxBound :: Int) =
+        throwError (financeInvariantServerError "Event finance amount exceeds the supported reporting range")
+    | otherwise = pure (fromInteger exact)
 
 financeInvariantServerError :: T.Text -> ServerError
 financeInvariantServerError message =
