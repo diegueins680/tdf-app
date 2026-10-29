@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { PublicationAnchor, usePublicationSelection, type PublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import RecordThumbnail from '../features/records/RecordThumbnail';
@@ -797,9 +798,9 @@ const RecordingsGrid = ({ items, selection }: { items: RecordingItem[]; selectio
             <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
               {item.artist}
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            <MarkdownText variant="body2" sx={{ color: 'text.secondary' }}>
               {item.description}
-            </Typography>
+            </MarkdownText>
             {item.url && (
               <Box sx={{ mt: 'auto' }}>
                 <Button
@@ -986,9 +987,9 @@ const SessionsGrid = ({ items, selection }: { items: SessionItem[]; selection: P
               <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
                 {video.guests}
               </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              <MarkdownText variant="body2" sx={{ color: 'text.secondary' }}>
                 {video.description}
-              </Typography>
+              </MarkdownText>
               <InteractionPanel kind="recording_session" entityKey={video.id} />
             </CardContent>
           </Card>

@@ -1,3 +1,4 @@
+import MarkdownText from './MarkdownText';
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -253,7 +254,7 @@ export default function NotificationBell() {
                       primary={n.nTitle}
                       secondary={
                         <Stack component="span" spacing={0.5}>
-                          <Typography variant="caption" component="span">{n.nBody}</Typography>
+                          <MarkdownText inline disableLinks variant="caption">{n.nBody}</MarkdownText>
                           <Typography variant="caption" component="span" color="text.disabled">
                             {new Date(n.nCreatedAt).toLocaleString()}
                           </Typography>

@@ -1,3 +1,5 @@
+import UserProfileLink from '../components/UserProfileLink';
+import MarkdownText from '../components/MarkdownText';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { useState } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
@@ -46,11 +48,11 @@ interface MemberCardProps {
   artistId: number;
 }
 
-function MemberCard({ member, artistId }: MemberCardProps) {
+function MemberCard({ member }: MemberCardProps) {
   return (
     <Card
       component={RouterLink}
-      to={`/fans/clubs/${artistId}/members/${member.fcmpPartyId}`}
+      to={`/perfil/${member.fcmpPartyId}`}
       sx={{
         textDecoration: 'none',
         transition: 'transform 0.2s, box-shadow 0.2s',
@@ -123,9 +125,9 @@ function MemoryCard({ memory }: { memory: FanClubMemoryDTO }) {
           <Typography variant="h6">{memory.fcmTitle}</Typography>
           <InteractionPanel kind="club_memory" entityKey={String(memory.fcmId)} />
           {memory.fcmDescription && (
-            <Typography variant="body2" color="text.secondary">
+            <MarkdownText variant="body2" color="text.secondary">
               {memory.fcmDescription}
-            </Typography>
+            </MarkdownText>
           )}
           {memory.fcmMediaUrls.length > 0 && (
             <ImageList cols={2} gap={8}>
@@ -304,15 +306,15 @@ function MemberProfileCard(props: MemberProfileCardProps) {
       <CardContent>
         <Stack spacing={2}>
           <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar
+            <UserProfileLink partyId={profile.fcmpPartyId} label={profile.fcmpDisplayName}><Avatar
               src={profile.fcmpAvatarUrl ?? undefined}
               sx={{
                 width: FAN_CLUB_MEMBER_PROFILE_DISPLAY_CONTRACTS.profileHeaderAvatarSizePx,
                 height: FAN_CLUB_MEMBER_PROFILE_DISPLAY_CONTRACTS.profileHeaderAvatarSizePx,
               }}
-            />
+            /></UserProfileLink>
             <Box flexGrow={1}>
-              <Typography variant="h5" fontWeight={600}>{profile.fcmpDisplayName}</Typography>
+              <UserProfileLink partyId={profile.fcmpPartyId}><Typography variant="h5" fontWeight={600}>{profile.fcmpDisplayName}</Typography></UserProfileLink>
               {profile.fcmpHandle && (
                 <Typography variant="subtitle1" color="text.secondary">@{profile.fcmpHandle}</Typography>
               )}
@@ -336,7 +338,7 @@ function MemberProfileCard(props: MemberProfileCardProps) {
               onSave={onSave}
             />
           ) : (
-            profile.fcmpBio && <Typography variant="body1">{profile.fcmpBio}</Typography>
+            profile.fcmpBio && <MarkdownText variant="body1">{profile.fcmpBio}</MarkdownText>
           )}
         </Stack>
       </CardContent>

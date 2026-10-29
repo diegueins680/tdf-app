@@ -11003,7 +11003,11 @@ components:
         badge: { type: string, enum: [Compra verificada] }
         author:
           type: object
-          description: Public name/avatar according to buyer privacy preferences
+          description: Public identity according to buyer privacy preferences; partyId and avatarUrl are omitted for anonymous buyers
+          properties:
+            partyId: { type: integer, format: int64, minimum: 1 }
+            name: { type: string }
+            avatarUrl: { type: string, nullable: true }
           additionalProperties: true
         dimensions:
           type: object

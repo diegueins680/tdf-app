@@ -1,3 +1,4 @@
+import MarkdownText from '../../components/MarkdownText';
 import { InteractionPanel } from '../interactions/InteractionPanel';
 import { useId, useRef, useState, type RefObject } from 'react';
 import {
@@ -451,9 +452,9 @@ function ReleaseSummary(props: ReleaseSummaryProps) {
         <Chip label={formatReleaseDate(release.arReleaseDate)} size="small" />
       </Stack>
       {release.arDescription && (
-        <Typography variant="body2" color="text.secondary">
+        <MarkdownText inline variant="body2" color="text.secondary">
           {shortDescription(release.arDescription)}
-        </Typography>
+        </MarkdownText>
       )}
     </Stack>
   );

@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import {
   Alert,
@@ -259,7 +260,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 </Alert>
               )}
               <Divider />
-              <Typography sx={{ whiteSpace: 'pre-wrap', fontSize: '1.08rem', lineHeight: 1.75 }}>{description}</Typography>
+              <MarkdownText sx={{ fontSize: '1.08rem', lineHeight: 1.75 }}>{description}</MarkdownText>
 
               {kind === 'event' && (
                 <Stack spacing={2}>
@@ -465,7 +466,7 @@ function ReviewCard({ review, authenticated }: { review: DirectoryReviewPage['it
         <Box><Typography component={RouterLink} to={`/directorio/${review.authorProfile.slug}`} color="text.primary" fontWeight={800} sx={{ textDecoration: 'none' }}>{review.authorProfile.name}</Typography><Typography variant="body2" color="text.secondary">Interacción completada verificada</Typography></Box>
         <Rating value={review.rating} readOnly size="small" aria-label={`${review.rating} de 5 estrellas`} />
       </Stack>
-      {review.body && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{review.body}</Typography>}
+      {review.body && <MarkdownText>{review.body}</MarkdownText>}
       <Typography variant="caption" color="text.secondary">{new Date(review.createdAt).toLocaleDateString()}</Typography>
       {authenticated && <Button size="small" color="inherit" sx={{ alignSelf: 'flex-start' }} disabled={report.isPending || report.isSuccess} onClick={() => report.mutate()}>{report.isSuccess ? 'Reportada' : 'Reportar reseña'}</Button>}
     </Stack>

@@ -1,3 +1,5 @@
+import UserProfileLink from '../components/UserProfileLink';
+import MarkdownText from '../components/MarkdownText';
 import { useQuery } from '@tanstack/react-query';
 import {
   Alert,
@@ -80,14 +82,14 @@ export default function MerchReputationPage({ kind }: { kind: 'store' | 'product
             <CardContent>
               <Stack spacing={1.25}>
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                  <Avatar src={review.author.avatarUrl ?? undefined} alt="">
+                  <UserProfileLink partyId={review.author.partyId} label={review.author.name}><Avatar src={review.author.avatarUrl ?? undefined} alt="">
                     {review.author.name.slice(0, 1).toUpperCase()}
-                  </Avatar>
-                  <Typography fontWeight={700}>{review.author.name}</Typography>
+                  </Avatar></UserProfileLink>
+                  <UserProfileLink partyId={review.author.partyId}><Typography fontWeight={700}>{review.author.name}</Typography></UserProfileLink>
                   <Chip size="small" color="success" label="Compra verificada" />
                   <Typography aria-label={review.rating + ' de 5'}>{review.rating} ★</Typography>
                 </Stack>
-                {review.comment && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{review.comment}</Typography>}
+                {review.comment && <MarkdownText>{review.comment}</MarkdownText>}
                 {review.images.map((image) => (
                   <Box
                     key={image.assetId}
@@ -101,7 +103,7 @@ export default function MerchReputationPage({ kind }: { kind: 'store' | 'product
                 {review.sellerResponse && (
                   <Box sx={{ borderLeft: 3, borderColor: 'primary.main', pl: 2 }}>
                     <Typography variant="overline" fontWeight={800}>Respuesta de la tienda</Typography>
-                    <Typography>{review.sellerResponse.body}</Typography>
+                    <MarkdownText>{review.sellerResponse.body}</MarkdownText>
                   </Box>
                 )}
               </Stack>

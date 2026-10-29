@@ -1,3 +1,4 @@
+import MarkdownText from '../../components/MarkdownText';
 import { Card, CardContent, CardMedia, Grid, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import type { FanClubDTO } from '../../api/types';
@@ -48,11 +49,11 @@ export function FanClubPreview({
                         {club.fcFollowerCount} seguidores
                       </Typography>
                       {club.fcDescription && (
-                        <Typography variant="body2" color="text.secondary">
+                        <MarkdownText disableLinks inline variant="body2" color="text.secondary">
                           {club.fcDescription.length > 100
                             ? `${club.fcDescription.slice(0, 100)}…`
                             : club.fcDescription}
-                        </Typography>
+                        </MarkdownText>
                       )}
                     </Stack>
                   </CardContent>

@@ -1,3 +1,5 @@
+import UserProfileLink from '../components/UserProfileLink';
+import MarkdownText from '../components/MarkdownText';
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
 import { createElement, useEffect, useMemo } from 'react';
 import { useParams, useLocation, Link as RouterLink } from 'react-router-dom';
@@ -171,7 +173,7 @@ export default function FanClubPage() {
                 )}
                 <Typography variant="h5" fontWeight={600}>{club.fcName}</Typography>
                 {club.fcDescription && (
-                  <Typography variant="body1" color="text.secondary">{club.fcDescription}</Typography>
+                  <MarkdownText variant="body1" color="text.secondary">{club.fcDescription}</MarkdownText>
                 )}
                 <Divider />
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -199,7 +201,7 @@ export default function FanClubPage() {
                       color="primary"
                       variant="outlined"
                       component={RouterLink}
-                      to={`/fans/clubs/${artistIdNum}/members/${o.fcoPartyId}`}
+                      to={`/perfil/${o.fcoPartyId}`}
                       clickable
                     />
                   ))}
@@ -322,8 +324,7 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar src={optionalImageSource(item.fcfAvatarUrl)} sx={{ width: 32, height: 32 }} />
-                        <Typography variant="subtitle2">{item.fcfAuthorName}</Typography>
+                        <UserProfileLink partyId={item.fcfAuthorId}><Avatar src={optionalImageSource(item.fcfAvatarUrl)} alt={item.fcfAuthorName} sx={{ width: 32, height: 32 }} /><Typography variant="subtitle2">{item.fcfAuthorName}</Typography></UserProfileLink>
                         {item.fcfIsOfficer && <Chip size="small" label="Directiva" color="primary" />}
                         {item.fcfIsPinned && <Chip size="small" label="Fijado" color="primary" />}
                         <Chip size="small" label={item.fcfKind === 'memory' ? 'Recuerdo' : 'Post'} variant="outlined" />
@@ -341,7 +342,7 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                         )}
                       </Stack>
                       {item.fcfTitle && <Typography variant="h6">{item.fcfTitle}</Typography>}
-                      <Typography variant="body1">{item.fcfContent}</Typography>
+                      <MarkdownText variant="body1">{item.fcfContent}</MarkdownText>
                       {item.fcfMediaUrls.length > 0 && (
                         <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
                           {item.fcfMediaUrls.map((url, idx) => (
@@ -435,8 +436,7 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar src={optionalImageSource(msg.fcimFanAvatarUrl)} sx={{ width: 32, height: 32 }} />
-                        <Typography variant="subtitle2">{msg.fcimFanName}</Typography>
+                        <UserProfileLink partyId={msg.fcimFanId}><Avatar src={optionalImageSource(msg.fcimFanAvatarUrl)} alt={msg.fcimFanName} sx={{ width: 32, height: 32 }} /><Typography variant="subtitle2">{msg.fcimFanName}</Typography></UserProfileLink>
                         <Chip size="small" label={msg.fcimStatus} color={statusColor(msg.fcimStatus)} />
                         <Box flexGrow={1} />
                         <Button size="small" variant="outlined" onClick={() => setDetailOpen(msg.fcimId)}>Ver</Button>
@@ -448,9 +448,9 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
                         )}
                       </Stack>
                       {msg.fcimSubject && <Typography variant="h6">{msg.fcimSubject}</Typography>}
-                      <Typography variant="body2" color="text.secondary">
+                      <MarkdownText variant="body2" color="text.secondary">
                         {msg.fcimBody.length > 200 ? `${msg.fcimBody.slice(0, 200)}…` : msg.fcimBody}
-                      </Typography>
+                      </MarkdownText>
                       <Typography variant="caption" color="text.secondary">
                         {new Date(msg.fcimCreatedAt).toLocaleString()}
                       </Typography>
@@ -472,17 +472,16 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
             return (
               <Stack spacing={2} sx={{ mt: 1 }}>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <Avatar src={optionalImageSource(msg.fcimFanAvatarUrl)} />
-                  <Typography variant="subtitle1">{msg.fcimFanName}</Typography>
+                  <UserProfileLink partyId={msg.fcimFanId}><Avatar src={optionalImageSource(msg.fcimFanAvatarUrl)} alt={msg.fcimFanName} /><Typography variant="subtitle1">{msg.fcimFanName}</Typography></UserProfileLink>
                   <Chip size="small" label={msg.fcimStatus} color={statusColor(msg.fcimStatus)} />
                 </Stack>
                 {msg.fcimSubject && <Typography variant="h6">{msg.fcimSubject}</Typography>}
-                <Typography variant="body1">{msg.fcimBody}</Typography>
+                <MarkdownText variant="body1">{msg.fcimBody}</MarkdownText>
                 {msg.fcimReplyBody && (
                   <Card variant="outlined" sx={{ bgcolor: 'action.hover' }}>
                     <CardContent>
-                      <Typography variant="subtitle2">Respuesta de {firstNonEmptyString(msg.fcimOfficerName, 'Directiva')}</Typography>
-                      <Typography variant="body2">{msg.fcimReplyBody}</Typography>
+                      <Typography variant="subtitle2">Respuesta de <UserProfileLink partyId={msg.fcimOfficerId}>{firstNonEmptyString(msg.fcimOfficerName, 'Directiva')}</UserProfileLink></Typography>
+                      <MarkdownText variant="body2">{msg.fcimReplyBody}</MarkdownText>
                     </CardContent>
                   </Card>
                 )}
@@ -578,8 +577,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar src={optionalImageSource(post.fcpAvatarUrl)} sx={{ width: 32, height: 32 }} />
-                        <Typography variant="subtitle2">{post.fcpAuthorName}</Typography>
+                        <UserProfileLink partyId={post.fcpAuthorId}><Avatar src={optionalImageSource(post.fcpAvatarUrl)} alt={post.fcpAuthorName} sx={{ width: 32, height: 32 }} /><Typography variant="subtitle2">{post.fcpAuthorName}</Typography></UserProfileLink>
                         {post.fcpIsPinned && <Chip size="small" label="Fijado" color="primary" />}
                         <Box flexGrow={1} />
                         {isOfficer && (
@@ -606,7 +604,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
                         )}
                       </Stack>
                       {post.fcpTitle && <Typography variant="h6">{post.fcpTitle}</Typography>}
-                      <Typography variant="body1">{post.fcpContent}</Typography>
+                      <MarkdownText variant="body1">{post.fcpContent}</MarkdownText>
                       <InteractionPanel kind="club_post" entityKey={String(post.fcpId)} />
                       {post.fcpMediaUrls.length > 0 && (
                         <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
@@ -667,6 +665,11 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
 }
 
 function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: number; memories: FanClubMemoryDTO[]; isOfficer: boolean; loading: boolean }) {
+  const membersQuery = useQuery({
+    queryKey: ['fan-club-member-profiles', artistId],
+    queryFn: () => Fans.listClubMemberProfiles(artistId),
+    enabled: artistId > 0,
+  });
   const qc = useQueryClient();
   const [open, setOpen] = useLocalValue(false);
   const [title, setTitle] = useLocalValue('');
@@ -746,8 +749,7 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar src={optionalImageSource(memory.fcmMemberAvatarUrl)} sx={{ width: 32, height: 32 }} />
-                        <Typography variant="subtitle2">{memory.fcmMemberName}</Typography>
+                        <UserProfileLink partyId={membersQuery.data?.find((member) => member.fcmpId === memory.fcmMemberProfileId)?.fcmpPartyId}><Avatar src={optionalImageSource(memory.fcmMemberAvatarUrl)} alt={memory.fcmMemberName} sx={{ width: 32, height: 32 }} /><Typography variant="subtitle2">{memory.fcmMemberName}</Typography></UserProfileLink>
                         <Box flexGrow={1} />
                         {isOfficer && (
                           <>
@@ -783,7 +785,7 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
                       </Stack>
                       <Typography variant="h6">{memory.fcmTitle}</Typography>
                       <InteractionPanel kind="club_memory" entityKey={String(memory.fcmId)} />
-                      {memory.fcmDescription && <Typography variant="body1">{memory.fcmDescription}</Typography>}
+                      {memory.fcmDescription && <MarkdownText variant="body1">{memory.fcmDescription}</MarkdownText>}
                       {memory.fcmMediaUrls.length > 0 && (
                         <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
                           {memory.fcmMediaUrls.map((url, idx) => (
@@ -911,7 +913,7 @@ function ClubCalendar({ artistId, events, isOfficer, loading }: { artistId: numb
                           <Typography variant="h6">{ev.fceTitle}</Typography>
                           {ev.fceIsArtistConcert && <Chip size="small" label="Concierto" color="secondary" />}
                         </Stack>
-                        {ev.fceDescription && <Typography variant="body2" color="text.secondary">{ev.fceDescription}</Typography>}
+                        {ev.fceDescription && <MarkdownText variant="body2" color="text.secondary">{ev.fceDescription}</MarkdownText>}
                         {ev.fceStartsAt && (
                           <Typography variant="body2">
                             📅 {new Date(ev.fceStartsAt).toLocaleString()}
@@ -1071,11 +1073,7 @@ function ClubElections({ artistId, elections }: { artistId: number; elections: F
               }}>
                 <CardContent>
                   <Stack direction="row" spacing={2} alignItems="center">
-                    <Avatar src={optionalImageSource(c.fccAvatarUrl)} />
-                    <Box>
-                      <Typography variant="subtitle2">{c.fccFanName}</Typography>
-                      <Typography variant="caption">{c.fccRole}</Typography>
-                    </Box>
+                    <UserProfileLink partyId={c.fccFanId}><Avatar src={optionalImageSource(c.fccAvatarUrl)} alt={c.fccFanName} /><Box><Typography variant="subtitle2">{c.fccFanName}</Typography><Typography variant="caption">{c.fccRole}</Typography></Box></UserProfileLink>
                   </Stack>
                 </CardContent>
               </Card>

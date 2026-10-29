@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { Card, CardContent, Link, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
@@ -53,7 +54,7 @@ export default function PublicReputationRightsPage({ view = 'privacy' }: { view?
   return (
     <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', py: 4 }} lang={english ? 'en' : 'es'}>
       <Typography variant="h3" fontWeight={800}>{title}</Typography>
-      <Typography color="text.secondary">{body}</Typography>
+      <MarkdownText color="text.secondary">{body}</MarkdownText>
       <Card><CardContent><Stack spacing={2}>
         {view === 'privacy' && <>
           <Typography id="retirar-consentimientos" variant="h6">{copy.withdrawal}</Typography>

@@ -1,3 +1,5 @@
+import MarkdownText from '../../components/MarkdownText';
+import UserProfileLink from '../../components/UserProfileLink';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -30,18 +32,9 @@ function CommentBody({ comment }: { comment: InteractionComment }) {
   if (comment.state !== 'visible') return <Typography color="text.secondary">
     {comment.state === 'deleted' ? 'Comentario eliminado' : comment.state === 'hidden' || comment.state === 'removed' ? 'Comentario retirado' : 'Comentario no disponible'}
   </Typography>;
-  const points = [...comment.body]; const nodes: ReactNode[] = []; let offset = 0;
-  const plain = (text: string, key: string) => text.split(/(https?:\/\/[^\s<>]+)/g).map((part, index) =>
-    /^https?:\/\//i.test(part) ? <Link key={`${key}-${index}`} href={part} target="_blank" rel="noopener noreferrer nofollow ugc">{part}</Link> : part);
-  for (const mention of comment.mentions) {
-    nodes.push(...plain(points.slice(offset, mention.start).join(''), String(offset)));
-    nodes.push(<Link component={RouterLink} key={`mention-${mention.start}`} to={`/perfil/${mention.partyId}`}>{points.slice(mention.start, mention.end).join('')}</Link>);
-    offset = mention.end;
-  }
-  nodes.push(...plain(points.slice(offset).join(''), String(offset)));
   return <Stack spacing={0.5}>
     {comment.legacyPresentation?.title && <Typography variant="subtitle2">{comment.legacyPresentation.title}</Typography>}
-    <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{nodes}</Typography>
+    <MarkdownText mentions={comment.mentions}>{comment.body}</MarkdownText>
     {comment.legacyPresentation?.mediaUrls?.filter((url) => /^https?:\/\//i.test(url) || /^\/[^/]/.test(url)).map((url, index) => <Link key={`${index}-${url}`} href={url} target="_blank" rel="noopener noreferrer nofollow ugc">Archivo adjunto {index + 1}</Link>)}
   </Stack>;
 }
@@ -79,8 +72,7 @@ function CommentCard({ comment, summary, run, onReply, focused, refresh, focusFa
     id={`comment-${comment.id}`} sx={{ py: 1.5, px: 1, borderRadius: 2, outlineOffset: 2,
       ...(focused ? { animation: 'discussion-focus 4s ease-out', '@keyframes discussion-focus': { from: { backgroundColor: 'rgba(124,58,237,.16)' }, to: { backgroundColor: 'transparent' } } } : {}) }}>
     <Stack direction="row" spacing={1} alignItems="center">
-      {comment.author && <Avatar src={comment.author.avatarUrl ?? undefined} alt="" sx={{ width: 28, height: 28 }} />}
-      <Typography variant="subtitle2">{comment.author?.displayName ?? 'Comentario'}</Typography>
+      {comment.author ? <UserProfileLink partyId={comment.author.id}><Avatar src={comment.author.avatarUrl ?? undefined} alt={comment.author.displayName} sx={{ width: 28, height: 28 }} /><Typography variant="subtitle2">{comment.author.displayName}</Typography></UserProfileLink> : <Typography variant="subtitle2">Comentario</Typography>}
       <Typography variant="caption" color="text.secondary" component="time" dateTime={comment.createdAt}>
         {new Date(comment.createdAt).toLocaleString()}{comment.editedAt ? ' · editado' : ''}
       </Typography>

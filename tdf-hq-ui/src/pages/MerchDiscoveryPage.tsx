@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Alert, Box, Card, CardActionArea, CardContent, CardMedia, Chip, CircularProgress, Grid, MenuItem, Stack, TextField, Typography } from '@mui/material';
@@ -81,7 +82,7 @@ export default function MerchDiscoveryPage() {
                           />
                         )}
                         <StoreCommercialReputation storeId={store.id} />
-                        {store.description && <Typography color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{store.description}</Typography>}
+                        {store.description && <MarkdownText disableLinks color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{store.description}</MarkdownText>}
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Chip size="small" label={`${store.products?.length ?? 0} ${language === 'en' ? 'products' : 'productos'}`} />
                           {typeof price === 'number' && <Typography variant="body2">{language === 'en' ? 'From ' : 'Desde '}{formatMerchMoney(price, firstProduct?.currency ?? 'USD', language === 'en' ? 'en-US' : 'es-EC')}</Typography>}

@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -1106,7 +1107,7 @@ export default function LabelArtistsPage() {
                                   <TableCell>{slot.apsInterviewerHost}</TableCell>
                                   <TableCell>{slot.apsBandMembers}</TableCell>
                                   <TableCell>{slot.apsStatus ?? '—'}</TableCell>
-                                  <TableCell>{slot.apsNotes ?? '—'}</TableCell>
+                                  <TableCell><MarkdownText>{slot.apsNotes ?? '—'}</MarkdownText></TableCell>
                                 </TableRow>
                               ))}
                             </TableBody>
@@ -1160,7 +1161,7 @@ export default function LabelArtistsPage() {
                                 <TableCell>{slot.apsInterviewerHost}</TableCell>
                                 <TableCell>{slot.apsBandMembers}</TableCell>
                                 <TableCell>{slot.apsStatus ?? '—'}</TableCell>
-                                <TableCell>{slot.apsNotes ?? '—'}</TableCell>
+                                <TableCell><MarkdownText>{slot.apsNotes ?? '—'}</MarkdownText></TableCell>
                                 <TableCell align="right">
                                   <Tooltip title="Editar espacio">
                                     <IconButton

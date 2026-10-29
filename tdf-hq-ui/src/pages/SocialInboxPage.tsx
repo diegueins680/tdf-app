@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -840,9 +841,9 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                       }}
                     >
                       {showBody ? (
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        <MarkdownText variant="body2" sx={{ wordBreak: 'break-word' }}>
                           {formatBody(msg.text)}
-                        </Typography>
+                        </MarkdownText>
                       ) : attachments.length > 0 ? (
                         <Stack spacing={1}>
                           <Typography variant="body2" color="text.secondary">
@@ -1354,9 +1355,9 @@ const ChannelPanel = ({
                             </Typography>
                           </TableCell>
                           <TableCell>
-                            <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                            <MarkdownText variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
                               {previewText ? formatBody(previewText) : '—'}
-                            </Typography>
+                            </MarkdownText>
                           </TableCell>
                           {showReplyOutcomeColumn && (
                             <TableCell>

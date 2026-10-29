@@ -1,3 +1,4 @@
+import MarkdownText from './MarkdownText';
 import { readOptionalBrowserStorage, writeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
 import { ABOVE_GLOBAL_PLAYER, RADIO_BAR_HEIGHT_VAR, useDockedBarHeight } from '../utils/bottomDock';
 import { logger } from '../utils/logger';
@@ -125,9 +126,9 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
       {prompts.map((p, idx) => (
         <Card key={`${p.text}-${idx}`} variant="outlined">
           <CardContent sx={{ py: 1.25, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-            <Typography variant="body2" fontWeight={600}>
+            <MarkdownText variant="body2" fontWeight={600}>
               {p.text}
-            </Typography>
+            </MarkdownText>
             <Typography variant="caption" color="text.secondary">
               {p.author ?? 'Agente Tidal'} {p.createdAt ? `· ${p.createdAt}` : ''}
             </Typography>

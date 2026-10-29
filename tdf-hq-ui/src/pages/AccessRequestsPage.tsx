@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { Suspense, lazy, useMemo, useState } from 'react';
 import {
   Accordion,
@@ -446,7 +447,7 @@ function ReviewCard({ request, onChanged, canReview = true }: { request: Feature
             sx={{ mt: 2 }}
           />
         ) : null}
-        {request.reviewerNotes ? <Typography sx={{ mt: 2 }}>{request.reviewerNotes}</Typography> : null}
+        {request.reviewerNotes ? <MarkdownText sx={{ mt: 2 }}>{request.reviewerNotes}</MarkdownText> : null}
         {decisionMutation.isError ? <Alert severity="error" sx={{ mt: 2 }}>{decisionMutation.error.message}</Alert> : null}
         <History request={request} />
       </CardContent>

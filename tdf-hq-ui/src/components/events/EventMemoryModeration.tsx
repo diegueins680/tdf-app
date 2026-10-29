@@ -1,3 +1,4 @@
+import MarkdownText from '../MarkdownText';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -90,7 +91,7 @@ function ReviewItem({ item, choose }: { item: MemorySourceReport; choose: (selec
   const select = (action: Action) => choose({ action, targetId: item.id, version: item.version, controls: item.source });
   return <Card variant="outlined"><CardContent><Stack spacing={1}>
     <Chip label={stateLabel(item.source.state)} size="small" sx={{ alignSelf: 'flex-start' }} />
-    <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{item.caption?.trim() ? item.caption : 'Recuerdo sin descripción'}</Typography>
+    <MarkdownText>{item.caption?.trim() ? item.caption : 'Recuerdo sin descripción'}</MarkdownText>
     {item.author?.displayName && <Typography variant="caption">Publicado por {item.author.displayName}</Typography>}
     {url && <Button component="a" href={url} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer" sx={{ alignSelf: 'flex-start' }}>Ver archivo</Button>}
     <Typography variant="body2">Denuncias abiertas: {item.openReports}</Typography>

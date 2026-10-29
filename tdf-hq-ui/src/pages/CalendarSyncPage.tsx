@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useCallback, useEffect, useMemo, useState, useRef, useId } from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -675,9 +676,9 @@ function CalendarSyncForm({ authority }: { authority: SessionUser | null }) {
                             </Typography>
                           )}
                           {ev.description && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            <MarkdownText variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                               {ev.description}
-                            </Typography>
+                            </MarkdownText>
                           )}
                         </Box>
                         <Stack spacing={0.5} alignItems={{ xs: 'flex-start', sm: 'flex-end' }}>

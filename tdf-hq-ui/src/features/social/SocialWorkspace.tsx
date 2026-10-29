@@ -1,3 +1,5 @@
+import UserProfileLink from '../../components/UserProfileLink';
+import MarkdownText from '../../components/MarkdownText';
 import { useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, Button, Card, Checkbox, FormControlLabel, Stack, Tab, Tabs, Typography } from '@mui/material';
@@ -92,11 +94,11 @@ export default function SocialWorkspace() {
       {feed.isError && <Alert severity="error">No pudimos cargar las publicaciones. <Button onClick={() => { void feed.refetch(); }}>Reintentar</Button></Alert>}
       {!feed.isPending && !feed.isError && posts.length === 0 && <Typography>Sigue artistas o descubre personas para empezar.</Typography>}
       {posts.map((post) => <Card key={post.postId} component="article" sx={{ p: 2 }}>
-        <Typography variant="h6">{post.title ?? post.authorName}</Typography>
+        <Typography variant="h6">{post.title ?? <UserProfileLink partyId={post.authorId}>{post.authorName}</UserProfileLink>}</Typography>
         <Typography component="time" dateTime={post.publishedAt} variant="caption">
           {new Date(post.publishedAt).toLocaleString('es-EC')}
         </Typography>
-        <Typography>{post.authorName}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{post.content}</Typography>
+        <UserProfileLink partyId={post.authorId}><Typography>{post.authorName}</Typography></UserProfileLink><MarkdownText>{post.content}</MarkdownText>
         <Button component={Link} to={`/artista/${post.artistId}`}>Ver artista</Button>
       </Card>)}
       {feed.hasNextPage && <Button disabled={feed.isFetchingNextPage} onClick={() => { void feed.fetchNextPage(); }}>Ver más</Button>}
@@ -106,7 +108,7 @@ export default function SocialWorkspace() {
       {discover.isError && <Alert severity="error">No pudimos cargar las sugerencias. <Button onClick={() => { void discover.refetch(); }}>Reintentar</Button></Alert>}
       {discover.data?.items.length === 0 && <Typography>No hay sugerencias nuevas. Puedes actualizar tus intereses o volver más tarde.</Typography>}
       {!discover.isError && discover.data?.items.map((person) => <Card key={person.partyId} sx={{ p: 2 }}>
-        <Typography variant="h6">{person.displayName}</Typography>
+        <UserProfileLink partyId={person.partyId}><Typography variant="h6">{person.displayName}</Typography></UserProfileLink>
         <Typography>{person.reason === 'shared_interests' ? 'Intereses musicales compartidos' : 'Perfil público de la comunidad'}</Typography>
         <RelationshipActions partyId={person.partyId} displayName={person.displayName} initial={person.relationship} />
       </Card>)}
@@ -115,7 +117,7 @@ export default function SocialWorkspace() {
       {profile.isPending && <Typography role="status">Cargando conexiones…</Typography>}
       {profile.data?.relationships.length === 0 && <Typography>Aún no hay conexiones. Cada persona debe aceptar para conectarse.</Typography>}
       {!profile.isError && profile.data?.relationships.map((person) => <Card key={person.partyId} sx={{ p: 2 }}>
-        <Typography variant="h6">{person.displayName}</Typography>
+        <UserProfileLink partyId={person.partyId}><Typography variant="h6">{person.displayName}</Typography></UserProfileLink>
         <Typography>{person.connected ? 'Conexión aceptada' : person.incoming ? 'Solicitud recibida' : person.requested ? 'Solicitud enviada' : ''}</Typography>
         <RelationshipActions partyId={person.partyId} displayName={person.displayName} initial={person} />
       </Card>)}

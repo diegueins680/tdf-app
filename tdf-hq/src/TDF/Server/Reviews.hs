@@ -300,7 +300,7 @@ publicReviewPageSql =
   "'rating',page.rating,'body',page.body,'status',page.status," <>
   "'createdAt',page.created_at,'verified',TRUE," <>
   "'sourceKind',page.source_kind,'author',jsonb_build_object(" <>
-  "'name',author.display_name,'avatarUrl',fan.avatar_url)) " <>
+  "'partyId',author.id,'name',author.display_name,'avatarUrl',fan.avatar_url)) " <>
   "FROM page JOIN party author ON author.id=page.author_party_id " <>
   "LEFT JOIN fan_profile fan ON fan.fan_party_id=author.id " <>
   "ORDER BY page.created_at DESC,page.id DESC"
@@ -454,7 +454,7 @@ reviewById reviewId = listToMaybe <$> jsonRows
  <> "'targetId',review.target_id,'rating',review.rating,'body',review.body,"
  <> "'status',review.status,'createdAt',review.created_at,'verified',TRUE,"
  <> "'sourceKind',review.source_kind,'author',jsonb_build_object("
- <> "'name',author.display_name,'avatarUrl',fan.avatar_url)) "
+ <> "'partyId',author.id,'name',author.display_name,'avatarUrl',fan.avatar_url)) "
  <> "FROM experience_review review JOIN party author ON author.id=review.author_party_id "
  <> "LEFT JOIN fan_profile fan ON fan.fan_party_id=author.id WHERE review.id=?" )
   [toPersistValue reviewId]

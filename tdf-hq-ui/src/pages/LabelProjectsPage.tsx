@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -173,7 +174,7 @@ function ProjectNoteRow({ note, onToggle, onDelete }: ProjectNoteRowProps) {
         onChange={() => onToggle(note.id)}
         inputProps={{ 'aria-label': `Marcar pendiente: ${note.text}` }}
       />
-      <Typography
+      <MarkdownText
         variant="body2"
         sx={{
           flexGrow: 1,
@@ -183,7 +184,7 @@ function ProjectNoteRow({ note, onToggle, onDelete }: ProjectNoteRowProps) {
         }}
       >
         {note.text}
-      </Typography>
+      </MarkdownText>
       <IconButton
         data-project-note-delete-action
         tabIndex={0}

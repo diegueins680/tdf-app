@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { canonicalMusicMinor } from '../utils/musicMoney';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -876,7 +877,7 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
       {infringementReports.isError && <Alert severity="warning">No se pudo cargar la cola de infracciones.</Alert>}
       {(infringementReports.data ?? []).map((report) => <Stack key={report.id} spacing={1} sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Typography fontWeight={700} flex={1}>{report.reasonCode} · {report.status}</Typography><Typography variant="caption">{new Date(report.createdAt).toLocaleString('es-EC')}</Typography></Stack>
-        <Typography>{report.description}</Typography>
+        <MarkdownText>{report.description}</MarkdownText>
         {report.resolutionNotes && <Typography variant="body2" color="text.secondary">Resolución: {report.resolutionNotes}</Typography>}
         {!['actioned','dismissed'].includes(report.status) && <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           {report.status === 'received' && <Button disabled={actionPending} onClick={() => void actionInfringement(report, 'triage')}>Iniciar triage</Button>}

@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useMemo, useState, type MouseEvent } from 'react';
 import {
   Alert,
@@ -429,9 +430,9 @@ function InventoryAssetSummaryCard({
             <Typography variant="h6" fontWeight={700}>
               {title}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <MarkdownText variant="body2" color="text.secondary">
               {description}
-            </Typography>
+            </MarkdownText>
           </Stack>
           <Stack spacing={0.5}>
             <Typography variant="body1" fontWeight={700}>
@@ -1295,12 +1296,12 @@ export default function InventoryPage() {
                           )}
                           {h.termsAndConditions && (
                             <LegalDisclosure dense title="Términos y condiciones">
-                              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                              <MarkdownText variant="body2">
                                 {h.termsAndConditions}
-                              </Typography>
+                              </MarkdownText>
                             </LegalDisclosure>
                           )}
-                          <Typography variant="body2">{h.notes ?? '—'}</Typography>
+                          <MarkdownText variant="body2">{h.notes ?? '—'}</MarkdownText>
                         </Stack>
                       </TableCell>
                     </TableRow>

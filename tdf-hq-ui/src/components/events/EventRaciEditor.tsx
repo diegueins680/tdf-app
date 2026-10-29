@@ -1,3 +1,4 @@
+import MarkdownText from '../MarkdownText';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
@@ -141,7 +142,7 @@ export default function EventRaciEditor({ eventId, activityId, session, onLock, 
         <Typography>{t(`eventTask.role_${request.body.role}`)}</Typography>
         <Typography>{t('eventTask.editorSwap', { from: request.body.fromPartyId, to: request.body.toPartyId })}</Typography>
         <Typography>{t('eventTask.editorRevision', { revision: request.body.expectedRevision })}</Typography>
-        <Typography sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>{request.body.reason}</Typography>
+        <MarkdownText sx={{ overflowWrap: 'anywhere', }}>{request.body.reason}</MarkdownText>
         <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>{t('eventTask.editorKey', { key: request.key })}</Typography>
         {phase === 'review' && <Typography>{t('eventTask.editorConfirmHint')}</Typography>}
         {phase === 'sending' && <Typography role="status">{t('eventTask.editorSending')}</Typography>}

@@ -1,3 +1,4 @@
+import MarkdownText from '../../components/MarkdownText';
 import { useState } from 'react';
 import { commentPolicyAvailable } from './model';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -42,10 +43,10 @@ export function DiscussionControls({ summary, scope, run }: { summary: Interacti
         {queue.data?.pages.every((page) => page.items.length === 0) && <Typography>No hay comentarios pendientes.</Typography>}
         <TextField label="Motivo de la decisión" multiline value={reason} onChange={(event) => setReason(event.target.value)} inputProps={{ maxLength: 1000 }} />
         {queue.data?.pages.flatMap((page) => page.items).map((comment) => <Stack key={comment.id} spacing={1}>
-          <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{comment.moderationBody}</Typography>
+          <MarkdownText sx={{ overflowWrap: 'anywhere' }}>{comment.moderationBody}</MarkdownText>
             {!!comment.reportReasons?.length && <Stack component="section" aria-label="Motivos de los reportes" spacing={1}>
               <Typography variant="caption">Motivos recientes ({comment.reportReasons.length} de {comment.openReports ?? 0})</Typography>
-              {comment.reportReasons.map((text, index) => <Typography key={index} sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{text}</Typography>)}
+              {comment.reportReasons.map((text, index) => <MarkdownText key={index} sx={{ overflowWrap: 'anywhere' }}>{text}</MarkdownText>)}
             </Stack>}
           <Typography variant="caption">{comment.state === 'hidden' ? 'Oculto' : `${comment.openReports ?? 0} reportes`}</Typography>
           <Stack direction="row">
