@@ -21,6 +21,7 @@ import {
   Switch,
   FormControlLabel,
   MenuItem,
+  Slider,
   useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -43,7 +44,6 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import Slider from '@mui/material/Slider';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import BoltIcon from '@mui/icons-material/Bolt';
@@ -777,13 +777,19 @@ export default function RadioWidget() {
     const initial = clampPosition(width - 320, height - 320);
     setPosition(initial);
   }, [clampPosition]);
-  // Stored coordinates may come from a wider screen. Once the panel is
-  // mounted, clamp against its actual dimensions so its controls stay in view.
-  useEffect(() => {
-    if (hideRadioForRoute || miniBarDismissed || miniBarVisible) return;
-    setPosition((current) => clampPosition(current.x, current.y));
-  }, [clampPosition, expanded, hideRadioForRoute, miniBarDismissed, miniBarVisible, panelSize]);
 
+  // Opening the panel or changing its contents can make a saved position too low.
+  useEffect(() => {
+    if (hideRadioForRoute || miniBarVisible || miniBarDismissed || compactMiniBar) return;
+    const keepInBounds = () => setPosition((p) => {
+      const next = clampPosition(p.x, p.y);
+      return next.x === p.x && next.y === p.y ? p : next;
+    });
+    keepInBounds();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(keepInBounds);
+    if (containerRef.current) observer?.observe(containerRef.current);
+    return () => observer?.disconnect();
+  }, [clampPosition, compactMiniBar, expanded, hideRadioForRoute, miniBarDismissed, miniBarVisible, panelSize]);
   const resetPosition = useCallback(() => {
     if (typeof window === 'undefined') return;
     const width = window.innerWidth;
@@ -814,9 +820,10 @@ export default function RadioWidget() {
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       const target = e.target as HTMLElement | null;
-      // Header controls take priority over the surrounding drag handle,
-      // including taps on the SVG inside a button.
-      if (isInteractiveTarget(target)) {
+      const dragHandle = target?.closest('[data-drag-handle]');
+      const isInteractive = isInteractiveTarget(target);
+      // Controls inside the handle must keep their native click/touch behavior.
+      if (!dragHandle || isInteractive) {
         return;
       }
       e.preventDefault();
@@ -848,9 +855,11 @@ export default function RadioWidget() {
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
     return () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
     };
   }, [clampPosition, dragging]);
 
@@ -1151,8 +1160,8 @@ export default function RadioWidget() {
       setMuted(muteOnLoad);
       setIsPlaying(!muteOnLoad);
     };
-    window.addEventListener('tdf-radio-load-stream', handleLoadStream as EventListener);
-    return () => window.removeEventListener('tdf-radio-load-stream', handleLoadStream as EventListener);
+    window.addEventListener('tdf-radio-load-stream', handleLoadStream);
+    return () => window.removeEventListener('tdf-radio-load-stream', handleLoadStream);
   }, [availableStations, muteOnLoad]);
 
   const togglePlay = () => {
@@ -2028,23 +2037,27 @@ export default function RadioWidget() {
       )}
       {!miniBarDismissed && !miniBarVisible && (
         <Box
+          data-testid="radio-floating-panel"
           sx={{
             position: 'fixed',
-            left: position.x,
-            top: position.y,
+            left: compactMiniBar ? 12 : position.x,
+            right: compactMiniBar ? 12 : 'auto',
+            top: compactMiniBar ? 'auto' : position.y,
+            bottom: compactMiniBar ? `calc(${ABOVE_GLOBAL_PLAYER} + env(safe-area-inset-bottom, 0px) + 12px)` : 'auto',
             zIndex: (theme) => theme.zIndex.appBar,
-            width: expanded ? sizeOptions[panelSize].width : { xs: 220, sm: 260 },
+            width: compactMiniBar ? 'auto' : expanded ? sizeOptions[panelSize].width : 340,
             maxWidth: 'calc(100vw - 24px)',
-            cursor: pinned ? 'default' : dragging ? 'grabbing' : 'grab',
-            touchAction: 'none',
-            userSelect: 'none',
-            maxHeight: expanded ? sizeOptions[panelSize].bodyHeight : 'none',
-            overflow: 'visible',
           }}
           ref={containerRef}
-          onPointerDown={pinned ? undefined : onPointerDown}
+          onPointerDown={pinned || compactMiniBar ? undefined : onPointerDown}
           tabIndex={0}
           onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              setMiniBarVisible(true);
+              return;
+            }
+            if (e.target !== e.currentTarget) return;
             const step = e.shiftKey ? 20 : 10;
             const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
             if (['input', 'textarea'].includes(tag ?? '')) return;
@@ -2084,30 +2097,48 @@ export default function RadioWidget() {
         >
       <Card
         elevation={6}
-        sx={{ borderRadius: 3, overflow: 'hidden', cursor: dragging ? 'grabbing' : 'grab' }}
+        sx={{
+          borderRadius: 3,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: compactMiniBar
+            ? `calc(100dvh - ${ABOVE_GLOBAL_PLAYER} - env(safe-area-inset-bottom, 0px) - 96px)`
+            : `min(${sizeOptions[panelSize].bodyHeight}, calc(100dvh - 24px))`,
+        }}
       >
+        <Box sx={{ flexShrink: 0, bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider' }}>
         <Box
           data-drag-handle
           sx={{
             display: 'flex',
-            flexWrap: 'wrap',
             alignItems: 'center',
-            '& .MuiIconButton-root': { minWidth: 44, minHeight: 44, flexShrink: 0 },
             gap: 1,
             px: 1.5,
             py: 0.75,
             bgcolor: dragging ? 'action.selected' : 'action.hover',
-            borderBottom: '1px dashed',
-            borderColor: 'divider',
-            cursor: dragging ? 'grabbing' : 'grab',
+            cursor: pinned || compactMiniBar ? 'default' : dragging ? 'grabbing' : 'grab',
+            touchAction: compactMiniBar ? 'auto' : 'none',
             userSelect: 'none',
           }}
         >
-          <DragIndicatorIcon fontSize="small" color="action" sx={{ display: { xs: 'none', sm: 'block' } }} />
-          <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: { xs: 'none', sm: 'block' } }}>
-            {pinned ? 'Fijado' : 'Arrastra para mover'}
+          {!compactMiniBar && <DragIndicatorIcon fontSize="small" color="action" />}
+          <Typography variant="caption" color="text.secondary" fontWeight={600} noWrap sx={{ minWidth: 0 }}>
+            {compactMiniBar ? 'Radio' : pinned ? 'Fijado' : 'Arrastra para mover'}
           </Typography>
-            <Box sx={{ flex: 1, display: { xs: 'none', sm: 'block' } }} />
+            <Box sx={{ flex: 1 }} />
+            <Button
+              size="small"
+              onClick={() => setMiniBarVisible(true)}
+              data-no-drag
+              aria-label="Minimizar radio a la barra"
+              startIcon={<ExpandMoreIcon fontSize="small" />}
+              sx={{ minHeight: 44, flexShrink: 0 }}
+            >
+              Minimizar
+            </Button>
+        </Box>
+        <Stack direction="row" alignItems="center" flexWrap="wrap" useFlexGap sx={{ px: 1.5, pb: 0.75 }}>
             <Button
               size="small"
               variant="text"
@@ -2130,22 +2161,14 @@ export default function RadioWidget() {
               <PushPinIcon fontSize="small" sx={{ transform: pinned ? 'rotate(25deg)' : 'none' }} />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Minimizar radio a la barra">
-            <IconButton
-              size="small"
-              onClick={() => setMiniBarVisible(true)}
-              data-no-drag
-              aria-label="Minimizar radio a la barra"
-            >
-              <KeyboardArrowDownIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
           <Tooltip title="Volver a la esquina">
             <IconButton size="small" onClick={resetPosition} data-no-drag aria-label="Volver a la esquina">
               <RestartAltIcon fontSize="small" />
             </IconButton>
           </Tooltip>
+        </Stack>
         </Box>
+        <Box data-testid="radio-panel-content" sx={{ overflowY: 'auto', minHeight: 0, overscrollBehavior: 'contain', touchAction: 'pan-y' }}>
         <CardContent
           sx={{ p: 2, cursor: 'pointer' }}
           onClick={(e) => {
@@ -2159,9 +2182,9 @@ export default function RadioWidget() {
             openAndFocusPrompt();
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
             <RadioIcon color="secondary" />
-            <Box flex={1} minWidth={0}>
+            <Box sx={{ flex: '1 1 calc(100% - 40px)', minWidth: 0 }}>
               <Typography variant="subtitle1" fontWeight={800} noWrap>
                 Radio Inteligente
               </Typography>
@@ -2261,7 +2284,7 @@ export default function RadioWidget() {
                 {muted ? <VolumeOffIcon /> : <GraphicEqIcon />}
               </IconButton>
             </Tooltip>
-            <Box sx={{ minWidth: 140, px: 1 }}>
+            <Box sx={{ flex: '1 1 160px', minWidth: 0, px: 1 }}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <VolumeUpIcon fontSize="small" />
                 <Slider
@@ -2409,9 +2432,9 @@ export default function RadioWidget() {
             </Stack>
           )}
           {playbackWarning && (
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }} data-no-drag>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mt: 1 }} data-no-drag>
               <WarningAmberIcon fontSize="small" color="warning" />
-              <Typography variant="caption" sx={{ color: 'warning.main' }}>
+              <Typography variant="caption" sx={{ color: 'warning.main', flex: '1 1 160px', overflowWrap: 'anywhere' }}>
                 {playbackWarning}
               </Typography>
               {sortedVisibleStations.length > 1 && (
@@ -2427,8 +2450,6 @@ export default function RadioWidget() {
           <CardContent
             sx={{
               p: 2,
-              maxHeight: sizeOptions[panelSize].bodyHeight,
-              overflowY: 'auto',
               pr: 1,
             }}
           >
@@ -3247,6 +3268,7 @@ export default function RadioWidget() {
             </Stack>
           </CardContent>
         </Collapse>
+        </Box>
       </Card>
     </Box>
       )}

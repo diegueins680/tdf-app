@@ -20,7 +20,7 @@ const originalMatchMedia = window.matchMedia;
 
 /** Emulates a viewport width for MUI's useMediaQuery (max-width queries only). */
 const setViewportWidth = (width: number) => {
-  window.matchMedia = ((query: string) => {
+  window.matchMedia = (query: string) => {
     const max = /max-width:\s*([\d.]+)px/.exec(query);
     const min = /min-width:\s*([\d.]+)px/.exec(query);
     const matches = (max ? width <= Number(max[1]) : true) && (min ? width >= Number(min[1]) : true);
@@ -34,7 +34,7 @@ const setViewportWidth = (width: number) => {
       removeEventListener: () => undefined,
       dispatchEvent: () => false,
     } as MediaQueryList;
-  }) as typeof window.matchMedia;
+  };
 };
 
 let pause: ReturnType<typeof jest.spyOn>;
@@ -47,7 +47,7 @@ beforeEach(() => {
   load = jest.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => undefined);
   rect = jest.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
     const height = this.getAttribute('data-testid') === 'radio-docked-bar' ? 58 : 0;
-    return { x: 0, y: 0, top: 0, left: 0, right: 0, bottom: height, width: 0, height, toJSON: () => ({}) } as DOMRect;
+    return { x: 0, y: 0, top: 0, left: 0, right: 0, bottom: height, width: 0, height, toJSON: () => ({}) };
   });
 });
 
@@ -60,7 +60,7 @@ afterEach(() => {
   document.body.style.paddingBottom = '';
 });
 
-const renderWidget = async () => {
+const renderWidget = async (docked = true) => {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root: Root = createRoot(container);
@@ -75,7 +75,7 @@ const renderWidget = async () => {
     );
   });
   const bar = await waitFor(() => {
-    const node = container.querySelector<HTMLElement>('[data-testid="radio-docked-bar"]');
+    const node = container.querySelector<HTMLElement>(`[data-testid="${docked ? 'radio-docked-bar' : 'radio-floating-panel'}"]`);
     expect(node).not.toBeNull();
     return node!;
   });
@@ -188,6 +188,40 @@ it('restores the radio after hiding the docked bar and remembers the choice', as
     });
     expect(container.querySelector('[data-testid="radio-docked-bar"]')).not.toBeNull();
     expect(window.localStorage.getItem('radio-mini-dismissed')).toBe('0');
+  } finally {
+    await unmount();
+  }
+});
+
+it.each([320, 360, 1024])('minimizes a restored floating player at %ipx without intercepting the control pointer', async (width) => {
+  setViewportWidth(width);
+  window.localStorage.setItem('radio-mini-visible', '0');
+  window.localStorage.setItem('radio-position', JSON.stringify({ x: 900, y: 1400 }));
+  const { container, unmount } = await renderWidget(false);
+  try {
+    const minimize = container.querySelector<HTMLButtonElement>('[aria-label="Minimizar radio a la barra"]')!;
+    expect(minimize).not.toBeNull();
+    // Buttons in the drag handle must receive a native pointer/click sequence.
+    expect(fireEvent.pointerDown(minimize, { pointerId: 1, clientX: 100, clientY: 100 })).toBe(true);
+    await act(async () => {
+      fireEvent.pointerUp(minimize, { pointerId: 1 });
+      fireEvent.click(minimize);
+    });
+    expect(container.querySelector('[data-testid="radio-floating-panel"]')).toBeNull();
+    expect(container.querySelector('[data-testid="radio-docked-bar"]')).not.toBeNull();
+    expect(window.localStorage.getItem('radio-mini-visible')).toBe('1');
+    await waitFor(() => expect(document.documentElement.style.getPropertyValue(VAR)).toBe('58px'));
+
+    await act(async () => {
+      fireEvent.click(container.querySelector('[aria-label="Expandir radio"]')!);
+    });
+    expect(container.querySelector('[data-testid="radio-floating-panel"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="radio-docked-bar"]')).toBeNull();
+    const content = container.querySelector<HTMLElement>('[data-testid="radio-panel-content"]')!;
+    expect(window.getComputedStyle(content).overflowY).toBe('auto');
+    await act(async () => { fireEvent.keyDown(content, { key: 'Escape' }); });
+    expect(container.querySelector('[data-testid="radio-floating-panel"]')).toBeNull();
+    expect(container.querySelector('[data-testid="radio-docked-bar"]')).not.toBeNull();
   } finally {
     await unmount();
   }
