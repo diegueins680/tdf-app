@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27"
+    "tdf-hq/tdf-hq.cabal": "2dcba94604be8524981fc1789b9e77735890d1d933f3f3d48be64a1e6a756a4d"
   },
   "obligations": [
     {
@@ -125,6 +125,20 @@
       "change": "Automatic account public-name privacy: register TDF.Auth.AccountName in the executable and tests, register AccountNameSpec, and replace the missing Google-name email fallback with initialAccountName gpName.",
       "semanticReview": "Removing exactly three new Cabal module registrations reproduces protected main byte for byte: dependencies, source paths, GHC/CPP options and existing registrations are unchanged. Reverting only the new ServerAuth import and Google-name call reproduces protected main byte for byte. Authorization predicates, RoleEnum, RecordsIngestion, recoveryWindowValid, reset-token issuance, recovery SQL, identity contract and Stack/lock remain unchanged. The helper accepts only Maybe Text and returns a public label; it does not import or redefine authorization/recovery predicates. Obligation claims, assumptions, translations and limitations are preserved.",
       "qualification": "These fingerprints bind current source and do not prove implementation/refinement or authorize production. Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required. Prior 6a09737 hosted failure and approval are historical; no waiver."
+    },
+    {
+      "reviewedAgainst": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+      "candidateImplementation": "6845381756620d4607ad6459cfab7c356c67f0d0",
+      "changes": [
+        {
+          "source": "tdf-hq/tdf-hq.cabal",
+          "previousSha256": "b7cbbd18548883e4f631631e8be084a6105d1c793510da6e56984ba850b21d27",
+          "currentSha256": "2dcba94604be8524981fc1789b9e77735890d1d933f3f3d48be64a1e6a756a4d"
+        }
+      ],
+      "change": "Register the isolated real-handler TDF.Contracts.DeliverySpec regression module in the test suite for truthful unsupported contract email reporting.",
+      "semanticReview": "Removing exactly the one new test other-modules line reconstructs current main Cabal bytes. Dependencies, source paths, compiler/CPP options and production-module registrations are unchanged. DeliverySpec introduces no plugins, TemplateHaskell or instances and exercises existing direct handlers in owned temporary directories. All other reviewed source hashes match. Authorization/recovery obligations, assumptions, helper code and translations remain unchanged.",
+      "qualification": "The initial M684 fresh assurance correctly rejected these stale manifest bindings; its failed report and deliberately interrupted pre-suite native build remain archived. This review updates the source context only, not theorem scope or implementation/refinement status. Fresh committed M2 solver/replay/control/native/quality checks and independent review are required; no production or delivery authority is granted."
     }
   ]
 }
