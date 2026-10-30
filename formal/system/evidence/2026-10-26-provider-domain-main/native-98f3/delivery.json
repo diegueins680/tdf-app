@@ -1,0 +1,435 @@
+{
+  "measuredAt": "2026-10-26T23:19:39.941001+00:00",
+  "pr": 596,
+  "mergeCommit": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "mergedAt": "2026-10-26T23:10:30Z",
+  "reviewedHead": "98f3ed230d2bcc87971d9e7c9b2083bd1cb9700d",
+  "statuses": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:34:37Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121889842557",
+      "name": "payment-staging-inspection",
+      "startedAt": "2026-10-26T22:34:37Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:39:44Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235089/job/121888963788",
+      "name": "build",
+      "startedAt": "2026-10-26T22:33:06Z",
+      "status": "COMPLETED",
+      "workflowName": "CI Safe Install"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:35:16Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235128/job/121888963759",
+      "name": "hardcoded-list-audit",
+      "startedAt": "2026-10-26T22:32:39Z",
+      "status": "COMPLETED",
+      "workflowName": "Catalog list authority"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T23:17:39Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235019/job/121889159666",
+      "name": "real-raci-browser",
+      "startedAt": "2026-10-26T22:33:13Z",
+      "status": "COMPLETED",
+      "workflowName": "Event RACI real browser integration"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:36:52Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235088/job/121888965056",
+      "name": "specification-contracts",
+      "startedAt": "2026-10-26T22:32:39Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:33:01Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413232582/job/121888959163",
+      "name": "admission",
+      "startedAt": "2026-10-26T22:32:39Z",
+      "status": "COMPLETED",
+      "workflowName": "Main integration admission"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:33:33Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413302573/job/121889195753",
+      "name": "admission",
+      "startedAt": "2026-10-26T22:33:12Z",
+      "status": "COMPLETED",
+      "workflowName": "Main integration admission"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:46:02Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40414894892/job/121894603242",
+      "name": "admission",
+      "startedAt": "2026-10-26T22:45:45Z",
+      "status": "COMPLETED",
+      "workflowName": "Main integration admission"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:51:14Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40415541779/job/121896819090",
+      "name": "admission",
+      "startedAt": "2026-10-26T22:50:58Z",
+      "status": "COMPLETED",
+      "workflowName": "Main integration admission"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T23:12:02Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40417912761/job/121905223351",
+      "name": "admission",
+      "startedAt": "2026-10-26T23:11:47Z",
+      "status": "COMPLETED",
+      "workflowName": "Main integration admission"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:33:10Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235095/job/121888964508",
+      "name": "build",
+      "startedAt": "2026-10-26T22:32:46Z",
+      "status": "COMPLETED",
+      "workflowName": "Run Datadog Synthetic tests"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:36:05Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235194/job/121888964525",
+      "name": "models-and-postgres",
+      "startedAt": "2026-10-26T22:33:12Z",
+      "status": "COMPLETED",
+      "workflowName": "Social formal and persistence verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:33:29Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235109/job/121888964064",
+      "name": "postgres-properties",
+      "startedAt": "2026-10-26T22:32:39Z",
+      "status": "COMPLETED",
+      "workflowName": "Universal interaction verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:32:36Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235109/job/121888966058",
+      "name": "native-ios-e2e",
+      "startedAt": "2026-10-26T22:32:37Z",
+      "status": "COMPLETED",
+      "workflowName": "Universal interaction verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:35:56Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121889840722",
+      "name": "changes",
+      "startedAt": "2026-10-26T22:34:55Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:42:16Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235088/job/121888965128",
+      "name": "verify",
+      "startedAt": "2026-10-26T22:32:40Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:45:00Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235194/job/121888965067",
+      "name": "social-client",
+      "startedAt": "2026-10-26T22:33:13Z",
+      "status": "COMPLETED",
+      "workflowName": "Social formal and persistence verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:38:57Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121890412273",
+      "name": "repo-quality",
+      "startedAt": "2026-10-26T22:36:25Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:33:28Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235088/job/121888964990",
+      "name": "postgres-foundation",
+      "startedAt": "2026-10-26T22:32:40Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:47:32Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121890412329",
+      "name": "ui-quality",
+      "startedAt": "2026-10-26T22:38:52Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:33:09Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235088/job/121888964646",
+      "name": "postgres-api",
+      "startedAt": "2026-10-26T22:32:39Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T23:03:18Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121890412456",
+      "name": "persona-web-e2e",
+      "startedAt": "2026-10-26T22:39:02Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:33:11Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235088/job/121888965053",
+      "name": "postgres-task-commit",
+      "startedAt": "2026-10-26T22:32:39Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:45:24Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121890412252",
+      "name": "native-music-e2e",
+      "startedAt": "2026-10-26T22:38:22Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:33:11Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235088/job/121888965221",
+      "name": "postgres-task-read",
+      "startedAt": "2026-10-26T22:32:40Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:38:19Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121890412189",
+      "name": "mobile-quality",
+      "startedAt": "2026-10-26T22:36:07Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:33:04Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235088/job/121888965122",
+      "name": "postgres-task-revision",
+      "startedAt": "2026-10-26T22:32:39Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T23:08:03Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121890412249",
+      "name": "backend-quality",
+      "startedAt": "2026-10-26T22:36:23Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:33:37Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235088/job/121888965245",
+      "name": "postgres-task-revisioned-read",
+      "startedAt": "2026-10-26T22:33:07Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:38:00Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121890412313",
+      "name": "api-contract-tests",
+      "startedAt": "2026-10-26T22:37:01Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:34:31Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235088/job/121888965374",
+      "name": "postgres-raci-reassignment",
+      "startedAt": "2026-10-26T22:33:11Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:42:35Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121890412573",
+      "name": "migration-tests",
+      "startedAt": "2026-10-26T22:39:18Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:33:43Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235088/job/121888965218",
+      "name": "postgres-raci-editor-context",
+      "startedAt": "2026-10-26T22:32:39Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T23:08:03Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121903731666",
+      "name": "native-android-e2e",
+      "startedAt": "2026-10-26T23:08:06Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:34:34Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235088/job/121888965215",
+      "name": "postgres-task-completion",
+      "startedAt": "2026-10-26T22:33:04Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:39:28Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121891311715",
+      "name": "api-contracts",
+      "startedAt": "2026-10-26T22:39:24Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:33:08Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235088/job/121888965031",
+      "name": "postgres-complete-schema",
+      "startedAt": "2026-10-26T22:32:39Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:42:41Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121893280580",
+      "name": "production-migrations",
+      "startedAt": "2026-10-26T22:42:38Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T23:08:17Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/40413235195/job/121903759961",
+      "name": "quality",
+      "startedAt": "2026-10-26T23:08:14Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:37:33Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://dash.cloudflare.com/?to=/c07256e78d05ad9a508d0aee82ac577a/pages/view/tdf-app/454d5522-100a-492f-bc96-e95d2924fb13",
+      "name": "Cloudflare Pages",
+      "startedAt": "2026-10-26T22:37:33Z",
+      "status": "COMPLETED",
+      "workflowName": ""
+    },
+    {
+      "__typename": "StatusContext",
+      "context": "Vercel",
+      "startedAt": "2026-10-26T22:37:13Z",
+      "state": "SUCCESS",
+      "targetUrl": "https://vercel.com/diego-saas-projects/tdf-app-tdf-hq-ui/Cq5eTPqjNbocUfPHfEf7yLKFo1vW"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-26T22:37:14Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://vercel.com/github",
+      "name": "Vercel Preview Comments",
+      "startedAt": "2026-10-26T22:37:14Z",
+      "status": "COMPLETED",
+      "workflowName": ""
+    },
+    {
+      "__typename": "StatusContext",
+      "context": "main-integration-admission",
+      "startedAt": "2026-10-26T22:32:58Z",
+      "state": "SUCCESS",
+      "targetUrl": "https://github.com/diegueins680/tdf-app/actions/workflows/merge-admission.yml"
+    }
+  ],
+  "normalMergeVerified": true,
+  "productionOperations": false
+}

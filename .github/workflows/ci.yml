@@ -116,7 +116,8 @@ jobs:
   repo-quality:
     needs: changes
     if: needs.changes.outputs.repo == 'true'
-    runs-on: ubuntu-latest
+    # Keep the actual Docker recovery checks on the qualified Noble environment.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -406,6 +407,11 @@ jobs:
         env:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test
         run: node scripts/test-music-source-projection.mjs
+
+      - name: Verify authorized recording search and metadata boundaries
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_search_test
+        run: node scripts/test-music-track-search.mjs
 
       - name: Verify authenticated account deletion and auditable resolution
         env:
@@ -873,23 +879,17 @@ jobs:
       - native-android-e2e
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout admission implementation
+        uses: actions/checkout@v7
+      - name: Setup admission Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
       - name: Require every selected quality job to pass
         env:
-          CHANGES_RESULT: ${{ needs.changes.result }}
-          REPO_RESULT: ${{ needs.repo-quality.result }}
-          UI_RESULT: ${{ needs.ui-quality.result }}
-          PERSONA_WEB_E2E_RESULT: ${{ needs.persona-web-e2e.result }}
-          NATIVE_MUSIC_RESULT: ${{ needs.native-music-e2e.result }}
-          MOBILE_RESULT: ${{ needs.mobile-quality.result }}
-          BACKEND_RESULT: ${{ needs.backend-quality.result }}
-          NATIVE_ANDROID_RESULT: ${{ needs.native-android-e2e.result }}
-        run: |
-          for result in "$CHANGES_RESULT" "$REPO_RESULT" "$UI_RESULT" "$PERSONA_WEB_E2E_RESULT" "$NATIVE_MUSIC_RESULT" "$MOBILE_RESULT" "$BACKEND_RESULT" "$NATIVE_ANDROID_RESULT"; do
-            case "$result" in
-              success|skipped) ;;
-              *) echo "Selected quality job did not pass: $result" >&2; exit 1 ;;
-            esac
-          done
+          CI_ADMISSION_NEEDS: ${{ toJSON(needs) }}
+          CI_ADMISSION_NATIVE_ANDROID: ${{ github.event_name == 'workflow_dispatch' && inputs.native_android_run != '' && 'true' || 'false' }}
+        run: node scripts/ci-job-admission.mjs quality
 
   api-contract-tests:
     needs: changes
@@ -933,13 +933,16 @@ jobs:
       - api-contract-tests
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout admission implementation
+        uses: actions/checkout@v7
+      - name: Setup admission Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
       - name: Require API contract validation when selected
         env:
-          CHANGES_RESULT: ${{ needs.changes.result }}
-          CONTRACT_RESULT: ${{ needs.api-contract-tests.result }}
-        run: |
-          test "$CHANGES_RESULT" = success
-          case "$CONTRACT_RESULT" in success|skipped) ;; *) exit 1 ;; esac
+          CI_ADMISSION_NEEDS: ${{ toJSON(needs) }}
+        run: node scripts/ci-job-admission.mjs api-contracts
 
   migration-tests:
     needs: changes
@@ -1131,10 +1134,13 @@ jobs:
       - migration-tests
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout admission implementation
+        uses: actions/checkout@v7
+      - name: Setup admission Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
       - name: Require production migration validation when selected
         env:
-          CHANGES_RESULT: ${{ needs.changes.result }}
-          MIGRATION_RESULT: ${{ needs.migration-tests.result }}
-        run: |
-          test "$CHANGES_RESULT" = success
-          case "$MIGRATION_RESULT" in success|skipped) ;; *) exit 1 ;; esac
+          CI_ADMISSION_NEEDS: ${{ toJSON(needs) }}
+        run: node scripts/ci-job-admission.mjs production-migrations

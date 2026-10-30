@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "status": "LOCAL_SCOPED_QUALIFICATION_COMPILED_BUILD_HTTP_AND_EXACT_CANDIDATE_CI_PENDING",
+  "source": {
+    "branch": "feat/universal-music-search-20261026",
+    "backendCheckpoint": "c88e3849f33f52619f786bf7f6ef4d2819b26fab",
+    "stackedParent": "52aa82ea70ed1e2b3dc26180977d9a0b838dea59",
+    "protectedMainBaseline": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "frontendNativeAndModel": "Uncommitted exact source fingerprints, not all code in backend checkpoint",
+    "parentRequirementObjectsPreserved": 148,
+    "currentRequirementObjects": 149,
+    "parentDecisionsPreservedActiveOrExactHistory": 1341,
+    "parentDecisionsStillActiveExact": 1340,
+    "activeReviewedDecisions": 1343,
+    "newTechnicalDecisions": 3,
+    "productionMigrationEntries": 222
+  },
+  "results": {
+    "frontend": {
+      "tests": 55,
+      "suites": 6,
+      "result": "PASS",
+      "lintFiles": 10,
+      "canonicalAppTypecheck": "PASS",
+      "boundary": "Synthetic API/event inspection, React Query and route mounts; no real decoder or backend rights claim"
+    },
+    "apiClient": {
+      "tests": 23,
+      "result": "PASS_OPERATOR_ATTESTED",
+      "session": 87386,
+      "rawLog": "NOT_RETAINED",
+      "boundary": "Root actual tool stdout only; no fabricated raw log; not compiled API HTTP"
+    },
+    "sql": {
+      "result": "PASS",
+      "node": "22.14.0",
+      "postgres": "16.13",
+      "selectedMigrations": 14,
+      "actualShippedSqlAndBindingControls": true,
+      "ownedDatabasesRemoved": true,
+      "ownedClusterStopped": true,
+      "firstFixtureFailureRetained": true,
+      "boundary": "Selected fixture only; not full 222 schema, compiled HTTP, storage or production"
+    },
+    "native": {
+      "result": "PASS",
+      "cases": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "projects": [
+        "Chromium desktop",
+        "Chromium phone web emulation",
+        "Firefox critical"
+      ],
+      "realAacFlacDecoderExecutions": 3,
+      "revokedAllThreeBRenditions403ExecutionsWithoutMedia": 3,
+      "apiAuthorizationCatalogAndMediaDeliveryResponses": "INJECTED_LOCAL_FIXTURES",
+      "sameSyntheticToneForAAndB": true,
+      "identityBoundary": "Exact track/recording/asset IDs and URLs; not audible song recognition",
+      "lateARequests": "Browser cancelled all three; not proof of a delivered stale response",
+      "webKit": "UNVERIFIED_LOCAL_UNSUPPORTED_MACOS_12_7_6",
+      "physicalDevices": "UNVERIFIED",
+      "nativeMediaMethodsOrClocksPatched": false
+    },
+    "model": {
+      "result": "MODEL_CHECKED_WITH_BOUNDS",
+      "states": 9642,
+      "transitions": 54454,
+      "maxEvents": 12,
+      "frontierStates": 936,
+      "negativeControlsDetected": 6,
+      "unitTests": 10,
+      "conditionalDrainMaxObserved": 3,
+      "conditionalDrainCap": 4,
+      "liveness": "PARTIAL",
+      "implementationRefinement": "UNPROVEN"
+    },
+    "ciScopeContracts": {
+      "result": "PASS_OPERATOR_ATTESTED_BEFORE_MODEL_REGISTRATION_ADDITION",
+      "tests": 47,
+      "rawLog": "NOT_RETAINED_IN_THIS_PACKET",
+      "finalUpdatedScopeSuite": "PENDING_ROOT_CHECK"
+    },
+    "strictCatalogFinal": "PENDING_ROOT_FINAL_WRITER_49931",
+    "canonicalStackBuild": "ACTIVE_PENDING",
+    "compiledHttpFull222": "PENDING_NOT_EXECUTED",
+    "hostedExactCandidateCi": "PENDING",
+    "reviewProtectedMergeDeployment": "PENDING"
+  },
+  "captureHistory": {
+    "initialCapture": "Empty files map preserved as setup failure, not source evidence",
+    "original972Capture": "Exact subset captured during c88 build, retained unchanged; omitted one Unicode non-code TeX template",
+    "full973Review": "Supplemental read-only raw Git blob/mode and current-file review during active build; all973 match; not a before-build capture",
+    "successfulBuildClaim": false
+  },
+  "performance": {
+    "playbackP95Ms": null,
+    "readyPlaybackP95Ms": null,
+    "searchP95Ms": null,
+    "rebufferRatio": null,
+    "methodology": "No representative-device/network SLO benchmark executed. Test timeouts, case durations and decoder clock polls are functional controls, not p95 measurements."
+  },
+  "release": {
+    "published": false,
+    "merged": false,
+    "deployed": false,
+    "productionWrites": false,
+    "productionFlagsChanged": false,
+    "productionPlaybackVerified": false,
+    "coverage": "Canonical music releases only; no universal historical/legacy/social/event attachment coverage claim",
+    "assurance": "Finite design check is not implementation refinement; existing global release gates remain blocked or unfulfilled."
+  },
+  "archive": {
+    "path": "reports/music-track-search-evidence-20261026/local-execution-evidence.tar.gz",
+    "sha256": "5fc5d4f01a82476cccb608a1f6bc55784d4169909a89c50bc68c56e5e5d77d0a",
+    "members": 42,
+    "rawInputsUnchanged": true,
+    "heavyVideoTraceAndHtmlAssets": "Not copied; original native receipts preserve artifact paths/hashes",
+    "compiledHttpSubdirectory": "Reserved for root after actual execution; absent from this packet"
+  },
+  "recordedAt": "2026-10-26T22:48:31.275301+00:00"
+}

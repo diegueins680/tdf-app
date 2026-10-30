@@ -1,0 +1,10 @@
+{
+  "baseline": "a9095bc3e3bf53f5a76244564472fe53cfff7691",
+  "appUIUnchanged": true,
+  "strictCatalogCurrent1352UnchangedExceptClock": true,
+  "wholeHistoricalCatalogFileUnchanged": true,
+  "finalPhaseBrowserCases": "9instrumented+9uninstrumented/0skip/0retry",
+  "controlledFaults": "helper-only edgefailure withroot320;sole-option rootfailure362/320;synthetic/missing-native ack fails8s",
+  "rootAndIndices": "PASS",
+  "purpose": "Explicit specification/harness phase correction; historical initial-overlay failures retained; hosted qualification pending"
+}

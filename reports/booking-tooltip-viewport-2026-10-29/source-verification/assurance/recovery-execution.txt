@@ -1,0 +1,1 @@
+{"output": "/private/tmp/tdf-booking-tooltip-receipts-v3-20261028/assurance/recovery", "executionPassed": true, "error": null, "obligations": {"window-equivalence": "PROVEN", "schema-correspondence": "PROVEN", "issuance-admission": "PROVEN", "issuance-exact": "PROVEN"}}

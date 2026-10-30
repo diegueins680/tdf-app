@@ -1,0 +1,10 @@
+{
+  "finalDiagnosticSourceSha256": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
+  "helperOnlyFault": "1 actual edge failure/rootfits320; initial guard unchanged, later+event attachment present",
+  "rootOptionRemoval": "1actual rootfailure; fullfinaltestbody, soleproductoption removed",
+  "exactCorrectSourceAndDistRestored": true,
+  "correctDistUICompilationCommit": "a5535c59e49064fec535daa3682a4a1dc31c68f4",
+  "allOwnedServersStoppedAndAliasesRemoved": true,
+  "nativeAcknowledgementFault": "Synthetic event at requested width rejected; no real registered native acknowledgment, actual8s timeout/delivered assertion fails",
+  "scope": "Explicit phase oracle sensitivity/immutable root failure protection; no new product repair or universal convergence guarantee."
+}

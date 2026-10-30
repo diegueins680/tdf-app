@@ -93,6 +93,9 @@ const toLocalInputValue = (date: Date) => {
 };
 
 const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
+// The physical studio's opening hours use Quito time, independently of the
+// visitor's timezone or the application's default display preference.
+const STUDIO_TIME_ZONE = 'America/Guayaquil';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
 const MAX_DURATION_MINUTES = (OPEN_HOURS.end - OPEN_HOURS.start) * 60;
 const QUICK_SLOT_STEP_MINUTES = 30;
@@ -133,9 +136,10 @@ const formatMinorAmount = (currency: string, amountMinor: number): string =>
     maximumFractionDigits: 2,
   })}`;
 
-const zoneLabel = (zone: string) => {
+const zoneLabel = (zone: string, localStart?: string) => {
   try {
-    return DateTime.now().setZone(zone).toFormat('ZZZZ');
+    const date = localStart ? DateTime.fromISO(localStart, { zone }) : DateTime.now().setZone(zone);
+    return date.isValid ? date.toFormat('ZZZZ') : zone;
   } catch {
     return zone;
   }
@@ -332,12 +336,8 @@ export default function PublicBookingPage() {
     if (typeof Intl === 'undefined' || !Intl.DateTimeFormat) return 'UTC';
     return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
   }, []);
-  const studioTimeZone = useMemo(
-    () => env.read('VITE_DEFAULT_TIMEZONE') ?? 'UTC',
-    [],
-  );
+  const studioTimeZone = STUDIO_TIME_ZONE;
   const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);
-  const userZoneLabel = useMemo(() => zoneLabel(userTimeZone), [userTimeZone]);
   const studioCurrency = useMemo(() => services[0]?.currency ?? resolveRuntimeCurrency(), [services]);
   const serviceCatalogUnavailable =
     serviceCatalogQuery.isFetched && (serviceCatalogQuery.isError || (serviceCatalogQuery.data?.length ?? 0) === 0);
@@ -360,7 +360,7 @@ export default function PublicBookingPage() {
   const bookingReadinessNote = useMemo(() => {
     if (!requiresManualConfirmation) return null;
     if (serviceCatalogUnavailable) {
-      return 'No pudimos cargar el catálogo de servicios. Reintenta en unos minutos; no enviaremos una reserva sin un servicio canónico.';
+      return 'No pudimos cargar el catálogo de servicios. Reintenta sin salir de esta página; conservaremos tus datos y no enviaremos una reserva sin un servicio disponible.';
     }
     return 'Puedes dejar la solicitud ahora mismo. Guarda el ID de reserva y escríbenos por WhatsApp si necesitas confirmar disponibilidad o recursos.';
   }, [requiresManualConfirmation, serviceCatalogUnavailable]);
@@ -379,6 +379,7 @@ export default function PublicBookingPage() {
   const durationNote = 'Duración estándar de 1h (ajústala si necesitas más tiempo).';
   const notesPlaceholder = 'Cuéntanos qué necesitas (ej: grabación de voz, mezcla, ensayo, DJ booth, etc.)';
   const [form, setForm] = useState<FormState>(buildInitialForm);
+  const userZoneLabel = useMemo(() => zoneLabel(userTimeZone, form.startsAt), [userTimeZone, form.startsAt]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<BookingDTO | null>(null);
@@ -1089,7 +1090,7 @@ export default function PublicBookingPage() {
     const duration = normalizeDurationMinutes(form.durationMinutes);
     const nowUser = DateTime.now().setZone(userTimeZone).plus({ minutes: 15 });
     const baseDay = DateTime.fromISO(form.startsAt || '', { zone: userTimeZone });
-    const day = baseDay.isValid ? baseDay.startOf('day') : nowUser.startOf('day');
+    const day = (baseDay.isValid ? baseDay : nowUser).setZone(studioTimeZone).startOf('day');
 
     const openStudio = day
       .setZone(studioTimeZone)
@@ -1769,7 +1770,7 @@ export default function PublicBookingPage() {
                 {pageDescription}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Horario del estudio: <strong>{studioZoneLabel}</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
+                Horario del estudio: <strong>08:00–22:00, Quito ({studioZoneLabel})</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {authoritativeQuote ? (
@@ -1785,7 +1786,19 @@ export default function PublicBookingPage() {
               )}
               {bookingReadinessNote && (
                 <Alert severity="info" variant="outlined">
-                  {bookingReadinessNote}
+                  <Stack spacing={1} alignItems="flex-start">
+                    <span>{bookingReadinessNote}</span>
+                    {serviceCatalogUnavailable && (
+                      <Button
+                        variant="outlined"
+                        disabled={serviceCatalogQuery.isFetching}
+                        aria-busy={serviceCatalogQuery.isFetching}
+                        onClick={() => void serviceCatalogQuery.refetch()}
+                      >
+                        {serviceCatalogQuery.isFetching ? 'Cargando catálogo…' : 'Reintentar catálogo'}
+                      </Button>
+                    )}
+                  </Stack>
                 </Alert>
               )}
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap" sx={WRAPPING_CHIP_ROW_SX}>
@@ -2126,7 +2139,11 @@ export default function PublicBookingPage() {
                                 </Typography>
                                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                                   {suggestedSlots.map((slot) => (
-                                    <Tooltip key={slot.value} title={slot.helper}>
+                                    <Tooltip
+                                      key={slot.value}
+                                      title={slot.helper}
+                                      slotProps={{ popper: { popperOptions: { strategy: 'fixed' } } }}
+                                    >
                                       <Chip
                                         label={slot.label}
                                         onClick={() => {

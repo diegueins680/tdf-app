@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "fb5e4bd35da8911d1c369b0fff91119b52cf8a83",
+  "sourceWorktreeDirty": false,
+  "sourceFingerprints": {
+    "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
+    "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+    "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
+    "scripts/test-backend-version-rebuild.py": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc"
+  },
+  "sourceSha256": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
+  "status": "passed",
+  "cases": [
+    {
+      "case": "intended",
+      "result": "passed",
+      "commitA": "ed58f65a97514ba05b1bdae2a28c9c52dd018ce5",
+      "commitB": "88ec15c9d7b925d6f62a960a3fab0a14b6690541",
+      "reportedCommitB": "88ec15c9d7b925d6f62a960a3fab0a14b6690541",
+      "unrelatedObjectReused": true,
+      "binarySha256": "98f71c005b5a0af99ed7625f50618bf0e67bbad547e10ad994e9ce60b979843f"
+    },
+    {
+      "case": "without-stack-force-dirty",
+      "result": "expected-stale-metadata-detected",
+      "expectedCommit": "0526d6625ebfdc7e8335086ff7ae195b528c0ccb",
+      "reportedCommit": "dev"
+    },
+    {
+      "case": "without-module-force-recomp",
+      "result": "expected-stale-metadata-detected",
+      "expectedCommit": "7bff978f318e1babbf640b0d890494966d63f442",
+      "reportedCommit": "dev"
+    }
+  ],
+  "scope": "Actual TDF.Version in a minimal cached Stack package; Git HEAD changes without changing Haskell source. Not whole-binary build attestation."
+}

@@ -1,0 +1,75 @@
+{
+  "date": "2026-10-26",
+  "sourcePR": 636,
+  "failedCandidate": "8bdafbeb059cf4a53ce1a07580479cd1957b882d",
+  "failedCI": {
+    "run": 40416891311,
+    "job": 121901775474,
+    "passed": 593,
+    "skipped": 22,
+    "failed": 1,
+    "failure": "WebKit desktop reported horizontal overflow immediately after viewport resize to320px. Error-catalog recovery, contact preservation and schedule progression had passed.",
+    "originalArtifactId": 12697151661,
+    "originalArtifactSize": 80535014,
+    "originalArtifactSha256": "3ec20e0dd78407f48c5ff00a4b32d735311c46e3aeae239ea92ebbdb5a9d9595",
+    "traceSha256": "9394e84ba541f04e8297b70ae4e4cb985c62159553d4c779b13a13df70d7e414"
+  },
+  "evidence": "The trace resolves setViewportSize at990313.503 and measures overflow at990326.542\u2013990330.491. The captured320px DOM/image still shows the desktop stepper; the mobile Paso2de3 indicator is absent. This supports waiting for the responsive render; the browser scheduling mechanism is not independently proven.",
+  "change": "The test awaits the existing visible Paso 2 de 3 indicator after viewport resizing before measuring. The same zero-overflow, data preservation, mutation-refusal, keyboard and accessibility assertions remain. No sleeps, timeout increases, skipped cases or automatic retries. No own workflow changes; inherited main workflow bytes are preserved exactly.",
+  "localQualification": {
+    "runtimeBuild": "Reused the prior frontend compiled artifact. All frontend and TS unit-test bytes remain exact8bd; this is not a new clean-commit frontend or backend build.",
+    "browserCases": 8,
+    "projects": [
+      "Chrome desktop",
+      "Pixel7 emulation",
+      "360px Android Chrome emulation",
+      "Firefox"
+    ],
+    "stats": {
+      "startTime": "2026-10-26T23:31:05.301Z",
+      "duration": 73633.972,
+      "expected": 8,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "newWebKitExecution": false,
+    "checkoutHeadDuringRun": "8bdafbeb059cf4a53ce1a07580479cd1957b882d",
+    "workingTreeChange": "Only the three-line mobile-render synchronization, subsequently committed unchanged as the checkpoint below.",
+    "checkpointWithExactTestBytes": "aa28696a15dbbebedc6a8c5cc6cacaa3d0943b23",
+    "testSourceSha256": "04cb5ff5442060aaa69077587e4e51d7fcf3b814d387bbb07407fba0d508a595"
+  },
+  "composition": {
+    "protectedMain": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+    "mainRequirements": 148,
+    "foreignObjectsPreserved": 147,
+    "ownedRequirementExactPrior": "BOOK-SERVICE-PICKER-001",
+    "mainCatalogDecisionsPreservedExactly": true,
+    "runtimeCodeUnchanged": true,
+    "freshSourceCIRequired": true,
+    "frontendMaterialInputsMatchExecutedCheckpoint": true,
+    "backendApiSqlDependenciesMobileAndWorkflowExactMain": true,
+    "strictCatalogCandidates": 1341,
+    "strictCatalogJsonAndCsv": "PASS",
+    "specificationInventoryAndTraceability": "PASS"
+  },
+  "limits": [
+    "Initial593/22/1 CI failure is retained, not counted as success.",
+    "Prior3516UItests and4hosted-preview cases retain8bd identity; no claim that the new source passed WebKit or hosted CI yet.",
+    "All business/session APIs synthetic, external traffic and business writes blocked. No production, human, device or conversion validation."
+  ],
+  "evidenceSha256": {
+    "reports/booking-catalog-safari-evidence-20261026/original-error-context.md": "798823cb17faebf0bb836cf0e486322915c37d0150dab0b166b2b08856456edd",
+    "reports/booking-catalog-safari-evidence-20261026/trace-timeline.json": "06870df17b05302a399f1023d55f46f313d86a0c114a84b431e5eba5756cd470",
+    "reports/booking-catalog-safari-evidence-20261026/original-webkit-320.png": "08a02663f0d4befbf43d173ec5bb235947ab890c400b19d9c4bc02c4f29c83c7",
+    "reports/booking-catalog-safari-evidence-20261026/original-result-summary.json": "da0cdf14c15dc943a7815476da3eeef28a99c5bc576fcb0f26ec84d07fb76dfd",
+    "reports/booking-catalog-safari-evidence-20261026/local-browser-stats.json": "e6fee28e47280bc7207160bc6c57e53660182f8ba0b6051fea3b1e06819a444f"
+  },
+  "historicalIndependentReview": {
+    "head": "8bdafbeb059cf4a53ce1a07580479cd1957b882d",
+    "user": "tdfrecords",
+    "submittedAt": "2026-10-26T23:20:52Z",
+    "state": "APPROVED",
+    "scope": "Only the previous head. New source requires fresh independent approval; no transfer is inferred."
+  }
+}

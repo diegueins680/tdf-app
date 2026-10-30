@@ -1,0 +1,25 @@
+{
+  "modes": [
+    {
+      "mode": "positive",
+      "exitCode": 0,
+      "expectedResultObserved": true
+    },
+    {
+      "mode": "false-premerge-summary",
+      "exitCode": 1,
+      "expectedResultObserved": true
+    },
+    {
+      "mode": "changed-raw-completion",
+      "exitCode": 1,
+      "expectedResultObserved": true
+    },
+    {
+      "mode": "naive-timestamp-function",
+      "exitCode": 1,
+      "expectedResultObserved": true
+    }
+  ],
+  "scope": "Fresh chronology computation and evidence-integrity fault controls only; historical gate enforcement remains UNKNOWN; no new provider/native/application execution."
+}

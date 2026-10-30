@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "scope": "New directory-regression supplement only; excludes self-manifest; all41 prior leaves unchanged.",
+  "files": {
+    "qa-receipt.json": {
+      "bytes": 11368,
+      "sha256": "ac2f0c5952786ad204d81812bfff8b173c5d6b5f894af507400882237fdb7e9e"
+    },
+    "summary.json": {
+      "bytes": 1897,
+      "sha256": "9110cd7f7657e3a0f681fb96ea3ac75a5eea451575262650c5ff976e025158c7"
+    },
+    "directory-regression-failure-evidence.tar.gz": {
+      "bytes": 7422,
+      "sha256": "213f061154bcf0517cf0818a8365394adcd38d61a8cdb7a7848baa6c4dd635ba"
+    },
+    "archive-member-hashes.json": {
+      "bytes": 1041,
+      "sha256": "708c3005fd76b51a4ec17ebd67383d6136e71f8d94517d17b3ad0b3f4659ddb6"
+    },
+    "README.md": {
+      "bytes": 1476,
+      "sha256": "0c24f929bc788bd578b507fbf1e239228929e6fd88d9cddba147b9c3160bf316"
+    }
+  }
+}
